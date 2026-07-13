@@ -259,6 +259,68 @@ def _copy_docs_source(docs_root: Path, target: Path) -> None:
     shutil.copytree(docs_root, target, ignore=shutil.ignore_patterns("_build"))
 
 
+def ensure_isolated_storage_root() -> None:
+    """Point product storage at a build-scoped scratch root unless already pinned.
+
+    The documentation build imports the application (autodoc, the deferred
+    diagnostics-model rebuild, CLI-reference generation, and the search-index
+    terminology projections), and importing the application resolves the
+    product storage root. A documentation build must never depend on the
+    workstation's product state — in particular, the former-product custody
+    refusal must not red a docs build on a machine that carries retired
+    ``aeat`` state. Callers that deliberately pin a storage root keep it.
+    """
+    scratch = Path(tempfile.gettempdir()) / "cadrumo-docs-build-storage"
+    os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
+    Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
+
+
+#: Builder-owned pages with no corresponding source document.
+_ORPHAN_SPECIAL_PAGES = {"genindex.html", "search.html", "404.html", "py-modindex.html"}
+
+#: Asset and infrastructure directories that carry no docname-addressed pages.
+_ORPHAN_SKIP_DIRS = {"_static", "_sources", "_images", "_downloads", "_sphinx_design_static", "pagefind"}
+
+
+def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> int:
+    """Delete built pages whose source document no longer exists.
+
+    Furo bakes the theme's variables and templates into every page at build
+    time, so a page whose source was removed or renamed keeps rendering its
+    build-era design indefinitely and leaks stale results into the search
+    index (the docs-brand audit found 2208 such orphans rendering a retired
+    theme). Every docname maps to a ``.md``/``.rst`` source under ``docs/`` —
+    including the generated ``api/``, ``cli/``, and ``_generated/`` sources,
+    which are written to disk before Sphinx reads the tree — and ``_modules``
+    viewcode pages map back to ``src/`` modules.
+
+    Returns:
+        The number of orphaned pages removed.
+    """
+    if not html_root.exists():
+        return 0
+    removed = 0
+    for page in html_root.rglob("*.html"):
+        rel = page.relative_to(html_root)
+        if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
+            continue
+        docname = rel.with_suffix("")
+        if rel.parts[0] == "_modules":
+            if rel.as_posix() == "_modules/index.html":
+                continue
+            module_path = Path(*docname.parts[1:])
+            candidates = [repo_root / "src" / Path(f"{module_path}.py")]
+        else:
+            candidates = [docs_root / Path(f"{docname}{suffix}") for suffix in (".md", ".rst")]
+        if any(candidate.is_file() for candidate in candidates):
+            continue
+        page.unlink()
+        removed += 1
+    if removed:
+        print(f"Removed {removed} orphaned page(s) whose source no longer exists.", flush=True)
+    return removed
+
+
 def remove_noncanonical_build_entries(docs_root: Path) -> None:
     """Remove stale noncanonical entries directly under ``docs/_build``."""
     build_root = docs_root / "_build"
@@ -303,6 +365,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
+    ensure_isolated_storage_root()
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", "auto"]
     env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
     if strict:
@@ -369,6 +432,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
+        remove_orphan_pages(docs_root, docs_root / "_build" / "html", repo_root)
         compile_search_index(docs_root / "_build" / "html", repo_root)
 
 
@@ -397,6 +461,7 @@ def compile_search_index(
             can drive a small real injector without paying the full
             materialisation cost; production always uses the default.
     """
+    ensure_isolated_storage_root()
     from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
     from dev.docs.pagefind_inject import InjectionStats, build_record_injector
 
