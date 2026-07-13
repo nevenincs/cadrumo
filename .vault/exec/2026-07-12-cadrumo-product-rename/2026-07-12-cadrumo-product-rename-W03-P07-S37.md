@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-13'
 step_id: 'S37'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
@@ -50,24 +50,24 @@ related:
 
 ## Description
 
-- Retarget source paths, wheel glob, archive prefixes, imports, install target, executable, version assertion, and optional-extra remedy to Cadrumo.
-- Preserve `registry/aeat` leaves as authority-owned taxonomy evidence.
-- Isolate installed-wheel subprocess settings from unrelated host product state.
-- Run the real wheel build and fresh virtual-environment installation probe.
+- Read the binding naming ADR and confirm that `aeat` is the sole human
+  executable while `CADRUMO` is the version identity.
+- Correct the slim-wheel installed CLI assertion to require `CADRUMO` from
+  `aeat --version`.
+- Run focused packaging tests, lint, formatting, and the real wheel build and
+  fresh virtual-environment installation probe.
 
 ## Outcome
 
-The slim-wheel probe now expects `cadrumo`, `cadrumo-*.whl`, `cadrumo/_data`,
-`cadrumo[anthropic]`, Cadrumo imports, and the installed `cadrumo` script, with no
-former distribution, import, member, or executable expectation. Ruff, formatting,
-residue, plan, and diff checks pass.
+The slim-wheel probe now verifies the installed `aeat` executable and rejects
+version output that does not carry the `CADRUMO` identity. The focused packaging
+suite passed three tests, Ruff and formatting passed, and the real packaging
+smoke built `cadrumo-0.2.0-py3-none-any.whl`, installed it into a fresh virtual
+environment, exercised the installed CLI, and wrote its smoke manifest.
 
 ## Notes
 
-The first real run exposed an installed import inheriting former-product host
-state; the second exposed the same leak in the default CLI check. Both child
-processes now receive isolated Cadrumo storage and database settings. The final
-run built and installed the real wheel and advanced through installed data and
-runtime-surface checks into CLI profile/config work, but the outer 124-second
-command budget expired before the smoke manifest was written. This timeout is
-recorded as incomplete end-to-end acceptance evidence rather than a passing run.
+The real smoke completed in 312 seconds. Existing authority-owned `AEAT` and
+`registry/aeat` names were not changed. Sentence prose casing was outside this
+Step; the uppercase assertion is intentional because version output is an
+identity context under the binding ADR.
