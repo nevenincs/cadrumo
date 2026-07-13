@@ -1,80 +1,55 @@
-# Recording a filing, and why Cadrumo never files for you
+# Recording a filing, and why the tool never files for you
 
-This page explains the last stretch of the journey: the line between local work
-in Cadrumo and the real Agencia Estatal de Administración Tributaria (AEAT).
-The taxpayer or authorized filer uploads the export, and Cadrumo keeps local
-history around that human act. This page explains why the boundary sits there.
+This page covers the last stretch of the journey: the line between the work
+you do on your own computer and the real Agencia Estatal de Administración
+Tributaria (AEAT, the Spanish tax agency). The short answer is that you file
+it yourself, and the tool keeps a careful record around that act. This page
+is about why the boundary sits where it does.
 
 ## The boundary is permanent
 
-Cadrumo cannot submit a return, make a payment, acknowledge a notification, or
-change a value at AEAT. This is not a cautious default that a setting can turn
-off. No submission command exists. Cadrumo is always the local product; AEAT is
-always the external authority and counterparty.
+The tool can never submit a return, register anything, or change a single value at the agency. This is not a cautious default you could switch off later. There is no setting, no flag, and no expert mode that turns it on. The submit path is built to refuse, every time, with a clear error rather than a quiet attempt.
 
-The refusal preserves human control over a legal filing act. It prevents
-Cadrumo from initiating an authority-side change and keeps submission within
-the official channel used by the taxpayer or authorized filer.
+That refusal is deliberate. Filing a tax return is a legal act with your name on it. A piece of software that could press the button on your behalf would carry a risk you can never fully see. By making submission impossible, the tool removes that risk entirely and keeps you in the chair where the law expects you to be.
 
 ## Read-only access is the only connection
 
-Configured AEAT access is read-only. It can retrieve filed returns, receipts,
-and supported authority observations for local review and comparison.
+When you connect the tool to the agency, you grant it one thing: the ability to read your own data from AEAT, view-only. It can look at the returns you've already filed, the receipts on record, and the facts the agency holds about you. It reads this so it can show it to you and compare it against your local work.
 
 Nothing flows the other way. The connection has no path that writes, edits, or registers. Reading your data, view-only, is the whole of what it can do at the agency.
 
 ## You upload the file yourself
 
-Submission happens through an official AEAT channel with the filer's
-credentials, such as a digital certificate or Cl@ve. The filer selects the
-export and completes the authority's submission flow.
+The real submission happens in your own browser, on the agency's website, with your own login credentials - a digital certificate or Cl@ve (the Spanish government's shared identity login). You sign in as yourself, you upload the file the tool prepared, and you press submit. The tool never holds your credentials for this and never stands between you and the agency at that moment.
 
 For the steps, see [Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md).
 
 ## Recording a filing in your own records
 
-After upload, the local filing record identifies the saved revision that was
-filed and when the filing occurred.
+After you've uploaded the return yourself, you come back and mark that saved version as final in your own history. This is recording that you've filed - a local note in your own records, like writing "sent" next to an invoice in your ledger.
 
-This record changes nothing at AEAT. It does not submit, resend, or confirm a
-return. It preserves which local revision was filed and when.
+It changes nothing at the agency. It does not submit, re-send, or confirm anything with AEAT. It marks one version as the answer you actually filed, so that later, when you look back, you know which numbers went out and when.
 
 ## Checking your record against the agency's receipt
 
-When you file, AEAT gives you a justificante - the official receipt for the
-filing. Justificante reconciliation checks the filing identity and the declared
-total available in that receipt against the local filing record.
+When you file, the agency gives you a justificante - the official receipt confirming what it received. The tool can compare your local figures against that receipt to catch any disagreement. This is checking your record against the agency's receipt.
 
-This comparison can read a receipt you supply or a justificante retrieved
-through the separate read-only AEAT surface. It does not ask AEAT to recompute
-the return or alter the authority's record.
+The comparison reads only the receipt you supply. It does not contact the agency to do its work. You hand it the justificante; it reports whether your record matches, diverges, or doesn't line up with any receipt yet.
 
 For the steps, see [Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
 
 ## What this comparison can and can't tell you
 
-Two evidence comparisons are distinct. Justificante reconciliation compares
-filing identity and the receipt's declared total. For modelos enrolled in
-detailed comparison, a separately parsed filed declaración supplies the
-per-casilla values that Cadrumo compares with the corresponding local values.
-The justificante itself is not the source of that per-casilla comparison.
-
-Neither comparison is a live re-check of your maths against the agency.
-Cadrumo compares saved local values with issued evidence. The justificante
-supplies identity and declared total. For enrolled modelos, the parsed filed
-declaración supplies per-casilla values.
-
-Cadrumo can save read-only authority records as local evidence. This supports
-comparison and record-keeping, not a fresh calculation. These operations do
-not re-derive the tax result.
+The comparison confirms that your local record matches the receipt's header
+fields - the modelo, the filing year, the period, and your tax ID - and
+names any field that disagrees. It does not compare individual box values,
+and it is not a live re-check of your maths against the agency: none of
+these steps re-derives your tax; they confirm what was filed and keep proof
+of it. The precise scope and the mismatch-handling steps are in
+[Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
 
 ## Where this sits in the journey
 
-This stage connects local preparation with the external authority. Cadrumo
-prepares and records locally. The taxpayer or authorized filer completes the
-official submission.
+This is the end of the pipeline that the [overview](index.md) lays out. Everything before it - building the modelo, checking it, recording the result - is yours to do locally; this page is where that local work meets the real agency, across a line the tool will not cross.
 
-If a comparison finds a mismatch, [Editing and verifying a
-calculation](editing-and-verifying.md) explains local correction. A recorded
-filing can support later returns, as [How filings build on earlier
-ones](building-on-earlier-filings.md) explains.
+If a comparison turns up a mismatch and you fix it, re-checking the corrected version is covered in [Editing and verifying a calculation](editing-and-verifying.md). And once a filing is recorded, it becomes evidence the tool can lean on for later returns, which [How filings build on earlier ones](building-on-earlier-filings.md) explains.

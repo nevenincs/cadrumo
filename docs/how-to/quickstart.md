@@ -4,8 +4,8 @@ Use this when you are new to Cadrumo and want the shortest path from local
 records to a file you can upload yourself through the Agencia Estatal de
 Administración Tributaria (AEAT) portal.
 
-Cadrumo prepares, checks, and exports local files for Spanish tax forms. It does
-not submit filings to AEAT. You remain responsible for reviewing and filing
+Cadrumo, invoked as the `aeat` command, prepares, checks, and exports local
+files for Spanish tax forms. It does not submit filings to AEAT. You remain responsible for reviewing and filing
 through official AEAT channels.
 
 This page follows one complete path: create a profile, add two transactions,
@@ -13,9 +13,31 @@ then calculate, verify, and export a Modelo 130 for the first quarter of 2026.
 Every command below is run in order. It links to deeper guides whenever a step
 has tax-specific setup or review choices.
 
+## 1. Install the CLI
+
+Install the `cadrumo` package from PyPI. Any tool that installs Python
+applications works; `pip` is the plainest path:
+
+```bash
+pip install cadrumo
+```
+
+Confirm the command is on your path:
+
+```bash
+aeat --version
+```
+
+To use Cadrumo with an AI agent later, install the agent extra instead; see
+[Connect an agent](connect-an-agent.md):
+
+```bash
+pip install "cadrumo[agent]"
+```
+
 ## Before you start: the master-key passphrase
 
-Cadrumo encrypts your local data with a master key derived from a passphrase.
+`aeat` encrypts your local data with a master key derived from a passphrase.
 The first command that touches the store asks for the passphrase and the tool
 reuses it for the rest of the session. To run without a prompt, set it in the
 environment first:
@@ -24,7 +46,7 @@ environment first:
 export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
 ```
 
-The `aeat` command-line interface (CLI) emits its help and messages in Spanish. The English text on this page
+The CLI emits its help and messages in Spanish. The English text on this page
 describes what each step does.
 
 ## 1. Create your taxpayer profile
@@ -82,7 +104,7 @@ List the recognised expense categories any time:
 aeat app ledger categories
 ```
 
-If you instead have a bank export, import it. Cadrumo reads a semicolon-delimited
+If you instead have a bank export, import it. `aeat` reads a semicolon-delimited
 CSV with comma decimals and a negative `Importe` for money leaving the account:
 
 ```text
@@ -109,7 +131,7 @@ and run readiness checks.
 ## 3. Classify imported transactions
 
 Each imported transaction has no tax category until you classify it.
-Classification tells Cadrumo whether a row is a business expense, personal
+Classification tells `aeat` whether a row is a business expense, personal
 spending, or a mix of both. Take the transaction id from `ledger list`:
 
 ```bash
@@ -188,7 +210,7 @@ aeat app modelo work verify --modelo 130 --year 2026 --period 1T
 ```
 
 When the draft is complete, the report shows `completeness_status complete` and
-`granted_verificado_completo true`, and Cadrumo marks the draft as verified. A
+`granted_verificado_completo true`, and `aeat` marks the draft as verified. A
 first filing also shows one advisory noting that the period falls before your
 activity start date; this is informational and does not block the export. If
 verification reports a blocking issue, fix it and calculate again before
@@ -224,7 +246,7 @@ AEAT's official portal. For the full calendar flow, see
 
 ## 9. File manually through AEAT
 
-The final filing step is outside Cadrumo:
+The final filing step is outside `aeat`:
 
 1. Log in to the official AEAT electronic filing portal.
 2. Choose the Modelo 130 file-upload path for the relevant year and period.

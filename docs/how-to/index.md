@@ -1,26 +1,28 @@
 # How-to guides
 
-These guides take Cadrumo from local taxpayer records to a checked, exportable
-filing file. Cadrumo is the product; the Agencia Estatal de Administración
-Tributaria (AEAT) is the external tax authority. Cadrumo never submits a return
-or acts as AEAT. Read [how records become filing-ready
-figures](../explanation/from-records-to-figures.md) for that boundary, then pick
-the outcome closest to what you are trying to do.
+This page covers the task guides, grouped the way a filing year actually
+runs: set up who the taxpayer is, see what is due and when, keep the ledger
+of what happened, and prepare each filing. Cadrumo is the product; the
+Agencia Estatal de Administración Tributaria (AEAT) is the external tax
+authority, and Cadrumo never submits a return or acts as AEAT - read
+[how records become filing-ready figures](../explanation/from-records-to-figures.md)
+for that boundary, then pick the question closest to what you are trying to
+do.
 
-Start with the [source setup](../workstation-setup.md) if the `aeat` command
-does not run, or use the [quickstart](quickstart.md) for the shortest complete
-local workflow. For terminology, use the {doc}`glossary </_generated/glossary>`;
-for exact options and refusals, use the [command-line reference](../cli/index.rst).
+Start with the [workstation setup](../workstation-setup.md) if the `aeat`
+command does not run, or the [quickstart](quickstart.md) for the shortest
+complete local workflow. For terminology, use the
+{doc}`glossary </_generated/glossary>`; for exact options and refusals, the
+[command-line reference](../cli/index.rst).
 
 For an ordinary failure, follow [Diagnose and repair](troubleshooting.md) and
-open a [public issue](https://github.com/cadrumo/cadrumo/issues) with redacted
-output if the problem remains. Never publish taxpayer data, credentials, or a
-vulnerability in an issue. Follow the [security policy](../../SECURITY.md) for
-the private reporting route and its documented fallback.
+open a [public issue](https://github.com/nevenincs/cadrumo/issues) with
+redacted output if the problem remains. Never publish taxpayer data,
+credentials, or a vulnerability in an issue.
 
-## How do I start this?
+## Get started
 
-::::{grid} 1 2 2 3
+::::{grid} 1 2 2 2
 :gutter: 3
 
 :::{grid-item-card} Get Started
@@ -37,6 +39,15 @@ Map the whole journey from bank records to a filed modelo, stage by stage.
 Shortest path from profile and ledger to an exported modelo file.
 :::
 
+::::
+
+## Your profile
+
+Who the taxpayer is, and the facts that decide what you owe.
+
+::::{grid} 1 2 2 3
+:gutter: 3
+
 :::{grid-item-card} Set Up a Profile
 :link: profile-setup
 :link-type: doc
@@ -50,13 +61,6 @@ Create, inspect, switch, export, import, rename, or delete taxpayer profiles.
 
 Configure read-only AEAT authentication for live-read workflows.
 :::
-
-::::
-
-## What do I have to do?
-
-::::{grid} 1 2 2 3
-:gutter: 3
 
 :::{grid-item-card} Maintain Modelo 036 Censo Facts
 :link: censo-update
@@ -72,33 +76,53 @@ Keep AEAT census facts correct in the active profile.
 Ask which modelos apply to you and why, from your saved profile facts.
 :::
 
+:::{grid-item-card} Protect Data Access
+:link: protect-data-access
+:link-type: doc
+
+Set up a recovery key, change or recover your passphrase, lock, or reset.
+:::
+
+::::
+
+## Your calendar
+
+What is due, and when.
+
+::::{grid} 1 2 2 3
+:gutter: 3
+
 :::{grid-item-card} Filing Calendar
 :link: filing-calendar
 :link-type: doc
 
-See what may be due and when filing windows open and close.
-:::
-
-:::{grid-item-card} Filing Periods
-:link: filing-periods
-:link-type: doc
-
-Understand quarters, annual period codes, dates, and year-end.
+See what may be due, when filing windows open and close, and which period
+tokens address them.
 :::
 
 :::{grid-item-card} AEAT Notifications
 :link: check-aeat-notifications
 :link-type: doc
 
-Capture, list, and view official AEAT notifications from your electronic inbox.
+Capture official notifications and read live AEAT data, view-only.
 :::
 
-:::{grid-item-card} Read Live AEAT Data
-:link: read-live-aeat-data
+:::{grid-item-card} Filing Readiness
+:link: filing-readiness
 :link-type: doc
 
-Pull read-only data from AEAT: censo, notifications, filed returns, and receipts.
+Check readiness, dependencies, lifecycle history, and year-over-year deltas.
 :::
+
+::::
+
+## Your ledger
+
+The record of what happened: bring transactions in, classify them, and keep
+the evidence.
+
+::::{grid} 1 2 2 3
+:gutter: 3
 
 :::{grid-item-card} Work with Transactions
 :link: import-bank-statements
@@ -111,14 +135,15 @@ Import, add, edit, remove, and review ledger rows.
 :link: classify-transactions
 :link-type: doc
 
-Classify rows manually, in bulk, with allocation, or with LLM assistance.
+Classify rows manually, in bulk, with allocation, or through the review queue.
 :::
 
-:::{grid-item-card} Manage Business Invoices
-:link: manage-invoices
+:::{grid-item-card} LLM Classification
+:link: classify-with-llm
 :link-type: doc
 
-Record issued and received invoices and feed intra-community operations to Modelo 349.
+Set up a provider, preview and apply suggestions, and classify from an
+attached invoice.
 :::
 
 :::{grid-item-card} Attach Invoices and Receipts
@@ -128,6 +153,13 @@ Record issued and received invoices and feed intra-community operations to Model
 Store invoices and receipts and link them to the transactions they support.
 :::
 
+:::{grid-item-card} Manage Business Invoices
+:link: manage-invoices
+:link-type: doc
+
+Record issued and received invoices and feed intra-community operations to Modelo 349.
+:::
+
 :::{grid-item-card} Correct Ledger Mistakes
 :link: correct-ledger-entries
 :link-type: doc
@@ -135,18 +167,69 @@ Store invoices and receipts and link them to the transactions they support.
 Update, remove, split, merge, stash, or archive transactions safely.
 :::
 
-:::{grid-item-card} Review Queue
-:link: review-queue
+:::{grid-item-card} IVA Prorrata Deductions
+:link: prorrata
 :link-type: doc
 
-Work through everything that still wants attention before a filing.
+Deduct input IVA under general or especial prorrata and declare differentiated sectors.
 :::
 
-:::{grid-item-card} Record Modelo 036
+::::
+
+## Your filings
+
+The per-modelo work: prepare, review, verify, export, file, and reconcile.
+
+::::{grid} 1 2 2 3
+:gutter: 3
+
+:::{grid-item-card} Filing Workflow
+:link: filing-spine
+:link-type: doc
+
+Understand drafts, verification, export, filing markers, and history.
+:::
+
+:::{grid-item-card} Modelo 036
 :link: modelo-036
 :link-type: doc
 
 Record an alta, modificacion, or baja you filed at AEAT's sede.
+:::
+
+:::{grid-item-card} Modelo 100 (Renta)
+:link: modelo-100
+:link-type: doc
+
+Prepare the annual Renta declaration that gathers the whole year.
+:::
+
+:::{grid-item-card} Modelo 130
+:link: modelo-130
+:link-type: doc
+
+Prepare the quarterly IRPF instalment, cumulative across the year.
+:::
+
+:::{grid-item-card} Modelo 303
+:link: modelo-303
+:link-type: doc
+
+Prepare, verify, and export a quarterly IVA return.
+:::
+
+:::{grid-item-card} Modelo 349
+:link: modelo-349
+:link-type: doc
+
+Declare intra-community operations from your invoice records.
+:::
+
+:::{grid-item-card} Modelo 390
+:link: modelo-390
+:link-type: doc
+
+Prepare the annual IVA summary.
 :::
 
 :::{grid-item-card} Calculation Inputs
@@ -170,13 +253,6 @@ Export, edit, and pull back model calculations using a Google Sheets spreadsheet
 Run verification, read the report findings, and fix what blocks export.
 :::
 
-:::{grid-item-card} Filing Readiness
-:link: filing-readiness
-:link-type: doc
-
-Check readiness, dependencies, lifecycle history, and year-over-year deltas.
-:::
-
 :::{grid-item-card} File at AEAT
 :link: file-at-aeat
 :link-type: doc
@@ -188,77 +264,22 @@ Export the file, upload it at the AEAT portal yourself, record, and reconcile.
 :link: reconcile
 :link-type: doc
 
-Compare local filing data with the AEAT justificante.
-:::
-
-:::{grid-item-card} Filing Receipts
-:link: justificante-receipts
-:link-type: doc
-
-Pull, store, and inspect the AEAT justificante for each filed period.
+Pull and store the AEAT justificante, then compare it with your local filing
+record.
 :::
 
 ::::
 
-## How do I handle a specialist workflow?
+## Tools and help
 
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Filing Workflow
-:link: filing-spine
+:::{grid-item-card} Connect an Agent
+:link: connect-an-agent
 :link-type: doc
 
-Understand drafts, verification, export, filing markers, and history.
-:::
-
-:::{grid-item-card} Modelo 303
-:link: modelo-303
-:link-type: doc
-
-Prepare, verify, and export a quarterly IVA return.
-:::
-
-:::{grid-item-card} Modelo 390
-:link: modelo-390
-:link-type: doc
-
-Prepare the annual IVA summary.
-:::
-
-:::{grid-item-card} IVA Prorrata Deductions
-:link: prorrata
-:link-type: doc
-
-Deduct input IVA under general or especial prorrata and declare differentiated sectors.
-:::
-
-:::{grid-item-card} LLM Classification
-:link: classify-with-llm
-:link-type: doc
-
-Preview, apply, reject, or override local LLM suggestions.
-:::
-
-:::{grid-item-card} Classify from an Invoice
-:link: classify-with-llm-evidence
-:link-type: doc
-
-Read an attached invoice on-host to classify, with the consent and privacy rules.
-:::
-
-:::{grid-item-card} LLM Provider Setup
-:link: setup-llm-classification
-:link-type: doc
-
-Install and authenticate a provider CLI so LLM suggestions work.
-:::
-
-:::{grid-item-card} Protect Data Access
-:link: protect-data-access
-:link-type: doc
-
-Set up a recovery key, change or recover your passphrase, lock, or reset.
+Expose the toolset to Claude or any MCP client, with the safety boundary intact.
 :::
 
 :::{grid-item-card} Troubleshooting
@@ -287,34 +308,32 @@ records.
 onboarding
 quickstart
 profile-setup
+authenticate-with-aeat
 censo-update
 choose-modelo
+protect-data-access
 filing-calendar
-filing-periods
 check-aeat-notifications
-read-live-aeat-data
+filing-readiness
 import-bank-statements
 classify-transactions
+classify-with-llm
 ledger-evidence
 manage-invoices
 correct-ledger-entries
-review-queue
+prorrata
+filing-spine
 modelo-036
-classify-with-llm
-classify-with-llm-evidence
-setup-llm-classification
+modelo-100
+modelo-130
+modelo-303
+modelo-349
+modelo-390
 review-calculation-values
 review-with-google-sheets
-filing-spine
-modelo-303
-modelo-390
-prorrata
 verification-reports
-filing-readiness
 file-at-aeat
 reconcile
-justificante-receipts
-protect-data-access
+connect-an-agent
 troubleshooting
-authenticate-with-aeat
 ```

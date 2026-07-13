@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-02'
-modified: '2026-07-05'
+modified: '2026-07-10'
 related:
   - "[[2026-07-02-arch-remediation-gates-ratchet-plan]]"
 ---

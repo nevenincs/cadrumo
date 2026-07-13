@@ -421,8 +421,9 @@ docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
 # Serve documentation with live reload on docs/ and src/cadrumo/ edits. Binds every
-# interface on a non-default port; auto-picks a free port when PORT is omitted,
-# and attaches to (instead of colliding with) an already-running server.
+# interface on the docs' canonical port 8788, claimed strictly: attaches to a
+# healthy running server, evicts an invalid squatter, and errors rather than
+# drifting to another port. The first serve builds before opening the browser.
 docs-serve PORT="":
     uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 
@@ -443,6 +444,18 @@ docs-check:
     @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
+
+# Create or update the private Cadrumo docs stack.
+docs-stack-deploy:
+    uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
+
+# Build and publish the complete Cadrumo docs site.
+docs-deploy:
+    uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
+
+# Build and publish the Cadrumo landing page to the site root.
+frontend-deploy:
+    uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
 
 # ── Database migrations ──────────────────────────────────────────────────────
 

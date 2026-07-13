@@ -5,7 +5,7 @@ Cadrumo is a helper for preparing your Spanish tax forms.
 This is the landing page for Cadrumo and its `aeat` command-line interface (CLI). It shows how to
 turn local records into checked modelo figures and export files. You upload those
 files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
-project source is on [GitHub](https://github.com/cadrumo/cadrumo).
+project source is on [GitHub](https://github.com/nevenincs/cadrumo).
 
 Cadrumo is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The
@@ -74,21 +74,23 @@ tax-field decisions.
 Use this when you need to see which modelos are due and which period to prepare.
 :::
 
-:::{grid-item-card} Follow the filing workflow
+:::{grid-item-card} Prepare your filings
 :link: how-to/filing-spine
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this when you want the full repeatable loop: prepare, verify, export, file
-through AEAT, and keep local history.
+Use this for the repeatable loop - prepare, verify, export, file through
+AEAT, reconcile - and the per-modelo recipes: 036, 100 (Renta), 130, 303,
+349, and 390.
 :::
 
-:::{grid-item-card} Build your first Modelo 130 filing
+:::{grid-item-card} Follow a whole filing year
 :link: tutorials/index
 :link-type: doc
 :class-card: cadrumo-route-card
 
-A guided walkthrough from setup through the final local export.
+Two guided lifecycle tutorials: the income-tax year (Modelo 130 into the
+annual Renta) and the IVA year (Modelo 303 into the annual 390).
 :::
 
 ::::
@@ -116,6 +118,7 @@ runbooks/index
 :caption: Everyday use
 
 cli/index
+reference/index
 ```
 
 ```{toctree}
