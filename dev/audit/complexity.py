@@ -13,7 +13,7 @@ cyclomatic functions, a handful of sub-A maintainability files, and a dozen
 cognitive-complexity hotspots. Refactoring them all at once is infeasible and
 unsafe, so they are *grandfathered* into a committed baseline
 (``dev/audit/complexity_baseline.json``). Every baseline entry is a
-SPLIT-CANDIDATE that its owning campaign should pay down over time.
+SPLIT-CANDIDATE its owning area should pay down over time.
 
 The audit FAILS (exit 1) only on:
 
@@ -248,7 +248,7 @@ def build_baseline(cc: list[CcHit], mi: list[MiHit], cog: list[CogHit]) -> Basel
 
 _BASELINE_COMMENT = (
     "Grandfathered complexity debt for dev/audit/complexity.py. Each entry is a "
-    "SPLIT-CANDIDATE the owning campaign should pay down. Regenerate ONLY via "
+    "SPLIT-CANDIDATE its owning area should pay down. Regenerate ONLY via "
     "`python -m dev.audit.complexity --write-baseline` (production) or "
     "`python -m dev.audit.complexity --tests --write-baseline` when intentionally "
     "accepting new debt or after paying debt down. The 'production' and 'tests' "

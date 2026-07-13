@@ -152,7 +152,7 @@ def _revision_toml(modelo_id: str, revision_id: str) -> str:
         "legal_refs = []  # TODO\n"
         "source_refs = []  # TODO\n"
         "# Mandatory: cite the Orden(es) ministeriales that approve or amend this\n"
-        "# revision's form (period-revision-resolution ADR, Ruling 4 / D3).\n"
+        "# revision's form.\n"
         "orden_aplicabilidad = []  # TODO\n"
     )
 

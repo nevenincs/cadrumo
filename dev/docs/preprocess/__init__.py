@@ -17,12 +17,6 @@ corpus PDFs) emit, and serves two consumers from that one extraction truth:
   the repo-root ``.vaultragpreprocess.toml`` rules (the sidecars are
   ``.vaultragignore``-excluded from that index to avoid double counting).
 
-History: the sidecars began as the D6 interim of the 2026-06-10
-``docs-terminology-search`` ADR, authored when the walker had no
-preprocess-hook capability. The hook seam has since shipped upstream and is
-wired here; the sidecars stayed because the product grew onto them (ADR
-``2026-07-13-docs-terminology-search``, Update 1).
-
 Major declarations:
 
 * :class:`PreprocessOutput` -- the versioned strict extraction record.

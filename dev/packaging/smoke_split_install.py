@@ -95,11 +95,11 @@ print("split-companion-clean-ok")
 def _head_extract(repo_root: Path, work_dir: Path) -> Path:
     """Extract a pristine ``git archive HEAD`` tree to build the lane's wheels from.
 
-    The shared factory worktree carries concurrent campaigns' uncommitted WIP
-    (including registry TOML mid-edits) that a tree-built wheel would sweep into
-    this lane's registry-validation probes, failing them for reasons outside the
-    split contract. Building from the HEAD archive keeps the proof owner-clean;
-    on a clean checkout (CI) it is identical to the tree.
+    A working tree may carry uncommitted changes (including registry TOML
+    mid-edits) that a tree-built wheel would sweep into this lane's
+    registry-validation probes, failing them for reasons outside the split
+    contract. Building from the HEAD archive keeps the proof clean of
+    uncommitted state; on a clean checkout (CI) it is identical to the tree.
     """
     archive = work_dir / "head.zip"
     extract_root = work_dir / "head"

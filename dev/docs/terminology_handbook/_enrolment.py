@@ -3,8 +3,8 @@
 The scaffold enrols CONCEPT-GRADE vocabulary only -- the bounded set of
 enrolables (modelos, IVA categories, period codes, registry topics, CLI
 leaf verbs), each consumed through its existing authority, never
-re-parsed. Per ADR D4 the 18,885 casillas and the 262 legal provisions
-are PROJECTED at compile time (a separate compiler, W03.P07), never
+re-parsed. The 18,885 casillas and the 262 legal provisions
+are PROJECTED at compile time by a separate compiler, never
 scaffolded as Handbook concepts: turning a per-casilla or per-provision
 row into a curated concept recreates the bulk-enrolment disease the
 scale-control rule forbids. Legal provisions surface through concept
@@ -85,8 +85,8 @@ def collect_enrolment_candidates(
     every authority.
 
     ``cli_verbs`` defaults to False: CLI verbs are a searchable namespace
-    PROJECTED at compile time (W03.P07), not scaffolded as curated
-    concepts (ADR D4). The walker is retained behind the toggle so a
+    PROJECTED at compile time, not scaffolded as curated
+    concepts. The walker is retained behind the toggle so a
     future decision can revisit, but the default concept-grade set is the
     bounded modelo / IVA / period / topic axes.
 
