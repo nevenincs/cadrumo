@@ -68,10 +68,10 @@ import pytest
 from .....adapters.outbound.google import GoogleAuthAdcUnavailableError, load_credential_source_selection
 from .....adapters.outbound.storage import build_google_credentials
 from .....core import GoogleCredentialSourceKind
-from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.env_scope import scoped_env_var
-from .....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -91,21 +91,6 @@ _PROFILE_CREATE_ARGS = (
     "--quiet",
     "--accept-defaults",
 )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path):
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            cadrumo_token_dir=tmp_path / "tokens",
-            cadrumo_runs_dir=tmp_path / "runs",
-            cadrumo_financial_txs_dir=tmp_path / "txs",
-            cadrumo_invoices_dir=tmp_path / "invoices",
-            cadrumo_drafts_dir=tmp_path / "drafts",
-        ),
-    ):
-        yield
 
 
 def _create_profile(name: str = "google-credential-source-operator") -> str:

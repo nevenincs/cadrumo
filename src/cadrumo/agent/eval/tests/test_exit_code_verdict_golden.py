@@ -18,7 +18,7 @@ real CLI/registry output.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -27,10 +27,8 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
-from ....core.config import override_settings
 from ....core.json_contract import EnvelopeStatus
 from ....domain.transactions import (
     BusinessClassification,
@@ -44,7 +42,7 @@ from ....domain.transactions import (
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ExitCodeScenario, check_exit_code_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -55,19 +53,6 @@ _PERIOD = "1T"
 
 def _valid_commands() -> frozenset[str]:
     return frozenset(ref.command for ref in command_schema_refs())
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile() -> None:

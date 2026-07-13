@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -19,16 +16,6 @@ _MODELO = "100"
 _YEAR = "2025"
 _PERIOD = "0A"
 _REVISION = "2025"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_natural_person_profile() -> None:
