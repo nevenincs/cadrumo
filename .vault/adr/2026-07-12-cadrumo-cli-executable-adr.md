@@ -9,11 +9,11 @@ supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
 modified: '2026-07-12'
 ---
-# `cadrumo-cli-executable` adr: `Cadrumo product identity with AEAT CLI executable` | (**status:** `accepted`)
+# `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The accepted Cadrumo rename establishes the correct product/authority boundary,
+The accepted CADRUMO rename establishes the correct product/authority boundary,
 but its required human executable `cadrumo` conflicts with the approved current
 operator contract: the command-line executable remains `aeat`. Treating
 `aeat` as an old alias would create a false compatibility narrative; retaining
@@ -25,14 +25,14 @@ Python imports, configuration, persistence, and integrations.
 
 ## Considerations
 
-`Cadrumo` is the product name. AEAT remains the Spanish tax authority, its
+`CADRUMO` is the product name. AEAT remains the Spanish tax authority, its
 official protocol and evidence vocabulary, and the institution the product
 interacts with. These referents must stay distinct in active prose and runtime
 contracts.
 
 An executable name and a Python import root are independent interfaces. The
 approved executable is exactly `aeat`; the approved Python root is exactly
-`cadrumo`. The command must invoke the Cadrumo implementation directly. No
+`cadrumo`. The command must invoke the CADRUMO implementation directly. No
 second executable name, import fallback, wrapper package, or compatibility
 claim is permitted.
 
@@ -42,7 +42,7 @@ recommended human CLI spelling is the sole element overridden by this decision.
 
 ## Considered options
 
-- **Choose: Cadrumo product and import root with one canonical `aeat` CLI.**
+- **Choose: CADRUMO product and import root with one canonical `aeat` CLI.**
   This keeps the approved operator command stable while giving the product one
   direct runtime implementation.
 - **Reject: make `cadrumo` the human executable.** It contradicts the current
@@ -52,20 +52,20 @@ recommended human CLI spelling is the sole element overridden by this decision.
 - **Reject: provide an `aeat` Python package shim.** It creates a second import
   root and misleadingly conflates a command name with package compatibility.
 - **Reject: revert the product identity to AEAT.** It erases the required
-  distinction between Cadrumo as product and AEAT as authority.
+  distinction between CADRUMO as product and AEAT as authority.
 
 ## Constraints
 
-The canonical identity tuple is: display name `Cadrumo`; Python package and
+The canonical identity tuple is: display name `CADRUMO`; Python package and
 root distribution `cadrumo`; human command-line executable `aeat`; MCP
 executable `cadrumo-mcp`; product environment prefix `CADRUMO_`; and companion
 namespace `cadrumo_data`. The human executable is a deliberate, singular
 operator contract, not a legacy alias.
 
-The installed `aeat` entry point must resolve directly to the Cadrumo CLI
+The installed `aeat` entry point must resolve directly to the CADRUMO CLI
 callable. `import cadrumo` is the supported Python import; `import aeat` must
 not be restored or documented as supported. Product state and configuration
-continue to make one hard Cadrumo cut, with no dual reader or automatic old
+continue to make one hard CADRUMO cut, with no dual reader or automatic old
 state migration.
 
 Authority-owned `AEAT` names remain correct for official endpoints,
@@ -79,24 +79,24 @@ source of naming authority.
 
 > **Operator re-confirmation (2026-07-13).** During execution an agent re-flipped the
 > console script to `cadrumo` (commit `ecadfe08ba`, "restore canonical Cadrumo
-> executable"). The operator adjudicated explicitly: the product name Cadrumo is
+> executable"). The operator adjudicated explicitly: the product name CADRUMO is
 > binding for all user documentation, and the binary CLI command retains `aeat` —
 > this ADR remains binding. Do not rename the console script to `cadrumo`.
 
 ## Implementation
 
 Keep exactly one human CLI console-script declaration named `aeat`, pointed
-directly at the Cadrumo CLI entry callable, and retain the distinct MCP
-console-script declaration named `cadrumo-mcp`, pointed at the Cadrumo MCP
-entry callable. Keep all Cadrumo application code and Python imports under the
+directly at the CADRUMO CLI entry callable, and retain the distinct MCP
+console-script declaration named `cadrumo-mcp`, pointed at the CADRUMO MCP
+entry callable. Keep all CADRUMO application code and Python imports under the
 `cadrumo` root; remove or correct stale checks that demand an `aeat` import
 package instead of adding a shim.
 
 Project the same distinction into command help, user documentation, packaging
-proofs, developer tooling, and release checks: product prose says Cadrumo;
+proofs, developer tooling, and release checks: product prose says CADRUMO;
 operator invocations use `aeat`; authority interactions retain AEAT. Verify
 the installed artifact, not only source-tree imports: `aeat --help` must run
-the Cadrumo CLI, `import cadrumo` must succeed, and `import aeat` must not be a
+the CADRUMO CLI, `import cadrumo` must succeed, and `import aeat` must not be a
 supported compatibility path.
 
 ## Rationale
@@ -107,16 +107,16 @@ approved command contract supplies the missing distinction: executable naming
 is an operator interface, not evidence that the Python root or product brand is
 AEAT.
 
-One direct `aeat`-to-Cadrumo binding honors both facts. It removes the broken
+One direct `aeat`-to-CADRUMO binding honors both facts. It removes the broken
 partial-rename ambiguity without presenting `aeat` as a deprecated alias, and
 it preserves the no-shim rule where duplication would harm architecture rather
 than help operators.
 
 ## Consequences
 
-Active product material can consistently call the product Cadrumo while giving
+Active product material can consistently call the product CADRUMO while giving
 operators one truthful command to run. Import, packaging, and documentation
-gates gain an unambiguous three-part proof: Cadrumo import succeeds, `aeat`
+gates gain an unambiguous three-part proof: `cadrumo` import succeeds, `aeat`
 executes it, and no `aeat` import compatibility surface exists.
 
 The exception means zero-occurrence brand checks are invalid: `aeat` remains
