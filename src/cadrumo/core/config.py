@@ -290,7 +290,7 @@ class Settings(AeatIntegrationSettings):
             "Backend for `cadrumo.adapters.outbound.storage`. "
             "Accepted values: local_filesystem (default), google_drive, in_memory. "
             "google_drive additionally requires cadrumo_google_drive_root_folder_id "
-            "and a per-profile registered OAuth client + token via `aeat config google`."
+            "and a per-profile registered OAuth client + token via `cadrumo config google`."
         ),
     )
     cadrumo_local_storage_root: Path = Field(
@@ -369,7 +369,7 @@ class Settings(AeatIntegrationSettings):
         default=False,
         description=(
             "Force ANSI colour output even when stdout is not a TTY. "
-            "Operators set this when piping cadrumo output through a terminal "
+            "Operators set this when piping Cadrumo output through a terminal "
             "renderer (less -R, gh actions, etc.). Defaults to False; the "
             "should_use_color() helper consults this and the standard NO_COLOR "
             "convention through Settings rather than reading os.environ directly."
@@ -578,7 +578,7 @@ class Settings(AeatIntegrationSettings):
     aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
-            "Default auth provider for `aeat config auth status` / `test` when "
+            "Default auth provider for `cadrumo config auth status` / `test` when "
             "--provider is omitted. When None, the CLI auto-selects the "
             "first configured provider from the canonical registry order."
         ),
@@ -588,7 +588,7 @@ class Settings(AeatIntegrationSettings):
     aeat_clave_movil_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
+            "Taxpayer DNI/NIE for `cadrumo config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
             "identity and to pre-fill the non-QR fallback form. AEAT-regulated "
             "personal identifier under Spanish tax law; typed as SecretStr to "
@@ -652,7 +652,7 @@ class Settings(AeatIntegrationSettings):
     aeat_clave_permanente_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat config auth configure "
+            "Taxpayer DNI/NIE for `cadrumo config auth configure "
             "--provider clave_permanente`. Used as the Cl@ve IdP login "
             "username and to stamp the persisted session with the "
             "operator's identity. AEAT-regulated personal identifier "
@@ -837,7 +837,7 @@ class Settings(AeatIntegrationSettings):
     cadrumo_inbox_alert_lead_days: int = Field(
         default=7,
         description=(
-            "Lead window (days) for `cadrumo inbox next-deadline`: surface CRITICAL/HIGH "
+            "Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH "
             "notifications whose appeal_deadline falls within the next N days"
         ),
     )
@@ -861,7 +861,7 @@ class Settings(AeatIntegrationSettings):
     cadrumo_m210_engine_live: bool = Field(
         default=False,
         description=(
-            "Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo "
+            "Gate the M210 IRNR Phase 1 engine. When False (default) `cadrumo app modelo "
             "work create --modelo 210` emits the Path-B refusal stub. When True "
             "the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen "
             "dispatch + representante-fiscal predicate + cuota composition). "
@@ -1049,7 +1049,7 @@ class Settings(AeatIntegrationSettings):
         ``<cadrumo_local_storage_root>/logs`` so the diagnostic log lives
         inside the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT``
         scopes — consistent with the token directory. A system-wide
-        ``~/.config/aeat/logs/aeat.log`` mixes every workspace's (and
+        ``~/.config/cadrumo/logs/cadrumo.log`` mixes every workspace's (and
         every test run's) records into a single file; rooting the log
         under the storage root keeps each workspace's diagnostics
         isolated.
