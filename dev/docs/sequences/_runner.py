@@ -48,6 +48,7 @@ JSON, and the values captured from that frame.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import time
@@ -57,6 +58,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Literal
 
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
@@ -84,6 +86,7 @@ __all__ = [
     "SANDBOX_PROFILE_ID",
     "SANDBOX_PROFILE_LABEL",
     "CapturedValue",
+    "EnvelopeSource",
     "FrameExecution",
     "SequenceSandbox",
     "SequenceTranscript",
@@ -162,15 +165,26 @@ class CapturedValue(BaseModel):
     value: CapturedScalar
 
 
+#: Which stream carried a frame's parsed JSON envelope: the success envelope
+#: rides stdout; the refusal error document (which shares the envelope spine,
+#: per the CLI notices standard) rides stderr.
+EnvelopeSource = Literal["stdout", "stderr"]
+
+
 class FrameExecution(BaseModel):
     """The executed record of one sequence frame.
 
     ``command_line`` is the authored line (placeholders intact); ``argv`` is the
     command as actually executed, after ``{name}`` interpolation, leading with
-    the ``aeat`` executable token. ``output`` is the verbatim CLI output.
-    ``envelope`` is the parsed JSON document when the output parses as a JSON
-    object (the pre-mask captured :class:`~cadrumo.core.json_contract.SchemaEnvelope`
-    the golden store persists), otherwise ``None`` for a text frame.
+    the ``aeat`` executable token. ``output`` is the verbatim stdout and
+    ``stderr`` the verbatim stderr — recorded separately so a refusal's
+    error document is a first-class, golden-able artifact. ``envelope`` is the
+    parsed JSON document (the pre-mask captured
+    :class:`~cadrumo.core.json_contract.SchemaEnvelope`), resolved
+    stdout-first-then-stderr: a success envelope is emitted on stdout, a
+    refusal's error document on stderr, and both share the envelope spine.
+    ``envelope_source`` names the carrying stream (``None`` for a pure text
+    frame).
     """
 
     model_config = _STRICT_FROZEN
@@ -180,7 +194,9 @@ class FrameExecution(BaseModel):
     argv: tuple[str, ...] = Field(min_length=1)
     exit_code: int
     output: str
+    stderr: str = ""
     envelope: dict[str, JsonValue] | None = None
+    envelope_source: EnvelopeSource | None = None
     captured: tuple[CapturedValue, ...] = Field(default=())
 
 
@@ -241,10 +257,23 @@ def _frame_at(frame: SequenceFrame) -> str:
 
 
 def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
-    """Return the argv tokens that mark ``frame`` as a live-AEAT invocation."""
+    """Return the argv tokens that mark ``frame`` as a live-AEAT invocation.
+
+    A token immediately following an option token is treated as that option's
+    value and skipped (so ``--file pull-history.csv`` never false-refuses); an
+    ``=``-joined value rides its option token and is skipped with it. A bare
+    positional value spelled ``live``/``pull`` would still refuse — the scan is
+    deliberately fail-closed, and the refusal names the offending token so a
+    false refusal is instantly diagnosable.
+    """
     flagged: list[str] = []
+    previous_was_option = False
     for token in frame.argv[1:]:
-        if token.startswith("-") or "{" in token:
+        if token.startswith("-"):
+            previous_was_option = "=" not in token
+            continue
+        if previous_was_option or "{" in token:
+            previous_was_option = False
             continue
         if token in _LIVE_TOKENS or token.startswith(_PULL_VERB_PREFIX):
             flagged.append(token)
@@ -492,8 +521,16 @@ def _capture_values(
 
 
 def _invoke_frame(args: tuple[str, ...]) -> Result:
-    """Invoke the cached CLI, retrying only on the transient registry-write race."""
+    """Invoke the cached CLI, retrying only on the transient registry-write race.
+
+    The race exists only in the shared development worktree where peer agents
+    edit the registry TOML tree mid-load; under CI the tree is static, so any
+    marker match there is a genuine failure and the retry loop is skipped
+    entirely rather than burning bounded-retry latency in front of it.
+    """
     result = invoke_cached_cli(list(args))
+    if os.environ.get("CI"):
+        return result
     tries = 1
     while (
         tries < _TRANSIENT_RETRY_ATTEMPTS
@@ -515,7 +552,12 @@ def _execute_frame(
     """Execute one frame, enforce its exit code, and thread its captures."""
     argv = _resolved_argv(frame, captures)
     result = _invoke_frame(argv[1:])
-    output = result.output
+    # The runner records the two streams separately: ``Result.output`` under
+    # this Click version is the COMBINED capture, so read the split
+    # ``stdout``/``stderr`` properties — a refusal's error document (which
+    # rides stderr) must be a first-class, golden-able artifact.
+    output = result.stdout
+    stderr = result.stderr
 
     expected_exit = _expected_exit_code(frame, sequence.sequence_id)
     if result.exit_code != expected_exit:
@@ -526,10 +568,19 @@ def _execute_frame(
             f"{expected_exit} (declare a non-zero expectation with "
             f"'@expect {_EXIT_CODE_PATH} == <n>'){cause}\n"
             f"  argv: {' '.join(argv)}\n"
-            f"  output tail: {output[-2000:]!r}",
+            f"  stdout tail: {output[-1500:]!r}\n"
+            f"  stderr tail: {stderr[-1500:]!r}",
         )
 
+    # Envelope resolution is stdout-first-then-stderr: the success envelope is
+    # emitted on stdout; the refusal error document — which shares the envelope
+    # spine per the CLI notices standard — on stderr.
     envelope = _parse_envelope(output)
+    envelope_source: EnvelopeSource | None = "stdout" if envelope is not None else None
+    if envelope is None:
+        envelope = _parse_envelope(stderr)
+        envelope_source = "stderr" if envelope is not None else None
+
     captured = _capture_values(
         frame,
         envelope,
@@ -545,7 +596,9 @@ def _execute_frame(
         argv=argv,
         exit_code=result.exit_code,
         output=output,
+        stderr=stderr,
         envelope=envelope,
+        envelope_source=envelope_source,
         captured=captured,
     )
 

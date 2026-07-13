@@ -181,6 +181,50 @@ class TestLiveAeatRefusal:
         # The refusal precedes the sandbox: nothing was provisioned or executed.
         assert not sandbox_root.exists()
 
+    def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
+        """The scan skips option VALUES: '--file pull-history.csv' is a local
+        file input, not a live verb (the reviewer-named false positive)."""
+        from .._runner import _live_aeat_tokens
+
+        benign = _result_sequence(
+            "@setup aeat app ledger import --file pull-history.csv\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n',
+            sequence_id="runner-option-value-scan",
+        )
+        assert _live_aeat_tokens(benign.frames[0]) == ()
+
+
+class TestStderrErrorDocument:
+    def test_declared_refusal_records_the_stderr_error_envelope(self, tmp_path: Path) -> None:
+        """A frame that fails via the stderr error-document path is a
+        first-class transcript artifact: the error envelope (which shares the
+        success spine) parses from stderr, ``envelope_source`` names the
+        stream, and ``@expect`` json-paths evaluate against it."""
+        missing_id = "deadbeef" * 8
+        sequence = _result_sequence(
+            f"aeat --format json app modelo work calculate {missing_id}\n"
+            "@expect exit_code == 2\n"
+            '@expect error.code == "REFUSED_CLI_BOUNDARY"\n'
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n',
+            sequence_id="runner-stderr-envelope",
+        )
+        transcript = execute_sequence(sequence, sandbox_root=tmp_path / "stderr-envelope")
+
+        refusal = transcript.frames[0]
+        assert refusal.exit_code == 2
+        assert refusal.stderr, "the refusal must carry the stderr error document"
+        assert refusal.envelope is not None
+        assert refusal.envelope_source == "stderr"
+        error = refusal.envelope["error"]
+        assert isinstance(error, dict)
+        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+
+        success = transcript.result_frame
+        assert success.envelope_source == "stdout"
+        assert success.stderr == ""
+
 
 class TestCaptureFailureDiagnostics:
     def test_capture_against_text_output_names_the_json_requirement(self, tmp_path: Path) -> None:

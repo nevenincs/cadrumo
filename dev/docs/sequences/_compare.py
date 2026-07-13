@@ -122,37 +122,56 @@ def compare_transcript_to_golden(
             live_view = {item.name: item.value for item in actual.captured}
             problems.append(f"{at}: captured values diverged — golden {golden_view!r}, live {live_view!r}")
 
+        # Envelope tier: golden and live must agree on whether a JSON envelope
+        # exists and on which stream carried it (a success envelope moving to
+        # a stderr error document — or vice versa — is a behavioural change).
         if expected.envelope is not None:
             if actual.envelope is None:
                 problems.append(
-                    f"{at}: the golden expects a JSON envelope but the live output is not a "
-                    f"JSON document (output starts: {actual.output[:120]!r})",
+                    f"{at}: the golden expects a JSON envelope (on {expected.envelope_source}) "
+                    f"but the live output carries none "
+                    f"(stdout starts: {actual.output[:120]!r})",
                 )
-                continue
-            masked_expected = mask_document(expected.envelope)
-            masked_actual = mask_document(actual.envelope)
-            if canonicalise(masked_expected) != canonicalise(masked_actual):
-                diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
-                problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
-            continue
-
-        # Text frame: the golden stores normalised text; normalise the live
-        # output with THIS run's sandbox paths and masked ids, then compare
-        # exactly.
-        if actual.envelope is not None:
+            else:
+                if expected.envelope_source != actual.envelope_source:
+                    problems.append(
+                        f"{at}: the envelope moved streams — golden on "
+                        f"{expected.envelope_source}, live on {actual.envelope_source}",
+                    )
+                masked_expected = mask_document(expected.envelope)
+                masked_actual = mask_document(actual.envelope)
+                if canonicalise(masked_expected) != canonicalise(masked_actual):
+                    diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
+                    problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
+        elif actual.envelope is not None:
             problems.append(
-                f"{at}: the golden expects text output but the live output is now a JSON envelope",
+                f"{at}: the golden expects no JSON envelope but the live output now carries "
+                f"one on {actual.envelope_source}",
             )
-            continue
-        live_text = normalise_text_output(
-            actual.output,
-            storage_root=transcript.storage_root,
-            workdir=transcript.workdir,
-            masked_values=live_masked_values,
-        )
-        expected_text = expected.text if expected.text is not None else ""
-        if live_text != expected_text:
-            problems.append(f"{at}: text output diverged:\n{_unified_diff(expected_text, live_text)}")
+
+        # Text tier: each stream that did not carry the envelope compares by
+        # exact equality after the declared narrow normalisation (the golden
+        # stores normalised text; the live side normalises with THIS run's
+        # sandbox paths and masked ids). ``None`` reads as the empty stream.
+        def _normalised_live(raw: str) -> str:
+            return normalise_text_output(
+                raw,
+                storage_root=transcript.storage_root,
+                workdir=transcript.workdir,
+                masked_values=live_masked_values,
+            )
+
+        if actual.envelope_source != "stdout" and expected.envelope_source != "stdout":
+            live_text = _normalised_live(actual.output)
+            expected_text = expected.text if expected.text is not None else ""
+            if live_text != expected_text:
+                problems.append(f"{at}: stdout text diverged:\n{_unified_diff(expected_text, live_text)}")
+
+        if actual.envelope_source != "stderr" and expected.envelope_source != "stderr":
+            live_stderr = _normalised_live(actual.stderr)
+            expected_stderr = expected.stderr_text if expected.stderr_text is not None else ""
+            if live_stderr != expected_stderr:
+                problems.append(f"{at}: stderr text diverged:\n{_unified_diff(expected_stderr, live_stderr)}")
 
     return tuple(problems)
 
