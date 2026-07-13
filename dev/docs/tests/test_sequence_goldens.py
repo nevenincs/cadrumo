@@ -10,13 +10,16 @@ executor and comparison path (W02.P05.S18; ADR D3). Three interlocking claims:
    surface that residual is EMPTY — with the clock frozen and the profile id
    injected, every reachable identifier is content-addressed or pinned — which
    is trivially within the central ``GOLDEN_MASK_FIELDS``.
-2. **The masked-field canary.** The centrally-masked surrogate keys
-   (``snapshot_id``, ``run_id``) are today emitted ONLY by live-AEAT surfaces,
-   which are unenrollable by design (ADR D6), so no sandbox sequence can
-   surface them organically. This gate pins that fact: if a masked key ever
-   appears in an enrollable envelope, the canary fails loudly and claim 1 must
-   be extended to a sequence that genuinely exercises the flap — the gate
-   cannot silently rot into vacuity.
+2. **The masked-field canary.** No hermetic-reachable enrollable envelope
+   surfaces a centrally-masked surrogate key (``snapshot_id``, ``run_id``) in
+   a fresh sandbox today: every ``snapshot_id`` emitter is a live-AEAT surface
+   (unenrollable by design, ADR D6), and the one enrollable non-live ``run_id``
+   carrier — the ``app diagnostics runs`` payload — lists per-run rows that are
+   empty in a fresh sandbox, so the key never materialises. The representative
+   sequence deliberately includes that diagnostics read so the canary scans the
+   nearest surface that COULD emit a masked key. If one ever appears, the
+   canary fails loudly and claim 1 must be extended to a sequence that
+   genuinely exercises the flap — the gate cannot silently rot into vacuity.
 3. **The mask bites exactly the declared set — through the real compare
    path.** A masked-field value difference injected into a REAL golden/live
    pair compares CLEAN (the mask hides it), while the same difference under
@@ -47,9 +50,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _PAGE = "tutorials/anti-tautology-gate"
 
-#: The representative sequence: a real capture-threaded JSON read chain.
+#: The representative sequence: a real capture-threaded JSON read chain. The
+#: ``app diagnostics runs`` frame is deliberate: its payload is the one
+#: enrollable non-live surface whose schema carries a masked key (``run_id``
+#: per run row), so the canary below scans the nearest surface that could emit
+#: one — in a fresh hermetic sandbox the run list is empty and the key never
+#: materialises.
 _BODY = "\n".join(
     [
+        "aeat --format json app diagnostics runs",
         "aeat --format json config profile list",
         "@capture run_status status",
         "@result aeat --format json config profile list",
@@ -135,11 +144,13 @@ class TestExecutorMaskHonesty:
         self,
         double_run: tuple[SequenceTranscript, SequenceTranscript],
     ) -> None:
-        """Claim 2 (canary): today the masked surrogate keys live only on
-        unenrollable live-AEAT surfaces. If this ever fails, an enrollable
-        envelope has started emitting a masked field — extend the double-run
-        proof above to a sequence that genuinely exercises that flap before
-        touching this assertion."""
+        """Claim 2 (canary): no hermetic-reachable enrollable envelope surfaces
+        a masked key in a fresh sandbox. The scan includes the one enrollable
+        non-live surface whose SCHEMA carries ``run_id`` (``app diagnostics
+        runs``) — its per-run rows are empty in a fresh sandbox. If this ever
+        fails, an enrollable envelope has started emitting a masked field —
+        extend the double-run proof above to a sequence that genuinely
+        exercises that flap before touching this assertion."""
         first, _ = double_run
         seen: set[str] = set()
         for frame in first.frames:

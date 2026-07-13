@@ -10,12 +10,20 @@ outside.
 This module exposes the frame-grammar parser (ADR rulings D1 / D4), the
 ``:seed:`` recipe loader (ADR D6), the per-sequence hermetic sandbox runner
 with ``@capture`` threading (ADR D6 / D3), the committed golden store (ADR D2),
-and the golden comparison plus ``@expect`` evaluation tier (ADR D3 / D4). The
-refresh/check CLI lands in the next phase and extends this facade.
+the golden comparison plus ``@expect`` evaluation tier (ADR D3 / D4), and the
+discovery/refresh/check engine functions behind ``python -m dev.docs.sequences``
+— the one execution path the Sphinx build hook and the pytest gate both wire.
 """
 
 from __future__ import annotations
 
+from .__main__ import (
+    DiscoveredSequence,
+    check_sequences,
+    default_docs_root,
+    discover_sequences,
+    refresh_sequences,
+)
 from ._compare import (
     assert_transcript_matches_golden,
     check_transcript,
@@ -75,6 +83,7 @@ __all__ = [
     "SEED_SUFFIX",
     "CaptureBinding",
     "CapturedValue",
+    "DiscoveredSequence",
     "EnvelopeSource",
     "ExpectAssertion",
     "FrameExecution",
@@ -92,11 +101,14 @@ __all__ = [
     "SequenceTranscript",
     "assert_transcript_matches_golden",
     "build_golden",
+    "check_sequences",
     "check_transcript",
     "compare_transcript_to_golden",
+    "default_docs_root",
     "default_fixtures_root",
     "default_goldens_root",
     "default_seeds_root",
+    "discover_sequences",
     "evaluate_expectations",
     "execute_sequence",
     "golden_path",
@@ -107,6 +119,7 @@ __all__ = [
     "parse_sequence",
     "read_golden",
     "refresh_invocation",
+    "refresh_sequences",
     "sequence_sandbox",
     "write_golden",
 ]
