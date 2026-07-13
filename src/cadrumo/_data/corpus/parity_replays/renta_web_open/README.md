@@ -58,5 +58,5 @@ both the payload and the Playwright trace.
 Without these payloads, the registry's chain-behaviour scenarios
 verify only registry self-consistency. With these payloads, every
 formula's output is independently confirmed by AEAT's own
-calculator. This is the grounding mandate the plan's Phase H6
-enforces (see `.vault/plan/2026-05-07-renta-full-coverage-plan.md`).
+calculator. An engine value is only externally grounded when a
+bundled replay payload carries the expected figure for it.
