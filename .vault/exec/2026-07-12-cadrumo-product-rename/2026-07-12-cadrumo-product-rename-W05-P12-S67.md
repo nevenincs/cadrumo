@@ -3,44 +3,11 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-13'
 step_id: 'S67'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S67 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Regenerate locale scaffold output and pass locale parity checks and ## Scope
-
-- `generated locale scaffold` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Regenerate locale scaffold output and pass locale parity checks
 
@@ -50,23 +17,114 @@ related:
 
 ## Description
 
-- Run the authoritative locale scaffold under isolated Cadrumo local state after S65 and S66 landed.
-- Translate all thirty generated keys in English, Spanish, Catalan, and Hungarian through `python -m cadrumo.locales set` only.
-- Cover cross-period findings, verification/workflow recovery guidance, formula-operation labels, and Click help/error fragments.
-- Preserve AEAT in agency/censo/evidence meanings and leave the intentional-identical authority unchanged.
-- Verify scaffold parity, codebase audit, YAML, Unicode, placeholder removal, and translation honesty.
+- Re-run the authoritative production locale scaffold in write mode under
+  isolated valid CADRUMO local state after the complete corrective catalogue,
+  authority, and validator ancestry landed and passed independent review.
+- Prove the write is an exact byte no-op before running the production scaffold
+  check and audit commands.
+- Verify identical key sets, exact string leaf types, production placeholder
+  parity, product and command residue, valid machine identifiers, and preserved
+  AEAT authority vocabulary across Catalan, English, Spanish, and Hungarian.
+- Run the complete owned i18n, locale, parity, translation-honesty, and root-help
+  test slice plus live `aeat --language` help in all four languages.
+- Close only S67 while preserving every other plan checkbox.
 
 ## Outcome
 
-All four catalogues contain the complete codebase key set, and every generated
-leaf has a language-specific value with preserved placeholders. No scaffold
-placeholder or Unicode replacement character remains, and the honesty ratchet
-passes without an allowlist change.
+The production `python -m cadrumo.locales scaffold` write completed under a
+fresh isolated valid unsecured state and changed zero bytes. Catalan remains
+442,017 bytes with SHA-256
+`9A4BBE39A1DCA9B4B42175D5DAF1DAECC0E0BCEBD354F52E759BFEFDE30BC5CC`;
+English remains 403,956 bytes with
+`06C2550F40D46982ADBBBA713D3031B1BB54CEBBE1141C80340F749C6F70325B`;
+Spanish remains 449,246 bytes with
+`2D97F3174AA18D65ECFBE5856A6D4FCF015606AFB54447610DE85BAFCD8E3A72`;
+and Hungarian remains 458,599 bytes with
+`9F659FD5A312A7B1B1B5219A43B00285E3F3BD8CEEF81F90F6C03D2CEFE30F9B`.
+
+All four catalogues have the same 3,702-key set, every leaf has runtime type
+exactly `str`, and every production placeholder-map digest is
+`ECF9F59F5BF1E0228F5FD6836595940F7B9150C7824453C8B1DC771DC8CEC918`.
+Production audit and `scaffold --check` both report all four catalogues `ok`.
+There are zero exact `Cadrumo` values and zero production-classified
+command-leading lowercase `cadrumo` references.
+
+The complete owned acceptance slice passed 76 tests. Live help for `es`, `en`,
+`ca`, and `hu` exited zero in every language; each output contains one exact
+`CADRUMO` product display, two `AEAT` authority references, and 27 lowercase
+`aeat` command references, with zero exact `Cadrumo` and zero stale lowercase
+`cadrumo` commands.
 
 ## Notes
 
-- A stale S65 background locale writer overlapped the first scaffold attempt and malformed `ca.yml`. The writer was terminated, the catalogue was reconstructed byte-for-byte from the committed S65 blob through `apply_patch`, and work resumed only after the atomic locale-manager fix `4a3511c9d6` landed.
-- An interrupted translation pass left forty-five explicit placeholders; inspection identified them precisely and they were filled through targeted locale CLI calls rather than another bulk transformation.
-- `scaffold --check` and `audit` report every catalogue `ok`; twenty-two focused parity, honesty, coverage, positional, and locale-CLI tests pass.
-- Three broader CLI tests still fail because current non-S67 command constants emit `aeat` or compare persisted `cadrumo` actions against `aeat` constants. The localized Catalan/Hungarian prose is selected correctly; S67 does not modify those command authorities.
-- No child `cadrumo.locales` process remained at final verification, and `_intentional_identical.json` was unchanged.
+### Historical execution evidence
+
+The first S67 execution at `3a5ac58ba0` generated and translated thirty then-new
+keys in all four languages. A stale S65 background writer overlapped its first
+scaffold attempt and malformed `ca.yml`; the writer was terminated, the
+catalogue was reconstructed byte-for-byte from the committed S65 blob through
+an explicit patch, and work resumed only after atomic locale-manager fix
+`4a3511c9d6` landed. An interrupted translation pass left forty-five explicit
+placeholders. Those exact leaves were inspected and filled through targeted
+production locale CLI calls rather than another bulk transformation. That pass
+reported clean scaffold and audit output, 22 focused tests, three broader
+command-authority failures outside S67, no remaining child locale process, and
+an unchanged intentional-identical allowlist. These incidents remain historical
+evidence; they are not replayed or hidden by the corrective no-op proof.
+
+### Corrective ancestry
+
+S89 implementation `2d976745ee` and PASS audit `b634581f60` established the
+shared 3,702-string-key catalogue baseline. S90 implementation `934a20eaaf` and
+PASS audit `5f70903315` restored the binding `CADRUMO` display while retaining
+the `aeat` executable and `AEAT` authority. S91 implementation `ee4bb7f9ad` was
+failed by audit `9b372bba70`; S92 implementation `e513202907` fixed both HIGH
+formatter findings and PASS audit `ee4f25296a` accepted them. S91 closure
+`a2a83ec6be` and PASS re-review `28dac1a2f5` then accepted the production
+validator in its scoped lane.
+
+S93 implementation `9ea3b77f24` restored the identity tuple but FAIL audit
+`ef9bbc64fe` found false descendant closures. S94 implementation
+`132f9b5352` reopened them and PASS audit `1ab78e5176` cleared that plan blocker.
+S95's logical authority repair across `f70329749d` and `3db2049e84` was failed
+by audit `bb97babbd5` because a second accepted ADR remained. S96 implementation
+`db4976fdc0` repaired the reciprocal graph but FAIL audit `9cb59a4444` found a
+contradictory historical status note. S97 implementation `b17f29e140` removed
+that last semantic conflict, and PASS audit `cc57185b09` established the active
+binding matrix used here.
+
+S62 implementation `6226f2fe57` and PASS audit `fc7c25b0af` restored shared
+help and locale-maintenance expectations. The catalogue restorations then
+landed and passed independent review in order: S63 `8644548342` /
+`5087f0cf67`, S64 `2dbbdbb89a` / `47295b569d`, S65 `56fea16316` /
+`b5a2a07e71`, and S66 `6c11c6c08c` with evidence clarification
+`084ee2e18c` / PASS audit `efb1f48a22`. This ancestry leaves the checked-out
+catalogues at the exact hashes proven by the no-op write above.
+
+### Identity and verification classification
+
+The remaining lowercase product-stem values are intentional machine settings
+or storage history: `cadrumo-vault/` appears once in every catalogue, and
+`cadrumo_secret_store_backend` appears once in Spanish and once in Hungarian.
+Human command guidance remains lowercase `aeat`. `AEAT`, `AEAT_*`, and each
+`registry/aeat` path remain authority-owned. Exact catalogue counts are:
+Catalan 13 `CADRUMO`, 21 `CADRUMO_`, 225 lowercase `aeat`, 227 standalone
+`AEAT`, four `AEAT_`, and one `registry/aeat`; English 10, 21, 227, 220, four,
+and one respectively; Spanish seven, 20, 225, 234, four, and one; and Hungarian
+six, 20, 217, 222, four, and one.
+
+The 76-test run covered the complete core i18n and locale test directories,
+catalogue parity, translation honesty, and root-help shape. No locale YAML,
+intentional-identical allowlist, production code, CLI, documentation,
+packaging, or generated scaffold derivative changed in this closure.
+
+Plan validation, feature frontmatter, modified-stamp, Markdown, placeholder,
+and annotation checks all exit zero; plan validation retains the known
+non-monotonic `PLAN022` warning, and the S67 record has no remaining scaffold
+annotation. The feature-surface gate has no owned Python path for Ruff or
+test-module discovery, so the explicit 76-test acceptance slice supplies the
+runtime evidence. The broad feature-tagged Vault check remains nonzero on 348
+pre-existing shared-corpus errors and 81 warnings: 319 legacy filename-shape
+errors, 29 unrelated feature-folder integrity errors, old modified stamps and
+annotations, and the stale feature index. References, schema, ADR status,
+rename integrity, encoding, and every S67-owned document check are clean.
