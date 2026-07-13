@@ -62,4 +62,4 @@ def test_real_wheels_match_the_deferred_authority_sequence(tmp_path: Path) -> No
     assert "bundled_authority" not in _ADVISORY_PROBE
     assert "load_registry_tree" in _ADVISORY_PROBE
     assert "bundled_authority" in _CLEAN_PROBE
-    assert _venv_cadrumo(tmp_path).name == ("cadrumo.exe" if os.name == "nt" else "cadrumo")
+    assert _venv_cadrumo(tmp_path).name == ("aeat.exe" if os.name == "nt" else "aeat")
