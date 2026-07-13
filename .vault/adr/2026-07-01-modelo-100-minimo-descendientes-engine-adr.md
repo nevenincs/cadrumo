@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-07-02'
+modified: '2026-07-10'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
   - '[[2026-05-27-descendant-profile-axis-adr]]'
+  - '[[2026-07-10-modelo-100-minimo-descendientes-engine-research]]'
 ---
 
 # `modelo-100-minimo-descendientes-engine` adr: `Modelo 100 minimo por descendientes engine: compute 0513/0514 vs manual` | (**status:** `accepted`)

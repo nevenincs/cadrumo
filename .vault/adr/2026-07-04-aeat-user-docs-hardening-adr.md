@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#aeat-user-docs-hardening'
 date: '2026-07-04'
-modified: '2026-07-08'
+modified: '2026-07-10'
 related:
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'
+  - '[[2026-07-10-aeat-user-docs-hardening-research]]'
 ---
 
 # `aeat-user-docs-hardening` adr: `user docs hardening authority alignment` | (**status:** `accepted`)

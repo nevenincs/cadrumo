@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#test-docstring-dev-metadata'
 date: '2026-07-08'
-modified: '2026-07-08'
-related: []
+modified: '2026-07-10'
+related:
+  - '[[2026-07-10-test-docstring-dev-metadata-research]]'
 ---
 
 # `test-docstring-dev-metadata` adr: `test docstrings and comments must not carry dev/campaign metadata` | (**status:** `accepted`)

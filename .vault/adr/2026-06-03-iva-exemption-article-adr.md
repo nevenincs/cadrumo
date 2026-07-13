@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#iva-exemption-article'
+  - "#adr"
+  - "#iva-exemption-article"
 date: '2026-06-03'
-modified: '2026-07-08'
 related:
   - "[[2026-06-03-iva-exemption-article-research]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
+superseded_by: '2026-07-11-article-20-uno-26-correction-adr'
+modified: '2026-07-11'
 ---
-
-# `iva-exemption-article` adr: `IvaExemptionArticle discriminator on Transaction` | (**status:** `accepted`)
+# `iva-exemption-article` adr: `IvaExemptionArticle discriminator on Transaction` | (**status:** `superseded`)
 
 ## Problem Statement
 

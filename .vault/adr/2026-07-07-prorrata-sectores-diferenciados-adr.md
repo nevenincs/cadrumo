@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#prorrata-sectores-diferenciados'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-10'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
+  - '[[2026-07-10-prorrata-sectores-diferenciados-research]]'
 ---
 
 # `prorrata-sectores-diferenciados` adr: `Sectores diferenciados de actividad (LIVA arts 9.1.c/101): sector assignment, per-sector register orchestration and provisional/definitive lifecycle` | (**status:** `proposed`)

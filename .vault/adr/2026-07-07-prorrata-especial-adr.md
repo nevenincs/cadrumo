@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#prorrata-especial'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-10'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
+  - '[[2026-07-10-prorrata-especial-research]]'
 ---
 
 # `prorrata-especial` adr: `Prorrata especial per-input classification (LIVA arts 103.Dos/106): 100/0/prorrata deduction and the +10% mandatory-especial advisory` | (**status:** `proposed`)

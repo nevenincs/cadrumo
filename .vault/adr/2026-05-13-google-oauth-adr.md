@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#google-oauth'
+  - "#adr"
+  - "#google-oauth"
 date: '2026-05-13'
-modified: '2026-07-08'
 related:
   - "[[2026-05-12-google-oauth-adr]]"
   - "[[2026-05-08-google-oauth-adr]]"
   - "[[2026-05-06-google-oauth-research]]"
   - "[[2026-05-06-secure-persistence-enforcement-adr]]"
+superseded_by: '2026-07-12-google-oauth-adr'
+modified: '2026-07-12'
 ---
-
-# `google-oauth` adr: `Drive bucket hierarchy, naming, atomicity, and sync state` | (**status:** `accepted`)
+# `google-oauth` adr: `Drive bucket hierarchy, naming, atomicity, and sync state` | (**status:** `superseded`)
 
 ## Problem Statement
 
