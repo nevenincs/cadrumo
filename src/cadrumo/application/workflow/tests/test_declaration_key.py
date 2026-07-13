@@ -46,7 +46,7 @@ def test_declaration_key_uses_separated_period_identity() -> None:
 
 def test_declaration_key_rejects_combined_string_period() -> None:
     combined_period = cast(Any, "2025Q1")
-    with pytest.raises(TypeError, match=r"aeat\.core\.Period"):
+    with pytest.raises(TypeError, match=r"cadrumo\.core\.Period"):
         declaration_key("130", combined_period)
 
 

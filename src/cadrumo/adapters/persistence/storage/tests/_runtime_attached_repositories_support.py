@@ -784,7 +784,7 @@ def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
 
 def _repair_decision(label: str) -> RepairRemediationDecision:
     decided_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
-    target_namespace = "aeat-test.runtime.attached"
+    target_namespace = "cadrumo-test.runtime.attached"
     reason = f"runtime attached repair decision {label}"
     likely_origin = "runtime family gate"
     decision_id = repair_remediation_decision_id(

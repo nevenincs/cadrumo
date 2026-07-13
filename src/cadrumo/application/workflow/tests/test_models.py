@@ -65,7 +65,7 @@ class TestComputeRunId:
     def test_rejects_combined_string_period(self) -> None:
         """A combined token must not enter the workflow run-id contract."""
         combined_period = cast(Any, "2026Q1")
-        with pytest.raises(TypeError, match=r"aeat\.core\.Period"):
+        with pytest.raises(TypeError, match=r"cadrumo\.core\.Period"):
             compute_run_id(
                 tax_id="X1234567L",
                 modelo="130",

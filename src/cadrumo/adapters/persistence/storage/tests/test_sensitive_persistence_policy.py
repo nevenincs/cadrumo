@@ -82,6 +82,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "secure storage rotation writes encrypted envelope payloads only",
     (
+        "src/cadrumo/locales/manager.py",
+        "_rewrite_locale_mapping",
+        "tempfile.NamedTemporaryFile",
+    ): "locale catalogue maintenance rewrites source-tree YAML translations only, no user data",
+    (
         "src/cadrumo/domain/calculations/registry/_validate_evidence.py",
         "_write_disk_cache",
         "tempfile.NamedTemporaryFile",

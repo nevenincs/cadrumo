@@ -268,8 +268,8 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert "aeat config profile history" in config_text
     assert "aeat app invoice" not in app_text
     assert "aeat app declaration" not in app_text
-    assert "aeat app" not in root_text + config_text + app_text
-    assert "aeat config" not in root_text + config_text + app_text
+    assert "cadrumo app" not in root_text + config_text + app_text
+    assert "cadrumo config" not in root_text + config_text + app_text
 
 
 def test_help_command_rows_are_backed_by_mounted_command_families() -> None:
@@ -283,7 +283,7 @@ def test_help_command_rows_are_backed_by_mounted_command_families() -> None:
                 if " -> " in entry.command or "rejected" in entry.command:
                     continue
                 tokens = entry.command.split()
-                assert tokens[0] == "cadrumo"
+                assert tokens[0] == "aeat"
                 assert (tokens[1], tokens[2]) in mounted
 
 
