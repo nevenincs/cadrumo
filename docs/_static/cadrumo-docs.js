@@ -641,20 +641,25 @@
     var total = frames.length;
     var current = 0;
 
-    /* Output disclosure: every frame's result/output block is individually
-     * toggleable by the reader; the command line itself is never hideable.
-     * Stepping OPENS the newly active frame's output and never closes any
-     * other — what the reader opened stays open until they close it. The
-     * toggle is JS-created, so a no-JS reader sees everything. */
-    var OUTPUT_SELECTOR =
-      ".cadrumo-frame-output, .cadrumo-frame-stderr, .cadrumo-verify, .cadrumo-expects";
+    /* Output disclosure: each frame's output/stderr block is toggleable by the
+     * reader and ONLY by the reader — stepping the playhead never opens or
+     * closes an output. The verification caption and its checks stay visible
+     * (they are narration, not output). The toggle is a real labelled button
+     * with an SVG chevron icon; it is JS-created, so a no-JS reader sees
+     * everything. */
+    var OUTPUT_SELECTOR = ".cadrumo-frame-output, .cadrumo-frame-stderr";
+    var CHEVRON_SVG =
+      '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+      '<path d="M5 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     function setOutputOpen(frame, open) {
       frame.classList.toggle("is-output-open", open);
       var toggle = frame.querySelector(".cadrumo-output-toggle");
       if (toggle) {
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        toggle.textContent = open ? "▾" : "▸";
+        var label = toggle.querySelector(".cadrumo-output-toggle-label");
+        if (label) label.textContent = open ? "Hide output" : "Show output";
       }
     }
 
@@ -663,7 +668,12 @@
       var toggle = document.createElement("button");
       toggle.type = "button";
       toggle.className = "cadrumo-output-toggle";
-      toggle.setAttribute("aria-label", "Show or hide this command's output");
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.innerHTML = CHEVRON_SVG; // static icon markup, no user data
+      var label = document.createElement("span");
+      label.className = "cadrumo-output-toggle-label";
+      label.textContent = "Show output";
+      toggle.appendChild(label);
       var command = frame.querySelector(".cadrumo-frame-command");
       if (command && command.parentNode === frame) {
         frame.insertBefore(toggle, command.nextSibling);
@@ -705,12 +715,11 @@
       frames.forEach(function (frame, index) {
         // Commands are always visible; only the playhead state changes. The CSS
         // keys on these classes to dim future commands (and drop their
-        // highlighting). Stepping opens the active frame's output additively —
-        // it never closes an output the reader has open.
+        // highlighting). Output disclosure is entirely the reader's: stepping
+        // neither opens nor closes any output.
         frame.classList.toggle("is-active", index === current);
         frame.classList.toggle("is-past", index < current);
         frame.classList.toggle("is-future", index > current);
-        if (index === current) setOutputOpen(frame, true);
       });
       indicator.textContent = current + 1 + " / " + total;
       prevBtn.disabled = current === 0;
@@ -813,9 +822,11 @@
 
     var activeToken = null;
     var intended = null;
+    var pinned = false;
 
     function hide() {
       popover.hidden = true;
+      pinned = false;
       if (activeToken) {
         activeToken.removeAttribute("aria-describedby");
         activeToken = null;
@@ -851,8 +862,21 @@
       return li;
     }
 
-    function renderNode(node, optionName) {
+    function renderNode(node, optionName, isPinned) {
       popover.textContent = "";
+      if (isPinned) {
+        // A clicked-open popup carries its own explicit close control.
+        var close = document.createElement("button");
+        close.type = "button";
+        close.className = "cadrumo-cli-popover-close";
+        close.setAttribute("aria-label", "Close help");
+        close.textContent = "×";
+        close.addEventListener("click", function () {
+          intended = null;
+          hide();
+        });
+        popover.appendChild(close);
+      }
       appendLine("cadrumo-cli-popover-path", (node.path || []).join(" "));
       appendLine("cadrumo-cli-popover-usage", node.usage);
       appendLine("cadrumo-cli-popover-help", node.help);
@@ -894,7 +918,7 @@
       popover.style.top = Math.round(top) + "px";
     }
 
-    function show(token) {
+    function show(token, pin) {
       var key = token.getAttribute("data-command-path");
       if (!key) return;
       intended = token;
@@ -902,40 +926,58 @@
         if (!tree || intended !== token) return; // pointer/focus moved on
         var node = tree[key];
         if (!node) return;
-        renderNode(node, token.getAttribute("data-option"));
+        renderNode(node, token.getAttribute("data-option"), pin === true);
         popover.hidden = false;
+        pinned = pin === true;
         activeToken = token;
         token.setAttribute("aria-describedby", popover.id);
         positionNear(token);
+        // The popup must always be fully visible: when the viewport-clamped
+        // position still leaves it partly off-canvas, scroll it into view.
+        popover.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
 
     tokens.forEach(function (token) {
       if (!token.hasAttribute("tabindex")) token.setAttribute("tabindex", "0");
+      // Hover/focus give a transient preview; click PINS the popup until its
+      // close button, Escape, an outside click, or another token's pin.
       token.addEventListener("mouseenter", function () {
-        show(token);
+        if (!pinned) show(token, false);
       });
       token.addEventListener("mouseleave", function () {
-        intended = null;
-        hide();
+        if (!pinned) {
+          intended = null;
+          hide();
+        }
       });
       token.addEventListener("focus", function () {
-        show(token);
+        if (!pinned) show(token, false);
       });
       token.addEventListener("blur", function () {
-        intended = null;
-        hide();
+        if (!pinned) {
+          intended = null;
+          hide();
+        }
       });
-      // Touch: a tap toggles the popover for the tapped token.
       token.addEventListener("click", function (event) {
         event.preventDefault();
-        if (activeToken === token) {
+        event.stopPropagation();
+        if (pinned && activeToken === token) {
           intended = null;
           hide();
         } else {
-          show(token);
+          show(token, true);
         }
       });
+    });
+
+    // An outside click dismisses a pinned popup (clicks inside it stay).
+    document.addEventListener("click", function (event) {
+      if (pinned && !popover.hidden && !popover.contains(event.target)) {
+        intended = null;
+        hide();
+      }
     });
 
     document.addEventListener("keydown", function (event) {
