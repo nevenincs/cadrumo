@@ -1,13 +1,12 @@
 """Regime-switched compatibility-lifecycle policy for persisted formats.
 
-Two operator directives pull apart across time. Pre-release, the
-``no-legacy-compatibility`` rule stands unchanged: delete-not-migrate,
-durability floors chase the current version, no read-tolerance of
-pre-current shapes. Post-release, struct compatibility and multi-year
-persistence of a taxpayer's filed data become MUSTs. This module owns the
-transition the durability substrate left ungoverned — WHEN the posture
-flips, WHAT flips, and WHAT enforces it — as a DORMANT, regime-switched
-policy that is a no-op today and activates on a one-line, ADR-gated flip.
+Compatibility posture pulls apart across time. Pre-release, the posture is
+delete-not-migrate: durability floors chase the current version, and there
+is no read-tolerance of pre-current shapes. Post-release, struct
+compatibility and multi-year persistence of a taxpayer's filed data become
+MUSTs. This module owns the transition — WHEN the posture flips, WHAT
+flips, and WHAT enforces it — as a DORMANT, regime-switched policy that is
+a no-op today and activates on a one-line flip.
 
 :data:`COMPATIBILITY_REGIME` is a one-way repo-committed constant. While it
 is :attr:`CompatibilityRegime.PRE_RELEASE` the policy predicates are
@@ -19,13 +18,7 @@ cross-version fixture coverage for any version above the frozen floor.
 
 The predicates are PURE: every fact they judge on is an explicit parameter,
 so the ``RELEASED`` branch is proven correct by synthetic-input tests
-without monkeypatching the enforcing gate — the no-patching constraint the
-``2026-07-08-released-data-durability-adr`` set for its lineage gates.
-
-Governing vault record
-    ``2026-07-09-compatibility-lifecycle-adr`` (regime-switched dormant
-    durability governance), building on
-    ``2026-07-08-released-data-durability-adr`` (the per-format mechanism).
+without monkeypatching the enforcing gate.
 """
 
 from __future__ import annotations
@@ -53,10 +46,10 @@ class CompatibilityRegime(StrEnum):
 
 
 #: The one-way compatibility regime of this codebase commit. Flipped to
-#: :attr:`CompatibilityRegime.RELEASED` ONLY by an accepted checkpoint ADR
-#: whose flip commit also freezes :data:`RELEASED_FORMAT_FLOORS` at the
-#: then-current per-format floors. There is no path back to
-#: ``PRE_RELEASE`` — release is a one-way door.
+#: :attr:`CompatibilityRegime.RELEASED` ONLY by a checkpoint commit that
+#: also freezes :data:`RELEASED_FORMAT_FLOORS` at the then-current
+#: per-format floors. There is no path back to ``PRE_RELEASE`` — release is
+#: a one-way door.
 COMPATIBILITY_REGIME: Final[CompatibilityRegime] = CompatibilityRegime.PRE_RELEASE
 
 #: The per-format durability floors frozen at the release checkpoint, keyed
