@@ -1,0 +1,63 @@
+"""Registry disk-cache directory resolution after the cache-root relocation.
+
+The cross-process registry pickle formerly always defaulted into the shared OS
+temp directory. Production now derives ``<cadrumo_local_storage_root>/cache/registry``;
+the pytest cross-worker share keeps the host temp directory (xdist workers each
+get a per-pid storage root, so deriving from it would defeat the single-compile
+sharing); an explicit override always wins. These tests exercise the pure
+resolver with real inputs and the live accessor under pytest.
+"""
+
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+
+import pytest
+
+from .._loader_cache import (
+    _resolve_registry_disk_cache_dir,
+    registry_disk_cache_dir,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_production_derives_cache_registry_under_storage_root(tmp_path: Path) -> None:
+    resolved = _resolve_registry_disk_cache_dir(
+        override=None,
+        under_pytest=False,
+        storage_root=tmp_path / "state",
+    )
+    assert resolved == tmp_path / "state" / "cache" / "registry"
+
+
+def test_pytest_without_override_uses_host_shared_temp(tmp_path: Path) -> None:
+    resolved = _resolve_registry_disk_cache_dir(
+        override=None,
+        under_pytest=True,
+        storage_root=tmp_path / "state",
+    )
+    assert resolved == Path(tempfile.gettempdir())
+
+
+def test_explicit_override_wins_in_either_environment(tmp_path: Path) -> None:
+    override = tmp_path / "operator-cache"
+    for under_pytest in (True, False):
+        resolved = _resolve_registry_disk_cache_dir(
+            override=override,
+            under_pytest=under_pytest,
+            storage_root=tmp_path / "state",
+        )
+        assert resolved == override
+
+
+def test_live_accessor_under_pytest_returns_host_temp() -> None:
+    # With no override, the live accessor resolves the host-shared temp
+    # directory under pytest, keeping the bundled-root pickle shared across
+    # xdist workers. Clear any ambient override so the assertion is
+    # deterministic regardless of a sibling test's environment.
+    from .....core.config import override_settings
+
+    with override_settings(cadrumo_registry_disk_cache_dir=None):
+        assert registry_disk_cache_dir() == Path(tempfile.gettempdir())
