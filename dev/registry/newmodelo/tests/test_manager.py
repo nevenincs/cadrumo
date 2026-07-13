@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.domain.calculations.registry import RegistryLoadError
+from cadrumo.domain.calculations.registry import RegistryLoadError
 
 from ..checklist import CHECKLIST, render_checklist
 from ..manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
@@ -176,15 +176,14 @@ def test_scaffold_force_bypasses_the_foreign_manifest_guard(tmp_path: Path) -> N
     assert result.written
 
 
-def test_scaffolded_tree_loads_as_a_valid_directory_mode_modelo_definition(tmp_path: Path) -> None:
-    """The scaffolded skeleton is valid enough for the registry loader's directory-mode reader.
+def test_scaffolded_tree_reaches_directory_mode_validation(tmp_path: Path) -> None:
+    """The scaffolded skeleton reaches semantic registry validation.
 
-    This does not assert the modelo is calc-grade (it is a placeholder skeleton — every
-    array section is empty), only that ``load_modelo_directory`` accepts the on-disk shape
-    the scaffold produces: a real end-to-end proof that the generated tree matches the
-    loader's directory-mode contract, not merely a hand-asserted file-existence check.
+    The real directory loader can read the generated on-disk structure, then rejects its
+    deliberately incomplete TODO metadata. This proves the scaffold reaches semantic
+    validation rather than failing earlier on a malformed directory layout.
     """
-    from aeat.domain.calculations.registry._loader import load_modelo_directory
+    from cadrumo.domain.calculations.registry._loader import load_modelo_directory
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
