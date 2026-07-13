@@ -28,20 +28,28 @@ related:
 
 ## Outcome
 
-The installed `aeat` entry point now renders `aeat` in generated usage lines,
-recognises its real-process argument stream, and reports `CADRUMO 0.1.1` on the
-short version surface. The runtime derives each value from the canonical
-product identity rather than duplicating a command or display literal.
+Commit `0589de6f0fab3e238998bd0d57f8be07c5903df4` landed the runtime
+mechanics: the installed `aeat` entry point renders `aeat` in generated usage
+lines, recognises its real-process argument stream, and reports `CADRUMO 0.1.1`
+on the short version surface. Those values derive from the canonical product
+identity rather than duplicated command or display literals.
 
 Twenty focused integration tests passed across state-free help and version,
 cold startup, installed-console discovery, former-state refusal, and curated
 help resolution. The live absence probe confirmed that `cadrumo` is not a
 human executable.
 
+Formal review did not accept S25 as complete. Live `aeat --help` still fails
+the Step's help acceptance contract, so S25 remains open pending the
+locale-authority work in S62-S67 and a real installed-console assertion for
+the corrected output.
+
 ## Notes
 
 The default Spanish root-help catalogue still contains title-case `Cadrumo`
 and two `cadrumo <comando>` guidance lines. Those catalogue-owned strings were
-not changed in this runtime step; the reopened locale-authority Steps S62-S67
-remain responsible for replacing them through the locale CLI. No compatibility
-executable, Python import shim, state reader, or migration path was added.
+not changed in the runtime mechanics commit. The formal review therefore found
+the checked Step dishonest and S25 was reopened through the plan CLI. The
+locale-authority Steps S62-S67 remain responsible for replacing the strings
+through the locale CLI before S25 can close. No compatibility executable,
+Python import shim, state reader, or migration path was added.
