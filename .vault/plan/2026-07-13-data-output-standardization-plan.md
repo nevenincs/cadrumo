@@ -9,6 +9,15 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `data-output-standardization` plan
 
@@ -44,7 +53,7 @@ Rotating log handler and retention prunes for the unbounded artifact families, f
 
 - [x] `W02.P03.S09` - Replace the plain FileHandler with a size-capped rotating handler for cadrumo.log; `src/cadrumo/core/logging.py`.
 - [x] `W02.P03.S10` - Add retention-days pruning to the LLM response cache and usage JSONL following the run-telemetry precedent; `src/cadrumo/adapters/outbound/llm`.
-- [ ] `W02.P03.S11` - Add retention pruning for per-run trace directories; `src/cadrumo/core/observability/_store.py`.
+- [x] `W02.P03.S11` - Add retention pruning for per-run trace directories; `src/cadrumo/core/observability/_store.py`.
 - [ ] `W02.P03.S12` - Add retention pruning for wallet diagnostic dump files; `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
 
 ### Phase `W02.P04` - Lifecycle gate
@@ -96,6 +105,7 @@ One shared two-tier atomic-write helper; migrate all four dialects onto it.
 - [x] `W05.P08.S23` - Author the shared two-tier atomic-write helper with the hardened master-key pattern as the strong tier; `src/cadrumo/core`.
 - [x] `W05.P08.S24` - Migrate the weak no-fsync atomic-write variants onto the helper; `bucket pointer, outbound local store, bucket manifest, corpus bundle`.
 - [x] `W05.P08.S25` - Migrate the remaining stem-sibling atomic-write sites onto the helper; `envelope, blob store, secret store, rotation, env_io, corpus manifest, locales`.
+- [ ] `W05.P08.S31` - Migrate the outbound local store sidecar write onto the atomic-write helper closing the torn object-plus-sidecar crash window; `src/cadrumo/adapters/outbound/storage/_local.py`.
 
 ### Phase `W05.P09` - Test isolation
 
