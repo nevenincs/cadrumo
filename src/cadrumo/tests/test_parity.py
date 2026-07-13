@@ -172,8 +172,8 @@ def test_set_locale_value_falls_back_for_multiline_scalar_that_looks_like_a_key(
     assert _leaf(data, "cli", "app", "modelo", "work", "next_action") == "Run aeat app modelo work calculate."
 
 
-def test_set_locale_value_canonicalizes_product_identity(tmp_path: Path):
-    """Locale maintenance writes the canonical product display and human CLI."""
+def test_set_locale_value_canonicalizes_human_cli_without_rewriting_product_prose(tmp_path: Path):
+    """Locale maintenance preserves product prose while canonicalizing the human CLI."""
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()
     locale_path = locales_dir / "en.yml"
@@ -188,7 +188,7 @@ def test_set_locale_value_canonicalizes_product_identity(tmp_path: Path):
 
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "root", "next_action") == (
-        "CADRUMO prepares the draft; run aeat app modelo work calculate."
+        "Cadrumo prepares the draft; run aeat app modelo work calculate."
     )
 
 
@@ -215,7 +215,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
     for locale in ("ca", "en"):
         data = temp_manager.load_locale(locales_dir / f"{locale}.yml")
         assert _leaf(data, "cli", "root", "next_action") == (
-            "CADRUMO prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
+            "Cadrumo prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
         )
         assert _leaf(data, "product", "machine_names") == (
             "Install cadrumo; launch cadrumo-mcp; read cadrumo://status."
@@ -247,12 +247,8 @@ def test_canonicalize_product_identity_cli_selects_only_one_supported_locale(tmp
     assert result.exit_code == 0, result.output
     assert "1 locale catalogue(s)" in result.output
     en_data = manager.load_locale(locales_dir / "en.yml")
-    assert _leaf(en_data, "product", "guidance") == (
-        "CADRUMO works with AEAT; run aeat app overview status."
-    )
-    assert {
-        locale: (locales_dir / f"{locale}.yml").read_bytes() for locale in sibling_bytes
-    } == sibling_bytes
+    assert _leaf(en_data, "product", "guidance") == ("Cadrumo works with AEAT; run aeat app overview status.")
+    assert {locale: (locales_dir / f"{locale}.yml").read_bytes() for locale in sibling_bytes} == sibling_bytes
 
 
 def test_canonicalize_product_identity_cli_rejects_invalid_locale_without_writing(tmp_path: Path) -> None:
@@ -295,9 +291,7 @@ def test_canonicalize_product_identity_cli_omission_updates_every_catalogue(tmp_
     assert "4 locale catalogue(s)" in result.output
     for locale in OutputLanguage:
         data = manager.load_locale(locales_dir / f"{locale.value}.yml")
-        assert _leaf(data, "product", "guidance") == (
-            "CADRUMO works with AEAT; run aeat config profile status."
-        )
+        assert _leaf(data, "product", "guidance") == ("Cadrumo works with AEAT; run aeat config profile status.")
 
 
 def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
