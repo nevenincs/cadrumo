@@ -341,7 +341,6 @@ dev = [
   "sphinx-design>=0.6",
   "sphinx-notfound-page>=1.1",
   "sphinxext-opengraph>=0.9",
-  "sphinx-sitemap>=2.6",
   # Hover tooltip cards on :term: cross-references. With hoverxref_roles=["term"],
   # every :term: reference to a generated glossary entry shows the definition on
   # hover - the curated short description surfaces without a page load. The

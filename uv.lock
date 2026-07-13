@@ -276,7 +276,6 @@ dev = [
     { name = "sphinx-hoverxref" },
     { name = "sphinx-markdown-builder" },
     { name = "sphinx-notfound-page" },
-    { name = "sphinx-sitemap" },
     { name = "sphinxcontrib-mermaid" },
     { name = "sphinxext-opengraph" },
     { name = "syrupy" },
@@ -386,7 +385,6 @@ dev = [
     { name = "sphinx-hoverxref", specifier = ">=1.4" },
     { name = "sphinx-markdown-builder", specifier = ">=0.6" },
     { name = "sphinx-notfound-page", specifier = ">=1.1" },
-    { name = "sphinx-sitemap", specifier = ">=2.6" },
     { name = "sphinxcontrib-mermaid", specifier = ">=1.0" },
     { name = "sphinxext-opengraph", specifier = ">=0.9" },
     { name = "syrupy", specifier = ">=4.7.0" },
@@ -3423,18 +3421,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sphinx-last-updated-by-git"
-version = "0.3.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "sphinx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/03/fd/de1685b6dab173dff31da24e0d3b29f02873fc24a1cdbb7678721ddc8581/sphinx_last_updated_by_git-0.3.8.tar.gz", hash = "sha256:c145011f4609d841805b69a9300099fc02fed8f5bb9e5bcef77d97aea97b7761", size = 10785, upload-time = "2024-08-11T07:15:54.601Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/fb/e496f16fa11fbe2dbdd0b5e306ede153dfed050aae4766fc89d500720dc7/sphinx_last_updated_by_git-0.3.8-py3-none-any.whl", hash = "sha256:6382c8285ac1f222483a58569b78c0371af5e55f7fbf9c01e5e8a72d6fdfa499", size = 8580, upload-time = "2024-08-11T07:15:53.244Z" },
-]
-
-[[package]]
 name = "sphinx-markdown-builder"
 version = "0.6.10"
 source = { registry = "https://pypi.org/simple" }
@@ -3458,18 +3444,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6a/b2/67603444a8ee97b4a8ea71b0a9d6bab1727ed65e362c87e02f818ee57b8a/sphinx_notfound_page-1.1.0.tar.gz", hash = "sha256:913e1754370bb3db201d9300d458a8b8b5fb22e9246a816643a819a9ea2b8067", size = 7392, upload-time = "2025-01-28T18:45:02.871Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/d4/019fe439c840a7966012bbb95ccbdd81c5c10271749706793b43beb05145/sphinx_notfound_page-1.1.0-py3-none-any.whl", hash = "sha256:835dc76ff7914577a1f58d80a2c8418fb6138c0932c8da8adce4d9096fbcd389", size = 8167, upload-time = "2025-01-28T18:45:00.465Z" },
-]
-
-[[package]]
-name = "sphinx-sitemap"
-version = "2.9.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "sphinx-last-updated-by-git" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/61/17/56fe0f65e3567f829b2b4153a622be1d4b222b781e0d90d7db5a7738f30f/sphinx_sitemap-2.9.0.tar.gz", hash = "sha256:70f97bcdf444e3d68e118355cf82a1f54c4d3c03d651cd17fe87398b26e25e21", size = 6978, upload-time = "2025-10-06T00:24:00.036Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/94/3c57e8b1985e755c48972e2ecd59526d4bf0b52a1fe805bc52a8e98cb92d/sphinx_sitemap-2.9.0-py3-none-any.whl", hash = "sha256:f1f1d3a9ad012ba17a7ef0b560d303bff2d0db26647567d6e810bcc754466664", size = 6218, upload-time = "2025-10-06T00:23:58.778Z" },
 ]
 
 [[package]]
