@@ -28,7 +28,7 @@ Each source has its own guide with the exact commands:
   (Value Added Tax) compensation balance - see
   [Check AEAT notifications and live observations](check-aeat-notifications.md).
 - Filing receipts (*justificante*) for periods you filed - see
-  [Pull and keep your filing receipts](justificante-receipts.md).
+  [Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).
 
 ## How a live read works
 
@@ -95,6 +95,6 @@ on that page before you take the issue to the project's issue tracker.
 - [Authenticate with AEAT](authenticate-with-aeat.md)
 - [Link Modelo 036 census information](censo-update.md)
 - [Check AEAT notifications and live observations](check-aeat-notifications.md)
-- [Pull and keep your filing receipts](justificante-receipts.md)
+- [Reconcile a filed modelo against its justificante](reconcile.md)
 - [Recording a filing and the boundary](../explanation/recording-a-filing-and-the-boundary.md)
 - [CLI reference](../cli/index.rst)
