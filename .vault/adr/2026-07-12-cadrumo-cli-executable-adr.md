@@ -7,7 +7,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
-modified: '2026-07-12'
+modified: '2026-07-13'
 ---
 # `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)
 
@@ -37,8 +37,9 @@ second executable name, import fallback, wrapper package, or compatibility
 claim is permitted.
 
 The parent rename research remains applicable to the package move, generated
-artifacts, release naming, state boundary, and authority-owned terminology. Its
-recommended human CLI spelling is the sole element overridden by this decision.
+artifacts, release naming, state boundary, and authority-owned terminology. This
+decision overrides two elements of the parent tuple: the product display casing
+is exactly `CADRUMO`, and the sole human CLI executable is exactly `aeat`.
 
 ## Considered options
 
@@ -56,11 +57,23 @@ recommended human CLI spelling is the sole element overridden by this decision.
 
 ## Constraints
 
-The canonical identity tuple is: display name `CADRUMO`; Python package and
-root distribution `cadrumo`; human command-line executable `aeat`; MCP
-executable `cadrumo-mcp`; product environment prefix `CADRUMO_`; and companion
-namespace `cadrumo_data`. The human executable is a deliberate, singular
-operator contract, not a legacy alias.
+The complete canonical identity matrix is:
+
+- product display name: `CADRUMO`;
+- Python package, root distribution, and repository identifier: `cadrumo`;
+- sole human command-line executable: `aeat`;
+- MCP server identifier, tool prefix, and resource URI scheme: `cadrumo`;
+- plugin identifier: `cadrumo`;
+- MCP executable: `cadrumo-mcp`;
+- product environment prefix: `CADRUMO_`;
+- companion distributions: `cadrumo-data-manuals` and
+  `cadrumo-data-official`;
+- companion namespace: `cadrumo_data`; and
+- Spanish tax authority short name: `AEAT`.
+
+The human executable is a deliberate, singular operator contract, not a legacy
+alias. Lowercase `cadrumo` remains correct for the listed machine identities; it
+is not the human executable or the product display casing.
 
 The installed `aeat` entry point must resolve directly to the CADRUMO CLI
 callable. `import cadrumo` is the supported Python import; `import aeat` must
@@ -72,10 +85,9 @@ Authority-owned `AEAT` names remain correct for official endpoints,
 credentials, legal provenance, registry classifications, evidence, and
 statements about the counterparty. The previously accepted packaging,
 resource-boundary, compatibility-lifecycle, persistence, and safety decisions
-remain stable constraints. This ADR only changes the human executable element
-of the renamed product tuple and supersedes the prior rename ADR as its active
-source of naming authority.
-
+remain stable constraints. This ADR changes the human executable and product
+display casing elements of the renamed product tuple and supersedes the prior
+rename ADR as its active source of naming authority.
 
 > **Operator re-confirmation (2026-07-13).** During execution an agent re-flipped the
 > console script to `cadrumo` (commit `ecadfe08ba`, "restore canonical Cadrumo
