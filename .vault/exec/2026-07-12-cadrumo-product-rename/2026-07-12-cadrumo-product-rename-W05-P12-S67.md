@@ -128,3 +128,37 @@ pre-existing shared-corpus errors and 81 warnings: 319 legacy filename-shape
 errors, 29 unrelated feature-folder integrity errors, old modified stamps and
 annotations, and the stale feature index. References, schema, ADR status,
 rename integrity, encoding, and every S67-owned document check are clean.
+
+## S87 contextual acceptance correction
+
+Authority Step S87 at `03cd792be3` replaces the absolute all-caps premise with
+the binding contextual contract: sentence prose uses `Cadrumo`, identity
+headings may use `CADRUMO`, the human executable is `aeat`, machine identifiers
+use `cadrumo` or `CADRUMO_` as defined by the identity tuple, and the Spanish
+authority remains `AEAT`. Earlier zero-`Cadrumo` claims above are historical
+evidence only.
+
+The authoritative scaffold write is byte-for-byte a no-op after S63 through
+S66. Final hashes are English
+`6241114C3A643E9F60283E526386080A7AD31D7A965012221F956A557D594426`,
+Spanish
+`02C6765D56B101DDF3F9E81833DC55A47A62CE033319FC7A0EEE9BC9EA996104`,
+Catalan
+`D202C2F634134F4E172FFFF01B8DDE81551D11BD43766FE43CFD7CAE7F93A428`,
+and Hungarian
+`D61AF25DF70D31B8BAC73B15C457F1C82EAD95E05C5ABDF332B2E71F8BE26716`.
+No catalogue value changed in this Step.
+
+The final acceptance gate asserts the exact sentence-prose key sets—seven
+English, three Spanish, nine Catalan, and three Hungarian—and the exact two
+identity-heading keys in every catalogue. It verifies every classified MCP
+recovery key names `aeat`, rejects stale command-leading `cadrumo` through the
+production matcher, and pins package, distribution, MCP, resource-scheme,
+environment-prefix, storage-history, and `AEAT` authority forms. Production
+audit supplies the key, scalar-type, and placeholder-parity proof.
+
+Production `audit` and `scaffold --check` report all four catalogues healthy.
+The complete core-i18n, locale, and catalogue-parity slice passed 80 real tests.
+Ruff lint, Ruff format, and Ty passed for the contextual acceptance test, and
+the scoped diff passes whitespace validation. No fake, mock, patch, skip, or
+expected-failure shortcut was introduced.
