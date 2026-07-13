@@ -276,3 +276,105 @@ def test_independent_faults_accumulate_in_one_pass() -> None:
     assert any("exactly one @result frame; found none" in problem for problem in problems)
     assert any("must be a JSON literal" in problem for problem in problems)
     assert len(problems) >= 3
+
+
+# --- Review findings M1-M3, L1-L2 -------------------------------------------
+
+
+def test_unbalanced_placeholder_brace_is_refused() -> None:
+    # M1: an unterminated ``{work_unit_id`` would otherwise survive as a literal
+    # argv token with no problem raised.
+    body = (
+        "aeat app modelo create 303\n"
+        "@capture work_unit_id result.work_unit_id\n"
+        "aeat app modelo calculate {work_unit_id\n"
+        "@result aeat app modelo verify\n"
+        '@expect result.status == "verified_complete"\n'
+    )
+    problems = _problems(body)
+    assert any("unbalanced placeholder brace" in problem for problem in problems)
+
+
+def test_stray_closing_brace_is_refused() -> None:
+    body = (
+        "aeat app modelo calculate value}\n"
+        "@result aeat app modelo verify\n"
+        '@expect result.status == "verified_complete"\n'
+    )
+    problems = _problems(body)
+    assert any("unbalanced placeholder brace" in problem for problem in problems)
+
+
+def test_over_long_sequence_id_accumulates_not_raw_validation_error() -> None:
+    # M2: a 121-char kebab id passes the pattern but exceeds SequenceId's cap;
+    # it must surface as an accumulating SequenceParseError, not a raw pydantic
+    # ValidationError, and co-accumulate with a second fault.
+    long_id = "a" * 121
+    with pytest.raises(SequenceParseError) as excinfo:
+        parse_sequence(sequence_id=long_id, options={"verify": None}, body=_WORKED_EXAMPLE)
+    problems = excinfo.value.problems
+    assert any("sequence id" in problem and "characters" in problem for problem in problems)
+    assert any(":verify: option is required" in problem for problem in problems)
+
+
+def test_over_long_seed_name_is_refused(tmp_path) -> None:
+    problems = _problems(_WORKED_EXAMPLE, seed="s" * 200)
+    assert any(":seed: recipe name" in problem and "characters" in problem for problem in problems)
+
+
+def test_over_long_verify_is_refused() -> None:
+    problems = _problems(_WORKED_EXAMPLE, verify="V" * 241)
+    assert any("at most 240 characters" in problem for problem in problems)
+
+
+def test_non_int_exit_code_expect_is_refused() -> None:
+    # M3: exit_code is an integer exit status (ADR D3).
+    body = '@result aeat app modelo verify\n@expect exit_code == "nope"\n'
+    problems = _problems(body)
+    assert any("exit_code" in problem and "integer literal" in problem for problem in problems)
+
+
+def test_bool_exit_code_expect_is_refused() -> None:
+    # A bool is an int subclass in Python but is not an exit code.
+    body = "@result aeat app modelo verify\n@expect exit_code == true\n"
+    problems = _problems(body)
+    assert any("exit_code" in problem and "integer literal" in problem for problem in problems)
+
+
+def test_int_exit_code_expect_is_accepted() -> None:
+    body = "@result aeat app modelo verify\n@expect exit_code == 1\n"
+    sequence = _parse(body)
+    assert sequence.result_frame.expects[0].expected == 1
+
+
+def test_duplicate_capture_diagnostic_locates_the_capture_line() -> None:
+    # L1: the diagnostic points at the offending @capture line (line 4), not the
+    # frame's command line.
+    body = (
+        "aeat app modelo create 303\n"
+        "@capture work_unit_id result.work_unit_id\n"
+        "aeat app modelo calculate {work_unit_id}\n"
+        "@capture work_unit_id result.work_unit_id\n"
+        "@result aeat app modelo verify {work_unit_id}\n"
+        '@expect result.status == "verified_complete"\n'
+    )
+    problems = _problems(body)
+    assert any("line 4" in problem and "duplicate @capture name" in problem for problem in problems)
+
+
+def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
+    # L2: the parser must not duplicate the schema patterns; they are derived
+    # from the single StringConstraints declaration and cannot drift.
+    from typing import get_args
+
+    from pydantic import StringConstraints
+
+    from .._parser import _IDENTIFIER_RE, _JSON_PATH_RE, _SEQUENCE_ID_RE
+    from .._schema import Identifier, JsonPath, SequenceId
+
+    def _pattern(alias: object) -> str:
+        return next(meta for meta in get_args(alias) if isinstance(meta, StringConstraints)).pattern
+
+    assert _SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
+    assert _IDENTIFIER_RE.pattern == _pattern(Identifier)
+    assert _JSON_PATH_RE.pattern == _pattern(JsonPath)

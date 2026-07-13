@@ -30,6 +30,9 @@ import shlex
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import get_args
+
+from pydantic import StringConstraints
 
 from ._errors import SequenceParseError
 from ._schema import (
@@ -37,20 +40,51 @@ from ._schema import (
     ExpectAssertion,
     ExpectLiteral,
     FrameKind,
+    Identifier,
+    JsonPath,
     ParsedSequence,
     SequenceFrame,
+    SequenceId,
+    VerifySentence,
 )
 
 __all__ = ["parse_frame_lines", "parse_sequence"]
 
 #: The sole human CLI executable; every frame command leads with this token.
 _EXECUTABLE: str = "aeat"
+#: The ``@expect`` pseudo-path asserting a frame's process exit code (ADR D3);
+#: its literal MUST be an integer.
+_EXIT_CODE_PATH: str = "exit_code"
 
-_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-_JSON_PATH_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$")
+
+def _string_constraints(annotated: object) -> StringConstraints:
+    """Return the :class:`StringConstraints` metadata of an annotated str alias.
+
+    The parser validates ids, identifiers, and JSON paths against the SAME
+    pattern and length bounds the strict schema enforces, driven off the single
+    schema declaration so the two surfaces cannot drift (a raw pydantic
+    ``ValidationError`` would otherwise escape the accumulating-error contract).
+    """
+    for meta in get_args(annotated):
+        if isinstance(meta, StringConstraints):
+            return meta
+    raise TypeError(f"{annotated!r} carries no StringConstraints metadata")
+
+
+_SEQUENCE_ID_CONSTRAINTS = _string_constraints(SequenceId)
+_IDENTIFIER_CONSTRAINTS = _string_constraints(Identifier)
+_JSON_PATH_CONSTRAINTS = _string_constraints(JsonPath)
+_VERIFY_CONSTRAINTS = _string_constraints(VerifySentence)
+
+_SEQUENCE_ID_RE = re.compile(_SEQUENCE_ID_CONSTRAINTS.pattern or "")
+_IDENTIFIER_RE = re.compile(_IDENTIFIER_CONSTRAINTS.pattern or "")
+_JSON_PATH_RE = re.compile(_JSON_PATH_CONSTRAINTS.pattern or "")
 #: Matches every ``{...}`` interpolation token; the inner text is validated
 #: separately so a malformed placeholder is an instructive error, not a miss.
 _PLACEHOLDER_RE = re.compile(r"\{([^{}]*)\}")
+#: Any residual brace after valid ``{...}`` tokens are stripped is an unbalanced
+#: placeholder (e.g. ``{work_unit_id`` with no closer).
+_STRAY_BRACE_RE = re.compile(r"[{}]")
 
 #: The frame-introducing sigils, mapped to the frame kind they declare.
 _FRAME_SIGILS: dict[str, FrameKind] = {
@@ -71,6 +105,10 @@ class _FrameBuilder:
     line_number: int
     captures: list[CaptureBinding] = field(default_factory=list)
     expects: list[ExpectAssertion] = field(default_factory=list)
+    #: The source line of each entry in :attr:`captures`, positionally aligned,
+    #: so a duplicate-name diagnostic points at the offending ``@capture`` line
+    #: rather than the frame's command line.
+    capture_lines: list[int] = field(default_factory=list)
 
     def build(self) -> SequenceFrame:
         return SequenceFrame(
@@ -92,6 +130,20 @@ def _at(source: str, line_number: int) -> str:
     return f"{source} line {line_number}"
 
 
+def _validate_kebab_id(value: str, label: str, problems: list[str]) -> None:
+    """Validate a kebab-case id against the shared :data:`SequenceId` constraints.
+
+    Checks the pattern AND the length bounds the strict schema enforces, so an
+    over-long id is an accumulated problem here rather than a raw pydantic
+    ``ValidationError`` escaping the single-error contract downstream.
+    """
+    minimum = _SEQUENCE_ID_CONSTRAINTS.min_length or 0
+    maximum = _SEQUENCE_ID_CONSTRAINTS.max_length
+    if not _SEQUENCE_ID_RE.match(value) or (maximum is not None and not (minimum <= len(value) <= maximum)):
+        bound = f"{minimum} to {maximum}" if maximum is not None else f"at least {minimum}"
+        problems.append(f"{label} {value!r} must be a kebab-case identifier of {bound} characters")
+
+
 def _placeholder_names(command_line: str, source: str, line_number: int, problems: list[str]) -> tuple[str, ...]:
     """Extract and validate every ``{name}`` placeholder in a command line."""
     names: list[str] = []
@@ -104,6 +156,14 @@ def _placeholder_names(command_line: str, source: str, line_number: int, problem
             )
             continue
         names.append(inner)
+    # A lone '{' or '}' surviving after every balanced ``{...}`` token is removed
+    # is an unterminated placeholder, which would otherwise pass through as a
+    # literal argv token and misfire at runtime.
+    if _STRAY_BRACE_RE.search(_PLACEHOLDER_RE.sub("", command_line)):
+        problems.append(
+            f"{_at(source, line_number)}: unbalanced placeholder brace in {command_line!r}; "
+            "a placeholder is '{name}' with a matching brace",
+        )
     return tuple(names)
 
 
@@ -196,6 +256,13 @@ def _parse_expect(rest: str, source: str, line_number: int, problems: list[str])
     if literal:
         value, literal_ok = _parse_expect_literal(literal, source, line_number, problems)
         ok = ok and literal_ok
+    # ADR D3: exit_code is an integer exit status; a bool is not an exit code
+    # even though ``bool`` is an ``int`` subclass in Python.
+    if ok and json_path == _EXIT_CODE_PATH and not (isinstance(value, int) and not isinstance(value, bool)):
+        problems.append(
+            f"{_at(source, line_number)}: @expect {_EXIT_CODE_PATH} value {literal!r} must be an integer literal",
+        )
+        ok = False
     if not ok:
         return None
     return ExpectAssertion(json_path=json_path, expected=value)
@@ -264,6 +331,7 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
             binding = _parse_capture(remainder, source, offset, problems)
             if binding is not None:
                 current.captures.append(binding)
+                current.capture_lines.append(offset)
             continue
 
         if head == "@expect":
@@ -327,10 +395,10 @@ def _enforce_captures_and_placeholders(builders: list[_FrameBuilder], problems: 
                     f"{_at(builder.source, builder.line_number)}: placeholder '{{{name}}}' does not resolve "
                     "to an earlier @capture",
                 )
-        for binding in builder.captures:
+        for binding, capture_line in zip(builder.captures, builder.capture_lines, strict=True):
             if binding.name in seen_names:
                 problems.append(
-                    f"{_at(builder.source, builder.line_number)}: duplicate @capture name {binding.name!r}",
+                    f"{_at(builder.source, capture_line)}: duplicate @capture name {binding.name!r}",
                 )
             seen_names.add(binding.name)
         # A capture is produced by its own frame's output, so it only becomes
@@ -371,24 +439,26 @@ def parse_sequence(
 
     problems: list[str] = []
 
-    if not _SEQUENCE_ID_RE.match(sequence_id.strip()):
-        problems.append(f"sequence id {sequence_id!r} must be a kebab-case identifier")
+    _validate_kebab_id(sequence_id.strip(), "sequence id", problems)
 
     verify_raw = options.get("verify")
     verify = (verify_raw or "").strip()
+    verify_max = _VERIFY_CONSTRAINTS.max_length
     if not verify:
         problems.append(
             "the :verify: option is required: one singular imperative verification sentence "
             '(e.g. "Verify the calculation before exporting.")',
         )
+    elif verify_max is not None and len(verify) > verify_max:
+        problems.append(f"the :verify: sentence must be at most {verify_max} characters")
 
     builders: list[_FrameBuilder] = []
     seed_raw = options.get("seed")
     seed = (seed_raw or "").strip() or None
     if seed is not None:
-        if not _SEQUENCE_ID_RE.match(seed):
-            problems.append(f":seed: recipe name {seed!r} must be a kebab-case identifier")
-        else:
+        before = len(problems)
+        _validate_kebab_id(seed, ":seed: recipe name", problems)
+        if len(problems) == before:
             seed_builders, seed_problems = load_seed_frames(seed, seeds_root=seeds_root)
             problems.extend(seed_problems)
             builders.extend(seed_builders)
@@ -409,6 +479,3 @@ def parse_sequence(
         seed=seed,
         frames=tuple(builder.build() for builder in builders),
     )
-
-
-_SEQUENCE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$")
