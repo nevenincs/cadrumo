@@ -35,8 +35,6 @@ from __future__ import annotations
 import hashlib
 import io
 import json
-import os
-import tempfile
 import zipfile
 from collections.abc import Iterator
 from datetime import datetime
@@ -386,32 +384,17 @@ def verify_corpus_manifest(
 def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     """Atomically persist ``manifest`` as JSON to ``target``."""
     resolved = target.resolve()
-    resolved.parent.mkdir(parents=True, exist_ok=True)
     payload = manifest.model_dump_json()
-    # NamedTemporaryFile raising means no file was created; the outer
-    # except re-raises cleanly.
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=resolved.parent,
-            prefix=f"{resolved.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp_path, resolved)
-        from ..locks import fsync_parent_dir
+    # Deferred import: mirrors the existing deferred-import discipline in
+    # this module (see build_corpus_bundle) -- core.atomic_write
+    # transitively imports core.locks, which imports core.config; kept
+    # local to avoid widening this module's eager import surface.
+    from ..atomic_write import atomic_write_text
 
-        fsync_parent_dir(resolved)
+    try:
+        atomic_write_text(resolved, payload, encoding="utf-8")
         _logger.debug("save_corpus_manifest: wrote manifest to %s", resolved)
     except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
         _logger.error("save_corpus_manifest: failed to write manifest to %s", resolved, exc_info=True)
         raise
 
