@@ -74,6 +74,43 @@ binding direction for the proposal shape:
    Mostly the raw material already exists across how-to pages; the work is
    consolidation and gap-filling, not greenfield writing.
 
+## Binding direction: condense, never bloat
+
+This is a standing mandate for every document this feature touches or
+authors, not a one-time instruction scoped to this research pass. It
+applies to the plan phase, the ADR phase, and every eventual `docs/` edit:
+
+- **Every document must end up highly actionable, well-grounded, and
+  cross-referenced** — something a taxpayer can use to actually perform a
+  task or orient themselves, not a description of the system for its own
+  sake. This is the same discipline `aeat-user-docs-hardening` already
+  states for individual instruction steps ("Create taxpayer profile," not
+  "We will now set up the taxpayer profiles"), extended here to the
+  document and site level: a page that only orients without letting the
+  reader act, or that repeats what another page already covers, does not
+  earn its place.
+- **A receiving page must not grow into theory when explanation-page
+  signal merges in.** Every extraction identified in Finding 1 and folded
+  into a how-to target (Finding 3's disposition table) must land as a
+  tightened, action-relevant addition — a checklist, a precise scope
+  statement, a one-paragraph caveat — never as a restatement of the
+  conceptual framing the source explanation page used. If a merge would
+  make the receiving page read like explanation prose, the signal is
+  either compressed further or left out.
+- **Prefer removing, renaming, moving, or rearranging an existing page over
+  authoring new prose.** The gap-fill list (addendum item 4) is explicit
+  that the raw material mostly already exists; new pages are reserved for
+  the three named Tier-1 gaps (Modelo 130, 100, 349) and the one sanctioned
+  Renta deep-mechanism document (Finding 5). Every other change in this
+  proposal is a disposition on an existing page — merge, move, rename, or
+  retire — not new authorship.
+
+The three-axis IA table (Finding 3) and the Renta document outline
+(Finding 5) below are both built under this mandate: the table shows small,
+targeted consolidation rather than a rewrite, and the Renta outline is
+explicitly scoped as the one place a deeper narrative is sanctioned, not a
+precedent for expanding any other page.
+
 ## Findings
 
 ### 1. Phase-1 survey carried forward (documentation-structure baseline)
@@ -264,13 +301,16 @@ preparer skill but no how-to page and are not named by the operator or
 required by the two mandated tutorials. Flagged as a plausible later wave,
 not actioned here.
 
-### 3. Full-site information architecture: the three-axis restructuring (addendum item 2)
+### 3. Full-site information architecture: the before→after page-level IA table (addendum item 2)
 
-The addendum's mandate is structural, not additive: organise `docs/how-to/`
-around the calendar / profile / per-modelo-filings axes a taxpayer actually
-lives in during a filing year, and show a page-level before-to-after
-disposition for every existing page — kept, renamed, moved, merged, or
-retired — rather than only proposing the two new tutorials.
+The addendum's mandate is structural, not additive: organise the whole
+taxpayer-facing surface — `docs/how-to/`, `docs/tutorials/`, and
+`docs/explanation/` — around the calendar / profile / per-modelo-filings
+axes a taxpayer actually lives in during a filing year, and show a
+page-level before-to-after disposition for EVERY existing page in all
+three quadrants — kept, renamed, moved, merged into X, or retired after
+extraction — not only the how-to pages and not only the two new tutorials.
+This is the centrepiece proposal for operator review.
 
 Proposed groupings (folder or clear sub-index groupings under `how-to/`,
 exact folder-vs-flat-with-headings mechanics deferred to the plan phase):
@@ -326,20 +366,27 @@ inventory:
 | `justificante-receipts.md` | Your filings | MERGE into `reconcile.md` as a "pull and store the justificante" leading section — reconciliation always needs the justificante fetched first, so the two-hop split serves no reader |
 | `connect-an-agent.md` | (residual, tooling) | KEEP unchanged |
 | `troubleshooting.md` | (residual, cross-cutting) | KEEP unchanged |
+| `tutorials/index.md` | (Tutorial quadrant) | RETIRE as a standalone single tutorial; ABSORBED into the new `tutorials/irpf-lifecycle.md` as its Q1 stage (Finding 4, Wireframe A) |
+| *(new)* `tutorials/irpf-lifecycle.md` | (Tutorial quadrant) | AUTHOR — Wireframe A, absorbs `tutorials/index.md` |
+| *(new)* `tutorials/iva-lifecycle.md` | (Tutorial quadrant) | AUTHOR — Wireframe B |
+| `explanation/from-records-to-figures.md` | (Explanation quadrant) | KEEP, TIGHTEN — extract the mixed-cost-split and readiness-check signal into `classify-transactions.md` / `import-bank-statements.md` (Finding 1), trim the source page once each signal has a how-to home |
+| `explanation/editing-and-verifying.md` | (Explanation quadrant) | KEEP, TIGHTEN — extract the verify-state taxonomy and the immutable-revision fact into `verification-reports.md` / `filing-spine.md`, trim after extraction |
+| `explanation/building-on-earlier-filings.md` | (Explanation quadrant) | KEEP, TIGHTEN — extract the no-fabricated-prior-period guarantee into `review-calculation-values.md`; the IVA-wallet mechanics fold into the IVA lifecycle tutorial (Tier 3 gap) rather than staying prose-only here |
+| `explanation/reviewing-and-exporting.md` | (Explanation quadrant) | KEEP, TIGHTEN — extract the xlsx-vs-Sheets distinction and the fingerprint's purpose into `review-with-google-sheets.md` / `file-at-aeat.md` |
+| `explanation/recording-a-filing-and-the-boundary.md` | (Explanation quadrant) | KEEP, TIGHTEN — extract the reconcile-scope-precision fact into the merged `reconcile.md` |
+| *(new)* `explanation/renta-and-bindings.md` (working title) | (Explanation quadrant, sanctioned deep-mechanism page) | AUTHOR — Finding 5; the one explanation page allowed to stay CLI-command-dense rather than tightened toward brevity |
+| `architecture/index.md`, `architecture.md` | (developer surface, out of taxpayer scope) | KEEP unchanged — confirmed out of scope by the operator ruling ("Diataxis stands... `architecture/` stays the developer surface") |
 
 Net page-count effect of this table: 34 existing how-to pages become
 roughly 27 (7 merges: filing-periods to filing-calendar, read-live-aeat-data
 retired/redistributed, review-queue to classify-transactions, three
-LLM pages to one, justificante-receipts to reconcile) plus 3 new pages
-(130, 100, 349) plus 1 new dedicated explanation document (Renta) plus the
-tutorials/index.md split into two lifecycle tutorials — net growth is small
-and concentrated exactly where the operator named a real gap, not a general
-expansion.
-
-`explanation/` disposition is unchanged from phase 1's per-page extraction
-findings except that the addendum's condense mandate now applies explicitly
-to the receiving how-to pages, not just to the explanation pages being
-trimmed.
+LLM pages to one, justificante-receipts to reconcile); 1 tutorial page
+becomes 2 (the lifecycle split); all 5 explanation pages are kept but
+tightened as their extracted signal lands on how-to pages; 3 new per-modelo
+how-to pages (130, 100, 349) and 1 new dedicated explanation document
+(Renta) are authored. Net growth is small and concentrated exactly where
+the operator named a real gap, not a general expansion — consistent with
+the condense-never-bloat mandate above.
 
 ### 4. Two lifecycle tutorial wireframes (proposals only — not authored under `docs/` in this phase)
 
@@ -563,14 +610,22 @@ unless a future audit finds the same trust gap there.
    step 5 and Wireframe B step 5 use a placeholder annual period token;
    the actual token must be re-verified against the live registry at
    authoring time, not copied from this research without a fresh check.
-8. **Does the dedicated Renta document's home in `explanation/` need its
-   own frontmatter/toctree treatment distinct from the other five
-   explanation pages** (for example, a visually distinct "deep dive"
-   label so a taxpayer does not mistake it for the same lightweight
-   background-reading register as the other five), or does it read fine as
-   a sixth ordinary member of the existing cluster? This research leans
-   toward a distinct label given its CLI-command density versus the other
-   five pages' zero-command register, but defers to the ADR.
+8. **Where does the Renta document sit in Diataxis — the explanation
+   quadrant as proposed, or a how-to hybrid?** This research places it in
+   `explanation/` (Finding 5) because Diataxis reserves mechanism-level
+   narrative for that quadrant and the operator's own framing ("the one
+   place where deeper mechanism explanation is sanctioned") matches that
+   quadrant's charter. But the outline is unusually CLI-command-dense for
+   an explanation page — it walks `bindings list/resolve`, `work
+   dependencies`, and `work observations` live, closer to how-to register
+   than the other five zero-command explanation pages. The amending ADR
+   must place it explicitly: (a) a sixth `explanation/` page, tightened
+   toward narrative with commands used only as illustration; (b) a
+   distinctly labelled "deep dive" page still inside `explanation/`,
+   signalling it is denser than its siblings; or (c) a genuine how-to/
+   explanation hybrid — a new, one-off Diataxis exception documented as
+   such — that a taxpayer reaches from the calculate step itself. This
+   research leans toward (b) but does not consider it settled.
 
 ## Next steps
 
