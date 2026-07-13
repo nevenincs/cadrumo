@@ -421,8 +421,9 @@ docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
 # Serve documentation with live reload on docs/ and src/aeat/ edits. Binds every
-# interface on a non-default port; auto-picks a free port when PORT is omitted,
-# and attaches to (instead of colliding with) an already-running server.
+# interface on the docs' canonical port 8788, claimed strictly: attaches to a
+# healthy running server, evicts an invalid squatter, and errors rather than
+# drifting to another port. The first serve builds before opening the browser.
 docs-serve PORT="":
     uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 

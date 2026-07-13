@@ -5,22 +5,29 @@ incrementally whenever the narrative corpus (``docs/``) or the autodoc source
 tree (``src/aeat/``) changes. The Sphinx application stays warm between
 rebuilds, so edit-to-refresh is a fraction of a cold ``just docs`` build.
 
-The server binds every interface (``0.0.0.0``) on a non-default port so a
-container, VM, or peer device on the LAN can reach the preview, and is
-**start-idempotent**: a second ``just docs-serve`` does not collide with the
-first. It probes the target port and either
+The server binds every interface (``0.0.0.0``) on the docs' OWNED canonical
+port so a container, VM, or peer device on the LAN can reach the preview at a
+stable, known address, and is **start-idempotent**: a second
+``just docs-serve`` does not collide with the first. The port is strict — the
+server never silently drifts to a neighbouring port. It probes the target
+port and either
 
 * **attaches** — a healthy aeat docs server is already answering there, so this
   invocation just points you at it (and opens the browser) and exits, rather
   than failing with ``EADDRINUSE``;
-* **starts** — the port is free (the previous server died: "dead"), so a fresh
-  server is launched; or
+* **starts** — the port is free, so a fresh server is launched;
 * **respawns** — a server *we* started is bound but no longer healthy ("dirty"),
-  so it is terminated and a fresh one is launched in its place.
+  so it is terminated and a fresh one is launched in its place; or
+* **evicts** — a foreign process squats the docs' canonical port, so it is
+  terminated and the port reclaimed. The canonical port belongs to the docs
+  server by declaration; anything else answering there is an invalid occupant.
 
-A port occupied by a process we did not start is never killed: in auto mode the
-next free port is used, and when an explicit ``--port`` is pinned the server
-refuses with an instructive message.
+Not being able to serve on the resolved port is an ERROR (exit 1), never a
+silent fallback. An explicitly pinned ``--port`` that a foreign process holds
+is refused with guidance (eviction applies only to the canonical port we own).
+
+The first serve performs an initial build so the review is never a stale
+snapshot; subsequent edits rebuild incrementally.
 
 Surfaces that the build itself rewrites are excluded from the watch set so a
 rebuild cannot trigger itself: ``docs/cli/`` is regenerated from the live
@@ -54,13 +61,14 @@ from typing import Final
 
 _UTF_8: Final[str] = "utf-8"
 
-# Bind every interface so containers / VMs / LAN peers can reach the preview,
-# and default to a non-default port to avoid colliding with the crowded 8000.
+# Bind every interface so containers / VMs / LAN peers can reach the preview.
 _DEFAULT_HOST = "0.0.0.0"  # noqa: S104 - a LAN-reachable dev preview is the intent
-_DEFAULT_PORT = 8765
-# In auto mode (no explicit --port) scan this many ports upward from the default
-# past any occupied-by-a-stranger ports before giving up.
-_PORT_SCAN_LIMIT = 20
+# The docs server's OWNED canonical port. 8765/8766 belong to the resident
+# vaultspec-rag stack (qdrant HTTP + the RAG service) and 8767/8770 to its
+# dashboards on developer machines, so the docs claim a port clear of that
+# cluster and clear of the crowded 8000. The port is strict: the server never
+# scans away from it, and a foreign squatter on it is evicted.
+_DEFAULT_PORT = 8788
 # Interfaces that cannot be the *target* of an HTTP probe: a wildcard bind is
 # reached over a concrete loopback address.
 _WILDCARD_PROBE_HOST = {"0.0.0.0": "127.0.0.1", "::": "::1", "": "127.0.0.1"}  # noqa: S104 - probe mapping, not a bind
@@ -95,8 +103,11 @@ class ServeAction(StrEnum):
     RESPAWN = "respawn"
     """Terminate our own dirty server, then launch a fresh one."""
 
+    EVICT = "evict"
+    """A foreign process squats the canonical port we own; terminate it and claim the port."""
+
     BLOCKED = "blocked"
-    """A foreign process holds the pinned port; refuse with guidance."""
+    """A foreign process holds an explicitly pinned non-canonical port; refuse with guidance."""
 
 
 @dataclass(frozen=True)
@@ -171,10 +182,9 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool) 
         "html",
         "-j",
         "auto",
-        # Bind and serve the existing docs/_build/html immediately instead of
-        # blocking the port until a full cold autodoc build finishes; the first
-        # rebuild fires on the first detected change.
-        "--no-initial",
+        # No --no-initial: the first serve builds the current tree before the
+        # browser opens, so a review can never start on a stale snapshot of
+        # docs/_build/html left by an earlier session.
         "--watch",
         str(repo_root / "src" / "aeat"),
         "--host",
@@ -377,42 +387,87 @@ def resolve_target(
     *,
     requested_port: int | None,
     default_port: int,
-    scan_limit: int,
     probe: Callable[[int], PortStatus],
     owned_stale: Callable[[int], bool],
 ) -> Resolution:
-    """Decide which port to use and what to do with it.
+    """Decide what to do with the single strict target port.
 
     Pure orchestration over injected ``probe`` and ``owned_stale`` callables so
-    the attach / start / respawn / blocked decision is unit testable without
-    sockets or processes.
+    the attach / start / respawn / evict / blocked decision is unit testable
+    without sockets or processes. There is exactly one candidate port — the
+    explicit pin or the canonical default — and the server never scans away
+    from it.
 
     Args:
-        requested_port: An explicitly pinned port, or ``None`` for auto mode.
-        default_port: The first candidate in auto mode.
-        scan_limit: How many consecutive ports auto mode may try.
+        requested_port: An explicitly pinned port, or ``None`` for the
+            canonical default.
+        default_port: The docs server's owned canonical port.
         probe: Maps a port to its :class:`PortStatus`.
         owned_stale: Whether a dirty port is a live server we started.
 
     Returns:
-        The resolved :class:`Resolution`.
+        The resolved :class:`Resolution`. A dirty canonical port held by a
+        stranger resolves to :attr:`ServeAction.EVICT` (the port is ours to
+        claim); a dirty *pinned* non-canonical port resolves to
+        :attr:`ServeAction.BLOCKED` (we do not kill strangers on ports we do
+        not own).
     """
-    explicit = requested_port is not None
-    candidates = [requested_port] if explicit else list(range(default_port, default_port + scan_limit))
-    for port in candidates:
-        assert port is not None
-        status = probe(port)
-        if status is PortStatus.SERVING:
-            return Resolution(ServeAction.ATTACH, port)
-        if status is PortStatus.FREE:
-            return Resolution(ServeAction.START, port)
-        # DIRTY from here on.
-        if owned_stale(port):
-            return Resolution(ServeAction.RESPAWN, port)
-        if explicit:
-            return Resolution(ServeAction.BLOCKED, port)
-        # Auto mode: a stranger holds this port; try the next one.
-    return Resolution(ServeAction.BLOCKED, candidates[0] if candidates else default_port)
+    port = requested_port if requested_port is not None else default_port
+    status = probe(port)
+    if status is PortStatus.SERVING:
+        return Resolution(ServeAction.ATTACH, port)
+    if status is PortStatus.FREE:
+        return Resolution(ServeAction.START, port)
+    # DIRTY from here on.
+    if owned_stale(port):
+        return Resolution(ServeAction.RESPAWN, port)
+    if port == default_port:
+        return Resolution(ServeAction.EVICT, port)
+    return Resolution(ServeAction.BLOCKED, port)
+
+
+def _listeners_on(port: int) -> list[tuple[int, str]]:
+    """Return ``(pid, name)`` for every process with a LISTEN socket on ``port``.
+
+    Used only to evict a squatter from the docs' canonical port. Returns an
+    empty list when psutil is unavailable or the listener cannot be identified
+    (the caller then reports the port unclaimable instead of guessing).
+    """
+    try:
+        import psutil
+    except ImportError:  # pragma: no cover - psutil is a dev-group dependency
+        return []
+    found: dict[int, str] = {}
+    with contextlib.suppress(psutil.Error, OSError):
+        for conn in psutil.net_connections(kind="tcp"):
+            if conn.status == psutil.CONN_LISTEN and conn.laddr and conn.laddr.port == port and conn.pid:
+                name = ""
+                with contextlib.suppress(psutil.Error):
+                    name = psutil.Process(conn.pid).name()
+                found[conn.pid] = name
+    return sorted(found.items())
+
+
+def _evict_port(bind_host: str, port: int, *, timeout: float = _PORT_RELEASE_TIMEOUT_SECONDS) -> bool:
+    """Terminate whatever squats the docs' canonical ``port`` and wait for release.
+
+    The canonical port is the docs server's by declaration; an occupant that is
+    not a healthy aeat docs server is an invalid squatter and is evicted. Each
+    evicted process is named on stdout so the operator sees exactly what was
+    terminated.
+
+    Returns:
+        Whether the port was released within the timeout.
+    """
+    listeners = _listeners_on(port)
+    if not listeners:
+        print(f"Port {port} is bound but its holder could not be identified for eviction.", flush=True)
+        return False
+    for pid, name in listeners:
+        label = f"{name} (pid {pid})" if name else f"pid {pid}"
+        print(f"Evicting {label} from the docs' canonical port {port}.", flush=True)
+        _terminate(pid, timeout=timeout)
+    return _wait_for_free(bind_host, port, timeout=timeout)
 
 
 def _wait_for_free(bind_host: str, port: int, *, timeout: float) -> bool:
@@ -511,8 +566,8 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=None,
         help=(
-            f"Port to serve on. Omit to auto-pick from {_DEFAULT_PORT}; "
-            "a pinned port a foreign process holds is refused."
+            f"Port to serve on (default: the docs' canonical {_DEFAULT_PORT}, which is claimed strictly — "
+            "an invalid occupant is evicted). A pinned non-canonical port a foreign process holds is refused."
         ),
     )
     parser.add_argument(
@@ -536,7 +591,6 @@ def main(argv: list[str] | None = None) -> int:
     resolution = resolve_target(
         requested_port=args.port,
         default_port=_DEFAULT_PORT,
-        scan_limit=_PORT_SCAN_LIMIT,
         probe=lambda port: probe_port(args.host, port),
         owned_stale=lambda port: _owned_stale(state_path, port),
     )
@@ -552,7 +606,16 @@ def main(argv: list[str] | None = None) -> int:
     if resolution.action is ServeAction.BLOCKED:
         print(
             f"Port {port} is held by another process that is not an aeat docs server; "
-            "choose a different --port (or omit --port to auto-pick a free one).",
+            f"choose a different --port (or omit --port to claim the canonical {_DEFAULT_PORT}).",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 1
+
+    if resolution.action is ServeAction.EVICT and not _evict_port(args.host, port):
+        print(
+            f"ERROR: the docs' canonical port {port} could not be claimed — the squatter did not release it. "
+            "Nothing else may hold this port; investigate the process bound to it.",
             file=sys.stderr,
             flush=True,
         )
