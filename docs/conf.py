@@ -1033,15 +1033,18 @@ def setup(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
 
         The projection is a build-time asset the ``cli-sequence`` frontend widget
-        fetches for hover help (ADR ``2026-07-13-docs-cli-sequences-adr`` D5);
-        it is gitignored and regenerated on every build, never committed.
+        fetches for hover help (ADR ``2026-07-13-docs-cli-sequences-adr`` D5); it
+        is gitignored and regenerated, never committed. Guarded like the sibling
+        CLI-reference hook: an incremental changed-page build whose artifact
+        already exists skips the projection's subprocess cost (the CLI tree
+        cannot change on a docs-only page build).
 
         Args:
             app: The Sphinx application instance.
         """
         from dev.docs.sequence_build_gate import emit_cli_tree
 
-        emit_cli_tree(app)
+        emit_cli_tree(app, specific_sources=_specific_build_sources())
 
     def _check_cli_sequences(app):
         """Fail the build on any cli-sequence golden divergence (ADR D6).
