@@ -94,8 +94,8 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     # category prefix (the encrypted-state substrate, diagnostic logs, and
     # durable outputs keep bare, self-describing leaf names, matching the
     # existing tokens/secrets/blobs/audit/logs layout). The lifecycle grouping
-    # (state / cache / logs / exports) is recorded conceptually per the
-    # data-output-standardization ADR ruling R1, not as a rigid path prefix.
+    # (state / cache / logs / exports) is a conceptual classification, not a
+    # rigid path prefix.
     #
     # State substrate and identity (encrypted store + auth tokens).
     "cadrumo_token_dir": "tokens",
@@ -106,8 +106,8 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_log_dir": "logs",
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
-    # Regenerable, evictable caches (the cache/ namespace; W01.P02 adds the
-    # corpus-text and registry-pickle caches here).
+    # Regenerable, evictable caches (the cache/ namespace, which also holds the
+    # corpus-text and registry-pickle caches).
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_status_cache_dir": "cache/status-cache",
     # Durable generated outputs.
