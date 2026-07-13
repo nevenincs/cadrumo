@@ -116,6 +116,39 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
     assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Tax Assistant"
 
 
+def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """Spanish copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "es.yml")
+
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "La carpeta vault de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
+        "usa la carpeta vault de Cadrumo."
+    )
+    assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
+        "La clasificación '%{value}' la asigna Cadrumo automáticamente y no puede establecerse a mano. "
+        "Elige una de: BUSINESS, PERSONAL, MIXED, u omite --classification para dejar la fila sin clasificar."
+    )
+    assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
+        "La clasificación '%{value}' la asigna Cadrumo automáticamente y no puede establecerse a mano. "
+        "Elige una de: BUSINESS, PERSONAL, MIXED."
+    )
+    assert _leaf(data, "mcp", "call", "timeout") == (
+        "'{command}' supero el limite de tiempo del nivel {tier} ({seconds}s) y se cancelo. "
+        "Reintentalo o ejecuta el comando aeat equivalente directamente en un terminal."
+    )
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "'{command}' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). "
+        "Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando aeat CLI equivalente "
+        "directamente en un terminal."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO, herramienta de declaraciones fiscales con la AEAT."
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "Asistente fiscal CADRUMO"
+
+
 def test_set_locale_value_updates_one_leaf(tmp_path: Path):
     """The locale CLI write path updates a concrete leaf in a real YAML file."""
 
