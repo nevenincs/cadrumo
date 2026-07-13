@@ -752,11 +752,198 @@
     });
   }
 
+  /* ── CLI token hover help ───────────────────────────────────────────────
+   * A verb/option token in a sequence carries a data-command-path key that
+   * indexes the build-emitted cli-tree.json help projection (ADR D5). On hover
+   * or focus the token opens a popover with that command's live help, usage,
+   * and parameters. The projection is fetched once per page, lazily on the
+   * first hover intent, over a same-origin relative URL derived from this
+   * script's own src; a fetch failure degrades to no hover help (no console
+   * noise) and leaves the static transcript untouched. */
+
+  function cliTreeUrl() {
+    // Derive _static/cli-tree.json from this script's own src, so the fetch is
+    // same-origin and page-depth-independent without hard-coding a path.
+    var script = document.querySelector('script[src*="cadrumo-docs.js"]');
+    if (!script || !script.src) return null;
+    try {
+      return new URL("cli-tree.json", script.src).href;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function initHoverHelp() {
+    var tokens = document.querySelectorAll(
+      ".cadrumo-sequence .cli-tok[data-command-path]"
+    );
+    if (!tokens.length) return;
+    var url = cliTreeUrl();
+    if (!url) return;
+
+    var treePromise = null;
+    function loadTree() {
+      if (treePromise) return treePromise;
+      treePromise = fetch(url, { credentials: "same-origin" })
+        .then(function (response) {
+          return response.ok ? response.json() : null;
+        })
+        .catch(function () {
+          /* Absent projection (e.g. a dev preview built without the emit hook):
+           * hover help is simply unavailable, silently. */
+          return null;
+        });
+      return treePromise;
+    }
+
+    var popover = document.createElement("div");
+    popover.className = "cadrumo-cli-popover";
+    popover.id = "cadrumo-cli-popover";
+    popover.setAttribute("role", "tooltip");
+    popover.hidden = true;
+    document.body.appendChild(popover);
+
+    var activeToken = null;
+    var intended = null;
+
+    function hide() {
+      popover.hidden = true;
+      if (activeToken) {
+        activeToken.removeAttribute("aria-describedby");
+        activeToken = null;
+      }
+    }
+
+    function appendLine(className, text) {
+      if (!text) return;
+      var el = document.createElement("p");
+      el.className = className;
+      el.textContent = text;
+      popover.appendChild(el);
+    }
+
+    function appendParam(param) {
+      var li = document.createElement("li");
+      var name = document.createElement("span");
+      name.className = "cadrumo-cli-popover-param-name";
+      name.textContent = (param.names || []).join(", ");
+      li.appendChild(name);
+      if (param.required) {
+        var req = document.createElement("span");
+        req.className = "cadrumo-cli-popover-param-req";
+        req.textContent = "required";
+        li.appendChild(req);
+      }
+      if (param.help) {
+        var help = document.createElement("span");
+        help.className = "cadrumo-cli-popover-param-help";
+        help.textContent = param.help;
+        li.appendChild(help);
+      }
+      return li;
+    }
+
+    function renderNode(node, optionName) {
+      popover.textContent = "";
+      appendLine("cadrumo-cli-popover-path", (node.path || []).join(" "));
+      appendLine("cadrumo-cli-popover-usage", node.usage);
+      appendLine("cadrumo-cli-popover-help", node.help);
+      var params = node.params || [];
+      // When the token is a specific option, lead with just that option's
+      // parameter; otherwise list the command's parameters.
+      var shown = params;
+      if (optionName) {
+        shown = params.filter(function (param) {
+          return (param.names || []).indexOf(optionName) >= 0;
+        });
+        if (!shown.length) shown = params;
+      }
+      if (shown.length) {
+        var list = document.createElement("ul");
+        list.className = "cadrumo-cli-popover-params";
+        shown.slice(0, 12).forEach(function (param) {
+          list.appendChild(appendParam(param));
+        });
+        popover.appendChild(list);
+      }
+    }
+
+    function positionNear(token) {
+      var rect = token.getBoundingClientRect();
+      var margin = 8;
+      var doc = document.documentElement;
+      var pw = popover.offsetWidth;
+      var ph = popover.offsetHeight;
+      var left = rect.left + window.pageXOffset;
+      var maxLeft = window.pageXOffset + doc.clientWidth - pw - margin;
+      if (left > maxLeft) left = maxLeft;
+      if (left < window.pageXOffset + margin) left = window.pageXOffset + margin;
+      var top = rect.bottom + window.pageYOffset + 6;
+      if (rect.bottom + ph + 12 > doc.clientHeight && rect.top - ph - 6 > 0) {
+        top = rect.top + window.pageYOffset - ph - 6;
+      }
+      popover.style.left = Math.round(left) + "px";
+      popover.style.top = Math.round(top) + "px";
+    }
+
+    function show(token) {
+      var key = token.getAttribute("data-command-path");
+      if (!key) return;
+      intended = token;
+      loadTree().then(function (tree) {
+        if (!tree || intended !== token) return; // pointer/focus moved on
+        var node = tree[key];
+        if (!node) return;
+        renderNode(node, token.getAttribute("data-option"));
+        popover.hidden = false;
+        activeToken = token;
+        token.setAttribute("aria-describedby", popover.id);
+        positionNear(token);
+      });
+    }
+
+    tokens.forEach(function (token) {
+      if (!token.hasAttribute("tabindex")) token.setAttribute("tabindex", "0");
+      token.addEventListener("mouseenter", function () {
+        show(token);
+      });
+      token.addEventListener("mouseleave", function () {
+        intended = null;
+        hide();
+      });
+      token.addEventListener("focus", function () {
+        show(token);
+      });
+      token.addEventListener("blur", function () {
+        intended = null;
+        hide();
+      });
+      // Touch: a tap toggles the popover for the tapped token.
+      token.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (activeToken === token) {
+          intended = null;
+          hide();
+        } else {
+          show(token);
+        }
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !popover.hidden) {
+        intended = null;
+        hide();
+      }
+    });
+  }
+
   ready(function () {
     initBroadcast();
     initNavActive();
     initCommandBlocks();
     initPalette();
     initSequences();
+    initHoverHelp();
   });
 })();
