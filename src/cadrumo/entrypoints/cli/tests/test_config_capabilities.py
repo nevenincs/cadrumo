@@ -1,4 +1,4 @@
-"""Real-behaviour CLI tests for ``cadrumo config profile capabilities`` show/set.
+"""Real-behaviour CLI tests for ``aeat config profile capabilities`` show/set.
 
 Exercises the operator surface end to end against the real Typer app and real
 persistence in an isolated storage root: setting a capability writes a profile

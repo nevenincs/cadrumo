@@ -1,7 +1,7 @@
 """Application-owned diagnostics, version reports, and repair probes.
 
 :func:`build_cli_version_report` and :func:`render_cli_version_text` back the
-root ``cadrumo --version`` surface. They keep the fast path import-light unless the
+root ``aeat --version`` surface. They keep the fast path import-light unless the
 caller requests registry detail.
 
 :func:`build_config_repair_report` composes environment checks,
@@ -38,7 +38,7 @@ See Also:
     :mod:`application.wizard._status` supplies semantic profile/auth
     readiness once the workflow state has loaded.
     :mod:`entrypoints.cli._config._repair_cli` wires these reports into
-    ``cadrumo config repair`` commands.
+    ``aeat config repair`` commands.
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ from ._errors import DiagnosticModelError
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
 # all heavy import subtrees (the browser adapter and the registry parse
-# alone add ~3.5s of cold-start import time). The ``cadrumo --version``
+# alone add ~3.5s of cold-start import time). The ``aeat --version``
 # fast path imports this module only for ``build_cli_version_report`` /
 # ``render_cli_version_text``, neither of which needs any of them.
 # Importing them lazily inside the functions that actually run keeps the
@@ -111,7 +111,7 @@ class CliVersionReport(BaseModel):
 
     :func:`build_cli_version_report` fills the :class:`RegistryVersionSummary`
     field, and :func:`render_cli_version_text` renders the text form used by the
-    root ``cadrumo --version`` command.
+    root ``aeat --version`` command.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -139,7 +139,7 @@ class DiagnosticFinding(BaseModel):
     A bare counter (``31/40``) or a one-word verdict (``warn``) tells the
     operator *that* something is wrong but never *what*. Each finding
     names one specific cause in operator language and, where an
-    automated route exists, the exact ``cadrumo ...`` command that resolves
+    automated route exists, the exact ``aeat ...`` command that resolves
     it. The profile-keys check emits one finding per unset key; a
     failing check emits one finding per concrete cause. Findings are
     explanatory children, not a replacement for the parent row's required
@@ -158,7 +158,7 @@ class DiagnosticCheck(BaseModel):
     """One concrete config repair check.
 
     A failing or warning row MUST carry exactly one of ``next_action`` (an
-    exact ``cadrumo ...`` command string the operator can run) or ``dead_end``
+    exact ``aeat ...`` command string the operator can run) or ``dead_end``
     (a short explanation of why no automated route exists). A row that
     supplies neither, or both, is a :class:`pydantic.ValidationError` at
     construction time by raising
@@ -228,7 +228,7 @@ class SecureObjectIntegrityReport(BaseModel):
 
 
 class ConfigRepairReport(BaseModel):
-    """Composite report rendered by the bare ``cadrumo config repair`` command.
+    """Composite report rendered by the bare ``aeat config repair`` command.
 
     The report combines the public :class:`RegistryVersionSummary`, the
     secure-object :class:`SecureObjectIntegrityReport`, and ordered
@@ -262,7 +262,7 @@ def _ensure_models_rebuilt() -> None:
     ``SecureObjectIntegrityReport`` and ``ConfigRepairReport`` carry
     fields typed by ``SecureObjectNamespaceIntegrity`` and
     ``WizardStatusReport``. Those names are imported lazily so the
-    ``cadrumo --version`` fast path never pulls the heavy secure-object and
+    ``aeat --version`` fast path never pulls the heavy secure-object and
     wizard-status import subtrees. The two models are only ever
     *constructed* by the diagnostics functions below — never by the
     version path — so their forward references are resolved here, on
@@ -288,7 +288,7 @@ class RegistryIntegrityReport(BaseModel):
     Disaster ADR Ruling 4 moves the full registry TOML parse +
     cross-domain referential-integrity gate off the ``--version`` and
     bare-invocation surfaces into the explicit
-    ``cadrumo config repair integrity registry`` verb. This typed
+    ``aeat config repair integrity registry`` verb. This typed
     report is what that verb renders: a :class:`RegistryVersionSummary` plus
     the aggregate :class:`DiagnosticCheck` from
     :func:`_registry_cross_domain_integrity_check`.
@@ -309,7 +309,7 @@ def build_cli_version_report(
 
     The ``with_registry`` flag controls whether the full registry
     TOML load fires. The CLI root callback passes
-    ``with_registry=False`` for bare ``cadrumo --version`` invocations
+    ``with_registry=False`` for bare ``aeat --version`` invocations
     (the fast-path mandated by disaster ADR Ruling 4 — the operator
     must see name + version in under a second on cold start). When
     ``--detail`` is on, the caller re-invokes with
@@ -332,7 +332,7 @@ def build_cli_version_report(
 
 
 def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
-    """Return local diagnostics for the ``cadrumo config repair`` surface.
+    """Return local diagnostics for the ``aeat config repair`` surface.
 
     Returns a :class:`ConfigRepairReport` enumerating every diagnostic
     check and any suggested repairs. Expensive registry validation beyond the
@@ -366,7 +366,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             name="logging.file",
             status="ok" if default_log_file_path().parent.exists() else "warn",
             summary=str(default_log_file_path()),
-            next_action=None if default_log_file_path().parent.exists() else "cadrumo config repair logs",
+            next_action=None if default_log_file_path().parent.exists() else "aeat config repair logs",
         ),
         DiagnosticCheck(
             name="registry.load",
@@ -432,9 +432,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     # summary + next_action already guide the operator.
                     detail=None if missing_active_bucket_session else _compact_exception(exc),
                     next_action=(
-                        profile_health.next_action or "cadrumo config switch NAME"
+                        profile_health.next_action or "aeat config switch NAME"
                         if missing_active_bucket_session
-                        else "cadrumo config repair reset-progress --yes"
+                        else "aeat config repair reset-progress --yes"
                     ),
                 ),
             )
@@ -692,7 +692,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     """Render the ``secure_objects.integrity`` repair row.
 
     A non-zero unreadable total becomes a warn :class:`DiagnosticCheck` whose
-    ``next_action`` is the guarded ``cadrumo config repair quarantine --yes`` path.
+    ``next_action`` is the guarded ``aeat config repair quarantine --yes`` path.
     """
     if report.unreadable_total == 0:
         if report.readable_total == 0:
@@ -725,7 +725,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             readable=report.readable_total,
         ),
         detail=affected,
-        next_action="cadrumo config repair quarantine --yes",
+        next_action="aeat config repair quarantine --yes",
     )
 
 
@@ -782,7 +782,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
 def build_registry_integrity_report(registry_root: Path | None = None) -> RegistryIntegrityReport:
     """Run the full registry validation as a standalone :class:`RegistryIntegrityReport` probe.
 
-    Backs the ``cadrumo config repair integrity registry`` verb. Bundles
+    Backs the ``aeat config repair integrity registry`` verb. Bundles
     the registry version summary with the cross-domain
     referential-integrity check so the engineer-facing verb can render
     both the registry's identity and its validation verdict. Disaster
@@ -834,13 +834,13 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
         name="profile.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
-        next_action="cadrumo config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+        next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
     )
 
 
-_PROFILE_EDIT_COMMAND = "cadrumo config profile edit NAME"
+_PROFILE_EDIT_COMMAND = "aeat config profile edit NAME"
 """The operator command that walks the profile wizard over an existing
-profile. There is deliberately no per-key setter on the ``cadrumo config``
+profile. There is deliberately no per-key setter on the ``aeat config``
 surface, so every unset-key finding routes to this single guided
 editor; the finding's ``summary`` names the specific key to fill."""
 
@@ -923,7 +923,7 @@ def _profile_check(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_none"),
-            next_action="cadrumo config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     unset_findings = _unset_profile_key_findings(state)
     if not report.profile_ready:
@@ -969,7 +969,7 @@ def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
         name="auth.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.auth_state_unreadable"),
-        next_action=health.next_action or "cadrumo config switch NAME",
+        next_action=health.next_action or "aeat config switch NAME",
     )
 
 
@@ -980,7 +980,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="auth.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.auth_none"),
-            next_action="cadrumo config auth configure --provider certificate --file PATH",
+            next_action="aeat config auth configure --provider certificate --file PATH",
         )
     if not report.login_ready:
         return DiagnosticCheck(
@@ -991,7 +991,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
                 default="Authentication provider %{provider} has no ready session",
                 provider=report.auth_provider,
             ),
-            next_action=f"cadrumo config auth test --provider {report.auth_provider}",
+            next_action=f"aeat config auth test --provider {report.auth_provider}",
         )
     return DiagnosticCheck(
         name="auth.readiness",
@@ -1096,9 +1096,9 @@ def secure_object_unreadable_total() -> int:
     """Return the count of rows the current master key cannot decrypt.
 
     Lightweight wrapper over :func:`_probe_secure_objects_integrity` for
-    consumers (notably ``cadrumo app overview status``) that want to surface
+    consumers (notably ``aeat app overview status``) that want to surface
     a concise "N rows unreadable" pointer towards
-    ``cadrumo config repair`` without rendering the per-namespace breakdown
+    ``aeat config repair`` without rendering the per-namespace breakdown
     themselves. The full breakdown remains the authority of
     :class:`ConfigRepairReport`.
     """
@@ -1108,7 +1108,7 @@ def secure_object_unreadable_total() -> int:
 def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     """Report the rows ``repair quarantine`` would move, mutating nothing.
 
-    Backs the ``cadrumo config repair quarantine --dry-run`` preview. Runs
+    Backs the ``aeat config repair quarantine --dry-run`` preview. Runs
     the same per-namespace decryptability probe that
     :func:`quarantine_unreadable_secure_objects` uses to decide which
     rows to archive, but performs no copy and no delete: the

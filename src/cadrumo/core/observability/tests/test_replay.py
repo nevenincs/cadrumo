@@ -283,7 +283,7 @@ class TestArgvReconstruction:
             ),
             (
                 "multiple-positionals",
-                "cadrumo app modelo work file",
+                "aeat app modelo work file",
                 (
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),

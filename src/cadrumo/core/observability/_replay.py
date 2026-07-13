@@ -213,7 +213,7 @@ def replay_run(
     previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)
     # Store the *original* run_id, not just "1", so the re-entered
     # run_context can label the new trace's ``replay_of`` field with
-    # the source run. This lets ``cadrumo run show`` distinguish replay
+    # the source run. This lets ``aeat run show`` distinguish replay
     # traces from fresh runs and chain them back to their original.
     os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id  # env-write: intentional — scoped context-manager
     captured: list[dict[str, object]] = []

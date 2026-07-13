@@ -340,7 +340,7 @@ def _yaml_quoted_scalar(value: str) -> str:
     return "'" + escaped + "'"
 
 
-_STALE_CLI_EXECUTABLE_RE = re.compile(r"\baeat(?= (?:app|config|--|<))")
+_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?= (?:app|config|--|<))")
 
 
 def _normalise_cli_executable_references(value: str) -> str:

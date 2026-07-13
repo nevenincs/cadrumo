@@ -158,7 +158,7 @@ def verify_show(
 
     The lookup resolves a stored :class:`VerifyObservation` through
     :class:`VerifyService` and emits :class:`VerifyViewResult` with the same row
-    shape as ``cadrumo app live verify list``.
+    shape as ``aeat app live verify list``.
     """
     from ...application.live import VerifyService
     from ._app_live_payloads import VerifyViewResult

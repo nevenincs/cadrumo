@@ -251,7 +251,7 @@ class CertificateSourcePayload(BaseModel):
 
 
 class CertificateSourceListResult(BaseModel):
-    """Result of ``cadrumo config auth certificate list``."""
+    """Result of ``aeat config auth certificate list``."""
 
     model_config = _STRICT_FROZEN
 
@@ -308,7 +308,7 @@ class CertificateSourceCheckEntry(BaseModel):
 
 
 class CertificateSourceCheckReport(BaseModel):
-    """Result of ``cadrumo config auth certificate check``.
+    """Result of ``aeat config auth certificate check``.
 
     ``has_warnings`` is ``True`` when at least one entry's ``result`` is
     ``expiring`` or ``expired``, letting the CLI decide whether to attach

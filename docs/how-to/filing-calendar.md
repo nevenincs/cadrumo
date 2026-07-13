@@ -4,7 +4,7 @@ Use this guide when you want to understand what may be due, what is overdue,
 and what to prepare next for the [active profile](profile-setup.md#what-the-active-profile-means).
 A modelo is a Spanish tax form.
 
-These commands are local unless a command is under `cadrumo app live`. Local
+These commands are local unless a command is under `aeat app live`. Local
 calendar commands read the [active profile](profile-setup.md#what-the-active-profile-means)
 and local registry data. They do not file, submit, or contact the Agencia
 Estatal de Administración Tributaria (AEAT).
@@ -37,7 +37,7 @@ add `--allow-incomplete` where the command accepts it (`agenda`, `backlog`, and
 Start with the agenda:
 
 ```bash
-cadrumo app overview agenda
+aeat app overview agenda
 ```
 
 The agenda ranks obligations around a reference date. The agenda shows:
@@ -50,19 +50,19 @@ Use another reference date when planning ahead or reviewing a past point in
 time:
 
 ```bash
-cadrumo app overview agenda --date 2026-04-15
+aeat app overview agenda --date 2026-04-15
 ```
 
 Change the upcoming window with `--horizon`; the default is 14 days:
 
 ```bash
-cadrumo app overview agenda --date 2026-04-15 --horizon 30
+aeat app overview agenda --date 2026-04-15 --horizon 30
 ```
 
 To understand why one modelo appears or does not appear, use:
 
 ```bash
-cadrumo app overview explain 130 --year 2026
+aeat app overview explain 130 --year 2026
 ```
 
 `explain` reports whether that modelo applies, the registry reason, and the
@@ -74,7 +74,7 @@ Calendar commands do not read AEAT mailboxes. For DEHu notification snapshots,
 use the live notification workflow:
 
 ```bash
-cadrumo app live notifications latest
+aeat app live notifications latest
 ```
 
 If you have not captured notifications yet, use
@@ -86,14 +86,14 @@ capture requires AEAT authentication and is read-only.
 Use backlog for past-due obligations that are not locally marked as presented:
 
 ```bash
-cadrumo app overview backlog
+aeat app overview backlog
 ```
 
 The default backlog window starts 365 days before today and ends today. Narrow
 the review when you are checking a specific period:
 
 ```bash
-cadrumo app overview backlog --from 2026-01-01 --to 2026-06-30
+aeat app overview backlog --from 2026-01-01 --to 2026-06-30
 ```
 
 Backlog is a local planning tool. It does not prove what AEAT has or has not
@@ -106,7 +106,7 @@ see [The filing workflow: work units and calculation revisions](filing-spine.md)
 Generate a calendar window:
 
 ```bash
-cadrumo app overview calendar --from 2026-01-01 --to 2026-12-31
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
 Both dates are required in `YYYY-MM-DD` format. The calendar applies national
@@ -122,7 +122,7 @@ them against. Review the profile facts (see
 marked `censo_enrolment=unverified`:
 
 ```bash
-cadrumo app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
 ```
 
 To see every registered profile instead of only the
@@ -130,14 +130,14 @@ To see every registered profile instead of only the
 `--all-profiles`:
 
 ```bash
-cadrumo app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles
 ```
 
 When you want to inspect obligations that Cadrumo normally filters out, add
 `--show-suppressed`:
 
 ```bash
-cadrumo app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed
 ```
 
 Suppressed entries include obligations that do not apply given your profile
@@ -149,7 +149,7 @@ Use the year you are preparing and the date window you care about. A full
 calendar year window is:
 
 ```bash
-cadrumo app overview calendar --from 2026-01-01 --to 2026-12-31
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
 Quarterly filing periods use `1T`, `2T`, `3T`, and `4T`. Annual filings use
@@ -164,15 +164,15 @@ year-end - all addressed with `--year 2026 --period 1T` - see
 List the modelo catalogue:
 
 ```bash
-cadrumo app modelo list
-cadrumo app modelo list --year 2026
+aeat app modelo list
+aeat app modelo list --year 2026
 ```
 
 Describe one modelo before creating filing work:
 
 ```bash
-cadrumo app modelo describe 130
-cadrumo app modelo describe 130 --period 1T
+aeat app modelo describe 130
+aeat app modelo describe 130 --period 1T
 ```
 
 Then follow the filing workflow for the target modelo, year, and period:

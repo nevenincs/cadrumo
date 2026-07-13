@@ -64,7 +64,7 @@ _MODELO_202_INCOMPLETE_REASON = (
     "de la cifra de negocios de los doce meses anteriores no está "
     "declarado. Sin este dato el motor no infiere modalidad — un pago "
     "fraccionado equivocado es peor que una respuesta incompleta. Declare "
-    "el INCN con 'cadrumo config profile edit'."
+    "el INCN con 'aeat config profile edit'."
 )
 
 _MODELO_202_NOT_APPLICABLE_REASON = (

@@ -39,7 +39,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
-        source_command="cadrumo app ledger import",
+        source_command="aeat app ledger import",
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     duplicate_import = import_ledger_transactions(
@@ -48,7 +48,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
-        source_command="cadrumo app ledger import",
+        source_command="aeat app ledger import",
         occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
     )
 

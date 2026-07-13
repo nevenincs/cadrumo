@@ -1,4 +1,4 @@
-"""Behaviour gate for the ``cadrumo app contract`` capability manifest command.
+"""Behaviour gate for the ``aeat app contract`` capability manifest command.
 
 Asserts the read-only manifest command surfaces the full operator-surface
 contract through the shared :class:`SchemaEnvelope`: both roots, every mounted

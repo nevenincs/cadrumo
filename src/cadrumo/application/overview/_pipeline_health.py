@@ -1,7 +1,7 @@
 """Pipeline health: cross-domain readiness summary for one filing period.
 
 :func:`build_pipeline_health_report` is the application service backing
-``cadrumo app overview pipeline --year YEAR --period PERIOD``. It answers the
+``aeat app overview pipeline --year YEAR --period PERIOD``. It answers the
 operator-observable question "is my pipeline healthy for this period?" by
 composing three already-existing read models for the requested
 ``(filing_year, period)`` scope into one typed report:
@@ -168,7 +168,7 @@ def _modelo_health_row(
             work_unit_id=work_unit.work_unit_id,
             state=ModeloReadinessState.NOT_STARTED,
             summary=f"Modelo {modelo} work unit '{work_unit.name}' has no calculation revision yet.",
-            next_command=f"cadrumo app modelo work calculate {work_unit.work_unit_id}",
+            next_command=f"aeat app modelo work calculate {work_unit.work_unit_id}",
         )
 
     blocking = 0
@@ -188,7 +188,7 @@ def _modelo_health_row(
             blocking_finding_count=blocking,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: {blocking} blocking finding(s) on the current revision.",
-            next_command=f"cadrumo app modelo work verify {work_unit.work_unit_id}",
+            next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
         )
 
     if revision.state is CalculationRevisionState.PRESENTADO:
@@ -198,7 +198,7 @@ def _modelo_health_row(
             state=ModeloReadinessState.FILED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: filed.",
-            next_command=f"cadrumo app modelo filing-record list --modelo {modelo}",
+            next_command=f"aeat app modelo filing-record list --modelo {modelo}",
         )
 
     if revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
@@ -208,7 +208,7 @@ def _modelo_health_row(
             state=ModeloReadinessState.FILED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: filed (superseded by a later revision).",
-            next_command=f"cadrumo app modelo work revisions {work_unit.work_unit_id}",
+            next_command=f"aeat app modelo work revisions {work_unit.work_unit_id}",
         )
 
     if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
@@ -218,7 +218,7 @@ def _modelo_health_row(
             state=ModeloReadinessState.VERIFIED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: verified, not yet filed.",
-            next_command=f"cadrumo app modelo work file {work_unit.work_unit_id}",
+            next_command=f"aeat app modelo work file {work_unit.work_unit_id}",
         )
 
     # BORRADOR or DESCARTADO (a discarded unit would already be filtered out
@@ -230,7 +230,7 @@ def _modelo_health_row(
         state=ModeloReadinessState.CALCULATED,
         warning_finding_count=warning,
         summary=f"Modelo {modelo}: calculated, not yet verified.",
-        next_command=f"cadrumo app modelo work verify {work_unit.work_unit_id}",
+        next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
     )
 
 

@@ -1,4 +1,4 @@
-"""CLI work-command tests for the ``cadrumo ... modelo`` command tree."""
+"""CLI work-command tests for the ``aeat ... modelo`` command tree."""
 
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ def test_work_amend_batch_reports_partial_missing_options(_active_cli_profile: N
 
 
 def test_work_calculate_help_exposes_by_actor_flag() -> None:
-    """``cadrumo app modelo work calculate --help`` advertises a ``--by ACTOR``
+    """``aeat app modelo work calculate --help`` advertises a ``--by ACTOR``
     option so operators can attribute a calculation revision to a specific
     actor; the default factory pulls the active profile display name when
     ``--by`` is omitted."""

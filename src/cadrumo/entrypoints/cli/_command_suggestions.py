@@ -19,7 +19,7 @@ The same group class also owns **lazy subcommand loading**. The Cadrumo
 CLI command tree is wide: every leaf command module pulls the application
 layer and, transitively, the ~0.6 s registry parse. Importing the
 whole tree just to construct the ``cadrumo`` command app made
-``cadrumo --version`` and ``cadrumo --help`` pay that cost even though they
+``aeat --version`` and ``aeat --help`` pay that cost even though they
 never dispatch into a subcommand.
 
 Heavy subcommand groups therefore register a

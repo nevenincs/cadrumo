@@ -1,4 +1,4 @@
-"""Real-behavior coverage for ``cadrumo config google credential-source set|show``.
+"""Real-behavior coverage for ``aeat config google credential-source set|show``.
 
 Drives the full CLI surface (Typer callback, envelope emission, error
 boundary) through :func:`~tests.cli_runner.invoke_cached_cli` against a real provisioned

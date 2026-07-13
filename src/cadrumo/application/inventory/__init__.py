@@ -4,10 +4,10 @@ Wraps the rich :mod:`domain.contribuyente.inventory` substrate (FIFO /
 PMP valuation per LIS art. 17.1) with a bucket-scoped persistence
 layer and canonical operator verbs:
 
-    cadrumo app ledger inventory list
-    cadrumo app ledger inventory create
-    cadrumo app ledger inventory movement add
-    cadrumo app ledger inventory valuation preview
+    aeat app ledger inventory list
+    aeat app ledger inventory create
+    aeat app ledger inventory movement add
+    aeat app ledger inventory valuation preview
 
 Adapts the mutating-noun-group CRUD contract to the inventory domain's
 natural sub-noun grammar (actividad + movement + valuation); this

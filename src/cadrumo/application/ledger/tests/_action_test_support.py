@@ -436,7 +436,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
         iva_amount=Decimal("21.00"),
         purchase_invoice_evidence_id=purchase_evidence.invoice_id,
         actor="operator-A",
-        source_command="cadrumo app ledger add",
+        source_command="aeat app ledger add",
         idempotency_key="cash-2026-05-02-001",
     )
     result = create_manual_transaction(

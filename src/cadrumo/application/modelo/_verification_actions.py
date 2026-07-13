@@ -401,16 +401,16 @@ def _missing_evidence_findings(
                 severity=ModeloVerificationFindingSeverity.WARNING,
                 message=diagnostic.message,
                 next_action=(
-                    f"Register the supplier invoice with `cadrumo app ledger evidence add PATH`, attach it with "
-                    f"`cadrumo app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
+                    f"Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with "
+                    f"`aeat app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
                     "then rerun verification."
                     if is_deductible_gap
                     else (
                         f"Advisory only: keep issued/sales invoice support for ledger row {diagnostic.binding_id}. "
                         "There is currently no dedicated public CLI path that mints issued-invoice evidence like "
-                        "`cadrumo app ledger evidence add` does for purchase invoices. If you already have a secure "
+                        "`aeat app ledger evidence add` does for purchase invoices. If you already have a secure "
                         "attachment id, link it with "
-                        f"`cadrumo app ledger attach {diagnostic.binding_id} "
+                        f"`aeat app ledger attach {diagnostic.binding_id} "
                         "--attachment-id ATTACHMENT_ID`, then rerun "
                         "verification."
                     )
@@ -960,7 +960,7 @@ def _m369_unresolved_oss_source_finding(
             ),
             next_action=(
                 "Correct the OSS/IOSS invoice classification or add its law-grounded registry binding, rerun "
-                "`cadrumo app modelo work calculate`, then rerun verification."
+                "`aeat app modelo work calculate`, then rerun verification."
             ),
             legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
             source_refs=source_refs,
@@ -991,7 +991,7 @@ def _m369_unresolved_oss_source_finding(
                     f"recalculate before verification (sources: {legacy_refs})"
                 ),
                 next_action=(
-                    "Rerun `cadrumo app modelo work calculate` to persist current OSS/IOSS source resolution, "
+                    "Rerun `aeat app modelo work calculate` to persist current OSS/IOSS source resolution, "
                     "then rerun verification."
                 ),
                 legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
@@ -1010,7 +1010,7 @@ def _m369_unresolved_oss_source_finding(
                 ),
                 next_action=(
                     "Restore or classify the OSS/IOSS issued invoice evidence, rerun "
-                    "`cadrumo app modelo work calculate`, "
+                    "`aeat app modelo work calculate`, "
                     "then rerun verification."
                 ),
                 legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
@@ -1026,7 +1026,7 @@ def _m369_unresolved_oss_source_finding(
             "was persisted for a revision that declares ledger_oss_aggregation bindings."
         ),
         next_action=(
-            "Record and classify the OSS/IOSS issued invoice evidence, rerun `cadrumo app modelo work calculate`, "
+            "Record and classify the OSS/IOSS issued invoice evidence, rerun `aeat app modelo work calculate`, "
             "then rerun verification."
         ),
         legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
@@ -1085,7 +1085,7 @@ def _collect_revision_verification_findings(
                     filing_year=str(work_unit.filing_year),
                     period=work_unit.period.registry_token,
                 ),
-                next_action="cadrumo app registry verify",
+                next_action="aeat app registry verify",
                 legal_refs=WORKFLOW_GATE_LEGAL_REFS,
             ),
         )
@@ -1232,7 +1232,7 @@ def _missing_required_casilla_finding(
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
         message=tr("application.modelo.findings.missing_required_casilla", casilla_id=casilla_id),
-        next_action=(f"cadrumo app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
+        next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
         legal_refs=legal_refs,
         source_refs=source_refs,
     )

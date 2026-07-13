@@ -20,7 +20,7 @@ The service is local-only: it never contacts AEAT and never invokes
 that produces a file the operator presents through sede.agenciatributaria.gob.es
 themselves.
 
-The CLI verb ``cadrumo app modelo export`` is a thin delegate over this
+The CLI verb ``aeat app modelo export`` is a thin delegate over this
 service.
 
 See Also:
@@ -140,10 +140,10 @@ _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
 )
 _LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION = (
     "After filing through AEAT, capture official evidence with "
-    "`cadrumo app modelo reconcile pull --modelo {modelo} --year {filing_year} --period {period}`, "
-    "or `cadrumo app live justificante pull --modelo {modelo} --year {filing_year} --period {period}` "
+    "`aeat app modelo reconcile pull --modelo {modelo} --year {filing_year} --period {period}`, "
+    "or `aeat app live justificante pull --modelo {modelo} --year {filing_year} --period {period}` "
     "when live read access is available; otherwise import AEAT justificante/CSV evidence with "
-    "`cadrumo app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
+    "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
     "--evidence-id CSV --set CASILLA=VALUE`."
 )
 _COMPLETENESS_UNVERIFIED_MESSAGE = (
@@ -728,7 +728,7 @@ def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider:
     raise ModeloExportUnsupportedError(
         translated_message="application.modelo.errors.export_unsupported",
         context=context,
-        suggestion=f"cadrumo app modelo describe {modelo}",
+        suggestion=f"aeat app modelo describe {modelo}",
     )
 
 
@@ -1033,8 +1033,8 @@ def export_modelo_revision(
         error_type=ModeloExportEvidenceMissingError,
         surface="export",
         suggestion=(
-            "cadrumo app ledger evidence add PATH; "
-            "cadrumo app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+            "aeat app ledger evidence add PATH; "
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
         ),
     )
     work_unit = wu_repo.load().get(revision.work_unit_id)

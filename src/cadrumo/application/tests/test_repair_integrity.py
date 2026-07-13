@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Two fixed, distinct 32-byte master keys. Rows written under one and
 # probed under the other are genuinely undecryptable -- the exact
-# production condition `cadrumo config repair` exists to surface.
+# production condition `aeat config repair` exists to surface.
 _KEY_A = b"\xa1" * 32
 _KEY_B = b"\xb2" * 32
 _ROW_WRITTEN_AT = datetime(2026, 5, 28, 13, 5, 0, tzinfo=UTC)
@@ -113,7 +113,7 @@ class TestBuildIntegrityReport:
         assert workflow.unreadable == 2
         assert report.unreadable_total == 2
         assert report.check.status == "fail"
-        assert report.check.next_action == "cadrumo config repair quarantine --yes"
+        assert report.check.next_action == "aeat config repair quarantine --yes"
 
     def test_namespace_filter_restricts_scope(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):

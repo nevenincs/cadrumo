@@ -1,13 +1,13 @@
 """Regression tests pinning the evidence-store id space to the attach/create/update validator.
 
-``cadrumo app ledger evidence add`` mints a :class:`PurchaseInvoiceEvidence` record
+``aeat app ledger evidence add`` mints a :class:`PurchaseInvoiceEvidence` record
 into the dedicated bucket-scoped evidence store, while the purchase-invoice
 evidence validator historically resolved only the rich
 :class:`InvoiceCatalogue`. These tests assert the validator now accepts an
 ``evidence add`` id across the attach, create, and update paths — an id produced
-by ``evidence add`` is accepted by ``cadrumo app ledger attach`` in the same shell
+by ``evidence add`` is accepted by ``aeat app ledger attach`` in the same shell
 session — while still refusing unknown ids and ids minted by the slim
-``cadrumo app ledger invoice add`` store (the deliberate evidence/invoice store
+``aeat app ledger invoice add`` store (the deliberate evidence/invoice store
 split). Real adapters only: no mocks, stubs, or monkeypatch
 (``aeat-quality-gates``, ``aeat-roundtrip-discipline``).
 """
@@ -141,7 +141,7 @@ def test_evidence_add_id_is_accepted_by_update_patch(profile: TestRuntimeProfile
         transaction_id=transaction_id,
         patch=ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id),
         actor="operator-A",
-        source_command="cadrumo app ledger link",
+        source_command="aeat app ledger link",
         transaction_repository=_transaction_repository(profile),
         bucket_event_repository=_event_repository(profile),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
@@ -169,11 +169,11 @@ def test_nonexistent_evidence_id_is_refused_with_instructive_message(profile: Te
 
     # The acceptance is store-backed, not unconditional: an absent record still refuses,
     # and the refusal names the canonical evidence-registration verb.
-    assert "cadrumo app ledger evidence add" in str(exc_info.value)
+    assert "aeat app ledger evidence add" in str(exc_info.value)
 
 
 def test_slim_invoice_add_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
-    # An id minted by the slim operator invoice CRUD (`cadrumo app ledger invoice add`)
+    # An id minted by the slim operator invoice CRUD (`aeat app ledger invoice add`)
     # is NOT a valid evidence reference under the evidence/invoice store split;
     # attach must refuse it.
     invoice_service = PayableInvoiceService(
@@ -202,4 +202,4 @@ def test_slim_invoice_add_id_is_refused_by_attach(profile: TestRuntimeProfile) -
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
-    assert "cadrumo app ledger invoice add" in str(exc_info.value)
+    assert "aeat app ledger invoice add" in str(exc_info.value)

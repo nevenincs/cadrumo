@@ -161,7 +161,7 @@ def _raise_required_bindings_missing(
 ) -> None:
     period = work_unit.period.registry_token
     command = (
-        f"cadrumo app modelo bindings list --modelo {work_unit.modelo} "
+        f"aeat app modelo bindings list --modelo {work_unit.modelo} "
         f"--year {work_unit.filing_year} --period {period} --missing"
     )
     joined = ", ".join(missing_bindings)

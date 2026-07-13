@@ -108,7 +108,7 @@ class WithholdingSourceResolver:
                         f"per-perceptor-clave observations are persisted for "
                         f"{context.period.registry_token} {context.filing_year}; the distinct "
                         "percepciones count is materialised as zero. Supply the per-perceptor records "
-                        "(`cadrumo app modelo aggregate`) before filing."
+                        "(`aeat app modelo aggregate`) before filing."
                     ),
                 ),
             )

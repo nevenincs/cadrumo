@@ -1,4 +1,4 @@
-"""End-to-end gate for ``cadrumo app agent --output DIR --layout plugin``.
+"""End-to-end gate for ``aeat app agent --output DIR --layout plugin``.
 
 Asserts the CLI materialises the shipped operator harness as a schema-valid Claude
 plugin tree and emits the layout-discriminated ``agent`` envelope, without

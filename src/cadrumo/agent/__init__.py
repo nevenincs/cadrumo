@@ -8,7 +8,7 @@ resolves identically under an editable install and a built wheel.
 This package is a read accessor only. It carries no tax logic and computes no
 value; it hands the operating-layer text to whatever drives the agent (a prompt
 assembler, the MCP server, or an operator-workspace materialiser). The capability
-catalogue the agent reads first is emitted by ``cadrumo app contract --format json``.
+catalogue the agent reads first is emitted by ``aeat app contract --format json``.
 """
 
 from __future__ import annotations

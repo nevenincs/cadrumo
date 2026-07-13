@@ -1,12 +1,12 @@
-"""Conceptual topic catalogue for ``cadrumo app registry citations``.
+"""Conceptual topic catalogue for ``aeat app registry citations``.
 
 A tax-naive operator hitting the CLI for the first time needs
 plain-language explanations of concepts (``iva-regime``, ``casilla``,
 ``pago-fraccionado`` …) without having to leave the terminal. The
 CLI exposes:
 
-- ``cadrumo app registry citations`` -> list every registered slug + one-line summary.
-- ``cadrumo app registry citations <slug>`` -> render the topic body + see_also
+- ``aeat app registry citations`` -> list every registered slug + one-line summary.
+- ``aeat app registry citations <slug>`` -> render the topic body + see_also
   pointers + legal references.
 
 Topics live as TOML files under ``registry/aeat/topics/<slug>.toml``;

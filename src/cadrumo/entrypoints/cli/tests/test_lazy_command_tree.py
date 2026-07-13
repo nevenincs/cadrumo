@@ -3,7 +3,7 @@
 The Cadrumo command tree is wide: every leaf command module imports the
 application layer and, transitively, the registry parse. Registering
 every subcommand eagerly made constructing the Cadrumo app object
-import the whole tree — so ``cadrumo --version`` and ``cadrumo --help`` paid
+import the whole tree — so ``aeat --version`` and ``aeat --help`` paid
 the full registry cost even though neither dispatches into a
 subcommand.
 
@@ -12,7 +12,7 @@ subcommand groups through :class:`LazySubcommand` loaders that import
 their module only when the subtree is first resolved. These tests are
 the structural guard for that contract:
 
-* a real subprocess cold start of ``cadrumo --version`` must complete well
+* a real subprocess cold start of ``aeat --version`` must complete well
   under the time a registry parse alone would cost; and
 * importing the CLI package, and invoking the ``--version`` / ``--help``
   surfaces, must not import the registry or any heavy command module.
@@ -33,7 +33,7 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# A cold ``cadrumo --version`` — fresh interpreter, no warm import cache —
+# A cold ``aeat --version`` — fresh interpreter, no warm import cache —
 # resolves in well under a second once the command tree is lazy. A
 # re-introduced eager registration pulls the ~0.6 s registry parse (and
 # its workflow / deadlines dependencies) into app construction, pushing
@@ -74,7 +74,7 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_version_cold_start_completes_under_budget() -> None:
-    """A fresh-interpreter ``cadrumo --version`` returns inside the budget.
+    """A fresh-interpreter ``aeat --version`` returns inside the budget.
 
     This spawns the real console entry point in a new process — paying
     interpreter startup and every import — so the assertion covers the
@@ -99,7 +99,7 @@ def test_version_cold_start_completes_under_budget() -> None:
     assert completed.returncode == 0, completed.stderr
     assert "cadrumo" in completed.stdout
     assert elapsed < _COLD_START_BUDGET_S, (
-        f"cadrumo --version cold start took {elapsed:.2f}s (budget {_COLD_START_BUDGET_S}s) — "
+        f"aeat --version cold start took {elapsed:.2f}s (budget {_COLD_START_BUDGET_S}s) — "
         "lazy subcommand registration likely regressed to an eager import"
     )
 
@@ -134,7 +134,7 @@ def test_importing_cli_package_does_not_import_registry() -> None:
 
 @pytest.mark.parametrize("argv", [["--version"], ["--help"], []])
 def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
-    """``aeat`` (bare), ``cadrumo --version``, and ``cadrumo --help`` run without registry parse.
+    """``aeat`` (bare), ``aeat --version``, and ``aeat --help`` run without registry parse.
 
     State-free surfaces (version, help, and bare landing) short-circuit in the
     root callback before any subcommand is resolved, so no :class:`LazySubcommand`

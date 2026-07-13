@@ -1,5 +1,8 @@
 # Registry, legal sources, and Python API
 
+The Agencia Estatal de Administración Tributaria (AEAT) owns the official
+modelo structure. API means application programming interface.
+
 ## Registry and legal-source lookup
 
 Cadrumo's calculation registry preserves the AEAT structure it represents:

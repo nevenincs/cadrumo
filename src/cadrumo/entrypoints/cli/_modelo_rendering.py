@@ -60,11 +60,11 @@ _CROSS_PERIOD_DEPENDENCY_UNCLEAN_MESSAGE = _re.compile(
 )
 _CROSS_PERIOD_DEPENDENCY_UNCLEAN_EVIDENCE_NEXT_ACTION = _re.compile(
     r"Capture/import AEAT evidence for source modelo=\S+ year=\d+ period=\S+\. Run "
-    r"`(?P<target_capture>cadrumo app live filed pull-sources --modelo \S+ --year \d+ --period \S+)`, "
-    r"`(?P<source_justificante_capture>cadrumo app live justificante pull --modelo \S+ --year \d+ --period \S+)`, "
-    r"`(?P<import_official_record>cadrumo app modelo filing-record import WORK_UNIT_ID --evidence-kind "
+    r"`(?P<target_capture>aeat app live filed pull-sources --modelo \S+ --year \d+ --period \S+)`, "
+    r"`(?P<source_justificante_capture>aeat app live justificante pull --modelo \S+ --year \d+ --period \S+)`, "
+    r"`(?P<import_official_record>aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind "
     r"aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE)`, or "
-    r"`(?P<reconcile_file>cadrumo app modelo reconcile file WORK_UNIT_ID --file PATH)`; rerun verification\.",
+    r"`(?P<reconcile_file>aeat app modelo reconcile file WORK_UNIT_ID --file PATH)`; rerun verification\.",
 )
 _CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_MESSAGE = _re.compile(
     r"cross-period dependency scoped out as no-prior-obligation \(pre-activity\): "
@@ -87,7 +87,7 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
     rows, the entity operator who files the M184 is handed, per socio, the exact
     attributed base plus the ``attribution_received`` fact keys the socio records
-    on their OWN profile, and the exact ``cadrumo app modelo work calculate
+    on their OWN profile, and the exact ``aeat app modelo work calculate
     --binding`` command that folds the base into the socio's Modelo 100 (per the
     ``2026-07-09-m184-socio-attribution-handoff-adr`` addendum, decision (a): the
     cross-bucket value is carried by hand onto the relation-canonical casilla
@@ -117,7 +117,7 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
                 # language per the machine-identifier convention, so it is built
                 # in code rather than routed through tr().
                 suggestion=(
-                    f"cadrumo app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
+                    f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
                 ),
                 context={
                     "nif": row.nif,
@@ -206,7 +206,7 @@ def next_action_notice(
     the "what should the operator run next" guidance emitted after a work-unit
     read or a verification into an info-severity
     :class:`~cadrumo.core.json_contract.Notice` whose ``suggestion`` is the
-    follow-on ``cadrumo ...`` command. The lifecycle read verbs (``work list`` /
+    follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
     ``work status`` / ``work history``) and ``work verify`` call this instead of
     a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
     rides the one uniform notices surface per the
@@ -890,7 +890,7 @@ def verification_report_notices(report) -> list[Notice]:
 def verification_report_payload(report) -> VerificationReportPayload:
     """Project a domain report into the shared verification JSON payload.
 
-    Both ``cadrumo app modelo work verify`` and ``verification-report view/list``
+    Both ``aeat app modelo work verify`` and ``verification-report view/list``
     use this function so persisted :class:`cadrumo.domain.modelos.VerificationReport`
     rows expose identical
     :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`
@@ -973,7 +973,7 @@ def verification_report_lines(report) -> list[str]:
             + tr(
                 "cli.app.modelo.verification_report.next_action",
                 command=(
-                    "cadrumo app modelo verification-report list "
+                    "aeat app modelo verification-report list "
                     f"--calculation-revision-id {report.calculation_revision_id}"
                 ),
             ),

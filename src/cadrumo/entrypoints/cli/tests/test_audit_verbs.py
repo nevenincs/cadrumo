@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo app modelo audit {show, check, export, replay}`.
+"""CLI surface tests for `aeat app modelo audit {show, check, export, replay}`.
 
 The four verbs are the ratified audit surface from the evidence-bundle
 contract. These real-behavior tests drive each verb through the Typer

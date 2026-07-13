@@ -399,8 +399,8 @@ def _issues_for_transaction(
                 reason=LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
                 detail=(
                     "mixed ledger transaction has no usage_ratio_id; use an existing configured "
-                    "eligible category id from 'cadrumo app ledger ratios list' or 'cadrumo app ledger "
-                    "ratios eligible', create one with 'cadrumo app ledger ratios set <category-id> "
+                    "eligible category id from 'aeat app ledger ratios list' or 'aeat app ledger "
+                    "ratios eligible', create one with 'aeat app ledger ratios set <category-id> "
                     "<ratio>', then allocate with --usage-ratio-id <category-id>"
                 ),
             ),
@@ -412,7 +412,7 @@ def _issues_for_transaction(
                 reason=LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH,
                 detail=(
                     f"{censo_ratio_mismatch_detail}; update your censo vivienda_office data with "
-                    "'cadrumo config profile edit', or unset the HOME_OFFICE ratio before using it in modelo "
+                    "'aeat config profile edit', or unset the HOME_OFFICE ratio before using it in modelo "
                     "calculations"
                 ),
             ),

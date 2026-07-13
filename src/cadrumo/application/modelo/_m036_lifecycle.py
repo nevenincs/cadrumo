@@ -2,7 +2,7 @@
 
 Per the accepted Modelo 036/037 foundation decision, the local app never files a
 036. AEAT is the authority; the operator files the declaration at sede or in
-person, then records that fact locally through ``cadrumo app modelo m036
+person, then records that fact locally through ``aeat app modelo m036
 {alta,modificacion,baja}``. This module owns the typed application service behind
 that surface: it persists encrypted
 :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,

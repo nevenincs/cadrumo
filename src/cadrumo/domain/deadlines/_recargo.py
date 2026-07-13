@@ -261,7 +261,7 @@ def build_recovery_for_overdue(
     else:
         months = completed_months_late(closes_on, reference_today)
         resolved = resolve_recargo_band(months, band_table)
-    next_command = "cadrumo app modelo work --help"
+    next_command = "aeat app modelo work --help"
     return Recovery(
         still_filable=True,
         recargo_band=resolved,

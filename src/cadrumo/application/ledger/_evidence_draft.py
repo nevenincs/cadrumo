@@ -46,7 +46,7 @@ and
 :func:`~application.ledger._evidence_input.resolve_attachment_evidence_input`) and
 runs :func:`~application.ledger.extract_invoice_fields` over them, falling back
 to the on-host vision reader for scan-only PDFs and images, so
-``cadrumo app ledger evidence extract`` needs only a bucket id plus one of the two
+``aeat app ledger evidence extract`` needs only a bucket id plus one of the two
 reference ids.
 
 :func:`~application.ledger.confirm_invoice_draft_from_evidence` is the
@@ -353,7 +353,7 @@ def extract_invoice_draft_from_evidence(
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
             "exactly one of evidence_id or attachment_id must be supplied",
-            suggestion="cadrumo app ledger evidence list",
+            suggestion="aeat app ledger evidence list",
         )
 
     resolved_settings = settings or _load_settings()
@@ -392,7 +392,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         raise PurchaseInvoiceEvidenceInputError(
             "on-host LLM vision reading is disabled for this profile; enable it to read a scan-only "
             "PDF or image evidence",
-            suggestion="cadrumo config profile capabilities set llm_vision on",
+            suggestion="aeat config profile capabilities set llm_vision on",
         )
 
     try:
@@ -443,7 +443,7 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
             f"cannot confirm an invoice: {field} could not be extracted and no --{field.replace('_', '-')} "
             "override was supplied",
             suggestion=(
-                "cadrumo app ledger evidence extract --evidence-id <id>  # review the draft, then re-run confirm "
+                "aeat app ledger evidence extract --evidence-id <id>  # review the draft, then re-run confirm "
                 f"with an explicit --{field.replace('_', '-')} override"
             ),
         )
@@ -562,7 +562,7 @@ def confirm_invoice_draft_from_evidence(
         raise PurchaseInvoiceEvidenceInputError(
             "cannot confirm an invoice: counterparty_name has no extraction heuristic yet and "
             "no --counterparty-name override was supplied",
-            suggestion="cadrumo app ledger evidence extract --evidence-id <id>",
+            suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
@@ -630,7 +630,7 @@ def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDra
             return parsed
     raise PurchaseInvoiceEvidenceInputError(
         "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date override was supplied",
-        suggestion="cadrumo app ledger evidence extract --evidence-id <id>",
+        suggestion="aeat app ledger evidence extract --evidence-id <id>",
     )
 
 

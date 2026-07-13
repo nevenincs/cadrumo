@@ -60,12 +60,12 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # entrypoints/cli/__init__.py (importlib.import_module on a
         # string arg); the AST walker cannot follow dynamic dispatch.
         # Each is exercised end-to-end via the CLI surface tests under
-        # entrypoints/cli/test_*.py that invoke `cadrumo app <verb> ...`.
+        # entrypoints/cli/test_*.py that invoke `aeat app <verb> ...`.
         "src/cadrumo/entrypoints/cli/_exit_codes.py",
         "src/cadrumo/entrypoints/cli/_registry_corpus.py",
         "src/cadrumo/entrypoints/cli/_review.py",
         "src/cadrumo/entrypoints/cli/registry.py",
-        # cadrumo app quickfile / cadrumo app agent: same _lazy(...) dispatch as
+        # aeat app quickfile / aeat app agent: same _lazy(...) dispatch as
         # above; each has a dedicated entrypoints/cli/tests/test_app_*.py
         # driving the real CLI end-to-end, and its payload module is only
         # reachable through that same dynamically-dispatched command module.
@@ -82,7 +82,7 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # `python -m` entry point; not pytest-importable surface.
         # locales/__main__ dispatches into locales/scaffold.py.
         "src/cadrumo/locales/__main__.py",
-        # cadrumo app diagnostics: same _lazy(...) dispatch as the CLI verb
+        # aeat app diagnostics: same _lazy(...) dispatch as the CLI verb
         # modules above; only reachable via the dynamically-dispatched
         # `_app_diagnostics` command module. Each is exercised end-to-end via
         # the dedicated entrypoints/cli/tests/test_app_diagnostics_*.py suite

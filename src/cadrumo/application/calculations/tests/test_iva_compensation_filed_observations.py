@@ -138,7 +138,7 @@ def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope(
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_IVA_COMPENSATION_MODELO"
     assert envelope.retryable is False
-    assert envelope.suggestion == "cadrumo app live iva-wallet history"
+    assert envelope.suggestion == "aeat app live iva-wallet history"
     assert envelope.message != "IVA compensation history only accepts Modelo 303 observations"
 
 

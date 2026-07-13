@@ -13,8 +13,8 @@ You need:
 To find the transaction you want to fix, list your transactions and view one in detail:
 
 ```bash
-cadrumo app ledger list
-cadrumo app ledger view <transaction-id>
+aeat app ledger list
+aeat app ledger view <transaction-id>
 ```
 
 The [transactions guide](import-bank-statements.md) covers listing and filtering in depth.
@@ -35,7 +35,7 @@ The [transactions guide](import-bank-statements.md) covers listing and filtering
 Change one or more fields directly:
 
 ```bash
-cadrumo app ledger update <transaction-id> --amount 121.00 --description "Office chair, corrected price"
+aeat app ledger update <transaction-id> --amount 121.00 --description "Office chair, corrected price"
 ```
 
 Each flag fully replaces that field - write the complete new value, not an addition to the old one. Write the amount as a positive figure - the direction field carries whether money came in or went out, and a negative amount is refused. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
@@ -49,8 +49,8 @@ Update works on active transactions only. Archived and stashed transactions refu
 Remove deletes a transaction from your active records. To preview what would happen without deleting anything, run with `--dry-run` first:
 
 ```bash
-cadrumo app ledger remove <transaction-id> --reason "wrong file imported" --dry-run
-cadrumo app ledger remove <transaction-id> --reason "wrong file imported" --yes
+aeat app ledger remove <transaction-id> --reason "wrong file imported" --dry-run
+aeat app ledger remove <transaction-id> --reason "wrong file imported" --yes
 ```
 
 ## Split one transaction into parts
@@ -58,7 +58,7 @@ cadrumo app ledger remove <transaction-id> --reason "wrong file imported" --yes
 When one payment covers two different things - for example, a card payment that mixes business and personal items - split it into parts:
 
 ```bash
-cadrumo app ledger split <transaction-id> --child-amount 100.00 --child-description "office supplies" --child-amount 21.00 --child-description "personal items" --reason "mixed receipt" --yes
+aeat app ledger split <transaction-id> --child-amount 100.00 --child-description "office supplies" --child-amount 21.00 --child-description "personal items" --reason "mixed receipt" --yes
 ```
 
 Amounts and descriptions pair up one per part: the first amount goes with the first description, and so on. The original transaction becomes the split parent, and the parts carry the balance from then on.
@@ -70,10 +70,10 @@ The split output prints one `Id de transacción hija` row per part, each showing
 To undo a split, merge the parts back together using the child ids the split printed. Name every sibling part - the command refuses a partial merge:
 
 ```bash
-cadrumo app ledger merge --child-id <id1> --child-id <id2> --reason "undo split" --yes
+aeat app ledger merge --child-id <id1> --child-id <id2> --reason "undo split" --yes
 ```
 
-The parts and the original parent move to history, and the merge creates a fresh transaction in their place. If you no longer have the split output, the parts are active rows: run `cadrumo app ledger list` and read their ids from the listing.
+The parts and the original parent move to history, and the merge creates a fresh transaction in their place. If you no longer have the split output, the parts are active rows: run `aeat app ledger list` and read their ids from the listing.
 
 ## Stash a transaction you are unsure about
 
@@ -82,34 +82,34 @@ Stash sets a transaction aside for later. A stashed transaction is kept out of o
 Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active.
 
 ```bash
-cadrumo app ledger stash <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger stash <transaction-id> --reason "waiting for invoice" --yes
 ```
 
-The command prints the transaction's id, date, amount, and description, but not its new lifecycle state. To confirm the change took effect, view the row - `cadrumo app ledger view <transaction-id>` shows the lifecycle state (`STASHED`).
+The command prints the transaction's id, date, amount, and description, but not its new lifecycle state. To confirm the change took effect, view the row - `aeat app ledger view <transaction-id>` shows the lifecycle state (`STASHED`).
 
 ## Archive a transaction
 
 Archive keeps a transaction in history but out of ordinary work - it's the right choice for duplicates you want to keep a deliberate trace of:
 
 ```bash
-cadrumo app ledger archive <transaction-id> --reason "duplicate imported row" --yes
+aeat app ledger archive <transaction-id> --reason "duplicate imported row" --yes
 ```
 
-Like stash, the command prints the transaction's fields but not its new lifecycle state. Run `cadrumo app ledger view <transaction-id>` to confirm the row reads `ARCHIVED`.
+Like stash, the command prints the transaction's fields but not its new lifecycle state. Run `aeat app ledger view <transaction-id>` to confirm the row reads `ARCHIVED`.
 
 ## Restore a stashed or archived transaction
 
 If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals.
 
 ```bash
-cadrumo app ledger restore <transaction-id> --reason "stashed by mistake" --yes
+aeat app ledger restore <transaction-id> --reason "stashed by mistake" --yes
 ```
 
 Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to reset the whole ledger. List does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`:
 
 ```bash
-cadrumo app ledger view <transaction-id>
-cadrumo app ledger restore <transaction-id> --reason "bulk stash undo" --yes
+aeat app ledger view <transaction-id>
+aeat app ledger restore <transaction-id> --reason "bulk stash undo" --yes
 ```
 
 Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through an amendment.
@@ -119,13 +119,13 @@ Restore refuses a row that is already active, and it refuses a row whose period 
 Every correction is recorded. To see every action on a transaction in order, run:
 
 ```bash
-cadrumo app ledger history <transaction-id>
+aeat app ledger history <transaction-id>
 ```
 
 The history lists each action in order with its timestamp and event reference. Details such as the reason and the new values are in the JSON output. To see a value before a change, read the earlier events in the history. To follow a whole split family, add `--include-split-siblings`:
 
 ```bash
-cadrumo app ledger history <transaction-id> --include-split-siblings
+aeat app ledger history <transaction-id> --include-split-siblings
 ```
 
 The [CLI reference](../cli/index.rst) covers every field the history shows.
@@ -139,8 +139,8 @@ An attached evidence record - a receipt or invoice - is not deleted when you cor
 If the ledger is beyond repair - for example, after importing the wrong files repeatedly - clear it and rebuild. Preview first:
 
 ```bash
-cadrumo app ledger reset --reason "re-importing all statements" --dry-run
-cadrumo app ledger reset --reason "re-importing all statements" --yes
+aeat app ledger reset --reason "re-importing all statements" --dry-run
+aeat app ledger reset --reason "re-importing all statements" --yes
 ```
 
 Reset clears the whole ledger for the active profile. Use the [transactions guide](import-bank-statements.md) to rebuild it from your statements.

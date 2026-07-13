@@ -1,6 +1,6 @@
 """CLI tests for per-bucket profile lifecycle navigation.
 
-These tests drive ``cadrumo config profile`` from a cold per-bucket storage
+These tests drive ``aeat config profile`` from a cold per-bucket storage
 backend: ``rename`` is a label-only edit, ``import --label`` re-lands an
 exported bundle, and ``delete`` / ``switch`` / ``list`` / ``status`` / ``show``
 all resolve correctly from a no-active-session state. They are the

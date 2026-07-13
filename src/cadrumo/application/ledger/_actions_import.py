@@ -242,7 +242,7 @@ def import_ledger_transactions(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger import",
+    source_command: str = "aeat app ledger import",
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerImportOperationResult:

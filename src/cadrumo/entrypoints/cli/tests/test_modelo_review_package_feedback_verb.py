@@ -1,4 +1,4 @@
-"""CLI surface tests for ``cadrumo app modelo review-package encrypt-feedback/import-feedback``.
+"""CLI surface tests for ``aeat app modelo review-package encrypt-feedback/import-feedback``.
 
 Exercises the recipient feedback round trip end to end against a genuine
 encrypted profile bucket (no mocks): build a review package, sign it,

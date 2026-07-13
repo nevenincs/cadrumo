@@ -154,7 +154,7 @@ def _media_kind_from_mime(mime_type: str) -> MediaKind:
         return MediaKind.IMAGE
     raise PurchaseInvoiceEvidenceInputError(
         f"evidence media type {mime_type!r} cannot be read; only PDF and image evidence is supported",
-        suggestion="cadrumo app ledger evidence list",
+        suggestion="aeat app ledger evidence list",
     )
 
 

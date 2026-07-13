@@ -215,7 +215,7 @@ class InventoryLedgerRepository:
             raise InventoryLedgerError(
                 f"inventory ledger already exists for {ledger.actividad_id!r} in {ledger.year}",
                 context={"actividad_id": ledger.actividad_id, "year": ledger.year},
-                suggestion="cadrumo app ledger inventory list",
+                suggestion="aeat app ledger inventory list",
                 translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists",
             )
         updated = InventoryLedgerDocument(ledgers=(*current.ledgers, ledger))
@@ -249,7 +249,7 @@ class InventoryLedgerRepository:
                     raise InventoryLedgerError(
                         f"movement {movement.movement_id!r} already exists",
                         context={"movement_id": movement.movement_id},
-                        suggestion="cadrumo app ledger inventory valuation preview",
+                        suggestion="aeat app ledger inventory valuation preview",
                         translated_message="adapters.persistence.profile.inventory.errors.movement_already_exists",
                     )
                 updated = ledger.model_copy(update={"period_movements": (*ledger.period_movements, movement)})

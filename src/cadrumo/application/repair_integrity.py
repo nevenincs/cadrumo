@@ -208,7 +208,7 @@ def _aggregate_integrity(
         name="secure_objects.integrity",
         status="fail",
         summary=f"{unreadable} undecryptable row(s) in: {impacted}",
-        next_action="cadrumo config repair quarantine --yes",
+        next_action="aeat config repair quarantine --yes",
     )
 
 

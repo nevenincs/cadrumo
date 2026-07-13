@@ -1,5 +1,8 @@
 # Filesystem, state, and safety
 
+The Agencia Estatal de Administración Tributaria (AEAT) is the external tax
+authority referenced by the filing and live-read boundaries on this page.
+
 ## Local state layout
 
 `CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local state. The
@@ -46,6 +49,6 @@ untouched and requires the operator to choose a separate, explicit disposition.
 | Responsibility | The taxpayer or authorized filer reviews figures, meets deadlines, uploads, and retains the justificante |
 
 See [Protect access to your data](../how-to/protect-data-access.md) for recovery,
-locking, export, and reset tasks, and [the filing-boundary
-explanation](../explanation/recording-a-filing-and-the-boundary.md) for the
-reason submission stays outside Cadrumo.
+locking, export, and reset tasks. The [filing-boundary
+explanation](../explanation/recording-a-filing-and-the-boundary.md) explains why
+submission stays outside Cadrumo.

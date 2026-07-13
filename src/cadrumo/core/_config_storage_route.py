@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from .errors import CoreValidationError
 from ._config_state_root import PRODUCT_DATABASE_FILENAME
+from .errors import CoreValidationError
 
 if TYPE_CHECKING:
     from .config import Settings, StorageRouteClassification

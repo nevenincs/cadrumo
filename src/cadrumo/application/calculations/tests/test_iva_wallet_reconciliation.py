@@ -395,7 +395,7 @@ def test_iva_wallet_reconciliation_error_round_trips_through_build_error_envelop
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT"
     assert envelope.retryable is False
-    assert envelope.suggestion == "cadrumo app live iva-wallet pull"
+    assert envelope.suggestion == "aeat app live iva-wallet pull"
 
 
 def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -> None:

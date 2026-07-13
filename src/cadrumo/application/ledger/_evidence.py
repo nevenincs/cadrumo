@@ -1,6 +1,6 @@
 """Purchase invoice evidence records and the CRUD application service.
 
-``cadrumo app ledger evidence {add|remove|update|view|list}`` operate over a
+``aeat app ledger evidence {add|remove|update|view|list}`` operate over a
 :class:`PurchaseInvoiceEvidence` pydantic record. Audit events are emitted
 to a :class:`BucketEventHistoryRepository` on every mutating verb.
 
@@ -153,7 +153,7 @@ def derive_purchase_invoice_evidence_id(
     Mirrors :func:`cadrumo.domain.transactions.derive_transaction_id`: the id is a
     SHA-256 digest (truncated to 16 hex chars, the prior surrogate's width) over
     the record's identifying fields, so it is stable under a frozen-clock replay
-    and directly referenceable as an ``cadrumo app ledger evidence`` argument,
+    and directly referenceable as an ``aeat app ledger evidence`` argument,
     needing no output mask. ``created_at`` plus the ``disambiguator`` ordinal
     preserve the genuine-duplicate case the ledger already supports: two evidence
     records for the same file must keep distinct ids, so the mint site increments
@@ -217,7 +217,7 @@ def _resolve_media_kind(source_path: Path) -> MediaKind:
     raise PurchaseInvoiceEvidenceInputError(
         f"source path {source_path!s} has unsupported extension {suffix!r}; "
         f"only PDF and image inputs are accepted. See {_DEFERRED_ADR_REF}.",
-        suggestion="cadrumo app ledger evidence list",
+        suggestion="aeat app ledger evidence list",
     )
 
 
@@ -328,7 +328,7 @@ def _emit_evidence_event(
 
 
 class PurchaseInvoiceEvidenceService:
-    """Application service for the ``cadrumo app ledger evidence`` verb group."""
+    """Application service for the ``aeat app ledger evidence`` verb group."""
 
     def __init__(
         self,
@@ -409,7 +409,7 @@ class PurchaseInvoiceEvidenceService:
                 context={"source_path": str(source_path), "resolved_path": str(resolved)},
                 suggestion=(
                     "check the --file path: confirm the file exists, the path is spelled correctly, "
-                    "and the file is readable, then re-run `cadrumo app ledger evidence add`"
+                    "and the file is readable, then re-run `aeat app ledger evidence add`"
                 ),
             )
         media_kind = _resolve_media_kind(resolved)
@@ -431,7 +431,7 @@ class PurchaseInvoiceEvidenceService:
                 captured_at=now,
                 bucket_id=bucket_id,
                 captured_by=actor,
-                source_command="cadrumo app ledger evidence add",
+                source_command="aeat app ledger evidence add",
             ),
         )
         records = _load(self._settings, bucket_id)
@@ -511,7 +511,7 @@ class PurchaseInvoiceEvidenceService:
                 return record
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
-            suggestion="cadrumo app ledger evidence list",
+            suggestion="aeat app ledger evidence list",
         )
 
     def list_all(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
@@ -581,7 +581,7 @@ class PurchaseInvoiceEvidenceService:
             return PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
-            suggestion="cadrumo app ledger evidence list",
+            suggestion="aeat app ledger evidence list",
         )
 
     def remove(
@@ -629,7 +629,7 @@ class PurchaseInvoiceEvidenceService:
                 return PurchaseInvoiceEvidenceResult(record=removed, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
-            suggestion="cadrumo app ledger evidence list",
+            suggestion="aeat app ledger evidence list",
         )
 
     def _event_repository_for_bucket(self, bucket_id: str) -> BucketEventHistoryRepositoryProtocol:

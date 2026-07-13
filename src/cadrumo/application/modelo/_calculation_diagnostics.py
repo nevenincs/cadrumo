@@ -88,7 +88,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     replaces them: because a genuinely childless profile and a profile that simply
     never declared its descendientes both resolve 0513 to the same zero, this
     collector flags the ambiguous case (0513 = 0 and no descendiente facts declared
-    at all) and points the operator at ``cadrumo config profile descendiente add``.
+    at all) and points the operator at ``aeat config profile descendiente add``.
 
     Args:
         revision: The :class:`ModeloRevision` whose predicates, casillas, and

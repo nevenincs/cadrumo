@@ -108,7 +108,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     descriptors: list[McpToolDescriptor] = []
     for key in exposable_keys:
         mutability = _mutability_for_key(key, family_map)
-        cli_form = "cadrumo app " + key.replace(".", " ")
+        cli_form = "aeat app " + key.replace(".", " ")
         intent = _family_intent(key, intent_map)
         verb_schema = verb_schemas[key]
         # The model-facing description stays English (ADR mcp-protocol-hardening

@@ -1,4 +1,4 @@
-"""CLI surface tests for ``cadrumo app ledger ratios``.
+"""CLI surface tests for ``aeat app ledger ratios``.
 
 Pins the 5-verb ratios subgroup (list / set / unset / eligible /
 validate) against the real ratios backend, plus exercises the help-text
@@ -47,7 +47,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 @pytest.mark.parametrize("verb", ["list", "set", "unset", "eligible", "validate"])
 def test_ledger_ratios_verb_help_renders(verb: str) -> None:
-    """Every `cadrumo app ledger ratios <verb> --help` renders cleanly,
+    """Every `aeat app ledger ratios <verb> --help` renders cleanly,
     confirming each verb is mounted and its help-text translation key
     resolves to a non-empty default."""
 
@@ -57,7 +57,7 @@ def test_ledger_ratios_verb_help_renders(verb: str) -> None:
 
 
 def test_ledger_ratios_list_returns_envelope_on_empty_bucket() -> None:
-    """`cadrumo app ledger ratios list` on an empty bucket emits a typed
+    """`aeat app ledger ratios list` on an empty bucket emits a typed
     envelope (no exception, no missing-override error). The verb is
     read-only and informative — operators must always be able to query
     the override surface even when no overrides are persisted."""
@@ -67,7 +67,7 @@ def test_ledger_ratios_list_returns_envelope_on_empty_bucket() -> None:
 
 
 def test_ledger_ratios_eligible_returns_envelope_on_empty_bucket() -> None:
-    """`cadrumo app ledger ratios eligible` lists the categories whose
+    """`aeat app ledger ratios eligible` lists the categories whose
     overrides the engine accepts; this surface is purely registry-driven
     and works against an empty bucket."""
 
@@ -76,7 +76,7 @@ def test_ledger_ratios_eligible_returns_envelope_on_empty_bucket() -> None:
 
 
 def test_ledger_ratios_validate_on_empty_bucket_succeeds() -> None:
-    """`cadrumo app ledger ratios validate` runs the engine validation on
+    """`aeat app ledger ratios validate` runs the engine validation on
     the persisted override set (empty here). No errors surface when no
     overrides exist; the verb proves the validation path is reachable."""
 
@@ -85,7 +85,7 @@ def test_ledger_ratios_validate_on_empty_bucket_succeeds() -> None:
 
 
 def test_ledger_ratios_unset_refuses_when_no_override_exists() -> None:
-    """`cadrumo app ledger ratios unset <category>` against a bucket with
+    """`aeat app ledger ratios unset <category>` against a bucket with
     no persisted override for that category surfaces the
     ``no_override_error`` translation rather than silently succeeding,
     so the operator notices the override was never persisted."""

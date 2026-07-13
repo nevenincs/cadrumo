@@ -5,7 +5,7 @@ certificates — their own personal certificate plus one apoderado
 certificate per represented entity. Before this module, the certificate
 auth provider carried exactly one certificate path
 (:attr:`~application.auth.AuthState.certificate_path`), configured through
-``cadrumo config auth configure --provider certificate --file PATH``: adopting
+``aeat config auth configure --provider certificate --file PATH``: adopting
 a different certificate meant re-running that command and losing track of
 the previous path.
 

@@ -134,7 +134,7 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
         raise OutboundStorageValidationError(
             "no Google OAuth client registered for this profile",
             context={"profile": profile},
-            suggestion="cadrumo config google register --client-json <path>",
+            suggestion="aeat config google register --client-json <path>",
             translated_message="adapters.outbound.storage.factory.errors.google_client_missing",
         )
     token = load_token(profile)
@@ -142,7 +142,7 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
         raise OutboundStorageValidationError(
             "no Google OAuth token persisted for this profile",
             context={"profile": profile},
-            suggestion="cadrumo config google login",
+            suggestion="aeat config google login",
             translated_message="adapters.outbound.storage.factory.errors.google_token_missing",
         )
     try:
@@ -185,7 +185,7 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
        debugging without persisting state)
     2. Per-profile persisted
        :class:`adapters.outbound.google.DriveConfig` record (canonical
-       operator enrolment via ``cadrumo config google folder set <id>``)
+       operator enrolment via ``aeat config google folder set <id>``)
 
     Returns the empty string when neither source is configured.
     """
@@ -238,7 +238,7 @@ def get_storage_provider(
             raise OutboundStorageValidationError(
                 "no Drive root folder id is configured for this profile",
                 context={"profile": profile},
-                suggestion="cadrumo config google folder set <id>",
+                suggestion="aeat config google folder set <id>",
                 translated_message="adapters.outbound.storage.factory.errors.drive_root_missing",
             )
         credentials = build_google_credentials(profile=profile)

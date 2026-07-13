@@ -171,13 +171,13 @@ def test_config_profile_commands_accept_output_language() -> None:
 
 
 def test_modelo_work_commands_accept_output_language() -> None:
-    """Every ``cadrumo app modelo work`` command accepts ``--output-language``."""
+    """Every ``aeat app modelo work`` command accepts ``--output-language``."""
     for argv in _MODELO_WORK_COMMANDS:
         _assert_output_language_registered(argv)
 
 
 def test_review_commands_accept_output_language() -> None:
-    """Every ``cadrumo app review`` read verb accepts ``--output-language``."""
+    """Every ``aeat app review`` read verb accepts ``--output-language``."""
     for argv in _REVIEW_COMMANDS:
         _assert_output_language_registered(argv)
 

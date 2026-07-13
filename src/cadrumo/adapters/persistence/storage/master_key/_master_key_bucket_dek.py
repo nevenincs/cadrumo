@@ -90,7 +90,7 @@ def load_or_mint_bucket_dek(
             write_wrapped_bucket_dek(path, wrapped)
             return dek
         raise MasterKeyMaterialMissingError(
-            f"bucket {bucket_id!r} has no manifest; run `cadrumo config profile create NAME` "
+            f"bucket {bucket_id!r} has no manifest; run `aeat config profile create NAME` "
             "to create a profile before invoking commands that decrypt or persist stored records.",
         )
 
@@ -98,7 +98,7 @@ def load_or_mint_bucket_dek(
         if not path.is_file():
             raise MasterKeyMaterialMissingError(
                 f"bucket {bucket_id!r} is enrolled in the bucket-dek-v1 key schedule "
-                f"but its wrapped DEK is missing at {path}; run `cadrumo config recover` "
+                f"but its wrapped DEK is missing at {path}; run `aeat config recover` "
                 "or restore the bucket keystore from backup before decrypting or "
                 "persisting records.",
             )
@@ -113,7 +113,7 @@ def load_or_mint_bucket_dek(
 
     raise MasterKeyMaterialMissingError(
         f"bucket {bucket_id!r} has unsupported key schedule {key_schedule!r}; "
-        "run `cadrumo config recover` before decrypting or persisting records.",
+        "run `aeat config recover` before decrypting or persisting records.",
     )
 
 

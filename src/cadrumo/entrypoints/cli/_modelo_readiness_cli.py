@@ -207,7 +207,7 @@ def _readiness_lines(
         command_period = period or report.period.registry_token
         lines.append(
             "missing_bindings_command\t"
-            f"cadrumo app modelo bindings list --modelo {modelo} --year {filing_year} "
+            f"aeat app modelo bindings list --modelo {modelo} --year {filing_year} "
             f"--period {command_period} --missing",
         )
     lines.extend(
@@ -263,7 +263,7 @@ def _readiness_notices(report) -> tuple[Notice, ...]:
                 message=(
                     f"Modelo {report.modelo} cannot produce a local fichero-BOE export: {export_context['reason']}."
                 ),
-                suggestion=f"cadrumo app modelo describe {report.modelo}",
+                suggestion=f"aeat app modelo describe {report.modelo}",
                 context=export_context,
             ),
         )
@@ -302,7 +302,7 @@ def _export_readiness_context(report) -> dict[str, str] | None:
 def _readiness_finish_line(export_context: dict[str, str] | None) -> str:
     if export_context is not None:
         return "finish_line\tlocal calculation, verification, and internal filing only; fichero-BOE export unsupported"
-    return "finish_line\texport verified-complete revision via 'cadrumo app modelo export' (local finish line)"
+    return "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)"
 
 
 __all__ = ["register_readiness_commands"]

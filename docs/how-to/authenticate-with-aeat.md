@@ -6,7 +6,7 @@ your AEAT identity authorizes. Authentication provides read-only access only.
 It never files a declaration, makes a payment, acknowledges a notification, or
 performs representative-write actions.
 
-Run `cadrumo --help` before continuing. If it fails, stop before configuring
+Run `aeat --help` before continuing. If it fails, stop before configuring
 authentication and follow the [CLI troubleshooting guide](troubleshooting.md).
 If that does not restore the command, report the failure with the Cadrumo
 version and redacted output.
@@ -22,7 +22,7 @@ You need:
 
 - an [active profile](profile-setup.md#what-the-active-profile-means). `cadrumo
   config auth configure` refuses with `No hay un perfil activo` until you create
-  one. Create one non-interactively with `cadrumo config profile create me --quiet
+  one. Create one non-interactively with `aeat config profile create me --quiet
   --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`. A NIF,
   CIF, DNI, or NIE is a Spanish tax identifier.
 - the master-key passphrase that protects your local store. The tool prompts for
@@ -33,7 +33,7 @@ You need:
 List providers:
 
 ```bash
-cadrumo config auth providers
+aeat config auth providers
 ```
 
 The list marks each provider as `disponible` (available now) or `reservado (no
@@ -55,7 +55,7 @@ Configure one of the available providers.
 Configure the provider you use:
 
 ```bash
-cadrumo config auth configure --provider certificate --file ./certificate.p12
+aeat config auth configure --provider certificate --file ./certificate.p12
 ```
 
 Use `--file` for providers that need a file, such as your digital certificate.
@@ -66,8 +66,8 @@ Keep credential files private and do not share them.
 Check what is configured:
 
 ```bash
-cadrumo config auth status
-cadrumo config auth test
+aeat config auth status
+aeat config auth test
 ```
 
 If you want to inspect a specific provider, use `--provider` with either
@@ -82,7 +82,7 @@ live read caused by an expired certificate.
 Check the remaining validity:
 
 ```bash
-cadrumo config auth test
+aeat config auth test
 ```
 
 The report tells you how the certificate stands:
@@ -103,7 +103,7 @@ Download the renewed certificate file (`.p12` or `.pfx`) to your machine.
 Point the tool at the renewed file:
 
 ```bash
-cadrumo config auth configure --provider certificate --file ./renewed-certificate.p12
+aeat config auth configure --provider certificate --file ./renewed-certificate.p12
 ```
 
 If the renewed certificate uses a new password, update the
@@ -112,7 +112,7 @@ If the renewed certificate uses a new password, update the
 Confirm the new expiry:
 
 ```bash
-cadrumo config auth test
+aeat config auth test
 ```
 
 The report now shows the renewed certificate's later expiry date.
@@ -120,31 +120,31 @@ The report now shows the renewed certificate's later expiry date.
 ## Manage several certificates
 
 If you act for several entities, register one certificate per entity. Do not
-reconfigure `cadrumo config auth configure --file` every time you switch.
+reconfigure `aeat config auth configure --file` every time you switch.
 
 Register each certificate under a name:
 
 ```bash
-cadrumo config auth certificate register --name personal --file ./personal.p12
-cadrumo config auth certificate register --name apoderado-acme --file ./acme.p12 --friendly-name "ACME SL"
+aeat config auth certificate register --name personal --file ./personal.p12
+aeat config auth certificate register --name apoderado-acme --file ./acme.p12 --friendly-name "ACME SL"
 ```
 
 List every registered certificate:
 
 ```bash
-cadrumo config auth certificate list
+aeat config auth certificate list
 ```
 
 Select the one you want active:
 
 ```bash
-cadrumo config auth certificate select --name apoderado-acme
+aeat config auth certificate select --name apoderado-acme
 ```
 
 Remove a registered certificate you no longer need:
 
 ```bash
-cadrumo config auth certificate remove --name personal
+aeat config auth certificate remove --name personal
 ```
 
 ### Check every registered certificate's expiry
@@ -153,7 +153,7 @@ Each registered certificate has its own expiry date. Check all registered
 certificates in one pass, not only the active one:
 
 ```bash
-cadrumo config auth certificate check
+aeat config auth certificate check
 ```
 
 The report lists each registered certificate with its status:
@@ -167,23 +167,23 @@ Renew an expiring or expired certificate with the body that issued it, then
 re-register it under its existing name:
 
 ```bash
-cadrumo config auth certificate register --name apoderado-acme --file ./renewed-acme.p12
+aeat config auth certificate register --name apoderado-acme --file ./renewed-acme.p12
 ```
 
-Re-run `cadrumo config auth certificate check` to confirm the new expiry date.
+Re-run `aeat config auth certificate check` to confirm the new expiry date.
 
 ## Acquire or verify a live session
 
 When you are ready to use a live-read command:
 
 ```bash
-cadrumo config auth login
+aeat config auth login
 ```
 
 If you need to intentionally reauthenticate, force a fresh authentication:
 
 ```bash
-cadrumo config auth login --fresh
+aeat config auth login --fresh
 ```
 
 If a previous login was interrupted and left the authentication step stuck, use
@@ -195,20 +195,20 @@ is not.
 Clear one provider:
 
 ```bash
-cadrumo config auth clear --provider certificate
+aeat config auth clear --provider certificate
 ```
 
 Clear sessions or locks:
 
 ```bash
-cadrumo config auth clear --sessions
-cadrumo config auth clear --locks
+aeat config auth clear --sessions
+aeat config auth clear --locks
 ```
 
 If you intend to reset authentication setup, clear all configured providers:
 
 ```bash
-cadrumo config auth clear --all
+aeat config auth clear --all
 ```
 
 ## Act for someone else (apoderado)
@@ -228,7 +228,7 @@ AEAT. No command writes representation state to AEAT.
 List the scope codes the tool accepts:
 
 ```bash
-cadrumo config auth apoderado scopes list
+aeat config auth apoderado scopes list
 ```
 
 Each scope is an AEAT apoderamiento area. Examples include:
@@ -246,7 +246,7 @@ Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) and
 the scopes that match the grant at AEAT:
 
 ```bash
-cadrumo config auth apoderado configure --represented-nif <nif> --scope IVA --scope PAGOSF
+aeat config auth apoderado configure --represented-nif <nif> --scope IVA --scope PAGOSF
 ```
 
 Repeat `--scope` for each code. The CLI rejects a comma-separated list. Scope
@@ -261,18 +261,18 @@ again replaces it. The represented identifier is stored encrypted.
 Show what is recorded for the active profile:
 
 ```bash
-cadrumo config auth apoderado status
+aeat config auth apoderado status
 ```
 
-`cadrumo config auth apoderado check` is the live-verification verb, but the
+`aeat config auth apoderado check` is the live-verification verb, but the
 live AEAT read path is sealed. It refuses with a "live verification unavailable"
-message and points you back to `status`. Use `cadrumo config auth apoderado status`
+message and points you back to `status`. Use `aeat config auth apoderado status`
 for the offline configuration read.
 
 Remove the configuration when the representation ends:
 
 ```bash
-cadrumo config auth apoderado clear
+aeat config auth apoderado clear
 ```
 
 Clearing removes only the local record. The apoderamiento at AEAT is
@@ -284,6 +284,6 @@ unaffected. Revoke it through AEAT's own procedures.
 - [Set up your taxpayer profile](profile-setup.md)
 - [Diagnose and repair your local setup](troubleshooting.md)
 
-Run `cadrumo config auth test` before each live-read task. Follow [Renew your
+Run `aeat config auth test` before each live-read task. Follow [Renew your
 certificate before it expires](#renew-your-certificate-before-it-expires) when
 the command reports an expiry warning.

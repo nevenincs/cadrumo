@@ -203,7 +203,7 @@ def credentials_to_records(
         raise GoogleAuthScopeInsufficientError(
             f"consent screen returned without granting required scopes: {missing!r}",
             context={"missing_scopes": list(missing), "account_email": account_email},
-            suggestion="cadrumo config google login",
+            suggestion="aeat config google login",
             translated_message="adapters.google.oauth_flow.errors.scope_missing",
         )
     token = OAuthToken(refresh_token=refresh_token, token_uri=token_uri)
@@ -375,7 +375,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthScopeInsufficientError(
             "Google did not return an id_token; the OAuth consent did not include the openid+email scopes",
             context={"audience": audience},
-            suggestion="cadrumo config google login",
+            suggestion="aeat config google login",
             translated_message="adapters.google.oauth_flow.errors.id_token_missing",
         )
     try:
@@ -400,7 +400,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthScopeInsufficientError(
             "id_token verified but carries no `email` claim",
             context={"audience": audience},
-            suggestion="cadrumo config google login",
+            suggestion="aeat config google login",
             translated_message="adapters.google.oauth_flow.errors.email_claim_missing",
         )
     return email

@@ -76,7 +76,7 @@ def archive_manual_transaction(
     transaction_id: str,
     actor: str,
     reason: str = "",
-    source_command: str = "cadrumo app ledger archive",
+    source_command: str = "aeat app ledger archive",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -110,7 +110,7 @@ def stash_manual_transaction(
     transaction_id: str,
     actor: str,
     reason: str = "",
-    source_command: str = "cadrumo app ledger stash",
+    source_command: str = "aeat app ledger stash",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -144,7 +144,7 @@ def restore_manual_transaction(
     transaction_id: str,
     actor: str,
     reason: str = "",
-    source_command: str = "cadrumo app ledger restore",
+    source_command: str = "aeat app ledger restore",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -218,7 +218,7 @@ def mark_transaction_reviewed_excluded(
     transaction_id: str,
     actor: str,
     reason: str = "",
-    source_command: str = "cadrumo app ledger exclude",
+    source_command: str = "aeat app ledger exclude",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -233,7 +233,7 @@ def mark_transaction_reviewed_excluded(
     surfacing it." The row stays ``ACTIVE`` and visible in the ledger with review
     status ``excluded``, drops out of the review queue, and is omitted from every
     tax aggregation. The operator re-includes it by re-classifying the row
-    (``cadrumo app ledger classify``).
+    (``aeat app ledger classify``).
 
     The finalized-modelo guard refuses the exclusion when the row is cited by a
     sealed (``VERIFICADO_COMPLETO`` / ``PRESENTADO`` / ``PRESENTADO_SUPERSEDIDO``)
@@ -323,7 +323,7 @@ def remove_manual_transaction(
     actor: str,
     reason: str = "",
     dry_run: bool = False,
-    source_command: str = "cadrumo app ledger remove",
+    source_command: str = "aeat app ledger remove",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
@@ -444,7 +444,7 @@ def reset_ledger_catalogue(
     actor: str,
     reason: str = "",
     dry_run: bool = False,
-    source_command: str = "cadrumo app ledger reset",
+    source_command: str = "aeat app ledger reset",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,

@@ -249,7 +249,7 @@ def _resolve_evidence(
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(
             "on-host LLM vision reading is disabled for this profile; enable it to read scanned or image evidence",
-            suggestion="cadrumo config profile capabilities set llm_vision on",
+            suggestion="aeat config profile capabilities set llm_vision on",
         )
     return _ResolvedEvidence(reference=reference, text=None, images=images)
 
@@ -526,7 +526,7 @@ def apply_llm_classification(
     bucket_id: str,
     business_pct: Decimal | None = None,
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger classify --llm",
+    source_command: str = "aeat app ledger classify --llm",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -826,7 +826,7 @@ def apply_saturated_llm_classification(
     bucket_id: str,
     business_pct: Decimal | None = None,
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger classify --llm --saturate --apply",
+    source_command: str = "aeat app ledger classify --llm --saturate --apply",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -928,7 +928,7 @@ def derive_operator_iva_substrate(
     iva_category: IvaCategory,
     on_date: date | None = None,
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger classify --iva-category --saturate",
+    source_command: str = "aeat app ledger classify --iva-category --saturate",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -1189,7 +1189,7 @@ def apply_evidence_split(
     *,
     bucket_id: str,
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger split --llm --apply",
+    source_command: str = "aeat app ledger split --llm --apply",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -1315,7 +1315,7 @@ def apply_evidence_classification(
     *,
     bucket_id: str,
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger classify --read-evidence --auto-split --apply",
+    source_command: str = "aeat app ledger classify --read-evidence --auto-split --apply",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -1409,7 +1409,7 @@ def reject_llm_suggestion(
     bucket_id: str,
     reason: str = "",
     actor: str = "operator",
-    source_command: str = "cadrumo app ledger classify --llm --reject",
+    source_command: str = "aeat app ledger classify --llm --reject",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,

@@ -130,7 +130,7 @@ def test_set_locale_value_preserves_multiline_value_roundtrip(tmp_path: Path):
         "Todavía no se ha guardado nada.\n"
         "\n"
         "1. Vuelve a ejecutar el comando:\n"
-        "     cadrumo config profile create NAME\n"
+        "     aeat config profile create NAME\n"
         "\n"
         "2. O usa flags: --quiet --tax-id NIF/CIF/DNI/NIE"
     )
@@ -155,7 +155,7 @@ def test_set_locale_value_falls_back_for_multiline_scalar_that_looks_like_a_key(
         "      work:\n"
         "        legal_note: 'Legal\n"
         "          basis: regulation.'\n"
-        "        next_action: Run cadrumo app modelo work calculate.\n",
+        "        next_action: Run aeat app modelo work calculate.\n",
         encoding="utf-8",
     )
 
@@ -168,11 +168,11 @@ def test_set_locale_value_falls_back_for_multiline_scalar_that_looks_like_a_key(
 
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "app", "modelo", "work", "legal_note") == "Legal basis: regulation."
-    assert _leaf(data, "cli", "app", "modelo", "work", "next_action") == "Run cadrumo app modelo work calculate."
+    assert _leaf(data, "cli", "app", "modelo", "work", "next_action") == "Run aeat app modelo work calculate."
 
 
 def test_set_locale_value_canonicalizes_the_cli_executable(tmp_path: Path):
-    """Locale maintenance rewrites the retired executable to the Cadrumo CLI."""
+    """Locale maintenance rewrites a stale cadrumo command prefix to the aeat CLI."""
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()
     locale_path = locales_dir / "en.yml"
@@ -182,12 +182,12 @@ def test_set_locale_value_canonicalizes_the_cli_executable(tmp_path: Path):
     temp_manager.set_locale_value(
         "en",
         "cli.root.next_action",
-        "Cadrumo prepares the draft; run aeat app modelo work calculate.",
+        "Cadrumo prepares the draft; run cadrumo app modelo work calculate.",
     )
 
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "root", "next_action") == (
-        "Cadrumo prepares the draft; run cadrumo app modelo work calculate."
+        "Cadrumo prepares the draft; run aeat app modelo work calculate."
     )
 
 
@@ -197,7 +197,7 @@ def test_canonicalize_cli_executable_references_updates_each_catalogue_once(tmp_
     locales_dir.mkdir()
     for locale in ("ca", "en"):
         (locales_dir / f"{locale}.yml").write_text(
-            "cli:\n  root:\n    next_action: Run aeat config profile status.\n"
+            "cli:\n  root:\n    next_action: Run cadrumo config profile status.\n"
             "product:\n  heading: Cadrumo prepares tax forms.\n",
             encoding="utf-8",
         )
@@ -208,7 +208,7 @@ def test_canonicalize_cli_executable_references_updates_each_catalogue_once(tmp_
     assert {path.name for path in updated} == {"ca.yml", "en.yml"}
     for locale in ("ca", "en"):
         data = temp_manager.load_locale(locales_dir / f"{locale}.yml")
-        assert _leaf(data, "cli", "root", "next_action") == "Run cadrumo config profile status."
+        assert _leaf(data, "cli", "root", "next_action") == "Run aeat config profile status."
         assert _leaf(data, "product", "heading") == "Cadrumo prepares tax forms."
 
 

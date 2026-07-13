@@ -237,7 +237,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             "zero_reconciliation_casillas_at_risk": tuple(target for _rel, _binding, target, _annual in missing),
             "nonzero_annual_casillas": tuple(annual for _rel, _binding, _target, annual in missing),
         },
-        suggestion="cadrumo app live filed pull-sources --modelo 303",
+        suggestion="aeat app live filed pull-sources --modelo 303",
     )
 
 

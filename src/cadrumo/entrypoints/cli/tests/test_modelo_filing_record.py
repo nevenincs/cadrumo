@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
-    """The JSON-format emitter for ``cadrumo app modelo filing-record show``
+    """The JSON-format emitter for ``aeat app modelo filing-record show``
     surfaces both ``external_evidence`` (kind / reference_id / imported_at)
     and ``amends_filing_record_id`` so amendment chains are operator-discoverable
     from the record's own listing surface, not only via the amend action."""

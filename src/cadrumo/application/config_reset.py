@@ -1,4 +1,4 @@
-"""Scoped reset service for ``cadrumo config reset``.
+"""Scoped reset service for ``aeat config reset``.
 
 Removes one or more pieces of operator-local state behind an explicit
 ``--yes`` confirmation gate and the CLI requires an explicit ``--scope``.
@@ -32,7 +32,7 @@ message key.
 
 See Also:
     :func:`~application.workflow._persistence.reset_workflow_state`
-        Narrow ``cadrumo config repair reset-progress`` route that deletes the
+        Narrow ``aeat config repair reset-progress`` route that deletes the
         saved workflow-state envelope after producing a
         :class:`~application.workflow.WorkflowStateResetFingerprint`.
     :class:`~application.diagnostics.SecureObjectIntegrityReport`
@@ -71,7 +71,7 @@ class ConfigResetScope(StrEnum):
 
 
 CONFIG_RESET_SCOPE_CLI_VALUES: tuple[str, ...] = tuple(scope.value.lower() for scope in ConfigResetScope)
-"""Lowercase :class:`ConfigResetScope` tokens accepted by ``cadrumo config reset --scope``."""
+"""Lowercase :class:`ConfigResetScope` tokens accepted by ``aeat config reset --scope``."""
 
 
 def parse_config_reset_scope(raw: str) -> ConfigResetScope:
@@ -132,7 +132,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
     This broad reset surface is separate from
     :func:`~application.workflow._persistence.reset_workflow_state`, which
     only clears the workflow-state envelope for
-    ``cadrumo config repair reset-progress``.
+    ``aeat config repair reset-progress``.
 
     Args:
         scope: The :class:`ConfigResetScope` to apply.

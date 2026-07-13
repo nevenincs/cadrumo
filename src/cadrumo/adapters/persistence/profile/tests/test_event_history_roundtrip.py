@@ -183,9 +183,9 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
         assert exc_info.value.context == {
             "namespace": _NAMESPACE,
             "object_key": _OBJECT_KEY,
-            "recovery": "cadrumo config repair --help",
+            "recovery": "aeat config repair --help",
         }
-        assert exc_info.value.suggestion == "cadrumo config repair --help"
+        assert exc_info.value.suggestion == "aeat config repair --help"
 
 
 def test_bucket_event_inner_classification_drift_is_structured(tmp_path: Path) -> None:

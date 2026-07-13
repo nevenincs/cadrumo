@@ -65,7 +65,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
                 direction=TransactionDirection.OUTGOING,
                 description="attempt to edit archived row",
                 actor="operator-B",
-                source_command="cadrumo app ledger update",
+                source_command="aeat app ledger update",
             ),
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,

@@ -1,4 +1,4 @@
-"""Real-CLI regression for ``cadrumo app ledger evidence extract`` (#254 slice).
+"""Real-CLI regression for ``aeat app ledger evidence extract`` (#254 slice).
 
 Wires the on-host ``extract_invoice_fields`` primitive (landed in
 ``25ed55fd29``) to the ledger CLI: an operator can now run ``evidence add``

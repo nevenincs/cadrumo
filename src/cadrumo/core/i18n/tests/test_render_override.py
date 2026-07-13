@@ -84,11 +84,11 @@ def test_stale_cli_prefixes_normalise_without_changing_product_prose() -> None:
     from .._render import _normalise_cli_executable_references
 
     rendered = _normalise_cli_executable_references(
-        "Cadrumo prepares the draft; run cadrumo config profile status, cadrumo app modelo work calculate, or cadrumo --help.",
+        "Cadrumo prepares the draft; run aeat config profile status, aeat app modelo work calculate, or aeat --help.",
     )
 
     assert rendered == (
-        "Cadrumo prepares the draft; run cadrumo config profile status, cadrumo app modelo work calculate, or cadrumo --help."
+        "Cadrumo prepares the draft; run aeat config profile status, aeat app modelo work calculate, or aeat --help."
     )
 
 

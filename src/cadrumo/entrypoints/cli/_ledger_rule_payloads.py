@@ -42,7 +42,7 @@ class ClassificationRulePayload(OutputSchema):
 
 @register_schema("ledger.rule.add")
 class RuleAddResult(ClassificationRulePayload):
-    """JSON envelope for ``cadrumo app ledger rule add``.
+    """JSON envelope for ``aeat app ledger rule add``.
 
     The command persists one
     :class:`LedgerClassificationRule` through
@@ -54,7 +54,7 @@ class RuleAddResult(ClassificationRulePayload):
 
 @register_schema("ledger.rule.list")
 class RuleListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger rule list``.
+    """JSON envelope for ``aeat app ledger rule list``.
 
     Rows are returned in the application evaluation order exposed by
     :meth:`LedgerClassificationRuleRepository.list_rules`: priority ascending,
@@ -100,7 +100,7 @@ class RuleApplyAppliedPayload(OutputSchema):
 
 @register_schema("ledger.rule.apply")
 class RuleApplyResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger rule apply``.
+    """JSON envelope for ``aeat app ledger rule apply``.
 
     Covers both the dry-run branch (``dry_run``, ``would_match``,
     ``count``) and the live-apply branch (``rules_evaluated``,
@@ -161,7 +161,7 @@ class VisionProviderPayload(OutputSchema):
 
 @register_schema("ledger.providers")
 class LedgerProvidersResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger providers``.
+    """JSON envelope for ``aeat app ledger providers``.
 
     Reports subprocess cloud-provider CLIs from
     :func:`available_llm_providers` and the on-host Ollama vision model probed
@@ -213,7 +213,7 @@ class LlmConfidenceProviderPayload(OutputSchema):
 
 @register_schema("ledger.llm_diagnostics")
 class LedgerLlmDiagnosticsResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger llm-diagnostics``.
+    """JSON envelope for ``aeat app ledger llm-diagnostics``.
 
     Presents the two existing LLM metric stores in one read-only report: the
     usage/cost log aggregated per provider

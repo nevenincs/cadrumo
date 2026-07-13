@@ -35,8 +35,8 @@ From an authorized source checkout, run:
 ```console
 python --version
 uv sync
-uv run cadrumo --version
-uv run cadrumo --help
+uv run aeat --version
+uv run aeat --help
 ```
 
 The last two commands verify the sole human command, `cadrumo`.
@@ -54,7 +54,7 @@ Long commands below use PowerShell's backtick continuation. Copy the complete bl
 ### 1. Create a profile
 
 ```powershell
-uv run cadrumo config profile create demo `
+uv run aeat config profile create demo `
   --quiet --accept-defaults `
   --entity-type natural_person `
   --tax-id 12345678Z --name Ana --surnames "García López" `
@@ -68,17 +68,17 @@ The profile becomes active. The commands below store their records and filing wo
 ### 2. Add two classified records
 
 ```powershell
-uv run cadrumo app ledger add `
+uv run aeat app ledger add `
   --date 2026-02-10 --amount 1210 --direction INCOMING `
   --description venta --classification BUSINESS `
   --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
 
-uv run cadrumo app ledger add `
+uv run aeat app ledger add `
   --date 2026-02-11 --amount 500 --direction OUTGOING `
   --description compra --classification BUSINESS `
   --category-id material_oficina --taxable-base 500
 
-uv run cadrumo app ledger list
+uv run aeat app ledger list
 ```
 
 `--amount` is the transaction total. The fictional income records its taxable base and value-added tax (IVA) breakdown.
@@ -90,15 +90,15 @@ The fictional expense claims no deductible IVA quota. Its amount and Impuesto so
 The `--binding` options supply calculation inputs that do not come from these two ledger records.
 
 ```powershell
-uv run cadrumo app modelo work create --modelo 130 --year 2026 --period 1T
+uv run aeat app modelo work create --modelo 130 --year 2026 --period 1T
 
-uv run cadrumo app modelo work calculate `
+uv run aeat app modelo work calculate `
   --modelo 130 --year 2026 --period 1T `
   --binding modelo-130-resultados-negativos-anteriores=0 `
   --binding modelo-130-pagos-fraccionados-anteriores=0 `
   --binding irpf.previous_year_economic_activity_net_income=0
 
-uv run cadrumo app modelo work revision --modelo 130 --year 2026 --period 1T
+uv run aeat app modelo work revision --modelo 130 --year 2026 --period 1T
 ```
 
 The two `modelo-130-*` bindings declare that this fictional first-quarter filing has no negative result or fractional payment carried from an earlier quarter.
@@ -108,9 +108,9 @@ The two `modelo-130-*` bindings declare that this fictional first-quarter filing
 ### 4. Verify the calculation revision and export
 
 ```powershell
-uv run cadrumo app modelo work verify --modelo 130 --year 2026 --period 1T
+uv run aeat app modelo work verify --modelo 130 --year 2026 --period 1T
 
-uv run cadrumo app modelo export `
+uv run aeat app modelo export `
   --modelo 130 --year 2026 --period 1T `
   --output ./modelo-130-2026-1T.boe
 ```

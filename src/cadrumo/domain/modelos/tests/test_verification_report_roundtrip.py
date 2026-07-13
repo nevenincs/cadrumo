@@ -71,7 +71,7 @@ def _populated_report() -> VerificationReport:
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             casilla_id=_IVA_DEVENGADO_CASILLA,
             message="iva.devengado is required but unresolved",
-            next_action="cadrumo app modelo work calculate <id> --casilla iva.devengado=...",
+            next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
         ModeloVerificationFinding(

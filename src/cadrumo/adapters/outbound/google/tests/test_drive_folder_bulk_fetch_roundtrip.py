@@ -1,6 +1,6 @@
 """Bulk-fetch-and-encrypt roundtrip for the Drive-folder sweep (#262, Drive half).
 
-Exercises the exact composition ``cadrumo app ledger doclink pull-folder``
+Exercises the exact composition ``aeat app ledger doclink pull-folder``
 performs — :func:`list_drive_folder_documents` to enumerate the folder's
 PDF/image children, then :func:`resolve_document_link` +
 :func:`~cadrumo.domain.attachments.add_attachment_bytes` to fetch-and-encrypt

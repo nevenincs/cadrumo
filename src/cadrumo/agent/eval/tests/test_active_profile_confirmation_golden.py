@@ -6,7 +6,7 @@ silently shows another taxpayer's data" - the cross-tenant data leak, critical f
 gestor's multi-taxpayer use of the harness. "Onboarding persona needs 'confirm active
 profile before every mutating sequence'." ``docs/how-to/troubleshooting.md``'s "The
 numbers or facts look like someone else's" section names the confirmation surface: "See
-which profile is active: ``cadrumo config profile status``" - the registry command key
+which profile is active: ``aeat config profile status``" - the registry command key
 ``config.profile.status``, resolved against the live CLI schema registry below rather
 than assumed.
 

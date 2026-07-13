@@ -127,8 +127,8 @@ class PersonaToolScope(BaseModel):
 # already-scoped family never needs this mapping edited - only a new family
 # grant does.
 #
-# coordinator: read-only orchestration only (`cadrumo app overview status`,
-# `cadrumo app contract`); it delegates every mutating step and issues no
+# coordinator: read-only orchestration only (`aeat app overview status`,
+# `aeat app contract`); it delegates every mutating step and issues no
 # mutating verb itself (asserted by the pinning test).
 #
 # onboarding: profile custody + read-only auth configuration + read-only

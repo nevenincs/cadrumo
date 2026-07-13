@@ -795,7 +795,7 @@ def _casilla_detail_report(
         raise RegistryValidationError(
             f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
             f"valid casilla ids include: {sample}{overflow}. "
-            f"Run 'cadrumo app modelo casillas {definition.id}' to list every casilla id and number.",
+            f"Run 'aeat app modelo casillas {definition.id}' to list every casilla id and number.",
         )
     formula_expression: Mapping[str, object] | None = None
     if matched.formula is not None:

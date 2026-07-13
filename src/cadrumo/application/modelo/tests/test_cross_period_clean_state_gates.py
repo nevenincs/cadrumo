@@ -368,7 +368,7 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER,),
             (
                 "Configure the expected grupo member roster for source modelo=303 year=2025 period=1T, "
-                "then run `cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A` "
+                "then run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` "
                 "and rerun verification."
             ),
             (),
@@ -379,7 +379,7 @@ def _clean_state_repair_verdict(
             (
                 "Capture every expected grupo member filing for source modelo=303 year=2025 period=1T. "
                 "Missing members: B00000001. "
-                "Run `cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
             ),
             ("B00000001",),
             (),
@@ -397,7 +397,7 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE,),
             (
                 "Reconcile the captured filed observation against the local calculation with "
-                "`cadrumo app registry verify-filed-state --observation PATH`, "
+                "`aeat app registry verify-filed-state --observation PATH`, "
                 "then refresh the upstream filing evidence."
             ),
             (),
@@ -407,7 +407,7 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE,),
             (
                 "Use AEAT evidence for upstream values in source modelo=303 year=2025 period=1T. "
-                "Run `cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
             ),
             (),
             (),
@@ -416,11 +416,11 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,),
             (
                 "Capture/import AEAT evidence for source modelo=303 year=2025 period=1T. "
-                "Run `cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
-                "`cadrumo app live justificante pull --modelo 303 --year 2025 --period 1T`, "
-                "`cadrumo app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
+                "`aeat app live justificante pull --modelo 303 --year 2025 --period 1T`, "
+                "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
                 "--evidence-id CSV --set CASILLA=VALUE`, or "
-                "`cadrumo app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
+                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
             ),
             (),
             (),
@@ -429,11 +429,11 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,),
             (
                 "Capture/import AEAT evidence for source modelo=303 year=2025 period=1T. "
-                "Run `cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
-                "`cadrumo app live justificante pull --modelo 303 --year 2025 --period 1T`, "
-                "`cadrumo app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
+                "`aeat app live justificante pull --modelo 303 --year 2025 --period 1T`, "
+                "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
                 "--evidence-id CSV --set CASILLA=VALUE`, or "
-                "`cadrumo app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
+                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
             ),
             (),
             (),
@@ -511,11 +511,11 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     )
     assert any(
         finding.next_action is not None
-        and "cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A" in finding.next_action
-        and "cadrumo app live justificante pull --modelo 303 --year 2025 --period 1T" in finding.next_action
-        and "cadrumo app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"
+        and "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in finding.next_action
+        and "aeat app live justificante pull --modelo 303 --year 2025 --period 1T" in finding.next_action
+        and "aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"
         in finding.next_action
-        and "cadrumo app modelo reconcile file WORK_UNIT_ID --file PATH" in finding.next_action
+        and "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in finding.next_action
         for finding in cross_period_findings
     )
     assert len(stored_reports) == 1
@@ -699,7 +699,7 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
         assert "model=303" in blocking_notice["message"]
         assert blocking_notice["suggestion"] is not None
         assert (
-            "cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A"
+            "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A"
             in (blocking_notice["suggestion"])
         )
         assert "La dependència entre períodes no està neta" in blocking_payload["message"]

@@ -6,7 +6,7 @@ Each payload is a strict
 :class:`SchemaEnvelope` surface through
 :func:`_emit_envelope`.
 
-The unified ``cadrumo app ledger invoice`` group drives the slim
+The unified ``aeat app ledger invoice`` group drives the slim
 :class:`BusinessOperationInvoice` operator record
 (payloads in :mod:`_ledger_payloads`). The ``catalogue``
 subgroup added here drives the **rich** :class:`Invoice`
@@ -61,7 +61,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
 
 @register_schema("ledger.invoice.catalogue.create")
 class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``cadrumo app ledger invoice catalogue create``.
+    """JSON envelope for ``aeat app ledger invoice catalogue create``.
 
     Mirrors the ``invoice`` inside the application-layer create result returned
     by :func:`create_catalogue_invoice`.
@@ -70,7 +70,7 @@ class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
 
 @register_schema("ledger.invoice.catalogue.wizard")
 class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``cadrumo app ledger invoice catalogue wizard``.
+    """JSON envelope for ``aeat app ledger invoice catalogue wizard``.
 
     Mirrors the ``invoice`` inside the application-layer result returned by
     :func:`create_invoice_via_wizard`. ``already_existed`` reports the guarded
@@ -83,7 +83,7 @@ class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
 
 @register_schema("ledger.invoice.catalogue.view")
 class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``cadrumo app ledger invoice catalogue view``.
+    """JSON envelope for ``aeat app ledger invoice catalogue view``.
 
     Projects the rich :class:`Invoice` resolved by
     :func:`resolve_catalogue_invoice_from_repository`.
@@ -92,7 +92,7 @@ class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
 
 @register_schema("ledger.invoice.catalogue.remove")
 class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``cadrumo app ledger invoice catalogue remove``.
+    """JSON envelope for ``aeat app ledger invoice catalogue remove``.
 
     Reports the deleted rich :class:`Invoice` returned by
     :func:`remove_catalogue_invoice`; linked invoices are refused before this
@@ -102,7 +102,7 @@ class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
 
 @register_schema("ledger.invoice.catalogue.list")
 class CatalogueInvoiceListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger invoice catalogue list``.
+    """JSON envelope for ``aeat app ledger invoice catalogue list``.
 
     Each row is a
     :class:`CatalogueInvoiceRecordPayload`
@@ -126,7 +126,7 @@ class BulkInvoiceImportRowFailurePayload(OutputSchema):
 
 @register_schema("ledger.invoice.catalogue.import")
 class CatalogueInvoiceImportResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger invoice catalogue import``.
+    """JSON envelope for ``aeat app ledger invoice catalogue import``.
 
     Mirrors the application-layer
     :class:`~application.invoices.BulkInvoiceImportResult`: ``created``

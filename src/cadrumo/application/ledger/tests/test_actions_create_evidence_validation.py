@@ -128,7 +128,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
             captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
             bucket_id=_OTHER_BUCKET_ID,
             captured_by="operator-B",
-            source_command="cadrumo app ledger attach",
+            source_command="aeat app ledger attach",
         ),
     )
 

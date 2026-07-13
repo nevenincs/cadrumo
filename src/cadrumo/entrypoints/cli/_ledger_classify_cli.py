@@ -1,4 +1,4 @@
-"""Bulk CSV transport helper for ``cadrumo app ledger classify``.
+"""Bulk CSV transport helper for ``aeat app ledger classify``.
 
 Bulk classification writes through :class:`TransactionCatalogueRepository` when
 the caller supplies the concrete repository, preserving the active ledger
@@ -52,7 +52,7 @@ def ledger_classify_bulk_csv(
         bucket_id=transaction_repository.bucket_id,
         csv_text=csv_text,
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="cadrumo app ledger classify --from-csv",
+        source_command="aeat app ledger classify --from-csv",
         transaction_repository=transaction_repository
         if isinstance(transaction_repository, TransactionCatalogueRepository)
         else None,

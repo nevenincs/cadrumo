@@ -1,4 +1,4 @@
-"""Read, discovery, and reporting commands for ``cadrumo app ledger``.
+"""Read, discovery, and reporting commands for ``aeat app ledger``.
 
 Read commands load transactions through :class:`TransactionCatalogueRepository`
 and read :class:`BucketEventHistoryRepository` events for history and
@@ -272,7 +272,7 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                             "Run an LLM-assisted classification to populate them."
                         ),
                     ),
-                    suggestion="cadrumo app ledger classify <transaction-id> --llm <provider> --apply",
+                    suggestion="aeat app ledger classify <transaction-id> --llm <provider> --apply",
                 ),
             )
             lines.append(
@@ -588,7 +588,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
                     "can support a zero-activity local filing."
                 ),
             )
-            suggestion = "cadrumo app ledger add --help; cadrumo app ledger import --help"
+            suggestion = "aeat app ledger add --help; aeat app ledger import --help"
             notices.append(
                 Notice(
                     severity=NoticeSeverity.WARNING,
@@ -701,7 +701,7 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
                 output_path=output,
                 period=_optional_canonical_period(period, year=year),
                 actor=actor or resolve_active_bucket_id() or "operator",
-                source_command="cadrumo app ledger export",
+                source_command="aeat app ledger export",
             ),
             transaction_repository=transaction_repository,
         )
@@ -1140,7 +1140,7 @@ def _latest_llm_rejection_notice(
                 "The most recent LLM suggestion for this transaction was rejected; classify it manually when ready."
             ),
         ),
-        suggestion=f"cadrumo app ledger classify {resolved_id} --classification BUSINESS --category-id <id>",
+        suggestion=f"aeat app ledger classify {resolved_id} --classification BUSINESS --category-id <id>",
         context=context,
     )
 

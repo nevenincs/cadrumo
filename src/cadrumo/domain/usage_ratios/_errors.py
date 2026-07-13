@@ -57,7 +57,7 @@ class CensoRatioMismatchError(UsageRatioError):
     ratio.
 
     The fix is operator-driven: either update the censo vivienda_office
-    data via ``cadrumo config profile edit``, or unset the
-    diverging override via ``cadrumo app ledger ratios unset``. No
+    data via ``aeat config profile edit``, or unset the
+    diverging override via ``aeat app ledger ratios unset``. No
     automatic migration; no shim.
     """

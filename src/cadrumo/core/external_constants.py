@@ -369,7 +369,7 @@ class AeatSection(_Frozen):
                     "section": "aeat.pre303",
                     "validation_error": str(exc),
                 },
-                suggestion="cadrumo config repair --help",
+                suggestion="aeat config repair --help",
             ) from exc
 
 

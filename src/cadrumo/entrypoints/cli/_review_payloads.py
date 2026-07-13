@@ -52,7 +52,7 @@ class ReviewQueueRowPayload(OutputSchema):
 
 @register_schema("review.queue")
 class ReviewQueueResult(OutputSchema):
-    """JSON envelope for ``cadrumo review queue``.
+    """JSON envelope for ``aeat review queue``.
 
     Wraps :class:`ReviewQueueReport` rows after the CLI
     applies kind, source-kind, state, and modelo filters through
@@ -65,7 +65,7 @@ class ReviewQueueResult(OutputSchema):
 
 @register_schema("review.view")
 class ReviewViewResult(OutputSchema):
-    """JSON envelope for ``cadrumo review view <item_id>``.
+    """JSON envelope for ``aeat review view <item_id>``.
 
     Carries the single
     :class:`ReviewQueueRowPayload`

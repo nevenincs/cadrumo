@@ -1,7 +1,7 @@
 """Overview agenda: upcoming-deadline ranking with a top-of-payload next_due.
 
 :func:`build_overview_agenda` is the application service backing
-``cadrumo app overview agenda``. It accepts a
+``aeat app overview agenda``. It accepts a
 :class:`~domain.deadlines.TaxpayerProfile` and composes
 :func:`application.overview.build_overview_calendar` over a window anchored
 on the operator's ``as_of`` date, then partitions the resulting

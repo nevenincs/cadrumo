@@ -1,7 +1,7 @@
 """Data-prep walkthrough: ordered readiness checklist for one (modelo, period).
 
 :func:`build_data_prep_walkthrough` is the application service backing
-``cadrumo app overview prepare --modelo MODELO --year YEAR --period PERIOD``. It
+``aeat app overview prepare --modelo MODELO --year YEAR --period PERIOD``. It
 walks the operator through the data-preparation phase that precedes a modelo
 calculation - import transactions, classify them, attach purchase-invoice
 evidence, register business invoices, resolve ledger readiness gaps, then start
@@ -202,13 +202,13 @@ def _import_step(period: Period, period_transactions: tuple[Transaction, ...]) -
             step_id=DataPrepStepId.IMPORT_TRANSACTIONS,
             state=DataPrepStepState.PENDING,
             summary=f"0 transactions recorded for {period.registry_token} {period.filing_year}.",
-            next_command="cadrumo app ledger import --file <statement.csv>",
+            next_command="aeat app ledger import --file <statement.csv>",
         )
     return DataPrepStep(
         step_id=DataPrepStepId.IMPORT_TRANSACTIONS,
         state=DataPrepStepState.DONE,
         summary=f"{count} transaction(s) recorded for {period.registry_token} {period.filing_year}.",
-        next_command=f"cadrumo app ledger list --period {period.registry_token} --year {period.filing_year}",
+        next_command=f"aeat app ledger list --period {period.registry_token} --year {period.filing_year}",
     )
 
 
@@ -218,7 +218,7 @@ def _classify_step(period_transactions: tuple[Transaction, ...]) -> DataPrepStep
             step_id=DataPrepStepId.CLASSIFY_TRANSACTIONS,
             state=DataPrepStepState.PENDING,
             summary="No transactions to classify yet.",
-            next_command="cadrumo app ledger import --file <statement.csv>",
+            next_command="aeat app ledger import --file <statement.csv>",
         )
     unclassified = sum(1 for t in period_transactions if t.business_classification not in _CLASSIFIED_STATES)
     if unclassified == 0:
@@ -226,14 +226,14 @@ def _classify_step(period_transactions: tuple[Transaction, ...]) -> DataPrepStep
             step_id=DataPrepStepId.CLASSIFY_TRANSACTIONS,
             state=DataPrepStepState.DONE,
             summary=f"All {len(period_transactions)} transaction(s) classified.",
-            next_command="cadrumo app ledger allocate --help",
+            next_command="aeat app ledger allocate --help",
         )
     state = DataPrepStepState.IN_PROGRESS if unclassified < len(period_transactions) else DataPrepStepState.PENDING
     return DataPrepStep(
         step_id=DataPrepStepId.CLASSIFY_TRANSACTIONS,
         state=state,
         summary=f"{unclassified} of {len(period_transactions)} transaction(s) unclassified.",
-        next_command="cadrumo app ledger classify --help",
+        next_command="aeat app ledger classify --help",
     )
 
 
@@ -252,7 +252,7 @@ def _evidence_step(
             state=DataPrepStepState.DONE,
             summary=f"{len(evidence_records)} purchase-invoice evidence record(s) registered; "
             "no classified business/mixed expenses require evidence yet.",
-            next_command="cadrumo app ledger evidence add --help",
+            next_command="aeat app ledger evidence add --help",
         )
     missing = sum(1 for t in expense_rows if t.purchase_invoice_evidence_id is None)
     if missing == 0:
@@ -261,14 +261,14 @@ def _evidence_step(
             state=DataPrepStepState.DONE,
             summary=f"All {len(expense_rows)} business/mixed expense(s) have attached evidence "
             f"({len(evidence_records)} evidence record(s) registered).",
-            next_command="cadrumo app ledger evidence list",
+            next_command="aeat app ledger evidence list",
         )
     state = DataPrepStepState.IN_PROGRESS if missing < len(expense_rows) else DataPrepStepState.PENDING
     return DataPrepStep(
         step_id=DataPrepStepId.ATTACH_EVIDENCE,
         state=state,
         summary=f"{missing} of {len(expense_rows)} business/mixed expense(s) have no attached evidence.",
-        next_command="cadrumo app ledger evidence add --help",
+        next_command="aeat app ledger evidence add --help",
     )
 
 
@@ -280,13 +280,13 @@ def _invoices_step(period: Period, invoice_catalogue: InvoiceCatalogue) -> DataP
             step_id=DataPrepStepId.REGISTER_INVOICES,
             state=DataPrepStepState.PENDING,
             summary=f"0 business invoice(s) registered for {period.registry_token} {period.filing_year}.",
-            next_command="cadrumo app ledger invoice add --help",
+            next_command="aeat app ledger invoice add --help",
         )
     return DataPrepStep(
         step_id=DataPrepStepId.REGISTER_INVOICES,
         state=DataPrepStepState.DONE,
         summary=f"{count} business invoice(s) registered for {period.registry_token} {period.filing_year}.",
-        next_command="cadrumo app ledger invoice list",
+        next_command="aeat app ledger invoice list",
     )
 
 
@@ -296,7 +296,7 @@ def _readiness_step(preflight_report: LedgerPreflightReport) -> DataPrepStep:
             step_id=DataPrepStepId.RESOLVE_READINESS,
             state=DataPrepStepState.PENDING,
             summary="No transactions checked yet for calculation readiness.",
-            next_command="cadrumo app ledger import --file <statement.csv>",
+            next_command="aeat app ledger import --file <statement.csv>",
         )
     issue_count = len(preflight_report.issues)
     if issue_count == 0:
@@ -304,7 +304,7 @@ def _readiness_step(preflight_report: LedgerPreflightReport) -> DataPrepStep:
             step_id=DataPrepStepId.RESOLVE_READINESS,
             state=DataPrepStepState.DONE,
             summary=f"{preflight_report.checked_transaction_count} transaction(s) checked; no readiness issues.",
-            next_command="cadrumo app ledger preflight "
+            next_command="aeat app ledger preflight "
             f"--period {preflight_report.period.registry_token} --year {preflight_report.period.filing_year}",
         )
     return DataPrepStep(
@@ -312,7 +312,7 @@ def _readiness_step(preflight_report: LedgerPreflightReport) -> DataPrepStep:
         state=DataPrepStepState.IN_PROGRESS,
         summary=f"{issue_count} readiness issue(s) across "
         f"{preflight_report.checked_transaction_count} checked transaction(s).",
-        next_command="cadrumo app ledger preflight "
+        next_command="aeat app ledger preflight "
         f"--period {preflight_report.period.registry_token} --year {preflight_report.period.filing_year}",
     )
 
@@ -336,7 +336,7 @@ def _work_unit_step(
             step_id=DataPrepStepId.START_MODELO_WORK,
             state=DataPrepStepState.PENDING,
             summary=f"No Modelo {modelo} work unit exists yet for {period.registry_token} {filing_year}.",
-            next_command=f"cadrumo app modelo work create --modelo {modelo} --year {filing_year} "
+            next_command=f"aeat app modelo work create --modelo {modelo} --year {filing_year} "
             f"--period {period.registry_token}",
         )
     unit = matching[0]
@@ -344,7 +344,7 @@ def _work_unit_step(
         step_id=DataPrepStepId.START_MODELO_WORK,
         state=DataPrepStepState.DONE,
         summary=f"Modelo {modelo} work unit '{unit.name}' is in progress.",
-        next_command=f"cadrumo app modelo work calculate {unit.work_unit_id}",
+        next_command=f"aeat app modelo work calculate {unit.work_unit_id}",
     )
 
 

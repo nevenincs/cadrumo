@@ -348,7 +348,7 @@ class VerifyService:
         if not matches:
             raise VerifyObservationNotFoundError(
                 "no verify observation matches the requested id",
-                suggestion="cadrumo app live verify nif-iva",
+                suggestion="aeat app live verify nif-iva",
                 translated_message="application.live.verify.errors.observation_not_found",
                 context={"observation_id": observation_id},
             )

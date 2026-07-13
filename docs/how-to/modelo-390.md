@@ -83,7 +83,7 @@ Establish each quarter's evidence one of two ways before you verify Modelo 390:
   [Prepare a Modelo 303 IVA filing](modelo-303.md)), then:
 
   ```bash
-  cadrumo app modelo work file --modelo 303 --year 2025 --period 1T
+  aeat app modelo work file --modelo 303 --year 2025 --period 1T
   ```
 
   `work file` records the filing locally only; it does not submit to AEAT, and
@@ -92,8 +92,8 @@ Establish each quarter's evidence one of two ways before you verify Modelo 390:
 - Capture or reconcile the official AEAT justificante for each quarter:
 
   ```bash
-  cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A
-  cadrumo app modelo reconcile file --modelo 303 --year 2025 --period 1T \
+  aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+  aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T \
     --file ./303-2025-1T-justificante.pdf
   ```
 
@@ -111,19 +111,19 @@ Use the same active profile for every command. Inspect the four 303 filing
 targets before you work on the annual target:
 
 ```bash
-cadrumo config profile status
+aeat config profile status
 
-cadrumo app modelo work status --modelo 303 --year 2025 --period 1T
-cadrumo app modelo work status --modelo 303 --year 2025 --period 2T
-cadrumo app modelo work status --modelo 303 --year 2025 --period 3T
-cadrumo app modelo work status --modelo 303 --year 2025 --period 4T
+aeat app modelo work status --modelo 303 --year 2025 --period 1T
+aeat app modelo work status --modelo 303 --year 2025 --period 2T
+aeat app modelo work status --modelo 303 --year 2025 --period 3T
+aeat app modelo work status --modelo 303 --year 2025 --period 4T
 ```
 
 List all saved work when you need to see the active profile's broader filing
 surface:
 
 ```bash
-cadrumo app modelo work list
+aeat app modelo work list
 ```
 
 No command switches a current filing target for you. To move from one quarter
@@ -135,16 +135,16 @@ annual 390 review, change both `--modelo` and `--period`.
 For each Modelo 303 period, list revisions and inspect the selected revision:
 
 ```bash
-cadrumo app modelo work revisions --modelo 303 --year 2025 --period 1T
-cadrumo app modelo work revision --modelo 303 --year 2025 --period 1T --select filed
+aeat app modelo work revisions --modelo 303 --year 2025 --period 1T
+aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select filed
 ```
 
 If no filed revision exists locally, inspect the current or verified revision
 instead:
 
 ```bash
-cadrumo app modelo work revision --modelo 303 --year 2025 --period 1T --select latest-verified
-cadrumo app modelo work revision --modelo 303 --year 2025 --period 1T --select current
+aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select latest-verified
+aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select current
 ```
 
 Repeat that review for `2T`, `3T`, and `4T`. Pay attention to the values that
@@ -159,8 +159,8 @@ If a 303 return was filed outside Cadrumo, capture or reconcile the official
 evidence before you rely on local values:
 
 ```bash
-cadrumo app live filed pull-sources --modelo 390 --year 2025 --period 0A
-cadrumo app modelo reconcile file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
+aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
 ```
 
 Live filed capture is read-only. Reconciliation reads the justificante or
@@ -173,11 +173,11 @@ compensation carry-forward review; they are not a general Modelo 390
 reconciliation gate:
 
 ```bash
-cadrumo app modelo iva-wallet balance --as-of-year 2025
-cadrumo app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
-cadrumo app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
-cadrumo app live iva-wallet history
-cadrumo app live iva-wallet pull-history --from-year 2024 --to-year 2025
+aeat app modelo iva-wallet balance --as-of-year 2025
+aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
+aeat app live iva-wallet history
+aeat app live iva-wallet pull-history --from-year 2024 --to-year 2025
 ```
 
 `pull-history` requires both `--from-year` and `--to-year`; it reads filed
@@ -193,18 +193,18 @@ it (it refuses once an already-filed Modelo 303 has consumed that basis).
 Create or reuse the annual Modelo 390 work unit:
 
 ```bash
-cadrumo app modelo work create --modelo 390 --year 2025 --period 0A
+aeat app modelo work create --modelo 390 --year 2025 --period 0A
 ```
 
 Check the saved annual target:
 
 ```bash
-cadrumo app modelo work status --modelo 390 --year 2025 --period 0A
-cadrumo app modelo work history --modelo 390 --year 2025 --period 0A
-cadrumo app modelo bindings list --modelo 390 --year 2025 --period 0A
-cadrumo app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
-cadrumo app modelo casillas 390 --period 0A
-cadrumo app modelo formulas 390 --period 0A --explain
+aeat app modelo work status --modelo 390 --year 2025 --period 0A
+aeat app modelo work history --modelo 390 --year 2025 --period 0A
+aeat app modelo bindings list --modelo 390 --year 2025 --period 0A
+aeat app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
+aeat app modelo casillas 390 --period 0A
+aeat app modelo formulas 390 --period 0A --explain
 ```
 
 The binding list shows ledger IVA aggregation bindings (source
@@ -219,14 +219,14 @@ local filing record automatically.
 Check the annual ledger window before calculation:
 
 ```bash
-cadrumo app ledger preflight --year 2025 --period 0A
-cadrumo app ledger status --year 2025 --period 0A
+aeat app ledger preflight --year 2025 --period 0A
+aeat app ledger status --year 2025 --period 0A
 ```
 
 Run the annual calculation:
 
 ```bash
-cadrumo app modelo work calculate --modelo 390 --year 2025 --period 0A
+aeat app modelo work calculate --modelo 390 --year 2025 --period 0A
 ```
 
 The calculation uses the annual ledger window for 390 ledger-backed IVA
@@ -236,7 +236,7 @@ calculation, inspect the missing binding list and supply reviewed values
 explicitly:
 
 ```bash
-cadrumo app modelo work calculate --modelo 390 --year 2025 --period 0A \
+aeat app modelo work calculate --modelo 390 --year 2025 --period 0A \
   --binding modelo-390-prev-303-cuota-devengada-total=<sum-from-303> \
   --binding modelo-390-prev-303-cuota-deducible-total=<sum-from-303> \
   --binding modelo-390-prev-303-resultado-regimen-general=<sum-from-303> \
@@ -254,8 +254,8 @@ casilla-level review and binding mechanics, see
 Inspect the saved annual revision:
 
 ```bash
-cadrumo app modelo work revisions --modelo 390 --year 2025 --period 0A
-cadrumo app modelo work revision --modelo 390 --year 2025 --period 0A
+aeat app modelo work revisions --modelo 390 --year 2025 --period 0A
+aeat app modelo work revision --modelo 390 --year 2025 --period 0A
 ```
 
 Compare the annual totals with the 303 reconciliation values:
@@ -273,9 +273,9 @@ revision, any official justificantes, and the supplied 390 bindings. Use the
 spreadsheet review loop when you need a wider calculation surface:
 
 ```bash
-cadrumo config google sync calc export --modelo 390 --year 2025 --period 0A
-cadrumo config google sync calc compute --modelo 390 --year 2025 --period 0A --spreadsheet-id <spreadsheet-id>
-cadrumo config google sync calc verify --modelo 390 --year 2025 --period 0A
+aeat config google sync calc export --modelo 390 --year 2025 --period 0A
+aeat config google sync calc compute --modelo 390 --year 2025 --period 0A --spreadsheet-id <spreadsheet-id>
+aeat config google sync calc verify --modelo 390 --year 2025 --period 0A
 ```
 
 The spreadsheet workflow is a review surface. It does not submit to AEAT.
@@ -285,7 +285,7 @@ The spreadsheet workflow is a review surface. It does not submit to AEAT.
 Verify the annual draft:
 
 ```bash
-cadrumo app modelo work verify --modelo 390 --year 2025 --period 0A
+aeat app modelo work verify --modelo 390 --year 2025 --period 0A
 ```
 
 If verification reports `cross_period_dependency_unclean` blocking findings,
@@ -299,14 +299,14 @@ the filing.
 Inspect the stored verification report when you need the detailed result:
 
 ```bash
-cadrumo app modelo verification-report list --calculation-revision-id <calculation-revision-id>
-cadrumo app modelo verification-report view <verification-report-id>
+aeat app modelo verification-report list --calculation-revision-id <calculation-revision-id>
+aeat app modelo verification-report view <verification-report-id>
 ```
 
 Export the verified or locally filed revision:
 
 ```bash
-cadrumo app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
+aeat app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
 ```
 
 Upload the exported file through AEAT's official channel - the full checklist
@@ -314,10 +314,10 @@ is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md). After
 filing, keep the justificante and reconcile it locally:
 
 ```bash
-cadrumo app modelo work file --modelo 390 --year 2025 --period 0A
-cadrumo app modelo filing-record list
-cadrumo app modelo filing-record view <filing-record-id>
-cadrumo app modelo reconcile file --modelo 390 --year 2025 --period 0A --file ./390-2025-justificante.pdf
+aeat app modelo work file --modelo 390 --year 2025 --period 0A
+aeat app modelo filing-record list
+aeat app modelo filing-record view <filing-record-id>
+aeat app modelo reconcile file --modelo 390 --year 2025 --period 0A --file ./390-2025-justificante.pdf
 ```
 
 `work file` is an internal local marker. It does not submit anything to AEAT.
@@ -325,7 +325,7 @@ If the annual return was filed outside this local workflow, import an external
 filing record only from official evidence:
 
 ```bash
-cadrumo app modelo filing-record import <work-unit-id> \
+aeat app modelo filing-record import <work-unit-id> \
   --evidence-kind aeat_justificante_pdf \
   --evidence-id <justificante-or-capture-id> \
   --set <casilla>=<value>
@@ -335,10 +335,10 @@ If a verification or export workflow creates an evidence bundle, inspect and
 archive it with the audit commands:
 
 ```bash
-cadrumo app modelo audit show <bundle-id>
-cadrumo app modelo audit check <bundle-id>
-cadrumo app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
-cadrumo app modelo audit replay <bundle-id>
+aeat app modelo audit show <bundle-id>
+aeat app modelo audit check <bundle-id>
+aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
+aeat app modelo audit replay <bundle-id>
 ```
 
 ## Current policy limits

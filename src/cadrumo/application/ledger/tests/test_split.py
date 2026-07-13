@@ -135,7 +135,7 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
         bucket_id=_BUCKET_ID,
         transaction_id=first.child_transaction_ids[0],
         actor="operator-A",
-        source_command="cadrumo app ledger archive",
+        source_command="aeat app ledger archive",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -143,7 +143,7 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
         bucket_id=_BUCKET_ID,
         transaction_id=first.child_transaction_ids[1],
         actor="operator-A",
-        source_command="cadrumo app ledger archive",
+        source_command="aeat app ledger archive",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )

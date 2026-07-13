@@ -326,7 +326,7 @@ def rule_apply(
         bucket_id=bucket_id,
         reaffirm=reaffirm,
         actor=resolved_actor,
-        source_command="cadrumo app ledger rule apply",
+        source_command="aeat app ledger rule apply",
     )
     _emit_rule_apply_result(ctx, result)
 

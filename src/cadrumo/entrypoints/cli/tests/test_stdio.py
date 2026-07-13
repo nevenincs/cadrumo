@@ -196,7 +196,7 @@ def test_help_invocation_below_floor_widens_columns() -> None:
 def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path: Path) -> None:
     """The real console entry point must apply the width guard before Typer help.
 
-    Persona runs invoke ``cadrumo ... --help`` through the console script, not by
+    Persona runs invoke ``aeat ... --help`` through the console script, not by
     manually entering ``_ensure_help_render_width``. A narrow terminal must still
     show the long profile-create flags in full so operators do not guess option
     names from Rich ellipses.

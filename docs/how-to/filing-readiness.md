@@ -11,26 +11,26 @@ nothing silent is missing underneath a clean-looking draft.
 Report whether the active profile is ready for one modelo, year, and period:
 
 ```bash
-cadrumo app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id <revision-id>
+aeat app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id <revision-id>
 ```
 
 Find the revision id first — it is listed by:
 
 ```bash
-cadrumo app modelo describe 303 --year 2026 --period 1T
+aeat app modelo describe 303 --year 2026 --period 1T
 ```
 
 The report covers two things:
 
 - **Profile readiness** — every profile fact the modelo requires. Each
   missing fact is listed by its section and field key, so you know exactly
-  what to fill in with `cadrumo config profile edit`.
+  what to fill in with `aeat config profile edit`.
 - **Ledger readiness** — for ledger-fed modelos, the same source checks as
-  `cadrumo app ledger preflight`, listing each transaction that blocks the
+  `aeat app ledger preflight`, listing each transaction that blocks the
   period and why.
 
 Readiness does not check box-level completeness of a draft — that is what
-`cadrumo app modelo work verify` does. See
+`aeat app modelo work verify` does. See
 [Verify a filing](verification-reports.md).
 
 ## Check what this filing depends on
@@ -40,14 +40,14 @@ quarters, a cross-modelo box reads another form's result. List the
 registry-declared dependencies for a filing year:
 
 ```bash
-cadrumo app modelo work dependencies --year 2026
+aeat app modelo work dependencies --year 2026
 ```
 
 Narrow to one modelo, or to one modelo and period:
 
 ```bash
-cadrumo app modelo work dependencies --year 2026 --modelo 390
-cadrumo app modelo work dependencies --year 2026 --modelo 390 --period 0A
+aeat app modelo work dependencies --year 2026 --modelo 390
+aeat app modelo work dependencies --year 2026 --modelo 390 --period 0A
 ```
 
 `--period` requires `--modelo`. With both set, the command also evaluates the
@@ -62,12 +62,12 @@ Stream every recorded lifecycle event — calculations, verification passes
 and refusals, filings, amendments, imports — for one modelo:
 
 ```bash
-cadrumo app modelo history --modelo 303 --year 2026
+aeat app modelo history --modelo 303 --year 2026
 ```
 
 Add `--period` to narrow to one period. This is the modelo-wide audit trail;
 for the event stream of a single workspace, use
-`cadrumo app modelo work history` — see
+`aeat app modelo work history` — see
 [How the tool organises your filing work](filing-spine.md).
 
 ## Compare two filing years
@@ -75,7 +75,7 @@ for the event stream of a single workspace, use
 See how this year's figures moved against last year's, box by box:
 
 ```bash
-cadrumo app modelo compare --modelo 100 --year 2024 --year 2025
+aeat app modelo compare --modelo 100 --year 2024 --year 2025
 ```
 
 Pass `--year` exactly twice. Each row shows the box, its label and section,
@@ -94,7 +94,7 @@ If you file quarterly Modelo 130 instalments, project what the year-end
 Modelo 100 would look like from the quarters filed so far:
 
 ```bash
-cadrumo app modelo project --year 2026 --ccaa cataluna
+aeat app modelo project --year 2026 --ccaa cataluna
 ```
 
 `--ccaa` names your autonomous community of tax residence, which selects the
@@ -116,7 +116,7 @@ Refine the projection with values the quarters cannot know — withholdings,
 personal circumstances, or specific boxes:
 
 ```bash
-cadrumo app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
+aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
 ```
 
 Withholdings bindings default to zero when not supplied, so a projection
@@ -132,12 +132,12 @@ For when the year-end filing actually happens, see
 Every computed value carries its grounding, and you can surface it at each
 review stage:
 
-- `cadrumo app modelo formulas 303 --period 1T --explain` — the formula behind
+- `aeat app modelo formulas 303 --period 1T --explain` — the formula behind
   each computed box with its legal and source references. See
   [Review and supply calculation inputs](review-calculation-values.md).
 - Verification findings name the legal references behind each rule — see
   [Verify a filing](verification-reports.md).
-- `cadrumo app review queue --explain` — pending findings with their legal
+- `aeat app review queue --explain` — pending findings with their legal
   references. See [Work through the review queue](review-queue.md).
 
 ## Next steps

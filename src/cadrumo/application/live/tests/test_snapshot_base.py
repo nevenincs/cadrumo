@@ -451,9 +451,9 @@ def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     # AeatError-first MRO means suggestion= is accepted (KeyError.__init__ rejects kwargs).
     error = BorradorSnapshotNotFoundError(
         f"borrador snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
-        suggestion="cadrumo app live borrador 100 list",
+        suggestion="aeat app live borrador 100 list",
     )
-    assert error.suggestion == "cadrumo app live borrador 100 list"
+    assert error.suggestion == "aeat app live borrador 100 list"
 
 
 # ---- SnapshotRepository structural-conformance gate (contract) -----------------

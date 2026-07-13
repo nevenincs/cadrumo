@@ -10,7 +10,7 @@ path tokens.
 
 The resolved path is load-bearing. A registry command key carries segment tokens
 with underscores (``app.live.iva_wallet.pull``) while the live CLI command is
-hyphenated (``cadrumo app live iva-wallet pull``); walking the real tree records the
+hyphenated (``aeat app live iva-wallet pull``); walking the real tree records the
 command names as click knows them, so :func:`cli_argv_for` builds an argv that
 actually dispatches. The prior ``{args: [string]}`` bag forced the operator to
 run ``--help`` per verb and split the argv itself; a per-verb schema replaces it

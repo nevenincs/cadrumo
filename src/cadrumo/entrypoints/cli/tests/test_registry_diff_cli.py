@@ -1,4 +1,4 @@
-"""CLI tests for ``cadrumo app registry diff-revisions``.
+"""CLI tests for ``aeat app registry diff-revisions``.
 
 Grounds every assertion against the two *real* Modelo 303 registry revisions
 shipped in the bundled tree (``2009-y-siguientes`` covering 2009-2022,

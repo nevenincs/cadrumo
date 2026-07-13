@@ -515,7 +515,7 @@ def test_validator_surfaces_missing_required_field_as_issue(schema: ProfileSchem
     lifecycle service composes surfaces a missing required field as
     a structured issue (not a silent pass).
 
-    This pins the validator contract that ``cadrumo config profile
+    This pins the validator contract that ``aeat config profile
     validate`` and lifecycle.register both depend on."""
 
     validator = ProfileValidationService(schema=schema)

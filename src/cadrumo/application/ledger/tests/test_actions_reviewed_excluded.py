@@ -158,7 +158,7 @@ def test_mark_reviewed_excluded_is_reversible_by_reclassify(
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS),
         actor="operator-A",
-        source_command="cadrumo app ledger classify",
+        source_command="aeat app ledger classify",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )

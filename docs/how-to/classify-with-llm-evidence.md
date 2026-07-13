@@ -43,19 +43,19 @@ Classify a transaction from its attached image, letting the model pick the IVA
 category:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --saturate
+aeat app ledger classify <transaction-id> --read-evidence --saturate
 ```
 
 This previews the result without saving. Add `--apply` to persist it:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --saturate --apply
+aeat app ledger classify <transaction-id> --read-evidence --saturate --apply
 ```
 
 Override the vision model for one run:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --saturate --vision-model qwen2.5vl:7b
+aeat app ledger classify <transaction-id> --read-evidence --saturate --vision-model qwen2.5vl:7b
 ```
 
 ## Read a text-layer PDF through a cloud provider
@@ -72,7 +72,7 @@ of the following:
   acknowledgement is never remembered; pass it every time.
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude --read-evidence --evidence-acknowledged --saturate
+aeat app ledger classify <transaction-id> --llm claude --read-evidence --evidence-acknowledged --saturate
 ```
 
 When the transaction has a text-layer PDF attached and you pass
@@ -93,7 +93,7 @@ split. The suggestion arrives as a notice with the exact command to run.
 To act on it in one step, add `--auto-split`:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --auto-split
+aeat app ledger classify <transaction-id> --read-evidence --auto-split
 ```
 
 Cadrumo previews one child transaction per invoice line, each with its own
@@ -117,7 +117,7 @@ If the model returns `unknown` for the IVA category, choose a category yourself
 and let Cadrumo derive the rest:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --iva-category domestic_general_21 --saturate
+aeat app ledger classify <transaction-id> --iva-category domestic_general_21 --saturate
 ```
 
 ## How Cadrumo protects the documents it reads
@@ -147,8 +147,8 @@ source:
 Inspect a transaction and its history:
 
 ```bash
-cadrumo app ledger view <transaction-id>
-cadrumo app ledger history <transaction-id>
+aeat app ledger view <transaction-id>
+aeat app ledger history <transaction-id>
 ```
 
 ## Settings reference

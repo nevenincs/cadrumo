@@ -31,19 +31,19 @@ Pick the command that matches what you filed:
 Record an alta:
 
 ```bash
-cadrumo app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
+aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
 ```
 
 Record a modificacion:
 
 ```bash
-cadrumo app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
+aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
 ```
 
 Record a baja:
 
 ```bash
-cadrumo app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
+aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
 ```
 
 `--declared-on` is required - the ISO date (year-month-day) you filed at the sede.
@@ -67,7 +67,7 @@ That printed output is your confirmation. Save it with your records.
 List the declarations you have recorded in the active profile:
 
 ```bash
-cadrumo app modelo m036 list
+aeat app modelo m036 list
 ```
 
 The list shows each declaration's id, event kind, declared-on date, recorded-at
@@ -77,7 +77,7 @@ no declarations yet.
 View one declaration in full by its id (or an unambiguous prefix of it):
 
 ```bash
-cadrumo app modelo m036 view <declaration-id>
+aeat app modelo m036 view <declaration-id>
 ```
 
 The view shows the full record, including the justificante and your note if you gave

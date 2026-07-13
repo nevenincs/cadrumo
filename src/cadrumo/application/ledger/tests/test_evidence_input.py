@@ -74,7 +74,7 @@ def test_add_with_nonexistent_path_refuses_with_path_oriented_guidance(
     assert error.suggestion is not None
     assert "evidence list" not in error.suggestion
     assert "path" in error.suggestion.lower()
-    assert "cadrumo app ledger evidence add" in error.suggestion
+    assert "aeat app ledger evidence add" in error.suggestion
     # The offending path is named in structured context for the operator.
     assert error.context is not None
     assert str(bogus) == error.context["source_path"]

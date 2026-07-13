@@ -138,7 +138,7 @@ def test_no_channel_refusal_names_the_canonical_product_cli() -> None:
 #
 # The policy records the decided stance: secrets
 # (certificate passphrases, tokens, API keys, PINs) are entered ONLY through the
-# local CLI (`cadrumo config auth certificate secret set`) into encrypted storage;
+# local CLI (`aeat config auth certificate secret set`) into encrypted storage;
 # no secret ever rides any MCP channel, form or URL. The console's sole
 # elicitation payload is ``confirmation_request``, which asks exactly one boolean
 # ``confirm`` field. This gate asserts that stance and locks it: a secret-like

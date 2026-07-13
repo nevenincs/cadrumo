@@ -102,7 +102,7 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvo
 
     The single contractual home for the direction↔settlement relationship,
     consumed by both :class:`InvoiceCatalogueSourceResolver` and the operator
-    ``cadrumo app ledger invoice`` CLI. An *issued* invoice (we billed a customer)
+    ``aeat app ledger invoice`` CLI. An *issued* invoice (we billed a customer)
     is *collectible*; a *received* invoice (a vendor billed us) is *payable*.
 
     Returns:

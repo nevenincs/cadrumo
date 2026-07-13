@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for ``cadrumo config check``.
+"""Typed ``--json`` payload schemas for ``aeat config check``.
 
 The command is the workstation doctor: it reports every
 :class:`ServiceCapability` resolved for the active profile beside the
@@ -82,7 +82,7 @@ class CheckPreflightPayload(OutputSchema):
 
 @register_schema("config.check")
 class ConfigCheckResult(OutputSchema):
-    """JSON envelope for ``cadrumo config check``.
+    """JSON envelope for ``aeat config check``.
 
     Combines :func:`resolve_active_capability`
     decisions in
