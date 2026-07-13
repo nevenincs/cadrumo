@@ -20,11 +20,28 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-__all__ = ["SequenceEngineError", "SequenceParseError"]
+__all__ = ["SequenceEngineError", "SequenceExecutionError", "SequenceParseError"]
 
 
 class SequenceEngineError(ValueError):
     """Base error for every ``cli-sequence`` engine failure mode."""
+
+
+class SequenceExecutionError(SequenceEngineError):
+    """Raised when a structurally valid sequence cannot execute hermetically.
+
+    Unlike :class:`SequenceParseError` this is fail-fast, not accumulating: the
+    runner stops at the first frame whose execution is structurally impossible
+    (an unexpected exit code, a ``@capture`` against non-JSON output, a capture
+    json-path missing from the envelope, a live-AEAT frame) because every later
+    frame would run against a corrupted premise. The message carries the
+    sequence id and a locator-prefixed detail naming the offending frame.
+    """
+
+    def __init__(self, sequence_id: str, detail: str) -> None:
+        self.sequence_id = sequence_id
+        self.detail = detail
+        super().__init__(f"cli-sequence {sequence_id!r} failed to execute: {detail}")
 
 
 class SequenceParseError(SequenceEngineError):
