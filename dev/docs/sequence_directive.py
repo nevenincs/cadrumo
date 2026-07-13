@@ -167,10 +167,22 @@ def _render_tokens_html(tokens: list[dict[str, Any]]) -> str:
 
 
 def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
-    """Render a ``{format, body}`` output view as a ``pre`` block, or empty string."""
+    """Render a ``{format, body}`` output view as a ``pre`` block, or empty string.
+
+    A JSON body is syntax-highlighted at build time with Pygments (the same
+    engine and CSS classes the docs' code blocks use, so the theme palette
+    applies in light and dark); text bodies render escaped and plain.
+    """
     if not view or view["format"] == "empty" or not view["body"]:
         return ""
     data_format = html.escape(view["format"])
+    if view["format"] == "json":
+        from pygments import highlight
+        from pygments.formatters import HtmlFormatter
+        from pygments.lexers import JsonLexer
+
+        body = highlight(view["body"], JsonLexer(), HtmlFormatter(nowrap=True)).rstrip("\n")
+        return f'<pre class="{css_class} highlight" data-format="{data_format}">{body}</pre>'
     body = html.escape(view["body"])
     return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
 

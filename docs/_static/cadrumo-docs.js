@@ -643,9 +643,9 @@
 
     /* Output disclosure: every frame's result/output block is individually
      * toggleable by the reader; the command line itself is never hideable.
-     * Stepping resets the disclosure (active frame open, others closed) so the
-     * playhead stays predictable; a manual toggle then overrides until the
-     * next step. The toggle is JS-created, so a no-JS reader sees everything. */
+     * Stepping OPENS the newly active frame's output and never closes any
+     * other — what the reader opened stays open until they close it. The
+     * toggle is JS-created, so a no-JS reader sees everything. */
     var OUTPUT_SELECTOR =
       ".cadrumo-frame-output, .cadrumo-frame-stderr, .cadrumo-verify, .cadrumo-expects";
 
@@ -705,11 +705,12 @@
       frames.forEach(function (frame, index) {
         // Commands are always visible; only the playhead state changes. The CSS
         // keys on these classes to dim future commands (and drop their
-        // highlighting); the output disclosure resets to the active command.
+        // highlighting). Stepping opens the active frame's output additively —
+        // it never closes an output the reader has open.
         frame.classList.toggle("is-active", index === current);
         frame.classList.toggle("is-past", index < current);
         frame.classList.toggle("is-future", index > current);
-        setOutputOpen(frame, index === current);
+        if (index === current) setOutputOpen(frame, true);
       });
       indicator.textContent = current + 1 + " / " + total;
       prevBtn.disabled = current === 0;

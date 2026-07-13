@@ -196,6 +196,11 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     assert f'data-sequence-id="{_SEQUENCE_ID}"' in html
     assert 'class="cli-tok cli-tok-leaf" data-command-path="aeat app modelo work calculate"' in html
     assert '<details class="cadrumo-setup"><summary>Preparation</summary>' in html
+    # JSON outputs render as the readable highlighted document: the Pygments
+    # classes are present and the double-encoded `"{\n` noise signature is not.
+    assert 'class="cadrumo-frame-output highlight" data-format="json">' in html
+    assert '<span class="nt">' in html, "JSON output must carry Pygments key highlighting"
+    assert "&quot;{" not in html, "JSON output must never render double-encoded"
     assert "Verify the calculation before exporting." in html
     assert "Confirm result.status reads verified_complete." in html
 
