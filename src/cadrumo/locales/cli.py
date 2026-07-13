@@ -143,7 +143,7 @@ def canonicalize_product_identity(
         typer.Option("--locale", help="Update only this supported locale catalogue."),
     ] = None,
 ) -> None:
-    """Normalize product display and command prefixes in selected catalogues."""
+    """Normalize stale command prefixes in selected catalogues."""
     manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     try:
         updated_paths = manager.canonicalize_product_identity_references(locale=locale)

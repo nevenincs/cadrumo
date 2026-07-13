@@ -27,8 +27,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _PROJECT_DIRS = {
     "cadrumo": _REPO_ROOT,
-    "cadrumo-data-manuals": _REPO_ROOT / "packaging" / "aeat_data_manuals",
-    "cadrumo-data-official": _REPO_ROOT / "packaging" / "aeat_data_official",
+    "cadrumo-data-manuals": _REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+    "cadrumo-data-official": _REPO_ROOT / "packaging" / "cadrumo_data_official",
 }
 
 
@@ -50,7 +50,7 @@ def test_distribution_declares_and_carries_the_attribution_chain(distribution: s
 
 @pytest.mark.parametrize(
     "companion",
-    ("aeat_data_manuals", "aeat_data_official"),
+    ("cadrumo_data_manuals", "cadrumo_data_official"),
 )
 def test_companion_notice_scopes_the_licence_off_official_documents(companion: str) -> None:
     """The corpus companions' NOTICE must scope Apache-2.0 to packaging, never the official texts."""

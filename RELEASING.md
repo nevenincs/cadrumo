@@ -93,17 +93,18 @@ ambiguous, expired, or contradicted by current external state, stop.
 ### Trusted Publisher configuration
 
 Configure each PyPI project or pending project with its own Trusted Publisher.
-All three registrations must use these exact values:
+PyPI's *pending* publishers are unique on (owner, repository, workflow,
+environment) excluding the project name, so each distribution carries its own
+GitHub environment; the workflow selects the environment from the dispatched
+distribution. Register with these exact values:
 
-| Setting | Required value |
-| --- | --- |
-| PyPI project | The matching distribution name |
-| GitHub owner | `nevenincs` |
-| GitHub repository | `cadrumo` |
-| Workflow | `publish.yml` |
-| Environment | `pypi` |
+| PyPI project | GitHub owner | Repository | Workflow | Environment |
+| --- | --- | --- | --- | --- |
+| `cadrumo` | `nevenincs` | `cadrumo` | `publish.yml` | `pypi` |
+| `cadrumo-data-manuals` | `nevenincs` | `cadrumo` | `publish.yml` | `pypi-data-manuals` |
+| `cadrumo-data-official` | `nevenincs` | `cadrumo` | `publish.yml` | `pypi-data-official` |
 
-The GitHub `pypi` environment must exist. Required-reviewer protection is not
+All three GitHub environments must exist. Required-reviewer protection is not
 available for this private repository on the current billing plan, so the
 human gate is the manual `workflow_dispatch` itself (issue #612 records the
 acceptance); add required reviewers if the plan or visibility ever changes.

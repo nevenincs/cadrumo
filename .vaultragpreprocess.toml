@@ -1,0 +1,36 @@
+# vaultspec-rag pre-index preprocess rules (docs-terminology-search ADR D1,
+# .vault/adr/2026-07-13-docs-terminology-search-adr.md).
+#
+# Routes the bundled AEAT grounding corpus - BOE normatives HTML, Diseños de
+# Registro workbooks, and corpus PDFs - through the project extractors in
+# dev/docs/preprocess via the command-form hook adapter, so the resident
+# vaultspec-rag walker indexes these binary/markup sources first-class.
+# Validated by `vaultspec-rag preprocess check` (strict repo gate in
+# dev/docs/preprocess/tests/test_hook.py); trial a single file with
+# `vaultspec-rag preprocess run-one <path>`.
+
+version = 1
+
+[[rule]]
+pattern = "src/cadrumo/_data/corpus/normatives/html/*.html"
+command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+on_error = "skip"
+timeout_s = 120
+
+[[rule]]
+pattern = "src/cadrumo/_data/corpus/**/*.pdf"
+command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+on_error = "skip"
+timeout_s = 300
+
+[[rule]]
+pattern = "src/cadrumo/_data/corpus/**/*.xls"
+command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+on_error = "skip"
+timeout_s = 300
+
+[[rule]]
+pattern = "src/cadrumo/_data/corpus/**/*.xlsx"
+command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+on_error = "skip"
+timeout_s = 300

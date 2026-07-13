@@ -31,7 +31,6 @@ _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _FORMAT_FIELD_ROOT_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?=$|[.\[])")
 _FORMATTER = Formatter()
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
-_STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 # Test-scope flag: when True, tr raises UnmatchedPlaceholderError for any
@@ -254,15 +253,14 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
 
 
 def _normalise_product_identity_references(rendered: str) -> str:
-    """Project the canonical product display and human executable into locale text.
+    """Project the canonical human executable into locale command text.
 
     Locale catalogues can temporarily lag their per-language migration. Normalize
-    only title-case product prose and unambiguous stale command prefixes at the
-    shared render boundary. Lowercase package and MCP identifiers remain untouched,
-    as does uppercase ``AEAT`` authority prose.
+    only unambiguous stale command prefixes at the shared render boundary.
+    Sentence-case ``Cadrumo``, identity-context ``CADRUMO``, lowercase package
+    and MCP identifiers, and uppercase ``AEAT`` authority prose remain untouched.
     """
-    rendered = _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
-    return _STALE_PRODUCT_DISPLAY_RE.sub(PRODUCT_IDENTITY.display_name, rendered)
+    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
 
 
 def extract_placeholders(value: str) -> frozenset[str]:

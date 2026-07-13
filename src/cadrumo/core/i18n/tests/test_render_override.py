@@ -90,7 +90,7 @@ def test_stale_product_identity_normalises_without_corrupting_machine_or_authori
     )
 
     assert rendered == (
-        "CADRUMO prepares the draft for AEAT; run aeat\n"
+        "Cadrumo prepares the draft for AEAT; run aeat\n"
         "app modelo work calculate or aeat manual fetch. Install cadrumo; "
         "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE."
     )
