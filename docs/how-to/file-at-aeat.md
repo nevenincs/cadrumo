@@ -31,7 +31,7 @@ You need:
   Cadrumo. Its [AEAT authentication](authenticate-with-aeat.md) is for
   read-only data pulls, not for filing.
 
-Cadrumo requires your master-key passphrase before every `cadrumo` command on this
+Cadrumo requires your master-key passphrase before every `aeat` command on this
 page. It prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` to run
 non-interactively. The command's messages are in Spanish.
 

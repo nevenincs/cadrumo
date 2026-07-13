@@ -9,7 +9,7 @@ profile never submits anything to the Agencia Estatal de Administración
 Tributaria (AEAT). Cadrumo builds and verifies your filing on your machine; you
 upload it yourself.
 
-If you haven't installed and run `cadrumo` yet, start with the
+If you haven't installed Cadrumo and run the `aeat` command yet, start with the
 [quickstart](quickstart.md), then come back here.
 
 ## What the active profile means
