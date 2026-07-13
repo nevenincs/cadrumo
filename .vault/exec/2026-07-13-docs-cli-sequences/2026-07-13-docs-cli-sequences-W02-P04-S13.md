@@ -61,4 +61,6 @@ A JSON-frame divergence reds with the exact post-mask paths that moved, and the 
 
 ## Notes
 
-No incidents. `check_transcript` (added in the sibling step) is the single function both future gate surfaces call, so neither re-implements comparison.
+`check_transcript` (added in the sibling step) is the single function both future gate surfaces call, so neither re-implements comparison.
+
+Review absorption (P04 review LOW): the original mask-centrality pin was weaker than its "structural" claim — the forbidden-parameter check was name-brittle, and the substrate's `mask_document` itself accepts a `fields=` kwarg, so an internal override inside the compare module would have widened the mask without touching any signature. Hardened to three declared tiers: a broadened mask-shaped-parameter signature gate, an AST gate asserting every `mask_document` call in the compare module is argument-free beyond the document, and the executor-level double-run proof; the module docstring now names the enforcement instead of overclaiming.

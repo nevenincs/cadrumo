@@ -12,6 +12,7 @@ pass can never be vacuous.
 
 from __future__ import annotations
 
+import ast
 import inspect
 import json
 from collections.abc import Callable
@@ -30,6 +31,7 @@ from .. import (
     SequenceGoldenError,
     SequenceGoldenMismatchError,
     SequenceTranscript,
+    _compare,
     assert_transcript_matches_golden,
     build_golden,
     check_transcript,
@@ -369,14 +371,45 @@ class TestExpectEvaluation:
 
 
 class TestMaskAuthorityIsCentral:
+    """ADR D3: the executor never declares its own mask set.
+
+    Three enforcement tiers, none sufficient alone: the public surface exposes
+    no mask-shaped parameter (this class), the compare module's own source
+    never overrides ``mask_document``'s central default (the AST gate below —
+    the substrate primitive DOES take a ``fields=`` kwarg, so an internal
+    override would otherwise widen the mask without touching any signature),
+    and the executor-level double-run proof in
+    ``dev/docs/tests/test_sequence_goldens.py`` pins the residual behaviour.
+    """
+
     def test_comparison_surface_exposes_no_mask_parameter(self) -> None:
-        """ADR D3: the executor never declares its own mask set. The refusal is
-        structural — no function on the comparison surface accepts one."""
         for function in (
             compare_transcript_to_golden,
             evaluate_expectations,
             check_transcript,
             assert_transcript_matches_golden,
         ):
-            parameters = set(inspect.signature(function).parameters)
-            assert not ({"fields", "mask", "mask_fields"} & parameters), function.__name__
+            parameters = {name.lower() for name in inspect.signature(function).parameters}
+            offending = {name for name in parameters if "mask" in name or "field" in name}
+            assert not offending, f"{function.__name__} exposes mask-shaped parameter(s): {sorted(offending)}"
+
+    def test_compare_module_never_overrides_the_central_mask_default(self) -> None:
+        """AST gate: every ``mask_document`` call inside the compare module is
+        argument-free beyond the document — no ``fields=`` keyword, no extra
+        positional — so the central ``GOLDEN_MASK_FIELDS`` default is the only
+        mask that can ever apply."""
+        module_ast = ast.parse(inspect.getsource(_compare))
+        calls = [
+            node
+            for node in ast.walk(module_ast)
+            if isinstance(node, ast.Call)
+            and (
+                (isinstance(node.func, ast.Name) and node.func.id == "mask_document")
+                or (isinstance(node.func, ast.Attribute) and node.func.attr == "mask_document")
+            )
+        ]
+        assert calls, "the compare module must route JSON comparison through mask_document"
+        for call in calls:
+            assert len(call.args) == 1 and not call.keywords, (
+                f"mask_document call at line {call.lineno} overrides the central mask default"
+            )
