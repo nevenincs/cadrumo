@@ -200,6 +200,36 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
     assert _leaf(data, "cli", "root", "landing", "headline") == "Assistent fiscal CADRUMO"
 
 
+def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """Hungarian copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "hu.yml")
+
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "A Google Drive vault mappa {vault_folder_name} az elozo termekhez tartozik es nem hasznalhato; "
+        "hasznalja a Cadrumo vault mappat."
+    )
+    assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
+        "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
+        "Válassz egyet: BUSINESS, PERSONAL, MIXED, vagy hagyd ki a --classification kapcsolót, "
+        "hogy a sor besorolatlan maradjon."
+    )
+    assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
+        "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
+        "Válassz egyet: BUSINESS, PERSONAL, MIXED."
+    )
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés "
+        "(elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő "
+        "aeat CLI parancsot közvetlenül a terminálban."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal"
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Adóasszisztens"
+
+
 def test_set_locale_value_updates_one_leaf(tmp_path: Path):
     """The locale CLI write path updates a concrete leaf in a real YAML file."""
 
