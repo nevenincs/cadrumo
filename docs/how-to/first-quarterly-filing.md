@@ -14,6 +14,10 @@ The commands on this page run live at build time in a fresh, synthetic sandbox.
 The transactions, amounts, and taxpayer are invented. Run the same commands
 against your own profile to see your own figures.
 
+**Requirement:** a valid taxpayer profile. Create one with
+`aeat config profile create <name>` before you start — [Set up your
+profile](profile-setup.md) walks through it step by step.
+
 ## Bring your quarter's transactions in
 
 Import your bank statement for the quarter. This example reads a small
