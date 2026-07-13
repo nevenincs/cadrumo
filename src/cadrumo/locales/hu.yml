@@ -84,12 +84,11 @@ adapters:
         workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
           pillanatképpel.
       suggestions:
-        reexport_then_pull: Exportálja újra a munkafüzetet a `aeat config google
-          sync calc export` paranccsal, majd húzza be újra.
-        reexport_workbook: Exportálja újra a munkafüzetet a `aeat config google
-          sync calc export` paranccsal, hogy az alkalmazás által kezelt metaadatok
-          frissüljenek.
-        verify_exported_workbook: Ellenőrizze, hogy a táblázatot eredetileg a `cadrumo
+        reexport_then_pull: Exportálja újra a munkafüzetet a `aeat config google sync
+          calc export` paranccsal, majd húzza be újra.
+        reexport_workbook: Exportálja újra a munkafüzetet a `aeat config google sync
+          calc export` paranccsal, hogy az alkalmazás által kezelt metaadatok frissüljenek.
+        verify_exported_workbook: Ellenőrizze, hogy a táblázatot eredetileg a `aeat
           config google sync calc export` hozta létre ehhez a profilhoz.
     oauth_flow:
       errors:
@@ -121,9 +120,8 @@ adapters:
           és próbálja újra.
         open_consent_url_manually: Nyissa meg manuálisan a megjelenített hozzájárulási
           URL-t a böngészőjében.
-        repair_profile_state: Futtassa a `aeat config profile health` parancsot,
-          majd javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a
-          Google-parancsot.
+        repair_profile_state: Futtassa a `aeat config profile health` parancsot, majd
+          javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a Google-parancsot.
         run_from_interactive_terminal: Futtassa a 'aeat config google login' parancsot
           interaktív terminálban, elérhető webböngészővel.
         use_keyring_or_synthetic: Állítsa be a cadrumo_secret_store_backend=keyring
@@ -171,8 +169,7 @@ adapters:
       factory:
         errors:
           drive_root_missing: 'Nincs Google Drive gyokermappa-azonosito beallitva
-            az aktiv profilhoz. Futtassa eloszor: `aeat config google folder set
-            <id>`.'
+            az aktiv profilhoz. Futtassa eloszor: `aeat config google folder set <id>`.'
           google_auth_import_failed: 'A google-auth fuggoseg nem importalhato; futtassa:
             `uv sync`, majd probalja ujra.'
           google_client_missing: 'Nincs Google OAuth-kliens regisztralva az aktiv
@@ -196,7 +193,7 @@ adapters:
           folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent
             jelolve; az operatori adatok vedelmeben az iras megtagadva.
           former_vault_folder: A Google Drive vault mappa {vault_folder_name} az elozo
-            termekhez tartozik es nem hasznalhato; hasznalja a Cadrumo vault mappat.
+            termekhez tartozik es nem hasznalhato; hasznalja a CADRUMO vault mappat.
           googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem
             importalhato; futtassa: `uv sync`, majd probalja ujra.'
           media_non_bytes: A Google Drive medialetoltes {payload_type} tipust adott
@@ -226,7 +223,7 @@ adapters:
           namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
             {namespace} névteret: az elérési út meghaladja a Windows elérésiút-hossz
             korlátját. Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb
-            útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `cadrumo
+            útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat
             config check`).'
           namespace_create_permission: 'A helyi tarhely nem tudta letrehozni a nevteret:
             {namespace}.'
@@ -246,8 +243,7 @@ adapters:
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             tartalmát: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
             Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
-            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config
-            check`).'
+            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
           payload_write_permission: A helyi tarhely nem tudta irni az objektum payloadjat.
           sidecar_malformed: A helyi sidecar {sidecar_path} nem olvashato vagy hibas.
           sidecar_missing: A helyi objektum sidecarja hianyzik.
@@ -256,8 +252,7 @@ adapters:
           sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
             Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
-            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config
-            check`).'
+            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -283,8 +278,8 @@ adapters:
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
-        munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és
-        próbálja újra.
+        munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és próbálja
+        újra.
       ejercicio_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért adóévet
         ehhez a modellhez.
       empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
@@ -305,8 +300,8 @@ adapters:
         futtassa először a `aeat config auth status` parancsot.
       notifications_bad_landing: Az AEAT értesítési oldala nem töltődött be megfelelően;
         a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtassa a
-        'aeat config auth status' parancsot, és próbálja újra. Ne tekintse ezt
-        üres postafióknak.
+        'aeat config auth status' parancsot, és próbálja újra. Ne tekintse ezt üres
+        postafióknak.
       parse_failed: Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája
         megváltozhatott.
       playwright_alert_modal_failed: Hiba az AEAT riasztási modal folytatásakor.
@@ -419,13 +414,13 @@ application:
         lock_held: Egy másik AEAT hitelesítési műveletet már folyamatban van ehhez
           a profilhoz. Ne kezdjen el egy második Cl@ve kérést; várja meg az előző
           befejezését.
-        lock_held_suggestion: Futtassa a `aeat config auth status --format json`
-          parancsot az aktív hitelesítési zár megvizsgálásához.
+        lock_held_suggestion: Futtassa a `aeat config auth status --format json` parancsot
+          az aktív hitelesítési zár megvizsgálásához.
     certificate:
       health:
         file_missing: A konfigurált tanúsítványfájl (%{path}) nem létezik. Állítsa
-          vissza a fájlt, vagy futtassa a `aeat config auth configure --provider
-          certificate --file ÚTVONAL` parancsot.
+          vissza a fájlt, vagy futtassa a `aeat config auth configure --provider certificate
+          --file ÚTVONAL` parancsot.
         path_unset: Nem lett kiválasztva tanúsítványfájl. Futtassa a `aeat config
           auth configure --provider certificate --file ÚTVONAL` parancsot.
         unavailable: A tanúsítvány állapota nem érhető el; a diagnosztikai részletekért
@@ -433,8 +428,8 @@ application:
       load:
         password_unset: Nincs konfigurálva tanúsítványjelszó. A folytatás előtt állítsa
           be a tanúsítványjelszót.
-        path_unset: Nincs konfigurálva tanúsítványfájl. Futtassa a `aeat config
-          auth configure --provider certificate --file ÚTVONAL` parancsot.
+        path_unset: Nincs konfigurálva tanúsítványfájl. Futtassa a `aeat config auth
+          configure --provider certificate --file ÚTVONAL` parancsot.
     clave_movil:
       health:
         identity_unset: Nincs konfigurálva DNI/NIE a Cl@ve Móvilhoz. A folytatás előtt
@@ -466,19 +461,19 @@ application:
           a Cl@ve Móvil DNI/NIE-vel, vagy javítsa a helytelen értéket.
         profile_tax_id_missing_detail: Az aktív profilnak nincs adóazonosítója, ezért
           nem hasonlítható össze a Cl@ve azonosítóval. Állítsa be a profil adóazonosítóját.
-        profile_tax_id_missing_next_action: Szerkessze az aktív profilt a `cadrumo
-          config profile edit NÉV --tax-id DNI/NIE` paranccsal a hitelesítés előtt.
+        profile_tax_id_missing_next_action: Szerkessze az aktív profilt a `aeat config
+          profile edit NÉV --tax-id DNI/NIE` paranccsal a hitelesítés előtt.
       errors:
         certificate_file_required: A tanúsítvány-szolgáltató tanúsítványfájlt igényel.
-          Futtassa a `aeat config auth configure --provider certificate --file
-          ÚTVONAL` parancsot.
+          Futtassa a `aeat config auth configure --provider certificate --file ÚTVONAL`
+          parancsot.
         certificate_file_unresolved: A(z) %{certificate_path} tanúsítványútvonal nem
           oldódik fel létező fájlra. Futtassa a `aeat config auth configure --provider
           certificate --file ÚTVONAL` parancsot.
         certificate_source_not_found: A(z) '%{name}' tanúsítványforrás nincs regisztrálva.
-          Futtassa a `aeat config auth certificate list` parancsot a regisztrált
-          források megtekintéséhez, vagy a `aeat config auth certificate register
-          --name %{name} --file UTVONAL` parancsot a regisztrálásához.
+          Futtassa a `aeat config auth certificate list` parancsot a regisztrált források
+          megtekintéséhez, vagy a `aeat config auth certificate register --name %{name}
+          --file UTVONAL` parancsot a regisztrálásához.
         dangling_active_profile: Az aktív profil mutató (%{active_profile}) nem oldódik
           fel regisztrált profil-bucket-re. Futtassa a `aeat config profile list`
           parancsot.
@@ -517,7 +512,7 @@ application:
         clave_movil_identity_unset: Nincs konfigurálva DNI/NIE a Cl@ve Móvilhoz.
         no_provider: Nincs konfigurálva hitelesítési szolgáltató; helyi vizsgálat
           nem lehetséges.
-        no_session: Nincs tárolt AEAT munkamenet-token a lemezen; futtassa a `cadrumo
+        no_session: Nincs tárolt AEAT munkamenet-token a lemezen; futtassa a `aeat
           config auth login` parancsot egy megszerzéséhez.
         session_expired: Munkamenet lejárt
         session_live: Munkamenet aktív
@@ -543,22 +538,22 @@ application:
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil
           adóazonosítóját.
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
-          Futtassa a `aeat config auth clear --sessions` majd a `aeat config
-          auth login` parancsot.
+          Futtassa a `aeat config auth clear --sessions` majd a `aeat config auth
+          login` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`
           parancsot az AEAT adatok olvasása előtt.
         profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
           aktív profil rendelkezzen identity.tax_id-val.
         sede_rejected: Az AEAT munkamenetet az AEAT Sede nem fogadja el; futtassa
           a `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
-        session_expired: Az AEAT munkamenet lejárt; futtassa a `aeat config auth
-          test` parancsot az AEAT adatok olvasása előtt.
+        session_expired: Az AEAT munkamenet lejárt; futtassa a `aeat config auth test`
+          parancsot az AEAT adatok olvasása előtt.
         session_identity_profile_mismatch: Az AEAT munkamenet azonossága nem egyezik
           az aktív profil adóazonosítójával; törölje a hitelesítési munkameneteket,
           és hitelesítse az egyező profilt.
         state_missing: Az AEAT munkamenet állapota hiányzik; futtassa a `aeat config
           auth test` parancsot az AEAT adatok olvasása előtt.
-        verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa a `cadrumo
+        verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa a `aeat
           config auth test` parancsot az AEAT adatok olvasása előtt.
   bucket_maintenance:
     errors:
@@ -754,8 +749,7 @@ application:
           szamitas ev=%{filing_year} idoszak=%{period}.'
         snapshot_bucket_mismatch: A tervezet-pillanatkep nem az aktiv buckethez tartozik.
         snapshot_load_failed: 'A kivalasztott tervezet-pillanatkep nem toltheto be;
-          az aktiv pillanatkepek listazhatok ezzel: aeat app live borrador 100
-          list.'
+          az aktiv pillanatkepek listazhatok ezzel: aeat app live borrador 100 list.'
         snapshot_not_active: A tervezet pillanatképe nem aktív; az aktív pillanatképek
           listájához futtassa a `aeat app live borrador 100 list` parancsot.
         unsupported_modelo: A tervezetkotes nem tamogatott a(z) %{modelo} modellhez;
@@ -793,9 +787,8 @@ application:
         azonositok listazasahoz.'
       calculate_boolean_binding_encoding_invalid: 'A(z) %{key} kötés értéke decimálisként
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
-        %{value}. Elfogadott kódolás: %{mapping}. Futtassa a ''aeat app modelo
-        bindings list <MODELO>'' parancsot az egyes kötések decimális kódolásának
-        megtekintéséhez.'
+        %{value}. Elfogadott kódolás: %{mapping}. Futtassa a ''aeat app modelo bindings
+        list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
       calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
         casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja
         meg a pontos kanonikus casilla.id-t'
@@ -803,8 +796,8 @@ application:
         nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja
         helyette a kanonikus casilla.id-t: %{accepted}'
       calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
-        a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo
-        casillas <MODELO>`.'
+        a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
+        <MODELO>`.'
       calculate_decimal_input_invalid: 'A(z) %{flag} ertek %{key} kulcshoz nem decimalis
         szam: %{value}'
       calculate_detail_casilla_unsupported: A(z) %{key} casilla a Modelo 180 perceptor/ingatlan
@@ -926,8 +919,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight
-        --period %{period}` before calculating.'
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       m210_ledger_manual_agrupacion_rows: Az M210-es modell főkönyvi forrásmódja a
         főkönyvi besorolásokból származtatja az éves csoportosított jövedelemsorokat;
         ne adjon meg kézi agrupacion-renta sorokat.
@@ -1086,8 +1079,8 @@ application:
           (app_filing), nem az AEAT altal igazolt; nyujtsa be minden idoszakot az
           AEAT-nal kulsoleg.'
         next_action: Exportalja es nyujtsa be minden idoszakot az AEAT-nal kulsoleg,
-          majd frissitse a helyi lancot hivatalos bizonyitekkal; hasznalja a `cadrumo
-          app live justificante pull` parancsot, ha van elo hozzaferes, vagy a `cadrumo
+          majd frissitse a helyi lancot hivatalos bizonyitekkal; hasznalja a `aeat
+          app live justificante pull` parancsot, ha van elo hozzaferes, vagy a `aeat
           app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
           --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
           WORK_UNIT_ID --file PATH` parancsot a mar rendelkezesre allo bizonyitekhoz.
@@ -1219,8 +1212,8 @@ application:
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Jeloljon ki egy spanyolorszagi adougyi kepviselot a profile.representante_fiscal_nif
-          beallitasaval a `aeat config profile edit` paranccsal. A TRLIRNR 10.
-          cikke megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
+          beallitasaval a `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
+          megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
@@ -1256,8 +1249,8 @@ application:
         modelo_blank: A modelo azonosító nem lehet üres.
   portals:
     errors:
-      portal_not_found: A kért AEAT portál nincs regisztrálva. Futtassa a 'cadrumo
-        app live portals list' parancsot az elérhető portálok megtekintéséhez.
+      portal_not_found: A kért AEAT portál nincs regisztrálva. Futtassa a 'aeat app
+        live portals list' parancsot az elérhető portálok megtekintéséhez.
   registry:
     errors:
       citation_not_found: Nem található nyilvántartási hivatkozás a kért jogi referenciához.
@@ -1372,9 +1365,8 @@ application:
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
-      profile_already_exists: 'A(z) %{profile} profil már létezik; futtasd: cadrumo
-        config switch NÉV az aktiváláshoz, vagy aeat config profile delete NÉV
-        a törléshez.'
+      profile_already_exists: 'A(z) %{profile} profil már létezik; futtasd: aeat config
+        switch NÉV az aktiváláshoz, vagy aeat config profile delete NÉV a törléshez.'
       profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
         el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
@@ -2168,8 +2160,8 @@ cli:
           negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
           --period 1T`.'
         no_m130_units: 'Nincs M130 munkaegység a megadott évre. Először hozz létre
-          és számolj M130 munkaegységeket: `aeat app modelo work create --modelo
-          130 --year %{year} --period 1T`.'
+          és számolj M130 munkaegységeket: `aeat app modelo work create --modelo 130
+          --year %{year} --period 1T`.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -2364,8 +2356,8 @@ cli:
           varázslóhoz legalább egy megváltozott érték szükséges.
         amend_wizard_no_current_filing: A(z) %{work_unit_id} munkaegységnek nincs
           érvényes benyújtási rekordja, amelyet módosítani lehetne. Előbb importáld
-          az AEAT által igazolt alapot a `aeat app modelo filing-record import`
-          paranccsal, vagy nyújtsd be helyben.
+          az AEAT által igazolt alapot a `aeat app modelo filing-record import` paranccsal,
+          vagy nyújtsd be helyben.
         amend_wizard_reason_prompt: E helyesbítés indoka (megőrződik az ellenőrzési
           naplóban)
         amend_wizard_reason_required: A helyesbítés ellenőrzési naplójához indoklás
@@ -2394,8 +2386,8 @@ cli:
         bucket_id_help: A munkaegységhez tartozó profil.
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
-          %{state}). Megőrzött és később folytatható; revíziók listázása: `cadrumo
-          app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}`,
+          %{state}). Megőrzött és később folytatható; revíziók listázása: `aeat app
+          modelo work revisions --modelo %{modelo} --year %{year} --period %{period}`,
           ezt az egyet újra megtekintheti: `aeat app modelo work revision %{revision_id}`.'
         calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött,
           de ezt a bevallható összeget egyetlen rovat sem fogadja be, és nem szerepel
@@ -2432,8 +2424,8 @@ cli:
         create_quiet_help: Hagyja ki az ember altal olvashato megerosito kimenetet;
           a --format json boritek, az ertesitesek es a kilepesi kod nem valtozik.
         create_reused: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
-          kombinációra); nem jött létre semmi új. Nevezze át: `aeat app modelo
-          work rename`.'
+          kombinációra); nem jött létre semmi új. Nevezze át: `aeat app modelo work
+          rename`.'
         create_reused_name_match: Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
           kombinációra); nem jött létre semmi új. A megadott --name egyezik a tárolt
           névvel.
@@ -2568,9 +2560,9 @@ cli:
           kötés listázásához.'
         missing_binding_guidance_ledger: '%{base} Ez az érték a bucket főkönyvéből
           összesítődik, és nem adható meg a --binding kapcsolóval. Adja hozzá vagy
-          sorolja be a megfelelő főkönyvi sorokat, futtassa a `aeat app ledger
-          preflight` parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes
-          hiányzó kötés listázásához.'
+          sorolja be a megfelelő főkönyvi sorokat, futtassa a `aeat app ledger preflight`
+          parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes hiányzó
+          kötés listázásához.'
         missing_date_binding_guidance: '%{base} Állítsa be a(z) %{binding_id} értéket
           az aktív profilban, majd futtassa újra a számítást. Dátum típusú profiladat
           nem adható meg --binding kapcsolóval. Futtassa: `%{discover}` az összes
@@ -2713,8 +2705,8 @@ cli:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
         runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal,
-          legújabb először. Futtatásazonosítót használjon: `aeat app modelo work
-          resume`. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+          legújabb először. Futtatásazonosítót használjon: `aeat app modelo work resume`.
+          Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
         sal_beneficio_neto_help: A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015.
           törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz
           a kötelező külön tartalék kiszámításához, a jegyzett tőke kétszeresét egy
@@ -2749,8 +2741,8 @@ cli:
         state_label_presentado_supersedido: Felulirt beadas
         state_label_verificado_completo: Teljesen ellenorizve
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        status_next_action: Készítse el vagy számolja újra ezt az egységet a `cadrumo
-          app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `cadrumo
+        status_next_action: Készítse el vagy számolja újra ezt az egységet a `aeat
+          app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `aeat
           app modelo work verify` paranccsal.
         verify_already_verified_refused: A(z) %{calculation_revision_id} számítási
           revízió már %{state} állapotú, ezért nem ellenőrizhető újra. Az ellenőrzés
@@ -2761,8 +2753,8 @@ cli:
           dokumentumot a `aeat app modelo export` paranccsal.
         verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
           a fenti értesítéseket). Oldja meg őket, számolja újra a `aeat app modelo
-          work calculate` paranccsal, majd futtassa újra a `aeat app modelo work
-          verify` parancsot.
+          work calculate` paranccsal, majd futtassa újra a `aeat app modelo work verify`
+          parancsot.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
         wizard_help: Vegigvezet a munkaegyseg hianyzo kezi mezoin, majd kiszamitja
@@ -2771,7 +2763,7 @@ cli:
         wizard_relation_help: A(z) %{binding_id} regiszterkapcsolat tolti fel; add
           meg az idoszakok vagy modellek kozotti erteket, amit ez a kapcsolat hordoz.
         wizard_retry_exhausted: A varazslo %{limit} kovetkezmenyi kerdes utan sem
-          tudta feloldani az osszes szamitasi bemenetet. Futtasd kozvetlenul a `cadrumo
+          tudta feloldani az osszes szamitasi bemenetet. Futtasd kozvetlenul a `aeat
           app modelo work calculate` parancsot, es add meg kezzel a fennmarado --binding
           / --relation ertekeket.
         wizard_saved: 'Elmentve piszkozat szamitasi verziokent: %{revision_id} (allapot:
@@ -3019,14 +3011,14 @@ cli:
         network: 'Nem sikerült elérni a Google-t: {detail}'
         non_interactive: 'A Google bejelentkezéshez interaktív terminál és webböngésző
           szükséges, de ezt a parancsot nem interaktívan futtatták: {detail}'
-        profile_unbound: 'Nincs aktív profil. Futtasd: aeat config switch NÉV,
-          vagy add meg a --profile kapcsolót.'
+        profile_unbound: 'Nincs aktív profil. Futtasd: aeat config switch NÉV, vagy
+          add meg a --profile kapcsolót.'
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
           Futtassa: `aeat config google login` és fogadjon el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
         token_expired: 'A Google-hozzáférés lejárt (tesztelési projekt tokenek 7 nap
           után járnak le). Futtassa: `aeat config google login`.'
-        token_revoked: 'A Google-hozzáférés visszavonásra került. Futtassa: `cadrumo
+        token_revoked: 'A Google-hozzáférés visszavonásra került. Futtassa: `aeat
           config google login` az újraengedélyezéshez.'
         unsecured_mode: A Google-hozzáférés le van tiltva, amíg a titkos tár nem biztonságos
           módban fut valódi NIF-el rendelkező profil esetén.
@@ -3063,8 +3055,8 @@ cli:
             (nem ment semmit)
           export:
             capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
-              engedélyezd a 'aeat config profile capabilities set google_export
-              on' paranccsal.
+              engedélyezd a 'aeat config profile capabilities set google_export on'
+              paranccsal.
             modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
             period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
             prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a
@@ -3201,12 +3193,12 @@ cli:
         --accept-defaults'
       create_help: Új aktív profil inicializálása.
       delete_active_cleared: A torolt profil volt az aktiv; az aktiv profil mutato
-        torolve lett. Futtasd aeat config switch NAME vagy aeat config profile
-        create NAME a folytatashoz.
+        torolve lett. Futtasd aeat config switch NAME vagy aeat config profile create
+        NAME a folytatashoz.
       delete_help: Profil és lemezen lévő állapot törlése (--yes megerősíti).
       delete_name_help: A törölni kívánt profil neve.
-      delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `cadrumo
-        config profile delete %{name} --yes` a megerősítéshez.'
+      delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
+        profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
         add_flag_help: NACIMIENTO=EEEE-HH-NN[,ADOPCION=EEEE-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
@@ -3230,10 +3222,9 @@ cli:
       export_cleartext_local_help: Titkosítatlan JSON írása csak helyi/SAR kezelésre;
         nem biztonságos e-mailhez, szinkronizáláshoz vagy átvitelhez.
       export_encrypted_info: 'A profilcsomag AEAD passphrase titkosítással ide íródott:
-        {out}. Importálás: ''aeat config profile import PATH --passphrase ...''.
-        Csak a strukturált profilcsomagot tartalmazza; a csatolt bizonyítékokat és
-        az auditnaplót is tartalmazó teljes mentéshez használd a titkosított helyreállítási
-        archívumot.'
+        {out}. Importálás: ''aeat config profile import PATH --passphrase ...''. Csak
+        a strukturált profilcsomagot tartalmazza; a csatolt bizonyítékokat és az auditnaplót
+        is tartalmazó teljes mentéshez használd a titkosított helyreállítási archívumot.'
       export_help: Passphrase alatt titkosított hordozható profilcsomag írása ÚTVONALRA;
         a titkosítatlan JSON-hoz --cleartext-local kell, és csak helyi/SAR célra való.
       export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
@@ -3249,8 +3240,8 @@ cli:
         a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. A következő
         helyre íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben,
         ne szinkronizáld és ne vidd át. Töröld, amikor a helyi/SAR kezelés befejeződött.
-        AEAD-titkosított strukturált átviteli csomaghoz használd a ''aeat config
-        profile export --passphrase ...'' parancsot.'
+        AEAD-titkosított strukturált átviteli csomaghoz használd a ''aeat config profile
+        export --passphrase ...'' parancsot.'
       export_transport_conflict: A --passphrase és a --cleartext-local közül csak
         az egyiket add meg.
       help: Aktív profilkonfigurációs értékek kezelése.
@@ -3299,8 +3290,8 @@ cli:
       logout_help: Kijelentkezés az aktív profilból a helyi mutató törlésével.
       logout_session_warning: A kijelentkezes torolte az aktiv profil mutatot. Ebben
         a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak,
-        amig nem futtatod a aeat config switch NAME parancsot, vagy nem nyitsz
-        uj terminalt es valasztasz ujra.
+        amig nem futtatod a aeat config switch NAME parancsot, vagy nem nyitsz uj
+        terminalt es valasztasz ujra.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -3317,17 +3308,16 @@ cli:
         evhez es idoszakhoz tartozo aktiv reviziot hasznalja.
       preflight_revision_override_invalid: 'A registry-revizio felulbiralas nem ervenyes
         a(z) %{modelo} modellhez, %{filing_year} bevallasi evhez: %{detail}. Futtassa
-        a `aeat app modelo describe %{modelo}` parancsot a regisztralt reviziok
-        listazasahoz.'
+        a `aeat app modelo describe %{modelo}` parancsot a regisztralt reviziok listazasahoz.'
       preflight_revision_unresolved: Egyetlen registry-revizio sem fedi le a(z) %{modelo}
-        modellt, %{filing_year} bevallasi evet, %{period} idoszakot. Futtassa a `cadrumo
+        modellt, %{filing_year} bevallasi evet, %{period} idoszakot. Futtassa a `aeat
         app modelo describe %{modelo}` parancsot az ervenyes idoszakok es reviziok
         megtekintesehez.
       preflight_year_help: Benyújtási év.
       remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
         megmaradnak).
       remove_name_help: A lezárandó profil azonosítója.
-      remove_requires_yes: 'Az eltávolítás visszafordíthatatlan. Futtassa újra: `cadrumo
+      remove_requires_yes: 'Az eltávolítás visszafordíthatatlan. Futtassa újra: `aeat
         config profile delete %{name} --yes` a megerősítéshez.'
       remove_yes_help: A lezárási művelet explicit megerősítése.
       rename_display_name_help: 'Az üzemeltető által látható felirat; alapértelmezés:
@@ -3367,7 +3357,7 @@ cli:
         discard_name_help: A sandbox neve (előtag nélkül).
         discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
           egy valódi profil eldobását.'
-        discard_requires_yes: 'A sandbox eldobása destruktív. Futtassa újra: ''cadrumo
+        discard_requires_yes: 'A sandbox eldobása destruktív. Futtassa újra: ''aeat
           config profile sandbox discard %{name} --yes'' a megerősítéshez.'
         discard_yes_help: A destruktív törlés megerősítése.
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
@@ -3394,8 +3384,8 @@ cli:
         restore_not_archived: A(z) %{name} nincs archiválva; nincs mit visszaállítani.
         source_not_found: Nincs %{name} nevű élő profil, amelyből a sandbox feltölthető
           lenne.
-        unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa a ''aeat config
-          profile sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
+        unknown_sandbox: 'Ismeretlen sandbox: %{name}. Futtassa a ''aeat config profile
+          sandbox list'' parancsot a regisztrált sandboxok megtekintéséhez.'
         usage_help: Egy homokozó (sandbox) lemezterület-használatának jelentése, vagy
           az összesé egyszerre.
         usage_name_help: A homokozó neve (előtag nélkül); hagyja üresen az összes
@@ -3781,12 +3771,12 @@ cli:
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
       source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
         nem rezidens IRNR profiloknal.
-      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a CADRUMO automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
       usage_ratio_help: 'Meglévő, beállított felhasználásiarány-azonosító arányos
-        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet a ''cadrumo
+        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet a ''aeat
         app ledger ratios list'' vagy a ''aeat app ledger ratios eligible'' mutat;
         létrehozás: ''aeat app ledger ratios set <category-id> <ratio>''. Nem szabad
         szöveg.'
@@ -3801,7 +3791,7 @@ cli:
       id_help: A kiosztandó főkönyvi tranzakció azonosítója.
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
       usage_ratio_help: 'Meglévő, beállított felhasználásiarány-azonosító arányos
-        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet a ''cadrumo
+        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet a ''aeat
         app ledger ratios list'' vagy a ''aeat app ledger ratios eligible'' mutat;
         létrehozás: ''aeat app ledger ratios set <category-id> <ratio>''. Nem szabad
         szöveg.'
@@ -3817,8 +3807,8 @@ cli:
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
       help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
-        Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence
-        add PATH' paranccsal hozható létre.
+        Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence add
+        PATH' paranccsal hozható létre.
       id_help: A főkönyvi tranzakció azonosítója, amelyhez bizonyítékot csatolnak.
       purchase_invoice_evidence_help: A tranzakciót alátámasztó vásárlásiszámla-bizonyíték
         azonosítója; létrehozásához használja a 'aeat app ledger evidence add PATH'
@@ -3969,7 +3959,7 @@ cli:
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
         sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
         bevallható alap- és áfa-gyermekekre váljon szét.
-      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a CADRUMO automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
@@ -4056,8 +4046,8 @@ cli:
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
-        duplikátuma egy másik fájlból vagy formátumból. Tekintse meg: `aeat app
-        ledger list`.'
+        duplikátuma egy másik fájlból vagy formátumból. Tekintse meg: `aeat app ledger
+        list`.'
       no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
@@ -4138,13 +4128,12 @@ cli:
           profil.
         invoice_not_found: Ez az azonosító nem szerepel a reconciliációs számlakatalógusban,
           amelyet a számlaimportálási és -reconciliációs folyamatok töltenek fel.
-          A 'aeat app ledger invoice add' által létrehozott azonosítók operatori
-          számlarekordok, és itt nem kapcsolhatók össze. Kézzel linkelhető katalógusszámla
-          létrehozásához futtassa a 'aeat app ledger invoice catalogue create'
-          parancsot, majd adja át az invoice_id értéket a --invoice-id kapcsolónak.
-          Vásárlásiszámla-bizonyíték csatolásához futtassa a 'aeat app ledger link
-          <tx> --evidence-id <id>' (vagy 'aeat app ledger attach') parancsot egy
-          'aeat app ledger evidence add' azonosítóval.
+          A 'aeat app ledger invoice add' által létrehozott azonosítók operatori számlarekordok,
+          és itt nem kapcsolhatók össze. Kézzel linkelhető katalógusszámla létrehozásához
+          futtassa a 'aeat app ledger invoice catalogue create' parancsot, majd adja
+          át az invoice_id értéket a --invoice-id kapcsolónak. Vásárlásiszámla-bizonyíték
+          csatolásához futtassa a 'aeat app ledger link <tx> --evidence-id <id>' (vagy
+          'aeat app ledger attach') parancsot egy 'aeat app ledger evidence add' azonosítóval.
         missing_target: 'Adjon meg legalább egyet: --invoice-id vagy --evidence-id.'
       evidence_id_help: A 'aeat app ledger evidence add' által létrehozott vásárlásiszámla-bizonyíték
         azonosítója, amely a tranzakcióhoz kapcsolódik.
@@ -4153,9 +4142,9 @@ cli:
         soha nem lép kapcsolatba az AEAT-tal.
       id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
       invoice_id_help: A bővített számlakatalógus azonosítója egy importált vagy reconciliált
-        számlából, vagy a 'aeat app ledger invoice catalogue create' paranccsal
-        létrehozva, amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'cadrumo
-        app ledger invoice add' azonosító.
+        számlából, vagy a 'aeat app ledger invoice catalogue create' paranccsal létrehozva,
+        amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'aeat app ledger invoice
+        add' azonosító.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
       column_header: "id\tteljes_id\tdátum\tösszeg\tleírás\tellenőrzési_állapot"
@@ -4239,8 +4228,8 @@ cli:
       note_help: Minden letöltött mellékleten rögzített opcionális megjegyzés.
       notices:
         files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
-          a drive.file hatókörben; töltsd le őket kézzel, és csatold a 'aeat app
-          ledger attach --attachment-id ...' paranccsal.
+          a drive.file hatókörben; töltsd le őket kézzel, és csatold a 'aeat app ledger
+          attach --attachment-id ...' paranccsal.
     remove:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
@@ -4460,9 +4449,8 @@ cli:
         diagnostics_registry_inspect: Nyilvántartási metaadatok vizsgálata.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
         diagnostics_review_queue: Függőben lévő felülvizsgálati munka listázása.
-        footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app
-          --help.'
-        heading: Cadrumo - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
+        footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app --help.'
+        heading: CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
         ledger_allocate: Üzleti célú vagy adóelosztási metaadatok hozzárendelése.
         ledger_archive: Főkönyvi tranzakció archiválása az előzmények törlése nélkül.
         ledger_attach: Bizonyíték csatolása egy főkönyvi tranzakcióhoz.
@@ -4623,16 +4611,16 @@ cli:
       next_import_command: '  aeat app ledger import <bankikivonás.csv> --provider
         csv - banki tranzakciók importálása.'
       next_landing_command: '  aeat --help - visszatérés a parancs-útmutatóhoz.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - A
-        Modelo 210 lathato IRNR-felderiteshez, de helyi munkegyseg-letrehozas meg
-        nem tamogatott; nyujtsa be az AEAT Sede G320 feluleten.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - A Modelo
+        210 lathato IRNR-felderiteshez, de helyi munkegyseg-letrehozas meg nem tamogatott;
+        nyujtsa be az AEAT Sede G320 feluleten.'
       next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
         indítása a főkönyvi adatokból.'
       next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
       next_work_calculate_command: '  aeat app modelo work list - folyamatban lévő
         modellómunka-egység folytatása.'
-      next_work_create_command: '  aeat app modelo work create - új munkaegység
-        indítása egy másik nyomtatványhoz.'
+      next_work_create_command: '  aeat app modelo work create - új munkaegység indítása
+        egy másik nyomtatványhoz.'
       profile_active: A(z) `%{profile}` profilban dolgozik.
       profile_missing: 'Nincs aktív profil beállítva. Futtassa: `aeat config profile
         create NÉV` az adatok importálása előtt.'
@@ -4705,7 +4693,7 @@ cli:
       verify_failed: 'az ellenőrzés sikertelen ehhez: %{manual_id}/%{year}/%{part}:
         %{messages}'
       verify_help: A kézikönyv integritásának ellenőrzése a szerződésével szemben.
-      verify_missing_manifest: '%{manifest_path} hiányzik; futtasd a ''cadrumo manual
+      verify_missing_manifest: '%{manifest_path} hiányzik; futtasd a ''aeat manual
         fetch'' parancsot a létrehozásához'
       verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name}
         fordítási kulcsa'
@@ -4824,12 +4812,11 @@ cli:
     format_help: 'Kimeneti formátum: text, json, table, csv.'
     help_help: Súgó megjelenítése.
     landing:
-      headline: Cadrumo Adóasszisztens
-      help_line: 'További súgó: `aeat --help`, `aeat config --help` vagy `cadrumo
-        app --help`. A globális kapcsolókat (`--format json`, `--language hu`, `--profile
+      headline: CADRUMO Adóasszisztens
+      help_line: 'További súgó: `aeat --help`, `aeat config --help` vagy `aeat app
+        --help`. A globális kapcsolókat (`--format json`, `--language hu`, `--profile
         NÉV`, `--quiet`, `--verbose`, `--debug`) az alparancs ELÉ kell helyezni, pl.
-        `aeat --format json app ledger list` (nem `aeat app ledger list --format
-        json`).'
+        `aeat --format json app ledger list` (nem `aeat app ledger list --format json`).'
       quick_start_heading: Gyors kezdés
       quick_start_import: '  3. `aeat app ledger import <bankikivonás.csv> --provider
         csv` - banki tranzakciók hozzáadása.'
@@ -4839,8 +4826,8 @@ cli:
         és besorolása.'
       quick_start_setup_done: '  1. `aeat config profile status` - az aktív profil
         ellenőrzése az üzemelési munka előtt.'
-      quick_start_setup_needed: '  1. `aeat config profile create NÉV` - először
-        hozza létre a helyi adóprofilt.'
+      quick_start_setup_needed: '  1. `aeat config profile create NÉV` - először hozza
+        létre a helyi adóprofilt.'
       quick_start_status: '  2. `aeat app overview status` - az aktuális munkaterület
         állapota és diagnosztika.'
       section_config: '  config - profilbeállítás, hitelesítés, diagnosztika'
@@ -5075,8 +5062,7 @@ errors:
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
     auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a fokulcsot.
-      Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key
-      <WORDS>.
+      Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
   calc:
@@ -5933,8 +5919,8 @@ errors:
       Javítsa a megjelenített értéket.
     refused_workflow_aborted: A munkafolyamatot megszakították.
     refused_workflow_input_mismatch: A munkafolyamat bemeneti kérése nem egyezik a
-      számítási revízióval. Futtassa a aeat app modelo work calculate parancsot
-      egy friss revízió létrehozásához.
+      számítási revízióval. Futtassa a aeat app modelo work calculate parancsot egy
+      friss revízió létrehozásához.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
@@ -5992,8 +5978,8 @@ errors:
       route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
         csatolva.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: 'Az aktív bucket-munkamenet lejárt. Futtasd: aeat config
-        switch NÉV a profil újraaktiválásához.'
+      session_expired: 'Az aktív bucket-munkamenet lejárt. Futtasd: aeat config switch
+        NÉV a profil újraaktiválásához.'
       session_sealed: 'Az aktív bucket-munkamenet le van zárva. Futtasd: aeat config
         switch NÉV a profil újraaktiválásához.'
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
@@ -6071,7 +6057,7 @@ mcp:
         tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
       no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
         támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
-        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI parancsot közvetlenül a
+        tud kérdezni, vagy futtasd a megfelelő CADRUMO CLI parancsot közvetlenül a
         terminálban.
   faithfulness:
     advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
@@ -6212,8 +6198,8 @@ topic:
     title: Kötelezettségek naptára
   casilla:
     body: A mező egy nyomtatvány számozott rovata. A mezők lehetnek manuálisak, számítottak
-      vagy kötésből származtatottak. A `aeat app modelo casillas <nyomtatvány>`
-      parancs felsorolja azokat.
+      vagy kötésből származtatottak. A `aeat app modelo casillas <nyomtatvány>` parancs
+      felsorolja azokat.
     title: Mezők (casillák)
   formats:
     body: A CLI szöveges, JSON-, táblázatos vagy CSV-formátumban adja ki a kimenetet
@@ -6332,8 +6318,8 @@ wizard:
     unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
       megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 
-      Szerkessze a profilt nem interaktívan, megadva a módosítandó mezőt: cadrumo
-      config profile edit %{profile_name} --quiet --<mező> ÉRTÉK
+      Szerkessze a profilt nem interaktívan, megadva a módosítandó mezőt: aeat config
+      profile edit %{profile_name} --quiet --<mező> ÉRTÉK
 
       Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamenetből:
       aeat config profile edit %{profile_name}'

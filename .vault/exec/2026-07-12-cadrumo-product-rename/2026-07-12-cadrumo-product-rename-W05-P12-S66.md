@@ -50,21 +50,24 @@ related:
 
 ## Description
 
-- Audit the existing Hungarian catalogue WIP by product-versus-authority referent.
-- Route every mutation through `python -m cadrumo.locales set hu KEY VALUE` under isolated state roots.
-- Rename product commands, settings, storage names, headings, and recovery guidance to Cadrumo.
-- Translate ten English-identical leaves into Hungarian to restore the honesty ratchet without allowlisting.
+- Snapshot all four locale catalogue hashes before mutation.
+- Run the reviewed Hungarian-only production command `python -m cadrumo.locales canonicalize-product-identity --locale hu` under isolated local storage.
+- Compare every parsed changed leaf with the production identity normaliser and classify each change by referent.
+- Verify catalogue audits, focused tests, sibling hash equality, raw residue classification, and live Hungarian help output.
 
 ## Outcome
 
-The Hungarian catalogue contains 204 semantic updates and no former product
-command or storage identity. The unallowlisted English-identical count is 106,
-equal to the unchanged honesty ceiling, so the honesty gate passes. YAML,
-locale integrity, locale CLI round-trip, and multiline round-trip checks pass.
+- The command changed exactly 28 semantic leaves: 22 command-bearing leaves contained 24 command-leading references that became `aeat`, and 6 product-display references became `CADRUMO`.
+- Parsed key sets are identical before and after the mutation, and every changed value equals the production normaliser result.
+- The Hungarian catalogue hash changed from `9BC8CEED6AB0E139003697D072CF2D93D3DA81CC698354C167036EDC10776655` to `4540D54CA3F0C6A65060ECC3629E0C82437E2FD40FCCF1987B1F9EE57335E1BF`.
+- English, Spanish, and Catalan hashes remained unchanged.
+- Catalogue scaffold and audit checks passed for all four locales; 38 focused tests passed; live Hungarian help presents `CADRUMO`, `AEAT`, and the `aeat` command without stale title-case or command-leading forms.
 
 ## Notes
 
-The audit and scaffold checks retain the campaign's 30 missing keys for S67.
-Inter-locale parity is temporarily red because the concurrent Catalan S65 WIP
-has one additional key not yet present in English, Spanish, or Hungarian; S66
-did not mutate `ca.yml` or any honesty allowlist.
+- The production YAML serializer produced a 133-insertion and 147-deletion textual diff; semantic comparison isolated the 28 intended leaf changes.
+- No questionable replacements were found. `AEAT` remained at 226 occurrences and `CADRUMO_` remained at 20 occurrences.
+- Raw Hungarian residue is classified as 6 `CADRUMO` product displays, 20 `CADRUMO_*` settings, 215 `aeat` command prefixes, one Hungarian prose reference to the `aeat` product CLI, one `registry/aeat/treaties/` authority path, 222 standalone `AEAT` authority references, and four `AEAT_*` authority settings.
+- The valid remaining lowercase `cadrumo` residues are exactly `cadrumo_secret_store_backend` in `adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic` and `cadrumo-vault/` in `cli.config.google.sync.calc.export_help`. No lowercase MCP executable, URI scheme, or companion namespace is present.
+- Targeted title-case and command-leading residue is zero in all four catalogues.
+- No locale YAML was hand-edited.
