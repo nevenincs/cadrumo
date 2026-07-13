@@ -41,6 +41,7 @@ from dev.docs.sequences import (
     SequenceGolden,
     SequenceTranscript,
     build_golden,
+    check_sequences,
     compare_transcript_to_golden,
     execute_sequence,
     parse_sequence,
@@ -186,3 +187,19 @@ class TestExecutorMaskHonesty:
         problems = compare_transcript_to_golden(live, golden, page=_PAGE)
         assert len(problems) == 1
         assert undeclared_key in problems[0]
+
+
+class TestCommittedGoldensCleanGate:
+    """The pytest half of the two-surfaces-one-engine gate (W03.P08.S27; ADR D6).
+
+    Calls the same ``check_sequences`` the ``builder-inited`` Sphinx hook wires,
+    unscoped over the committed ``docs/`` tree, so CI catches golden drift
+    without a full docs build. A non-empty problem set is a divergence: each
+    entry already names the page, sequence, frame, argv, and diff, so they are
+    printed verbatim on failure.
+    """
+
+    def test_every_committed_golden_matches_live_execution(self) -> None:
+        """Every enrolled sequence re-executes clean against its committed golden."""
+        problems, _advisories = check_sequences()
+        assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
