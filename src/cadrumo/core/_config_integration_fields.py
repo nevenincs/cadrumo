@@ -116,17 +116,9 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
-    cadrumo_purchase_invoice_evidence_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "purchase-invoice-evidence",
-        description="Root directory for purchase invoice evidence record manifests",
-    )
     cadrumo_usage_ratios_path: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
         description="User-configured per-category usage ratio overrides",
-    )
-    cadrumo_ledgers_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "ledgers",
-        description="Directory for encrypted inventory and amortization ledgers",
     )
 
 

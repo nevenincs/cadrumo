@@ -122,6 +122,14 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_runs_dir": "runs",
     "cadrumo_justificantes_dir": "justificantes",
     "cadrumo_filing_history_dir": "filing-history",
+    # Financial file-envelope catalogues and the registry parity-tape archive
+    # (declared by the integration-fields mixin). The parity archive nests under
+    # the derived audit directory, matching its historical layout.
+    "cadrumo_financial_txs_dir": "financial/transactions",
+    "cadrumo_invoices_dir": "financial/invoices",
+    "cadrumo_attachments_dir": "financial/attachments",
+    "cadrumo_usage_ratios_path": "financial/usage-ratios.json",
+    "cadrumo_registry_parity_store_dir": "audit/registry/parity",
 }
 
 _LEGACY_PRODUCT_DOTENV_NAMES = frozenset(
@@ -1181,8 +1189,6 @@ class Settings(AeatIntegrationSettings):
         "cadrumo_financial_txs_dir",
         "cadrumo_invoices_dir",
         "cadrumo_attachments_dir",
-        "cadrumo_purchase_invoice_evidence_dir",
-        "cadrumo_ledgers_dir",
         "cadrumo_local_storage_root",
         "cadrumo_log_dir",
         "cadrumo_storage_backup_dir",

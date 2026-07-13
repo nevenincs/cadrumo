@@ -9,7 +9,6 @@ import pytest
 
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -20,7 +19,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_ledgers_dir=tmp_path / "ledgers"),
         profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
         workflow_state_repository().update(
