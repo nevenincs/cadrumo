@@ -116,7 +116,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         title="Author schema-local locale labels",
         detail=(
             "revisions/<revision-id>/locales/{en,ca,hu}.toml: translated casilla labels and "
-            "help text via `python -m aeat.locales modelo scaffold/set` "
+            "help text via `python -m cadrumo.locales modelo scaffold/set` "
             "(modelo-locales-cli-authority) — never hand-edit the locale TOML directly. "
             "Spanish stays the official CasillaDefinition.label; no es.toml fallback file."
         ),
@@ -124,7 +124,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Enroll the modelo id in the core Modelo enum",
         detail=(
-            "src/aeat/core/_modelo.py: add the new modelo's Modelo.M<code> member so "
+            "src/cadrumo/core/_modelo.py: add the new modelo's Modelo.M<code> member so "
             "production code references it through the enum, never a bare string literal "
             "(modelo-identifiers-use-core-enum); the registry-parity gate binds enum "
             "members to registry_modelo_codes()."

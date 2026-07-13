@@ -1,7 +1,7 @@
 """Scaffold the skeleton registry authoring tree for a new modelo revision.
 
 Generates the standard per-modelo, per-revision directory layout the loader
-(:mod:`aeat.domain.calculations.registry`) expects in *directory mode*:
+(:mod:`cadrumo.domain.calculations.registry`) expects in *directory mode*:
 ``manifest.toml`` at the modelo root, and ``revisions/<revision-id>/`` holding
 ``revision.toml`` plus one fragment subdirectory per registry section
 (casillas, formulas, bindings, completeness_manifest, verification_expectations,
@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from aeat.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.external_constants import UTF_8_ENCODING
 
 __all__ = [
     "NewModeloError",
@@ -67,7 +67,7 @@ class ScaffoldPlanEntry:
 
     Attributes:
         relative_path: Path relative to the modelo root directory
-            (``src/aeat/_data/registry/aeat/modelos/<modelo_id>/``).
+            (``src/cadrumo/_data/registry/aeat/modelos/<modelo_id>/``).
         content: The exact file content the scaffold would write.
     """
 
@@ -183,7 +183,7 @@ _SECTION_CHECKLIST_HINTS: dict[str, str] = {
 def _locale_toml_stub(revision_id: str, language: str) -> str:
     return (
         f'# Scaffolded schema-local "{language}" locale stub for revision "{revision_id}".\n'
-        "# Do NOT hand-edit: use `python -m aeat.locales modelo scaffold/set` "
+        "# Do NOT hand-edit: use `python -m cadrumo.locales modelo scaffold/set` "
         "(modelo-locales-cli-authority),\n"
         "# checklist item 10. This placeholder exists only so the directory is discoverable;\n"
         "# the locale CLI owns its content.\n"
@@ -198,7 +198,7 @@ class NewModeloScaffoldManager:
 
         Args:
             registry_modelos_root: Absolute path to
-                ``src/aeat/_data/registry/aeat/modelos/``.
+                ``src/cadrumo/_data/registry/aeat/modelos/``.
         """
         self.registry_modelos_root = registry_modelos_root
 
