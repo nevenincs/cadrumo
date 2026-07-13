@@ -260,7 +260,7 @@ class TestTextFrameComparison:
 
         problems = compare_transcript_to_golden(text_run, _mutated(golden, _drift), page=_PAGE)
         assert len(problems) == 1
-        assert "text output diverged" in problems[0]
+        assert "stdout text diverged" in problems[0]
         assert "--- golden" in problems[0] and "+++ live" in problems[0]
         assert "-a line the CLI no longer prints" in problems[0]
 
@@ -278,6 +278,63 @@ class TestTextFrameComparison:
         assert f"stored under {SANDBOX_STORAGE_ROOT_TOKEN} (also {SANDBOX_STORAGE_ROOT_TOKEN})" in normalised
         assert f"workdir {SANDBOX_WORKDIR_TOKEN}" in normalised
         assert f"snapshot {MASK_SENTINEL}" in normalised
+
+
+@pytest.fixture(scope="module")
+def error_run(tmp_path_factory: pytest.TempPathFactory) -> SequenceTranscript:
+    """One real run whose first frame refuses via the stderr error document."""
+    missing_id = "deadbeef" * 8
+    sequence = parse_sequence(
+        sequence_id="compare-stderr-case",
+        options={"verify": "Verify the profile listing succeeds."},
+        body=(
+            f"aeat --format json app modelo work calculate {missing_id}\n"
+            "@expect exit_code == 2\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n'
+        ),
+    )
+    return execute_sequence(sequence, sandbox_root=tmp_path_factory.mktemp("stderr-run"))
+
+
+class TestStderrErrorDocumentGoldens:
+    def test_error_document_golden_roundtrips_and_self_compares_clean(
+        self,
+        error_run: SequenceTranscript,
+        tmp_path: Path,
+    ) -> None:
+        write_golden(error_run, page=_PAGE, goldens_root=tmp_path)
+        golden = read_golden(_PAGE, error_run.sequence_id, goldens_root=tmp_path)
+
+        refusal = golden.frames[0]
+        assert refusal.envelope is not None
+        assert refusal.envelope_source == "stderr"
+        assert refusal.stderr_text is None  # stderr IS the envelope, never duplicated
+        assert refusal.exit_code == 2
+
+        assert compare_transcript_to_golden(error_run, golden, page=_PAGE) == ()
+
+    def test_envelope_moving_streams_is_a_named_failure(self, error_run: SequenceTranscript) -> None:
+        golden = build_golden(error_run)
+
+        def _drift(document: dict[str, object]) -> None:
+            frames = cast("list[dict[str, object]]", document["frames"])
+            frames[0]["envelope_source"] = "stdout"
+            frames[0]["stderr_text"] = None
+
+        problems = compare_transcript_to_golden(error_run, _mutated(golden, _drift), page=_PAGE)
+        assert any("moved streams" in problem for problem in problems)
+
+    def test_stderr_text_drift_is_a_named_failure(self, json_run: SequenceTranscript) -> None:
+        golden = build_golden(json_run)
+
+        def _drift(document: dict[str, object]) -> None:
+            frames = cast("list[dict[str, object]]", document["frames"])
+            frames[0]["stderr_text"] = "a warning the CLI no longer prints\n"
+
+        problems = compare_transcript_to_golden(json_run, _mutated(golden, _drift), page=_PAGE)
+        assert len(problems) == 1
+        assert "stderr text diverged" in problems[0]
 
 
 class TestExpectEvaluation:

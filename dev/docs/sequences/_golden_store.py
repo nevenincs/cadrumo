@@ -42,7 +42,7 @@ from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 
 from ._errors import SequenceGoldenError
-from ._runner import CapturedValue, SequenceTranscript
+from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from ._schema import FrameKind, SequenceId
 
 __all__ = [
@@ -85,10 +85,16 @@ _PAGE_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*(/[a-z0-9][a-z0-9._-]*)*$")
 class GoldenFrame(BaseModel):
     """One committed frame expectation.
 
-    Exactly one of ``envelope`` (JSON frame, verbatim pre-mask document) and
-    ``text`` (text frame, normalised verbatim output) is set; the other is
-    ``None``. ``captures`` are the values the frame bound at capture time, so
-    an id drift is named directly in review diffs and check failures.
+    The two process streams are covered independently. ``envelope`` is the
+    verbatim pre-mask JSON document with ``envelope_source`` naming the stream
+    that carried it — ``stdout`` for a success envelope, ``stderr`` for a
+    refusal's error document (both share the envelope spine). ``text`` is the
+    normalised stdout when stdout did NOT carry the envelope; ``stderr_text``
+    the normalised stderr when stderr did not. An empty stream stores ``None``
+    (compared as equal to the empty string), so a frame whose only output is
+    an exit code is a legitimate all-``None`` golden. ``captures`` are the
+    values the frame bound at capture time, so an id drift is named directly
+    in review diffs and check failures.
     """
 
     model_config = _STRICT_FROZEN
@@ -97,16 +103,19 @@ class GoldenFrame(BaseModel):
     argv: tuple[str, ...] = Field(min_length=1)
     exit_code: int
     envelope: dict[str, JsonValue] | None = None
+    envelope_source: EnvelopeSource | None = None
     text: str | None = None
+    stderr_text: str | None = None
     captures: tuple[CapturedValue, ...] = Field(default=())
 
     @model_validator(mode="after")
-    def _exactly_one_output_form(self) -> GoldenFrame:
-        if (self.envelope is None) == (self.text is None):
-            raise ValueError(
-                "a golden frame carries exactly one output form: 'envelope' for a "
-                "JSON frame or 'text' for a text frame",
-            )
+    def _streams_are_coherent(self) -> GoldenFrame:
+        if (self.envelope is None) != (self.envelope_source is None):
+            raise ValueError("'envelope' and 'envelope_source' are set together or not at all")
+        if self.envelope_source == "stdout" and self.text is not None:
+            raise ValueError("stdout carried the envelope; 'text' must be None")
+        if self.envelope_source == "stderr" and self.stderr_text is not None:
+            raise ValueError("stderr carried the envelope; 'stderr_text' must be None")
         return self
 
 
@@ -221,27 +230,35 @@ def normalise_text_output(
 def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
     """Project an executed transcript into its committed golden expectation.
 
-    JSON frames keep their envelope verbatim (pre-mask); text frames store the
-    normalised text so the artifact is run-independent.
+    The envelope (from whichever stream carried it) is kept verbatim
+    (pre-mask); the non-envelope streams store their normalised text so the
+    artifact is run-independent, with empty streams collapsing to ``None``.
     """
     masked_values = masked_envelope_values(transcript)
+
+    def _normalised(raw: str) -> str | None:
+        if not raw:
+            return None
+        return normalise_text_output(
+            raw,
+            storage_root=transcript.storage_root,
+            workdir=transcript.workdir,
+            masked_values=masked_values,
+        )
+
     frames: list[GoldenFrame] = []
     for frame in transcript.frames:
-        text: str | None = None
-        if frame.envelope is None:
-            text = normalise_text_output(
-                frame.output,
-                storage_root=transcript.storage_root,
-                workdir=transcript.workdir,
-                masked_values=masked_values,
-            )
+        text = _normalised(frame.output) if frame.envelope_source != "stdout" else None
+        stderr_text = _normalised(frame.stderr) if frame.envelope_source != "stderr" else None
         frames.append(
             GoldenFrame(
                 kind=frame.kind,
                 argv=frame.argv,
                 exit_code=frame.exit_code,
                 envelope=frame.envelope,
+                envelope_source=frame.envelope_source,
                 text=text,
+                stderr_text=stderr_text,
                 captures=frame.captured,
             ),
         )
