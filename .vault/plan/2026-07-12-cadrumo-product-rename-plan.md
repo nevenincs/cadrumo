@@ -195,6 +195,7 @@ Update product copy through locale authorities while preserving AEAT counterpart
 - [ ] `W05.P12.S67` - Regenerate locale scaffold output and pass locale parity checks; `generated locale scaffold`.
 - [x] `W05.P12.S88` - Add safe per-locale selection to product-identity canonicalization; `src/cadrumo locale manager, CLI, and cohesive tests`.
 - [x] `W05.P12.S89` - Correct locale scalar and placeholder parity through the locale CLI; `English, Spanish, Catalan, and Hungarian locale catalogues`.
+- [x] `W05.P12.S91` - Enforce locale scalar and placeholder parity in the production audit; `locale manager, shared interpolation grammar, and cohesive audit tests`.
 
 ### Phase `W05.P13` - rewrite active documentation through the mandated workflow
 
