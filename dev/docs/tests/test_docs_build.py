@@ -8,11 +8,13 @@ sets ``CADRUMO_DOCS_OFFLINE`` so intersphinx inventories are not fetched.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -296,3 +298,210 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
         + (result.stdout or "")[-6000:]
         + (result.stderr or "")[-6000:]
     )
+
+
+# ---------------------------------------------------------------------------
+# W04.P09.S32 — progressive-enhancement sequence widget verification
+#
+# The stepped-player widget (docs/_static/cadrumo-docs.js) enhances the
+# server-rendered `cli-sequence` transcript; the terminal styling lives in
+# docs/_static/cadrumo-docs.css. These gates assert, with no mocks: the widget
+# ships zero external requests, it is wired and implemented, and a real
+# nitpicky (-n -W) Sphinx build of a sequence page renders a content-identical
+# no-JS transcript, carries the enhanceable markup, and ships the widget
+# assets. ADR ruling D5.
+# ---------------------------------------------------------------------------
+
+_STATIC = _DOCS / "_static"
+_WIDGET_JS = _STATIC / "cadrumo-docs.js"
+_WIDGET_CSS = _STATIC / "cadrumo-docs.css"
+
+#: A quote/paren-anchored protocol-relative or absolute URL in an asset — the
+#: shape a CDN or external font reference would take. A bare ``//`` line comment
+#: is deliberately excluded (it is not a URL).
+_EXTERNAL_URL_RE = re.compile(r"""(?:url\(|["'(])\s*(?:https?:)?//""")
+
+_SEQUENCE_ID = "modelo-303-demo"
+_SEQUENCE_PAGE = "index"
+_SEQUENCE_DIRECTIVE_BODY = (
+    ":verify: Confirm the calculation is complete.\n"
+    "@setup aeat app ledger import --file fixtures/x.csv\n"
+    "aeat app modelo work calculate wu_demo\n"
+    "@result aeat app modelo work verify wu_demo\n"
+    '@expect result.status == "verified_complete"'
+)
+
+
+def _sequence_golden_json() -> str:
+    """Return a schema-valid golden matching the fixture directive's three frames."""
+    from dev.docs.sequences._golden_store import GoldenFrame, SequenceGolden
+    from dev.docs.sequences._schema import FrameKind
+
+    golden = SequenceGolden(
+        sequence_id=_SEQUENCE_ID,
+        frames=(
+            GoldenFrame(
+                kind=FrameKind.SETUP,
+                argv=("aeat", "app", "ledger", "import", "--file", "fixtures/x.csv"),
+                exit_code=0,
+                text="Imported 3 transactions.",
+            ),
+            GoldenFrame(
+                kind=FrameKind.COMMAND,
+                argv=("aeat", "app", "modelo", "work", "calculate", "wu_demo"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "modelo.work.calculate",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"casillas_computed": 4},
+                },
+                envelope_source="stdout",
+            ),
+            GoldenFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "app", "modelo", "work", "verify", "wu_demo"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "modelo.work.verify",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"status": "verified_complete"},
+                },
+                envelope_source="stdout",
+            ),
+        ),
+    )
+    return json.dumps(golden.model_dump(mode="json"), indent=2) + "\n"
+
+
+def _write_sequence_site(root: Path, *, goldens_root: Path) -> None:
+    """Write a minimal MyST site: one page with the directive, shipping the widget assets."""
+    static = root / "_static"
+    static.mkdir()
+    shutil.copy2(_WIDGET_JS, static / _WIDGET_JS.name)
+    shutil.copy2(_WIDGET_CSS, static / _WIDGET_CSS.name)
+    conf = (
+        'extensions = ["myst_parser"]\n'
+        'myst_enable_extensions = ["colon_fence"]\n'
+        "nitpicky = True\n"
+        'html_static_path = ["_static"]\n'
+        'html_css_files = ["cadrumo-docs.css"]\n'
+        'html_js_files = ["cadrumo-docs.js"]\n'
+        f"cadrumo_sequences_goldens_root = {str(goldens_root)!r}\n"
+        "\n"
+        "def setup(app):\n"
+        "    from dev.docs.sequence_directive import register\n"
+        "    register(app)\n"
+    )
+    (root / "conf.py").write_text(conf, encoding="utf-8")
+    body = "# Modelo 303\n\n```{cli-sequence} " + _SEQUENCE_ID + "\n" + _SEQUENCE_DIRECTIVE_BODY + "\n```\n"
+    (root / "index.md").write_text(body, encoding="utf-8")
+
+
+def _build_html(root: Path) -> tuple[str, Path, str]:
+    """Build the site in-process under -n -W, returning the index HTML, out dir, and warnings."""
+    from sphinx.application import Sphinx
+
+    warning = StringIO()
+    out = root / "_out"
+    app = Sphinx(
+        srcdir=str(root),
+        confdir=str(root),
+        outdir=str(out),
+        doctreedir=str(root / "_doctree"),
+        buildername="html",
+        status=StringIO(),
+        warning=warning,
+        freshenv=True,
+        warningiserror=True,
+    )
+    app.build()
+    index = out / "index.html"
+    html = index.read_text(encoding="utf-8") if index.is_file() else ""
+    return html, out, warning.getvalue()
+
+
+def test_sequence_widget_assets_make_no_external_requests() -> None:
+    """The vendored widget JS and CSS carry zero external or CDN requests (ADR D5)."""
+    for asset in (_WIDGET_JS, _WIDGET_CSS):
+        text = asset.read_text(encoding="utf-8")
+        assert "http://" not in text, f"{asset.name} carries an http:// URL"
+        assert "https://" not in text, f"{asset.name} carries an https:// URL"
+        match = _EXTERNAL_URL_RE.search(text)
+        assert match is None, f"{asset.name} carries a non-relative URL near: {text[match.start() : match.start() + 40]!r}"
+
+
+def test_sequence_widget_is_wired_and_implemented() -> None:
+    """conf.py ships both assets and the sources carry the player and hover-help surfaces."""
+    conf = (_DOCS / "conf.py").read_text(encoding="utf-8")
+    assert '"cadrumo-docs.css"' in conf
+    assert '"cadrumo-docs.js"' in conf
+
+    js = _WIDGET_JS.read_text(encoding="utf-8")
+    for surface in ("initSequences", "setupSequence", "initHoverHelp", "cadrumo-sequence-payload", "cli-tree.json"):
+        assert surface in js, f"widget JS is missing {surface!r}"
+
+    css = _WIDGET_CSS.read_text(encoding="utf-8")
+    for surface in (".cadrumo-sequence", ".cli-tok-placeholder", ".cadrumo-sequence-controls", ".cadrumo-cli-popover"):
+        assert surface in css, f"widget CSS is missing {surface!r}"
+    assert "prefers-reduced-motion" in css
+
+
+@pytest.fixture
+def _isolated_sequence_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin isolated Cadrumo storage and English output for the in-build CLI-tree walk."""
+    root = tmp_path / "cadrumo-store"
+    root.mkdir()
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "en")
+
+
+def test_sequence_page_ships_widget_and_degrades_without_js(
+    tmp_path: Path,
+    _isolated_sequence_storage: None,
+) -> None:
+    """A real -n -W build renders the no-JS transcript, the enhanceable markup, and ships the assets."""
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    (goldens_root / _SEQUENCE_PAGE).mkdir(parents=True)
+    (goldens_root / _SEQUENCE_PAGE / f"{_SEQUENCE_ID}.json").write_text(_sequence_golden_json(), encoding="utf-8")
+    _write_sequence_site(site, goldens_root=goldens_root)
+
+    html, out, warnings = _build_html(site)
+
+    # The nitpicky, warnings-as-errors build reached here without raising, so it
+    # is clean; assert no residual warning text leaked either.
+    assert "WARNING" not in warnings, warnings
+
+    # No-JS degradation: the complete linear transcript is present in the static
+    # HTML with no script required — every frame, output, verify caption, and the
+    # imperative expect check.
+    assert 'class="cadrumo-sequence"' in html
+    assert 'data-cadrumo-sequence="1"' in html
+    assert "Imported 3 transactions." in html  # the setup frame's output
+    assert "Confirm the calculation is complete." in html  # the verify caption
+    assert "Confirm result.status reads verified_complete." in html  # the expect check
+    assert html.count('class="cadrumo-frame"') == 3
+
+    # Enhanceable markup: the hover-help keys (data-command-path) and the inline
+    # payload the stepped player parses are both present, matching the frames.
+    assert 'data-command-path="aeat app modelo work verify"' in html
+    match = re.search(
+        r'<script type="application/json" class="cadrumo-sequence-payload">(.*?)</script>',
+        html,
+        re.DOTALL,
+    )
+    assert match is not None
+    payload = json.loads(match.group(1).replace("<\\/", "</"))
+    assert payload["sequence_id"] == _SEQUENCE_ID
+    assert [frame["kind"] for frame in payload["frames"]] == ["setup", "command", "result"]
+
+    # The widget assets ship into the built site and the page references them.
+    assert (out / "_static" / "cadrumo-docs.js").is_file()
+    assert (out / "_static" / "cadrumo-docs.css").is_file()
+    assert "cadrumo-docs.js" in html
+    assert "cadrumo-docs.css" in html
