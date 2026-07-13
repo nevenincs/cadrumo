@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#compatibility-lifecycle'
-date: '2026-07-09'
-modified: '2026-07-09'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-07-09-compatibility-lifecycle-P01-S01]]'
   - '[[2026-07-09-compatibility-lifecycle-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-07-09-compatibility-lifecycle-audit]]'
   - '[[2026-07-09-compatibility-lifecycle-plan]]'
   - '[[2026-07-09-compatibility-lifecycle-research]]'
+  - '[[2026-07-10-compatibility-lifecycle-reference]]'
 ---
 
 # `compatibility-lifecycle` feature index
@@ -48,6 +49,10 @@ Auto-generated index of all documents tagged with `#compatibility-lifecycle`.
 ### plan
 
 - `2026-07-09-compatibility-lifecycle-plan` - `compatibility-lifecycle` plan
+
+### reference
+
+- `2026-07-10-compatibility-lifecycle-reference` - `compatibility-lifecycle` reference: `release-checkpoint flip checklist`
 
 ### research
 

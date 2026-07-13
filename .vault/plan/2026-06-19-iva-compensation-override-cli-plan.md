@@ -3,10 +3,11 @@ tags:
   - '#plan'
   - '#iva-compensation-override-cli'
 date: '2026-06-19'
-modified: '2026-07-08'
+modified: '2026-07-10'
 tier: L2
 related:
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
+  - '[[2026-07-10-iva-compensation-override-cli-research]]'
 ---
 
 # `iva-compensation-override-cli` plan

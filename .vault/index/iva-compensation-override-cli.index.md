@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-compensation-override-cli'
-date: '2026-07-05'
-modified: '2026-07-05'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-06-19-iva-compensation-override-cli-P01-S01]]'
   - '[[2026-06-19-iva-compensation-override-cli-P01-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
   - '[[2026-06-19-iva-compensation-override-cli-audit]]'
   - '[[2026-06-19-iva-compensation-override-cli-plan]]'
+  - '[[2026-07-10-iva-compensation-override-cli-research]]'
 ---
 
 # `iva-compensation-override-cli` feature index
@@ -47,3 +48,7 @@ Auto-generated index of all documents tagged with `#iva-compensation-override-cl
 ### plan
 
 - `2026-06-19-iva-compensation-override-cli-plan` - `iva-compensation-override-cli` plan
+
+### research
+
+- `2026-07-10-iva-compensation-override-cli-research` - iva-compensation-override-cli research: warning closeout research grounding

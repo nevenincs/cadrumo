@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-oauth'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-12'
+modified: '2026-07-12'
 related:
   - '[[2026-05-06-google-oauth-audit]]'
   - '[[2026-05-06-google-oauth-research]]'
@@ -35,6 +35,9 @@ related:
   - '[[2026-05-14-google-oauth-w01-p02-foundation-exec]]'
   - '[[2026-05-14-google-oauth-w01-p02-google-drive-exec]]'
   - '[[2026-05-14-google-oauth-w01-p06-s01-s02-s28-exec]]'
+  - '[[2026-07-12-google-oauth-adr]]'
+  - '[[2026-07-12-google-oauth-audit]]'
+  - '[[2026-07-12-google-oauth-research]]'
 ---
 
 # `google-oauth` feature index
@@ -47,18 +50,20 @@ Auto-generated index of all documents tagged with `#google-oauth`.
 
 - `2026-05-08-google-oauth-adr` - `google-oauth` adr: `Google OAuth authentication implementation` | (**status:** `accepted`)
 - `2026-05-12-google-oauth-adr` - `google-oauth` adr: `Storage provider abstraction` | (**status:** `accepted`)
-- `2026-05-13-google-oauth-adr` - `google-oauth` adr: `Drive bucket hierarchy, naming, atomicity, and sync state` | (**status:** `accepted`)
+- `2026-05-13-google-oauth-adr` - `google-oauth` adr: `Drive bucket hierarchy, naming, atomicity, and sync state` | (**status:** `superseded`)
 - `2026-05-13-google-oauth-calc-sheets-adr` - `google-oauth` adr: `Calculation-to-Sheets visual verification surface` | (**status:** `accepted`)
 - `2026-05-13-google-oauth-inbound-adr` - `google-oauth` adr: `Incoming-bucket ingestion semantics` | (**status:** `accepted`)
 - `2026-05-13-google-oauth-snapshot-adr` - `google-oauth` adr: `Snapshot, backup, and restore with encryption boundary` | (**status:** `accepted`)
 - `2026-05-13-google-oauth-taxonomy-adr` - `google-oauth` adr: `Per-domain export taxonomy` | (**status:** `accepted`)
-- `2026-05-13-google-oauth-twoway-adr` - `google-oauth` adr: `Two-way Sheets sync feasibility verdict` | (**status:** `accepted — deferred`)
+- `2026-05-13-google-oauth-twoway-adr` - `google-oauth` adr: `Two-way Sheets sync feasibility verdict` | (**status:** `accepted`)
 - `2026-05-14-google-oauth-adr` - `google-oauth` adr: `schema-to-sheet engine and parity guarantee for bidirectional modelo sheets` | (**status:** `accepted`)
+- `2026-07-12-google-oauth-adr` - `google-oauth` adr: `remote ciphertext manifest mirror boundary` | (**status:** `accepted`)
 
 ### audit
 
 - `2026-05-06-google-oauth-audit` - `google-oauth` audit: `google-oauth teardown audit: pre-excision baseline`
 - `2026-05-14-google-oauth-audit` - `google-oauth` UX walkthrough audit (2026-05-14)
+- `2026-07-12-google-oauth-audit` - `google-oauth` audit: `foundation phase reconciliation`
 
 ### exec
 
@@ -89,3 +94,4 @@ Auto-generated index of all documents tagged with `#google-oauth`.
 
 - `2026-05-06-google-oauth-research` - `google-oauth` research: codebase reality + fresh-state OAuth design
 - `2026-05-14-google-oauth-research` - google-oauth research: Sheets bidirectional roundtrip research
+- `2026-07-12-google-oauth-research` - `google-oauth` research: `P03 sync-state re-planning`

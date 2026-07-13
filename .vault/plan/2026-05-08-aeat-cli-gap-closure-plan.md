@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#aeat-cli-gap-closure'
 date: '2026-05-08'
-modified: '2026-06-30'
+modified: '2026-07-12'
 related:
   - "[[2026-05-08-aeat-cli-gap-discovery-audit]]"
   - "[[2026-05-08-aeat-cli-hardening-plan]]"
@@ -14,10 +14,11 @@ related:
   - "[[2026-05-02-aeat-cli-redesign-research]]"
   - "[[2026-04-27-auth-cli-research]]"
   - "[[2026-05-12-cli-design-research]]"
+  - '[[2026-07-12-aeat-cli-gap-closure-audit]]'
 ---
-
 # `aeat-cli-gap-closure` `AEAT CLI gap closure granular execution plan`
 
+> **Reconciled 2026-07-12 â€” delivered and superseded, not active.** The numbered CLI repair waves are complete. The remaining unchecked rows are standing invariants and historical hand-verification protocol, while the accepted `config` and `app` workflow architecture superseded this plan's provisional command vocabulary. Evidence is recorded in `2026-07-12-aeat-cli-gap-closure-audit`.
 This plan turns every still-open and newly-discovered finding from the
 2026-05-08 CLI gap discovery audit recompile into one mechanical, repetitive,
 per-line execution checklist. It complements the prior CLI hardening plan: it
@@ -32,30 +33,30 @@ No PRs are created. All work lands in this worktree.
 
 ## 0. Hard invariants
 
-- [ ] Invariant: CLI changes are limited to argument parsing, command registration, output formatting, exit-code mapping, and delegation to backend functions.
-- [ ] Invariant: Validation, mutation, persistence, schema decisions, filing decisions, deadline decisions, auth decisions, and modelo calculations live in `src/aeat/application/...`, `src/aeat/domain/...`, or `src/aeat/adapters/...`.
-- [ ] Invariant: Missing backend behaviour discovered during CLI work is in scope and must be implemented before the CLI exposes the affected surface.
-- [ ] Invariant: Source code, docstrings, comments, and module headers contain no dates, vault paths, "phase", "wave", "previously", "rebuild pending", or any transient development metadata. Phases and waves live only in this plan and in commit messages.
-- [ ] Invariant: No tautological tests. Every numeric assertion is grounded against an external authority (workbook parity, AEAT-published worked example, live oracle replay, captured filing, or structural / graph-wiring contract).
-- [ ] Invariant: No mocks, fakes, stubs, monkeypatches, `pytest.skip`, `pytest.xfail`, or `xfail_strict=False` shortcuts used to make tests pass.
-- [ ] Invariant: Hand-verify a flow against the live CLI BEFORE encoding it as a test. Manual capture of inputs and outputs is an explicit prerequisite step.
-- [ ] Invariant: Every wave commits its own slice. Commits stage only the files this plan owns or that the wave's steps explicitly modify. Unrelated worktree drift is left untouched.
-- [ ] Invariant: No destructive git operations (`reset`, `restore`, `checkout --`, `clean`, `stash drop`, `worktree remove`). Conflicts are resolved by editing.
-- [ ] Invariant: Pre-commit hooks must pass before each wave commit; failures are root-caused, never bypassed with `--no-verify`.
-- [ ] Invariant: New CLI surface must reference an existing backend function. If the backend function does not exist, the wave creates it before adding the CLI verb.
+- [x] Invariant: CLI changes are limited to argument parsing, command registration, output formatting, exit-code mapping, and delegation to backend functions.
+- [x] Invariant: Validation, mutation, persistence, schema decisions, filing decisions, deadline decisions, auth decisions, and modelo calculations live in `src/aeat/application/...`, `src/aeat/domain/...`, or `src/aeat/adapters/...`.
+- [x] Invariant: Missing backend behaviour discovered during CLI work is in scope and must be implemented before the CLI exposes the affected surface.
+- [x] Invariant: Source code, docstrings, comments, and module headers contain no dates, vault paths, "phase", "wave", "previously", "rebuild pending", or any transient development metadata. Phases and waves live only in this plan and in commit messages.
+- [x] Invariant: No tautological tests. Every numeric assertion is grounded against an external authority (workbook parity, AEAT-published worked example, live oracle replay, captured filing, or structural / graph-wiring contract).
+- [x] Invariant: No mocks, fakes, stubs, monkeypatches, `pytest.skip`, `pytest.xfail`, or `xfail_strict=False` shortcuts used to make tests pass.
+- [x] Invariant: Hand-verify a flow against the live CLI BEFORE encoding it as a test. Manual capture of inputs and outputs is an explicit prerequisite step.
+- [x] Invariant: Every wave commits its own slice. Commits stage only the files this plan owns or that the wave's steps explicitly modify. Unrelated worktree drift is left untouched.
+- [x] Invariant: No destructive git operations (`reset`, `restore`, `checkout --`, `clean`, `stash drop`, `worktree remove`). Conflicts are resolved by editing.
+- [x] Invariant: Pre-commit hooks must pass before each wave commit; failures are root-caused, never bypassed with `--no-verify`.
+- [x] Invariant: New CLI surface must reference an existing backend function. If the backend function does not exist, the wave creates it before adding the CLI verb.
 
 ## 1. Hand-verify protocol
 
 Every wave that touches a user-facing CLI surface follows this protocol BEFORE
 any test code is written.
 
-- [ ] Capture step 1: run the live CLI command against a clean profile. Record the exact stdout, stderr, exit code.
-- [ ] Capture step 2: identify the external authority for the expected behaviour. Allowed authorities: AEAT workbook (`registry/aeat/workbooks/...`), AEAT-published worked example, captured prior filing, deadline engine documented rule, structural contract from registry TOML, error-path contract.
-- [ ] Capture step 3: by hand, derive the expected output from the external authority. Record the derivation.
-- [ ] Capture step 4: diff the live capture against the derived expectation. Treat any divergence as a defect, not a test bug.
-- [ ] Capture step 5: only after the live capture matches the external authority, encode the scenario as a `@pytest.mark.live` test gated by `AEAT_LIVE_TESTS_ENABLED`.
-- [ ] Capture step 6: randomise inputs the user could legally vary (profile name, working directory, flag order, value range within legal bounds); pin the externally-anchored output.
-- [ ] Capture step 7: prove the test fails when the backend is reverted to the pre-fix state. If the test still passes, it is tautological and must be rewritten.
+- [x] Capture step 1: run the live CLI command against a clean profile. Record the exact stdout, stderr, exit code.
+- [x] Capture step 2: identify the external authority for the expected behaviour. Allowed authorities: AEAT workbook (`registry/aeat/workbooks/...`), AEAT-published worked example, captured prior filing, deadline engine documented rule, structural contract from registry TOML, error-path contract.
+- [x] Capture step 3: by hand, derive the expected output from the external authority. Record the derivation.
+- [x] Capture step 4: diff the live capture against the derived expectation. Treat any divergence as a defect, not a test bug.
+- [x] Capture step 5: only after the live capture matches the external authority, encode the scenario as a `@pytest.mark.live` test gated by `AEAT_LIVE_TESTS_ENABLED`.
+- [x] Capture step 6: randomise inputs the user could legally vary (profile name, working directory, flag order, value range within legal bounds); pin the externally-anchored output.
+- [x] Capture step 7: prove the test fails when the backend is reverted to the pre-fix state. If the test still passes, it is tautological and must be rewritten.
 
 ## 2. Issue ledger
 
@@ -104,7 +105,7 @@ Status keys: `OPEN`, `PARTIAL`, `NEW`, `CARRIED` (unverified at recompile).
 - [x] Step W1.A.7: from a clean shell, run `aeat config doctor` and capture its `secure_state.load` row verdict. Reports `ok state backend readable` while W1.A.2 crashes; confirmed divergence. Cause: `state_repository().load()` reads ONE primary-keyed row in `aeat.application.user_cli` namespace whose recent rewrite (2026-05-08 09:56) decrypts; iterates nothing.
 - [x] Step W1.A.8: enumerate every secure-object kind written. The SQL `secure_objects` table has 17 namespaces in the user's local DB at this rev: `aeat.application.filing.history`, `aeat.application.setup.profile`, `aeat.application.user_cli`, `aeat.application.workflow.runs`, `aeat.domain.filing.amendments`, `aeat.domain.filing.drafts`, `aeat.domain.invoices`, `aeat.domain.justificante.metadata`, `aeat.domain.submission.records`, `aeat.domain.transactions`, `aeat.domain.usage_ratios`, `aeat.outbound.aeat.auth.clave_movil.diagnostics`, `aeat.outbound.aeat.auth.sessions`, `aeat.outbound.aeat.sede.filed_declaration.artefacts`, `aeat.outbound.aeat.sede.filed_declaration.observations`, `aeat.persistence.profile.inventory`, `aeat.persistence.profile.tax_residence`. Plus the on-disk file-envelope kinds (separate from this DB).
 - [x] Step W1.A.9: by hand, attempt to read each row's `payload` column via raw SQL bypassing the TypeDecorator. Result: 587 rows fail tag verification, 14 rows decrypt cleanly under the current keychain master key. Per-namespace breakdown captured in the user's local DB shows: `aeat.domain.transactions` 0/178 ok, `aeat.domain.usage_ratios` 0/149 ok, `aeat.domain.invoices` 1/136 ok (cutoff 2026-05-06 16:33), `aeat.domain.filing.drafts` 8/57 ok (cutoff 2026-05-08 05:29), `aeat.application.user_cli` 1/2 ok (cutoff 2026-05-08 09:56), and several namespaces with all rows readable (`auth.sessions`, `auth.clave_movil.diagnostics`, `filed_declaration.*`, `workflow.runs`).
-- [x] Step W1.A.10: classify. The failure is **stale at-rest ciphertext from a prior master-key generation**, NOT a writer/reader code-path divergence. The keychain master key was rotated (or wiped and regenerated) at some point; rows written under the prior master key are cryptographically unrecoverable. The user's plaintext for those rows is permanently lost. The architectural defect surfaced by this finding is that `secure_objects.list_records` crashes atomically when any single row fails to decrypt — making every iterating read path (overview, transactions, invoices, drafts) unusable even though most consumers only need the readable subset. The fix is therefore TWO-PART: (1) the read-path iterator must yield typed per-row outcomes so consumers can surface the unreadable-count without crashing, and (2) the user must be given a deliberate, opt-in surface to quarantine the unrecoverable rows after explicit confirmation. NEITHER step deletes user data automatically.
+- [x] Step W1.A.10: classify. The failure is **stale at-rest ciphertext from a prior master-key generation**, NOT a writer/reader code-path divergence. The keychain master key was rotated (or wiped and regenerated) at some point; rows written under the prior master key are cryptographically unrecoverable. The user's plaintext for those rows is permanently lost. The architectural defect surfaced by this finding is that `secure_objects.list_records` crashes atomically when any single row fails to decrypt â€” making every iterating read path (overview, transactions, invoices, drafts) unusable even though most consumers only need the readable subset. The fix is therefore TWO-PART: (1) the read-path iterator must yield typed per-row outcomes so consumers can surface the unreadable-count without crashing, and (2) the user must be given a deliberate, opt-in surface to quarantine the unrecoverable rows after explicit confirmation. NEITHER step deletes user data automatically.
 
 ### W1.B Backend localisation
 
@@ -449,7 +450,7 @@ Status keys: `OPEN`, `PARTIAL`, `NEW`, `CARRIED` (unverified at recompile).
 - [x] Step W8.E.1: every Tier-1 and Tier-2 checkbox is `[x]` and verified live. Tier-3 deferrals are documented per-step with the specific scope and reason for deferral.
 - [x] Step W8.E.2: exec summary embedded in the W8.F commit message instead of a separate `.vault/exec/...` file (which would be process metadata about my own work, not a vault artefact the codebase needs).
 - [x] Step W8.E.3: closure note appended to the local audit's recompile section -- the audit's "Updated reading order" Tier-1 cluster (UX-019, UX-007, UX-012) is fully resolved by commits `2ac995c9 / 68bb7b25 / cbb0f96a / 4b631297 / 6fc50036 / 1eecd737 / 3a03be8e`.
-- [x] Step W8.E.4: vault hygiene validated by `vaultspec-core vault check all` ran during plan creation (Slice 0); the only flagged warning was missing-research-document on the gap-closure plan (advisory `!`, not error `✗`); no schema violations introduced.
+- [x] Step W8.E.4: vault hygiene validated by `vaultspec-core vault check all` ran during plan creation (Slice 0); the only flagged warning was missing-research-document on the gap-closure plan (advisory `!`, not error `âœ—`); no schema violations introduced.
 
 ### W8.F Final commit
 
@@ -520,7 +521,7 @@ the audit; gated by W2's enrolment-key extension, which has shipped.
 - [x] Step W9.A.7: in `_overview.py` `overview_status --calendar` rendering, append warnings as `warning\t<code>\t<message>\tfix=<command>` lines and surface `Computable: M / Uncomputable: N` after the entries table.
 - [x] Step W9.A.8: add `--allow-incomplete` flag to `overview status --calendar`. Without the flag, refuse to print partial calendars when `len(uncomputable_modelos) > 0` (typed CLI usage error). With the flag, print the partial calendar plus warnings.
 - [x] Step W9.A.9: register i18n keys `cli.overview.warning.profile_field_unset` and `cli.overview.calendar_refused_incomplete` in ca/en/es/hu.
-- [x] Step W9.A.10: write `tests/live/test_calendar_warnings_live.py::test_iva_regime_unset_emits_warning_and_fix` and the parallel test for `does_intracomunitario`. External authority: AEAT calendar PDF for an autónomo régimen general (modelo 303 must be present when iva.regime=general; absent and warned when iva.regime is unset).
+- [x] Step W9.A.10: write `tests/live/test_calendar_warnings_live.py::test_iva_regime_unset_emits_warning_and_fix` and the parallel test for `does_intracomunitario`. External authority: AEAT calendar PDF for an autÃ³nomo rÃ©gimen general (modelo 303 must be present when iva.regime=general; absent and warned when iva.regime is unset).
 - [x] Step W9.A.11: write `src/aeat/application/overview/test_calendar_completeness.py::test_completeness_lists_uncomputable_with_reason` against an in-process build of the engine.
 - [x] Step W9.A.12: confirm no transient metadata in source. Commit `feat(overview): emit calendar warnings and completeness for under-specified profiles (UX-008)`.
 
@@ -607,7 +608,7 @@ Bind freshly-discovered audit findings here as a flat list. Each row gets:
 
 - a unique `audit_id` (next available is `UX-023`),
 - the same per-line `- [ ] Step` shape so the loop walks into it,
-- a wave heading `### W<N> UX-NNN <headline>` immediately under §15.
+- a wave heading `### W<N> UX-NNN <headline>` immediately under Â§15.
 
 When you paste new findings, follow the existing per-step granularity: hand-verify steps, backend steps, CLI steps, test steps, commit checkpoint. The loop's "find the first unchecked Step under any W heading" lookup will pick up the newest open finding automatically.
 

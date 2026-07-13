@@ -2,11 +2,12 @@
 tags:
   - "#plan"
   - "#multilang-externalization"
-date: 2026-05-04
-modified: '2026-07-08'
+date: '2026-05-04'
+modified: '2026-07-12'
 related:
   - "[[2026-05-04-multilang-externalization-phase1-adr]]"
   - "[[2026-05-04-multilang-externalization-phase1-research]]"
+  - '[[2026-07-12-multilang-externalization-research]]'
 ---
 
 # Multilang Externalization Phase 1 Plan

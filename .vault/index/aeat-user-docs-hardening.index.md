@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-user-docs-hardening'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-06-16-aeat-user-docs-hardening-S01]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S02]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'
   - '[[2026-07-04-aeat-user-docs-hardening-adr]]'
+  - '[[2026-07-10-aeat-user-docs-hardening-research]]'
 ---
 
 # `aeat-user-docs-hardening` feature index
@@ -95,3 +96,7 @@ Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 ### plan
 
 - `2026-06-16-aeat-user-docs-hardening-plan` - `aeat-user-docs-hardening` plan
+
+### research
+
+- `2026-07-10-aeat-user-docs-hardening-research` - aeat-user-docs-hardening research: warning closeout research grounding
