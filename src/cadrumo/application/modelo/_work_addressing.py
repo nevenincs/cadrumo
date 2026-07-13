@@ -505,8 +505,8 @@ def resolve_registry_revision_for_work_target(
     instructive-refusal mandate in ``aeat-architecture-boundaries``).
 
     ``--revision`` is thereby demoted from a free override to an
-    idempotence/assertion handle, mirroring the operator-surface ADR's D8
-    shape for ``preflight --revision-id``.
+    idempotence/assertion handle, mirroring the same shape used by
+    ``preflight --revision-id``.
 
     Returns:
         The revision id selected by

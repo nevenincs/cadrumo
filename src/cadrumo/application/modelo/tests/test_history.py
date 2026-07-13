@@ -129,8 +129,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(repos: _Repos) -> Non
     not declare, naming the modelo and listing the available revisions so the
     operator can re-issue the command with a valid id.
 
-    Persona-testimonial finding (MED, 2026-05-20-cli-persona-testimonials-audit):
-    passing ``--revision "bad-revision"`` previously created a content-addressed
+    Passing ``--revision "bad-revision"`` previously created a content-addressed
     work unit that was unreachable on subsequent ``work calculate`` (snapshot
     miss). The boundary now catches the typo at create-time.
     """

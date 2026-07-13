@@ -81,9 +81,8 @@ class ModeloVerifySelector(StrEnum):
     ``latest-draft``, and ``explicit`` (an explicitly-named draft revision id).
     The post-draft selectors ``latest-verified`` and ``filed`` on the full
     :class:`ModeloCalculationRevisionSelector` name states verify rejects, so
-    advertising them on the verify command is an advertised-but-impossible
-    combination (audit ``2026-06-10-cli-operator-surface-audit`` F5(d), decision
-    D5). This narrowed enum is what the verify ``--select`` option advertises;
+    advertising them on the verify command would be an advertised-but-impossible
+    combination. This narrowed enum is what the verify ``--select`` option advertises;
     other commands keep the full selector enum.
     """
 

@@ -754,8 +754,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 
-    # Modelo 390 gained a renderable fichero-BOE export layout (issue #508); the
-    # annual resumen now exports fixed-width bytes the same way each M303
+    # The annual resumen exports fixed-width bytes the same way each M303
     # quarter does above, rather than refusing with ModeloExportUnsupportedError.
     annual_output = tmp_path / f"m390-{_IRENE_YEAR}.boe"
     annual_export = export_modelo_revision(

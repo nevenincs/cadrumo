@@ -1,8 +1,6 @@
 """Recipient feedback-package round trip: reviewer notes back to the originator.
 
-This module closes the "import/feedback-package round trip" item left open on
-issue #421 (`2026-07-04-recipient-encryption-adr` and its follow-up slices):
-the recipient (accountant/gestor) who received a review package via
+The recipient (accountant/gestor) who received a review package via
 :func:`~application.modelo.encrypt_review_package_for_recipient` /
 :func:`~application.modelo.decrypt_review_package_for_recipient` now has a
 SYMMETRIC path back to the originator (the taxpayer) -- a small structured

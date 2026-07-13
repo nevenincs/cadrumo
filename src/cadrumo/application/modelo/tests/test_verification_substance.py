@@ -191,7 +191,7 @@ def test_at_most_one_positive_emits_blocking_rule_finding() -> None:
 # ---------------------------------------------------------------------------
 # contract: roll_forward_balances carry-forward continuity predicate (IS-2)
 #
-# The Modelo 200 BIN closing-stock roll-forward (modelo-200-bin-continuity decision record):
+# The Modelo 200 BIN closing-stock roll-forward:
 #   00671 (closing total pendiente) == 00670 (opening, bound)
 #                                       − DP200014:00547 (applied)
 #                                       + max(0, −DP200014:00552) (BIN generated)

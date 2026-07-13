@@ -683,7 +683,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     ``censo.activity_start_date`` falls inside the target period there is no in-scope
     prior compensation dependency, so the IVA wallet gate grounds a ``first_period_zero``
     decision and the calculate produces a zero result with NO ledger import, NO seed,
-    and NO manual override — the path a new filer needs (issue #555).
+    and NO manual override — the path a new filer needs.
     """
     _store_first_period_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)

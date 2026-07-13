@@ -1,10 +1,10 @@
-"""Regression guard for issue #514 — actividad-economica positive rendimiento
+"""Regression guard: actividad-economica positive rendimiento
 must yield a NON-negative base imponible general.
 
-Issue #514 reported that a positive actividad-economica income input produced a
-NEGATIVE base imponible (a sign/routing defect). The issue cited casilla 0006,
-but in the 2024 M100 revision casilla 0006 is *trabajo en especie*, not
-actividad economica (casilla ids renumber across filing years). The current
+A positive actividad-economica income input previously produced a
+NEGATIVE base imponible (a sign/routing defect). Note that in the 2024 M100
+revision casilla 0006 is *trabajo en especie*, not actividad economica
+(casilla ids renumber across filing years). The current
 actividad-economica estimacion-directa chain is:
 
     0171 (ingresos de explotacion, ledger income)
@@ -21,7 +21,7 @@ This test drives real persisted ledger income + expenses through the live
 bucket-aggregation calculate action and asserts the *sign* of the base
 imponible — a structural invariant, not a re-computation of any registry
 formula (the harness never hand-derives a registry expression). It fails loudly
-if a future edit re-introduces the sign/routing inversion #514 describes.
+if a future edit re-introduces the sign/routing inversion this test guards.
 
 Real-behaviour, real-adapter: real encrypted-SQLite secure store, the real
 registry authority, the real calculation engine, and the real ledger income /
@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Chain nodes from actividad-economica income through to the base imponible
 # general. Each must be non-negative for a positive-income / smaller-expense
-# persona; the base imponible (0435) is the node #514 reported as inverted.
+# persona; the base imponible (0435) is the node that was previously inverted.
 _ACTIVIDAD_ECONOMICA_INGRESOS = "0171"
 _RENDIMIENTO_NETO = "0224"
 _RENDIMIENTO_NETO_REDUCIDO_TOTAL = "0235"
@@ -61,7 +61,7 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
     tmp_path: Path,
 ) -> None:
     """A positive actividad-economica rendimiento must not invert into a
-    negative base imponible general (regression guard for #514)."""
+    negative base imponible general."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         secure_objects: SecureObjectRepository = profile.repository
         _persist_autonoma_style_ledger(secure_objects)
@@ -77,7 +77,7 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
             f"{_EXPECTED_M100_ACTIVITY_NET}; got {rendimiento_neto}"
         )
 
-        # #514 sign invariant: every node from income to base imponible general
+        # Sign invariant: every node from income to base imponible general
         # stays non-negative when income exceeds deductible expenses.
         for casilla in (
             _ACTIVIDAD_ECONOMICA_INGRESOS,
@@ -89,7 +89,7 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
             value = Decimal(casilla_values[casilla])
             assert value >= Decimal("0"), (
                 f"casilla {casilla} inverted to a negative value ({value}) on positive "
-                f"actividad-economica income — the #514 sign/routing defect has regressed"
+                f"actividad-economica income — the sign/routing defect has regressed"
             )
 
         # The base imponible general carries the positive activity net through

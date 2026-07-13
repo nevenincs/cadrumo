@@ -102,7 +102,7 @@ _M202 = "202"
 # formula folds via relation ``modelo-200-2024-rel-202-pagos-fraccionados``
 # (filing_year_delta = 0). That relation is consumed DIRECTLY by a formula operand
 # (the cuota-diferencial subtraction), so an absent value RAISES on the live path
-# (finding #26) rather than resolving present-or-zero. It is NOT the cross-year
+# rather than resolving present-or-zero. It is NOT the cross-year
 # carry under test, so seed it as zero (no instalments this scenario) to keep the
 # live calculate focused on the BIN / dotaciones self-carries.
 _M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OUTPUT")
