@@ -183,7 +183,7 @@ Converge developer automation, CI, release tooling, and external publication gat
 - [x] `W05.P11.S55` - Update developer recipes, release URLs, companion paths, and rollback commands; `justfile`.
 - [x] `W05.P11.S56` - Rename manual publish choices, builders, filename guards, and Trusted Publisher expectations; `.github/workflows/publish.yml`.
 - [ ] `W05.P11.S57` - Rename packaging smoke labels, commands, and evidence artifacts; `.github/workflows/packaging-smoke.yml`.
-- [ ] `W05.P11.S58` - Retarget CI source paths and named product jobs; `.github/workflows/ci.yml`.
+- [x] `W05.P11.S58` - Retarget CI source paths and named product jobs; `.github/workflows/ci.yml`.
 - [x] `W05.P11.S59` - Retarget agent-harness evaluation to cadrumo-mcp; `.github/workflows/agent-harness-eval.yml`.
 - [x] `W05.P11.S60` - Update release-readiness project-name parsing and real behavior tests; `dev/release`.
 - [ ] `W05.P11.S61` - Block publication until all three PyPI Trusted Publishers and remaining reservation evidence are confirmed; `issue #476 release gate evidence`.

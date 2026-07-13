@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -27,7 +28,7 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
 
 
 def test_ci_workflow_product_surface_has_no_former_identity() -> None:
-    """Product-facing CI labels and commands contain no former product name."""
+    """CI retains `aeat` only as the human CLI, never as a product identity."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     job = document["jobs"]["cadrumo-lint-and-test"]
     product_surface = "\n".join(
@@ -37,5 +38,26 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
             *(str(step.get("name", "")) for step in job["steps"]),
             *(str(step.get("run", "")) for step in job["steps"]),
         ),
-    ).casefold()
-    assert "aeat" not in product_surface
+    )
+    commands = tuple(
+        line.strip() for step in job["steps"] for line in str(step.get("run", "")).splitlines() if line.strip()
+    )
+    registry_commands = {command for command in commands if " app registry " in command}
+
+    assert registry_commands == {
+        "uv run --no-sync aeat app registry verify --json",
+        "uv run --no-sync aeat app registry audit-oracles --json",
+    }
+    assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
+
+    former_product_tokens = (
+        "aeat-cli",
+        "src/aeat/",
+        "packaging/aeat",
+        "python -m aeat",
+        "import aeat",
+        "aeat_data",
+    )
+    folded_surface = product_surface.casefold()
+    for token in former_product_tokens:
+        assert token not in folded_surface
