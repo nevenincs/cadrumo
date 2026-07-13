@@ -110,8 +110,8 @@ Ground every later decision in committed measurements: corpus coverage of the sh
 Read-only measurement runs against the resident RAG service producing committed reports.
 
 - [ ] `W01.P01.S01` - Generate the coverage report: derive the candidate query surface from calc-grade casilla labels/sections and legal-catalogue provision vocabulary, list every derivable target with no inbound relevance entry, and commit the report; `dev/docs/terminology/, .vault/audit/`.
-- [ ] `W01.P01.S02` - Run the held-out golden queries through the shipped relevance mapping with the miss-rate machinery and commit the baseline miss-rate report; `dev/docs/terminology/_miss_rate.py, .vault/audit/`.
-- [ ] `W01.P01.S03` - Inventory the synonym candidate queue (mined, unratified) and commit the inventory with a ratify-or-clear disposition per candidate; `dev/docs/terminology/_synonym_mining.py, .vault/audit/`.
+- [x] `W01.P01.S02` - Run the held-out golden queries through the shipped relevance mapping with the miss-rate machinery and commit the baseline miss-rate report; `dev/docs/terminology/_miss_rate.py, .vault/audit/`.
+- [x] `W01.P01.S03` - Inventory the synonym candidate queue (mined, unratified) and commit the inventory with a ratify-or-clear disposition per candidate; `dev/docs/terminology/_synonym_mining.py, .vault/audit/`.
 
 ## Wave `W02` - Hook wiring
 
@@ -121,9 +121,9 @@ Wire the repo extractors into the shipped upstream vaultspec-rag preprocess seam
 
 Build the upstream-schema adapter and rule file, gate config validity, prove parity per source kind, then one atomic cutover commit.
 
-- [ ] `W02.P02.S04` - Implement the upstream-schema adapter: serialize the repo PreprocessOutput to the upstream PreprocOutput JSON contract behind a python -m entry point, with unit tests against the pinned schema major; `dev/docs/preprocess/`.
-- [ ] `W02.P02.S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test; `.vaultragpreprocess.toml, dev/docs/preprocess/tests/`.
-- [ ] `W02.P02.S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test; `dev/docs/preprocess/tests/`.
+- [x] `W02.P02.S04` - Implement the upstream-schema adapter: serialize the repo PreprocessOutput to the upstream PreprocOutput JSON contract behind a python -m entry point, with unit tests against the pinned schema major; `dev/docs/preprocess/`.
+- [x] `W02.P02.S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test; `.vaultragpreprocess.toml, dev/docs/preprocess/tests/`.
+- [x] `W02.P02.S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test; `dev/docs/preprocess/tests/`.
 - [ ] `W02.P02.S07` - Atomic cutover: retarget the terminology resolver path rules to source-file paths, delete the committed sidecar tree, correct the stale preprocess docstring, and prove an equal-or-superset sweep target set, in one explicit-path commit; `dev/docs/terminology/_resolution.py, dev/docs/preprocess/__init__.py, src/cadrumo/_data/corpus/`.
 
 ## Wave `W03` - Widen
