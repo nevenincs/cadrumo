@@ -1,0 +1,64 @@
+---
+tags:
+  - '#exec'
+  - '#docs-cli-sequences'
+date: '2026-07-13'
+modified: '2026-07-13'
+step_id: 'S33'
+related:
+  - "[[2026-07-13-docs-cli-sequences-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace docs-cli-sequences with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S33 and 2026-07-13-docs-cli-sequences-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Author the synthetic input fixtures and shared seed recipes for the first tutorials and ## Scope
+
+- `docs/_sequences/fixtures` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Author the synthetic input fixtures and shared seed recipes for the first tutorials
+
+## Scope
+
+- `docs/_sequences/fixtures`
+
+## Description
+
+- Author the synthetic bank-statement fixture `docs/_sequences/fixtures/movimientos-2026-1t.csv`: a semicolon-delimited BBVA-shape statement with two invented first-quarter 2026 movements, one collected invoice (1210,00) and one office-supplies purchase (-605,00). All data synthetic.
+- Author the shared seed recipe `docs/_sequences/seeds/autonomo-irpf-2026.seq`: three `@setup` frames that enrich the sandbox profile with a 2026-01-01 activity-start date and add two classified `BUSINESS` ledger rows (1000 base + 210 IVA income; 500 base + 105 IVA `material_oficina` expense).
+- Ground both against the live engine with a throwaway probe before committing: the seed makes a fresh-sandbox Modelo 130 first-quarter verify grant, and a double run yields zero pre-mask differing paths.
+
+## Outcome
+
+Both synthetic inputs land and drive deterministic, granting runs. The seed's profile-edit approach was chosen after empirically proving that creating a fresh profile mints a random id that flaps every content-addressed identifier across runs (unusable for committed goldens); editing the pre-provisioned sandbox profile in place preserves the injected deterministic id while adding the activity-start date that scopes out the first-quarter cross-period dependency so verify grants.
+
+## Notes
+
+- The seed edits the profile by the engine's `SANDBOX_PROFILE_LABEL` (`docs-sequence-sandbox`); this is the only stable handle for the pre-provisioned active profile and is the deliberate cost of keeping the run deterministic. It renders inside the collapsed "Preparation" disclosure.
+- The fixture is consumed by the page's import sequence via `ledger import ... --provider csv`; import output carries no transaction ids, so import-then-classify by id was rejected as brittle in favour of an inline-classified seed for the filing sequence.
