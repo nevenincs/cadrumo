@@ -7,8 +7,8 @@ adapters:
           en el servidor.
       suggestions:
         reject_pending_request: Abre la app Cl@ve en tu móvil, rechaza todas las peticiones
-          pendientes y vuelve a ejecutar `aeat config auth test` (o espera hasta 5
-          minutos a que la AEAT las cancele automáticamente).
+          pendientes y vuelve a ejecutar `cadrumo config auth test` (o espera hasta
+          5 minutos a que la AEAT las cancele automáticamente).
     sede:
       groi:
         suggestions:
@@ -61,7 +61,7 @@ adapters:
           dentro del tiempo configurado.
         metadata_invalid: Los metadatos de sesión de Cl@ve Móvil son inválidos o no
           pueden analizarse.
-        no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
+        no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `cadrumo
           config auth status` primero.
         page_missing_click: La pagina de Playwright no expone click(); no se puede
           operar la entrada de Cl@ve Movil.
@@ -87,12 +87,12 @@ adapters:
         workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden
           con la instantánea de cálculo.
       suggestions:
-        reexport_then_pull: Vuelve a exportar el libro con `aeat config google sync
-          calc export` y después vuelve a importarlo.
-        reexport_workbook: Vuelve a exportar el libro con `aeat config google sync
+        reexport_then_pull: Vuelve a exportar el libro con `cadrumo config google
+          sync calc export` y después vuelve a importarlo.
+        reexport_workbook: Vuelve a exportar el libro con `cadrumo config google sync
           calc export` para renovar los metadatos gestionados por la aplicación.
         verify_exported_workbook: Comprueba que la hoja se creó originalmente con
-          `aeat config google sync calc export` para este perfil.
+          `cadrumo config google sync calc export` para este perfil.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
@@ -125,17 +125,17 @@ adapters:
           huérfano y vuelve a intentarlo.
         open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento
           impresa.
-        repair_profile_state: Ejecuta `aeat config profile health` y repara o cambia
+        repair_profile_state: Ejecuta `cadrumo config profile health` y repara o cambia
           el perfil activo antes de reintentar el comando de Google.
-        run_from_interactive_terminal: Ejecuta 'aeat config google login' desde un
-          terminal interactivo con un navegador web disponible.
+        run_from_interactive_terminal: Ejecuta 'cadrumo config google login' desde
+          un terminal interactivo con un navegador web disponible.
         use_keyring_or_synthetic: Configura cadrumo_secret_store_backend=keyring o
           cambia el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
       suggestions:
-        create_profile: Ejecuta `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
+        create_profile: Ejecuta `cadrumo config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
           y vuelve a intentar el comando de Google.
   inbound:
     declaracion:
@@ -178,14 +178,15 @@ adapters:
       factory:
         errors:
           drive_root_missing: No hay ningun id de carpeta raiz de Google Drive configurado
-            para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.
+            para el perfil activo. Ejecuta `cadrumo config google folder set <id>`
+            primero.
           google_auth_import_failed: La dependencia google-auth no se puede importar;
             ejecuta `uv sync` y reintentalo.
           google_client_missing: No hay ningun cliente OAuth de Google registrado
-            para el perfil activo. Ejecuta `aeat config google register --client-json
+            para el perfil activo. Ejecuta `cadrumo config google register --client-json
             <path>` primero.
           google_token_missing: No hay ningun token OAuth de Google persistido para
-            el perfil activo. Ejecuta `aeat config google login` primero.
+            el perfil activo. Ejecuta `cadrumo config google login` primero.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacio.
           kind_unhandled: El tipo de proveedor de almacenamiento {kind} no esta gestionado
             por la factoria.
@@ -242,7 +243,7 @@ adapters:
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
             ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
-            o habilite LongPathsEnabled (véase `aeat config check`).'
+            o habilite LongPathsEnabled (véase `cadrumo config check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
@@ -262,7 +263,7 @@ adapters:
           payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
             carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
-            (véase `aeat config check`).'
+            (véase `cadrumo config check`).'
           payload_write_permission: El almacenamiento local no pudo escribir el payload
             del objeto.
           sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
@@ -274,7 +275,7 @@ adapters:
           sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
-            (véase `aeat config check`).'
+            (véase `cadrumo config check`).'
   persistence:
     profile:
       assets:
@@ -297,7 +298,7 @@ adapters:
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
-        puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
+        puede haber expirado. Ejecute 'cadrumo config auth test' y vuelva a intentarlo.
       ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
         solicitado para este modelo.
       empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se
@@ -318,10 +319,10 @@ adapters:
       modelo_unavailable: El registro de declaraciones de la AEAT no ofrece el modelo
         solicitado.
       no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
-        ejecute primero `aeat config auth status`.
+        ejecute primero `cadrumo config auth status`.
       notifications_bad_landing: La página de notificaciones de la AEAT no se cargó
         correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento.
-        Ejecute 'aeat config auth status' y vuelva a intentarlo. No lo interprete
+        Ejecute 'cadrumo config auth status' y vuelva a intentarlo. No lo interprete
         como una bandeja vacía.
       parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
         estructura de la página puede haber cambiado.
@@ -332,8 +333,8 @@ adapters:
       playwright_combobox_select_failed: Error al seleccionar una opción del cuadro
         combinado en la Sede.
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
-        la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
-        a intentarlo.
+        la sesión probablemente ha expirado. Ejecute 'cadrumo config auth test' y
+        vuelva a intentarlo.
 aggregation:
   grouping:
     errors:
@@ -452,21 +453,21 @@ application:
         lock_held: Ya hay otra operación de autenticación AEAT en curso para este
           perfil. No inicies una segunda petición de Cl@ve; espera a que termine el
           proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
-        lock_held_suggestion: Ejecuta `aeat config auth status --format json` para
+        lock_held_suggestion: Ejecuta `cadrumo config auth status --format json` para
           inspeccionar el bloqueo de autenticación activo.
     certificate:
       health:
         file_missing: El archivo de certificado configurado (%{path}) no existe. Recupera
-          el archivo o ejecuta 'aeat config auth configure --provider certificate
+          el archivo o ejecuta 'cadrumo config auth configure --provider certificate
           --file RUTA' con una ruta válida.
-        path_unset: No se ha seleccionado un archivo de certificado. Ejecuta 'aeat
+        path_unset: No se ha seleccionado un archivo de certificado. Ejecuta 'cadrumo
           config auth configure --provider certificate --file RUTA' para indicarlo.
         unavailable: El estado del certificado no está disponible; consulta los registros
           de depuración para los detalles de diagnóstico.
       load:
         password_unset: No hay contraseña de certificado configurada. Configura la
           contraseña del certificado antes de continuar.
-        path_unset: No hay archivo de certificado configurado. Ejecuta 'aeat config
+        path_unset: No hay archivo de certificado configurado. Ejecuta 'cadrumo config
           auth configure --provider certificate --file RUTA' para indicarlo.
     clave_movil:
       health:
@@ -484,7 +485,7 @@ application:
         both_missing_detail: No están configurados ni la identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           ni el identificador fiscal del perfil activo. Configura ambos con el mismo
           DNI/NIE antes de la autenticación AEAT en directo.
-        both_missing_next_action: Edita el perfil activo con 'aeat config profile
+        both_missing_next_action: Edita el perfil activo con 'cadrumo config profile
           edit NOMBRE --tax-id DNI/NIE' y configura el mismo DNI/NIE para Cl@ve Móvil.
         clave_identity_missing_detail: La identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           no está configurada, por lo que no se puede comparar con el identificador
@@ -501,25 +502,25 @@ application:
         profile_tax_id_missing_detail: El perfil activo no tiene identificador fiscal,
           por lo que no se puede comparar con la identidad Cl@ve. Configura el identificador
           fiscal del perfil con el DNI/NIE usado para Cl@ve.
-        profile_tax_id_missing_next_action: Edita el perfil activo con 'aeat config
+        profile_tax_id_missing_next_action: Edita el perfil activo con 'cadrumo config
           profile edit NOMBRE --tax-id DNI/NIE' antes de la autenticación.
       errors:
         certificate_file_required: El proveedor de certificado requiere un archivo
-          de certificado. Ejecuta `aeat config auth configure --provider certificate
+          de certificado. Ejecuta `cadrumo config auth configure --provider certificate
           --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).
         certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
-          no resuelve a un archivo existente. Ejecuta `aeat config auth configure
+          no resuelve a un archivo existente. Ejecuta `cadrumo config auth configure
           --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
         certificate_source_not_found: El origen de certificado '%{name}' no está registrado.
-          Ejecute `aeat config auth certificate list` para ver los orígenes registrados,
-          o `aeat config auth certificate register --name %{name} --file RUTA` para
-          registrarlo.
+          Ejecute `cadrumo config auth certificate list` para ver los orígenes registrados,
+          o `cadrumo config auth certificate register --name %{name} --file RUTA`
+          para registrarlo.
         dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
-          resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
-          para inspeccionar los perfiles registrados y despues aeat config switch
-          NAME o aeat config profile create NAME.
-        no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
-          NAME` antes de configurar la autenticación.
+          resuelve a un bucket de perfil registrado. Ejecuta cadrumo config profile
+          list para inspeccionar los perfiles registrados y despues cadrumo config
+          switch NAME o cadrumo config profile create NAME.
+        no_active_bucket: No hay un perfil activo; ejecuta `cadrumo config profile
+          create NAME` antes de configurar la autenticación.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
           Siguiente acción: %{next_action}.'
@@ -528,7 +529,7 @@ application:
           de certificado configurado (%{path}) no existe. Recupera el archivo o vuelve
           a configurar la ruta antes de continuar.'
         refused_certificate_path_unset: 'No se puede iniciar sesión: aún no se ha
-          seleccionado un archivo de certificado. Ejecuta ''aeat config auth configure
+          seleccionado un archivo de certificado. Ejecuta ''cadrumo config auth configure
           --provider certificate --file RUTA'' antes de continuar.'
         refused_clave_movil_identity_unset: 'No se puede iniciar sesión con Cl@ve
           Móvil: aún no se ha configurado un DNI/NIE. Configúralo antes de continuar.'
@@ -557,9 +558,9 @@ application:
         no_provider: No hay ningún proveedor de autenticación configurado; nada que
           comprobar localmente.
         no_session: No hay ningún token de sesión AEAT persistido en disco; ejecuta
-          `aeat config auth login` para obtener uno.
+          `cadrumo config auth login` para obtener uno.
         session_expired: Hay un token de sesión AEAT persistido en disco pero ha superado
-          su límite de inactividad; ejecuta `aeat config auth login --fresh` para
+          su límite de inactividad; ejecuta `cadrumo config auth login --fresh` para
           renovarlo.
         session_live: Hay un token de sesión AEAT persistido en disco y dentro de
           su límite de inactividad.
@@ -586,23 +587,23 @@ application:
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
-          leer. Ejecuta `aeat config auth clear --sessions` y después `aeat config
-          auth test`.
-        no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
-          de leer datos AEAT.
+          leer. Ejecuta `cadrumo config auth clear --sessions` y después `cadrumo
+          config auth test`.
+        no_session: No hay sesión AEAT activa; ejecuta `cadrumo config auth test`
+          antes de leer datos AEAT.
         profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
           el perfil activo tenga identity.tax_id.
-        sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
-          auth test` antes de leer datos AEAT.
-        session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test`
-          antes de leer datos AEAT.
+        sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `cadrumo
+          config auth test` antes de leer datos AEAT.
+        session_expired: La sesión AEAT ha caducado; ejecuta `cadrumo config auth
+          test` antes de leer datos AEAT.
         session_identity_profile_mismatch: La identidad de la sesión AEAT no coincide
           con la identidad fiscal del perfil activo; borra las sesiones de autenticación
           y autentica el perfil que coincida antes de las lecturas AEAT en directo.
-        state_missing: Falta el estado de la sesión AEAT; ejecuta `aeat config auth
-          test` antes de leer datos AEAT.
-        verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
+        state_missing: Falta el estado de la sesión AEAT; ejecuta `cadrumo config
           auth test` antes de leer datos AEAT.
+        verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `cadrumo
+          config auth test` antes de leer datos AEAT.
   bucket_maintenance:
     errors:
       archive_active_bucket: El bucket activo no puede archivarse; cambia primero
@@ -819,9 +820,9 @@ application:
           anio del calculo=%{filing_year} periodo=%{period}.'
         snapshot_bucket_mismatch: El snapshot de borrador no pertenece al bucket activo.
         snapshot_load_failed: No se puede cargar el snapshot de borrador seleccionado;
-          lista los snapshots activos con aeat app live borrador 100 list.
+          lista los snapshots activos con cadrumo app live borrador 100 list.
         snapshot_not_active: El snapshot de borrador no está activo; lista los snapshots
-          activos con `aeat app live borrador 100 list`.
+          activos con `cadrumo app live borrador 100 list`.
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
     errors:
@@ -852,12 +853,13 @@ application:
         valores decimales y de enumeracion. Definelo como dato del perfil y vuelve
         a calcular.
       calculate_binding_unknown: '--binding %{key} no coincide con ningun binding
-        de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
-        list <MODELO>` para listar los bindings validos.'
+        de esta revision. Bindings aceptados: %{accepted}. Use `cadrumo app modelo
+        bindings list <MODELO>` para listar los bindings validos.'
       calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} es
         un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
-        Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
-        modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
+        Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''cadrumo
+        app modelo bindings list <MODELO>'' para ver la codificación decimal de cada
+        binding.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id
         canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica
         el casilla.id canónico exacto'
@@ -865,15 +867,15 @@ application:
         impreso o de formulario, o una referencia de exportación, no un casilla.id
         canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
-        esta revision. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
-        validos.
+        esta revision. Usa `cadrumo app modelo casillas <MODELO>` para listar los
+        casilla.id validos.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
       calculate_detail_casilla_unsupported: La casilla %{key} nombra un campo de detalle
         de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
         local --casilla solo acepta casillas decimales escalares; las filas de detalle
         de perceptor/inmueble del Modelo 180 aun no estan soportadas en la superficie
-        publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        publica --row. Usa cadrumo app modelo aggregate --modelo 180 --retencion-observation
         para la fuente soportada de numero de perceptores/base/retenciones anual.
       calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
@@ -930,7 +932,7 @@ application:
       export_ledger_evidence_missing: La revision de calculo %{calculation_revision_id}
         derivada del libro mayor no incluye evidencia del libro mayor ni una referencia
         resoluble al snapshot; verifica la revision otra vez antes de exportar.
-      export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
+      export_no_active_bucket: No hay un perfil activo; ejecuta `cadrumo config profile
         create NAME` antes de exportar una revisión de modelo.
       export_operator_name_missing: 'La exportacion requiere el nombre del operador
         en el perfil activo; faltan estos datos de perfil: %{missing}.'
@@ -978,7 +980,7 @@ application:
         compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
-        el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
+        el saldo de apertura con cero: `cadrumo app modelo iva-wallet seed --filing-year
         YEAR --period PERIOD --amount 0 --confirm`.'
       iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
         selected amount.
@@ -993,8 +995,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+        %{transaction_id} %{reason}: %{detail}. Run `cadrumo app ledger preflight
+        --period %{period}` before calculating.'
       m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo
         210 deriva las filas anuales de agrupación de rentas de las clasificaciones
         del libro; no proporcione filas manuales de agrupación de rentas.
@@ -1030,10 +1032,10 @@ application:
         %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
         declaración aún no está habilitada para este modelo; reconcilia un justificante
-        descargado con aeat app modelo reconcile file, o espera a que este modelo
+        descargado con cadrumo app modelo reconcile file, o espera a que este modelo
         se habilite.
-      reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
-        create NAME` antes de reconciliar una unidad de trabajo.
+      reconcile_no_active_bucket: No hay un perfil activo; ejecuta `cadrumo config
+        profile create NAME` antes de reconciliar una unidad de trabajo.
       refund_election_not_eligible: Se eligio devolver para el Modelo %{modelo} %{filing_year}
         %{period}, pero la devolucion solo esta disponible en el ultimo periodo de
         declaracion del ano. Arrastra el credito (compensar) o elige la devolucion
@@ -1076,10 +1078,10 @@ application:
       workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación
         pendiente para este modelo/periodo en la fecha actual (la ventana de obligación
         de presentación de la AEAT no está abierta). La presentación a fichero no
-        requiere este paso: exporta la revisión verificada-completa con ''aeat app
-        modelo export''; ese es el punto final local. ''work file'' es el paso interno
-        opcional para marcar como presentado cuando la ventana de obligación esté
-        abierta.'
+        requiere este paso: exporta la revisión verificada-completa con ''cadrumo
+        app modelo export''; ese es el punto final local. ''work file'' es el paso
+        interno opcional para marcar como presentado cuando la ventana de obligación
+        esté abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
     findings:
@@ -1119,9 +1121,9 @@ application:
         vacía: la participación recibida se registró en el perfil pero no se incorporó
         a la declaración.'
       attribution_received_unfolded_next_action: Incorpore la base atribuida a la
-        casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `aeat app
-        modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para que
-        la renta del régimen de atribución quede declarada.
+        casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `cadrumo
+        app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para
+        que la renta del régimen de atribución quede declarada.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1140,7 +1142,7 @@ application:
           va a la izquierda de un unico signo igual y el valor a la derecha. Para
           pagos fraccionados mutuamente excluyentes, confirma el regimen de estimacion
           de actividad en el perfil.'
-        next_action: 'Usa `aeat app modelo bindings list --missing` para identificar
+        next_action: 'Usa `cadrumo app modelo bindings list --missing` para identificar
           el binding de retenciones. Aporta el importe del certificado con --binding
           CLAVE=VALOR cuando corresponda: pon el id del binding a la izquierda de
           un unico signo igual y el importe a la derecha. Confirma el regimen de estimacion
@@ -1154,11 +1156,11 @@ application:
           esta evidenciado localmente (app_filing), no por la AEAT; presente cada
           periodo ante la AEAT de forma externa.'
         next_action: Exporte y presente cada periodo ante la AEAT de forma externa,
-          despues actualice la cadena local con evidencia oficial; use `aeat app live
-          justificante pull` cuando haya acceso en vivo, o `aeat app modelo filing-record
-          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
-          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
-          --file PATH` para evidencia que ya tenga.
+          despues actualice la cadena local con evidencia oficial; use `cadrumo app
+          live justificante pull` cuando haya acceso en vivo, o `cadrumo app modelo
+          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
+          --evidence-id CSV --set CASILLA=VALUE` / `cadrumo app modelo reconcile file
+          WORK_UNIT_ID --file PATH` para evidencia que ya tenga.
       cross_period_operator_declared_suppression: 'dependencia entre períodos excluida
         por no existir obligación previa (antes del inicio de actividad): modelo=%{modelo}
         ejercicio=%{year} período=%{period} origen=%{origin}. El período es estrictamente
@@ -1289,12 +1291,12 @@ application:
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Designe un representante fiscal en Espana estableciendo profile.representante_fiscal_nif
-          mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
+          mediante el comando `cadrumo config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
-        Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
+        Ejecuta primero 'cadrumo app modelo iva-wallet seed'; la corrección sobrescribe
         una siembra existente.
       correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
         ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración
@@ -1324,7 +1326,7 @@ application:
         modelo_blank: El identificador de modelo no puede estar en blanco.
   portals:
     errors:
-      portal_not_found: El portal AEAT solicitado no está registrado. Ejecute 'aeat
+      portal_not_found: El portal AEAT solicitado no está registrado. Ejecute 'cadrumo
         app live portals list' para ver los portales disponibles.
   registry:
     errors:
@@ -1375,7 +1377,7 @@ application:
             y ''Tarifas'' refleja los parámetros vigentes consultados por las fórmulas.'
           period: '%{modelo_title} - período %{period} / %{filing_year}.'
           pull_command: Para recoger sus ediciones en el almacenamiento local, ejecute
-            'aeat config google sync calc pull' desde la CLI.
+            'cadrumo config google sync calc pull' desde la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casilla
@@ -1446,8 +1448,8 @@ application:
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
-      profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
-        switch NAME para activarlo o aeat config profile delete NAME primero.
+      profile_already_exists: El perfil '%{profile}' ya existe; ejecuta cadrumo config
+        switch NAME para activarlo o cadrumo config profile delete NAME primero.
       profile_bucket_directory_removal_failed: No se pudo eliminar el directorio del
         perfil.
       profile_create_route_mismatch: La ruta de creación de perfil '%{route}' no coincide
@@ -1463,7 +1465,7 @@ application:
         de bucket registrado en %{bucket_dir}.
       profile_manifest_missing: El perfil '%{profile}' no tiene manifiesto de bucket
         registrado en %{bucket_dir}.
-      profile_not_registered: El perfil '%{profile}' no existe; ejecuta `aeat config
+      profile_not_registered: El perfil '%{profile}' no existe; ejecuta `cadrumo config
         profile create NAME` para crearlo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' está eliminado y no
         puede seleccionarse.
@@ -1514,7 +1516,7 @@ application:
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
     next_hint:
-      modelo_work_create: aeat app modelo work create
+      modelo_work_create: cadrumo app modelo work create
     notices:
       ccaa_defaulted: No se eligió comunidad autónoma, por lo que se asumió %{ccaa}
         para este perfil. Las deducciones autonómicas y el tramo autonómico de la
@@ -1564,7 +1566,7 @@ application:
       resume_target_contradiction: 'Indica solo un destino de resume: id de ejecución
         de flujo, id de unidad de trabajo, id de revisión de cálculo, o modelo/año/periodo.'
       resume_target_invalid: Destino de resume {target} invalido. Usa --modelo --year
-        --period o ejecuta `aeat app modelo work runs`.
+        --period o ejecuta `cadrumo app modelo work runs`.
       resume_target_required: Indica --modelo --year --period, un id de ejecución
         de flujo, un id de unidad de trabajo o un id de revisión de cálculo para reanudar.
       resume_visible_target_incomplete: Resume por clave natural requiere --modelo,
@@ -1647,7 +1649,7 @@ cli:
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
           el valor extraido).
         confirm_link_hint_message: Vincula esta factura a un movimiento del libro
-          con `aeat app ledger link`.
+          con `cadrumo app ledger link`.
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
@@ -2026,7 +2028,7 @@ cli:
         need_two_years: Se requieren exactamente dos valores --year (p. ej. --year
           2024 --year 2025).
         no_revisions: Las unidades de trabajo del Modelo %{modelo} para el ejercicio
-          %{filing_year} no tienen revisiones de cálculo. Ejecuta `aeat app modelo
+          %{filing_year} no tienen revisiones de cálculo. Ejecuta `cadrumo app modelo
           work calculate` primero.
         no_usable_revisions: El Modelo %{modelo} para el ejercicio %{filing_year}
           no tiene revisiones VERIFICADO_COMPLETO ni BORRADOR disponibles para comparar.
@@ -2209,7 +2211,7 @@ cli:
           bad_declared_on: --declared-on debe ser una fecha ISO (AAAA-MM-DD); recibido
             {value}.
           declaration_not_found: Ninguna declaración M036 coincide con {value!r}.
-            Ejecuta 'aeat app modelo m036 list' para ver las declaraciones registradas.
+            Ejecuta 'cadrumo app modelo m036 list' para ver las declaraciones registradas.
         group_help: Registra una declaración M036 presentada en sede (alta / modificacion
           / baja). La aplicación local nunca presenta; AEAT es la autoridad.
         justificante_help: Identificador opcional del acuse de recibo emitido por
@@ -2248,11 +2250,11 @@ cli:
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
         no_m130_revisions: No hay revisiones M130 para el ejercicio indicado. Ejecuta
-          `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
-          para cada trimestre primero.
+          `cadrumo app modelo work calculate --modelo 130 --year %{year} --period
+          1T` para cada trimestre primero.
         no_m130_units: No hay unidades de trabajo M130 para el ejercicio indicado.
-          Crea y calcula unidades M130 primero con `aeat app modelo work create --modelo
-          130 --year %{year} --period 1T`.
+          Crea y calcula unidades M130 primero con `cadrumo app modelo work create
+          --modelo 130 --year %{year} --period 1T`.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -2375,14 +2377,14 @@ cli:
         operator_public_key_help: Clave pública del operador (firmante original),
           en 64 caracteres hexadecimales en minúscula.
         originator_id_help: Id de originador registrado cuya clave pública sella los
-          comentarios (véase `aeat config collab recipient add`).
+          comentarios (véase `cadrumo config collab recipient add`).
         output_help: Ruta donde escribir el ZIP del paquete de revisión.
         package_path_help: Ruta del ZIP del paquete de revisión a verificar.
         public_key_help: Clave pública del firmante, en 64 caracteres hexadecimales
           en minúscula.
         receipt_path_help: Ruta del recibo contrafirmado en formato JSON generado
           por `counter-sign`.
-        recipient_id_help: Id del destinatario registrado (vease `aeat config collab
+        recipient_id_help: Id del destinatario registrado (vease `cadrumo config collab
           recipient add`).
         review_only_help: Marca el paquete sellado como carente de autoridad de presentacion
           (el destinatario puede leerlo y verificarlo, pero no es prueba de que la
@@ -2430,8 +2432,8 @@ cli:
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
         amend_set_required: --set es obligatorio al menos una vez para una complementaria.
         amend_wizard_export_next_action: Rectificación presentada como registro interno
-          en borrador. Exporta el fichero BOE compatible con la AEAT con `aeat app
-          modelo export %{work_unit_id} --output PATH`.
+          en borrador. Exporta el fichero BOE compatible con la AEAT con `cadrumo
+          app modelo export %{work_unit_id} --output PATH`.
         amend_wizard_help: 'Guía la corrección de una declaración ya presentada en
           lenguaje sencillo: qué casillas cambiaron, los valores corregidos y el tipo
           de rectificación, y la presenta'
@@ -2444,7 +2446,7 @@ cli:
           de rectificación necesita al menos un valor modificado.
         amend_wizard_no_current_filing: La unidad de trabajo %{work_unit_id} no tiene
           ningún registro de presentación vigente que corregir. Importa primero la
-          evidencia acreditada de la AEAT con `aeat app modelo filing-record import`,
+          evidencia acreditada de la AEAT con `cadrumo app modelo filing-record import`,
           o preséntala localmente.
         amend_wizard_reason_prompt: Motivo de esta rectificación (se conserva en el
           registro de auditoría)
@@ -2477,8 +2479,8 @@ cli:
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
-          revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
-          %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
+          revisiones con `cadrumo app modelo work revisions --modelo %{modelo} --year
+          %{year} --period %{period}` y vuelve a consultar esta con `cadrumo app modelo
           work revision %{revision_id}`.'
         calculate_source_advisory: 'AVISO: %{message} El cálculo se completó, pero
           este importe declarable no se asigna a ninguna casilla y no se declara en
@@ -2491,7 +2493,7 @@ cli:
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
         casilla_help: Valor de casilla con sintaxis CASILLA_ID=DECIMAL (repetible).
-          CASILLA_ID debe ser el casilla.id canonico mostrado por `aeat app modelo
+          CASILLA_ID debe ser el casilla.id canonico mostrado por `cadrumo app modelo
           casillas`.
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         causante_ccaa_help: CCAA de residencia habitual del causante (ISD Modelo 650/660)
@@ -2508,7 +2510,7 @@ cli:
           recomendación. Operación efímera: no persiste ninguna revisión.'
         compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} — {reason}'
         compare_taxation_work_unit_not_found: Unidad de trabajo {work_unit_id} no
-          encontrada; consulta las unidades activas con 'aeat app modelo work list'.
+          encontrada; consulta las unidades activas con 'cadrumo app modelo work list'.
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
@@ -2519,7 +2521,7 @@ cli:
           --format json, los avisos y el codigo de salida no se ven afectados.
         create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
           modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
-          `aeat app modelo work rename`.
+          `cadrumo app modelo work rename`.
         create_reused_name_match: Se devolvió la unidad de trabajo existente (idempotente
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado coincide con el nombre guardado.
@@ -2565,7 +2567,8 @@ cli:
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
-          a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
+          a ejecutar 'cadrumo app modelo work discard %{work_unit_id} --yes' para
+          confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
         disposition_help: 'Disposicion del resultado negativo del Modelo 303: compensar
           (arrastrar el credito, por defecto) o devolver (solicitar la devolucion;
@@ -2596,12 +2599,12 @@ cli:
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
         history_next_action: Revisa el estado actual de esta unidad de trabajo con
-          `aeat app modelo work status`.
+          `cadrumo app modelo work status`.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
           pero verify/file necesitan un id de revisión de cálculo. Para la ruta habitual,
-          ejecuta 'aeat app modelo work calculate --modelo %{modelo} --year %{year}
+          ejecuta 'cadrumo app modelo work calculate --modelo %{modelo} --year %{year}
           --period %{period}' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo.
           Los ids exactos siguen disponibles como vía avanzada.
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
@@ -2626,8 +2629,8 @@ cli:
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
         list_next_action: Inspecciona el estado completo de una unidad de trabajo
-          con `aeat app modelo work status` y luego crea o recalcula el borrador con
-          `aeat app modelo work calculate`.
+          con `cadrumo app modelo work status` y luego crea o recalcula el borrador
+          con `cadrumo app modelo work calculate`.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
           (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
           %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
@@ -2653,7 +2656,7 @@ cli:
           el cálculo todavía necesita.'
         missing_binding_guidance_ledger: '%{base} Este valor se agrega desde el libro
           mayor del bucket y no puede aportarse con --binding. Añade o clasifica las
-          filas correspondientes del libro mayor, ejecuta `aeat app ledger preflight`
+          filas correspondientes del libro mayor, ejecuta `cadrumo app ledger preflight`
           y vuelve a calcular. Ejecuta `%{discover}` para ver todos los bindings que
           el cálculo todavía necesita.'
         missing_date_binding_guidance: '%{base} Establece %{binding_id} en el perfil
@@ -2679,7 +2682,7 @@ cli:
           su procedencia.
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
-          `aeat app modelo bindings list --missing` para ver los bindings que requiere
+          `cadrumo app modelo bindings list --missing` para ver los bindings que requiere
           el cálculo.
         period_help: 'Token de periodo de la unidad: 0A anual, 1T-4T trimestres, 01-12
           meses; para modelos censales (036) usa alta, modificacion o baja.'
@@ -2726,7 +2729,7 @@ cli:
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relacion del registro con sintaxis KEY=VALUE (repetible).
           KEY es un id de relacion del registro, no un id de binding; usalo para entradas
-          de relacion entre periodos o entre modelos. Ejecuta aeat app modelo bindings
+          de relacion entre periodos o entre modelos. Ejecuta cadrumo app modelo bindings
           list --missing para ver la guia de relaciones del ambito. Para los pagos
           fraccionados M202 del Modelo 200, usa los canales de relacion mutuamente
           exclusivos 40.3 casilla 34 y 40.2 casilla 03, poniendo 0 en la modalidad
@@ -2763,7 +2766,8 @@ cli:
         resume_target_help: Id opcional de ejecución de flujo de 16 caracteres o id
           de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
         revision_help: Identificador estable de la revisión registrada del modelo;
-          ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
+          ejecuta `cadrumo app modelo describe MODELO` para ver los ids de revisión
+          disponibles.
         revision_selector_ambiguous: Mas de una revision de calculo coincide con este
           selector. Elija una explicitamente. {candidates}
         revision_selector_help: Selector de revision.
@@ -2796,8 +2800,8 @@ cli:
         row_validation_error: 'Validación fallida para fila --row tipo {row_type!r}:
           {error}'
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
-          de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
-          modelo work resume`. Solo local; nunca contacta con AEAT.
+          de la más reciente a la más antigua. Usa un id de ejecución con `cadrumo
+          app modelo work resume`. Solo local; nunca contacta con AEAT.
         sal_beneficio_neto_help: Beneficio neto del ejercicio de la Sociedad Laboral
           (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación
           obligatoria a la reserva especial, limitada al primer céntimo por encima
@@ -2816,7 +2820,7 @@ cli:
           modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
           de trabajo explicito. {candidates}
         selector_not_found: Ninguna unidad de trabajo activa coincide con este modelo,
-          ano y periodo. Ejecute primero aeat app modelo work create.
+          ano y periodo. Ejecute primero cadrumo app modelo work create.
         selector_revision_conflict: Ya existe una unidad de trabajo activa para este
           modelo/ano/periodo con revision de registro {existing_revision}; se solicito
           {requested_revision}. Reanude la unidad existente, descartela explicitamente
@@ -2830,17 +2834,17 @@ cli:
         state_label_presentado_supersedido: Presentacion sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
-          calculate` y luego verifica el borrador con `aeat app modelo work verify`.
+        status_next_action: Crea o recalcula esta unidad con `cadrumo app modelo work
+          calculate` y luego verifica el borrador con `cadrumo app modelo work verify`.
         verify_already_verified_refused: La revisión de cálculo %{calculation_revision_id}
           ya está en estado %{state} y no se puede volver a verificar. La verificación
           solo acepta una revisión en borrador.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_next_action_granted: La verificación se superó. Exporta el artefacto
-          de presentación con `aeat app modelo export`.
+          de presentación con `cadrumo app modelo export`.
         verify_next_action_incomplete: La verificación encontró elementos bloqueantes
-          (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
-          work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
+          (consulta los avisos anteriores). Resuélvelos, recalcula con `cadrumo app
+          modelo work calculate` y vuelve a ejecutar `cadrumo app modelo work verify`.
         verify_selector_help: Selector de revision borrador (current, latest-draft
           o explicit).
         wizard_help: Guia paso a paso por las casillas manuales pendientes de la unidad
@@ -2849,13 +2853,13 @@ cli:
         wizard_relation_help: Alimentado por la relacion de registro %{binding_id};
           introduce el valor entre periodos o entre modelos que aporta esta relacion.
         wizard_retry_exhausted: El asistente no pudo resolver todas las entradas de
-          calculo tras %{limit} preguntas de seguimiento. Ejecuta `aeat app modelo
+          calculo tras %{limit} preguntas de seguimiento. Ejecuta `cadrumo app modelo
           work calculate` directamente y aporta los valores --binding / --relation
           restantes a mano.
         wizard_saved: 'Guardado como revision de calculo en borrador %{revision_id}
           (estado: %{state}). Esta persistido y puede retomarse mas tarde; lista las
-          revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
-          %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
+          revisiones con `cadrumo app modelo work revisions --modelo %{modelo} --year
+          %{year} --period %{period}` y vuelve a consultar esta con `cadrumo app modelo
           work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
@@ -2885,7 +2889,7 @@ cli:
         (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej.
         --period 1T --year 2024).'
     next:
-      create_profile_command: aeat config profile create NOMBRE
+      create_profile_command: cadrumo config profile create NOMBRE
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -2967,7 +2971,7 @@ cli:
       login_help: Adquirir o verificar una sesión AEAT en vivo.
       login_reset_lock_help: Eliminar un bloqueo de adquisición de autenticación obsoleto
         antes de empezar.
-      no_active_bucket: No hay un perfil activo. Ejecuta 'aeat config profile create
+      no_active_bucket: No hay un perfil activo. Ejecuta 'cadrumo config profile create
         NAME' antes de configurar la autenticación.
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
@@ -2986,7 +2990,7 @@ cli:
       status_summary_unconfigured: La autenticación aún no está configurada.
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
-        ''aeat config auth --help'' para ver los identificadores válidos.'
+        ''cadrumo config auth --help'' para ver los identificadores válidos.'
     bucket: null
     check:
       available: disponible
@@ -3027,10 +3031,10 @@ cli:
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
-        NAME --tax-id <NIF/CIF/DNI/NIE>' primero.
-      unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
-        profile list'' para ver las claves disponibles.'
+      no_active_profile: No hay un perfil activo. Ejecuta 'cadrumo config profile
+        create NAME --tax-id <NIF/CIF/DNI/NIE>' primero.
+      unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''cadrumo
+        config profile list'' para ver las claves disponibles.'
     get:
       help: Mostrar el valor actual de una clave de configuración
       key_help: Clave a leer (ej. tax.id, iva.regime)
@@ -3089,10 +3093,10 @@ cli:
         browser_open: 'No se pudo abrir un navegador para autorizar el acceso a Google:
           {detail}'
         client_not_registered: No hay ningún cliente OAuth de Google registrado para
-          este perfil. Ejecuta primero `aeat config google register --client-json
+          este perfil. Ejecuta primero `cadrumo config google register --client-json
           <ruta>`.
         client_revoked: El cliente OAuth de Google registrado ha sido revocado. Vuelve
-          a registrarlo con `aeat config google register`.
+          a registrarlo con `cadrumo config google register`.
         impersonation_refused: 'Se rechazó la suplantación de la cuenta de servicio:
           {detail}'
         keychain_locked: El llavero del sistema que guarda las credenciales de Google
@@ -3103,15 +3107,15 @@ cli:
         non_interactive: 'El inicio de sesión de Google necesita un terminal interactivo
           con navegador web, pero este comando se ejecutó de forma no interactiva:
           {detail}'
-        profile_unbound: No hay ningun perfil activo. Ejecuta aeat config switch NAME
-          o indica --profile.
+        profile_unbound: No hay ningun perfil activo. Ejecuta cadrumo config switch
+          NAME o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
-          Ejecuta `aeat config google login` y acepta todos los permisos.
+          Ejecuta `cadrumo config google login` y acepta todos los permisos.
         storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
         token_expired: El acceso a Google ha caducado (los tokens de los proyectos
-          en pruebas caducan a los 7 días). Ejecuta `aeat config google login`.
-        token_revoked: El acceso a Google ha sido revocado. Ejecuta `aeat config google
-          login` para autorizarlo de nuevo.
+          en pruebas caducan a los 7 días). Ejecuta `cadrumo config google login`.
+        token_revoked: El acceso a Google ha sido revocado. Ejecuta `cadrumo config
+          google login` para autorizarlo de nuevo.
         unsecured_mode: El acceso a Google está bloqueado mientras el almacén de secretos
           funciona en modo no seguro para un perfil con un NIF real.
         validation: 'Los datos proporcionados para Google no superaron la validación:
@@ -3148,7 +3152,7 @@ cli:
             de las casillas (no persiste nada)
           export:
             capability_disabled: La exportación a Google está desactivada para este
-              perfil; actívala con 'aeat config profile capabilities set google_export
+              perfil; actívala con 'cadrumo config profile capabilities set google_export
               on'.
             modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
             period_help: Código de período (p. ej. 1T, 2T, 0A)
@@ -3156,7 +3160,7 @@ cli:
               desde el almacén local de observaciones antes de exportar (resúmenes
               anuales, arrastre de trimestres anteriores, etc.)
             root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
-              `aeat config google folder set <id>` primero
+              `cadrumo config google folder set <id>` primero
             snapshot_failure: 'No se puede construir el snapshot del registry para
               modelo {modelo} ({period} {year}): {detail}'
             unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
@@ -3188,7 +3192,7 @@ cli:
         push_limit_help: Número máximo de archivos que se subirán
         push_namespace_help: Espacio de datos que quieres subir; se puede repetir
         root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
-          `aeat config google folder set <id>` primero
+          `cadrumo config google folder set <id>` primero
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
@@ -3207,7 +3211,7 @@ cli:
       quiet_help: Oculta el mensaje de éxito después de inicializar
       submissions_dir_help: Directory to store submitted filing receipts
       success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+        next_step: 'Próximo paso: ejecuta `cadrumo app overview status`'
       tax_id_help: Identificador fiscal español (NIF/CIF/DNI/NIE)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
@@ -3223,7 +3227,7 @@ cli:
           del perfil, el libro contable, los cálculos y el historial de presentaciones.
           Si se exporta con --recovery-wrap-passphrase, es la vía cifrada de transferencia
           entre equipos para paquetes de perfil. Guárdalo en un lugar seguro; restáuralo
-          con ''aeat config profile archive import''.'
+          con ''cadrumo config profile archive import''.'
         export_help: Escribe un archivo de copia de seguridad completa, sellado y
           cifrado AEAD, en RUTA; añade --recovery-wrap-passphrase antes de enviarlo
           por correo o transferirlo entre equipos.
@@ -3235,8 +3239,8 @@ cli:
         help: Copia de seguridad y restauración de un perfil como archivo sellado
           y cifrado AEAD (el transporte de recuperación de custodia completa).
         import_active_switch_info: El perfil restaurado es ahora el perfil ACTIVO;
-          los siguientes comandos operan sobre él. Ejecuta 'aeat config switch <nombre>'
-          para cambiar el perfil activo.
+          los siguientes comandos operan sobre él. Ejecuta 'cadrumo config switch
+          <nombre>' para cambiar el perfil activo.
         import_force_help: Sobrescribe un perfil existente que comparta el identificador
           de bucket del archivo.
         import_help: Restaura un perfil desde un archivo sellado y cifrado en RUTA.
@@ -3253,8 +3257,8 @@ cli:
         enabled: activado
         help: Activa o desactiva en este perfil los servicios externos (subida a la
           nube, visión LLM, exportación a Google).
-        no_active_profile: No hay perfil activo; selecciona uno con 'aeat config profile
-          use <nombre>' antes de configurar una capacidad.
+        no_active_profile: No hay perfil activo; selecciona uno con 'cadrumo config
+          profile use <nombre>' antes de configurar una capacidad.
         set_help: Activa o desactiva una capacidad de servicio para el perfil activo.
         show_help: Muestra el estado resuelto de cada capacidad de servicio para el
           perfil activo.
@@ -3279,11 +3283,11 @@ cli:
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
       delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
-        activo se ha borrado. Ejecuta aeat config switch NAME o aeat config profile
-        create NAME para volver a trabajar.
+        activo se ha borrado. Ejecuta cadrumo config switch NAME o cadrumo config
+        profile create NAME para volver a trabajar.
       delete_help: Elimina un perfil y su estado local; --yes confirma
       delete_name_help: Nombre del perfil que quieres eliminar
-      delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
+      delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'cadrumo
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
@@ -3307,10 +3311,10 @@ cli:
       export_cleartext_local_help: Escribe JSON en claro solo para gestión local/SAR;
         no es seguro para correo, sincronización ni transferencia.
       export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
-        AEAD por frase de contraseña. Impórtalo con 'aeat config profile import PATH
-        --passphrase ...'. Solo contiene el paquete estructurado del perfil; usa el
-        archivo de recuperación cifrado para una copia completa con evidencias adjuntas
-        y auditoría.
+        AEAD por frase de contraseña. Impórtalo con 'cadrumo config profile import
+        PATH --passphrase ...'. Solo contiene el paquete estructurado del perfil;
+        usa el archivo de recuperación cifrado para una copia completa con evidencias
+        adjuntas y auditoría.
       export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
         en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso local/SAR.
       export_name_help: Perfil que quieres exportar; por defecto, el activo
@@ -3326,8 +3330,8 @@ cli:
         movimientos completo, las revisiones de cálculo y los registros de presentación.
         Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
         correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
-        local/SAR. Usa ''aeat config profile export --passphrase ...'' para un paquete
-        estructurado de transferencia cifrado AEAD.'
+        local/SAR. Usa ''cadrumo config profile export --passphrase ...'' para un
+        paquete estructurado de transferencia cifrado AEAD.'
       export_transport_conflict: Elige --passphrase o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
@@ -3349,7 +3353,7 @@ cli:
       history_until_help: Filtrar el historial a eventos en o antes de esta marca
         ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
       import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
-        las órdenes siguientes operan sobre él. Ejecuta 'aeat config switch <name>'
+        las órdenes siguientes operan sobre él. Ejecuta 'cadrumo config switch <name>'
         para cambiar el perfil activo.
       import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete de
         perfil cifrado. Comprueba la frase de contraseña y el archivo.
@@ -3377,10 +3381,10 @@ cli:
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
       logout_session_warning: El cierre de sesion limpio el puntero del perfil activo.
         Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
-        hasta que ejecutes aeat config switch NAME o abras un nuevo terminal y vuelvas
-        a seleccionar.
-      no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
-        NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
+        hasta que ejecutes cadrumo config switch NAME o abras un nuevo terminal y
+        vuelvas a seleccionar.
+      no_active_profile: No hay un perfil activo. Ejecuta `cadrumo config profile
+        create NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
       preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
         (modelo, revisión, ejercicio, periodo).
@@ -3395,14 +3399,15 @@ cli:
         para el modelo, ejercicio y periodo.
       preflight_revision_override_invalid: 'La anulacion de la revision del registro
         no es valida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}.
-        Ejecute `aeat app modelo describe %{modelo}` para listar las revisiones registradas.'
+        Ejecute `cadrumo app modelo describe %{modelo}` para listar las revisiones
+        registradas.'
       preflight_revision_unresolved: Ninguna revision del registro cubre el modelo
-        %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
-        describe %{modelo}` para ver los periodos y revisiones validos.
+        %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `cadrumo app
+        modelo describe %{modelo}` para ver los periodos y revisiones validos.
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
-      remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
+      remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'cadrumo config
         profile delete %{name} --yes' para confirmar.
       remove_yes_help: Confirma explícitamente la operación de retirada
       rename_display_name_help: Etiqueta visible para el operador; por defecto, la
@@ -3423,8 +3428,8 @@ cli:
         archive_help: Convierte un sandbox en un estado latente reversible sin eliminarlo.
         archive_name_help: Nombre del sandbox (sin el prefijo).
         archive_requires_yes: Archivar un sandbox es una transición de estado. Vuelve
-          a ejecutar 'aeat config profile sandbox archive %{name} --yes' para confirmar.
-        archive_restorable_info: El sandbox ahora está latente; ejecuta 'aeat config
+          a ejecutar 'cadrumo config profile sandbox archive %{name} --yes' para confirmar.
+        archive_restorable_info: El sandbox ahora está latente; ejecuta 'cadrumo config
           profile sandbox restore %{name}' para recuperarlo.
         archive_yes_help: Confirma el archivado.
         create_active_info: El sandbox es ahora el perfil ACTIVO; todos los comandos
@@ -3442,7 +3447,7 @@ cli:
         discard_not_a_sandbox: '%{name} no es un sandbox; la superficie de sandbox
           se niega a descartar un perfil real.'
         discard_requires_yes: Descartar un sandbox es destructivo. Vuelva a ejecutar
-          'aeat config profile sandbox discard %{name} --yes' para confirmar.
+          'cadrumo config profile sandbox discard %{name} --yes' para confirmar.
         discard_yes_help: Confirma la eliminación destructiva.
         help: Ejecuta experimentos en un bucket aislado y descartable que nunca afecta
           al estado del perfil principal.
@@ -3459,9 +3464,9 @@ cli:
           sin descartarlos.
         prune_help: Descarta todos los sandboxes a la vez.
         prune_requires_yes: Descartar todos los sandboxes es destructivo. Vuelve a
-          ejecutar 'aeat config profile sandbox prune --yes' para confirmar.
+          ejecutar 'cadrumo config profile sandbox prune --yes' para confirmar.
         prune_skipped_active_info: Se omitio el sandbox activo %{names}; cambia a
-          otro perfil y vuelve a ejecutar 'aeat config profile sandbox prune --yes'
+          otro perfil y vuelve a ejecutar 'cadrumo config profile sandbox prune --yes'
           para descartarlo.
         prune_yes_help: Confirma el descarte de todos los sandboxes.
         restore_help: Recupera un sandbox archivado y lo devuelve a estado activo.
@@ -3469,7 +3474,7 @@ cli:
         restore_not_archived: '%{name} no está archivado; no hay nada que recuperar.'
         source_not_found: No existe ningún perfil activo llamado %{name} para copiar
           al sandbox.
-        unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''aeat config profile
+        unknown_sandbox: 'Sandbox desconocido: %{name}. Ejecute ''cadrumo config profile
           sandbox list'' para ver los sandboxes registrados.'
         usage_help: Informar del espacio en disco de un sandbox, o de todos a la vez.
         usage_name_help: Nombre del sandbox (sin el prefijo); omitir para informar
@@ -3490,7 +3495,7 @@ cli:
         summary_valid: El registro del perfil es válido.
       show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
-      unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
+      unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''cadrumo config profile
         list'' para ver los perfiles registrados.'
       use_help: Seleccionar un perfil existente como perfil activo
       use_name_help: Id del perfil que se activará
@@ -3582,7 +3587,7 @@ cli:
         combínalo con --accept-defaults para rellenar el resto con los valores por
         defecto.
       success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
+        next_step: 'Próximo paso: ejecuta `cadrumo app overview status` para revisar
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
     show_recovery:
@@ -3593,10 +3598,10 @@ cli:
       rotate_help: Rotar el envoltorio de recuperacion e imprimir una nueva clave
         de recuperacion de un solo uso.
     status:
-      empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
-        para empezar.
+      empty_profile: Sin perfil configurado. Ejecuta `cadrumo config profile create
+        NAME` para empezar.
       help: Mostrar el estado del perfil de configuración activo
-      next_step: 'Próximo paso: `aeat app overview status`'
+      next_step: 'Próximo paso: `cadrumo app overview status`'
     switch:
       help: Cambia a un perfil y conviértelo en el activo.
       name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
@@ -3874,9 +3879,9 @@ cli:
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
       usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
-        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
-        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
-        set <category-id> <ratio>'. No es texto libre.
+        proporcional. Usa un id de categoría mostrado por 'cadrumo app ledger ratios
+        list' o 'cadrumo app ledger ratios eligible'; créalo con 'cadrumo app ledger
+        ratios set <category-id> <ratio>'. No es texto libre.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -3889,9 +3894,9 @@ cli:
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
       usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
-        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
-        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
-        set <category-id> <ratio>'. No es texto libre.
+        proporcional. Usa un id de categoría mostrado por 'cadrumo app ledger ratios
+        list' o 'cadrumo app ledger ratios eligible'; créalo con 'cadrumo app ledger
+        ratios set <category-id> <ratio>'. No es texto libre.
     app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -3904,11 +3909,11 @@ cli:
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
       help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
-        un id de justificante de factura de compra con 'aeat app ledger evidence add
-        PATH'.
+        un id de justificante de factura de compra con 'cadrumo app ledger evidence
+        add PATH'.
       id_help: Id del movimiento del libro al que adjuntar evidencia
       purchase_invoice_evidence_help: Id de justificante de factura de compra que
-        soporta el movimiento; créalo con 'aeat app ledger evidence add PATH'
+        soporta el movimiento; créalo con 'cadrumo app ledger evidence add PATH'
     categories:
       family_column: familia
       header: CATEGORIAS DE GASTO RECONOCIDAS DEL LIBRO
@@ -3977,7 +3982,7 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --from-csv.
-      irpf_category_help: 'Id de categoria de IRPF. Usa aeat app ledger categories.
+      irpf_category_help: 'Id de categoria de IRPF. Usa cadrumo app ledger categories.
         Facturas profesionales cobradas netas usan actividad_economica; alquileres
         pagados netos usan arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
         art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor;
@@ -3997,8 +4002,8 @@ cli:
         la transaccion; vista previa por defecto, persiste con --apply.
       llm_provider_unavailable: 'El proveedor LLM ''{provider}'' no esta disponible:
         su CLI no esta en el PATH. Instala el CLI de ''{provider}'' y asegurate de
-        que este en el PATH, o ejecuta ''aeat app ledger providers'' para listar los
-        proveedores disponibles.'
+        que este en el PATH, o ejecuta ''cadrumo app ledger providers'' para listar
+        los proveedores disponibles.'
       llm_reason_label: motivo
       llm_rejected_label: rechazada
       llm_rejected_message: Sugerencia del modelo rechazada y registrada. La transacción
@@ -4068,9 +4073,9 @@ cli:
       reference_help: Referencia del enlace al documento.
       refused: 'No se puede descargar el documento de %{source} para %{reference}%{scope_hint}:
         la evidencia debe contener los bytes cifrados del documento, y un enlace nunca
-        se guarda por sí solo. Descarga el documento y adjúntalo con ''aeat app ledger
-        attach --attachment-id ...'', o concede el permiso de Google requerido e inténtalo
-        de nuevo.'
+        se guarda por sí solo. Descarga el documento y adjúntalo con ''cadrumo app
+        ledger attach --attachment-id ...'', o concede el permiso de Google requerido
+        e inténtalo de nuevo.'
       source_help: 'Origen del enlace: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
@@ -4092,7 +4097,7 @@ cli:
         un SHA-256 completo.
       id_prefix_unknown: 'Error inesperado en el prefijo de id de transacción: %{message}'
       invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias
-        conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
+        conocidas: {known}. Ejecuta ''cadrumo app ledger categories'' para ver valores
         validos de --category-id.'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
@@ -4104,7 +4109,8 @@ cli:
         --filter year=%{year}.
       unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
         sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
-        Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
+        Ejecuta `cadrumo app ledger categories` para ver todos los identificadores
+        reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
@@ -4141,7 +4147,7 @@ cli:
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
         un probable duplicado del mismo movimiento importado desde otro archivo o
-        formato. Revísalas con `aeat app ledger list`.'
+        formato. Revísalas con `cadrumo app ledger list`.'
       no_rows_imported: 'No se importó ninguna entrada: el archivo se analizó pero
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
@@ -4223,22 +4229,22 @@ cli:
           activo.
         invoice_not_found: Este id no existe en el catálogo de facturas de reconciliación,
           que se rellena con los flujos de importación y reconciliación de facturas.
-          Los id generados por 'aeat app ledger invoice add' son registros de factura
+          Los id generados por 'cadrumo app ledger invoice add' son registros de factura
           del operador y no se pueden vincular aquí. Para crear una factura de catálogo
-          vinculable manualmente, ejecuta 'aeat app ledger invoice catalogue create'
+          vinculable manualmente, ejecuta 'cadrumo app ledger invoice catalogue create'
           y pasa ese invoice_id a --invoice-id. Para adjuntar evidencia de factura
-          de compra, ejecuta 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
-          app ledger attach') con un id de 'aeat app ledger evidence add'.
+          de compra, ejecuta 'cadrumo app ledger link <tx> --evidence-id <id>' (o
+          'cadrumo app ledger attach') con un id de 'cadrumo app ledger evidence add'.
         missing_target: Indica al menos uno de --invoice-id o --evidence-id.
-      evidence_id_help: Id de evidencia de factura de compra generado por 'aeat app
-        ledger evidence add', adjuntado al movimiento.
+      evidence_id_help: Id de evidencia de factura de compra generado por 'cadrumo
+        app ledger evidence add', adjuntado al movimiento.
       help: Vincula un movimiento contable con una factura y/o con un registro de
         evidencia de factura de compra en una única llamada canónica. Rechaza vínculos
         entre buckets. Local; nunca contacta con AEAT.
       id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
       invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
-        factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue
-        create', vinculado bidireccionalmente con el movimiento. NO es un id de 'aeat
+        factura importada, reconciliada o creada con 'cadrumo app ledger invoice catalogue
+        create', vinculado bidireccionalmente con el movimiento. NO es un id de 'cadrumo
         app ledger invoice add'.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
@@ -4307,7 +4313,7 @@ cli:
         PDF/imagen.
       help: Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y
         guarda cada una como evidencia cifrada (sin vincular a ningun movimiento;
-        vincula con 'aeat app ledger attach' o 'link').
+        vincula con 'cadrumo app ledger attach' o 'link').
       labels:
         fetched: obtenidos
         folder_id: id_carpeta
@@ -4318,7 +4324,7 @@ cli:
       notices:
         files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
           obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos
-          con ''aeat app ledger attach --attachment-id ...''.'
+          con ''cadrumo app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -4356,7 +4362,7 @@ cli:
       child_description_help: Descripción de una transacción hija; se puede repetir
       classification_dropped: La clasificación del padre %{classification} no se copió
         a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita
-        reclasificarse con 'aeat app ledger classify'.
+        reclasificarse con 'cadrumo app ledger classify'.
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
@@ -4450,8 +4456,8 @@ cli:
         las opciones disponibles.'
     help:
       app:
-        footer: Ejecute 'aeat app <comando> --help' para obtener mas informacion sobre
-          cada comando.
+        footer: Ejecute 'cadrumo app <comando> --help' para obtener mas informacion
+          sobre cada comando.
         heading: Operaciones de declaracion fiscal AEAT.
         ledger_add: Añadir una transacción al libro manualmente.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
@@ -4503,7 +4509,7 @@ cli:
         diagnostics_reset_progress: Borrar progreso atascado de comandos interrumpidos.
         first_run_bootstrap: Inicializar la configuracion en el primer uso.
         first_run_edit: Editar la configuracion inicial.
-        footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
+        footer: Ejecute 'cadrumo config <comando> --help' para obtener mas informacion
           sobre cada comando.
         heading: Configuracion y diagnostico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
@@ -4533,7 +4539,7 @@ cli:
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicacion.
         diagnostics_review_queue: Mostrar la cola de revision pendiente.
-        footer: Ejecute 'aeat <comando> --help' para obtener mas informacion sobre
+        footer: Ejecute 'cadrumo <comando> --help' para obtener mas informacion sobre
           cada comando.
         heading: Cadrumo, herramienta de declaraciones fiscales con la AEAT.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
@@ -4560,7 +4566,8 @@ cli:
           de almacenamiento.
         paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
           de declaracion y ''config'' para configuracion y diagnostico.'
-        paragraph_type_help: Escriba 'aeat <comando> --help' para obtener ayuda detallada.
+        paragraph_type_help: Escriba 'cadrumo <comando> --help' para obtener ayuda
+          detallada.
         section_daily_ledger: Libro diario de transacciones
         section_diagnostics: Diagnostico
         section_modelo_lifecycle: Ciclo de vida del modelo
@@ -4570,7 +4577,7 @@ cli:
         setup_inspect_profile: Inspeccionar el perfil de contribuyente activo.
     landing:
       active_profile_message: 'Perfil activo: %{profile}.'
-      no_active_profile_message: No hay ningun perfil activo. Ejecute 'aeat config
+      no_active_profile_message: No hay ningun perfil activo. Ejecute 'cadrumo config
         first-run' para comenzar.
       text_template: '%{message} Comando sugerido: %{command}'
   overview:
@@ -4626,7 +4633,7 @@ cli:
     coverage:
       investigate: 'No se han podido determinar con certeza %{count} obligacion(es)
         de presentacion para este perfil y podrian quedar sin declarar: %{modelos}.
-        Investigue cada una con ''aeat app overview explain <modelo>''.'
+        Investigue cada una con ''cadrumo app overview explain <modelo>''.'
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -4662,7 +4669,7 @@ cli:
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
       pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
-        atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
+        atención: %{kinds}. Revísalos con ''cadrumo app live notifications list''.'
     prepare:
       help: 'Recorre los pasos de preparación de datos para un modelo/periodo en orden:
         importar transacciones, clasificarlas, adjuntar justificantes de facturas
@@ -4687,7 +4694,7 @@ cli:
         de un pagador, con más de 1.500 € de los pagadores secundarios, reduce el
         límite de la obligación de declarar (art. 96.3 LIRPF); puede estar obligado
         a presentar el Modelo 100 si su total de rendimientos del trabajo lo supera.
-      integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas
+      integrity_next: Ejecuta `cadrumo config repair` para ver el detalle. No pongas
         filas en cuarentena salvo que quieras archivar deliberadamente datos locales
         antiguos ilegibles.
       invoices_empty: No hay facturas emitidas ni recibidas en el registro de facturas.
@@ -4697,22 +4704,22 @@ cli:
       invoices_present: '%{count} factura(s) emitida(s)/recibida(s) en el registro
         de facturas (un almacen distinto del libro bancario).'
       next_heading: Que escribir ahora
-      next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
+      next_import_command: '  cadrumo app ledger import <extracto-bancario.csv> --provider
         csv - importar movimientos bancarios.'
-      next_landing_command: '  aeat --help - volver a la guia de comandos.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo
+      next_landing_command: '  cadrumo --help - volver a la guia de comandos.'
+      next_modelo_210_unsupported_command: '  cadrumo app modelo describe 210 - Modelo
         210 esta visible para descubrimiento IRNR, pero la creacion local de trabajos
         aun no esta soportada; presenta por AEAT Sede G320.'
-      next_modelo_work_command: '  aeat app modelo work create - iniciar una declaración
+      next_modelo_work_command: '  cadrumo app modelo work create - iniciar una declaración
         de modelo a partir de los datos de tu libro.'
-      next_review_command: '  aeat app ledger review - revisar filas importadas.'
-      next_work_calculate_command: '  aeat app modelo work list - retomar una unidad
+      next_review_command: '  cadrumo app ledger review - revisar filas importadas.'
+      next_work_calculate_command: '  cadrumo app modelo work list - retomar una unidad
         de trabajo de modelo en curso.'
-      next_work_create_command: '  aeat app modelo work create - iniciar una unidad
+      next_work_create_command: '  cadrumo app modelo work create - iniciar una unidad
         de trabajo para otro modelo.'
       profile_active: Estas trabajando en el perfil `%{profile}`.
-      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config profile
-        create NAME` antes de importar datos.
+      profile_missing: No hay un perfil activo configurado. Ejecuta `cadrumo config
+        profile create NAME` antes de importar datos.
       storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra
         actual.
       storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden
@@ -4725,11 +4732,11 @@ cli:
         el libro.'
       work_units_empty: Aun no se ha iniciado ninguna unidad de trabajo de modelos.
       work_units_present: '%{count} unidad(es) de trabajo de modelos en curso en este
-        almacenamiento local; tu trabajo de modelos esta guardado, retomalo con `aeat
+        almacenamiento local; tu trabajo de modelos esta guardado, retomalo con `cadrumo
         app modelo work list`.'
       work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
-        de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
+        de modelos activo esta guardado, retomalo con `cadrumo app modelo work list`.'
     status_help: Mostrar el estado del perfil, libro y modelos
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
@@ -4908,23 +4915,23 @@ cli:
     help_help: Mostrar la ayuda.
     landing:
       headline: Asistente fiscal Cadrumo
-      help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
-        --help`. Los modificadores globales (`--format json`, `--language es`, `--profile
-        NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del subcomando,
-        p. ej. `aeat --format json app ledger list` (no `aeat app ledger list --format
-        json`).'
+      help_line: 'Más ayuda: ejecuta `cadrumo --help`, `cadrumo config --help` o `cadrumo
+        app --help`. Los modificadores globales (`--format json`, `--language es`,
+        `--profile NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del
+        subcomando, p. ej. `cadrumo --format json app ledger list` (no `cadrumo app
+        ledger list --format json`).'
       quick_start_heading: Inicio rápido
-      quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
-        csv` - añadir tus movimientos bancarios.'
-      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
+      quick_start_import: '  3. `cadrumo app ledger import <extracto-bancario.csv>
+        --provider csv` - añadir tus movimientos bancarios.'
+      quick_start_repair: '  5. `cadrumo config repair` - diagnosticar configuración,
         almacenamiento y salud local.'
-      quick_start_review: '  4. `aeat app ledger review` - revisar y clasificar las
-        filas importadas.'
-      quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
-        activo antes del trabajo operativo.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primero
-        tu perfil fiscal local.'
-      quick_start_status: '  2. `aeat app overview status` - leer el estado actual
+      quick_start_review: '  4. `cadrumo app ledger review` - revisar y clasificar
+        las filas importadas.'
+      quick_start_setup_done: '  1. `cadrumo config profile status` - comprobar el
+        perfil activo antes del trabajo operativo.'
+      quick_start_setup_needed: '  1. `cadrumo config profile create NAME` - crear
+        primero tu perfil fiscal local.'
+      quick_start_status: '  2. `cadrumo app overview status` - leer el estado actual
         del espacio y sus diagnosticos.'
       section_config: '  config - perfil, autenticación y diagnósticos'
       section_ledger: '  app ledger - importación bancaria y revisión de movimientos'
@@ -4941,14 +4948,14 @@ cli:
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
     startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
-      al inicio (%{dependency}). Ejecuta aeat config repair.'
+      al inicio (%{dependency}). Ejecuta cadrumo config repair.'
     unavailable_app_help: Este comando no está disponible en la configuración actual.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations''
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''cadrumo app registry citations''
         para listar los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
@@ -5160,7 +5167,7 @@ errors:
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
     auth_storage_master_key_passphrase_mismatch: La frase de contrasena no abre la
-      clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
+      clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta cadrumo config
       recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
@@ -5440,7 +5447,7 @@ errors:
     error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
     error_storage_bucket_path_too_long: La ruta del directorio del bucket supera el
       límite MAX_PATH de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más
-      corta o habilite LongPathsEnabled (véase `aeat config check`).
+      corta o habilite LongPathsEnabled (véase `cadrumo config check`).
     error_submission_validation: Un modelo de envío no superó la validación.
     error_telemetry_schema: Una clave de métrica de telemetría no está registrada
       en el esquema cerrado de métricas de su comando.
@@ -5759,7 +5766,7 @@ errors:
     locked_storage_bucket_busy: El bucket de almacenamiento está en uso por otro proceso.
       Espera a que ese proceso termine y vuelve a intentarlo.
     locked_storage_bucket_session: Esta operación requiere un bucket de almacenamiento
-      desbloqueado. Ejecuta `aeat config switch` y vuelve a intentarlo.
+      desbloqueado. Ejecuta `cadrumo config switch` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
     locked_storage_master_key_keychain: El llavero del sistema operativo está bloqueado.
@@ -5767,13 +5774,13 @@ errors:
       y vuelve a intentarlo.
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
-      perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
+      perfil activo. Crea un perfil con `cadrumo config profile create NOMBRE` y vuelve
       a intentarlo.
     auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
       de la sesión de autenticación solicitada.
     bootstrap_already_complete: El arranque del almacenamiento seguro ya esta completo.
-      Usa aeat config switch NAME para activar un perfil existente o aeat config profile
-      create NAME para anadir otro perfil.
+      Usa cadrumo config switch NAME para activar un perfil existente o cadrumo config
+      profile create NAME para anadir otro perfil.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
@@ -5833,11 +5840,11 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revision.
-    profile_already_registered: Ya existe un perfil con ese nombre. Usa aeat config
+    profile_already_registered: Ya existe un perfil con ese nombre. Usa cadrumo config
       switch NAME para cambiar a el.
     profile_import_collision: El identificador del perfil importado coincide con uno
       que ya existe.
-    profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
+    profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `cadrumo
       config switch` y vuelve a intentarlo.
     profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
       nombre distinto.
@@ -5887,7 +5894,7 @@ errors:
     refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
       estándar está redirigida. Ejecútalo en una terminal interactiva.
     refused_cli_validation_boundary: La entrada del comando no superó la validación.
-      Compruebe los argumentos o ejecute `aeat --help`.
+      Compruebe los argumentos o ejecute `cadrumo --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
     refused_corpus_search_dependency: Esta operación de búsqueda en el corpus necesita
@@ -6064,13 +6071,13 @@ errors:
     refused_storage_bucket_no_active: No se pudo determinar ningún bucket activo.
       Selecciona un perfil y vuelve a intentarlo.
     refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.
-      Ejecuta `aeat config switch` y vuelve a intentarlo.
+      Ejecuta `cadrumo config switch` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
     refused_storage_session_expired: La sesion activa ha caducado por inactividad.
-      Vuelve a activarla con aeat config switch NAME.
+      Vuelve a activarla con cadrumo config switch NAME.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
     refused_taxation_comparison: La comparación tributaria conjunta/individual no
@@ -6089,7 +6096,7 @@ errors:
       Corrige el valor indicado.
     refused_workflow_aborted: El flujo de trabajo se canceló.
     refused_workflow_input_mismatch: The workflow input request does not match the
-      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      calculation revision. Run cadrumo app modelo work calculate to produce a fresh
       revision.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
@@ -6140,8 +6147,8 @@ errors:
         solo está disponible antes de seleccionar un bucket de perfil activo.
       cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
         no puede omitir una ruta de base de datos explícita.
-      no_active_session: No hay una sesion de bucket activa. Ejecuta aeat config switch
-        NAME para desbloquear un perfil.
+      no_active_session: No hay una sesion de bucket activa. Ejecuta cadrumo config
+        switch NAME para desbloquear un perfil.
       no_detail: No se informó ningún detalle de preparación.
       not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
         a perfil: %{details}'
@@ -6151,15 +6158,15 @@ errors:
         de perfil activo.
       session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el perfil
         de destino.
-      session_expired: La sesion de bucket activa ha caducado. Ejecuta aeat config
+      session_expired: La sesion de bucket activa ha caducado. Ejecuta cadrumo config
         switch NAME para reactivar el perfil.
-      session_sealed: La sesion de bucket activa esta sellada. Ejecuta aeat config
+      session_sealed: La sesion de bucket activa esta sellada. Ejecuta cadrumo config
         switch NAME para reactivar el perfil.
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
     stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado
       ya no coincide con el esquema esperado — los datos en disco han divergido del
-      formato actual. Ejecuta `aeat config repair` para diagnosticar y recuperar.
+      formato actual. Ejecuta `cadrumo config repair` para diagnosticar y recuperar.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'
@@ -6360,8 +6367,8 @@ some:
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
-      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth configure
-      --provider certificate' y verifica con 'aeat config auth test'.
+      digital (FNMT / equivalente). Configura un proveedor con 'cadrumo config auth
+      configure --provider certificate' y verifica con 'cadrumo config auth test'.
     title: Autenticación con la AEAT
   calendar:
     body: El calendario muestra las obligaciones de presentación (modelos y periodos)
@@ -6370,8 +6377,8 @@ topic:
     title: Calendario de obligaciones
   casilla:
     body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
-      calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>'
-      las lista.
+      calculadas (computed) o derivadas de bindings. 'cadrumo app modelo casillas
+      <modelo>' las lista.
     title: Casillas
   formats:
     body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es
@@ -6390,7 +6397,7 @@ topic:
   modelos:
     body: Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115,
       184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad.
-      'aeat app modelo list' enumera los disponibles.
+      'cadrumo app modelo list' enumera los disponibles.
     title: Modelos tributarios
   pago-fraccionado:
     body: Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo
@@ -6400,11 +6407,11 @@ topic:
   profile:
     body: El perfil local contiene tu identificador fiscal (NIF/CIF/DNI/NIE), actividad
       principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config profile edit NAME'.
+      Edítalo con 'cadrumo config profile edit NAME'.
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
-      'aeat config auth --help' lista los proveedores con sus prerrequisitos.
+      'cadrumo config auth --help' lista los proveedores con sus prerrequisitos.
     title: Proveedores de autenticación
   recargo-extemporaneo:
     body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
@@ -6471,17 +6478,17 @@ wizard:
     unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
       \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
       \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
-      \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
+      \ una terminal interactiva para usar el asistente guiado:\n     cadrumo config\
       \ profile create NAME\n\n2. O crea un perfil de persona física residente IRPF\
-      \ en un solo paso indicando los datos obligatorios como flags:\n     aeat config\
-      \ profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person\
-      \ --irpf-income-categories actividad_economica --tax-residence-ccaa madrid --name\
-      \ NOMBRE --surnames APELLIDOS"
+      \ en un solo paso indicando los datos obligatorios como flags:\n     cadrumo\
+      \ config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE --entity-type\
+      \ natural_person --irpf-income-categories actividad_economica --tax-residence-ccaa\
+      \ madrid --name NOMBRE --surnames APELLIDOS"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
-      \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
+      \ indicando el campo a cambiar:\n  cadrumo config profile edit %{profile_name}\
       \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
-      \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
+      \ sesión de terminal interactiva:\n  cadrumo config profile edit %{profile_name}"
   other:
     description: Other configuration options
     section:
@@ -6753,7 +6760,7 @@ wizard:
       Ten a mano tu NIF/CIF/DNI/NIE, una descripción breve de la actividad, régimen
       de IVA/IRPF, residencia fiscal y datos familiares si aplican.
 
-      Después de guardar, revisa el progreso con `aeat config profile status`.'
+      Después de guardar, revisa el progreso con `cadrumo config profile status`.'
     iva:
       iva-group-dominant-entity-enrolled:
         prompt: Alta como entidad dominante de un grupo de IVA

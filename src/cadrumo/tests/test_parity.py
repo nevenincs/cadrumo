@@ -143,6 +143,75 @@ def test_set_locale_value_preserves_multiline_value_roundtrip(tmp_path: Path):
     assert _leaf(data, "wizard", "errors", "other") == "intacto"
 
 
+def test_set_locale_value_falls_back_for_multiline_scalar_that_looks_like_a_key(tmp_path: Path):
+    """A scalar continuation such as ``basis:`` cannot block a real locale edit."""
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "en.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  app:\n"
+        "    modelo:\n"
+        "      work:\n"
+        "        legal_note: 'Legal\n"
+        "          basis: regulation.'\n"
+        "        next_action: Run cadrumo app modelo work calculate.\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    temp_manager.set_locale_value(
+        "en",
+        "cli.app.modelo.work.next_action",
+        "Run aeat app modelo work calculate.",
+    )
+
+    data = temp_manager.load_locale(locale_path)
+    assert _leaf(data, "cli", "app", "modelo", "work", "legal_note") == "Legal basis: regulation."
+    assert _leaf(data, "cli", "app", "modelo", "work", "next_action") == "Run cadrumo app modelo work calculate."
+
+
+def test_set_locale_value_canonicalizes_the_cli_executable(tmp_path: Path):
+    """Locale maintenance rewrites the retired executable to the Cadrumo CLI."""
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "en.yml"
+    locale_path.write_text("cli:\n  root:\n    next_action: placeholder\n", encoding="utf-8")
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    temp_manager.set_locale_value(
+        "en",
+        "cli.root.next_action",
+        "Cadrumo prepares the draft; run aeat app modelo work calculate.",
+    )
+
+    data = temp_manager.load_locale(locale_path)
+    assert _leaf(data, "cli", "root", "next_action") == (
+        "Cadrumo prepares the draft; run cadrumo app modelo work calculate."
+    )
+
+
+def test_canonicalize_cli_executable_references_updates_each_catalogue_once(tmp_path: Path):
+    """Bulk locale maintenance fixes command prefixes without changing Cadrumo prose."""
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    for locale in ("ca", "en"):
+        (locales_dir / f"{locale}.yml").write_text(
+            "cli:\n  root:\n    next_action: Run aeat config profile status.\n"
+            "product:\n  heading: Cadrumo prepares tax forms.\n",
+            encoding="utf-8",
+        )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    updated = temp_manager.canonicalize_cli_executable_references()
+
+    assert {path.name for path in updated} == {"ca.yml", "en.yml"}
+    for locale in ("ca", "en"):
+        data = temp_manager.load_locale(locales_dir / f"{locale}.yml")
+        assert _leaf(data, "cli", "root", "next_action") == "Run cadrumo config profile status."
+        assert _leaf(data, "product", "heading") == "Cadrumo prepares tax forms."
+
+
 def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
     """The locale setter can repair a missing leaf without rebuilding the file."""
 
