@@ -1,4 +1,4 @@
-"""Import-hygiene scanner for the top-level-export centralisation campaign.
+"""Import-hygiene scanner for top-level-export centralisation.
 
 Discovery-phase tool: builds an inventory of cross-package private imports,
 shim/re-export modules, and redundantly re-exported symbols across
@@ -7,9 +7,6 @@ shim/re-export modules, and redundantly re-exported symbols across
 Re-run with:
 
     python dev/import_hygiene_scan.py [--json OUT.json] [--top N]
-
-See ``.vault/`` (once authored) for the campaign ADR/plan that consumes this
-inventory. Companion rule: ``service-imports-via-top-level-reexports``.
 """
 
 from __future__ import annotations
