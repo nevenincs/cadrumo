@@ -1,180 +1,183 @@
 <p align="center">
-  <img src="assets/readme/cadrumo-logo.svg" alt="" width="136">
+  <img src="assets/readme/cadrumo-logo.svg" alt="Cadrumo logo" width="136">
 </p>
 
-# Cadrumo
+# Cadrumo: turn Spanish tax records into locally verified filing artifacts
 
-**Cadrumo is a Claude plugin, command-line interface (CLI), and deterministic calculation engine for preparing Spanish tax filings.**
-
-[![Latest Cadrumo version on the Python Package Index (PyPI)](https://img.shields.io/pypi/v/cadrumo?label=PyPI)](https://pypi.org/project/cadrumo/)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/cadrumo)](https://pypi.org/project/cadrumo/)
-[![Claude plugin in the neve marketplace](https://img.shields.io/badge/Claude-plugin-D97757?logo=claude&logoColor=white)](https://github.com/nevenincs/neve-marketplace)
-[![Apache 2.0 license](https://img.shields.io/pypi/l/cadrumo)](LICENSE)
+[![Apache 2.0 license](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 ![Project status: alpha](https://img.shields.io/badge/status-alpha-orange)
 
-`Cadrumo` turns local financial records into calculated, checked, and exportable Spanish tax modelos (forms). The Claude plugin and CLI use the same calculation path.
+Cadrumo turns local financial records into calculated, checked, and exportable artifacts for supported Spanish tax forms. It keeps the calculation path deterministic and preserves each result's sources.
 
-Use Cadrumo if you're self-employed, run a small business, file under a supported regime, or prepare filings for others. Each profile keeps one taxpayer's work separate.
+Use Cadrumo to prepare a filing workspace, review the figures, and export a local file. You remain responsible for deciding what to file.
 
 > [!IMPORTANT]
-> Cadrumo never submits a filing. Review every result, then file through official Agencia Estatal de Administración Tributaria (AEAT) channels. This independent project isn't affiliated with or endorsed by AEAT. It doesn't provide tax, legal, accounting, or financial advice.
+> Cadrumo never submits a filing. Review every result, then file through official Agencia Estatal de Administración Tributaria (AEAT) channels.
+>
+> Cadrumo is independent from AEAT and isn't affiliated with or endorsed by the authority. It doesn't provide tax, legal, accounting, or financial advice.
 
-Alpha releases may introduce breaking changes before 1.0.
+Public publishing remains blocked while package, repository, marketplace, domain, executable, and trademark gates are unresolved. Install Cadrumo only from an authorized source checkout.
 
-## See the CLI flow
+## Understand the names
 
-![Animated terminal showing aeat app quickfile preparing, calculating, verifying, and exporting a Modelo 115 to a local file](assets/readme/cli-demo.gif)
+- **Cadrumo** is the product. Its Python package, distribution, repository, plugin, and human command use `cadrumo`.
+- **AEAT** is Spain's tax authority. The name remains in official portals, credentials, evidence, citations, and legal terminology.
+- A **profile** isolates one taxpayer's local settings, records, and filing workspaces.
+- A **modelo** is a Spanish tax form. A **casilla** is one registered field in that form.
+- A **verified calculation revision** is a saved calculation for which Cadrumo recorded a complete verification report. It isn't proof of filing or AEAT acceptance.
 
-This recording uses fictional data and the production calculation path. It writes a verified Modelo 115 export file locally without contacting or submitting to AEAT.
+## Run Cadrumo from source
 
-<details>
-<summary>Read the terminal transcript</summary>
+Cadrumo requires Python 3.13 or later and uses [`uv`](https://docs.astral.sh/uv/) for its local environment.
+
+From an authorized source checkout, run:
+
+```console
+python --version
+uv sync
+uv run cadrumo --version
+uv run cadrumo --help
+```
+
+The last two commands verify the sole human command, `cadrumo`.
+
+If you choose encrypted file storage, or Cadrumo falls back to it, the first command that opens local storage asks for a master-key passphrase. That passphrase unlocks the locally encrypted records. Operating-system-backed secret stores use their own unlock flow.
+
+Don't install from the Python Package Index or a public plugin marketplace yet. A successful local build doesn't clear Cadrumo's publication gates.
+
+## Complete one local filing path
+
+The following example uses fictional data. It prepares Modelo 130 for the first quarter of 2026 and writes a local fichero-BOE: an AEAT-compatible, fixed-width filing file with the `.boe` extension.
+
+Long commands below use PowerShell's backtick continuation. Copy the complete block, including each backtick.
+
+### 1. Create a profile
+
+```powershell
+uv run cadrumo config profile create demo `
+  --quiet --accept-defaults `
+  --entity-type natural_person `
+  --tax-id 12345678Z --name Ana --surnames "García López" `
+  --activity consultoria --activity-start-date 2026-01-01 `
+  --irpf-income-categories actividad_economica `
+  --tax-residence-ccaa madrid
+```
+
+The profile becomes active. The commands below store their records and filing workspace under it.
+
+### 2. Add two classified records
+
+```powershell
+uv run cadrumo app ledger add `
+  --date 2026-02-10 --amount 1210 --direction INCOMING `
+  --description venta --classification BUSINESS `
+  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+
+uv run cadrumo app ledger add `
+  --date 2026-02-11 --amount 500 --direction OUTGOING `
+  --description compra --classification BUSINESS `
+  --category-id material_oficina --taxable-base 500
+
+uv run cadrumo app ledger list
+```
+
+`--amount` is the transaction total. The fictional income records its taxable base and value-added tax (IVA) breakdown.
+
+The fictional expense claims no deductible IVA quota. Its amount and Impuesto sobre la Renta de las Personas Físicas (IRPF) expense base are therefore both `500`.
+
+### 3. Create and calculate the filing workspace
+
+The `--binding` options supply calculation inputs that do not come from these two ledger records.
+
+```powershell
+uv run cadrumo app modelo work create --modelo 130 --year 2026 --period 1T
+
+uv run cadrumo app modelo work calculate `
+  --modelo 130 --year 2026 --period 1T `
+  --binding modelo-130-resultados-negativos-anteriores=0 `
+  --binding modelo-130-pagos-fraccionados-anteriores=0 `
+  --binding irpf.previous_year_economic_activity_net_income=0
+
+uv run cadrumo app modelo work revision --modelo 130 --year 2026 --period 1T
+```
+
+The two `modelo-130-*` bindings declare that this fictional first-quarter filing has no negative result or fractional payment carried from an earlier quarter.
+
+`irpf.previous_year_economic_activity_net_income=0` is different. It supplies the prior-year economic-activity income used to determine the low-income reduction; it is not a quarterly carry.
+
+### 4. Verify the calculation revision and export
+
+```powershell
+uv run cadrumo app modelo work verify --modelo 130 --year 2026 --period 1T
+
+uv run cadrumo app modelo export `
+  --modelo 130 --year 2026 --period 1T `
+  --output ./modelo-130-2026-1T.boe
+```
+
+Verification is local. It saves a report tied to the calculation revision and grants `Verificado completo` only when `granted_verificado_completo` is true.
+
+Export selects that verified calculation revision and refuses an unverified draft. Before writing the file, it also checks the profile, required bindings, earlier-period state, saved ledger evidence, and evidence for any deductible IVA claimed.
+
+For this input, the deterministic calculation reports:
 
 ```text
-aeat app quickfile --modelo=115 --year=2026 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe
-operation  quickfile
-modelo  115
-filing_year  2026
-period  1T
-registry_revision_id  2019-y-siguientes
-stage  readiness  warning  profile is not yet source-ready; caller-supplied inputs may still satisfy calculate
-stage  create  ok  created
-stage  calculate  ok
-stage  verify  ok
-stage  export  ok
-completed  true
-output_path  var/readme-demo/m115.boe
-file_sha256  45cd24be65bd39783b5e9e87a30b64441192d7360a49e601aea9d98ed6ed1fef
+casilla 03  500.00  net result
+casilla 04  100.00  instalment amount
+casilla 19    0.00  final result
 ```
 
-</details>
+The export command reports the output path, byte size, and SHA-256 digest. The `.boe` file is cleartext and remains on your computer. It is a local AEAT-compatible artifact, not official filing evidence.
 
-## One engine, three ways to work
+Official evidence comes from AEAT after filing. A justificante is AEAT's receipt confirming submission. A filed-declaration query shows AEAT's record of the filing.
 
-| Use | Best for | Role |
-| --- | --- | --- |
-| **Claude plugin** | Guided preparation in Claude Code, Claude Desktop, or Cowork | Loads the operating rules, skills, personas, and local Model Context Protocol (MCP) console. The assistant guides and explains; it doesn't calculate tax values. |
-| **CLI** | Direct terminal work and automation | Exposes human-readable commands and versioned JavaScript Object Notation (JSON) results through `aeat`. It also provides the `cadrumo-mcp` console for other MCP clients. |
-| **Calculation engine** | Registry-backed figures beneath both interfaces | Selects the filing-year rules, resolves declared inputs, evaluates formulas, and returns form-field (`casilla`) values with legal and source references. |
+A CSV cotejo checks a document's authenticity using its Código Seguro de Verificación (CSV). Here, CSV is a security code, not a comma-separated-values file.
 
-Both interfaces use the same application services and calculation path.
+This result demonstrates the workflow, not the correct tax treatment for your circumstances. Review the full revision and resolve every blocker before using an export.
 
-## Prepare a filing from records
+## Choose a deeper route
 
-Use Cadrumo to:
-
-- Create a taxpayer profile whose sensitive facts and app-managed records are encrypted at rest
-- Classify business, personal, and mixed-use ledger entries with operator review
-- Calculate supported modelos from profile facts, records, prior filings, relations, and explicit inputs
-- Verify required values, provenance, internal consistency, and known blocking conditions
-- Export supported fixed-width or structured filing files to a local path
-- Reconcile local work with the justificante (filing receipt) or read-only AEAT evidence obtained after filing
-
-Coverage varies by modelo. `aeat app modelo list` shows catalogue and local-work eligibility. `aeat app modelo describe 115` shows its registered fields and formulas.
-
-At runtime, Cadrumo may refuse a calculation or export when the selected modelo lacks the required support.
-
-## Start with Claude
-
-In Claude Code, you need `uv` on `PATH`. Installing the plugin for the first time requires access to GitHub and PyPI.
-
-1. Add the marketplace:
-
-   ```console
-   claude plugin marketplace add nevenincs/neve-marketplace
-   ```
-
-2. Install and enable Cadrumo:
-
-   ```console
-   claude plugin install cadrumo@neve
-   claude plugin enable cadrumo@neve
-   ```
-
-Start a fresh workspace and ask:
-
-> Set up my taxpayer profile.
-
-The public [neve marketplace](https://github.com/nevenincs/neve-marketplace) carries the plugin. Continue with the [workflow overview](docs/how-to/onboarding.md) or the [full quickstart](docs/how-to/quickstart.md).
-
-In Claude Desktop or Cowork, use the plugin browser and follow the [marketplace installation instructions](https://github.com/nevenincs/neve-marketplace).
-
-## Start with the CLI
-
-`cadrumo` requires Python 3.13 or later. `uv` installs the tool in an isolated environment and can obtain a compatible Python interpreter.
-
-```console
-uv tool install cadrumo
-aeat --language en --help
-```
-
-Omit `--language en` to use the default Spanish interface. Follow the [quickstart](docs/how-to/quickstart.md) to create a profile, add records, calculate, verify, and export.
-
-For scripts, inspect the live capability and schema contract:
-
-```console
-aeat --language en --format json app contract
-```
-
-Every successful JSON command returns a versioned envelope with a command key, status, typed result, and notices. Expose the same command set through a local MCP server:
-
-```console
-uvx --from "cadrumo[agent]" cadrumo-mcp
-```
-
-Before integrating with Python, read the [architecture overview](docs/architecture/index.md) and [application programming interface (API) entry point](docs/api/cadrumo.rst). Import `cadrumo`; the package provides documented module entry points, but no stable top-level software development kit (SDK) before 1.0.
-
-## Follow one calculation path
-
-```text
-records → encrypted local storage → resolved inputs → selected filing rules
-        → calculated form fields with sources → checks → local export
-```
-
-The assistant guides this path and relays its results. Application logic gathers profile, ledger, invoice, relation, and prior-filing inputs. The deterministic engine owns formulas and legal grounding.
-
-Each calculated field keeps its value, the inputs used when a formula produced it, and legal and official-source references. The verification step records both blockers and warnings.
-
-See [how records become figures](docs/explanation/from-records-to-figures.md) for the full explanation.
-
-## Know the data boundary
-
-- App-managed financial records and evidence are encrypted at rest in the active profile's local storage.
-- Original imported files remain where you placed them. A local export is cleartext at the path you choose.
-- Authenticated AEAT retrieval commands run only when you invoke them. They can download information but cannot write or submit anything to AEAT.
-- If you choose an assistant or cloud classifier, that service's provider receives the words, figures, and transaction fields you send.
-- A cloud classifier receives text from supporting evidence only when the profile permits cloud upload and you confirm that invocation. Image evidence is processed locally with Ollama.
-
-Review the [filing boundary](docs/explanation/recording-a-filing-and-the-boundary.md), [data-to-figure explanation](docs/explanation/from-records-to-figures.md), and [full disclaimer](docs/disclaimer.md) before relying on the tool.
-
-## Find the right documentation
-
-| Goal | Read |
+| Goal | Documentation |
 | --- | --- |
-| Complete one example | [Quickstart](docs/how-to/quickstart.md) |
-| Find a task recipe | [How-to guides](docs/how-to/index.md) |
-| Understand calculations | [From records to figures](docs/explanation/from-records-to-figures.md) |
-| Understand the codebase | [Architecture](docs/architecture/index.md) |
-| Inspect Python modules | [API reference entry point](docs/api/cadrumo.rst) |
-| Diagnose a problem | [Troubleshooting](docs/how-to/troubleshooting.md) |
-| Review shipped changes | [Changelog](CHANGELOG.md) |
+| Work through the longer tutorial | [Quickstart](docs/how-to/quickstart.md) |
+| Find task-specific commands | [How-to guides](docs/how-to/index.md) |
+| Configure read-only AEAT access | [Authenticate with AEAT](docs/how-to/authenticate-with-aeat.md) |
+| Inspect the command tree | [Command-line interface (CLI) reference](docs/cli/index.rst) |
+| Inspect MCP server internals | [Model Context Protocol (MCP) Python reference](docs/api/cadrumo.entrypoints.mcp.rst) |
+| Integrate Python code | [Application programming interface (API) entry point](docs/api/cadrumo.rst) |
+| Inspect assistant integration internals | [Agent Python reference](docs/api/cadrumo.agent.rst) |
+| Understand records, formulas, and provenance | [From records to figures](docs/explanation/from-records-to-figures.md) |
+| Determine which modelos apply and inspect support | [Choose a modelo](docs/how-to/choose-modelo.md) |
+| Understand architecture and boundaries | [Architecture](docs/architecture/index.md) |
+| Diagnose a local problem | [Troubleshooting](docs/how-to/troubleshooting.md) |
 
-The generated CLI reference and glossary are part of the Sphinx documentation build. Until the public documentation site is deployed, use `aeat --help`, `aeat app contract`, and the tracked guides.
+The CLI, Python modules, and Model Context Protocol (MCP) server share the same application and calculation services. Assistants guide the workflow; the deterministic engine calculates values.
+
+## Protect your data
+
+- Cadrumo encrypts app-managed financial records and evidence at rest in the active profile's local storage.
+- Original imported files stay at their source paths. Local exports are cleartext at the paths you choose.
+- Authenticated AEAT retrieval runs only when you invoke it. Those operations are read-only and cannot submit a filing.
+- Optional cloud classifiers receive the words, figures, and transaction fields you send to their providers.
+- Evidence text reaches a cloud classifier only after profile permission and invocation confirmation. Image evidence uses a local Ollama workflow.
+
+Before using real data, read the [filing boundary](docs/explanation/recording-a-filing-and-the-boundary.md), [security policy](SECURITY.md), and [full disclaimer](docs/disclaimer.md).
 
 ## Get help or contribute
 
-This source repository is currently private. Authorized collaborators can open an [issue](https://github.com/cadrumo/cadrumo/issues) and follow [`SECURITY.md`](SECURITY.md). A public support channel and guaranteed confidential contact aren't available yet. Never publish vulnerability details in an issue.
+The repository remains private during alpha development. If you have access, use these routes to report defects, handle security concerns, set up a workstation, and review changes:
 
-Start development with the [workstation setup guide](docs/workstation-setup.md). The main local gates are:
+- [Open an issue](https://github.com/cadrumo/cadrumo/issues) for bugs and documentation problems
+- Follow [`SECURITY.md`](SECURITY.md) for vulnerability reporting
+- Use the [workstation setup guide](docs/workstation-setup.md) before contributing code
+- Review shipped changes in the [changelog](CHANGELOG.md)
 
-```console
-just check-all
-uv run pytest
-just docs-check
-```
+Don't publish vulnerability details in an issue. A public support channel and guaranteed confidential contact aren't available yet.
 
-Tests must exercise real behavior. The project doesn't accept fakes, mocks, monkeypatching, skipped tests, or tautological calculation assertions as shortcuts.
+## Status, license, and disclaimer
 
-## License and disclaimer
+Cadrumo is alpha software. Behavior, schemas, commands, and persisted state may change without compatibility support before 1.0.
 
-`Cadrumo` is available under the [Apache License 2.0](LICENSE). It is provided as-is, without warranties or guarantees. Read the [full disclaimer](docs/disclaimer.md) for the responsibility, affiliation, advice, and liability boundaries.
+Cadrumo is available under the [Apache License 2.0](LICENSE). It is provided as-is, without warranties or guarantees.
+
+You are responsible for reviewing calculations, meeting deadlines, and filing through official AEAT channels. Read the [full disclaimer](docs/disclaimer.md) for the advice, affiliation, responsibility, and liability boundaries.
