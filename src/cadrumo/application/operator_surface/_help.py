@@ -38,7 +38,7 @@ def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
     """Return the :class:`RootLandingReport` for caller-supplied profile state.
 
     The caller owns active-profile discovery and passes the projected display
-    label here.  A present profile points operators at ``aeat app overview
+    label here.  A present profile points operators at ``cadrumo app overview
     status``; a missing profile points at profile creation.  The CLI root
     callback decides whether this landing report or the full overview status is
     emitted under ``root.status``.
@@ -46,12 +46,12 @@ def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
     if active_profile:
         return RootLandingReport(
             active_profile=active_profile,
-            command="aeat app overview status",
+            command="cadrumo app overview status",
             message=tr("cli.operator_surface.landing.active_profile_message", profile=active_profile),
         )
     return RootLandingReport(
         active_profile=None,
-        command="aeat config profile create NAME",
+        command="cadrumo config profile create NAME",
         message=tr("cli.operator_surface.landing.no_active_profile_message"),
     )
 
@@ -120,15 +120,15 @@ def _root_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.root.section_setup"),
                 entries=(
                     HelpEntry(
-                        command="aeat config profile create NAME",
+                        command="cadrumo config profile create NAME",
                         description=tr("cli.operator_surface.help.root.setup_create_profile"),
                     ),
                     HelpEntry(
-                        command="aeat config profile",
+                        command="cadrumo config profile",
                         description=tr("cli.operator_surface.help.root.setup_inspect_profile"),
                     ),
                     HelpEntry(
-                        command="aeat config auth",
+                        command="cadrumo config auth",
                         description=tr("cli.operator_surface.help.root.setup_configure_auth"),
                     ),
                 ),
@@ -137,59 +137,59 @@ def _root_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.root.section_daily_ledger"),
                 entries=(
                     HelpEntry(
-                        command="aeat app ledger import",
+                        command="cadrumo app ledger import",
                         description=tr("cli.operator_surface.help.root.ledger_import"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger list",
+                        command="cadrumo app ledger list",
                         description=tr("cli.operator_surface.help.root.ledger_list"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger view",
+                        command="cadrumo app ledger view",
                         description=tr("cli.operator_surface.help.root.ledger_view"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger status",
+                        command="cadrumo app ledger status",
                         description=tr("cli.operator_surface.help.root.ledger_status"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger review",
+                        command="cadrumo app ledger review",
                         description=tr("cli.operator_surface.help.root.ledger_review"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger update",
+                        command="cadrumo app ledger update",
                         description=tr("cli.operator_surface.help.root.ledger_update"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger classify",
+                        command="cadrumo app ledger classify",
                         description=tr("cli.operator_surface.help.root.ledger_classify"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger allocate",
+                        command="cadrumo app ledger allocate",
                         description=tr("cli.operator_surface.help.root.ledger_allocate"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger attach",
+                        command="cadrumo app ledger attach",
                         description=tr("cli.operator_surface.help.root.ledger_attach"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger archive",
+                        command="cadrumo app ledger archive",
                         description=tr("cli.operator_surface.help.root.ledger_archive"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger stash",
+                        command="cadrumo app ledger stash",
                         description=tr("cli.operator_surface.help.root.ledger_stash"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger remove",
+                        command="cadrumo app ledger remove",
                         description=tr("cli.operator_surface.help.root.ledger_remove"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger reset",
+                        command="cadrumo app ledger reset",
                         description=tr("cli.operator_surface.help.root.ledger_reset"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger export",
+                        command="cadrumo app ledger export",
                         description=tr("cli.operator_surface.help.root.ledger_export"),
                     ),
                 ),
@@ -198,15 +198,15 @@ def _root_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.root.section_modelo_lifecycle"),
                 entries=(
                     HelpEntry(
-                        command="aeat app modelo list",
+                        command="cadrumo app modelo list",
                         description=tr("cli.operator_surface.help.root.modelo_list"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo bindings list",
+                        command="cadrumo app modelo bindings list",
                         description=tr("cli.operator_surface.help.root.modelo_bindings_list"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo work",
+                        command="cadrumo app modelo work",
                         description=tr("cli.operator_surface.help.root.modelo_work"),
                     ),
                 ),
@@ -215,23 +215,23 @@ def _root_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.root.section_diagnostics"),
                 entries=(
                     HelpEntry(
-                        command="aeat config repair --help",
+                        command="cadrumo config repair --help",
                         description=tr("cli.operator_surface.help.root.diagnostics_repair"),
                     ),
                     HelpEntry(
-                        command="aeat app overview status",
+                        command="cadrumo app overview status",
                         description=tr("cli.operator_surface.help.root.diagnostics_overview"),
                     ),
                     HelpEntry(
-                        command="aeat app live filed list",
+                        command="cadrumo app live filed list",
                         description=tr("cli.operator_surface.help.root.diagnostics_live_filed"),
                     ),
                     HelpEntry(
-                        command="aeat app review queue",
+                        command="cadrumo app review queue",
                         description=tr("cli.operator_surface.help.root.diagnostics_review_queue"),
                     ),
                     HelpEntry(
-                        command="aeat app registry inspect",
+                        command="cadrumo app registry inspect",
                         description=tr("cli.operator_surface.help.root.diagnostics_registry_inspect"),
                     ),
                 ),
@@ -239,7 +239,7 @@ def _root_help() -> HelpDocument:
         ),
         footer=tr(
             "cli.operator_surface.help.root.footer",
-            default="Run aeat config --help or aeat app --help for subtree commands.",
+            default="Run cadrumo config --help or cadrumo app --help for subtree commands.",
         ),
     )
 
@@ -249,7 +249,7 @@ def _config_help() -> HelpDocument:
         surface=HelpSurface.CONFIG,
         heading=tr(
             "cli.operator_surface.help.config.heading",
-            default="aeat config - profile, auth, diagnostics",
+            default="cadrumo config - profile, auth, diagnostics",
         ),
         paragraphs=(
             tr(
@@ -270,11 +270,11 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_first_run"),
                 entries=(
                     HelpEntry(
-                        command="aeat config profile create NAME",
+                        command="cadrumo config profile create NAME",
                         description=tr("cli.operator_surface.help.config.first_run_bootstrap"),
                     ),
                     HelpEntry(
-                        command="aeat config profile edit NAME",
+                        command="cadrumo config profile edit NAME",
                         description=tr("cli.operator_surface.help.config.first_run_edit"),
                     ),
                 ),
@@ -283,19 +283,19 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_profile_lifecycle"),
                 entries=(
                     HelpEntry(
-                        command="aeat config switch NAME",
+                        command="cadrumo config switch NAME",
                         description=tr("cli.operator_surface.help.config.profile_switch"),
                     ),
                     HelpEntry(
-                        command="aeat config profile delete NAME",
+                        command="cadrumo config profile delete NAME",
                         description=tr("cli.operator_surface.help.config.profile_delete"),
                     ),
                     HelpEntry(
-                        command="aeat config profile duplicate SRC DST",
+                        command="cadrumo config profile duplicate SRC DST",
                         description=tr("cli.operator_surface.help.config.profile_duplicate"),
                     ),
                     HelpEntry(
-                        command="aeat config profile rename SRC DST",
+                        command="cadrumo config profile rename SRC DST",
                         description=tr("cli.operator_surface.help.config.profile_rename"),
                     ),
                 ),
@@ -304,19 +304,19 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_profile_inspection"),
                 entries=(
                     HelpEntry(
-                        command="aeat config profile list",
+                        command="cadrumo config profile list",
                         description=tr("cli.operator_surface.help.config.profile_list"),
                     ),
                     HelpEntry(
-                        command="aeat config profile show [NAME]",
+                        command="cadrumo config profile show [NAME]",
                         description=tr("cli.operator_surface.help.config.profile_show"),
                     ),
                     HelpEntry(
-                        command="aeat config profile status",
+                        command="cadrumo config profile status",
                         description=tr("cli.operator_surface.help.config.profile_status"),
                     ),
                     HelpEntry(
-                        command="aeat config profile history",
+                        command="cadrumo config profile history",
                         description=tr("cli.operator_surface.help.config.profile_history"),
                     ),
                 ),
@@ -325,23 +325,23 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_authentication"),
                 entries=(
                     HelpEntry(
-                        command="aeat config auth providers",
+                        command="cadrumo config auth providers",
                         description=tr("cli.operator_surface.help.config.auth_providers"),
                     ),
                     HelpEntry(
-                        command="aeat config auth configure",
+                        command="cadrumo config auth configure",
                         description=tr("cli.operator_surface.help.config.auth_configure"),
                     ),
                     HelpEntry(
-                        command="aeat config auth status",
+                        command="cadrumo config auth status",
                         description=tr("cli.operator_surface.help.config.auth_status"),
                     ),
                     HelpEntry(
-                        command="aeat config auth test",
+                        command="cadrumo config auth test",
                         description=tr("cli.operator_surface.help.config.auth_test"),
                     ),
                     HelpEntry(
-                        command="aeat config auth clear",
+                        command="cadrumo config auth clear",
                         description=tr("cli.operator_surface.help.config.auth_clear"),
                     ),
                 ),
@@ -350,32 +350,32 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_diagnostics"),
                 entries=(
                     HelpEntry(
-                        command="aeat config repair --help",
+                        command="cadrumo config repair --help",
                         description=tr("cli.operator_surface.help.config.diagnostics_repair"),
                     ),
                     HelpEntry(
-                        command="aeat config repair logs",
+                        command="cadrumo config repair logs",
                         description=tr("cli.operator_surface.help.config.diagnostics_logs"),
                     ),
                     HelpEntry(
-                        command="aeat config repair quarantine",
+                        command="cadrumo config repair quarantine",
                         description=tr("cli.operator_surface.help.config.diagnostics_quarantine"),
                     ),
                     HelpEntry(
-                        command="aeat config repair reset-progress",
+                        command="cadrumo config repair reset-progress",
                         description=tr("cli.operator_surface.help.config.diagnostics_reset_progress"),
                     ),
                 ),
             ),
         ),
-        footer=tr("cli.operator_surface.help.config.footer", default="Run aeat --help for the full overview."),
+        footer=tr("cli.operator_surface.help.config.footer", default="Run cadrumo --help for the full overview."),
     )
 
 
 def _app_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.APP,
-        heading=tr("cli.operator_surface.help.app.heading", default="aeat app - operational tax work"),
+        heading=tr("cli.operator_surface.help.app.heading", default="cadrumo app - operational tax work"),
         paragraphs=(
             tr(
                 "cli.operator_surface.help.app.paragraph_operational_workflow",
@@ -387,7 +387,7 @@ def _app_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.app.section_overview"),
                 entries=(
                     HelpEntry(
-                        command="aeat app overview status",
+                        command="cadrumo app overview status",
                         description=tr("cli.operator_surface.help.app.overview_status"),
                     ),
                 ),
@@ -396,63 +396,63 @@ def _app_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.app.section_ledger"),
                 entries=(
                     HelpEntry(
-                        command="aeat app ledger import",
+                        command="cadrumo app ledger import",
                         description=tr("cli.operator_surface.help.app.ledger_import"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger add",
+                        command="cadrumo app ledger add",
                         description=tr("cli.operator_surface.help.app.ledger_add"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger list",
+                        command="cadrumo app ledger list",
                         description=tr("cli.operator_surface.help.app.ledger_list"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger view",
+                        command="cadrumo app ledger view",
                         description=tr("cli.operator_surface.help.app.ledger_view"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger status",
+                        command="cadrumo app ledger status",
                         description=tr("cli.operator_surface.help.app.ledger_status"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger review",
+                        command="cadrumo app ledger review",
                         description=tr("cli.operator_surface.help.app.ledger_review"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger update",
+                        command="cadrumo app ledger update",
                         description=tr("cli.operator_surface.help.app.ledger_update"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger classify",
+                        command="cadrumo app ledger classify",
                         description=tr("cli.operator_surface.help.app.ledger_classify"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger allocate",
+                        command="cadrumo app ledger allocate",
                         description=tr("cli.operator_surface.help.app.ledger_allocate"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger attach",
+                        command="cadrumo app ledger attach",
                         description=tr("cli.operator_surface.help.app.ledger_attach"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger archive",
+                        command="cadrumo app ledger archive",
                         description=tr("cli.operator_surface.help.app.ledger_archive"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger stash",
+                        command="cadrumo app ledger stash",
                         description=tr("cli.operator_surface.help.app.ledger_stash"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger remove",
+                        command="cadrumo app ledger remove",
                         description=tr("cli.operator_surface.help.app.ledger_remove"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger reset",
+                        command="cadrumo app ledger reset",
                         description=tr("cli.operator_surface.help.app.ledger_reset"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger export",
+                        command="cadrumo app ledger export",
                         description=tr("cli.operator_surface.help.app.ledger_export"),
                     ),
                 ),
@@ -461,27 +461,27 @@ def _app_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.app.section_modelo"),
                 entries=(
                     HelpEntry(
-                        command="aeat app modelo list",
+                        command="cadrumo app modelo list",
                         description=tr("cli.operator_surface.help.app.modelo_list"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo describe",
+                        command="cadrumo app modelo describe",
                         description=tr("cli.operator_surface.help.app.modelo_describe"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo bindings",
+                        command="cadrumo app modelo bindings",
                         description=tr("cli.operator_surface.help.app.modelo_bindings"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo work",
+                        command="cadrumo app modelo work",
                         description=tr("cli.operator_surface.help.app.modelo_work"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo verification-report list",
+                        command="cadrumo app modelo verification-report list",
                         description=tr("cli.operator_surface.help.app.modelo_verification_report"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo m036",
+                        command="cadrumo app modelo m036",
                         description=tr("cli.operator_surface.help.app.modelo_m036"),
                     ),
                 ),
@@ -490,19 +490,19 @@ def _app_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.app.section_review_and_registry"),
                 entries=(
                     HelpEntry(
-                        command="aeat app review queue",
+                        command="cadrumo app review queue",
                         description=tr("cli.operator_surface.help.app.review_queue"),
                     ),
                     HelpEntry(
-                        command="aeat app review view ID",
+                        command="cadrumo app review view ID",
                         description=tr("cli.operator_surface.help.app.review_view"),
                     ),
                     HelpEntry(
-                        command="aeat app registry inspect",
+                        command="cadrumo app registry inspect",
                         description=tr("cli.operator_surface.help.app.registry_inspect"),
                     ),
                     HelpEntry(
-                        command="aeat app registry verify",
+                        command="cadrumo app registry verify",
                         description=tr("cli.operator_surface.help.app.registry_verify"),
                     ),
                 ),
@@ -511,21 +511,21 @@ def _app_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.app.section_live_reads"),
                 entries=(
                     HelpEntry(
-                        command="aeat app live filed list",
+                        command="cadrumo app live filed list",
                         description=tr("cli.operator_surface.help.app.live_filed_list"),
                     ),
                     HelpEntry(
-                        command="aeat app live filed pull",
+                        command="cadrumo app live filed pull",
                         description=tr("cli.operator_surface.help.app.live_filed_capture"),
                     ),
                     HelpEntry(
-                        command="aeat app live filed pull-sources",
+                        command="cadrumo app live filed pull-sources",
                         description=tr("cli.operator_surface.help.app.live_filed_capture_sources"),
                     ),
                 ),
             ),
         ),
-        footer=tr("cli.operator_surface.help.app.footer", default="Run aeat --help for the full overview."),
+        footer=tr("cli.operator_surface.help.app.footer", default="Run cadrumo --help for the full overview."),
     )
 
 
