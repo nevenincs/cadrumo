@@ -79,8 +79,7 @@ _DEFAULT_IVA_REGIME: str = IVARegime.GENERAL.value
 """Wizard default for the iva.regime question.
 
 Shared between the :data:`_IVA_CHOICES` default-marker and the
-:func:`_IVA_SECTION` question's ``default=`` so the two never drift.
-W09.P40.S161 cross-domain-continuity dedup."""
+:func:`_IVA_SECTION` question's ``default=`` so the two never drift."""
 
 
 _IVA_CHOICES: tuple[WizardChoice, ...] = (

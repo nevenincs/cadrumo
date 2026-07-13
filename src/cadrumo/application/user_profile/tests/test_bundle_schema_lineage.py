@@ -57,8 +57,7 @@ def test_bundle_upgrade_chain_is_complete_from_floor_to_current() -> None:
     )
     assert missing == (), (
         f"BUNDLE_SCHEMA_VERSION was raised without registering one-hop payload upgraders for {missing}; "
-        "land them in BUNDLE_PAYLOAD_UPGRADERS in the same change "
-        "(2026-07-08-released-data-durability-adr)"
+        "land them in BUNDLE_PAYLOAD_UPGRADERS in the same change"
     )
 
 
