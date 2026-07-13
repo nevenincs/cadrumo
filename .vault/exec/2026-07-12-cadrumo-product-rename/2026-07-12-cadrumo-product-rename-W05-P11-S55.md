@@ -9,43 +9,15 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S55 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Update developer recipes, release URLs, companion paths, and rollback commands and ## Scope
-
-- `justfile` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Update developer recipes, release URLs, companion paths, and rollback commands
 
 ## Scope
 
+- `.vault/exec/2026-07-12-cadrumo-product-rename/2026-07-12-cadrumo-product-rename-W05-P11-S55.md`
+- `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `dev/release/readiness.py`
+- `dev/release/tests/test_justfile_release_guidance.py`
+- `dev/release/tests/test_readiness.py`
 - `justfile`
 
 ## Description
@@ -77,3 +49,7 @@ real `just --dry-run` subprocess coverage of `release-apply`,
 `release-rollback`, and `doctor`. `just --list` and `just --summary` also parsed
 successfully. Documentation, release runbooks, CI, and unrelated staged
 marketplace work were excluded.
+
+This evidence-only remediation cross-carries the pre-existing sanitizer removal
+of scaffold comments from this record and corrects Scope to enumerate all six
+paths delivered by `c2230d2b77`; it changes no implementation or plan state.
