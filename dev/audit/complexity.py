@@ -25,7 +25,7 @@ The audit FAILS (exit 1) only on:
 
 It exits 0 when every current violation is within its baselined ceiling. This
 mirrors the size-budget ratchet in
-``src/aeat/tests/test_codebase_size_budgets.py``
+``src/cadrumo/tests/test_codebase_size_budgets.py``
 (``_MODULE_LINE_LIMIT_OVERRIDES`` / SPLIT-CANDIDATE pins).
 
 Baseline entries that NO LONGER violate are reported as a soft "resolved"
@@ -70,9 +70,15 @@ else:
     file_complexity = _imported_file_complexity
 
 _UTF_8: Final[str] = "utf-8"
-_TARGET = "src/aeat"
-_PROD_EXCLUDE = "src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*"
-_TEST_EXCLUDE = "src/aeat/application/*,src/aeat/domain/*,src/aeat/adapters/*,src/aeat/core/*,src/aeat/_data/*"
+_TARGET = "src/cadrumo"
+_PROD_EXCLUDE = (
+    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,"
+    "src/cadrumo/tests/*,src/cadrumo/_data/*"
+)
+_TEST_EXCLUDE = (
+    "src/cadrumo/application/*,src/cadrumo/domain/*,src/cadrumo/adapters/*,"
+    "src/cadrumo/core/*,src/cadrumo/_data/*"
+)
 _CC_CAP = 20
 _MI_CAP = 15
 _COG_CAP = 20

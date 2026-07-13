@@ -797,6 +797,29 @@ excluded from this review. Its presence contaminated a generated shared index
 during exec scaffolding; that index is not part of S77's reviewed or committed
 surface.
 
+### s76-developer-audit-tooling | resolved | Developer scanners target the live Cadrumo tree non-vacuously
+
+Formal review of the assigned S76 developer-tooling slice found no unresolved
+finding. The complexity, composed health, semantic, evidence-corpus, and
+Vulture authorities now name `src/cadrumo` or `cadrumo` product modules. The
+complexity baseline preserves its recorded values while mechanically moving
+all product-root keys to `src/cadrumo`; five independently present debt
+removals were preserved rather than restored. AEAT remains intact inside the
+current product root wherever it denotes the outbound authority adapter.
+
+The review verified non-vacuity with live source cardinality, Radon findings,
+baseline cardinality, semantic-path classification, and the existing corpus
+directory. Ruff, JSON parsing, and nineteen real-tool tests pass without mocks,
+patches, skips, or expected failures. `W06.P14.S76` remains open because this
+commit closes only the explicitly assigned developer audit/evidence tooling
+group, not the full repository residue inventory.
+
+The direct production complexity invocation is now honestly non-green rather
+than vacuously clean: it reports 503 allowed baselined hotspots, one resolved
+entry, and 26 current new or regressed findings owned by the broader live tree.
+Those findings are not accepted into the baseline or hidden by this path
+remediation.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
