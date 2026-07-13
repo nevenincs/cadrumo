@@ -25,10 +25,14 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tomllib
+from pathlib import Path
 
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_cadrumo_package_imports_in_process() -> None:
@@ -77,3 +81,21 @@ def test_retired_aeat_package_fails_in_subprocess() -> None:
     assert completed.returncode != 0, (
         "fresh-subprocess `import aeat` unexpectedly succeeded; the hard cut forbids compatibility aliases and shims"
     )
+
+
+def test_retired_aeat_package_root_is_absent_from_the_source_tree() -> None:
+    """The checkout contains no package or module that could restore ``import aeat``."""
+    source_root = _PROJECT_ROOT / "src"
+
+    assert not (source_root / "aeat").exists()
+    assert not (source_root / "aeat.py").exists()
+
+
+def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
+    """Package metadata has one human CLI and one distinct MCP executable, with no alias."""
+    pyproject = tomllib.loads((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+
+    assert pyproject["project"]["scripts"] == {
+        "cadrumo": "cadrumo.entrypoints.cli:main",
+        "cadrumo-mcp": "cadrumo.entrypoints.mcp:main",
+    }

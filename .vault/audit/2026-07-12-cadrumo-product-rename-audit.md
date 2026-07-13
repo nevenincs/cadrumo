@@ -780,6 +780,23 @@ CRLF byte representations without refetching or changing textual content. Exact
 bundled-authority validation and focused source-integrity tests pass against the
 preserved official bytes, resolving the installed-runtime blocker.
 
+### compatibility-absence-s77 | resolved | Hard-cut compatibility absence is pinned by real behavior
+
+Formal review against the committed product-rename ADR found no unresolved
+S77 defect. The source layout and fresh-subprocess import proof reject an
+`aeat` package root; root metadata exposes exactly `cadrumo` and
+`cadrumo-mcp`, both bound directly to Cadrumo entrypoints. Existing real
+dotenv, filesystem, encrypted repository, database, session-key, namespace,
+and sealed-archive tests prove former product controls and state are ignored or
+refused without a shim, alias, fallback, migration, adoption, or mutation.
+Authority-owned AEAT adapters, endpoints, credentials, registry taxonomy, and
+legal evidence remain correctly outside the compatibility prohibition.
+
+The untracked `cadrumo-cli-executable` ADR is not accepted authority and was
+excluded from this review. Its presence contaminated a generated shared index
+during exec scaffolding; that index is not part of S77's reviewed or committed
+surface.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
