@@ -160,14 +160,8 @@ Export the file, upload it at the AEAT portal yourself, record, and reconcile.
 :link: reconcile
 :link-type: doc
 
-Compare local filing data with the AEAT justificante.
-:::
-
-:::{grid-item-card} Filing Receipts
-:link: justificante-receipts
-:link-type: doc
-
-Pull, store, and inspect the AEAT justificante for each filed period.
+Pull and store the AEAT justificante, then compare it with your local filing
+record.
 :::
 
 ::::
@@ -276,7 +270,6 @@ verification-reports
 filing-readiness
 file-at-aeat
 reconcile
-justificante-receipts
 protect-data-access
 troubleshooting
 authenticate-with-aeat
