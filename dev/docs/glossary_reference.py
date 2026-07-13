@@ -55,7 +55,9 @@ _UTF_8 = "utf-8"
 _GENERATED_RELPATH = Path("_generated") / "glossary.rst"
 
 #: The legal catalogue tree (id -> permalink) for grounding-link resolution.
-_LEGAL_CATALOGUE_RELPATH = Path("src") / "aeat" / "_data" / "registry" / "aeat" / "legal"
+#: The leading segment is the CADRUMO package root; the trailing "aeat" is the
+#: authority taxonomy directory (cadrumo-product-authority-names).
+_LEGAL_CATALOGUE_RELPATH = Path("src") / "cadrumo" / "_data" / "registry" / "aeat" / "legal"
 
 
 @dataclass(frozen=True)

@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-193"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:193"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99"]
+related = ["irpf", "modelo-123", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Resumen anual de retenciones del capital mobiliario."
+definition = "Declaracion informativa anual que resume las retenciones sobre rendimientos del capital mobiliario declaradas en los modelos 123 del ejercicio, con el detalle por perceptor."
+
+[language.es.source]
+citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 193"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "resumen anual del capital mobiliario"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual summary of the year's capital-income withholding returns (Modelo 123)."
+
+[language.ca]
+short_description = "Resum anual de retencions del capital mobiliari."
+
+[language.hu]
+short_description = "Eves osszesito a tokejovedelem forrasadojarol (123-as)."
