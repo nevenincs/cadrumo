@@ -131,8 +131,9 @@ _EXIT_CODE_PATH: str = "exit_code"
 _LIVE_TOKENS: frozenset[str] = frozenset({"live", "pull"})
 _PULL_VERB_PREFIX: str = "pull-"
 
-#: One json-path segment: a mapping key or a ``[index]`` list address.
-_PATH_SEGMENT_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)|\[([0-9]+)\]")
+#: One json-path segment: a dotted key (an identifier or an all-digit object
+#: key such as a casilla number) or a ``[index]`` list address.
+_PATH_SEGMENT_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*|[0-9]+)|\[([0-9]+)\]")
 
 #: Transient registry-race markers: concurrent modification of the registry
 #: TOML tree during local development produces these transient failures; the
@@ -459,20 +460,32 @@ def _parse_envelope(output: str) -> dict[str, JsonValue] | None:
 
 
 def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
-    """Walk a dotted/bracketed json-path; return ``(found, value)``."""
+    """Walk a dotted/bracketed json-path; return ``(found, value)``.
+
+    Digit-segment resolution rule: an all-digit DOTTED segment (``.03``) is a
+    string OBJECT KEY first — casilla numbers are JSON object keys — and is
+    treated as a list index only when the current node is a list. The bracketed
+    ``[n]`` form is always and only a list index.
+    """
     current: object = document
     for match in _PATH_SEGMENT_RE.finditer(path):
         key, index = match.group(1), match.group(2)
         if key is not None:
-            if not isinstance(current, Mapping):
-                return False, None
-            # Re-key defensively: JSON object keys are always strings, and the
-            # str-keyed view gives the checker a concrete key type to index by.
-            step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
-            if key not in step:
-                return False, None
-            current = step[key]
-            continue
+            if isinstance(current, Mapping):
+                # Re-key defensively: JSON object keys are always strings, and
+                # the str-keyed view gives the checker a concrete key type.
+                step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
+                if key not in step:
+                    return False, None
+                current = step[key]
+                continue
+            if isinstance(current, list) and key.isdigit():
+                position = int(key)
+                if position >= len(current):
+                    return False, None
+                current = current[position]
+                continue
+            return False, None
         if not isinstance(current, list) or int(index) >= len(current):
             return False, None
         current = current[int(index)]

@@ -48,16 +48,20 @@ Identifier = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$"),
 ]
-#: A dotted JSON path into a frame's parsed envelope, e.g. ``result.work_unit_id``
-#: or ``result.items[0].id``. The pseudo-path ``exit_code`` (a bare identifier)
-#: is accepted so ``@expect exit_code == <n>`` declares a non-zero expectation.
+#: A dotted JSON path into a frame's parsed envelope, e.g. ``result.work_unit_id``,
+#: ``result.items[0].id``, or ``result.casilla_values.03``. A dotted segment is
+#: an identifier OR an all-digit OBJECT KEY (casilla numbers like ``01``/``03``
+#: are JSON object keys, not list indexes); the bracketed ``[n]`` form remains
+#: the explicit list-index segment. The pseudo-path ``exit_code`` (a bare
+#: identifier) is accepted so ``@expect exit_code == <n>`` declares a non-zero
+#: expectation.
 JsonPath = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
         max_length=256,
-        pattern=r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$",
+        pattern=r"^[A-Za-z_][A-Za-z0-9_]*(\.(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+)|\[[0-9]+\])*$",
     ),
 ]
 #: One singular imperative verification sentence carried by the ``:verify:``

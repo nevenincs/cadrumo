@@ -463,3 +463,29 @@ def test_over_long_step_sentence_is_refused() -> None:
     )
     problems = _problems(body)
     assert any("line 1" in problem and "at most 240 characters" in problem for problem in problems)
+
+
+# --- Numeric object keys in @expect / @capture json-paths --------------------
+
+
+def test_numeric_object_key_segments_are_accepted() -> None:
+    body = (
+        "aeat --format json app modelo work calculate abc123\n"
+        "@capture net_yield result.casilla_values.03\n"
+        "@result aeat app modelo verify {net_yield}\n"
+        '@expect result.casilla_values.01 == "1000.00"\n'
+        "@expect exit_code == 0\n"
+    )
+    sequence = _parse(body)
+    calculate, result = sequence.frames
+    assert calculate.captures == (CaptureBinding(name="net_yield", json_path="result.casilla_values.03"),)
+    assert result.expects[0] == ExpectAssertion(json_path="result.casilla_values.01", expected="1000.00")
+
+
+def test_mixed_alnum_starting_with_digit_is_still_refused() -> None:
+    # '0abc' is neither an identifier nor an all-digit object key.
+    body = (
+        "aeat app modelo create 303 --year 2026 --period 1T\n@result aeat app modelo verify\n@expect result.0abc == 1\n"
+    )
+    problems = _problems(body)
+    assert any("not a valid dotted path" in problem and "0abc" in problem for problem in problems)
