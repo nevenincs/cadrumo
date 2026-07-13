@@ -207,7 +207,7 @@ Update product copy through locale authorities while preserving AEAT counterpart
 
 Update active user-facing documentation and regenerate derived references.
 
-- [x] `W05.P13.S68` - Rewrite product branding, badges, install commands, and authority-qualified prose; `README.md`.
+- [ ] `W05.P13.S68` - Rewrite product branding, badges, install commands, and authority-qualified prose; `README.md`.
 - [ ] `W05.P13.S69` - Rewrite release, publication, rollback, and old-state cutover instructions; `RELEASING.md`.
 - [ ] `W05.P13.S70` - Rewrite active user guides with `aeat` invocations, CADRUMO product prose, and preserved AEAT authority language; `docs/how-to`.
 - [ ] `W05.P13.S71` - Rewrite active explanation and reference pages with the product-authority boundary; `docs/explanation and docs/reference`.

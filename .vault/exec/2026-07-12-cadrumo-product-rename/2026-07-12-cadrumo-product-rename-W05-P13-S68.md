@@ -47,6 +47,7 @@ related:
 ## Scope
 
 - `README.md`
+- `src/cadrumo/tests/test_readme_cli_demo.py`
 
 ## Description
 
@@ -57,16 +58,19 @@ related:
 - Correct the false `cadrumo` human-command claims while preserving `Cadrumo` prose, `CADRUMO` identity contexts, `cadrumo` machine identifiers, `aeat` CLI commands, and `AEAT` authority references.
 - Apply the zero-context editorial review's minor terminology, acronym, accessibility, pronoun, and contraction findings without changing safety or legal meaning.
 - Repair the README demo's stale title-case assertion so it continues to require the live identity-context `CADRUMO` help surface.
-- Verify the live version and help commands, README command conformance, README demo, relative links, formatting, lint, and patch hygiene.
+- Remediate audit `ecf62294ad` by anchoring that test to the exact first help line and by distinguishing profile-backed mutations and workspaces from read-only commands and the export path chosen by the operator.
+- Verify the live version and help commands, README command conformance, README demo, relative links, Ruff lint and formatting, Ty, the mandatory nitpicky Sphinx build, and patch hygiene.
 
 ## Outcome
 
-The README now distinguishes Cadrumo's machine identifiers from its permanent `aeat` human command and describes the observed `CADRUMO 0.2.0` identity output accurately. The existing information architecture, filing boundary, publication block, data-protection summary, licensing, and authority-qualified language remain intact.
+The README now distinguishes Cadrumo's machine identifiers from its permanent `aeat` human command and describes the observed `CADRUMO 0.2.1` identity output accurately. The existing information architecture, filing boundary, publication block, data-protection summary, licensing, and authority-qualified language remain intact.
 
-The zero-context wireframe reviewer found that a newcomer would understand all eight required topics. The editorial reviewer returned minor revisions only; those revisions defined command-line interface, expanded BOE, SHA-256, and CSV at first use, removed directional wording, clarified pronouns, and split command outcomes. Technical review confirmed the package entry point and identity tuple against live behavior.
+Phase 1 classified the README as a primary tutorial with secondary explanation and reference navigation. In Phase 2, a zero-context wireframe reviewer answered yes to all eight newcomer-understanding questions: what Cadrumo is, the Cadrumo/AEAT distinction, installation and first command, the profile and local-storage model, the worked filing flow, the no-submission boundary, deeper documentation routes, and support and licensing context. Phase 3 approval derives from the user's explicit approval of the execution scope before implementation.
 
-Verification passed with two README demo tests, 59 documented-command conformance tests, Ruff lint, Ruff format, the relative-link check, live `aeat --version` and `aeat --help`, and `git diff --check`.
+Phases 4 and 5 grounded and drafted each affected section against the complete README, binding naming ADR, canonical product identity, package metadata, storage and export behavior, and live CLI. Phase 6 technical review confirmed the `aeat` entry point, exact `CADRUMO` identity heading, product-identity tuple, profile-backed mutation boundary, read-only command behavior, and operator-selected export path. It verified two README demo tests, 72 documented-command integration tests, live version and help output, two relative links, Ruff lint and formatting, Ty, and patch hygiene.
+
+Phase 7 used a zero-context editorial review. Its minor revisions defined command-line interface, expanded BOE, SHA-256, and CSV at first use, removed directional wording, clarified pronouns, split command outcomes, and preserved the filing and safety boundaries. The mandatory nitpicky warnings-as-errors Sphinx build passed its real build test in 212.97 seconds. Phase 8 final-document approval is still pending, so S68 is reopened and remains incomplete until the reviewed README is presented to and approved by the user.
 
 ## Notes
 
-No external publication was attempted. No data was lost, no compatibility alias was introduced, and no known review finding remains open in this step. The scoped plan check completed with the standing PLAN022 non-monotonic-order warning. The repository-wide vault check remains red on 319 pre-existing structure errors and unrelated stem collisions; this step introduced none of those findings.
+No external publication was attempted. No data was lost and no compatibility alias was introduced. Audit `ecf62294ad` is remediated except for the intentionally open Phase 8 final-document approval gate. The scoped plan check completed with the standing PLAN022 non-monotonic-order warning. The repository-wide vault check remains red on pre-existing structure errors and unrelated stem collisions; this step introduced none of those findings.
