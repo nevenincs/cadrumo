@@ -27,7 +27,10 @@ class IdentityReferent(StrEnum):
 
 
 class ProductIdentity(NamedTuple):
-    """Immutable names that jointly identify the Cadrumo product."""
+    """Immutable names that jointly identify the Cadrumo product.
+
+    ``repository`` is the owner-qualified source repository slug.
+    """
 
     display_name: str
     prose_name: str
@@ -51,7 +54,7 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     python_package="cadrumo",
     distribution="cadrumo",
     cli_executable="aeat",
-    repository="cadrumo",
+    repository="nevenincs/cadrumo",
     mcp_server="cadrumo",
     mcp_executable="cadrumo-mcp",
     mcp_tool_prefix="cadrumo",

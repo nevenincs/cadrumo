@@ -60,7 +60,8 @@ is exactly `CADRUMO`, and the sole human CLI executable is exactly `aeat`.
 The complete canonical identity matrix is:
 
 - product display name: `CADRUMO`;
-- Python package, root distribution, and repository identifier: `cadrumo`;
+- Python package and root distribution: `cadrumo`;
+- owner-qualified repository slug: `nevenincs/cadrumo`;
 - sole human command-line executable: `aeat`;
 - MCP server identifier, tool prefix, and resource URI scheme: `cadrumo`;
 - plugin identifier: `cadrumo`;
