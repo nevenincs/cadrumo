@@ -1029,9 +1029,55 @@ def setup(app):
 
         generate_glossary_reference(Path(__file__).resolve().parent)
 
+    def _emit_cli_tree(app):
+        """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
+
+        The projection is a build-time asset the ``cli-sequence`` frontend widget
+        fetches for hover help (ADR ``2026-07-13-docs-cli-sequences-adr`` D5);
+        it is gitignored and regenerated on every build, never committed.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from dev.docs.sequence_build_gate import emit_cli_tree
+
+        emit_cli_tree(app)
+
+    def _check_cli_sequences(app):
+        """Fail the build on any cli-sequence golden divergence (ADR D6).
+
+        The docs-build half of the two-surfaces-one-engine gate: runs the engine
+        check mode so a divergence or a failed ``@expect`` reds the build. Scoped
+        to the changed-page set on an incremental changed-page build (the same
+        specific-source detection the CLI reference and deferred-model hooks use),
+        unscoped on a full build.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from dev.docs.sequence_build_gate import check_sequence_goldens
+
+        specific_sources = _specific_build_sources()
+        pages: list[str] | None
+        if specific_sources is None:
+            pages = None
+        else:
+            docs_root = Path(app.srcdir)
+            pages = []
+            for source in specific_sources:
+                if source.suffix != ".md":
+                    continue
+                try:
+                    pages.append(source.relative_to(docs_root).with_suffix("").as_posix())
+                except ValueError:
+                    continue
+        check_sequence_goldens(app, pages=pages)
+
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)
+    app.connect("builder-inited", _emit_cli_tree)
+    app.connect("builder-inited", _check_cli_sequences)
     # Priority 700 runs after intersphinx (which resolves external targets at the
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.
