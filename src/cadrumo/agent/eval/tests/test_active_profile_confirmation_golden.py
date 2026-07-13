@@ -1,12 +1,11 @@
-"""Active-profile-confirmation golden gate for the operator eval (eval-catalogue category 5).
+"""Active-profile-confirmation golden gate for the operator eval.
 
-Closes eval-catalogue category 5 (auth / profile / state confusion,
-``.vault/research/2026-07-01-agent-harness-research.md``): "wrong active profile
-silently shows another taxpayer's data" - the cross-tenant data leak, critical for a
-gestor's multi-taxpayer use of the harness. "Onboarding persona needs 'confirm active
-profile before every mutating sequence'." ``docs/how-to/troubleshooting.md``'s "The
-numbers or facts look like someone else's" section names the confirmation surface: "See
-which profile is active: ``aeat config profile status``" - the registry command key
+Guards against auth / profile / state confusion: a wrong active profile silently
+showing another taxpayer's data - a cross-tenant data leak, critical for a gestor's
+multi-taxpayer use of the harness. The operator must confirm the active profile before
+every mutating sequence. ``docs/how-to/troubleshooting.md``'s "The numbers or facts look
+like someone else's" section names the confirmation surface: "See which profile is
+active: ``aeat config profile status``" - the registry command key
 ``config.profile.status``, resolved against the live CLI schema registry below rather
 than assumed.
 
@@ -18,8 +17,7 @@ calculate an M347 draft) and an unconfirmed one (the same mutating sequence with
 confirmation step omitted) - both dispatched through the live CLI, not scripted.
 
 No mocks: every dispatched CLI response is what the real profile-lifecycle and modelo
-work-unit commands produced (``no-tautological-calculation-tests``,
-``aeat-quality-gates``).
+work-unit commands produced.
 """
 
 from __future__ import annotations
@@ -230,7 +228,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     """FAIL-catch (anti-tautology): a real mutating sequence with no prior confirmation MUST fail.
 
     Dispatches the SAME real mutating sequence with the confirmation step omitted -
-    reproducing the exact wrong-active-profile hazard category 5 describes: an
+    reproducing the exact wrong-active-profile hazard this gate guards: an
     operator (or an autonomous agent acting on its behalf) mutates a taxpayer's draft
     without ever having confirmed which profile is active. Without this proof the
     dimension could pass vacuously regardless of what trajectory it was handed.

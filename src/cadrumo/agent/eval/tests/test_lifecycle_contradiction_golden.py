@@ -1,25 +1,22 @@
-"""Lifecycle-contradiction golden gate for the operator eval (eval-catalogue category 4).
+"""Lifecycle-contradiction golden gate for the operator eval.
 
-Covers eval-catalogue category 4 (wrong lifecycle sequencing / cross-surface
-contradiction, ``.vault/research/2026-07-01-agent-harness-research.md``) and finding A1
-of ``.vault/audit/2026-05-21-persona-fleet-round2-findings-audit.md``: "``modelo
-readiness`` for the same modelo reports ``ready: True`` - a direct cross-surface
-contradiction" against a blocked ``work`` verb. This is the enforcement surface for the
-``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``).
+Guards against wrong lifecycle sequencing surfacing as a cross-surface contradiction:
+``modelo readiness`` reporting ``ready: True`` for a modelo whose ``work`` verb is
+blocked. This is the enforcement surface for the "Contradictions between surfaces are a
+stop, not a retry" section of
+``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``.
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347
 ``2008-y-siguientes`` was such a revision, so ``modelo readiness`` reported ``ready:
 true`` for a freshly-created, casilla-empty draft (the binding axis had nothing to fail
 on) while ``modelo work verify`` legitimately refused to grant ``VERIFICADO_COMPLETO``.
-Commit ``8220834c35`` (``feat(modelo-347): bind invoice-source summary totals``) gave
-M347 real counterpart-summary bindings, so ``modelo readiness`` now reports the
+M347 now carries real counterpart-summary bindings, so ``modelo readiness`` reports the
 casilla-empty draft NOT ready and the readiness/verify pair no longer disagrees - the
 live CLI reproduction is permanently closed.
 
 The pure checker :func:`check_contradiction_scenario` (``.._runner``) still encodes the
-category-4 contract, so it is now covered STRUCTURALLY: the trajectory tests inject the
+contradiction contract, so it is now covered STRUCTURALLY: the trajectory tests inject the
 ``readiness_ready=True, blocking_step_refused=True`` disagreement directly (the module's
 own established idiom - see ``test_runner_rejects_a_scenario_where_the_signals_agree`` and
 ``test_runner_rejects_a_trajectory_that_never_reaches_the_halt_boundary``), giving
@@ -34,8 +31,7 @@ otherwise stops firing), this fails loudly and the golden contradiction should b
 re-instated as a live scenario.
 
 No mocks: every seeded profile fact and every dispatched CLI response is what the real
-profile-preflight, registry engine, and CLI envelope serializer produced
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+profile-preflight, registry engine, and CLI envelope serializer produced.
 """
 
 from __future__ import annotations
