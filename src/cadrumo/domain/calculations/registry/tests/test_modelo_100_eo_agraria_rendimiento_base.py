@@ -34,10 +34,6 @@ See Also:
     ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
         Registry formulas for the Fase 1ª product base, Fase 1ª aggregate, and
         Fase 2ª minorado chain.
-    ``2026-05-19-schema-hardening-m100-actividad-agraria-audit`` and
-    ``2026-07-03-registry-grounding-spotcheck-audit``
-        Audit records for the M100 agraria cluster and 2025 estimación
-        objetiva grounding.
 """
 
 from __future__ import annotations

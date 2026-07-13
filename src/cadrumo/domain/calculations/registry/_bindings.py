@@ -522,10 +522,8 @@ class _RelationPrefillSelector(BaseModel):
     authority for periods, year alignment, and aggregation. The slot exists
     only so a bound casilla can consume the materialised Decimal.
 
-    This is the canonical declared replacement for the mis-stamped
-    ``previous_filing`` non-direct slots (aggregation-taxonomy ADR ruling 3):
-    a slot binding declares ``source = "relation_prefill"``, never
-    ``previous_filing``.
+    A relation-targeted slot binding always declares
+    ``source = "relation_prefill"``, never ``previous_filing``.
     """
 
     model_config = STRICT_FROZEN_CONFIG

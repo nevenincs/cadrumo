@@ -4,8 +4,7 @@ A modelo calculation revision that reaches a verified or filed state carries a
 content-addressed snapshot of the ledger state it was computed from: a
 fingerprint over each contributing transaction's tax-relevant facts plus an
 aggregate snapshot fingerprint. This is the audit + staleness layer that sits
-on top of the write-time blocking guard (see the
-``modelo-filing-ledger-snapshot`` ADR).
+on top of the write-time blocking guard.
 
 This module holds the pure records and the pure fingerprint diff. The
 Transaction-aware capture (which reads the live catalogue to produce row
@@ -150,7 +149,7 @@ class LedgerEvidenceRow(BaseModel):
     value_date: str | None = None
     # Non-negative magnitude in the row's native currency; flow is carried by
     # ``direction``, never by the sign (the amount mirrors the already-absolute
-    # ``value_in_eur`` projection). See the ledger-amount-direction ADR.
+    # ``value_in_eur`` projection).
     amount: Decimal
     currency: str = Field(min_length=1)
     direction: str = Field(min_length=1)

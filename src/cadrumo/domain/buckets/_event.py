@@ -106,9 +106,8 @@ class BucketEventType(StrEnum):
     MODELO_LEDGER_DEPENDENT_STAMPED_STALE = "modelo.ledger.dependent_stamped_stale"
 
     # 036 declarative-recording verbs (operator declares an alta /
-    # modificacion / baja was filed at sede). Per the 2026-05-16
-    # ADR amendment to cli-workflow-redesign-modelo-036-037-foundation,
-    # the local app never files a 036 — AEAT is the authority. These
+    # modificacion / baja was filed at sede). The local app never
+    # files a 036 — AEAT is the authority. These
     # events record the operator's declaration so downstream profile
     # state and stale-cascade logic can react. Distinct prefix
     # ``modelo.036.declaration.*`` separates them from the existing
@@ -369,8 +368,8 @@ class BucketEventHistoryCatalogue(BaseModel):
 
     @override
     # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS:
-    # pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware
-    # base class. Successor epic required.
+    # pydantic BaseModel.__iter__ override requires a pydantic-v2
+    # metaclass-aware base class, which is not yet available.
     def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
         """Iterate over every :class:`BucketEvent` in insertion order."""
         return iter(self.events.values())

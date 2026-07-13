@@ -77,9 +77,9 @@ class VerificationCompletenessStatus(StrEnum):
 class ModeloVerificationFindingKind(StrEnum):
     """Closed catalogue of verification-finding kinds.
 
-    Maps to the readiness vocabulary mandated by the verify ADR:
-    bucket / ledger source / profile fact / prior filed revision /
-    live observation / casilla / waiver / blocking finding.
+    Covers the readiness vocabulary: bucket / ledger source / profile
+    fact / prior filed revision / live observation / casilla / waiver /
+    blocking finding.
     """
 
     MISSING_REQUIRED_CASILLA = "missing_required_casilla"

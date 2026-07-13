@@ -322,8 +322,7 @@ class IvaClassificationResult(_IvaStrictFrozen):
             " only when ``category`` is :attr:`IvaCategory.DOMESTIC_EXEMPT`"
             " and the classification chain (or operator) has determined the"
             " specific sub-article. It adds classification context without"
-            " creating a separate Modelo 303 route. See"
-            " ``2026-07-11-article-20-uno-26-correction-adr``."
+            " creating a separate Modelo 303 route."
         ),
     )
 

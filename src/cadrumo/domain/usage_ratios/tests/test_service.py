@@ -1,8 +1,8 @@
-"""Unit tests for the usage-ratio persistence service (#259).
+"""Unit tests for the usage-ratio persistence service.
 
-Post-USAGE-001 the service routes through the substrate's encrypted-
-object backend; every test here exercises the round-trip against a
-real active-profile SQLite runtime.
+The service routes through the substrate's encrypted-object backend;
+every test here exercises the round-trip against a real active-profile
+SQLite runtime.
 """
 
 from __future__ import annotations

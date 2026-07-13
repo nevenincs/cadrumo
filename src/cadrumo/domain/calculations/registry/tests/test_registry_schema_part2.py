@@ -546,7 +546,7 @@ def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() ->
 
 
 def test_committed_m100_anualidades_advisory_retired_after_separate_escala_compute() -> None:
-    """The interim M100 anualidades cuota-review advisory is retired on 2024/2025 (#532).
+    """The interim M100 anualidades cuota-review advisory is retired on 2024/2025.
 
     The LIRPF art. 64 / art. 75 anualidades separate-escala détermination now
     computes the correct cuota (escala(0527)+escala(0505-0527) minus
@@ -862,7 +862,7 @@ def _corrupt_first_ccaa_dispatch(expression: object, bad_parameter: str) -> tupl
 
     From the 2024/2025 M100 revisions the autonomic escala formula wraps its
     lookup_bracket_by_ccaa operators in the LIRPF art. 64/75 separate-escala
-    if_then_else predicate (#532), so the dispatch leaf is no longer at the top
+    if_then_else predicate, so the dispatch leaf is no longer at the top
     level; the tree is walked to corrupt the first reachable dispatch table.
     """
     if getattr(expression, "op", None) == "lookup_bracket_by_ccaa":

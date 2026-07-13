@@ -260,8 +260,8 @@ class TestCompute:
 class TestPreRegistrationObligationGate:
     """The deadline engine must not invent pre-registration obligations.
 
-    Round-4 testimonial finding D1: a 2026 registrant ran the backlog
-    and was shown overdue 2025 IVA quarters — obligations from before
+    A 2026 registrant running the backlog must not be shown overdue 2025
+    IVA quarters — obligations from before
     they had any economic activity. With ``activity_start_date`` set,
     the engine suppresses every window that closes before the alta;
     with it unset, behaviour is unchanged.

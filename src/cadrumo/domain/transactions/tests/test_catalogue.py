@@ -306,7 +306,7 @@ def _bare_transaction() -> Transaction:
 
 
 def test_set_classification_manual_path_defaults_confidence_to_one() -> None:
-    """Manual classification without an explicit confidence must persist 1.0 (#236)."""
+    """Manual classification without an explicit confidence must persist 1.0."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
 
@@ -324,7 +324,7 @@ def test_set_classification_manual_path_defaults_confidence_to_one() -> None:
 
 
 def test_set_classification_rule_path_preserves_explicit_confidence() -> None:
-    """Rule-based classification must round-trip the caller-supplied confidence (#236)."""
+    """Rule-based classification must round-trip the caller-supplied confidence."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
 
@@ -343,7 +343,7 @@ def test_set_classification_rule_path_preserves_explicit_confidence() -> None:
 
 
 def test_set_classification_rule_path_without_confidence_leaves_none() -> None:
-    """Non-manual classifiers must default confidence to None when the caller omits it (#236)."""
+    """Non-manual classifiers must default confidence to None when the caller omits it."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
 
@@ -361,7 +361,7 @@ def test_set_classification_rule_path_without_confidence_leaves_none() -> None:
 
 
 def test_set_classification_rejects_confidence_above_one() -> None:
-    """Out-of-range confidence must raise TransactionCatalogueError (#236)."""
+    """Out-of-range confidence must raise TransactionCatalogueError."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
 
@@ -377,7 +377,7 @@ def test_set_classification_rejects_confidence_above_one() -> None:
 
 
 def test_set_classification_propagates_confidence_into_history_on_reclassification() -> None:
-    """Prior confidence must land in the history entry when the decision changes (#236, #237)."""
+    """Prior confidence must land in the history entry when the decision changes."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
 
@@ -402,8 +402,7 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
     assert final.classification_confidence == Decimal("1.0")
     assert len(final.classification_history) == 2
     # Entry 0 snapshots the pre-first-classify bare state (NOT_YET_PROCESSED).
-    # Entry 1 snapshots the BUSINESS rule:vendor-map state with its confidence,
-    # which is the invariant #236 adds on top of #237.
+    # Entry 1 snapshots the BUSINESS rule:vendor-map state with its confidence.
     mid = final.classification_history[1]
     assert mid.business_classification is BusinessClassification.BUSINESS
     assert mid.classified_by == "rule:vendor-map"
@@ -411,12 +410,11 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
 
 
 def test_set_classification_accepts_llm_classifier_identity_shape() -> None:
-    """`classified_by="llm:<model>"` must be accepted by the validator (#236 LLM path).
+    """`classified_by="llm:<model>"` must be accepted by the validator.
 
-    Discovered by a live operator walkthrough: the pre-#236 validator only
-    permitted ``auto`` / ``manual`` / ``rule:<id>``, which rejected LLM
-    classifications outright. Without this shape, an LLM adapter could
-    never record its confidence against a transaction.
+    A validator that only permitted ``auto`` / ``manual`` / ``rule:<id>``
+    would reject LLM classifications outright. Without this shape, an LLM
+    adapter could never record its confidence against a transaction.
     """
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
@@ -470,7 +468,7 @@ def test_set_classification_normalises_classified_by_whitespace_for_idempotence(
 
 
 def test_confidence_survives_json_round_trip(tmp_path: Path) -> None:
-    """Saving then loading must preserve both current and historical confidence (#236)."""
+    """Saving then loading must preserve both current and historical confidence."""
     catalogue = TransactionCatalogue.from_transactions([_bare_transaction()])
     transaction = next(iter(catalogue))
     updated = set_classification(

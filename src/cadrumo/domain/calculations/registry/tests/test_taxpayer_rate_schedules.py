@@ -56,7 +56,7 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 
     # From 2024/2025 the autonomic escala formula wraps its lookup_bracket_by_ccaa
     # operators in the LIRPF art. 64/75 anualidades separate-escala if_then_else
-    # predicate (#532), so the dispatch table is no longer at the top level.
+    # predicate, so the dispatch table is no longer at the top level.
     def _first_ccaa_dispatch_table(expression: FormulaExpression) -> Mapping[str, ParameterId] | None:
         if expression.op == "lookup_bracket_by_ccaa":
             return expression.args[2].dispatch_table

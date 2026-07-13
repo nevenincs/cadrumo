@@ -2,8 +2,7 @@
 
 Re-exports :class:`TaxpayerProfile` and the associated enums from the
 private implementation module so callers can import from this stable surface.
-This is a documented Family-2 bridge (see ``import-centralization`` ADR
-ruling 4): a canonical non-``__init__`` public re-export module, safe to
+This is a canonical non-``__init__`` public re-export module, safe to
 import as a leaf without triggering :mod:`cadrumo.domain.deadlines`'s
 ``._profiles`` -> :mod:`cadrumo.core.setup_answers` circular-import edge that a
 top-level package import would risk. :func:`cadrumo.core.setup_answers._m`
