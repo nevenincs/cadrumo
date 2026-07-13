@@ -1,6 +1,6 @@
 [project]
 name = "cadrumo"
-version = "0.2.0"
+version = "0.2.1"
 description = "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -185,8 +185,8 @@ search = [
 # source verification is byte-identical to a full checkout. Reviewed data ships
 # as an artifact — never fetched at install or run time (product-packaging ADR).
 corpus-sources = [
-  "cadrumo-data-manuals==0.2.0",
-  "cadrumo-data-official==0.2.0",
+  "cadrumo-data-manuals==0.2.1",
+  "cadrumo-data-official==0.2.1",
 ]
 # Convenience aggregate: every optional integration at once. `corpus-sources`
 # is deliberately excluded until the two data companions are published on PyPI
