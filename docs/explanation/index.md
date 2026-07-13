@@ -1,129 +1,83 @@
-# How Cadrumo turns records into a filing-ready tax file
+# Understanding the AEAT pipeline
 
-This collection explains how Cadrumo turns local records into a filing-ready
-Spanish tax file and why each stage exists. Cadrumo is the product. AEAT is the
-*Agencia Estatal de Administración Tributaria*, the external Spanish tax
-authority. Authority names remain visible where they identify official forms,
-rules, evidence, credentials, or portals; they never name the application.
+This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday self-employed taxpayer in Spain - the *autónomo* who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
-Read this to understand how the pieces fit together. To install from source,
-use [source setup](../workstation-setup.md). To perform a task, follow the
-[how-to guides](../how-to/index.md), [Quickstart](../how-to/quickstart.md), or
-[Tutorial](../tutorials/index.md). Use the [Cadrumo
-reference](../reference/index.md) for exact names and lookup facts.
+Read this to understand how the pieces fit together. To actually perform a task, follow the [how-to guides](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the [lifecycle tutorials](../tutorials/index.md).
 
 ---
 
-## The permanent boundary
+## The one promise
 
-Cadrumo calculates, verifies, exports, and records filing history locally. It
-never submits a return, makes a payment, acknowledges a notification, or acts
-as AEAT. Optional live AEAT retrieval is separately invoked, authenticated, and
-read-only. When an export is ready, a human uploads it through an official AEAT
-channel. [Recording a filing, and why Cadrumo never files for
-you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
+The tool runs entirely on your own computer. It prepares your filing for you, but it never sends anything to the agency. When the file is ready, you upload it yourself through the agency's portal. [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
 
 ---
 
 ## The journey at a glance
 
-Records gain tax meaning before calculation. You review and verify each saved
-revision before export. After human upload, local recording and reconciliation
-preserve the filing history.
+Your data moves one way through the tool. Bank movements come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into a file you can upload, and finally get recorded once you've filed it yourself.
 
 ```mermaid
 graph TD
     A["Bank movements"] --> B["Sorted and made tax-ready"]
     B --> C["Readiness check"]
     C --> D["The numbered boxes of a form"]
-    D --> E["Reviewed and corrected"]
-    E --> F["Verified locally"]
-    F --> G["AEAT-compatible export"]
-    G --> H["Uploaded by a human"]
-    H --> I["Recorded and reconciled locally"]
+    D --> E["Edited and double-checked"]
+    E --> F["The file you upload"]
+    F --> G["Recorded after you file"]
 ```
 
-The stages are related but not interchangeable. Calculation derives a saved
-revision. Review inspects values and provenance. Verification applies local
-gates, and export produces an artifact. Human upload precedes local recording
-and reconciliation. Live command-line interface (CLI) help defines commands;
-the [CLI map](../cli/index.rst) organizes them.
+Each stop on this journey is owned in depth by one member of this cluster. The five sections that follow introduce them in order.
 
 ---
 
 ## From your records to the figures on the form
 
-Records need classifications, evidence, and applicable business shares before
-calculation. Registry rules then derive the modelo values. See [How your records
-become tax figures](from-records-to-figures.md).
+Your bank movements start as plain amounts and dates with no tax meaning. Before the tool can fill in a form, each movement is sorted into a tax category and, where a cost is partly personal, adjusted to the business share. A readiness check then confirms the records are complete for the period. From there the tool fills in each numbered box of the form, following the rules the agency publishes, and saves the result as a draft. See [How your records become tax figures](from-records-to-figures.md).
 
 ---
 
 ## Editing and double-checking a calculation
 
-Corrections create another saved calculation revision. Verification checks the
-selected revision for completeness and consistency. See [Editing and verifying
-a calculation](editing-and-verifying.md).
+A first draft is rarely the last word. You can adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and verifying a calculation](editing-and-verifying.md).
 
 ---
 
 ## When a form builds on earlier ones
 
-Some forms depend on earlier filed periods. Cadrumo carries recorded figures
-with their evidence and exposes missing dependencies. See [How filings build on
-earlier ones](building-on-earlier-filings.md).
+Some forms depend on figures you already filed - an annual summary that draws on the quarters, for example. The tool carries those earlier numbers forward so a later form stays consistent with what came before, and it tells you when an earlier filing isn't ready yet. See [How filings build on earlier ones](building-on-earlier-filings.md).
+
+For the annual Renta declaration specifically - the largest form and the one that gathers the whole year - a dedicated deep dive walks through where every value comes from and how to trace it, commands included: [Deep dive: how the Renta declaration is assembled](renta-and-bindings.md).
 
 ---
 
 ## Reviewing your numbers and producing the upload file
 
-After calculation, you review every figure and trace it back to its inputs.
-Corrections create a new revision, which you verify before export. Export still
-depends on its evidence gates and produces an AEAT-compatible file; it cannot
-guarantee portal acceptance. See [Reviewing your numbers and producing the
-upload file](reviewing-and-exporting.md).
+Before you commit to a form, you can review every figure and trace it back to the input that produced it. Once you're satisfied, the tool produces the official upload file - the exact layout the agency's portal accepts. See [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).
 
 ---
 
 ## Recording a filing, after you upload it yourself
 
-Cadrumo stops at the file. You upload it through an official AEAT channel, and
-AEAT hands you a {term}`justificante`. Back in Cadrumo, you record and reconcile
-the filing so local history stays accurate. See [Recording a filing, and why
-Cadrumo never files for you](recording-a-filing-and-the-boundary.md).
+The tool stops at the file. You upload it through the agency's portal, and the agency hands you a {term}`justificante`. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
-## What the workflow stages mean
+## What "verify" and "file" mean here
 
-The workflow verbs have narrow meanings inside Cadrumo:
+Two everyday words have narrow, local meanings in this tool:
 
-- **Calculate** creates a saved revision from the currently grounded inputs.
-- **Review** inspects values, sources, and unresolved items without claiming
-  official acceptance.
-- **Verify** applies local completeness and consistency rules and saves the
-  report.
-- **Export** writes a local artifact from an eligible revision.
-- **Record as filed** adds a local history marker after the human filing. It is
-  not submission.
-- **Reconcile** compares local filing identity with retained or read-only AEAT
-  evidence; it does not recompute the return.
+- **Verify** is a completeness and consistency check that runs on your own computer. It confirms the form holds together and nothing required is missing. It does not test the form against the agency's portal, and it's not a promise the agency will accept it.
+- **File** is a local "final" note in your own records. It marks a form as done so you don't change it by accident. It is not a submission - the tool never sends anything to the agency.
 
-For exact command paths and options, use the [command and stage
-lookup](../reference/commands-and-configuration.md).
+These two ideas are covered in depth in [Editing and verifying a calculation](editing-and-verifying.md) and [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
-## Related documentation
+## How to use this cluster
 
-Use the {doc}`glossary </_generated/glossary>` for terms and the [Cadrumo
-reference](../reference/index.md) for identity and scope. The generated Python
-application programming interface ([API](../api/cadrumo.rst)) lists public
-facades. [Troubleshooting](../how-to/troubleshooting.md) covers failures.
+Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the {doc}`glossary </_generated/glossary>` for any word you're unsure of.
 
-Report ordinary problems through the [public issue
-tracker](https://github.com/cadrumo/cadrumo/issues) with redacted output. Follow
-the [security policy](../../SECURITY.md) for credentials or vulnerabilities.
+When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step walkthrough of a full filing year, follow the [lifecycle tutorials](../tutorials/index.md); for the shortest single-filing path, the [Quickstart](../how-to/quickstart.md).
 
 ```{toctree}
 :hidden:
@@ -131,7 +85,7 @@ the [security policy](../../SECURITY.md) for credentials or vulnerabilities.
 from-records-to-figures
 editing-and-verifying
 building-on-earlier-filings
+renta-and-bindings
 reviewing-and-exporting
 recording-a-filing-and-the-boundary
-../reference/index
 ```

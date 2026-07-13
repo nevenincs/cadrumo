@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-06-30'
+modified: '2026-07-03'
 tier: L2
 related:
   - '[[2026-06-10-live-justificante-reconcile-adr]]'

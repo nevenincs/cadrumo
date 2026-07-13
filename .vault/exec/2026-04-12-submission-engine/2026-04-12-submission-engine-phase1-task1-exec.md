@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#submission-engine"
 date: 2026-04-12
-modified: '2026-07-08'
+modified: '2026-07-10'
 title: Submission Engine — Execution Record
 related:
   - "[[2026-04-12-submission-engine-plan]]"

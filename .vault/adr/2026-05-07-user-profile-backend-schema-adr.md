@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#user-profile-backend-schema'
 date: '2026-05-07'
-modified: '2026-06-30'
+modified: '2026-07-03'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-registry-dependencies-reference]]"

@@ -51,7 +51,8 @@ _LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 # ── Project metadata ────────────────────────────────────────────────────────
 project = str(_PYPROJECT["name"])
 author = ", ".join(author["name"] for author in _PYPROJECT.get("authors", []))
-copyright = f"2026, {author}"
+# Human-facing footer credit; the packaging author handle stays in pyproject.
+copyright = "2026, the cadrumo authors"
 release = str(_PYPROJECT["version"])
 version = release
 
@@ -254,6 +255,13 @@ html_theme = "furo"
 html_title = "Cadrumo - local Spanish tax preparation"
 html_short_title = "Cadrumo"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
+sitemap_url_scheme = "{link}"
+html_meta = {
+    "description": (
+        "Local tax engine with CLI, MCP, rules, skills, and scoped agents. "
+        "Deterministic calculations. LLM-assisted operation. No filing."
+    ),
+}
 html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]

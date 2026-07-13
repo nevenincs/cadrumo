@@ -1,11 +1,12 @@
-# Work with transactions
+# Work with Transactions
 
-Use this guide to bring your bank movements into Cadrumo so they can feed your
-tax calculations. Import your bank statement, add any missing transactions by
-hand, review and correct them, then hand them to classification before running
-a calculation.
+This page covers the ledger's transaction workflow: importing your bank
+statement, adding any missing transactions by hand, reviewing and correcting
+them, and checking readiness before a calculation. A line on a bank statement
+is just a date and an amount - the tax meaning is added later, in
+classification.
 
-Your bank records are not added automatically. Cadrumo imports only when you run
+Your bank records are not added automatically. aeat imports only when you run
 an import command. Tax calculations use the transactions you have saved under
 the active profile.
 
@@ -19,8 +20,8 @@ You need:
   encrypted storage in a session; for a non-interactive shell, set
   `CADRUMO_SECRET_PASSPHRASE`
 - a bank statement file or directory, unless you are adding transactions by hand
-- for home-office ratios, reviewed census facts in the profile; see
-  [Maintain Modelo 036 census facts in your profile](censo-update.md)
+- for AEAT census-derived home-office ratios, reviewed censo facts; see
+  [Link Modelo 036 census information](censo-update.md)
 
 Confirm the active profile before you write transaction data:
 
@@ -45,14 +46,14 @@ negative amount is an expense. Save this as `statement.csv` and import it with
 
 ## Preview an import
 
-Run a dry run first. A dry run shows what Cadrumo would import and saves no
+Run a dry run first. A dry run shows what `aeat` would import and saves no
 rows:
 
 ```bash
 aeat app ledger import ./statement.csv --provider auto --dry-run
 ```
 
-`--provider auto` asks Cadrumo to detect the statement format. The recognized
+`--provider auto` asks `aeat` to detect the statement format. The recognized
 providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`, `excel`, `n26`, `pdf`, and
 `pdf-n26`. If detection picks the wrong format, replace `auto` with the exact
 provider - run `aeat app ledger import --help` or see the
@@ -83,7 +84,7 @@ aeat app ledger import ./processed.csv --provider csv --verify --file ./statemen
 ```
 
 Use `--period` only when you intentionally want to label the import with a
-fiscal period. Leave it out. Cadrumo assigns the period from each transaction's
+fiscal period. Leave it out — aeat assigns the period from each transaction's
 date automatically.
 
 ## Add one transaction manually
@@ -281,7 +282,7 @@ movement into software and personal parts:
 aeat app ledger split <transaction-id> --child-amount 100.00 --child-description "Software business part" --child-amount 21.00 --child-description "Personal part" --reason "mixed receipt" --yes
 ```
 
-Cadrumo replaces the original transaction with two separate entries, one for
+aeat replaces the original transaction with two separate entries — one for
 each part. The split output prints one `Id de transacción hija` row per part,
 each carrying the short id and the full id; copy them. Classify each one
 separately:
@@ -298,7 +299,7 @@ split printed:
 aeat app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes
 ```
 
-You must include all the parts you split — Cadrumo will not let you re-merge only
+You must include all the parts you split — aeat will not let you re-merge only
 some of them.
 
 ## Remove, archive, stash, or reset ledger rows
@@ -412,8 +413,17 @@ Run preflight before calculating a modelo:
 aeat app ledger preflight --year 2026 --period 1T
 ```
 
-Preflight reports missing facts such as category, taxable base, IVA amount, IVA
-rate, currency, or proportionality reference. Fix the rows it names, then run
+Preflight looks at each record inside the period and flags anything still
+missing before any sums are trusted:
+
+- no business-versus-personal decision yet
+- no category on a deductible cost
+- no base amount, IVA amount, or IVA rate where one is expected
+- a mixed cost with no split reference attached
+- an amount in a currency the tool cannot convert to euros
+
+The check changes nothing; it names the rows that are not ready so you fix
+the raw material before trusting any total. Fix the rows it names, then run
 preflight again.
 
 Check the overall ledger state:
@@ -445,3 +455,4 @@ ledger is not ready, use
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)
+

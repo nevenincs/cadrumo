@@ -1,7 +1,8 @@
 # Upload your exported modelo at the AEAT portal
 
-This guide walks you through the handoff from a verified draft to a real filing
-at AEAT, as an ordered checklist. You prepare and export a {term}`modelo` with Cadrumo, but it never submits anything to
+This page covers the handoff from a verified draft to a real filing at AEAT,
+as an ordered checklist: export the file, upload it yourself at the portal,
+save the justificante, and record the filing locally. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
 AEAT. You upload the exported file at the AEAT portal yourself, signed with
 your own credentials. The `work file` command at the end records a local marker
 only; it does not and cannot file on your behalf.
@@ -28,12 +29,12 @@ You need:
   draft isn't verified yet, see [verification reports](verification-reports.md).
 - Your own AEAT portal credentials - a digital certificate or Cl@ve. These are
   your credentials for AEAT's website, separate from anything configured inside
-  Cadrumo. Its [AEAT authentication](authenticate-with-aeat.md) is for
+  `aeat`. The tool's [AEAT authentication](authenticate-with-aeat.md) is for
   read-only data pulls, not for filing.
 
-Cadrumo requires your master-key passphrase before every `aeat` command on this
-page. It prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` to run
-non-interactively. The command's messages are in Spanish.
+Every `aeat` command on this page needs your master-key passphrase. The tool
+prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The
+tool's messages are in Spanish.
 
 If you're new to the workflow as a whole, start with the
 [quickstart](quickstart.md).
@@ -64,11 +65,14 @@ The exported `.boe` file is a fixed-width text file in the official BOE
 export runs entirely on your machine and never contacts AEAT.
 
 The command prints the written file's path, its size in bytes, and its SHA-256
-checksum. Record the checksum - it identifies exactly which file you uploaded.
+checksum. Record the checksum - it is a fingerprint of the file's exact
+contents (change a single digit and the code changes completely), so if a
+question ever comes up about which version you filed, re-derive the checksum
+from the file on disk and compare: matching codes mean it is the same file.
 
 ## Step 3: upload the file at the AEAT portal yourself
 
-This step happens entirely outside Cadrumo, in your browser. Log in with your
+This step happens entirely outside `aeat`, in your browser. Log in with your
 own certificate or Cl@ve - do not expect the tool to do any part of this step
 for you.
 
@@ -91,7 +95,7 @@ record against your local one.
 
 ## Step 5: record the filing locally
 
-Only after the portal submission succeeds, record the filing in Cadrumo:
+Only after the portal submission succeeds, record the filing in `aeat`:
 
 ```bash
 aeat app modelo work file --modelo 303 --year 2026 --period 1T
@@ -127,9 +131,9 @@ mismatches, see [reconcile a filing](reconcile.md).
 
 With AEAT authentication configured, skip the manual download and let the
 tool fetch the receipt itself: `aeat app modelo reconcile pull` pulls the
-justificante from AEAT and reconciles in one step, and
-[Pull and keep your filing receipts](justificante-receipts.md) stores it as
-encrypted evidence in your profile.
+justificante from AEAT, stores it as encrypted evidence in your profile, and
+reconciles in one step — see
+[Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).
 
 ## If something goes wrong at the portal
 
@@ -139,7 +143,7 @@ succeeded at the portal.
 
 Instead:
 
-1. Fix the draft in Cadrumo.
+1. Fix the draft in `aeat`.
 2. Re-verify the calculation.
 3. Re-export the filing file.
 4. Retry the upload at the portal.

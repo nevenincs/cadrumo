@@ -106,3 +106,58 @@ def test_build_reports_the_real_signing_outcome_without_overclaiming(
             "[signed]" in captured.out
             or "[UNSIGNED (signer unavailable or no signing identity configured)]" in captured.out
         )
+
+
+def test_sign_invokes_the_mcpb_cli_when_a_signer_is_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """With a signer available, the build invokes `mcpb sign <bundle>` — the sign path is wired."""
+    # Simulate a present signer + a successful sign, and assert the build invokes
+    # `mcpb sign <bundle>` — proving the sign path runs when an identity exists.
+    import subprocess
+
+    bundle = tmp_path / "cadrumo.mcpb"
+    bundle.write_bytes(b"PK\x03\x04")
+    captured: dict[str, object] = {}
+
+    def _spy_run(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured["argv"] = argv
+        return subprocess.CompletedProcess(argv, returncode=0, stdout="signed", stderr="")
+
+    monkeypatch.setattr(BUILD.shutil, "which", lambda _name: "/usr/bin/mcpb")
+    monkeypatch.setattr(BUILD.subprocess, "run", _spy_run)
+
+    assert BUILD._sign(bundle) is True
+    assert captured["argv"] == ["mcpb", "sign", str(bundle)]
+
+
+def test_sign_returns_false_without_fabricating_when_the_signer_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A signer that exits non-zero (no identity) ships unsigned, never claims a signature."""
+    # Signer present but no configured identity: the CLI exits non-zero, and the
+    # build must ship unsigned (return False), never claim a signature.
+    import subprocess
+
+    bundle = tmp_path / "cadrumo.mcpb"
+    bundle.write_bytes(b"PK\x03\x04")
+
+    def _failing_run(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(argv, returncode=1, stdout="", stderr="no identity configured")
+
+    monkeypatch.setattr(BUILD.shutil, "which", lambda _name: "/usr/bin/mcpb")
+    monkeypatch.setattr(BUILD.subprocess, "run", _failing_run)
+
+    assert BUILD._sign(bundle) is False
+
+
+def test_manifest_version_matches_the_package_release() -> None:
+    """The bundle manifest must move in lockstep with the pyproject version.
+
+    The honesty review found the served plugin pinned a release two minors
+    behind source; this gate keeps at least the in-repo manifest honest.
+    """
+    import tomllib
+
+    repo_root = Path(__file__).resolve().parents[3]
+    manifest = json.loads((repo_root / "packaging" / "mcpb" / "manifest.json").read_text("utf-8"))
+    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text("utf-8"))
+    assert manifest["version"] == pyproject["project"]["version"]

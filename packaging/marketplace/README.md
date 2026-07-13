@@ -2,7 +2,7 @@
 
 The Claude marketplace repository content for **neve** — an ecosystem
 namespace for installable Claude plugins. It currently serves the
-[`cadrumo`](https://github.com/cadrumo/cadrumo) Spanish-tax assistant plugin;
+[`cadrumo`](https://github.com/nevenincs/cadrumo) Spanish-tax assistant plugin;
 future plugins are additional `plugins[]` entries under the same `neve`
 marketplace name.
 
