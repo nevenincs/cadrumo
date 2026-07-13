@@ -1,7 +1,7 @@
-"""Canonical CADRUMO product identity and AEAT authority vocabulary.
+"""Canonical Cadrumo product identity and AEAT authority vocabulary.
 
 This module is the single runtime authority for names that identify the
-application.  :data:`PRODUCT_IDENTITY` projects the accepted CADRUMO tuple into
+application.  :data:`PRODUCT_IDENTITY` projects the accepted Cadrumo tuple into
 an immutable, import-light value.  :class:`IdentityReferent` supplies the closed
 vocabulary used to distinguish that product identity from references to the
 external Spanish tax authority.
@@ -9,7 +9,7 @@ external Spanish tax authority.
 ``AEAT`` remains correct when it denotes the Agencia Estatal de Administracion
 Tributaria, its portals, protocols, credentials, official artefacts, legal
 provenance, or registry classifications.  It is not a former-product alias.
-Conversely, every product surface uses the CADRUMO values below; this module
+Conversely, every product surface uses the Cadrumo values below; this module
 provides no legacy spelling, compatibility lookup, or fallback.
 """
 
@@ -27,7 +27,7 @@ class IdentityReferent(StrEnum):
 
 
 class ProductIdentity(NamedTuple):
-    """Immutable names that jointly identify the CADRUMO product."""
+    """Immutable names that jointly identify the Cadrumo product."""
 
     display_name: str
     python_package: str
@@ -45,7 +45,7 @@ class ProductIdentity(NamedTuple):
 
 
 PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
-    display_name="CADRUMO",
+    display_name="Cadrumo",
     python_package="cadrumo",
     distribution="cadrumo",
     cli_executable="aeat",
