@@ -51,6 +51,8 @@ related:
   - '[[2026-06-15-docs-terminology-search-adr]]'
   - '[[2026-06-15-docs-terminology-search-audit]]'
   - '[[2026-06-15-docs-terminology-search-plan]]'
+  - '[[2026-07-13-docs-terminology-search-adr]]'
+  - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
 ---
 
@@ -64,6 +66,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 
 - `2026-06-10-docs-terminology-search-adr` - `docs-terminology-search` adr: `terminology handbook and precompiled docs search` | (**status:** `accepted`)
 - `2026-06-15-docs-terminology-search-adr` - `docs-terminology-search` adr: `glossary enrolment policy and committed-artifact boundary` | (**status:** `accepted`)
+- `2026-07-13-docs-terminology-search-adr` - `docs-terminology-search` adr: `next wave: upstream hook wiring, corpus coverage, and the rung-2 gate` | (**status:** `accepted`)
 
 ### audit
 
@@ -115,6 +118,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 
 - `2026-06-10-docs-terminology-search-plan` - `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 - `2026-06-15-docs-terminology-search-plan` - `docs-terminology-search` plan: grounding and glossary follow-up
+- `2026-07-13-docs-terminology-search-plan` - `docs-terminology-search` plan
 
 ### research
 
