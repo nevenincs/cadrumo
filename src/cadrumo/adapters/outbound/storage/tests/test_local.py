@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 from pathlib import Path
 from typing import TypedDict
 
@@ -62,6 +64,22 @@ def test_put_creates_namespace_and_writes_payload_atomically(provider: LocalFile
     assert target.name == "abcdef01--payroll-2026Q1.bin"
     sidecar = target.with_name(target.stem + ".meta.json")
     assert sidecar.is_file()
+
+
+def test_put_writes_payload_with_hardened_mode_and_no_tmp_leftover(provider: LocalFileSystemProvider) -> None:
+    """The object payload write is the atomic-write helper's hardened tier."""
+    payload = b"hardened-mode-check"
+    metadata = provider.put(
+        "ledger_transaction",
+        "0011223344556677",
+        payload,
+        content_hash=_hash(payload),
+        label="hardened-check",
+    )
+    target = Path(metadata.provider_object_id)
+    if os.name != "nt":
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    assert list(target.parent.glob("*.tmp")) == []
 
 
 def test_put_writes_sidecar_with_canonical_fields(provider: LocalFileSystemProvider) -> None:

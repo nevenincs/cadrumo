@@ -33,6 +33,7 @@ an integrity gate, not an authenticity gate; :mod:`._bundle_signing`
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import tempfile
@@ -538,10 +539,11 @@ def build_corpus_bundle(
     sidecar itself are excluded), builds the manifest, then writes a
     new zip archive containing the manifest under
     :data:`_BUNDLE_MANIFEST_MEMBER` plus every corpus file under its
-    POSIX-relative path. The write is atomic: the archive is built at a
-    temporary path in the same directory and renamed into place only on
-    success, so a failure mid-write never leaves a partial bundle at
-    ``output_path``.
+    POSIX-relative path. The archive is assembled fully in memory, then
+    persisted through :func:`~cadrumo.core.atomic_write.atomic_write_bytes`
+    (standard tier: tempfile sibling, fsync, :func:`os.replace`,
+    best-effort parent-directory fsync), so a failure mid-write never
+    leaves a partial bundle at ``output_path``.
 
     Args:
         corpus_root: The corpus directory to bundle.
@@ -566,18 +568,19 @@ def build_corpus_bundle(
         generated_at=generated_at,
     )
     resolved_output = output_path.resolve()
-    resolved_output.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = resolved_output.with_name(resolved_output.name + ".tmp")
-    tmp_path.unlink(missing_ok=True)
-    try:
-        with zipfile.ZipFile(tmp_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
-            for entry in manifest.entries:
-                archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
-        os.replace(tmp_path, resolved_output)
-    except BaseException:
-        tmp_path.unlink(missing_ok=True)
-        raise
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
+        for entry in manifest.entries:
+            archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
+    # Deferred import: core.atomic_write transitively imports core.locks,
+    # which configures logging at module level (mirroring the existing
+    # deferred `from ..locks import fsync_parent_dir` above in
+    # save_corpus_manifest) -- kept local to avoid widening this module's
+    # eager import surface.
+    from ..atomic_write import atomic_write_bytes
+
+    atomic_write_bytes(resolved_output, buffer.getvalue())
     _logger.info(
         "build_corpus_bundle: wrote %r bundle with %d files to %s",
         corpus_root_name,

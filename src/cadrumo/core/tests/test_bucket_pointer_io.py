@@ -44,7 +44,7 @@ def test_write_is_atomic_no_tmp_lingers(tmp_path: Path) -> None:
 
     target = pointer_path(tmp_path)
     assert target.is_file()
-    assert not target.with_suffix(target.suffix + ".tmp").exists()
+    assert list(target.parent.glob("*.tmp")) == []
 
 
 def test_overwrite_replaces_previous_pointer(tmp_path: Path) -> None:
