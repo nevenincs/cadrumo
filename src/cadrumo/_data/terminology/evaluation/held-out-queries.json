@@ -180,6 +180,115 @@
         "legal:ley-58-2003:da-18"
       ],
       "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "cuando presento el modelo 303",
+      "concept_id": "modelo-303",
+      "expected_record_ids": [
+        "concept:modelo-303"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "que es la prorrata especial",
+      "concept_id": "prorrata-especial",
+      "expected_record_ids": [
+        "concept:prorrata-especial"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "declarar bienes en el extranjero",
+      "concept_id": "modelo-720",
+      "expected_record_ids": [
+        "concept:modelo-720"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "modelo 130 para autonomos",
+      "concept_id": "modelo-130",
+      "expected_record_ids": [
+        "concept:modelo-130"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "resumen anual de retenciones de mis trabajadores",
+      "concept_id": "modelo-190",
+      "expected_record_ids": [
+        "concept:modelo-190"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "como funciona la ventanilla unica de iva",
+      "concept_id": "modelo-369",
+      "expected_record_ids": [
+        "concept:modelo-369"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "retenciones del alquiler de la oficina",
+      "concept_id": "modelo-115",
+      "expected_record_ids": [
+        "concept:modelo-115"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "impuesto de sociedades a pagar este ano",
+      "concept_id": "modelo-200",
+      "expected_record_ids": [
+        "concept:modelo-200"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "factura de la luz deducible",
+      "concept_id": "iva",
+      "expected_record_ids": [
+        "concept:iva"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "dar de alta un autonomo en hacienda",
+      "concept_id": "modelo-036",
+      "expected_record_ids": [
+        "concept:modelo-036"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "vender a francia sin iva",
+      "concept_id": "modelo-349",
+      "expected_record_ids": [
+        "concept:modelo-349",
+        "concept:iva-intra-community-supply"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
+    },
+    {
+      "query": "libro de ingresos y gastos",
+      "concept_id": "ledger",
+      "expected_record_ids": [
+        "concept:ledger"
+      ],
+      "source": "curated 2026-07-13 close-review remediation (SHARP-1): genuine out-of-sample palette phrasing, NOT a vocabulary row; expectation is the surface a taxpayer needs, independent of sweep output",
+      "kind": "out_of_sample"
     }
   ]
 }

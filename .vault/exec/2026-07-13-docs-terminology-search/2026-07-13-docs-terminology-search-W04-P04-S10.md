@@ -63,11 +63,16 @@ related:
 
 ## Outcome
 
-GATE DECISION: 20/20 held-out hits, miss-rate 0.0 at threshold 0.10 -
-rung-2 static term embeddings REMAIN DEFERRED, per measurement
-(miss-rate-post-widening.json). The retargeted sidecar-exclusion coverage
-gate passes; the dedup and staleness machinery is validated against the
-post-cutover contract.
+GATE DECISION (amended after the close honesty review): the initial
+20/20-hit, 0.0-miss measurement was tautological (all-vocabulary cases
+seeded with their own concept cards; audit SHARP-1). After remediation -
+out-of-sample case class, ratified 0.10 threshold, top-five bound, and a
+committed report writer - the honest measurement reads 32 cases, 26 hits,
+miss-rate 0.1875: the gate FIRES IMPLEMENT-RUNG-2
+(miss-rate-post-widening.json). Rung 2 is formally deferred into its own
+follow-up pipeline per ADR Update 2. The retargeted sidecar-exclusion
+coverage gate passes; the dedup and staleness machinery is validated
+against the post-cutover contract.
 
 ## Notes
 

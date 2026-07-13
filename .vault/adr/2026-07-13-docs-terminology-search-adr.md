@@ -154,6 +154,27 @@ prove the equal-or-superset sweep target set. The stale
 `dev/docs/preprocess/__init__.py` docstring is corrected to describe the
 dual role. Plan step W02.P02.S07 is re-scoped to match.
 
+
+## Update 2 (2026-07-13): the D3 gate, de-tautologized, fires implement-rung-2
+
+The close honesty review (the sibling audit) found the D3 gate could not
+fail as first built: the held-out set was all in-vocabulary with the
+concept's own seeded card as an expected id, the CI test pinned zero misses,
+the enforced threshold was 0.20 against the ratified 0.10, and the top-five
+bound was unimplemented. All four defects were remediated in-session: the
+held-out corpus now carries a gate-enforced out-of-sample class evaluated by
+palette-style lexical containment over the precompiled tiers, the module
+default equals the ratified 0.10, the top-five bound applies, and CI pins
+the adjudication's consistency, never its verdict. The remediated
+measurement over the widened mapping reads 32 cases / 26 hits / miss-rate
+0.1875 - ABOVE the line - so per this decision's own rule the gate fires
+IMPLEMENT-RUNG-2. Rung 2 is committed follow-up scope in its own pipeline
+(research, ADR, plan under a new feature), bounded by the 2026-06-10 ADR's
+rung-2 scoping (~1-3 MB int8 matrix, closed vocabulary, client-side cosine)
+and the licence-clean shipping rule; the offline measurement's stated caveat
+(precompiled tiers only, upper bound on shipped misses) is the first
+question that follow-up research must sharpen.
+
 ## Rationale
 
 The sibling research grounds every fact: the shipped pipeline inventory, the
