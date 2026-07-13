@@ -35,6 +35,10 @@ dependencies = [
   "argon2-cffi>=23.1.0,<26",
   # HTML parsing for status readers.
   "beautifulsoup4>=4.12,<5",
+  # Direct first-party imports (CadrumoTyperGroup command suggestions,
+  # wizard prompt types, click context helpers). typer>=0.26 no longer
+  # declares click, so the dependency must be explicit here.
+  "click>=8.1,<9",
   # PKCS#12 parsing for client-certificate auth.
   "cryptography>=47.0.0,<48",
   # XML parsing.
