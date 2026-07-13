@@ -357,7 +357,7 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrat
     _create_profile()
     bucket_id = _seed_m303_profile_facts()
     _seed_m303_ledger_and_wallet(bucket_id)
-    out = tmp_path / "modelo-303-1T.boe"
+    out = tmp_path / "modelo-303-2026-1T.boe"
 
     result = _invoke(
         [
