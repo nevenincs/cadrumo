@@ -1,42 +1,56 @@
-# How-to guides
+# Getting started
 
-This page covers the task guides, grouped the way a filing year actually
-runs: set up who the taxpayer is, see what is due and when, keep the ledger
-of what happened, and prepare each filing. Cadrumo is the product; the
-Agencia Estatal de Administración Tributaria (AEAT) is the external tax
-authority, and Cadrumo never submits a return or acts as AEAT - read
+This page routes you to the right guide. The guides are grouped the way a
+filing year actually runs: set up who the taxpayer is, see what is due and
+when, keep the ledger of what happened, and prepare each filing. Cadrumo is
+the product; the Agencia Estatal de Administración Tributaria (AEAT) is the
+external tax authority, and Cadrumo never submits a return or acts as AEAT -
+read
 [how records become filing-ready figures](../explanation/from-records-to-figures.md)
-for that boundary, then pick the question closest to what you are trying to
-do.
+for that boundary.
 
 Start with the [workstation setup](../workstation-setup.md) if the `aeat`
-command does not run, or the [quickstart](quickstart.md) for the shortest
-complete local workflow. For terminology, use the
-{doc}`glossary </_generated/glossary>`; for exact options and refusals, the
-[command-line reference](../cli/index.rst).
+command does not run. For a map of the whole journey from bank records to a
+filed modelo, read [the filing journey](onboarding.md). For terminology, use
+the {doc}`glossary </_generated/glossary>`; for exact options and refusals,
+the [command-line reference](../cli/index.rst).
 
 For an ordinary failure, follow [Diagnose and repair](troubleshooting.md) and
 open a [public issue](https://github.com/nevenincs/cadrumo/issues) with
 redacted output if the problem remains. Never publish taxpayer data,
 credentials, or a vulnerability in an issue.
 
-## Get started
+## Run through a filing year
 
-::::{grid} 1 2 2 2
+Two modelo-based run-throughs carry one example taxpayer through a complete
+filing year, command by command. Start here to see the whole workflow before
+running your own.
+
+::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Get Started
-:link: onboarding
+:::{grid-item-card} The income-tax year: Modelo 130 → 100
+:link: irpf-lifecycle
 :link-type: doc
 
-Map the whole journey from bank records to a filed modelo, stage by stage.
+Four quarterly Modelo 130 instalments, each building on the ones before it,
+closing with the annual Modelo 100 Renta declaration.
+:::
+
+:::{grid-item-card} The IVA year: Modelo 303 → 349 → 390
+:link: iva-lifecycle
+:link-type: doc
+
+Four quarterly Modelo 303 returns with the IVA credit carrying between them,
+a Modelo 349 branch, and the annual Modelo 390 summary.
 :::
 
 :::{grid-item-card} Quickstart
 :link: quickstart
 :link-type: doc
 
-Shortest path from profile and ledger to an exported modelo file.
+Shortest path from profile and ledger to an exported modelo file: one
+modelo, one period, copy-paste commands.
 :::
 
 ::::
@@ -305,8 +319,10 @@ records.
 ```{toctree}
 :hidden:
 
-onboarding
+irpf-lifecycle
+iva-lifecycle
 quickstart
+onboarding
 profile-setup
 authenticate-with-aeat
 censo-update

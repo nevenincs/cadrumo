@@ -37,7 +37,7 @@ That running record needs a true starting point. The first time you use the tool
 
 People make mistakes with an opening balance, so there's a correction path. You can fix a wrong opening balance after the fact. One guard protects you: the tool refuses to change the basis of a period you've already completed and marked as filed. Rewriting a figure that a filed return already relied on would quietly change that return after the fact, so the correction is refused and names the filing that's in the way. If you hit that, the figure is locked because a filing already used it - which is exactly when you'd want it locked.
 
-To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). The whole cycle - seeding the opening balance, a credit quarter, the carry, and the annual summary - is demonstrated live in [The IVA year](../tutorials/iva-lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
+To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). The whole cycle - seeding the opening balance, a credit quarter, the carry, and the annual summary - is demonstrated live in [The IVA year](../how-to/iva-lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
 
 ## The annual income-tax return pulls the year together
 

@@ -516,8 +516,7 @@ def _render_index_page(
     parts.append("* Open :doc:`config` for the local setup and maintenance commands.\n")
     parts.append("* Open :doc:`automation` for exit codes and the TTY/JSON output contract.\n")
     parts.append("* Open :doc:`schemas` for the JSON output-schema registry.\n")
-    parts.append("* Open :doc:`/how-to/index` for task-focused guides.\n")
-    parts.append("* Open :doc:`/tutorials/index` for step-by-step walkthroughs.\n\n")
+    parts.append("* Open :doc:`/how-to/index` for the getting-started run-throughs and task guides.\n\n")
 
     # toctree
     parts.append(".. toctree::\n")

@@ -39,6 +39,24 @@ Use this when you are new to Cadrumo and want the shortest path through profile,
 transactions, calculation, verification, and local export.
 :::
 
+:::{grid-item-card} Run through the income-tax year
+:link: how-to/irpf-lifecycle
+:link-type: doc
+:class-card: cadrumo-route-card
+
+Use this to follow a worked year of quarterly Modelo 130 instalments closing
+with the annual Modelo 100 Renta declaration, command by command.
+:::
+
+:::{grid-item-card} Run through the IVA year
+:link: how-to/iva-lifecycle
+:link-type: doc
+:class-card: cadrumo-route-card
+
+Use this to follow a worked year of quarterly Modelo 303 returns, the Modelo
+349 branch, and the annual Modelo 390 summary, command by command.
+:::
+
 :::{grid-item-card} Set up your taxpayer profile
 :link: how-to/profile-setup
 :link-type: doc
@@ -84,41 +102,32 @@ AEAT, reconcile - and the per-modelo recipes: 036, 100 (Renta), 130, 303,
 349, and 390.
 :::
 
-:::{grid-item-card} Follow a whole filing year
-:link: tutorials/index
-:link-type: doc
-:class-card: cadrumo-route-card
-
-Two guided lifecycle tutorials: the income-tax year (Modelo 130 into the
-annual Renta) and the IVA year (Modelo 303 into the annual 390).
-:::
-
 ::::
 
 ## Go straight to usage and reference
 
 Already know the workflow? Go straight to the reference you need:
 
-- the [how-to guide index](how-to/index.md) for task paths
+- the [Getting started page](how-to/index.md) for the modelo run-throughs
+  and task guides
 - the [command-line reference](cli/index.rst) for exact commands and options
 - [how it works](explanation/index.md) for how records become modelo figures,
   what checks run, and how official rule sources are tracked
 
 ```{toctree}
 :hidden:
-:caption: Where to start
 
 how-to/index
-tutorials/index
-runbooks/index
+workstation-setup
 ```
 
 ```{toctree}
 :hidden:
-:caption: Everyday use
+:caption: Reference
 
 cli/index
 reference/index
+_generated/glossary
 ```
 
 ```{toctree}
@@ -130,13 +139,18 @@ explanation/index
 
 ```{toctree}
 :hidden:
+:caption: Help
+
+runbooks/index
+disclaimer
+```
+
+```{toctree}
+:hidden:
 :caption: Project
 
 updates
-_generated/glossary
-disclaimer
 architecture/index
 authoring-guide
 api/cadrumo
-workstation-setup
 ```

@@ -11,11 +11,11 @@ does not submit them to the Agencia Estatal de Administración Tributaria
 (AEAT). At each filing you upload the exported file yourself through the
 AEAT portal.
 
-Meet the persona this tutorial follows: Ana García López, a consultant
+Meet the persona this run-through follows: Ana García López, a consultant
 (*consultoría*) who started her activity on January 1, 2026, invoices her
 clients with 21 percent IVA, and buys office material as she goes. The same
 persona and the same ledger continue in
-[The IVA year](iva-lifecycle.md) - the two tutorials describe the same
+[The IVA year](iva-lifecycle.md) - the two run-throughs describe the same
 business from two tax angles.
 
 The CLI prints help, labels, and messages in Spanish. This page keeps the
@@ -24,7 +24,7 @@ explanations in English and quotes real Spanish output where it shows one.
 ## Prerequisites
 
 You need a working `aeat` command (see the
-[Quickstart](../how-to/quickstart.md) for installation) and a master-key
+[Quickstart](quickstart.md) for installation) and a master-key
 passphrase. `aeat` encrypts your data with a passphrase and prompts for it
 the first time each command runs; to run without a prompt, set the
 `CADRUMO_SECRET_PASSPHRASE` environment variable first.
@@ -99,7 +99,7 @@ prints its path, size, and SHA-256 checksum - note the checksum; it
 identifies exactly which file you upload.
 
 Upload the file at the AEAT portal (the checklist is
-[Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md)),
+[Upload your exported modelo at the AEAT portal](file-at-aeat.md)),
 then record the filing locally while the presentation window is open:
 
 ```bash
@@ -236,8 +236,8 @@ rules that produced it.
 
 - [The IVA year](iva-lifecycle.md) - the same persona and ledger, through
   the IVA cycle.
-- [Prepare a Modelo 130 IRPF instalment](../how-to/modelo-130.md) - the
+- [Prepare a Modelo 130 IRPF instalment](modelo-130.md) - the
   standalone per-quarter recipe.
-- [Prepare the annual Modelo 100 Renta declaration](../how-to/modelo-100.md)
+- [Prepare the annual Modelo 100 Renta declaration](modelo-100.md)
 - [Deep dive: how the Renta declaration is assembled](../explanation/renta-and-bindings.md)
-- [Diagnose and repair your local setup](../how-to/troubleshooting.md)
+- [Diagnose and repair your local setup](troubleshooting.md)

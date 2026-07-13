@@ -209,7 +209,7 @@ Export the active ledger to a file:
 aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 ```
 
-The `--year` and `--period` filter keeps the export aligned with the tutorial
+The `--year` and `--period` filter keeps the export aligned with the run-through
 transaction dates. A transaction dated `2026-03-15` belongs in `--year 2026
 --period 1T`, so it appears in the command above. Use the annual token `0A`
 when a whole year is the review scope:

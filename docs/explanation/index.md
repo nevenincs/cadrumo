@@ -2,7 +2,7 @@
 
 This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday self-employed taxpayer in Spain - the *autónomo* who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
-Read this to understand how the pieces fit together. To actually perform a task, follow the [how-to guides](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the [lifecycle tutorials](../tutorials/index.md).
+Read this to understand how the pieces fit together. To actually perform a task, start from the [Getting started page](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the modelo run-throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the IVA year](../how-to/iva-lifecycle.md).
 
 ---
 
@@ -77,7 +77,7 @@ These two ideas are covered in depth in [Editing and verifying a calculation](ed
 
 Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the {doc}`glossary </_generated/glossary>` for any word you're unsure of.
 
-When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step walkthrough of a full filing year, follow the [lifecycle tutorials](../tutorials/index.md); for the shortest single-filing path, the [Quickstart](../how-to/quickstart.md).
+When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step run-through of a full filing year, follow [the income-tax year](../how-to/irpf-lifecycle.md) or [the IVA year](../how-to/iva-lifecycle.md); for the shortest single-filing path, the [Quickstart](../how-to/quickstart.md).
 
 ```{toctree}
 :hidden:
