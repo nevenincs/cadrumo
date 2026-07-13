@@ -296,3 +296,59 @@ class TestNumericJsonPathResolution:
         document = {"result": {"casilla_values": {"0": "zero-key"}}}
         assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
         assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
+
+
+class TestAmbientEnvNeutralisation:
+    def test_ambient_operator_env_never_reaches_frame_execution(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Operator machine state (ambient CADRUMO_*/AEAT_* env — Cl@ve
+        credentials, live opt-ins) is scrubbed for the whole sandbox scope, so
+        no frame execution can observe it; the storage-root isolation pin
+        survives, and everything is restored verbatim on exit."""
+        import os
+
+        from .._runner import sequence_sandbox
+
+        monkeypatch.setenv("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R")
+        monkeypatch.setenv("AEAT_FAKE_SESSION_TOKEN", "fake-session-token-do-not-leak")
+
+        observed: dict[str, str | None] = {}
+        with sequence_sandbox(sequence_id="env-scrub-probe", sandbox_root=tmp_path / "scope"):
+            observed["clave"] = os.environ.get("CADRUMO_CLAVE_MOVIL_DNI_NIE")
+            observed["aeat"] = os.environ.get("AEAT_FAKE_SESSION_TOKEN")
+            observed["pin"] = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+
+        # Inside the scope: operator vars gone, the isolation pin intact.
+        assert observed["clave"] is None
+        assert observed["aeat"] is None
+        assert observed["pin"] is not None
+        # Outside the scope: restored verbatim.
+        assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
+        assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
+
+    def test_frames_execute_green_and_leak_free_under_ambient_operator_env(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A real sequence executes normally with fake operator env exported,
+        and no frame's captured output carries the operator value — the
+        end-to-end proof that docs builds never observe machine state."""
+        secret = "fake-operator-dni-99999999R"  # noqa: S105 - synthetic test value
+        monkeypatch.setenv("CADRUMO_CLAVE_MOVIL_DNI_NIE", secret)
+
+        sequence = _result_sequence(
+            "aeat --format json config profile list\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n',
+            sequence_id="runner-env-scrub",
+        )
+        transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
+
+        for frame in transcript.frames:
+            assert frame.exit_code == 0
+            assert secret not in frame.output
+            assert secret not in frame.stderr
