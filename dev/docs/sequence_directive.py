@@ -75,8 +75,9 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
     from cadrumo.core.observability import canonicalise, mask_document
 
     if golden_frame.envelope is not None:
-        masked = canonicalise(mask_document(golden_frame.envelope))
-        return {"format": "json", "body": json.dumps(masked, indent=2, ensure_ascii=False)}
+        # canonicalise already renders the key-sorted, indented JSON string;
+        # dumping it again would double-encode the display into `\n`-escape noise.
+        return {"format": "json", "body": canonicalise(mask_document(golden_frame.envelope))}
     if golden_frame.text:
         return {"format": "text", "body": golden_frame.text}
     return {"format": "empty", "body": ""}
