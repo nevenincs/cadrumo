@@ -118,6 +118,20 @@ documents and the verification marketplace proofs cite the literal plugin id
 `aeat@...` as factual transcripts; those surfaces belong to the rename and
 packaging campaigns respectively.
 
+### cadrumo-as-executable-prose | medium | nine prose references named the executable `cadrumo`
+
+Operator follow-up surfaced the inverse conflation the first sweep missed:
+eight how-to pages carried nine prose references to "the `cadrumo` command" /
+"run `cadrumo`" — an over-correction from the rename sweep, since the binding
+`cadrumo-cli-executable` ADR fixes the human executable as exactly `aeat`
+(`cadrumo` is the product, package, and import root only). Every fenced
+example already invoked `aeat` correctly; only the prose noun drifted.
+Resolution: all nine references corrected to the `aeat` command, verified by
+a residual sweep (zero occurrences of `cadrumo` as command/executable/binary
+remain) and the documented-command conformance gate (60 passed). The
+`README.md` heading "Run Cadrumo from source" stands: it names the product,
+and its examples invoke `aeat`.
+
 ## Recommendations
 
 All three recommendations were engineered to closure on 2026-07-13 under
