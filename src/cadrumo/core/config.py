@@ -107,9 +107,10 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
     # Regenerable, evictable caches (the cache/ namespace, which also holds the
-    # corpus-text and registry-pickle caches).
+    # registry-pickle cache).
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_status_cache_dir": "cache/status-cache",
+    "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
     # Durable generated outputs.
     "cadrumo_storage_backup_dir": "backups",
     "cadrumo_submissions_dir": "submissions",
@@ -496,6 +497,15 @@ class Settings(AeatIntegrationSettings):
     aeat_iva_catalogue_root: Path = Field(
         default_factory=lambda: bundled_path("registry", "aeat", "iva", "catalogues"),
         description="Root directory for the hand-reviewed IVA taxonomy catalogue",
+    )
+
+    # ── Registry corpus-text validation cache ───────────────────────────────
+    cadrumo_corpus_text_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "cache" / "corpus-text",
+        description=(
+            "Directory for the registry corpus source-text validation cache "
+            "(normalised text keyed by content fingerprint)"
+        ),
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
@@ -1190,6 +1200,7 @@ class Settings(AeatIntegrationSettings):
         "aeat_manuals_root",
         "aeat_normatives_root",
         "aeat_iva_catalogue_root",
+        "cadrumo_corpus_text_cache_dir",
         "aeat_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
