@@ -209,6 +209,11 @@ class Settings(AeatIntegrationSettings):
             env_parse_none_str=dotenv_settings.env_parse_none_str,
             env_parse_enums=dotenv_settings.env_parse_enums,
         )
+        if _operator_dotenv_suppressed.get():
+            # A sandboxed scope behaves as if no operator dotenv existed
+            # (see suppress_operator_dotenv); ambient env vars are the
+            # scope owner's concern, so only the dotenv source is dropped.
+            return init_settings, env_settings, file_secret_settings
         return init_settings, env_settings, filtered_dotenv_settings, file_secret_settings
 
     # ── Token Storage ───────────────────────────────────────────────────────
@@ -1260,6 +1265,36 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
     "_settings_override",
     default=None,
 )
+
+_operator_dotenv_suppressed: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "_operator_dotenv_suppressed",
+    default=False,
+)
+"""Scope flag consulted by :meth:`Settings.settings_customise_sources`: when
+set, every :class:`Settings` construction skips the operator dotenv source."""
+
+
+@contextmanager
+def suppress_operator_dotenv() -> Iterator[None]:
+    """Construct every :class:`Settings` in scope as if no operator dotenv existed.
+
+    Sandboxed execution scopes (the docs cli-sequence sandbox, hermetic test
+    environments) must never observe operator machine state. The sandbox
+    scrubs the ambient environment itself; this seam closes the second
+    channel — the project-root ``env/.env`` dotenv, which pydantic-settings
+    loads via an ABSOLUTE path regardless of the working directory. The flag
+    is honoured inside :meth:`Settings.settings_customise_sources`, so every
+    construction path (:func:`load_settings` and direct ``Settings()``
+    instantiation) drops the dotenv source for the scope's duration.
+    Context-var scoped and DEFAULT-OFF: production behaviour is unchanged,
+    exactly like the :func:`~cadrumo.core.time.frozen_clock` seam this
+    mirrors.
+    """
+    token = _operator_dotenv_suppressed.set(True)
+    try:
+        yield
+    finally:
+        _operator_dotenv_suppressed.reset(token)
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:

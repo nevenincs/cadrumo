@@ -352,3 +352,43 @@ class TestAmbientEnvNeutralisation:
             assert frame.exit_code == 0
             assert secret not in frame.output
             assert secret not in frame.stderr
+
+    def test_operator_dotenv_never_reaches_frame_execution(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The second operator-state channel: the project dotenv (env/.env,
+        loaded by pydantic-settings via an ABSOLUTE path) must not reach
+        sandboxed settings. The REAL dotenv source is redirected to a poisoned
+        temp file; the channel is proven live outside the sandbox
+        (anti-vacuity), then the sandbox scope resolves settings as if no
+        dotenv existed, and a real sequence run never carries the value."""
+        from cadrumo.core.config import Settings, load_settings
+
+        from .._runner import sequence_sandbox
+
+        poison_marker = str(tmp_path / "poisoned-operator-runs")
+        poisoned_dotenv = tmp_path / "poisoned.env"
+        poisoned_dotenv.write_text(f"CADRUMO_RUNS_DIR={poison_marker}\n", encoding="utf-8")
+        monkeypatch.setitem(Settings.model_config, "env_file", poisoned_dotenv)
+
+        # Anti-vacuity: outside a sandbox, the poisoned dotenv IS a live source.
+        assert str(load_settings().cadrumo_runs_dir) == poison_marker
+
+        with sequence_sandbox(sequence_id="dotenv-probe", sandbox_root=tmp_path / "scope"):
+            assert str(load_settings().cadrumo_runs_dir) != poison_marker
+
+        # Restored outside the scope: the dotenv source reads again.
+        assert str(load_settings().cadrumo_runs_dir) == poison_marker
+
+        # End to end: a real sequence executes green and no frame observes it.
+        sequence = _result_sequence(
+            "@result aeat --format json config profile list\n" + '@expect status == "success"\n',
+            sequence_id="runner-dotenv-scrub",
+        )
+        transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
+        for frame in transcript.frames:
+            assert frame.exit_code == 0
+            assert poison_marker not in frame.output
+            assert poison_marker not in frame.stderr
