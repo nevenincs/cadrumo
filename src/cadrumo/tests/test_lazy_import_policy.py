@@ -379,12 +379,14 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: frozenset(
         {
+            ImportEdge("core._bucket_pointer_io", "core.atomic_write"),
             ImportEdge("core._bucket_pointer_io", "core.config"),
             ImportEdge("core._bucket_pointer_io", "core.errors"),
             ImportEdge("core._config_storage_route", "core.config"),
             ImportEdge("core.config", "core"),
             ImportEdge("core.config", "core.external_constants"),
             ImportEdge("core.config", "core.i18n"),
+            ImportEdge("core.corpus_manifest", "core.atomic_write"),
             ImportEdge("core.corpus_manifest", "core.locks"),
             # Cycle-backed package/facade deferrals retained after the D9 follow-up lift:
             # `_bundle_signing` needs functions defined in `core.corpus_manifest.__init__`,
@@ -786,7 +788,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
-    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,  # +2 state-root refusal deferrals (logging, output_rendering)
+    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 39,  # +2 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest)
     UnsanctionedClass.APPLICATION_DEFERRAL: 520,  # +3 censo vivienda-ratio profile deferrals (was 517: +14 readiness relation-prefill)
 }
 
@@ -797,7 +799,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 471  # +5 product-rename state-boundary deferrals; was 466 (net -18 after structural lifts; 4 cycle-backed edges declared).
+_ALLOWLIST_EDGE_CEILING: int = 473  # +2 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest); was 471.
 
 
 def _cadrumo_relative(dotted: str) -> str:

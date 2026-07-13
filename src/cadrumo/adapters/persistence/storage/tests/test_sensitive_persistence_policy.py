@@ -57,6 +57,21 @@ _FORBIDDEN_TEXT = (
 _SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
 _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_bytes",
+        "tempfile.NamedTemporaryFile",
+    ): "shared standard-tier atomic-write primitive; writes caller-supplied bytes only, no data of its own",
+    (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_hardened_bytes",
+        "os.open",
+    ): "shared hardened-tier atomic-write primitive; mirrors the master-key O_EXCL/0o600 pattern",
+    (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_hardened_bytes",
+        "os.write",
+    ): "shared hardened-tier atomic-write primitive; writes caller-supplied bytes through a private fd",
+    (
         "src/cadrumo/adapters/persistence/storage/bucket/_output_language_hint.py",
         "_atomic_write_text",
         "open",
@@ -247,16 +262,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py",
-        "write_manifest",
-        "open",
-    ): "bucket directory manifest is plaintext TOML by design; carries no NIF/financial data",
-    (
-        "src/cadrumo/core/_bucket_pointer_io.py",
-        "write_pointer",
-        "tmp.write_text",
-    ): "active-profile pointer file is plaintext TOML by design; carries only the bucket id",
-    (
         "src/cadrumo/application/user_profile/_profile_repository.py",
         "_restore_pointer_text",
         "target.write_text",
@@ -266,11 +271,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "restore_active_profile_pointer",
         "target.write_text",
     ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) when a cold-start create span fails",
-    (
-        "src/cadrumo/adapters/outbound/storage/_local.py",
-        "put",
-        "tmp_path.write_bytes",
-    ): "local-filesystem storage adapter writes caller-supplied bytes through atomic temp-then-rename",
     (
         "src/cadrumo/adapters/outbound/storage/_local.py",
         "put",
