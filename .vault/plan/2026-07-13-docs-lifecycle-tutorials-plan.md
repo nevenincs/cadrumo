@@ -135,7 +135,7 @@ Author the IRPF-year and IVA-year on-rails tutorials over one shared persona and
 
 - [x] `P04.S12` - Author tutorials/irpf-lifecycle.md: setup, four quarterly Modelo 130 stages with cumulative carry, annual Modelo 100 close via cross-period fold-in, file and reconcile; `absorb the existing tutorials/index.md walkthrough as the first-quarter stage; `docs/tutorials/irpf-lifecycle.md docs/tutorials/index.md`.
 - [x] `P04.S13` - Author tutorials/iva-lifecycle.md: setup with optional prorrata, quarterly Modelo 303 stages with IVA-wallet seed and credit carry, optional Modelo 349 branch, annual Modelo 390 reconciliation, file and reconcile; `same persona and continuous dataset as the IRPF tutorial; `docs/tutorials/iva-lifecycle.md`.
-- [ ] `P04.S14` - Convert tutorials/index.md into a short index introducing the two lifecycle tutorials and the shared persona; `docs/tutorials/index.md`.
+- [x] `P04.S14` - Convert tutorials/index.md into a short index introducing the two lifecycle tutorials and the shared persona; `docs/tutorials/index.md`.
 
 ### Phase `P05` - Restructure indexes, run gates, close with honesty review
 
