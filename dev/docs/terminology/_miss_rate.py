@@ -1,6 +1,6 @@
 """Held-out miss-rate evaluation for the compiled terminology relevance map.
 
-The evaluator is the ADR D6 deferral gate for a possible rung-2 static
+The evaluator is the deferral gate for a possible rung-2 static
 term-embedding matrix. It measures the committed, laundered mapping exactly as
 the offline docs build will consume it. A high miss-rate only justifies rung-2
 work when the input sweep is not already marked degraded; a saturated RAG run

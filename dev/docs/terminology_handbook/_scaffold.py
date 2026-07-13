@@ -1,8 +1,8 @@
 """The msgmerge three-outcome scaffold engine for the Terminology Handbook.
 
 ``scaffold`` reconciles the curated Handbook against the live enrolment
-sources under the GNU gettext ``msgmerge`` contract (ADR D3): every run
-has exactly three outcomes per concept --
+sources under the GNU gettext ``msgmerge`` contract: every run has
+exactly three outcomes per concept --
 
 * PRESERVE -- a concept already in the Handbook whose enrolment source
   still exists keeps ALL curated fields verbatim. Nothing the human
@@ -25,10 +25,10 @@ has exactly three outcomes per concept --
 
 The engine first computes a :class:`ScaffoldPlan` (a structured diff) and
 only then applies it. The plan IS the seam the sibling ``--check`` drift
-gate (W02.P05.S12) consumes: ``--check`` computes the plan and reports it
-without writing, exactly as the S10 validation seam exposed its diff.
-Determinism: stable ordering, canonical TOML serialisation, idempotent
-(a second run with no source change produces an empty plan).
+gate consumes: ``--check`` computes the plan and reports it without
+writing, exactly as the validation seam exposes its diff. Determinism:
+stable ordering, canonical TOML serialisation, idempotent (a second run
+with no source change produces an empty plan).
 """
 
 from __future__ import annotations

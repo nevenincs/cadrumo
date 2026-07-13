@@ -1,4 +1,4 @@
-"""Gates over the committed term-target relevance data (ADR D6 / D8).
+"""Gates over the committed term-target relevance data.
 
 The relevance data (``src/cadrumo/_data/terminology/relevance/relevance.json``) is
 the precompiled RAG output that SHIPS so CI and the docs build -- which have no

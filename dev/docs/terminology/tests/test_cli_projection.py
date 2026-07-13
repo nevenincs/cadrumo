@@ -1,4 +1,4 @@
-"""Real-behaviour conformance for the CLI-surface search-record emitter (ADR D4).
+"""Real-behaviour conformance for the CLI-surface search-record emitter.
 
 The emitter walks the LIVE materialised ``aeat`` command tree (the same
 ``typer.main.get_command(app)`` house walk the CLI reference generator uses)

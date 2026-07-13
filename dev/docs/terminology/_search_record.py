@@ -1,7 +1,7 @@
 """Strict search-record schema for the compiled docs search index.
 
-Per ADR D4 the compiled index unifies four record kinds (concept cards,
-casilla projections, CLI surface records, doc pages). This module owns
+The compiled index unifies four record kinds (concept cards, casilla
+projections, CLI surface records, doc pages). This module owns
 the shared base every kind extends -- a strict, frozen pydantic model
 carrying the ``kind`` discriminator, the four-language localised
 descriptions, and the legal grounding -- plus the casilla projection
@@ -34,7 +34,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SearchRecordKind(StrEnum):
-    """The four record kinds the compiled search index unifies (ADR D4)."""
+    """The four record kinds the compiled search index unifies."""
 
     CONCEPT = "concept"
     CASILLA = "casilla"
@@ -66,7 +66,7 @@ class SearchRecordBase(BaseModel):
 
 
 class CasillaSearchRecord(SearchRecordBase):
-    """A machine-projected search record for one AEAT casilla (ADR D4).
+    """A machine-projected search record for one AEAT casilla.
 
     Built from registry snapshots, never hand-curated. Identity is
     ``(modelo, casilla_id)``, deduplicated across revisions. ``number`` and

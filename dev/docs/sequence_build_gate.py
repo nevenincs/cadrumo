@@ -1,4 +1,4 @@
-"""The Sphinx ``builder-inited`` build-gate surface for cli-sequences (ADR D6).
+"""The Sphinx ``builder-inited`` build-gate surface for cli-sequences.
 
 This is the docs-build half of the two-surfaces-one-engine gate: the Sphinx
 build runs the engine's check mode from a ``builder-inited`` hook so a golden
