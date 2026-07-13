@@ -53,6 +53,14 @@ Shortest path from profile and ledger to an exported modelo file: one
 modelo, one period, copy-paste commands.
 :::
 
+:::{grid-item-card} Your first quarterly filing
+:link: first-quarterly-filing
+:link-type: doc
+
+First-time walk-through of one Modelo 130 quarter: import a statement,
+classify the rows, prepare the draft, and confirm it verifies.
+:::
+
 ::::
 
 ## Your profile
