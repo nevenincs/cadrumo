@@ -28,8 +28,8 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     } <= commands
 
 
-def test_workflow_evidence_and_product_identity_are_cadrumo_only() -> None:
-    """Product-facing labels and uploaded evidence use no former product identity."""
+def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> None:
+    """Labels use Cadrumo, artifacts use cadrumo, and commands keep the aeat boundary."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     job = document["jobs"]["cadrumo-packaging-smoke"]
     upload = next(step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@"))
@@ -38,13 +38,21 @@ def test_workflow_evidence_and_product_identity_are_cadrumo_only() -> None:
     assert upload["with"]["name"] == "cadrumo-packaging-smoke-evidence"
     assert upload["with"]["path"] == "var/packaging-smoke/**/packaging-smoke-manifest.json"
 
-    product_surface = "\n".join(
+    label_surface = "\n".join(
         (
             document["name"],
             job["name"],
             *(step.get("name", "") for step in job["steps"]),
-            *(step.get("run", "") for step in job["steps"]),
             upload["with"]["name"],
         ),
     ).casefold()
-    assert "aeat" not in product_surface
+    assert "aeat" not in label_surface
+
+    commands = tuple(step["run"] for step in job["steps"] if "run" in step)
+    assert not any(
+        command.startswith(("cadrumo ", "uv run cadrumo ", "uv run --no-sync cadrumo ")) for command in commands
+    )
+
+    workflow_source = _WORKFLOW.read_text(encoding="utf-8").casefold()
+    for former_product_form in ("import aeat", "from aeat", "python -m aeat", "src/aeat", "packaging/aeat", "aeat-cli"):
+        assert former_product_form not in workflow_source

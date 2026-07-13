@@ -50,19 +50,33 @@ related:
 
 ## Description
 
-- Rename the packaging-smoke workflow, job, step labels, and uploaded evidence artifact to Cadrumo.
+- Rename the packaging-smoke workflow, job, and step labels to sentence-prose
+  Cadrumo, and uploaded evidence artifacts to lowercase machine `cadrumo`.
 - Retain the host/core lane and explicitly execute the split-distribution and clean-Docker gates.
-- Add a real-workflow structural test for canonical commands, evidence paths, and product identity.
-- Reject the former executable and product spelling from the workflow surface.
+- Add a real-workflow structural test for canonical recipes, evidence paths,
+  product identity, and the binding human-executable boundary.
+- Reject former package/import identity and `cadrumo` as a human command without
+  banning the valid `aeat` executable from command contexts.
 
 ## Outcome
 
-The GitHub workflow now presents one Cadrumo packaging-smoke identity and runs
-the canonical Linux/core, split-distribution, and Docker recipes. YAML parsing,
-recipe dry-runs, Ruff, and six focused workflow/Docker structural tests pass.
+The GitHub workflow presents sentence-prose `Cadrumo Packaging Smoke` labels,
+uses machine job and evidence names `cadrumo-packaging-smoke` and
+`cadrumo-packaging-smoke-evidence`, and runs the canonical Linux/core,
+split-distribution, and Docker recipes. Those recipes own the installed-product
+probes and invoke the sole human CLI as `aeat`; the workflow does not introduce
+a direct `cadrumo` human command.
+
+The structural contract separates labels from commands: `aeat` remains invalid
+as product branding or a former package/import root, but remains valid as the
+binding executable in a command context. Former `import aeat`, `python -m aeat`,
+`src/aeat`, packaging paths, and former distributions are rejected explicitly.
 
 ## Notes
 
 The focused real split-wheel installation test exceeds the bounded S57
 structural-test window and was not needed to validate workflow wiring; its
 canonical recipe is retained and resolves successfully through `just --dry-run`.
+
+YAML parsing, the Linux/core, split-distribution, and Docker recipe dry-runs,
+six focused workflow/Docker structural tests, Ruff, formatting, and Ty pass.
