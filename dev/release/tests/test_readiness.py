@@ -31,7 +31,14 @@ def _write_project(project_file: Path, *, name: str, version: str) -> None:
 
 
 def _write_pyprojects(root: Path, version: str) -> None:
-    _write_project(root / "pyproject.toml", name="cadrumo", version=version)
+    root_project = root / "pyproject.toml"
+    _write_project(root_project, name="cadrumo", version=version)
+    root_project.write_text(
+        root_project.read_text(encoding="utf-8")
+        + "[project.optional-dependencies]\n"
+        + f'corpus-sources = ["cadrumo-data-manuals=={version}", "cadrumo-data-official=={version}"]\n',
+        encoding="utf-8",
+    )
     _write_project(
         root / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
         name="cadrumo-data-manuals",
@@ -66,8 +73,8 @@ def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     return root
 
 
-def test_version_surfaces_agree_passes_when_all_three_match(tmp_path: Path) -> None:
-    """A repo where pyproject, __init__, and manifest agree passes as blocking-clean."""
+def test_version_surfaces_agree_passes_when_all_release_authorities_match(tmp_path: Path) -> None:
+    """A repo where every version authority and companion pin agrees passes."""
     root = _make_repo_root(tmp_path, version="2.0.0")
 
     check = readiness.check_version_surfaces_agree(root)
@@ -123,6 +130,40 @@ def test_version_surfaces_agree_fails_on_drift(tmp_path: Path) -> None:
     assert check.passed is False
     assert "1.9.9" in check.detail
     assert "2.0.0" in check.detail
+
+
+def test_version_surfaces_agree_fails_on_companion_project_drift(tmp_path: Path) -> None:
+    """A companion project version that drifts from the release cohort blocks release."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    _write_project(
+        root / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
+        name="cadrumo-data-manuals",
+        version="1.9.9",
+    )
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "cadrumo_data_manuals" in check.detail
+    assert "1.9.9" in check.detail
+
+
+def test_version_surfaces_agree_fails_on_nonmatching_exact_pin(tmp_path: Path) -> None:
+    """An exact companion pin that does not name the cohort version blocks release."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    project = root / "pyproject.toml"
+    project.write_text(
+        project.read_text(encoding="utf-8").replace(
+            "cadrumo-data-official==2.0.0",
+            "cadrumo-data-official==1.9.9",
+        ),
+        encoding="utf-8",
+    )
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "cadrumo-data-official==1.9.9" in check.detail
 
 
 def test_changelog_ready_fails_when_missing(tmp_path: Path) -> None:
