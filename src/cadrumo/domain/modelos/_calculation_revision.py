@@ -503,23 +503,23 @@ class CalculationRevision(BaseModel):
     # an independent identity axis).
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
     # Immutable content-addressed snapshot of the ledger state this revision was
-    # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
+    # computed from. Captured at
     # verify/file time over ``source_transaction_ids``; ``None`` for unsnapshotted
     # revisions and for borradores not yet snapshotted. Deliberately NOT threaded
     # into ``derive_calculation_revision_id`` so the content-addressed id is
     # unaffected. A non-ledger modelo carries an empty-but-valid snapshot.
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None
-    # Bundled fact basis behind a ledger-derived revision (per the
-    # modelo-export-evidence-parity ADR): the typed contributing-row evidence
-    # projections plus operator manual fact-basis entries, pegged to the
+    # Bundled fact basis behind a ledger-derived revision: the typed
+    # contributing-row evidence projections plus operator manual
+    # fact-basis entries, pegged to the
     # snapshot's ``snapshot_fingerprint``. Where ``ledger_filing_snapshot`` proves
     # *whether* the ledger drifted, this carries *what the ledger said* so the
     # fact basis can be reconstituted and exported as filing evidence. Captured at
     # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
     # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
-    # Resolver-level source-mesh provenance (per the calculation-source-connectivity
-    # ADR, Phase 9): the typed resolver→source-object→fingerprint trace projected
+    # Resolver-level source-mesh provenance: the typed
+    # resolver→source-object→fingerprint trace projected
     # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist
     # time. Where ``observations`` carry the per-casilla legal/source grounding,
     # this carries WHICH resolver mesh and WHICH upstream source objects produced

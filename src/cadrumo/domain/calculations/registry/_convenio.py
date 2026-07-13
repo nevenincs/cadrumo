@@ -111,9 +111,8 @@ class ConvenioTreaty(RegistryModel):
 
     Authored one file per treaty under ``registry/aeat/treaties/`` and keyed by
     the counterpart ``country_code`` (ISO 3166-1 alpha-2). The optional
-    permanent-establishment / employment-income surfaces named by issue #537 are
-    deliberately not modelled in the first slice; the schema leaves room for them
-    without foreclosing.
+    permanent-establishment / employment-income surfaces are deliberately not
+    modelled yet; the schema leaves room for them without foreclosing.
     """
 
     country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")

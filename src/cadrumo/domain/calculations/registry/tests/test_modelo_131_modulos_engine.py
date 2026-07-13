@@ -314,9 +314,8 @@ class TestPanPasteleria6441EstimacionObjetiva:
         # 1 personal no asalariado, 30 m2 superficie del local de
         # fabricación, 2 (100 dm2) superficie del horno. This activity has 7
         # signos; a 4-slot engine would silently drop módulo 7 (superficie
-        # del horno, 629,86 €/unit) — the exact over-truncation risk the
-        # modelo-131-eo-modulos-engine decision record rejected (the option
-        # that capped the engine at 4 slots).
+        # del horno, 629,86 €/unit), so the engine supports all 7 módulo
+        # slots rather than capping at 4.
         previo, _minorado, _modulos, _actividad = _run_modulos_engine(
             "644.1",
             modulo_1=Decimal("1"),

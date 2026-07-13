@@ -58,8 +58,7 @@ class UseType(StrEnum):
             operator mark VIVIENDA_ARRENDADA) so the reducción-gate
             and casilla 0065 clave routing can refuse the reducción
             unambiguously. Authority: Ley 35/2006 IRPF Art. 23.2
-            (second paragraph) + R9-ROBERTO testimonial under
-            cross-domain-continuity plan W02.P11.S363.
+            (second paragraph).
     """
 
     VIVIENDA_ARRENDADA = "VIVIENDA_ARRENDADA"

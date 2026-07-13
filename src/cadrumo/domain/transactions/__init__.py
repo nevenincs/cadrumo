@@ -68,10 +68,6 @@ See Also:
         ``invoice_id`` and ``purchase_invoice_evidence_id``.
     :mod:`~domain.usage_ratios`
         Proportionality profiles referenced by ledger rows before aggregation.
-    ``2026-06-10-ledger-amount-direction-adr``
-        Decision making amount magnitude absolute and direction authoritative.
-    ``2026-06-10-ledger-modelo-crossref-adr``
-        Decision for the rebuildable transaction participation index.
 """
 
 from __future__ import annotations

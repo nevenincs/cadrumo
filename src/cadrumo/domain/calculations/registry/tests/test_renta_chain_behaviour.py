@@ -416,15 +416,14 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
 def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
     """Individual pension-plan contributions (casilla 0463) reduce the base imponible general.
 
-    Guards issue #574: an individual's own contributions to a personal
-    previsión-social system (plan de pensiones individual) give an Art. 51/52
-    LIRPF reducción to the base imponible general. Casilla 0463 ("Aportaciones
-    individuales y contribuciones empresariales ...", semantic_role
+    An individual's own contributions to a personal previsión-social system
+    (plan de pensiones individual) give an Art. 51/52 LIRPF reducción to the
+    base imponible general. Casilla 0463 ("Aportaciones individuales y
+    contribuciones empresariales ...", semantic_role
     ``irpf_red_prevision_social_aportaciones_individuales``) is the individual
     input box. The existing chain tests exercise the plan-de-empleo worker box
-    (0426) and the #545 employer box (0427); this locks the individual-side
-    (0463) path the issue names explicitly, flowing 0463 → 0467 → 0468 → base
-    liquidable general 0500.
+    (0426) and the employer box (0427); this locks the individual-side (0463)
+    path, flowing 0463 → 0467 → 0468 → base liquidable general 0500.
 
     Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1 —
     "Reducciones por aportaciones a sistemas de previsión social"): an
@@ -458,13 +457,12 @@ def test_individual_aportaciones_prevision_social_reduce_base_general() -> None:
 def test_plan_de_empleo_employer_contribution_reduces_base_general() -> None:
     """Employer plan-de-empleo contributions (casilla 0427) reduce the base imponible general.
 
-    Guards issue #545: the Art. 52 LIRPF reducción for employer pension-plan
-    (plan de empleo) contributions must flow through the previsión-social chain
-    and reduce the base liquidable general. Casilla 0427 ("Contribuciones
-    empresariales a sistemas de previsión social, excepto ... seguros colectivos
-    de dependencia") is the employer-side input box; the existing chain tests
-    exercise the worker-side box (0426), so this locks the 0427 path the issue
-    names explicitly.
+    The Art. 52 LIRPF reducción for employer pension-plan (plan de empleo)
+    contributions must flow through the previsión-social chain and reduce
+    the base liquidable general. Casilla 0427 ("Contribuciones empresariales
+    a sistemas de previsión social, excepto ... seguros colectivos de
+    dependencia") is the employer-side input box; the existing chain tests
+    exercise the worker-side box (0426), so this locks the 0427 path.
 
     Oracle derivation (Art. 51/52 LIRPF, AEAT Renta 2025 Manual Parte 1):
       trabajo rendimientos (0003) = 42,000 → 0019 (otros gastos, art. 19.2.f)

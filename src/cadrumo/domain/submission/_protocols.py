@@ -132,7 +132,7 @@ class ModeloDraftStatus(StrEnum):
     The preflight engine consumes only :attr:`APROBADO` and
     :attr:`APROBACION_CADUCADA` on its happy path; the broader filing /
     submission stack consumes the full lifecycle. Member names and
-    values mirror the AEAT Sede labels per ADR A7.2.
+    values mirror the AEAT Sede labels.
 
     Attributes:
         BORRADOR: New draft, not yet validated.

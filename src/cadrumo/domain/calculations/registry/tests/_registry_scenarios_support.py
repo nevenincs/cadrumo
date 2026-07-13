@@ -158,7 +158,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-2025-modelo-111-retenciones-periodicas": Decimal("4.00"),
             "renta-2025-modelo-123-retenciones-periodicas": Decimal("5.00"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
-            # aggregate is zero (modelo-100-minimo-descendientes-engine ADR).
+            # aggregate is zero.
             "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
         },

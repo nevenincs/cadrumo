@@ -5,11 +5,11 @@ The cross-package raw-registry-orchestration check this module carried
 ``build_snapshot`` / ``load_registry_tree``) is superseded by the
 project-wide ratcheting import-hygiene gate,
 ``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
-``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
-the ``import-centralization`` decision record's Ruling 8. Its former allowlist
+``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``). Its
+former allowlist
 (``_authority.py``, both package ``__init__.py`` files,
 ``legal_parameters.py``, ``_imputacion_parameters.py``,
-``_recargo_equivalencia.py``) is empty in practice at supersession time: none
+``_recargo_equivalencia.py``) is now empty in practice: none
 of those sites still import the raw orchestration symbols cross-package, and
 the general gate now enforces the boundary for every package, not just the
 registry. The checks below (positive facade-content assertions and the

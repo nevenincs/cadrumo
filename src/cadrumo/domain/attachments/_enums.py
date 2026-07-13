@@ -66,8 +66,7 @@ class DocumentLinkSource(StrEnum):
     The full :class:`AttachmentSource` taxonomy also includes ``LOCAL_FILE`` and
     ``INLINE``, which name byte-bearing captures that are not link sources. The
     ``aeat app ledger doclink --source`` option advertises exactly this narrowed
-    set so the choices it shows match the sources its handler accepts (audit
-    ``2026-06-10-cli-operator-surface-audit`` F5(c), decision D5). Each member's
+    set so the choices it shows match the sources its handler accepts. Each member's
     value equals the matching :class:`AttachmentSource` member's value, so
     :meth:`to_attachment_source` is a total mapping.
 

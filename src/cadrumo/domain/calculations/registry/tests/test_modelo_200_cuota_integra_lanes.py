@@ -467,14 +467,14 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
 
 
 # ---------------------------------------------------------------------
-# Task #183 regression: tributacion_estado_porcentaje binding path
+# Regression: tributacion_estado_porcentaje binding path
 # ---------------------------------------------------------------------
 
 
 def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_supplied() -> None:
     """DP200014B:00599 is non-zero when tributacion_estado_porcentaje = 100.
 
-    Root cause of Task #183: the formula
+    The formula
     ``modelo-200-cuota-ejercicio-a-ingresar-devolver`` multiplies the
     cuota by ``(binding / 100)`` where the binding is
     ``modelo-200-2024-profile-tributacion-estado-porcentaje``. Without
@@ -531,9 +531,9 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
 
     Without ``modelo-200-2024-profile-tributacion-estado-porcentaje``
     the formula cannot evaluate — the engine raises rather than
-    silently returning zero.  This is the correct fail-loud behaviour
-    after the Task #183 fix: operators see a missing-binding error
-    instead of a borrador with 00599 = 0.
+    silently returning zero.  This is the correct fail-loud behaviour:
+    operators see a missing-binding error instead of a borrador with
+    00599 = 0.
     """
     from .. import RegistryValidationError
 
