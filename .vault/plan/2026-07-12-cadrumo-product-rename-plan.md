@@ -68,10 +68,10 @@ Create and test the single CADRUMO identity authority.
 - [x] `W01.P02.S87` - Remediate the S86 naming-authority review and retire stale all-caps repair lanes; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/adr/2026-07-13-product-rename-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vault/audit/2026-07-13-cadrumo-product-rename-s86-restored-authority-audit.md; S86, S87, S90, and S93 execution records; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S90` - Retire the historical exact-all-caps repair lane under the contextual casing authority; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S90 execution record`.
 - [x] `W01.P02.S93` - Retire the historical all-caps regression lane under the contextual casing authority; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S93 execution record`.
-- [x] `W01.P02.S94` - Correct S93 review-invalidated descendant plan closures without changing implementation evidence; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S94 execution record`.
+- [x] `W01.P02.S94` - Correct S87 cross-carried S37 closure chronology and accepted Stage-A history; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S87, S37, S94, S96, and S97 execution records`.
 - [x] `W01.P02.S95` - Repair the 9cb authority regression while preserving reciprocal ADR supersession; `.vault/adr/2026-07-12-cadrumo-product-rename-adr.md; .vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S95 execution record`.
-- [x] `W01.P02.S96` - Supersede the conflicting July 13 rename ADR in the binding authority graph; `.vault/adr/2026-07-13-product-rename-adr.md; .vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S96 execution record`.
-- [x] `W01.P02.S97` - Clarify the superseded July 13 ADR as historical evidence only; `.vault/adr/2026-07-13-product-rename-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S97 execution record`.
+- [x] `W01.P02.S96` - Document the whole-ADR supersession attempt later corrected to preserve the accepted Stage-A role; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S96 execution record`.
+- [x] `W01.P02.S97` - Document the historical-only note later corrected to preserve the accepted Stage-A role; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S97 execution record`.
 
 ## Wave `W02` - move runtime and persistence at one breaking boundary
 

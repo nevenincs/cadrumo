@@ -97,3 +97,14 @@ the identity authority and its test. Plan validation passed with the known
 quoting warnings; schema, frontmatter, and placeholder checks passed; and the
 provider sync dry-run was unchanged. Feature-wide checks remain red on the
 repository's pre-existing structural drift rather than an S87-owned failure.
+
+## Bookkeeping correction from S94
+
+Commit `03cd792be3` also cross-carried the S37 checkbox from open to closed in
+the shared plan even though S37 was outside S87's declared scope and its owning
+implementation had not yet committed. That closure was premature and was not
+S87 evidence. The direct child commit `a4e56dcf83` subsequently delivered the
+S37 implementation and refreshed execution evidence, and independent audit
+`46363217dd` passed that installed-wheel behavior. S37 is therefore correctly
+closed now, but its checkbox chronology begins in the S87 commit and is
+disclosed rather than reassigned retroactively.
