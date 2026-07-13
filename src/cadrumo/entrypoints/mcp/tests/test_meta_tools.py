@@ -198,8 +198,10 @@ def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> 
     for tool in tools:
         assert tool.inputSchema["type"] == "object"
     product_descriptions = [tool.description for tool in tools if tool.name in {"search", "execute", "describe"}]
-    assert all("Cadrumo command" in description for description in product_descriptions)
-    assert all("aeat command" not in description.lower() for description in product_descriptions)
+    for description in product_descriptions:
+        assert description is not None
+        assert "Cadrumo command" in description
+        assert "aeat command" not in description.lower()
 
 
 def test_server_uses_the_canonical_cadrumo_identity() -> None:
