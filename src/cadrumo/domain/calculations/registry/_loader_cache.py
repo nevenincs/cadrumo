@@ -154,3 +154,12 @@ def registry_disk_cache_dir() -> Path:
     if _running_under_pytest():
         return Path(tempfile.gettempdir())
     return load_settings().cadrumo_local_storage_root / "cache" / "registry"
+
+
+def registry_disk_cache_max_entries() -> int:
+    """Return the retained-pickle ceiling for registry disk-cache eviction.
+
+    Reads :attr:`~core.config.Settings.cadrumo_registry_disk_cache_max_entries`;
+    the loader prunes the oldest pickles beyond this count after each write.
+    """
+    return load_settings().cadrumo_registry_disk_cache_max_entries
