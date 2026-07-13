@@ -109,22 +109,16 @@ verification-heavy, so it rides its own campaign.
 - All version history and provenance is preserved; the repository rename
   redirects old clones and links.
 
-## Status note: Stage B narrowed by operator decision (2026-07-13)
+## Status note: superseded historical decision (2026-07-13)
 
-This ADR remains accepted for its executed Stage-A scope: distribution names,
-the `nevenincs/cadrumo` repository, install hints, publish workflow,
-marketplace/marketing/legal references. Two elements are corrected by the
-binding `2026-07-12-cadrumo-cli-executable-adr` (see its status note):
+This ADR is superseded and retained only as a historical record. Its prior
+Stage-A decision and the distribution, repository, install, publication,
+marketplace, marketing, and legal work executed from it remain evidence of
+what occurred; they do not make this document an active naming authority.
 
-- The Stage-B console-script rename (`aeat`/`aeat-mcp` to
-  `cadrumo`/`cadrumo-mcp`) is STRUCK: the operator ruled the sole human
-  executable is exactly `aeat`. The related Consequences bullet ("Until
-  Stage B, `pip install cadrumo` still installs console scripts named
-  `aeat`...") is not a seam awaiting removal; it is the permanent contract.
-- The constraint "the Python import package stays `aeat`" was overtaken by
-  the executed hard cut to the `cadrumo` import root, which the binding ADR
-  sanctions; no `aeat` import surface exists.
-
-Any remaining Stage-B work (MCP tool prefix, envelope identifiers, locale
-citations) is governed by the binding cli-executable ADR's identity boundary,
-not by this document.
+The accepted `2026-07-12-cadrumo-cli-executable-adr` is the active authority
+for the product display, Python import root, human CLI executable, and related
+machine identities. It supersedes this document directly. Accordingly, the
+Stage-B console-script proposal and the `aeat` import-package constraint in
+the historical decision above are not active requirements. Any remaining work
+must follow the binding CLI ADR rather than this superseded document.
