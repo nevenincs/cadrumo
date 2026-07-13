@@ -60,11 +60,11 @@ from tempfile import TemporaryDirectory
 from typing import Literal
 
 from click.testing import Result
-from pydantic import BaseModel, Field, JsonValue
+from pydantic import BaseModel, Field, JsonValue, SecretStr
 
 from cadrumo.adapters.persistence.storage import dispose_engine
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.config import load_settings, override_settings, suppress_operator_dotenv
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli
@@ -361,10 +361,12 @@ def _neutralized_ambient_env() -> Iterator[None]:
     Settings resolution inside the sandbox re-reads the process environment on
     every :class:`Settings` instantiation, so any operator-exported variable
     would otherwise flow straight into sandboxed frame executions. Everything
-    removed is restored verbatim on exit. NOTE the residual channel this scrub
-    deliberately does not touch: the project-root ``env/.env`` dotenv is loaded
-    by pydantic-settings via an ABSOLUTE path and can also carry operator
-    values; neutralizing it is a settings-surface decision, not a sandbox one.
+    removed is restored verbatim on exit. BOTH operator-state channels are now
+    closed for the sandbox scope: this scrub covers the ambient environment,
+    and the settings-level :func:`~cadrumo.core.config.suppress_operator_dotenv`
+    seam (engaged alongside it in :func:`sequence_sandbox`) drops the
+    project-root ``env/.env`` dotenv source, which pydantic-settings loads via
+    an ABSOLUTE path regardless of the working directory.
     """
     removed: dict[str, str] = {}
     for key in list(os.environ):
@@ -423,7 +425,19 @@ def sequence_sandbox(
     dispose_engine()
     with (
         _neutralized_ambient_env(),
-        override_settings(cadrumo_output_language="en"),
+        suppress_operator_dotenv(),
+        # The synthetic auth posture is sandbox fixture state, like the
+        # injected profile: the modelo workflow's preflight deliberately
+        # requires a READY auth provider even for local verify purposes, and
+        # the Cl@ve Móvil readiness probe is purely local (it classifies the
+        # configured identity and never contacts AEAT). The identity is the
+        # sandbox profile's own synthetic tax id; live frames are refused
+        # up front regardless, so this posture can never reach the sede.
+        override_settings(
+            cadrumo_output_language="en",
+            cadrumo_auth_provider="clave_movil",
+            cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
+        ),
         isolated_profile_storage_root(tmp_path=sandbox_root) as storage_root,
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
