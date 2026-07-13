@@ -60,7 +60,7 @@ Establish path ownership and explicit product-versus-authority classification be
 
 Create and test the single CADRUMO identity authority.
 
-- [ ] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
+- [x] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
 - [x] `W01.P02.S06` - Expose the public product identity through the package facade; `src/cadrumo/core/__init__.py`.
 - [ ] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S08` - Codify that CADRUMO names the product and AEAT names the authority; `.vaultspec/rules/cadrumo-product-authority-names.md`.
