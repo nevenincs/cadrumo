@@ -2,19 +2,65 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from ...core.i18n import extract_placeholders
+from ...core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
 from ...tests.cli_runner import invoke_typer_app
 from ..cli import app
-from ..manager import LocaleManager
+from ..manager import _STALE_CLI_EXECUTABLE_RE, LocaleManager, _flatten_leaf_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _LOCALES = ("ca", "en", "es", "hu")
+_PROSE_NAME_RE = re.compile(r"\bCadrumo\b")
+_DISPLAY_NAME_RE = re.compile(r"\bCADRUMO\b")
+_IDENTITY_HEADING_KEYS = {
+    "cli.operator_surface.help.root.heading",
+    "cli.root.landing.headline",
+}
+_PROSE_KEYS = {
+    "ca": {
+        "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
+        "adapters.google.oauth_flow.errors.profile_state_unresolved",
+        "adapters.google.profile_binding.errors.no_active_profile",
+        "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "cli.config.custody.confirm_new_passphrase_prompt",
+        "cli.config.custody.new_passphrase_prompt",
+        "cli.config.google.profile_help",
+        "cli.ledger.add.system_state_not_assignable",
+        "cli.ledger.classify.system_state_not_assignable",
+    },
+    "en": {
+        "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
+        "adapters.google.oauth_flow.errors.profile_state_unresolved",
+        "adapters.google.profile_binding.errors.no_active_profile",
+        "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "cli.config.custody.confirm_new_passphrase_prompt",
+        "cli.config.custody.new_passphrase_prompt",
+        "cli.config.google.profile_help",
+    },
+    "es": {
+        "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "cli.ledger.add.system_state_not_assignable",
+        "cli.ledger.classify.system_state_not_assignable",
+    },
+    "hu": {
+        "adapters.outbound.storage.google_drive.errors.former_vault_folder",
+        "cli.ledger.add.system_state_not_assignable",
+        "cli.ledger.classify.system_state_not_assignable",
+    },
+}
+_CLI_KEYS = {
+    "ca": {"mcp.call.timeout", "mcp.elicitation.refusal.no_channel"},
+    "en": {"mcp.elicitation.refusal.no_channel"},
+    "es": {"mcp.call.timeout", "mcp.elicitation.refusal.no_channel"},
+    "hu": {"mcp.elicitation.refusal.no_channel"},
+}
 
 
 def _manager_for(tmp_path: Path, values: Mapping[str, str]) -> LocaleManager:
@@ -183,6 +229,35 @@ def test_committed_catalogues_pass_production_audit() -> None:
     result = manager.audit()
 
     assert result.ok, result
+
+
+def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
+    """Shipped locale values preserve prose, identity, CLI, machine, and authority referents."""
+    locales_dir = Path(__file__).resolve().parents[1]
+    manager = LocaleManager(src_dir=locales_dir.parent, locales_dir=locales_dir)
+
+    assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
+    assert PRODUCT_IDENTITY.display_name == "CADRUMO"
+    assert PRODUCT_IDENTITY.cli_executable == "aeat"
+    assert PRODUCT_IDENTITY.python_package == PRODUCT_IDENTITY.distribution == "cadrumo"
+    assert PRODUCT_IDENTITY.mcp_server == PRODUCT_IDENTITY.mcp_resource_scheme == "cadrumo"
+    assert PRODUCT_IDENTITY.mcp_executable == "cadrumo-mcp"
+    assert PRODUCT_IDENTITY.environment_prefix == "CADRUMO_"
+    assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
+
+    for locale in _LOCALES:
+        leaves = _flatten_leaf_values(manager.load_locale(locales_dir / f"{locale}.yml"))
+        assert {key for key, value in leaves.items() if _PROSE_NAME_RE.search(value)} == _PROSE_KEYS[locale]
+        assert {key for key, value in leaves.items() if _DISPLAY_NAME_RE.search(value)} == _IDENTITY_HEADING_KEYS
+        assert all(PRODUCT_IDENTITY.cli_executable in leaves[key] for key in _CLI_KEYS[locale])
+        assert all(PRODUCT_IDENTITY.display_name not in leaves[key] for key in _CLI_KEYS[locale])
+        assert not {key for key, value in leaves.items() if _STALE_CLI_EXECUTABLE_RE.search(value)}
+        assert any(PRODUCT_IDENTITY.environment_prefix in value for value in leaves.values())
+        assert any("cadrumo-vault/" in value for value in leaves.values())
+        assert any(AEAT_AUTHORITY_SHORT_NAME in value for value in leaves.values())
+
+    audit = manager.audit()
+    assert audit.ok, audit
 
 
 def test_real_audit_cli_rejects_placeholder_drift(tmp_path: Path) -> None:
