@@ -25,15 +25,26 @@
         "aeat",
         "app",
         "ledger",
-        "add",
-        "--date",
-        "2026-02-10",
-        "--amount",
-        "1210",
-        "--direction",
-        "INCOMING",
-        "--description",
-        "servicios de consultoria",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
         "--classification",
         "BUSINESS",
         "--taxable-base",
@@ -49,22 +60,15 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\t073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4\nDate\t2026-02-10\nAmount\t1210\nDescription\tservicios de consultoria\nReview status\treviewed\n"
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
     },
     {
       "argv": [
         "aeat",
         "app",
         "ledger",
-        "add",
-        "--date",
-        "2026-02-11",
-        "--amount",
-        "605",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "material de oficina",
+        "classify",
+        "e3eeac5e",
         "--classification",
         "BUSINESS",
         "--category-id",
@@ -82,7 +86,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\td3e1d48325f65cfb95baf7c8ca371c43e4ee558cc8d5abcf244524ef07651d77\nDate\t2026-02-11\nAmount\t605\nDescription\tmaterial de oficina\nReview status\treviewed\n"
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
     },
     {
       "argv": [
@@ -171,7 +175,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "8b510df0787ba5483f82b20b96a8a0de632205b674dd8491624f2ee067dfac59"
+          "value": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769"
         }
       ],
       "envelope": {
@@ -190,7 +194,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "8b510df0787ba5483f82b20b96a8a0de632205b674dd8491624f2ee067dfac59",
+          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -835,7 +839,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8b510df0787ba5483f82b20b96a8a0de632205b674dd8491624f2ee067dfac59 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8b510df0787ba5483f82b20b96a8a0de632205b674dd8491624f2ee067dfac59`.",
+          "saved_confirmation": "Saved as draft calculation revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -861,7 +865,7 @@
         "modelo",
         "work",
         "verify",
-        "8b510df0787ba5483f82b20b96a8a0de632205b674dd8491624f2ee067dfac59"
+        "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769"
       ],
       "captures": [],
       "envelope": {
@@ -888,9 +892,9 @@
               "severity": "warning",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "output VAT transaction '073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+            "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
             "severity": "warning",
-            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4 --attachment-id ATTACHMENT_ID`, then rerun verification."
+            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification."
           },
           {
             "code": "modelo.work.verify.finding.advisory",
@@ -900,9 +904,9 @@
               "severity": "warning",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "deductible VAT transaction 'd3e1d48325f65cfb95baf7c8ca371c43e4ee558cc8d5abcf244524ef07651d77' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+            "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
             "severity": "warning",
-            "suggestion": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach d3e1d48325f65cfb95baf7c8ca371c43e4ee558cc8d5abcf244524ef07651d77 --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification."
+            "suggestion": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification."
           },
           {
             "code": "modelo.work.verify.next_action_granted",
@@ -913,7 +917,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "8b510df0787ba5483f82b20b96a8a0de632205b674dd8491624f2ee067dfac59",
+          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
           "completeness_status": "complete",
           "findings": [
             {
@@ -939,8 +943,8 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "output VAT transaction '073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 073ca6311b819599af1ea456ebd7626e7e8b28fbee800bd83459c5055030bae4 --attachment-id ATTACHMENT_ID`, then rerun verification.",
+              "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -955,8 +959,8 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "deductible VAT transaction 'd3e1d48325f65cfb95baf7c8ca371c43e4ee558cc8d5abcf244524ef07651d77' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach d3e1d48325f65cfb95baf7c8ca371c43e4ee558cc8d5abcf244524ef07651d77 --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
+              "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -969,7 +973,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "77cccb078ebdab2d5a65cc44cba8d1e3537344e7e88578c9925e30e7c2b2c66e",
+          "verification_report_id": "705d3e7620a401d0ec4bf5248909999586355ee888ce174b9ab9caff3ae3ee39",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
