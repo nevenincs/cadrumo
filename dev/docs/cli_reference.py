@@ -303,6 +303,19 @@ def _rst_field_list(items: list[tuple[str, str]]) -> str:
 
 
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Parameter at this annotation site under the TYPE_CHECKING import guard.
+def _is_click_argument(param: click.Parameter) -> bool:  # type: ignore[name-defined]
+    """Return whether ``param`` is a positional argument.
+
+    Discriminates on Click's ``param_type_name`` rather than ``isinstance`` on
+    ``click.Argument``: Typer wraps positionals in ``TyperArgument``, which is
+    NOT a ``click.Argument`` subclass, so an ``isinstance`` check silently
+    mislabels every Typer positional as an option in the rendered reference.
+    """
+    return getattr(param, "param_type_name", "") == "argument"
+
+
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[name-defined]
     """Render a RST definition-list for command parameters.
@@ -323,7 +336,7 @@ def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[n
         opts = getattr(param, "opts", None) or [param.name]
         opt_str = ", ".join(f"``{o}``" for o in opts)
         required = getattr(param, "required", False)
-        kind = "Argument" if isinstance(param, click.Argument) else "Option"
+        kind = "Argument" if _is_click_argument(param) else "Option"
         help_text = (param.help or "").strip() or "No description."
         req_label = "required" if required else "optional"
         sections.append(f"{opt_str}\n   *{kind}, {req_label}.* {help_text}\n")

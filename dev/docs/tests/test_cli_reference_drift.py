@@ -16,12 +16,45 @@ import difflib
 from pathlib import Path
 
 import pytest
+import typer
+from typer.main import get_command
 
-from dev.docs.cli_reference import generate_cli_reference_in_subprocess
+from dev.docs.cli_reference import _render_param_table, generate_cli_reference_in_subprocess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 _DOCS_ROOT = Path("docs")
+
+
+def test_typer_positional_renders_as_argument() -> None:
+    """A real Typer positional renders as an ``Argument``, never an ``Option``.
+
+    Regression guard for the ``TyperArgument``-is-not-``click.Argument`` trap:
+    Typer wraps a ``typer.Argument`` positional in a ``TyperArgument`` that does
+    not subclass ``click.Argument``, so the prior ``isinstance`` classifier
+    mislabelled it as an ``Option`` in the generated reference. Build a real
+    single-command Typer app, materialise its Click command, and assert the
+    rendered param table names the positional an ``Argument``.
+    """
+    app = typer.Typer()
+
+    @app.command()
+    def view(transaction_id: str = typer.Argument(..., help="The ledger transaction id.")) -> None:
+        """Inspect a ledger transaction."""
+
+    command = get_command(app)
+    # A single-command Typer collapses to the leaf command directly; if Typer
+    # kept a group, descend to the one registered subcommand.
+    if hasattr(command, "commands"):
+        command = next(iter(command.commands.values()))
+
+    rendered = _render_param_table(list(command.params))
+
+    assert "transaction_id" in rendered
+    # The positional's own definition line must read *Argument, ...*, not Option.
+    positional_line = next(line for line in rendered.splitlines() if "Argument" in line or "Option" in line)
+    assert "*Argument, required.*" in positional_line
+    assert "Option" not in positional_line
 
 
 def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> None:
