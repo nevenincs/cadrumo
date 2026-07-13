@@ -86,9 +86,42 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_G
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
+    # Every output directory whose default is not an explicit operator override
+    # derives from ``cadrumo_local_storage_root`` under one category taxonomy, so
+    # a checkout keeps everything under ``PROJECT_ROOT/var/storage`` while an
+    # installed run keeps it under the platform user-data root. The value is the
+    # POSIX-style relative subpath under the root; ``cache/`` is the sole on-disk
+    # category prefix (the encrypted-state substrate, diagnostic logs, and
+    # durable outputs keep bare, self-describing leaf names, matching the
+    # existing tokens/secrets/blobs/audit/logs layout). The lifecycle grouping
+    # (state / cache / logs / exports) is recorded conceptually per the
+    # data-output-standardization ADR ruling R1, not as a rigid path prefix.
+    #
+    # State substrate and identity (encrypted store + auth tokens).
+    "cadrumo_token_dir": "tokens",
     "cadrumo_secret_store_dir": "secrets",
     "cadrumo_blob_store_dir": "blobs",
     "cadrumo_audit_dir": "audit",
+    # Diagnostic and append-only telemetry logs.
+    "cadrumo_log_dir": "logs",
+    "cadrumo_llm_usage_dir": "llm-usage",
+    "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
+    # Regenerable, evictable caches (the cache/ namespace; W01.P02 adds the
+    # corpus-text and registry-pickle caches here).
+    "cadrumo_llm_cache_dir": "cache/llm-cache",
+    "cadrumo_status_cache_dir": "cache/status-cache",
+    # Durable generated outputs.
+    "cadrumo_storage_backup_dir": "backups",
+    "cadrumo_submissions_dir": "submissions",
+    "cadrumo_submission_browser_trace_dir": "browser-traces",
+    "cadrumo_status_browser_trace_dir": "browser-traces",
+    "cadrumo_inbox_dir": "inbox",
+    "cadrumo_inbox_pdf_dir": "inbox/pdfs",
+    "cadrumo_workflow_runs_dir": "workflow-runs",
+    "cadrumo_drafts_dir": "drafts",
+    "cadrumo_runs_dir": "runs",
+    "cadrumo_justificantes_dir": "justificantes",
+    "cadrumo_filing_history_dir": "filing-history",
 }
 
 _LEGACY_PRODUCT_DOTENV_NAMES = frozenset(
@@ -1009,78 +1042,33 @@ class Settings(AeatIntegrationSettings):
         return self
 
     @model_validator(mode="after")
-    def _resolve_token_dir_under_storage_root(self) -> Settings:
-        """Root ``cadrumo_token_dir`` under ``cadrumo_local_storage_root``.
+    def _resolve_output_dirs_under_storage_root(self) -> Settings:
+        """Root every derived output directory under ``cadrumo_local_storage_root``.
 
-        When the field is not explicitly supplied (the production
-        default), this validator computes
-        ``<cadrumo_local_storage_root>/tokens`` so that auth token and
-        lock files live inside the one state root that
-        ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes — making the isolation
-        contract tests and the persona harness rely on actually true.
+        Auth tokens, the diagnostic log, the encrypted-store substrate (secret,
+        blob, audit), the append-only telemetry logs, the regenerable caches,
+        and the durable generated-output directories all default to a subpath
+        under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
+        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. A checkout keeps them under
+        ``PROJECT_ROOT/var/storage``; an installed run keeps them under the
+        platform user-data root — never inside a virtualenv or uv cache, which
+        is the hazard a ``PROJECT_ROOT/var/...`` default carries on an installed
+        distribution.
 
-        An explicit ``CADRUMO_TOKEN_DIR`` env var (or a value supplied via
-        an ``override_settings`` block in tests) registers the field in
-        ``model_fields_set`` and wins: the validator only computes the
-        derived path when the field was left at its placeholder
-        default.
+        An explicit per-field env override (``CADRUMO_TOKEN_DIR``,
+        ``CADRUMO_RUNS_DIR``, …) or a value supplied via an ``override_settings``
+        block registers the field in ``model_fields_set`` and wins: the
+        validator only computes the derived path when the field was left at its
+        placeholder default. The validator only computes paths; provider
+        factories and custody loaders decide how those directories are opened.
 
-        ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is
-        already populated when this runs.
+        ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
+        populated when this runs.
         """
-        if "cadrumo_token_dir" in self.model_fields_set:
-            return self
-        object.__setattr__(
-            self,
-            "cadrumo_token_dir",
-            self.cadrumo_local_storage_root / "tokens",
-        )
-        return self
-
-    @model_validator(mode="after")
-    def _resolve_log_dir_under_storage_root(self) -> Settings:
-        """Root ``cadrumo_log_dir`` under ``cadrumo_local_storage_root``.
-
-        When the field is not explicitly supplied (the production
-        default of ``None``), this validator computes
-        ``<cadrumo_local_storage_root>/logs`` so the diagnostic log lives
-        inside the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT``
-        scopes — consistent with the token directory. A system-wide
-        ``~/.config/cadrumo/logs/cadrumo.log`` mixes every workspace's (and
-        every test run's) records into a single file; rooting the log
-        under the storage root keeps each workspace's diagnostics
-        isolated.
-
-        An explicit ``CADRUMO_LOG_DIR`` env var (or a value supplied via
-        an ``override_settings`` block in tests) registers the field in
-        ``model_fields_set`` and wins: the validator only computes the
-        derived path when the field was left at its ``None`` default.
-
-        ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is
-        already populated when this runs.
-        """
-        if "cadrumo_log_dir" in self.model_fields_set:
-            return self
-        object.__setattr__(
-            self,
-            "cadrumo_log_dir",
-            self.cadrumo_local_storage_root / "logs",
-        )
-        return self
-
-    @model_validator(mode="after")
-    def _resolve_storage_substrate_dirs_under_storage_root(self) -> Settings:
-        """Root storage substrate directories under ``cadrumo_local_storage_root``.
-
-        Secret, blob, and audit stores share the same state-root derivation as
-        token and log directories unless the operator explicitly supplies the
-        individual field. The validator only computes paths; provider factories
-        and custody loaders decide how those directories are opened.
-        """
-        for field_name, dirname in _STATE_ROOT_DERIVED_DIRS.items():
+        for field_name, subpath in _STATE_ROOT_DERIVED_DIRS.items():
             if field_name in self.model_fields_set:
                 continue
-            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / dirname)
+            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / subpath)
         return self
 
     @field_validator(
@@ -1297,7 +1285,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     ):
         merged.pop("cadrumo_database_url", None)
     if "cadrumo_local_storage_root" in overrides:
-        for derived_field in (*_STATE_ROOT_DERIVED_DIRS, "cadrumo_token_dir", "cadrumo_log_dir"):
+        for derived_field in _STATE_ROOT_DERIVED_DIRS:
             if derived_field not in overrides and derived_field not in current.model_fields_set:
                 merged.pop(derived_field, None)
     merged.update(overrides)
