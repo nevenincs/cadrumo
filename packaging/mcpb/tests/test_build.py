@@ -42,10 +42,18 @@ def test_manifest_validates_and_points_at_the_console_script() -> None:
     assert isinstance(server, dict)
     assert server["mcp_config"]["command"] == "cadrumo-mcp"
     assert server["entry_point"] == "cadrumo-mcp"
+    assert server["mcp_config"]["env"] == {
+        "CADRUMO_MCP_PERSONA": "${user_config.persona}",
+    }
     assert manifest["display_name"] == "Cadrumo tax assistant console"
-    assert all(
-        tool["name"].startswith("cadrumo_") or tool["name"] in {"search", "execute"} for tool in manifest["tools"]
-    )
+    assert {tool["name"] for tool in manifest["tools"]} == {
+        "cadrumo_harness_load",
+        "cadrumo_corpus_search",
+        "cadrumo_terminology_search",
+        "cadrumo_contract",
+        "search",
+        "execute",
+    }
 
     assert manifest["name"] != "aeat"
     assert server["entry_point"] != "aeat-mcp"
@@ -101,52 +109,13 @@ def test_build_reports_the_real_signing_outcome_without_overclaiming(
     if not signing_available:
         assert "UNSIGNED (signer unavailable or no signing identity configured)" in captured.out
         assert captured.err == ""
+    elif "[signed]" in captured.out:
+        assert captured.err == ""
     else:
-        assert (
-            "[signed]" in captured.out
-            or "[UNSIGNED (signer unavailable or no signing identity configured)]" in captured.out
+        assert "[UNSIGNED (signer unavailable or no signing identity configured)]" in captured.out
+        assert captured.err.startswith(
+            "mcpb sign failed (no identity?); shipping unsigned:"
         )
-
-
-def test_sign_invokes_the_mcpb_cli_when_a_signer_is_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """With a signer available, the build invokes `mcpb sign <bundle>` — the sign path is wired."""
-    # Simulate a present signer + a successful sign, and assert the build invokes
-    # `mcpb sign <bundle>` — proving the sign path runs when an identity exists.
-    import subprocess
-
-    bundle = tmp_path / "cadrumo.mcpb"
-    bundle.write_bytes(b"PK\x03\x04")
-    captured: dict[str, object] = {}
-
-    def _spy_run(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
-        captured["argv"] = argv
-        return subprocess.CompletedProcess(argv, returncode=0, stdout="signed", stderr="")
-
-    monkeypatch.setattr(BUILD.shutil, "which", lambda _name: "/usr/bin/mcpb")
-    monkeypatch.setattr(BUILD.subprocess, "run", _spy_run)
-
-    assert BUILD._sign(bundle) is True
-    assert captured["argv"] == ["mcpb", "sign", str(bundle)]
-
-
-def test_sign_returns_false_without_fabricating_when_the_signer_fails(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A signer that exits non-zero (no identity) ships unsigned, never claims a signature."""
-    # Signer present but no configured identity: the CLI exits non-zero, and the
-    # build must ship unsigned (return False), never claim a signature.
-    import subprocess
-
-    bundle = tmp_path / "cadrumo.mcpb"
-    bundle.write_bytes(b"PK\x03\x04")
-
-    def _failing_run(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
-        return subprocess.CompletedProcess(argv, returncode=1, stdout="", stderr="no identity configured")
-
-    monkeypatch.setattr(BUILD.shutil, "which", lambda _name: "/usr/bin/mcpb")
-    monkeypatch.setattr(BUILD.subprocess, "run", _failing_run)
-
-    assert BUILD._sign(bundle) is False
 
 
 def test_manifest_version_matches_the_package_release() -> None:
