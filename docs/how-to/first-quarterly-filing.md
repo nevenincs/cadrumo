@@ -72,10 +72,12 @@ Read the frames in order:
   `work_unit_id` that addresses the draft.
 - Calculate it. Cadrumo reads the classified ledger and fills the boxes:
   casilla `01` is the quarter's income, casilla `02` the deductible expenses,
-  casilla `03` the net yield, and casilla `04` the instalment. With the example
-  ledger the net yield is `500.00` and the instalment is `100.00`, twenty
-  percent of the net. The three `--binding ...=0` values are the prior-period
-  carries a true first quarter does not have.
+  casilla `03` the net yield, and casilla `04` the instalment. Casilla 01 shows
+  1000.00, not the 1210.00 you collected: IVA is never part of your income, so
+  the 210.00 of IVA is left out. With the example ledger the net yield is
+  `500.00` and the instalment is `100.00`, twenty percent of the net. The three
+  `--binding ...=0` values are the prior-period carries a true first quarter
+  does not have.
 - Verify the draft. The result reads `granted_verificado_completo` true, so the
   draft is complete and ready to export.
 
