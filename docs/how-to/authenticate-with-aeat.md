@@ -20,7 +20,7 @@ Cadrumo no longer retrieves these facts live.
 
 You need:
 
-- an [active profile](profile-setup.md#what-the-active-profile-means). `cadrumo
+- an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
   config auth configure` refuses with `No hay un perfil activo` until you create
   one. Create one non-interactively with `aeat config profile create me --quiet
   --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`. A NIF,
