@@ -29,6 +29,7 @@ from ...core.external_constants import (
     MINIMO_MENOR_TRES_MAX_AGE,
 )
 from ...core.parsing import parse_iso8601_date
+from ...core.time import now
 from ._errors import ProfileValidationError
 
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
@@ -152,7 +153,7 @@ class DescendantInfo(BaseModel):
             return self
         if self.adoption_date < self.birth_date:
             raise ProfileValidationError(f"adoption_date {self.adoption_date} must be ≥ birth_date {self.birth_date}")
-        today = date.today()
+        today = now().date()
         if self.adoption_date > today:
             raise ProfileValidationError(
                 f"adoption_date {self.adoption_date} must not be in the future (today={today})",

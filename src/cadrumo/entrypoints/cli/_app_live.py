@@ -867,10 +867,10 @@ def filed_list_cmd(
     across every registry-configured modelo. Omitted year bounds default to the
     current calendar year.
     """
-    from datetime import date as _date
+    from ...core.time import now
 
-    resolved_from = year_from if year_from is not None else _date.today().year
-    resolved_to = year_to if year_to is not None else _date.today().year
+    resolved_from = year_from if year_from is not None else now().date().year
+    resolved_to = year_to if year_to is not None else now().date().year
     _emit_live_auth_preflight()
     if modelo is None:
         bulk_report = asyncio.run(
