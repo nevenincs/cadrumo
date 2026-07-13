@@ -256,12 +256,12 @@ def _seed_clean_cross_period_sources_for_m130(
 
 
 def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(repos: _Repos) -> None:
-    """After the H1 gasto bind, M130 has zero required MANUAL casillas (M4 resolved).
+    """With casilla 02 bound to the ledger, M130 has zero required MANUAL casillas.
 
     Casilla 02 (Gastos) used to be the lone ``input_kind = manual`` + ``required``
     casilla, so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA
-    finding until they hand-entered ``--casilla 02=0`` (finding M4). The H1 fix
-    binds casilla 02 to the ``ledger_renta_gasto_aggregation`` source, so it is
+    finding until they hand-entered ``--casilla 02=0``. Binding casilla 02 to the
+    ``ledger_renta_gasto_aggregation`` source means it is
     auto-populated (0 when there are no expenses) and the missing-required gate —
     which fires only for MANUAL required casillas — has nothing to flag. This test
     pins that no required manual casilla remains and that an M130 revision with no

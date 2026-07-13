@@ -7,7 +7,7 @@ simplificado. The official Modelo 390 surfaces that figure in the régimen
 simplificado apartado as box 79 ("IVA devengado - Total cuota resultante",
 AEAT Diseño de Registros 2025, campo 89 ``[79]``). Before this wiring the M390
 modelled only the régimen general totals, so the simplificado cuota devengada
-never reached the annual resumen (issue #531).
+never reached the annual resumen.
 
 The fold is the canonical annual_summary relation
 ``modelo-390-rel-303-cuota-devengada-simplificado`` whose ``target_binding``
