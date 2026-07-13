@@ -62,4 +62,6 @@ Goldens are light, review-diffable committed data per the Pagefind commit bounda
 
 ## Notes
 
-No incidents. The `golden_schema_version` literal gives the format a forward version field for the compatibility-lifecycle rules without any legacy branch.
+The `golden_schema_version` literal gives the format a forward version field for the compatibility-lifecycle rules without any legacy branch.
+
+Review absorption (review-p03 MEDIUM, landed with this phase): the runner previously recorded only the combined output stream, dropping the split stderr; a refusal's error document — which shares the envelope spine per the CLI notices standard — was un-golden-able. The runner now records stdout and stderr separately, resolves the envelope stdout-first-then-stderr with a typed `envelope_source`, and the golden frame covers both streams (`text` for non-envelope stdout, `stderr_text` for non-envelope stderr, empty streams as null); the comparison asserts the envelope's carrying stream and diffs each non-envelope stream independently. Proven by a real stderr-error-document sequence in the runner and comparison test suites. The two review LOW findings also landed: the live-AEAT scan skips option-value tokens (no `--file pull-history.csv` false refusal), and the transient registry-race retry is skipped entirely under CI.
