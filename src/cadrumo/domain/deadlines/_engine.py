@@ -404,7 +404,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
         The earliest non-overdue :class:`ModeloDeadline`, or ``None``
         if no such obligation exists.
     """
-    reference_today = today or now().date()
+    reference_today = today or today_madrid()
     upcoming = [o for o in schedule.obligations if o.closes_on >= reference_today]
     if not upcoming:
         return None
