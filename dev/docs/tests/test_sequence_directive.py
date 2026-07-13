@@ -176,6 +176,13 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     create_output = payload["frames"][1]["output"]
     assert create_output["format"] == "json"
     assert "snap_demo" not in create_output["body"]
+    # The displayed body is the human-readable canonical JSON DOCUMENT itself —
+    # re-parsing it yields the mapping, never a double-encoded string of JSON,
+    # and it carries real newlines rather than literal `\n` escape noise.
+    reparsed = json.loads(create_output["body"])
+    assert isinstance(reparsed, dict), "JSON output body must be the document, not a re-dumped string"
+    assert "\n" in create_output["body"]
+    assert "\\n" not in create_output["body"]
 
     # The result frame carries the imperative expect narration (ADR D4).
     result = payload["frames"][3]

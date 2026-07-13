@@ -1568,17 +1568,19 @@ a.sd-card:any-link,
   user-select: none;
 }
 
-/* Output region: a clearly separated block of result values — indented behind a
- * left rule, no prompt, lighter weight — so command and output never blur. */
+/* Output region: the command's return values as a treeview-style child block —
+ * inset beneath the command behind a guide rule, on a faint panel, no prompt,
+ * lighter weight — so command and output read as parent and result. */
 .cadrumo-frame-output,
 .cadrumo-frame-stderr {
-  background: transparent;
-  border-left: 2px solid color-mix(in srgb, var(--color-background-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-background-secondary) 55%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--color-brand-content) 35%, transparent);
+  border-radius: 0 var(--cadrumo-radius-s) var(--cadrumo-radius-s) 0;
   color: var(--color-foreground-secondary);
   font-weight: 400;
-  margin: 0.5rem 0 0.15rem;
+  margin: 0.55rem 0 0.3rem 1.1rem;
   overflow-x: auto;
-  padding: 0 0 0 0.85rem;
+  padding: 0.5rem 0.85rem;
   scrollbar-color: var(--color-background-border) transparent;
   scrollbar-width: thin;
   white-space: pre;
@@ -1654,18 +1656,18 @@ a.sd-card:any-link,
   display: none;
 }
 
-/* The disclosure handle: a single quiet chevron on its own hairline row —
- * present only when JS runs, styled to near-invisibility until wanted. */
+/* The disclosure handle: one clear chevron on its own row, aligned with the
+ * output inset so it reads as the child block's handle — JS-created only. */
 .cadrumo-output-toggle {
   background: none;
   border: none;
   color: var(--color-foreground-muted);
   cursor: pointer;
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   line-height: 1;
-  margin: 0.15rem 0 0;
-  padding: 0.1rem 0.3rem 0.1rem 0;
+  margin: 0.2rem 0 0 1.1rem;
+  padding: 0.15rem 0.5rem 0.15rem 0;
 }
 
 .cadrumo-output-toggle:hover {
