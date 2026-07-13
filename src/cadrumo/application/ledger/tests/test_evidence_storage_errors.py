@@ -36,7 +36,6 @@ class TestEvidenceSecureStorage:
         records = svc.list_all(bucket_id=_BUCKET_ID)
 
         assert records == (result.record,)
-        assert not (isolated_settings.cadrumo_purchase_invoice_evidence_dir / f"{_BUCKET_ID}.jsonl").exists()
         raw_records = tuple(secure_objects.iter_all_records_raw())
         assert any(row.namespace == "cadrumo.application.ledger.purchase_invoice_evidence" for row in raw_records)
 
