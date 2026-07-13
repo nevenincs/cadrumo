@@ -1,5 +1,5 @@
 # Modelo 353 (agregado del grupo) — reconciliation casillas surfacing the
-# cross-member previous_filing sums (A2 ADR). Each is a bound casilla pulling
+# cross-member previous_filing sums. Each is a bound casilla pulling
 # the per_grupo_member aggregate of the corresponding 322 result casilla, so the
 # 353 aggregate appears in engine_result.values with full provenance.
 

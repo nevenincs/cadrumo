@@ -1,6 +1,6 @@
 # Enrolls the M303 régimen simplificado de IVA módulos engine casillas and
-# formulas (Phase 2, 2026-07-01-modelo-303-regimen-simplificado-adr) into the
-# existing "modelo-303-iva-autoliquidacion" construct. Fragment merge is by
+# formulas into the existing "modelo-303-iva-autoliquidacion" construct.
+# Fragment merge is by
 # construct id (see cadrumo.domain.calculations.registry._loader); the append
 # arrays (casilla_ids, formulas) accumulate onto the construct declared in
 # revision.toml. legal_refs/source_refs are NOT append arrays (a fragment

@@ -28,8 +28,7 @@ import pytest
 # session (short-circuiting the CLI bootstrap's catalogue registration at
 # entrypoints/cli/__init__.py:281) and doesn't transitively import the
 # wizard package hits the "Wizard catalogue has not been registered"
-# guard. Documented in #158 entry 2 and ADR pending under
-# session-honest-followups P03.S19.
+# guard.
 from .core.external_constants import UTF_8_ENCODING
 from .tests import package_python_files, prime_ast_cache
 

@@ -1,13 +1,13 @@
 """Materialise a Claude-native operator workspace from the shipped harness data.
 
-Per ADR R4 the workspace materialiser is DEMOTED from the primary delivery
-vehicle to an optional Claude-native mirror: the operating layer reaches an
-arbitrary MCP client through the console's floor tool, resources, and prompts,
-and this materialiser is the Claude-specific enhancement that lays the same
-shipped harness out in the layout a Claude Code project loads natively.
+The workspace materialiser is an optional Claude-native mirror, not the primary
+delivery vehicle: the operating layer reaches an arbitrary MCP client through
+the console's floor tool, resources, and prompts, and this materialiser is the
+Claude-specific enhancement that lays the same shipped harness out in the
+layout a Claude Code project loads natively.
 
 The emitted layout is the Claude-native convention for an end-user project
-directory - never the repository's own vaultspec developer ``.claude/`` tree:
+directory - never the repository's own developer tooling ``.claude/`` tree:
 
 - workflow skills -> ``.claude/skills/<name>/SKILL.md`` (plus each skill's
   ``reference/`` progressive-disclosure material), the standard skill layout;
@@ -48,8 +48,8 @@ _CLAUDE_MEMORY_FILE = "CLAUDE.md"
 
 # --- Claude plugin layout -------------------------------------------------
 #
-# The plugin layout target (ADR "Plugin generation") re-materialises the SAME
-# authored harness source as a one-click Claude plugin: a ``.claude-plugin/``
+# The plugin layout target re-materialises the SAME authored harness source
+# as a one-click Claude plugin: a ``.claude-plugin/``
 # manifest, a top-level ``skills/`` and ``agents/`` tree, and an ``.mcp.json``
 # declaring the stdio ``cadrumo-mcp`` server. The manifest schema is the one the
 # live ``claude plugin validate --strict`` oracle accepts; every field name here
@@ -90,8 +90,8 @@ _MCP_CONSOLE_SCRIPT = PRODUCT_IDENTITY.mcp_executable
 _PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
 _MCP_PERSONA_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
-# The advertised-tool-surface toggle (ADR mcp-progressive-discovery P1). ``core``
-# (default) advertises only the orientation slice; ``full`` restores the flat
+# The advertised-tool-surface toggle. ``core`` (default) advertises only the
+# orientation slice; ``full`` restores the flat
 # per-verb surface. Wired from the ``userConfig`` surface option; the server
 # validates the value and refuses an unknown one.
 _MCP_SURFACE_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_SURFACE"
@@ -99,8 +99,8 @@ _MCP_SURFACE_INTERPOLATION = "${user_config.surface}"
 
 # --- Claude marketplace layout --------------------------------------------
 #
-# The marketplace layout target (ADR "Marketplace") emits the git-repo content
-# a dedicated public marketplace repository serves: a ``.claude-plugin/``
+# The marketplace layout target emits the git-repo content a dedicated public
+# marketplace repository serves: a ``.claude-plugin/``
 # ``marketplace.json`` (marketplace name ``neve``) listing the Cadrumo plugin plus
 # the plugin tree it points
 # at, materialised UNDER the marketplace root at ``plugins/cadrumo`` via the same
@@ -265,8 +265,8 @@ _TOOL_SCOPE_HEADING = "## Tool scope"
 # Claude built-in tools that mutate the local workspace filesystem. A persona
 # whose declared tool scope is read-only (orchestration only) does not carry
 # them; every other persona inherits the full tool set and relies on the
-# cadrumo-mcp server's own persona-scope gate as the refusal surface (per the ADR:
-# server-side validation stays the refusal surface).
+# cadrumo-mcp server's own persona-scope gate as the refusal surface:
+# server-side validation stays the refusal surface.
 _WORKSPACE_MUTATION_TOOLS = ("Edit", "Write", "NotebookEdit")
 
 
@@ -327,7 +327,7 @@ def _persona_agent_document(slug: str, text: str) -> str:
 
     The Claude agent frontmatter carries ``name`` and ``description`` and, for a
     read-only persona, a ``disallowedTools`` denylist. It NEVER carries the
-    vaultspec-style ``mode:`` field, which is not a Claude field. The persona's
+    harness-authoring ``mode:`` field, which is not a Claude field. The persona's
     original prose follows the frontmatter unchanged as the agent's system prompt.
     """
     front = ["---", f"name: {slug}", f"description: {json.dumps(_persona_description(text))}"]

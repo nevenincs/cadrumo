@@ -5,8 +5,8 @@
 # IS) is positive, yielding cuota integra cero -- a silent under-declaration the
 # verify gate would otherwise grant. ADVISORY (non-blocking): a positive result
 # with a legitimately zero base (BIN compensation, correcciones) is possible, so
-# this surfaces an operator-facing advisory rather than refusing the draft, while
-# the modelo-200-base-determination ADR tracks the durable derivation (Phase 2).
+# this surfaces an operator-facing advisory rather than refusing the draft, until
+# the base imponible is derived directly from resultado contable.
 [[revisions."2024-y-siguientes".verification_predicates]]
 predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
 expression = 'implies_nonzero(["00501", "DP200014:00552"])'
@@ -25,7 +25,7 @@ legal_refs = ["ley-27-2014:art-30"]
 # grant, and one the existing 00501→00552 advisory cannot catch because 00501 is
 # its antecedent. ADVISORY (non-blocking) and the earliest link in the IS-result
 # chain (00500→00501→00552→00562→00592); mirrors the no-silent-under-declaration
-# stance and the base-determination ADR Phase-1 advisory.
+# stance and the 00501→00552 base-determination advisory above.
 [[revisions."2024-y-siguientes".verification_predicates]]
 predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
 expression = 'implies_nonzero(["00500", "00501"])'
@@ -85,7 +85,7 @@ legal_refs = ["ley-27-2014:art-13"]
 # imponible being negative when a new BIN is generated). ADVISORY: a
 # legitimately-zero closing (all applied, none generated) stays permissible — the
 # guard fires only on a genuine discontinuity, mirroring the M200 base/dotaciones
-# advisories and no-silent-under-declaration. modelo-200-bin-continuity ADR.
+# advisories and no-silent-under-declaration.
 [[revisions."2024-y-siguientes".verification_predicates]]
 predicate_id = "modelo-200-bin-stock-cierre-reconcilia-roll-forward"
 expression = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'

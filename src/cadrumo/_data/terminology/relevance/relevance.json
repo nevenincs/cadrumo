@@ -7,85 +7,22 @@
       "targets": [
         {
           "record_id": "concept:aeat",
-          "target": "_generated/glossary.html#term-aeat",
+          "target": "_generated/glossary.html#term-AEAT",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.96885
+          "ranking_weight": 0.997427
         },
         {
-          "record_id": "concept:casilla",
-          "target": "_generated/glossary.html#term-casilla",
+          "record_id": "concept:sede-electronica",
+          "target": "_generated/glossary.html#term-sede-electronica",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.947998
-        },
-        {
-          "record_id": "page:USERDOCS-KICKOFF-BRIEF",
-          "target": "USERDOCS-KICKOFF-BRIEF.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.497864
-        },
-        {
-          "record_id": "page:architecture",
-          "target": "architecture.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.497757
-        },
-        {
-          "record_id": "page:authoring-guide",
-          "target": "authoring-guide.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.497501
-        },
-        {
-          "record_id": "page:updates",
-          "target": "updates.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.496971
-        },
-        {
-          "record_id": "page:disclaimer",
-          "target": "disclaimer.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.493324
-        },
-        {
-          "record_id": "page:explanation/reviewing-and-exporting",
-          "target": "explanation/reviewing-and-exporting.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.490851
-        },
-        {
-          "record_id": "page:how-to/quickstart",
-          "target": "how-to/quickstart.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.486472
-        },
-        {
-          "record_id": "legal:orden-eha-3127-2009:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.480919
-        },
-        {
-          "record_id": "code:aeat",
-          "target": "api/aeat.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.473868
+          "ranking_weight": 0.976869
         }
       ],
-      "dropped_count": 9,
-      "collapsed_count": 0,
-      "dominant_cluster": "docs:docs/USERDOCS-KICKOFF-BRIEF.md"
+      "dropped_count": 17,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "Agencia Tributaria",
@@ -94,50 +31,15 @@
       "targets": [
         {
           "record_id": "concept:aeat",
-          "target": "_generated/glossary.html#term-aeat",
+          "target": "_generated/glossary.html#term-AEAT",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.994907
-        },
-        {
-          "record_id": "legal:orden-hac-277-2026:art-3",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.495066
-        },
-        {
-          "record_id": "legal:orden-eha-3127-2009:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.493206
-        },
-        {
-          "record_id": "legal:orden-eha-3377-2011:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.493206
-        },
-        {
-          "record_id": "legal:orden-eha-3435-2007:anexo-ii",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-2",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.493206
-        },
-        {
-          "record_id": "legal:orden-hac-265-2024:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.493206
         }
       ],
-      "dropped_count": 12,
-      "collapsed_count": 2,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "autoliquidacion",
@@ -152,20 +54,6 @@
           "ranking_weight": 0.953718
         },
         {
-          "record_id": "concept:modelo-303",
-          "target": "_generated/glossary.html#term-modelo-303",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.942841
-        },
-        {
-          "record_id": "legal:ley-58-2003:art-120",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a120",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498704
-        },
-        {
           "record_id": "legal:ley-58-2003:art-93",
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a93",
           "kind": "page",
@@ -173,16 +61,16 @@
           "ranking_weight": 0.497489
         },
         {
-          "record_id": "legal:ley-35-2006:dt-32",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.483789
+          "ranking_weight": 0.47212
         }
       ],
-      "dropped_count": 12,
-      "collapsed_count": 3,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "self-assessment",
@@ -197,11 +85,11 @@
           "ranking_weight": 0.961095
         },
         {
-          "record_id": "page:how-to/modelo-303",
-          "target": "how-to/modelo-303.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.470957
+          "surface": "codebase",
+          "ranking_weight": 0.445141
         },
         {
           "record_id": "legal:ley-58-2003:art-93",
@@ -209,11 +97,53 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.431431
+        },
+        {
+          "record_id": "code:cadrumo.domain.portals._entries.portal_pago_autoliquidacion_tarjeta_bizum",
+          "target": "api/cadrumo.domain.portals._entries.portal_pago_autoliquidacion_tarjeta_bizum.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.417592
+        },
+        {
+          "record_id": "code:cadrumo.domain.portals._entries.portal_m200_sociedades_anual",
+          "target": "api/cadrumo.domain.portals._entries.portal_m200_sociedades_anual.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.417445
+        },
+        {
+          "record_id": "code:cadrumo.domain.portals._entries.portal_pago_autoliquidacion_cuenta",
+          "target": "api/cadrumo.domain.portals._entries.portal_pago_autoliquidacion_cuenta.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.411981
+        },
+        {
+          "record_id": "code:cadrumo.domain.portals._entries.portal_m303_iva_autoliquidacion",
+          "target": "api/cadrumo.domain.portals._entries.portal_m303_iva_autoliquidacion.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.403154
+        },
+        {
+          "record_id": "code:cadrumo.domain.deadlines._recargo",
+          "target": "api/cadrumo.domain.deadlines._recargo.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.396355
+        },
+        {
+          "record_id": "page:how-to/modelo-303",
+          "target": "how-to/modelo-303.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.395957
         }
       ],
-      "dropped_count": 16,
-      "collapsed_count": 1,
-      "dominant_cluster": "concept:domain:concepto"
+      "dropped_count": 11,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "borrador",
@@ -225,68 +155,61 @@
           "target": "_generated/glossary.html#term-borrador",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.921981
+        },
+        {
+          "record_id": "code:cadrumo.domain.submission._protocols",
+          "target": "api/cadrumo.domain.submission._protocols.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463831
+        },
+        {
+          "record_id": "code:cadrumo.domain.modelos._work_unit",
+          "target": "api/cadrumo.domain.modelos._work_unit.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.460133
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._app_live_borrador_cli",
+          "target": "api/cadrumo.entrypoints.cli._app_live_borrador_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.453302
+        },
+        {
+          "record_id": "code:cadrumo.adapters.inbound.borrador._schema",
+          "target": "api/cadrumo.adapters.inbound.borrador._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.427107
+        },
+        {
+          "record_id": "code:cadrumo.adapters.inbound.borrador._parser",
+          "target": "api/cadrumo.adapters.inbound.borrador._parser.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.425002
+        },
+        {
+          "record_id": "code:cadrumo.application.live._borrador_100",
+          "target": "api/cadrumo.application.live._borrador_100.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.422118
         },
         {
           "record_id": "page:how-to/check-aeat-notifications",
           "target": "how-to/check-aeat-notifications.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.496919
-        },
-        {
-          "record_id": "code:aeat.domain.modelos._work_unit",
-          "target": "api/aeat.domain.modelos._work_unit.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.477082
-        },
-        {
-          "record_id": "legal:orden-hac-248-2021:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.466298
-        },
-        {
-          "record_id": "legal:ley-35-2006:dt-32",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.445707
-        },
-        {
-          "record_id": "code:aeat.adapters.inbound.borrador",
-          "target": "api/aeat.adapters.inbound.borrador.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.444674
-        },
-        {
-          "record_id": "code:aeat.application.live._borrador_100",
-          "target": "api/aeat.application.live._borrador_100.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.441372
-        },
-        {
-          "record_id": "code:aeat.entrypoints.cli._app_live_borrador_cli",
-          "target": "api/aeat.entrypoints.cli._app_live_borrador_cli.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.419108
-        },
-        {
-          "record_id": "code:aeat.adapters.inbound.borrador._parser",
-          "target": "api/aeat.adapters.inbound.borrador._parser.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.416196
+          "ranking_weight": 0.421919
         }
       ],
-      "dropped_count": 9,
-      "collapsed_count": 2,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 12,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "draft",
@@ -298,40 +221,47 @@
           "target": "_generated/glossary.html#term-borrador",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.784526
+          "ranking_weight": 1.0
         },
         {
-          "record_id": "code:aeat.application.review._adapters",
-          "target": "api/aeat.application.review._adapters.html",
+          "record_id": "code:cadrumo.application.filing._review",
+          "target": "api/cadrumo.application.filing._review.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.428873
+        },
+        {
+          "record_id": "code:cadrumo.application.review._adapters",
+          "target": "api/cadrumo.application.review._adapters.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.415621
         },
         {
-          "record_id": "code:aeat.application.filing._export",
-          "target": "api/aeat.application.filing._export.html",
+          "record_id": "code:cadrumo.domain.submission._engine",
+          "target": "api/cadrumo.domain.submission._engine.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.407044
+          "ranking_weight": 0.413541
         },
         {
-          "record_id": "code:aeat.application.filing",
-          "target": "api/aeat.application.filing.html",
+          "record_id": "code:cadrumo.application.modelo._workflow_gate",
+          "target": "api/cadrumo.application.modelo._workflow_gate.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.397986
+          "ranking_weight": 0.413183
         },
         {
-          "record_id": "code:aeat.application.filing._review",
-          "target": "api/aeat.application.filing._review.html",
+          "record_id": "code:cadrumo.application.filing",
+          "target": "api/cadrumo.application.filing.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.397363
+          "ranking_weight": 0.392323
         }
       ],
-      "dropped_count": 13,
-      "collapsed_count": 1,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 10,
+      "collapsed_count": 5,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "presentado",
@@ -340,28 +270,28 @@
       "targets": [
         {
           "record_id": "concept:borrador-vs-presentado",
-          "target": "_generated/glossary.html#term-borrador-vs-presentado",
+          "target": "_generated/glossary.html#term-presentado",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.884013
+          "ranking_weight": 0.876716
+        },
+        {
+          "record_id": "code:cadrumo.domain.modelos._calculation_revision",
+          "target": "api/cadrumo.domain.modelos._calculation_revision.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.439459
         },
         {
           "record_id": "legal:ley-58-2003:art-27.2",
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a27",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.481293
+          "ranking_weight": 0.406293
         },
         {
-          "record_id": "code:aeat.domain.modelos._calculation_revision",
-          "target": "api/aeat.domain.modelos._calculation_revision.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.412635
-        },
-        {
-          "record_id": "code:aeat.domain.submission._protocols",
-          "target": "api/aeat.domain.submission._protocols.html",
+          "record_id": "code:cadrumo.domain.submission._protocols",
+          "target": "api/cadrumo.domain.submission._protocols.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.377145
@@ -369,7 +299,7 @@
       ],
       "dropped_count": 15,
       "collapsed_count": 1,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "box",
@@ -398,26 +328,19 @@
           "target": "_generated/glossary.html#term-casilla",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.811289
         },
         {
-          "record_id": "casilla-record:887c517cb4bbff8eec748645",
-          "target": "search.html?q=100+PH18",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.638046
-        },
-        {
-          "record_id": "code:aeat.domain.calculations.registry._queries",
-          "target": "api/aeat.domain.calculations.registry._queries.html",
+          "record_id": "code:cadrumo.entrypoints.cli._modelo_payloads",
+          "target": "api/cadrumo.entrypoints.cli._modelo_payloads.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.49075
+          "ranking_weight": 0.391453
         }
       ],
-      "dropped_count": 14,
-      "collapsed_count": 4,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:casilla-namespace"
     },
     {
       "query": "casilla",
@@ -429,47 +352,103 @@
           "target": "_generated/glossary.html#term-casilla",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.943786
         },
         {
-          "record_id": "casilla-record:887c517cb4bbff8eec748645",
-          "target": "search.html?q=100+PH18",
+          "record_id": "casilla-record:1cb89f65247831f1e5ee3e50",
+          "target": "search.html?q=592+decl.ejercicio",
           "kind": "casilla",
           "surface": "casilla",
-          "ranking_weight": 0.688977
+          "ranking_weight": 0.64174
         },
         {
-          "record_id": "code:aeat.domain.calculations.registry._queries",
-          "target": "api/aeat.domain.calculations.registry._queries.html",
+          "record_id": "casilla-record:155bd4ea77776cfe2f1fded6",
+          "target": "search.html?q=490+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.641336
+        },
+        {
+          "record_id": "casilla-record:dc7f3cd9a2df09f96dd0792b",
+          "target": "search.html?q=604+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.640344
+        },
+        {
+          "record_id": "casilla-record:b4dadc65c5b0cd6ff99f8a37",
+          "target": "search.html?q=238+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.637585
+        },
+        {
+          "record_id": "casilla-record:79fcbfecf859eb144f8283a3",
+          "target": "search.html?q=576+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.636004
+        },
+        {
+          "record_id": "casilla-record:dc845d98f14afcdd4479e1e0",
+          "target": "search.html?q=848+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.635606
+        },
+        {
+          "record_id": "casilla-record:9c6e08a086ef956bab4e7c3f",
+          "target": "search.html?q=234+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.633473
+        },
+        {
+          "record_id": "casilla-record:86e0e5c15e6910b498d26a9e",
+          "target": "search.html?q=763+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.632559
+        },
+        {
+          "record_id": "casilla-record:d7580bb604530bc6133289e9",
+          "target": "search.html?q=341+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.632366
+        },
+        {
+          "record_id": "casilla-record:a84c1f0c77f6403aea82285e",
+          "target": "search.html?q=121+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.631089
+        },
+        {
+          "record_id": "casilla-record:0902cf37a5cc3f24d7fe887e",
+          "target": "search.html?q=140+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.630456
+        },
+        {
+          "record_id": "code:cadrumo.application.storage.calc_sheets._engine",
+          "target": "api/cadrumo.application.storage.calc_sheets._engine.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.496924
+          "ranking_weight": 0.47664
         },
         {
-          "record_id": "legal:orden-hac-819-2024:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1",
+          "record_id": "code:cadrumo.application.filing._export",
+          "target": "api/cadrumo.application.filing._export.html",
           "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.485919
-        },
-        {
-          "record_id": "page:how-to/review-calculation-values",
-          "target": "how-to/review-calculation-values.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.481464
-        },
-        {
-          "record_id": "page:how-to/troubleshooting",
-          "target": "how-to/troubleshooting.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.47949
+          "surface": "codebase",
+          "ranking_weight": 0.475158
         }
       ],
-      "dropped_count": 10,
-      "collapsed_count": 5,
-      "dominant_cluster": "docs:docs/how-to"
+      "dropped_count": 6,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "recuadro",
@@ -525,44 +504,51 @@
           "ranking_weight": 0.767725
         },
         {
-          "record_id": "page:how-to/censo-update",
-          "target": "how-to/censo-update.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.471247
-        },
-        {
-          "record_id": "code:aeat.application.ledger._ratios",
-          "target": "api/aeat.application.ledger._ratios.html",
+          "record_id": "code:cadrumo.application.ledger._ratios",
+          "target": "api/cadrumo.application.ledger._ratios.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.463844
         },
         {
-          "record_id": "code:aeat.application.live._censo",
-          "target": "api/aeat.application.live._censo.html",
+          "record_id": "code:cadrumo.application.overview._calendar_warnings",
+          "target": "api/cadrumo.application.overview._calendar_warnings.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.452807
+          "ranking_weight": 0.432784
         },
         {
-          "record_id": "code:aeat.application.user_profile._censo_sync",
-          "target": "api/aeat.application.user_profile._censo_sync.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._censo_modelos",
+          "target": "api/cadrumo.domain.calculations.registry._censo_modelos.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.413535
+          "ranking_weight": 0.395928
         },
         {
-          "record_id": "page:how-to/choose-modelo",
-          "target": "how-to/choose-modelo.html",
+          "record_id": "code:cadrumo.application.user_profile._censo_sync",
+          "target": "api/cadrumo.application.user_profile._censo_sync.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.395327
+        },
+        {
+          "record_id": "page:how-to/censo-update",
+          "target": "how-to/censo-update.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.381703
+          "ranking_weight": 0.376334
+        },
+        {
+          "record_id": "code:cadrumo.application.user_profile._censo_errors",
+          "target": "api/cadrumo.application.user_profile._censo_errors.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.375644
         }
       ],
-      "dropped_count": 4,
-      "collapsed_count": 8,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 9,
+      "collapsed_count": 4,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "census",
@@ -582,17 +568,10 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.861911
-        },
-        {
-          "record_id": "page:how-to/censo-update",
-          "target": "how-to/censo-update.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.430907
         }
       ],
-      "dropped_count": 17,
-      "collapsed_count": 1,
+      "dropped_count": 19,
+      "collapsed_count": 0,
       "dominant_cluster": "concept:domain:concepto"
     },
     {
@@ -612,17 +591,17 @@
           "target": "_generated/glossary.html#term-censo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.969306
+          "ranking_weight": 0.969307
         },
         {
           "record_id": "legal:orden-hac-56-2024:art-1",
           "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.482119
+          "ranking_weight": 0.407118
         }
       ],
-      "dropped_count": 15,
+      "dropped_count": 16,
       "collapsed_count": 1,
       "dominant_cluster": "concept:domain:concepto"
     },
@@ -636,54 +615,47 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.95216
+          "ranking_weight": 0.894257
         },
         {
-          "record_id": "code:aeat.adapters.inbound.declaracion",
-          "target": "api/aeat.adapters.inbound.declaracion.html",
+          "record_id": "code:cadrumo.application.modelo._reconcile",
+          "target": "api/cadrumo.application.modelo._reconcile.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.431792
+          "ranking_weight": 0.460214
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations",
-          "target": "api/aeat.adapters.outbound.aeat.sede._declarations.html",
+          "record_id": "legal:orden-hac-248-2021:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.413447
+        },
+        {
+          "record_id": "legal:orden-hfp-207-2022:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.413447
+        },
+        {
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._declarations",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._declarations.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.412336
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_schema",
-          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_schema.html",
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._declarations_schema",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._declarations_schema.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.405058
-        },
-        {
-          "record_id": "legal:orden-hac-248-2021:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.376591
-        },
-        {
-          "record_id": "legal:orden-hac-265-2024:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.376591
-        },
-        {
-          "record_id": "legal:orden-hfp-207-2022:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.376591
+          "ranking_weight": 0.405059
         }
       ],
-      "dropped_count": 11,
-      "collapsed_count": 2,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 13,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "declaracion tributaria",
@@ -695,28 +667,14 @@
           "target": "_generated/glossary.html#term-autoliquidacion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.98159
+          "ranking_weight": 0.975723
         },
         {
           "record_id": "concept:declaracion",
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.974683
-        },
-        {
-          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
-          "target": "search.html?q=347+contraparte.clave-operacion",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.598949
-        },
-        {
-          "record_id": "legal:ley-58-2003:art-119",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a119",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499034
+          "ranking_weight": 0.964393
         },
         {
           "record_id": "legal:ley-58-2003:art-93",
@@ -724,25 +682,11 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.49758
-        },
-        {
-          "record_id": "legal:orden-hac-265-2024:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.489259
-        },
-        {
-          "record_id": "legal:orden-hac-248-2021:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.445834
         }
       ],
-      "dropped_count": 10,
-      "collapsed_count": 3,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "declaration",
@@ -754,40 +698,75 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.801959
+          "ranking_weight": 1.0
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations",
-          "target": "api/aeat.adapters.outbound.aeat.sede._declarations.html",
+          "record_id": "legal:orden-hac-248-2021:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.416227
+        },
+        {
+          "record_id": "legal:orden-hfp-207-2022:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.416227
+        },
+        {
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._declarations",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._declarations.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.413577
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_schema",
-          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_schema.html",
+          "record_id": "code:cadrumo.application.live._filed_observation_persistence",
+          "target": "api/cadrumo.application.live._filed_observation_persistence.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.395025
+        },
+        {
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._declarations_schema",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._declarations_schema.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.394439
         },
         {
-          "record_id": "code:aeat.entrypoints.cli._app_live_expedientes_cli",
-          "target": "api/aeat.entrypoints.cli._app_live_expedientes_cli.html",
+          "record_id": "code:cadrumo.application.live._filed_data",
+          "target": "api/cadrumo.application.live._filed_data.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.394169
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._app_live_expedientes_cli",
+          "target": "api/cadrumo.entrypoints.cli._app_live_expedientes_cli.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.380582
         },
         {
-          "record_id": "code:aeat.application.live._filed_data_capture",
-          "target": "api/aeat.application.live._filed_data_capture.html",
+          "record_id": "code:cadrumo.application.verification._verify",
+          "target": "api/cadrumo.application.verification._verify.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.380414
+        },
+        {
+          "record_id": "code:cadrumo.application.live._filed_data_capture",
+          "target": "api/cadrumo.application.live._filed_data_capture.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.375077
         }
       ],
-      "dropped_count": 14,
+      "dropped_count": 10,
       "collapsed_count": 1,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "tax return",
@@ -799,19 +778,12 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
-          "record_id": "page:explanation/building-on-earlier-filings",
-          "target": "explanation/building-on-earlier-filings.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.440195
+          "ranking_weight": 0.75546
         }
       ],
-      "dropped_count": 18,
-      "collapsed_count": 1,
-      "dominant_cluster": "docs:docs/explanation"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "case file",
@@ -823,10 +795,17 @@
           "target": "_generated/glossary.html#term-expediente",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.954144
+          "ranking_weight": 0.918732
+        },
+        {
+          "record_id": "code:cadrumo.domain.portals._entries.portal_mis_expedientes",
+          "target": "api/cadrumo.domain.portals._entries.portal_mis_expedientes.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.380004
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
       "dominant_cluster": "concept:domain:concepto"
     },
@@ -840,47 +819,54 @@
           "target": "_generated/glossary.html#term-expediente",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.787527
+          "ranking_weight": 0.941219
+        },
+        {
+          "record_id": "code:cadrumo.application.workflow._protocols",
+          "target": "api/cadrumo.application.workflow._protocols.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.437258
+        },
+        {
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._parse",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._parse.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.433899
+        },
+        {
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._schema",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.402444
         },
         {
           "record_id": "page:how-to/check-aeat-notifications",
           "target": "how-to/check-aeat-notifications.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.469386
+          "ranking_weight": 0.394386
         },
         {
-          "record_id": "code:aeat.application.workflow._protocols",
-          "target": "api/aeat.application.workflow._protocols.html",
+          "record_id": "code:cadrumo.core._post_filing_event",
+          "target": "api/cadrumo.core._post_filing_event.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.437258
+          "ranking_weight": 0.387064
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._parse",
-          "target": "api/aeat.adapters.outbound.aeat.sede._parse.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.433899
-        },
-        {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._schema",
-          "target": "api/aeat.adapters.outbound.aeat.sede._schema.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.385601
-        },
-        {
-          "record_id": "code:aeat.application.live._justificante",
-          "target": "api/aeat.application.live._justificante.html",
+          "record_id": "code:cadrumo.application.live._justificante",
+          "target": "api/cadrumo.application.live._justificante.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.378412
         }
       ],
-      "dropped_count": 14,
-      "collapsed_count": 0,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 12,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "fichero-BOE",
@@ -889,20 +875,13 @@
       "targets": [
         {
           "record_id": "concept:fichero-boe",
-          "target": "_generated/glossary.html#term-fichero-boe",
+          "target": "_generated/glossary.html#term-fichero-BOE",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.975257
-        },
-        {
-          "record_id": "code:aeat.adapters.outbound.aeat.export._formats._record_spec",
-          "target": "api/aeat.adapters.outbound.aeat.export._formats._record_spec.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.471494
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 17,
       "collapsed_count": 2,
       "dominant_cluster": "concept:domain:concepto"
     },
@@ -913,22 +892,15 @@
       "targets": [
         {
           "record_id": "concept:irpf",
-          "target": "_generated/glossary.html#term-irpf",
+          "target": "_generated/glossary.html#term-IRPF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.997853
-        },
-        {
-          "record_id": "legal:ley-35-2006:dt-32",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499954
         }
       ],
-      "dropped_count": 16,
-      "collapsed_count": 2,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "IRPF",
@@ -937,7 +909,7 @@
       "targets": [
         {
           "record_id": "concept:irpf",
-          "target": "_generated/glossary.html#term-irpf",
+          "target": "_generated/glossary.html#term-IRPF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.932753
@@ -954,20 +926,13 @@
       "targets": [
         {
           "record_id": "concept:irpf",
-          "target": "_generated/glossary.html#term-irpf",
+          "target": "_generated/glossary.html#term-IRPF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.939071
-        },
-        {
-          "record_id": "concept:modelo-100",
-          "target": "_generated/glossary.html#term-modelo-100",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.89516
         }
       ],
-      "dropped_count": 17,
+      "dropped_count": 18,
       "collapsed_count": 1,
       "dominant_cluster": "concept:domain:concepto"
     },
@@ -978,29 +943,15 @@
       "targets": [
         {
           "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-iva",
+          "target": "_generated/glossary.html#term-IVA",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.994851
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499853
-        },
-        {
-          "record_id": "legal:orden-eha-3786-2008:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.470518
         }
       ],
-      "dropped_count": 15,
-      "collapsed_count": 2,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "impuesto sobre el valor anyadido",
@@ -1009,36 +960,15 @@
       "targets": [
         {
           "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-iva",
+          "target": "_generated/glossary.html#term-IVA",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.99381
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499839
-        },
-        {
-          "record_id": "legal:orden-hap-1732-2014:art-2",
-          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499832
-        },
-        {
-          "record_id": "legal:orden-eha-3434-2007:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.487048
         }
       ],
-      "dropped_count": 14,
-      "collapsed_count": 2,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "IVA",
@@ -1047,36 +977,36 @@
       "targets": [
         {
           "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-iva",
+          "target": "_generated/glossary.html#term-IVA",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 1.0
         },
         {
-          "record_id": "page:how-to/profile-setup",
-          "target": "how-to/profile-setup.html",
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.471956
+          "surface": "legal",
+          "ranking_weight": 0.410487
         },
         {
-          "record_id": "code:aeat.domain.iva",
-          "target": "api/aeat.domain.iva.html",
+          "record_id": "code:cadrumo.domain.iva._saturation",
+          "target": "api/cadrumo.domain.iva._saturation.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.384898
+          "ranking_weight": 0.390934
         },
         {
-          "record_id": "code:aeat.domain.iva._schema",
-          "target": "api/aeat.domain.iva._schema.html",
+          "record_id": "code:cadrumo.domain.iva._invoice_classification",
+          "target": "api/cadrumo.domain.iva._invoice_classification.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.380032
+          "ranking_weight": 0.375491
         }
       ],
-      "dropped_count": 16,
-      "collapsed_count": 1,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 17,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "value-added tax",
@@ -1085,29 +1015,43 @@
       "targets": [
         {
           "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-iva",
+          "target": "_generated/glossary.html#term-IVA",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.971843
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.429008
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.424566
         },
         {
           "record_id": "legal:ley-37-1992:art-9",
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.498303
+          "ranking_weight": 0.423303
         },
         {
-          "record_id": "page:how-to/profile-setup",
-          "target": "how-to/profile-setup.html",
+          "record_id": "legal:orden-hac-174-2020:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.468329
+          "surface": "legal",
+          "ranking_weight": 0.375349
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 14,
       "collapsed_count": 1,
-      "dominant_cluster": "legal:src/aeat"
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "inversion del sujeto pasivo",
@@ -1116,17 +1060,10 @@
       "targets": [
         {
           "record_id": "concept:iva-domestic-reverse-charge",
-          "target": "_generated/glossary.html#term-iva-domestic-reverse-charge",
+          "target": "_generated/glossary.html#term-inversion-del-sujeto-pasivo",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.998185
-        },
-        {
-          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
-          "target": "search.html?q=347+contraparte.clave-operacion",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.681894
         },
         {
           "record_id": "legal:ley-37-1992:art-9",
@@ -1136,23 +1073,37 @@
           "ranking_weight": 0.498129
         },
         {
-          "record_id": "code:aeat.domain.iva._flow",
-          "target": "api/aeat.domain.iva._flow.html",
+          "record_id": "code:cadrumo.domain.iva._flow",
+          "target": "api/cadrumo.domain.iva._flow.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.493952
         },
         {
-          "record_id": "code:aeat.domain.iva._invoice_classification",
-          "target": "api/aeat.domain.iva._invoice_classification.html",
+          "record_id": "code:cadrumo.domain.iva._invoice_classification",
+          "target": "api/cadrumo.domain.iva._invoice_classification.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.490805
+          "ranking_weight": 0.487721
+        },
+        {
+          "record_id": "code:cadrumo.domain.iva._classification",
+          "target": "api/cadrumo.domain.iva._classification.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463859
+        },
+        {
+          "record_id": "code:cadrumo.domain.iva._saturation",
+          "target": "api/cadrumo.domain.iva._saturation.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.461726
         }
       ],
-      "dropped_count": 11,
+      "dropped_count": 10,
       "collapsed_count": 4,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "ISP",
@@ -1161,7 +1112,7 @@
       "targets": [
         {
           "record_id": "concept:iva-domestic-reverse-charge",
-          "target": "_generated/glossary.html#term-iva-domestic-reverse-charge",
+          "target": "_generated/glossary.html#term-inversion-del-sujeto-pasivo",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.952448
@@ -1178,29 +1129,22 @@
       "targets": [
         {
           "record_id": "concept:iva-recargo-equivalencia",
-          "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 1.0
         },
         {
-          "record_id": "code:aeat.adapters.inbound.justificante._extract",
-          "target": "api/aeat.adapters.inbound.justificante._extract.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.420782
-        },
-        {
-          "record_id": "code:aeat.domain.calculations.registry._text",
-          "target": "api/aeat.domain.calculations.registry._text.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._text",
+          "target": "api/cadrumo.domain.calculations.registry._text.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.385413
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "regimen del recargo de equivalencia",
@@ -1209,36 +1153,22 @@
       "targets": [
         {
           "record_id": "concept:iva-recargo-equivalencia",
-          "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.983029
+          "ranking_weight": 0.982416
         },
         {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499071
-        },
-        {
-          "record_id": "code:aeat.domain.deadlines._models",
-          "target": "api/aeat.domain.deadlines._models.html",
+          "record_id": "code:cadrumo.domain.deadlines._models",
+          "target": "api/cadrumo.domain.deadlines._models.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.493696
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-161",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a161",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.490763
+          "ranking_weight": 0.493704
         }
       ],
-      "dropped_count": 15,
-      "collapsed_count": 1,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "modulos",
@@ -1247,7 +1177,7 @@
       "targets": [
         {
           "record_id": "concept:iva-regimen-simplificado",
-          "target": "_generated/glossary.html#term-iva-regimen-simplificado",
+          "target": "_generated/glossary.html#term-regimen-simplificado",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.969356
@@ -1257,19 +1187,26 @@
           "target": "search.html?q=131+01",
           "kind": "casilla",
           "surface": "casilla",
-          "ranking_weight": 0.61204
+          "ranking_weight": 0.646023
         },
         {
-          "record_id": "casilla-record:7b05f42effac46cf0c0e5f86",
-          "target": "search.html?q=303+01",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.57899
+          "record_id": "code:cadrumo.domain.calculations.registry._formula_runtime_m131",
+          "target": "api/cadrumo.domain.calculations.registry._formula_runtime_m131.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.396132
+        },
+        {
+          "record_id": "code:cadrumo.domain.deadlines._profiles",
+          "target": "api/cadrumo.domain.deadlines._profiles.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.387087
         }
       ],
       "dropped_count": 13,
-      "collapsed_count": 4,
-      "dominant_cluster": "concept:domain:regimen"
+      "collapsed_count": 3,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "regimen simplificado",
@@ -1278,31 +1215,17 @@
       "targets": [
         {
           "record_id": "concept:iva-regimen-simplificado",
-          "target": "_generated/glossary.html#term-iva-regimen-simplificado",
+          "target": "_generated/glossary.html#term-regimen-simplificado",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.992097
         },
         {
-          "record_id": "legal:ley-37-1992:art-122",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a122",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.496365
-        },
-        {
-          "record_id": "code:aeat.domain.deadlines._models",
-          "target": "api/aeat.domain.deadlines._models.html",
+          "record_id": "code:cadrumo.domain.deadlines._models",
+          "target": "api/cadrumo.domain.deadlines._models.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.494136
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.492464
+          "ranking_weight": 0.494117
         },
         {
           "record_id": "legal:orden-eha-789-2010:art-1",
@@ -1310,18 +1233,11 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.492249
-        },
-        {
-          "record_id": "page:how-to/profile-setup",
-          "target": "how-to/profile-setup.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.484016
         }
       ],
-      "dropped_count": 10,
-      "collapsed_count": 4,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 14,
+      "collapsed_count": 3,
+      "dominant_cluster": "concept:domain:regimen"
     },
     {
       "query": "filing receipt",
@@ -1333,61 +1249,75 @@
           "target": "_generated/glossary.html#term-justificante",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.965726
+          "ranking_weight": 0.920855
+        },
+        {
+          "record_id": "code:cadrumo.domain.modelos._filing_record",
+          "target": "api/cadrumo.domain.modelos._filing_record.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.421091
         },
         {
           "record_id": "page:how-to/justificante-receipts",
           "target": "how-to/justificante-receipts.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.489861
+          "ranking_weight": 0.414861
+        },
+        {
+          "record_id": "code:cadrumo.domain.justificante._schema",
+          "target": "api/cadrumo.domain.justificante._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.406787
+        },
+        {
+          "record_id": "code:cadrumo.domain.justificante",
+          "target": "api/cadrumo.domain.justificante.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.405378
+        },
+        {
+          "record_id": "page:how-to/read-live-aeat-data",
+          "target": "how-to/read-live-aeat-data.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.403004
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._export",
+          "target": "api/cadrumo.application.modelo._export.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.399496
+        },
+        {
+          "record_id": "code:cadrumo.adapters.persistence.profile.modelos_filing",
+          "target": "api/cadrumo.adapters.persistence.profile.modelos_filing.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.397233
         },
         {
           "record_id": "page:how-to/file-at-aeat",
           "target": "how-to/file-at-aeat.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.464054
+          "ranking_weight": 0.389054
         },
         {
-          "record_id": "page:how-to/reconcile",
-          "target": "how-to/reconcile.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.445619
-        },
-        {
-          "record_id": "code:aeat.domain.modelos._filing_record",
-          "target": "api/aeat.domain.modelos._filing_record.html",
+          "record_id": "code:cadrumo.application.live._justificante",
+          "target": "api/cadrumo.application.live._justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.43376
-        },
-        {
-          "record_id": "page:explanation/recording-a-filing-and-the-boundary",
-          "target": "explanation/recording-a-filing-and-the-boundary.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.421736
-        },
-        {
-          "record_id": "code:aeat.application.modelo._export",
-          "target": "api/aeat.application.modelo._export.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.4172
-        },
-        {
-          "record_id": "code:aeat.domain.justificante._schema",
-          "target": "api/aeat.domain.justificante._schema.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.404419
+          "ranking_weight": 0.375896
         }
       ],
-      "dropped_count": 7,
-      "collapsed_count": 5,
-      "dominant_cluster": "docs:docs/how-to"
+      "dropped_count": 8,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "justificante",
@@ -1399,75 +1329,96 @@
           "target": "_generated/glossary.html#term-justificante",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.927063
+          "ranking_weight": 1.0
         },
         {
-          "record_id": "page:how-to/reconcile",
-          "target": "how-to/reconcile.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.49466
-        },
-        {
-          "record_id": "code:aeat.domain.justificante._schema",
-          "target": "api/aeat.domain.justificante._schema.html",
+          "record_id": "code:cadrumo.domain.justificante",
+          "target": "api/cadrumo.domain.justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.488703
+          "ranking_weight": 0.492986
         },
         {
-          "record_id": "page:how-to/justificante-receipts",
-          "target": "how-to/justificante-receipts.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.486539
-        },
-        {
-          "record_id": "code:aeat.domain.justificante._repository",
-          "target": "api/aeat.domain.justificante._repository.html",
+          "record_id": "code:cadrumo.domain.justificante._schema",
+          "target": "api/cadrumo.domain.justificante._schema.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.469875
+          "ranking_weight": 0.487218
         },
         {
-          "record_id": "page:explanation/recording-a-filing-and-the-boundary",
-          "target": "explanation/recording-a-filing-and-the-boundary.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.466825
-        },
-        {
-          "record_id": "code:aeat.adapters.inbound.justificante._extract",
-          "target": "api/aeat.adapters.inbound.justificante._extract.html",
+          "record_id": "code:cadrumo.adapters.inbound.justificante",
+          "target": "api/cadrumo.adapters.inbound.justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.466591
+          "ranking_weight": 0.486138
         },
         {
-          "record_id": "code:aeat.application.live._justificante",
-          "target": "api/aeat.application.live._justificante.html",
+          "record_id": "code:cadrumo.application.live",
+          "target": "api/cadrumo.application.live.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.464966
+          "ranking_weight": 0.469179
         },
         {
-          "record_id": "code:aeat.application.modelo._reconcile",
-          "target": "api/aeat.application.modelo._reconcile.html",
+          "record_id": "code:cadrumo.application.live._justificante",
+          "target": "api/cadrumo.application.live._justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.452226
+          "ranking_weight": 0.469094
         },
         {
-          "record_id": "code:aeat.adapters.inbound.justificante._parser",
-          "target": "api/aeat.adapters.inbound.justificante._parser.html",
+          "record_id": "code:cadrumo.adapters.persistence.profile.justificante",
+          "target": "api/cadrumo.adapters.persistence.profile.justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.437749
+          "ranking_weight": 0.468606
+        },
+        {
+          "record_id": "code:cadrumo.adapters.inbound.justificante._extract",
+          "target": "api/cadrumo.adapters.inbound.justificante._extract.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.465562
+        },
+        {
+          "record_id": "code:cadrumo.adapters.inbound.justificante._parser",
+          "target": "api/cadrumo.adapters.inbound.justificante._parser.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463277
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._reconcile",
+          "target": "api/cadrumo.application.modelo._reconcile.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.451614
+        },
+        {
+          "record_id": "code:cadrumo.application.filing._import",
+          "target": "api/cadrumo.application.filing._import.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.451007
+        },
+        {
+          "record_id": "code:cadrumo.application.overview._calendar_evidence",
+          "target": "api/cadrumo.application.overview._calendar_evidence.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.443391
+        },
+        {
+          "record_id": "code:cadrumo.domain.justificante._errors",
+          "target": "api/cadrumo.domain.justificante._errors.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.439627
         }
       ],
-      "dropped_count": 7,
-      "collapsed_count": 3,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 0,
+      "collapsed_count": 8,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "justificante de presentacion",
@@ -1479,33 +1430,26 @@
           "target": "_generated/glossary.html#term-justificante",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.972537
+          "ranking_weight": 0.937189
         },
         {
-          "record_id": "casilla-record:0ef210154ad84cd9ed8ac1a3",
-          "target": "search.html?q=360+decl.ejercicio",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.664129
-        },
-        {
-          "record_id": "code:aeat.domain.justificante._schema",
-          "target": "api/aeat.domain.justificante._schema.html",
+          "record_id": "code:cadrumo.domain.justificante._schema",
+          "target": "api/cadrumo.domain.justificante._schema.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.492449
+          "ranking_weight": 0.492293
         },
         {
-          "record_id": "code:aeat.application.live._justificante",
-          "target": "api/aeat.application.live._justificante.html",
+          "record_id": "code:cadrumo.domain.justificante",
+          "target": "api/cadrumo.domain.justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.449839
+          "ranking_weight": 0.489193
         }
       ],
-      "dropped_count": 15,
-      "collapsed_count": 0,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 16,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "ledger",
@@ -1520,16 +1464,65 @@
           "ranking_weight": 0.882471
         },
         {
-          "record_id": "code:aeat.entrypoints.cli._ledger_read_cli",
-          "target": "api/aeat.entrypoints.cli._ledger_read_cli.html",
+          "record_id": "code:cadrumo.core.aggregation",
+          "target": "api/cadrumo.core.aggregation.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.394322
+          "ranking_weight": 0.427765
+        },
+        {
+          "record_id": "code:cadrumo.application.ledger._rule_repository",
+          "target": "api/cadrumo.application.ledger._rule_repository.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.419818
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._ledger_read_cli",
+          "target": "api/cadrumo.entrypoints.cli._ledger_read_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.413799
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._ledger",
+          "target": "api/cadrumo.entrypoints.cli._ledger.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.406281
+        },
+        {
+          "record_id": "code:cadrumo.application.ledger._evidence_draft",
+          "target": "api/cadrumo.application.ledger._evidence_draft.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.405647
+        },
+        {
+          "record_id": "code:cadrumo.adapters.persistence.profile.inventory",
+          "target": "api/cadrumo.adapters.persistence.profile.inventory.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.395152
+        },
+        {
+          "record_id": "code:cadrumo.application.ledger._models",
+          "target": "api/cadrumo.application.ledger._models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.391488
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._ledger_lifecycle_cli",
+          "target": "api/cadrumo.entrypoints.cli._ledger_lifecycle_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.387383
         }
       ],
-      "dropped_count": 16,
-      "collapsed_count": 1,
-      "dominant_cluster": "concept:domain:concepto"
+      "dropped_count": 8,
+      "collapsed_count": 3,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "modelo",
@@ -1541,103 +1534,89 @@
           "target": "_generated/glossary.html#term-modelo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.877211
+          "ranking_weight": 0.860246
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._authority",
+          "target": "api/cadrumo.domain.calculations.registry._authority.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.492681
+        },
+        {
+          "record_id": "code:cadrumo.adapters.persistence.profile.modelos_filing",
+          "target": "api/cadrumo.adapters.persistence.profile.modelos_filing.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.463363
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._work_create_policy",
+          "target": "api/cadrumo.application.modelo._work_create_policy.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.455874
+        },
+        {
+          "record_id": "code:cadrumo.core._modelo",
+          "target": "api/cadrumo.core._modelo.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.448714
+        },
+        {
+          "record_id": "code:cadrumo.application.overview._explain",
+          "target": "api/cadrumo.application.overview._explain.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.446214
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._modelo_discovery_cli",
+          "target": "api/cadrumo.entrypoints.cli._modelo_discovery_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.434584
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._reconcile",
+          "target": "api/cadrumo.application.modelo._reconcile.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.428215
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._schema",
+          "target": "api/cadrumo.domain.calculations.registry._schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.425295
         },
         {
           "record_id": "page:how-to/choose-modelo",
           "target": "how-to/choose-modelo.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.495015
+          "ranking_weight": 0.420015
         },
         {
-          "record_id": "code:aeat.domain.calculations.registry._authority",
-          "target": "api/aeat.domain.calculations.registry._authority.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._validate",
+          "target": "api/cadrumo.domain.calculations.registry._validate.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.492681
+          "ranking_weight": 0.415813
         },
         {
-          "record_id": "page:explanation/editing-and-verifying",
-          "target": "explanation/editing-and-verifying.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.483234
-        },
-        {
-          "record_id": "code:aeat.domain.calculations.registry._queries",
-          "target": "api/aeat.domain.calculations.registry._queries.html",
+          "record_id": "code:cadrumo.domain.modelos",
+          "target": "api/cadrumo.domain.modelos.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.481911
-        },
-        {
-          "record_id": "page:how-to/filing-calendar",
-          "target": "how-to/filing-calendar.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.480175
-        },
-        {
-          "record_id": "code:aeat.core._modelo",
-          "target": "api/aeat.core._modelo.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.468179
-        },
-        {
-          "record_id": "page:how-to/quickstart",
-          "target": "how-to/quickstart.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.45273
-        },
-        {
-          "record_id": "code:aeat.domain.modelos._filing_repository",
-          "target": "api/aeat.domain.modelos._filing_repository.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.452456
-        },
-        {
-          "record_id": "page:how-to/censo-update",
-          "target": "how-to/censo-update.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.447797
-        },
-        {
-          "record_id": "page:how-to/modelo-303",
-          "target": "how-to/modelo-303.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.440629
-        },
-        {
-          "record_id": "code:aeat.domain.modelos",
-          "target": "api/aeat.domain.modelos.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.436625
-        },
-        {
-          "record_id": "code:aeat.domain.calculations.registry._schema",
-          "target": "api/aeat.domain.calculations.registry._schema.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.425295
-        },
-        {
-          "record_id": "page:USERDOCS-KICKOFF-BRIEF",
-          "target": "USERDOCS-KICKOFF-BRIEF.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.418723
+          "ranking_weight": 0.40989
         }
       ],
-      "dropped_count": 5,
-      "collapsed_count": 1,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 6,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "tax form",
@@ -1649,33 +1628,12 @@
           "target": "_generated/glossary.html#term-modelo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.775176
-        },
-        {
-          "record_id": "page:how-to/choose-modelo",
-          "target": "how-to/choose-modelo.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.391732
-        },
-        {
-          "record_id": "page:explanation/from-records-to-figures",
-          "target": "explanation/from-records-to-figures.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.389355
-        },
-        {
-          "record_id": "page:explanation/building-on-earlier-filings",
-          "target": "explanation/building-on-earlier-filings.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.388968
+          "ranking_weight": 0.775175
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": "docs:docs/explanation"
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "declaracion de la renta",
@@ -1687,19 +1645,19 @@
           "target": "_generated/glossary.html#term-modelo-100",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.976478
+          "ranking_weight": 1.0
         },
         {
           "record_id": "concept:renta",
           "target": "_generated/glossary.html#term-renta",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.940856
+          "ranking_weight": 0.867309
         }
       ],
-      "dropped_count": 17,
-      "collapsed_count": 1,
-      "dominant_cluster": "concept:domain:modelo"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "modelo 100",
@@ -1707,18 +1665,18 @@
       "language": "es",
       "targets": [
         {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.981834
+        },
+        {
           "record_id": "concept:modelo-100",
           "target": "_generated/glossary.html#term-modelo-100",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
-          "record_id": "casilla-record:887c517cb4bbff8eec748645",
-          "target": "search.html?q=100+PH18",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.687014
+          "ranking_weight": 0.976501
         },
         {
           "record_id": "legal:ley-35-2006:art-85",
@@ -1728,9 +1686,9 @@
           "ranking_weight": 0.499841
         }
       ],
-      "dropped_count": 4,
-      "collapsed_count": 14,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 17,
+      "collapsed_count": 0,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "modelo 130",
@@ -1742,19 +1700,26 @@
           "target": "_generated/glossary.html#term-modelo-130",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.977145
+          "ranking_weight": 0.972503
         },
         {
-          "record_id": "casilla-record:72682934c9ce0782ee8ba38d",
-          "target": "search.html?q=130+01",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.693835
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.498438
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488453
         }
       ],
-      "dropped_count": 14,
-      "collapsed_count": 4,
-      "dominant_cluster": "casilla:modelo:130"
+      "dropped_count": 17,
+      "collapsed_count": 0,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "pago fraccionado",
@@ -1767,60 +1732,11 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 1.0
-        },
-        {
-          "record_id": "legal:orden-hac-1155-2020:art-4",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-15599",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498068
-        },
-        {
-          "record_id": "legal:orden-hac-1347-2024:art-4",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498068
-        },
-        {
-          "record_id": "legal:orden-hac-1425-2025:art-4",
-          "target": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498068
-        },
-        {
-          "record_id": "legal:orden-hfp-1172-2022:art-4",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498068
-        },
-        {
-          "record_id": "legal:orden-hfp-1335-2021:art-4",
-          "target": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2021-19904",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498068
-        },
-        {
-          "record_id": "legal:orden-hfp-1359-2023:art-4",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.498068
-        },
-        {
-          "record_id": "legal:ley-27-2014:art-40",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.490075
         }
       ],
-      "dropped_count": 13,
+      "dropped_count": 20,
       "collapsed_count": 0,
-      "dominant_cluster": "legal:src/aeat"
+      "dominant_cluster": null
     },
     {
       "query": "autoliquidacion de IVA",
@@ -1842,18 +1758,11 @@
           "ranking_weight": 0.497579
         },
         {
-          "record_id": "page:how-to/modelo-303",
-          "target": "how-to/modelo-303.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.49347
-        },
-        {
-          "record_id": "legal:orden-hac-819-2024:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.486172
+          "surface": "codebase",
+          "ranking_weight": 0.488579
         },
         {
           "record_id": "legal:orden-eha-789-2010:art-1",
@@ -1861,18 +1770,11 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.486149
-        },
-        {
-          "record_id": "code:aeat.domain.portals._entries.portal_m303_iva_autoliquidacion",
-          "target": "api/aeat.domain.portals._entries.portal_m303_iva_autoliquidacion.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.478203
         }
       ],
-      "dropped_count": 11,
-      "collapsed_count": 3,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "modelo 303",
@@ -1884,33 +1786,19 @@
           "target": "_generated/glossary.html#term-modelo-303",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.972823
         },
         {
-          "record_id": "casilla-record:7b05f42effac46cf0c0e5f86",
-          "target": "search.html?q=303+01",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.686158
-        },
-        {
-          "record_id": "page:how-to/modelo-303",
-          "target": "how-to/modelo-303.html",
+          "record_id": "code:cadrumo.application.modelo._m303_m349_reconcile",
+          "target": "api/cadrumo.application.modelo._m303_m349_reconcile.html",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.499537
-        },
-        {
-          "record_id": "page:how-to/choose-modelo",
-          "target": "how-to/choose-modelo.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.491268
+          "surface": "codebase",
+          "ranking_weight": 0.482833
         }
       ],
-      "dropped_count": 0,
-      "collapsed_count": 17,
-      "dominant_cluster": "docs:docs/how-to"
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 390",
@@ -1922,26 +1810,12 @@
           "target": "_generated/glossary.html#term-modelo-390",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
-          "record_id": "casilla-record:fe0169c831b8e37bf0c1641c",
-          "target": "search.html?q=390+iva.anual.compensacion-generada-ejercicio-no-97",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.692256
-        },
-        {
-          "record_id": "page:how-to/modelo-390",
-          "target": "how-to/modelo-390.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.499221
+          "ranking_weight": 0.973051
         }
       ],
-      "dropped_count": 4,
-      "collapsed_count": 14,
-      "dominant_cluster": "docs:docs/how-to"
+      "dropped_count": 19,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "resumen anual de IVA",
@@ -1953,7 +1827,7 @@
           "target": "_generated/glossary.html#term-modelo-390",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.997081
+          "ranking_weight": 0.992549
         },
         {
           "record_id": "legal:orden-eha-789-2010:art-1",
@@ -1963,15 +1837,15 @@
           "ranking_weight": 0.488151
         },
         {
-          "record_id": "code:aeat.domain.calculations.registry._applicability",
-          "target": "api/aeat.domain.calculations.registry._applicability.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.485668
+          "ranking_weight": 0.479806
         }
       ],
-      "dropped_count": 17,
-      "collapsed_count": 0,
+      "dropped_count": 16,
+      "collapsed_count": 1,
       "dominant_cluster": "concept:domain:modelo"
     },
     {
@@ -1981,43 +1855,36 @@
       "targets": [
         {
           "record_id": "concept:nif",
-          "target": "_generated/glossary.html#term-nif",
+          "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.978377
         },
         {
-          "record_id": "code:aeat.core.identity._documents",
-          "target": "api/aeat.core.identity._documents.html",
+          "record_id": "code:cadrumo.core.identity._documents",
+          "target": "api/cadrumo.core.identity._documents.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.479832
+          "ranking_weight": 0.47821
         },
         {
-          "record_id": "code:aeat.core.identity._tax_id",
-          "target": "api/aeat.core.identity._tax_id.html",
+          "record_id": "code:cadrumo.core.identity._tax_id",
+          "target": "api/cadrumo.core.identity._tax_id.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.465244
+          "ranking_weight": 0.450024
         },
         {
-          "record_id": "page:how-to/profile-setup",
-          "target": "how-to/profile-setup.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.417412
-        },
-        {
-          "record_id": "code:aeat.adapters.outbound.aeat.auth.certificate",
-          "target": "api/aeat.adapters.outbound.aeat.auth.certificate.html",
+          "record_id": "code:cadrumo.adapters.outbound.aeat.auth.certificate",
+          "target": "api/cadrumo.adapters.outbound.aeat.auth.certificate.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.401429
+          "ranking_weight": 0.414131
         }
       ],
-      "dropped_count": 9,
-      "collapsed_count": 6,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 6,
+      "collapsed_count": 10,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "NIE",
@@ -2026,29 +1893,29 @@
       "targets": [
         {
           "record_id": "concept:nif",
-          "target": "_generated/glossary.html#term-nif",
+          "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.85941
         },
         {
-          "record_id": "code:aeat.core.identity._documents",
-          "target": "api/aeat.core.identity._documents.html",
+          "record_id": "code:cadrumo.core.identity._documents",
+          "target": "api/cadrumo.core.identity._documents.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.463099
+          "ranking_weight": 0.462792
         },
         {
-          "record_id": "page:how-to/profile-setup",
-          "target": "how-to/profile-setup.html",
+          "record_id": "code:cadrumo.core.identity._tax_id",
+          "target": "api/cadrumo.core.identity._tax_id.html",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.40038
+          "surface": "codebase",
+          "ranking_weight": 0.38961
         }
       ],
       "dropped_count": 15,
       "collapsed_count": 2,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "NIF",
@@ -2057,64 +1924,22 @@
       "targets": [
         {
           "record_id": "concept:nif",
-          "target": "_generated/glossary.html#term-nif",
+          "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.974399
         },
         {
-          "record_id": "casilla-record:887c517cb4bbff8eec748645",
-          "target": "search.html?q=100+PH18",
+          "record_id": "casilla-record:da25057bbc486233eee20b3d",
+          "target": "search.html?q=100+0001",
           "kind": "casilla",
           "surface": "casilla",
-          "ranking_weight": 0.65845
-        },
-        {
-          "record_id": "legal:orden-eha-3127-2009:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.483628
-        },
-        {
-          "record_id": "legal:orden-hac-265-2024:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.478179
-        },
-        {
-          "record_id": "legal:orden-hac-277-2026:art-3",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.478179
-        },
-        {
-          "record_id": "legal:orden-hac-248-2021:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.47386
-        },
-        {
-          "record_id": "legal:orden-hfp-207-2022:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.47386
-        },
-        {
-          "record_id": "legal:orden-hfp-310-2023:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.47386
+          "ranking_weight": 0.656269
         }
       ],
-      "dropped_count": 4,
-      "collapsed_count": 8,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 12,
+      "collapsed_count": 6,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "Numero de Identificacion Fiscal",
@@ -2123,57 +1948,15 @@
       "targets": [
         {
           "record_id": "concept:nif",
-          "target": "_generated/glossary.html#term-nif",
+          "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.998946
-        },
-        {
-          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
-          "target": "search.html?q=347+contraparte.clave-operacion",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.681199
-        },
-        {
-          "record_id": "casilla-record:8b981f9d5851140dc06a6f77",
-          "target": "search.html?q=720+decl.ejercicio",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.668091
-        },
-        {
-          "record_id": "casilla-record:292c599d5a02e02025aa5254",
-          "target": "search.html?q=184+tipo2.renta-atribuible-importe",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.658908
-        },
-        {
-          "record_id": "casilla-record:5ba734e53bd5da4719183586",
-          "target": "search.html?q=190+decl.total-percepciones",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.657595
-        },
-        {
-          "record_id": "legal:orden-eha-3377-2011:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499893
-        },
-        {
-          "record_id": "legal:orden-eha-3127-2009:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.488099
         }
       ],
-      "dropped_count": 10,
-      "collapsed_count": 3,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 18,
+      "collapsed_count": 1,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "aranyositas",
@@ -2205,30 +1988,44 @@
           "ranking_weight": 0.995397
         },
         {
-          "record_id": "code:aeat.domain.categories._proportionality",
-          "target": "api/aeat.domain.categories._proportionality.html",
+          "record_id": "code:cadrumo.domain.categories._proportionality",
+          "target": "api/cadrumo.domain.categories._proportionality.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.473709
         },
         {
-          "record_id": "code:aeat.domain.iva._prorrata",
-          "target": "api/aeat.domain.iva._prorrata.html",
+          "record_id": "code:cadrumo.domain.iva._prorrata",
+          "target": "api/cadrumo.domain.iva._prorrata.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.44007
+          "ranking_weight": 0.444288
         },
         {
-          "record_id": "code:aeat.domain.renta._ledger_expenses",
-          "target": "api/aeat.domain.renta._ledger_expenses.html",
+          "record_id": "code:cadrumo.domain.renta._ledger_expenses",
+          "target": "api/cadrumo.domain.renta._ledger_expenses.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.403811
+          "ranking_weight": 0.423979
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._renta_gasto_ledger",
+          "target": "api/cadrumo.application.aggregation._renta_gasto_ledger.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.412102
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._iva_ledger",
+          "target": "api/cadrumo.application.aggregation._iva_ledger.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.385006
         }
       ],
-      "dropped_count": 11,
+      "dropped_count": 9,
       "collapsed_count": 5,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "pro rata",
@@ -2250,23 +2047,37 @@
           "ranking_weight": 0.859667
         },
         {
-          "record_id": "code:aeat.domain.iva._prorrata",
-          "target": "api/aeat.domain.iva._prorrata.html",
+          "record_id": "code:cadrumo.domain.iva._prorrata",
+          "target": "api/cadrumo.domain.iva._prorrata.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.417498
+          "ranking_weight": 0.419084
+        },
+        {
+          "record_id": "code:cadrumo.application.calculations._prorrata_regularizacion",
+          "target": "api/cadrumo.application.calculations._prorrata_regularizacion.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.406174
         },
         {
           "record_id": "legal:orden-eha-789-2010:art-1",
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.388086
+          "ranking_weight": 0.39502
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._prorrata_regularizacion_advisory",
+          "target": "api/cadrumo.application.modelo._prorrata_regularizacion_advisory.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.377493
         }
       ],
-      "dropped_count": 13,
-      "collapsed_count": 2,
-      "dominant_cluster": "concept:domain:concepto"
+      "dropped_count": 10,
+      "collapsed_count": 4,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "prorateo",
@@ -2305,30 +2116,58 @@
           "ranking_weight": 0.968093
         },
         {
-          "record_id": "code:aeat.domain.iva._prorrata",
-          "target": "api/aeat.domain.iva._prorrata.html",
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.485827
+        },
+        {
+          "record_id": "code:cadrumo.domain.iva._prorrata",
+          "target": "api/cadrumo.domain.iva._prorrata.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.463878
+          "ranking_weight": 0.475926
         },
         {
-          "record_id": "legal:ley-37-1992:art-104",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104",
+          "record_id": "code:cadrumo.application.calculations._prorrata_regularizacion",
+          "target": "api/cadrumo.application.calculations._prorrata_regularizacion.html",
           "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.460583
+          "surface": "codebase",
+          "ranking_weight": 0.467412
         },
         {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "record_id": "code:cadrumo.application.prorrata_register._sector_lifecycle",
+          "target": "api/cadrumo.application.prorrata_register._sector_lifecycle.html",
           "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.460583
+          "surface": "codebase",
+          "ranking_weight": 0.460727
+        },
+        {
+          "record_id": "code:cadrumo.core._prorrata_register",
+          "target": "api/cadrumo.core._prorrata_register.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.459888
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._prorrata_regularizacion_advisory",
+          "target": "api/cadrumo.application.modelo._prorrata_regularizacion_advisory.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.452937
+        },
+        {
+          "record_id": "code:cadrumo.application.prorrata_register",
+          "target": "api/cadrumo.application.prorrata_register.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.441382
         }
       ],
-      "dropped_count": 9,
-      "collapsed_count": 6,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 2,
+      "collapsed_count": 10,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "prorrateo",
@@ -2372,32 +2211,11 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.499217
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499149
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-102",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a102",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.499089
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-104",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.488052
         }
       ],
-      "dropped_count": 10,
-      "collapsed_count": 5,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 16,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "kulonleges aranyositas",
@@ -2429,44 +2247,65 @@
           "ranking_weight": 0.949319
         },
         {
-          "record_id": "concept:prorrata",
-          "target": "_generated/glossary.html#term-prorrata",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.921156
-        },
-        {
-          "record_id": "casilla-record:75667132dbf04550bd5e5aa4",
-          "target": "search.html?q=322+decl.ejercicio",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.653734
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.498076
+          "ranking_weight": 0.498278
         },
         {
-          "record_id": "code:aeat.domain.iva._prorrata",
-          "target": "api/aeat.domain.iva._prorrata.html",
+          "record_id": "code:cadrumo.application.modelo._prorrata_regularizacion_advisory",
+          "target": "api/cadrumo.application.modelo._prorrata_regularizacion_advisory.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.496804
+        },
+        {
+          "record_id": "code:cadrumo.core._prorrata_register",
+          "target": "api/cadrumo.core._prorrata_register.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.494864
+        },
+        {
+          "record_id": "code:cadrumo.domain.iva._prorrata",
+          "target": "api/cadrumo.domain.iva._prorrata.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.493136
         },
         {
-          "record_id": "code:aeat.core.external_constants",
-          "target": "api/aeat.core.external_constants.html",
+          "record_id": "code:cadrumo.application.calculations._prorrata_regularizacion",
+          "target": "api/cadrumo.application.calculations._prorrata_regularizacion.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.486789
+          "ranking_weight": 0.490799
+        },
+        {
+          "record_id": "code:cadrumo.core.external_constants",
+          "target": "api/cadrumo.core.external_constants.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.479138
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._ledger",
+          "target": "api/cadrumo.entrypoints.cli._ledger.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.474241
+        },
+        {
+          "record_id": "code:cadrumo.entrypoints.cli._prorrata_register_cli",
+          "target": "api/cadrumo.entrypoints.cli._prorrata_register_cli.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.471726
         }
       ],
-      "dropped_count": 6,
-      "collapsed_count": 8,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 5,
+      "collapsed_count": 6,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "special pro rata",
@@ -2481,23 +2320,37 @@
           "ranking_weight": 0.983084
         },
         {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.446114
+          "ranking_weight": 0.459818
         },
         {
-          "record_id": "code:aeat.domain.iva._prorrata",
-          "target": "api/aeat.domain.iva._prorrata.html",
+          "record_id": "code:cadrumo.domain.iva._prorrata",
+          "target": "api/cadrumo.domain.iva._prorrata.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.398344
+          "ranking_weight": 0.434934
+        },
+        {
+          "record_id": "code:cadrumo.core._prorrata_register",
+          "target": "api/cadrumo.core._prorrata_register.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.414753
+        },
+        {
+          "record_id": "page:how-to/prorrata",
+          "target": "how-to/prorrata.html",
+          "kind": "page",
+          "surface": "docs",
+          "ranking_weight": 0.411099
         }
       ],
-      "dropped_count": 16,
-      "collapsed_count": 1,
-      "dominant_cluster": "concept:domain:concepto"
+      "dropped_count": 11,
+      "collapsed_count": 4,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "equivalence surcharge",
@@ -2506,50 +2359,50 @@
       "targets": [
         {
           "record_id": "concept:recargo-equivalencia",
-          "target": "_generated/glossary.html#term-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-recargo-de-equivalencia",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.9675
         },
         {
           "record_id": "concept:iva-recargo-equivalencia",
-          "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.919694
+          "ranking_weight": 0.929941
+        },
+        {
+          "record_id": "code:cadrumo.domain.transactions._llm",
+          "target": "api/cadrumo.domain.transactions._llm.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.441832
+        },
+        {
+          "record_id": "code:cadrumo.domain.iva._saturation",
+          "target": "api/cadrumo.domain.iva._saturation.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.428605
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._iva_ledger",
+          "target": "api/cadrumo.application.aggregation._iva_ledger.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.427469
         },
         {
           "record_id": "page:how-to/profile-setup",
           "target": "how-to/profile-setup.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.471424
-        },
-        {
-          "record_id": "code:aeat.domain.iva._saturation",
-          "target": "api/aeat.domain.iva._saturation.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.422579
-        },
-        {
-          "record_id": "code:aeat.application.aggregation._iva_ledger",
-          "target": "api/aeat.application.aggregation._iva_ledger.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.402648
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.39162
+          "ranking_weight": 0.381656
         }
       ],
       "dropped_count": 14,
       "collapsed_count": 0,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "recargo de equivalencia",
@@ -2558,43 +2411,22 @@
       "targets": [
         {
           "record_id": "concept:recargo-equivalencia",
-          "target": "_generated/glossary.html#term-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-recargo-de-equivalencia",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.978228
         },
         {
-          "record_id": "legal:ley-37-1992:art-9",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.49852
-        },
-        {
-          "record_id": "code:aeat.domain.iva._recargo_equivalencia",
-          "target": "api/aeat.domain.iva._recargo_equivalencia.html",
+          "record_id": "code:cadrumo.domain.iva._recargo_equivalencia",
+          "target": "api/cadrumo.domain.iva._recargo_equivalencia.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.493204
-        },
-        {
-          "record_id": "legal:ley-37-1992:art-161",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a161",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.4878
-        },
-        {
-          "record_id": "code:aeat.domain.iva._saturation",
-          "target": "api/aeat.domain.iva._saturation.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.48747
+          "ranking_weight": 0.493276
         }
       ],
-      "dropped_count": 11,
-      "collapsed_count": 4,
-      "dominant_cluster": "legal:src/aeat"
+      "dropped_count": 17,
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "renta",
@@ -2613,12 +2445,12 @@
           "target": "explanation/building-on-earlier-filings.html",
           "kind": "page",
           "surface": "docs",
-          "ranking_weight": 0.487531
+          "ranking_weight": 0.412531
         }
       ],
       "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": "docs:docs/explanation"
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "revision",
@@ -2633,51 +2465,72 @@
           "ranking_weight": 0.925941
         },
         {
-          "record_id": "page:how-to/filing-spine",
-          "target": "how-to/filing-spine.html",
+          "record_id": "code:cadrumo.application.modelo._work_addressing",
+          "target": "api/cadrumo.application.modelo._work_addressing.html",
           "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.44422
+          "surface": "codebase",
+          "ranking_weight": 0.443752
         },
         {
-          "record_id": "code:aeat.application.registry",
-          "target": "api/aeat.application.registry.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._loader",
+          "target": "api/cadrumo.domain.calculations.registry._loader.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.442197
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._revision_persistence",
+          "target": "api/cadrumo.application.modelo._revision_persistence.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.424329
+        },
+        {
+          "record_id": "code:cadrumo.application.registry",
+          "target": "api/cadrumo.application.registry.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.42401
         },
         {
-          "record_id": "code:aeat.application.modelo._revision_persistence",
-          "target": "api/aeat.application.modelo._revision_persistence.html",
+          "record_id": "code:cadrumo.application.modelo._registry_helpers",
+          "target": "api/cadrumo.application.modelo._registry_helpers.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.420441
+          "ranking_weight": 0.423942
         },
         {
-          "record_id": "page:how-to/modelo-303",
-          "target": "how-to/modelo-303.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.418493
-        },
-        {
-          "record_id": "code:aeat.application.modelo._selectors",
-          "target": "api/aeat.application.modelo._selectors.html",
+          "record_id": "code:cadrumo.adapters.persistence.storage.sql._secure_object_crypto",
+          "target": "api/cadrumo.adapters.persistence.storage.sql._secure_object_crypto.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.387646
+          "ranking_weight": 0.420046
         },
         {
-          "record_id": "code:aeat.entrypoints.cli._modelo_work_revision_cli",
-          "target": "api/aeat.entrypoints.cli._modelo_work_revision_cli.html",
+          "record_id": "code:cadrumo.application.modelo._selectors",
+          "target": "api/cadrumo.application.modelo._selectors.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.380723
+          "ranking_weight": 0.412323
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._ledger_filing_snapshot",
+          "target": "api/cadrumo.application.aggregation._ledger_filing_snapshot.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.376431
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._calculation_source_staging",
+          "target": "api/cadrumo.application.modelo._calculation_source_staging.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.375594
         }
       ],
-      "dropped_count": 11,
-      "collapsed_count": 2,
-      "dominant_cluster": "codebase:src/aeat"
+      "dropped_count": 4,
+      "collapsed_count": 6,
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "electronic office",
@@ -2689,17 +2542,10 @@
           "target": "_generated/glossary.html#term-sede-electronica",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.95655
-        },
-        {
-          "record_id": "legal:orden-hfp-310-2023:art-8",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.435909
+          "ranking_weight": 0.912524
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 19,
       "collapsed_count": 0,
       "dominant_cluster": "concept:domain:concepto"
     },
@@ -2716,37 +2562,37 @@
           "ranking_weight": 1.0
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._walker",
-          "target": "api/aeat.adapters.outbound.aeat.sede._walker.html",
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._notifications",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._notifications.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.387267
+          "ranking_weight": 0.39883
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._parse",
-          "target": "api/aeat.adapters.outbound.aeat.sede._parse.html",
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._walker",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._walker.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.388081
+        },
+        {
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._parse",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._parse.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.385613
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._schema",
-          "target": "api/aeat.adapters.outbound.aeat.sede._schema.html",
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._schema",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._schema.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.381303
-        },
-        {
-          "record_id": "page:how-to/modelo-036",
-          "target": "how-to/modelo-036.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.375979
+          "ranking_weight": 0.382032
         }
       ],
       "dropped_count": 16,
       "collapsed_count": 0,
-      "dominant_cluster": "codebase:src/aeat"
+      "dominant_cluster": "codebase:src/cadrumo"
     },
     {
       "query": "sede electronica",
@@ -2758,12 +2604,19 @@
           "target": "_generated/glossary.html#term-sede-electronica",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.989675
+          "ranking_weight": 0.986435
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496402
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 1,
-      "dominant_cluster": "concept:domain:concepto"
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "VAT Information Exchange System",
@@ -2772,14 +2625,14 @@
       "targets": [
         {
           "record_id": "concept:vies",
-          "target": "_generated/glossary.html#term-vies",
+          "target": "_generated/glossary.html#term-VIES",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.999111
         },
         {
-          "record_id": "code:aeat.domain.calculations.registry._groi_oracle",
-          "target": "api/aeat.domain.calculations.registry._groi_oracle.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._groi_oracle",
+          "target": "api/cadrumo.domain.calculations.registry._groi_oracle.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.495373
@@ -2796,62 +2649,55 @@
       "targets": [
         {
           "record_id": "concept:vies",
-          "target": "_generated/glossary.html#term-vies",
+          "target": "_generated/glossary.html#term-VIES",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.976362
         },
         {
-          "record_id": "code:aeat.domain.calculations.registry._groi_oracle",
-          "target": "api/aeat.domain.calculations.registry._groi_oracle.html",
+          "record_id": "code:cadrumo.domain.calculations.registry._groi_oracle",
+          "target": "api/cadrumo.domain.calculations.registry._groi_oracle.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.494207
         },
         {
-          "record_id": "page:how-to/profile-setup",
-          "target": "how-to/profile-setup.html",
-          "kind": "page",
-          "surface": "docs",
-          "ranking_weight": 0.451602
-        },
-        {
-          "record_id": "code:aeat.application.live._verify",
-          "target": "api/aeat.application.live._verify.html",
+          "record_id": "code:cadrumo.core.identity._nif_iva",
+          "target": "api/cadrumo.core.identity._nif_iva.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.422761
+          "ranking_weight": 0.462231
         },
         {
-          "record_id": "code:aeat.domain.modelos._row_models",
-          "target": "api/aeat.domain.modelos._row_models.html",
+          "record_id": "code:cadrumo.application.live._verify",
+          "target": "api/cadrumo.application.live._verify.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.399199
+          "ranking_weight": 0.443131
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._nif_iva_check",
-          "target": "api/aeat.adapters.outbound.aeat.sede._nif_iva_check.html",
+          "record_id": "code:cadrumo.adapters.outbound.aeat.sede._nif_iva_check",
+          "target": "api/cadrumo.adapters.outbound.aeat.sede._nif_iva_check.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.382733
         },
         {
-          "record_id": "code:aeat.domain.deadlines._models",
-          "target": "api/aeat.domain.deadlines._models.html",
+          "record_id": "code:cadrumo.domain.deadlines._models",
+          "target": "api/cadrumo.domain.deadlines._models.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.378326
+          "ranking_weight": 0.382413
         }
       ],
       "dropped_count": 13,
-      "collapsed_count": 0,
-      "dominant_cluster": "codebase:src/aeat"
+      "collapsed_count": 1,
+      "dominant_cluster": "codebase:src/cadrumo"
     }
   ],
   "query_count": 72,
   "concept_count": 29,
   "failed_query_count": 0,
-  "reindex_note": "derived from the failed=0 approved-era sweep by excluding deprecated concepts (glossary-enrolment policy); no re-retrieval",
+  "reindex_note": "reindex skipped (caller-supplied client; index used as-is)",
   "score_floor": 0.5
 }

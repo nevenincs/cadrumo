@@ -326,7 +326,7 @@ class MultiBucketTestRuntime:
     manifest, keystore, and secure-object repository but its
     session is held in this dataclass for the
     :meth:`switch_to_secondary` context manager to activate
-    on demand. Authority: ``2026-06-03-multi-bucket-test-fixture-adr``.
+    on demand.
     """
 
     __test__: ClassVar[bool] = False
@@ -369,9 +369,7 @@ def isolated_two_bucket_runtime(
     :class:`BucketMaintenanceService.delete` requires (the service's
     active-bucket guard refuses self-deletion by design), and the
     cross-host-migration distinction that the sealed-archive
-    export/import round-trip requires. See
-    ``2026-06-03-multi-bucket-test-fixture-adr`` for the design
-    rationale.
+    export/import round-trip requires.
 
     Both buckets are genuine ``BUCKET_DEK_V1`` buckets that share the
     storage root's single file-backend master key (the key-encryption
@@ -380,7 +378,7 @@ def isolated_two_bucket_runtime(
     one storage root share one ``master.key`` and each keeps its own
     wrapped DEK. The per-bucket DEK distinctness means an accidental
     cross-bucket DEK reuse in production code still surfaces as a test
-    failure. See ``2026-06-03-multi-bucket-test-fixture-adr``.
+    failure.
     """
     storage_root = tmp_path / "aeat-storage"
     secret_store_dir = tmp_path / "secrets"

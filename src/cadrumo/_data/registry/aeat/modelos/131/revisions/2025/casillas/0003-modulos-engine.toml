@@ -1,5 +1,5 @@
-# M131 estimación-objetiva módulos engine (Phase 1/Phase 2: fase 1ª
-# "rendimiento neto previo" + fase 4ª "reducción general", tabled IAE
+# M131 estimación-objetiva módulos engine (fase 1ª "rendimiento neto
+# previo" + fase 4ª "reducción general", tabled IAE
 # activities). The eight operator-declared unit-count inputs (epígrafe + up to
 # seven módulo unit counts — the highest signo count among the tabled
 # activities, 644.1/644.2/644.3 comercio menor de pan/pastelería) are
@@ -9,11 +9,10 @@
 # they feed a computed reference figure that the
 # "modelo-131-2025-modulos-computed-diverges-de-c01" advisory compares
 # against the operator-declared official casilla 01 ("Suma de rendimientos
-# netos"), which remains the filed manual input
-# (2026-07-01-modelo-131-eo-modulos-engine-adr, Option B — the fase-1-only
+# netos"), which remains the filed manual input — the fase-1-only
 # product would over-state the figure if wired directly into casilla 01
-# without the correcting stages; Phase 1 ships the guard, not a silent
-# substitution).
+# without the correcting stages; this engine ships the guard, not a silent
+# substitution.
 #
 # A ninth operator-declared input, "modulos-minoracion-inversion", carries
 # the fase 2ª minoración por incentivos a la inversión (amortización del

@@ -14,8 +14,7 @@ of the following marker tokens in the preceding 3 source lines:
 Structural prevention (ratchet history)
 --------------------------------
 This test AST-walks **all** production Python files under ``src/cadrumo/``
-(excluding test files) so every new file added by any future campaign is
-automatically covered.
+(excluding test files) so every new file is automatically covered.
 
 The ratchet records the set of (relative-path, function-lineno) pairs that
 currently carry an un-annotated ``Any`` parameter.  New sites must be
@@ -174,7 +173,7 @@ def test_no_new_any_param_without_rationale(source_tree_ast: Mapping[Path, ast.A
     - Sites already in the ratchet are skipped (tracked for future cleanup).
     - Any site NOT in the ratchet must have a rationale marker in the 3 lines
       before the ``def`` keyword.
-    - New files or new functions added by any campaign are automatically covered.
+    - New files or new functions are automatically covered.
 
     To remediate a known-violating site: add a marker comment (preferred) or
     replace ``Any`` with the concrete type, then remove the entry from

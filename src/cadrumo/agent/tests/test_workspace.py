@@ -1,6 +1,6 @@
 """Tests for the Claude-native operator-workspace materialiser.
 
-Asserts the demoted materialiser (decision record R4) writes the shipped harness in the
+Asserts the workspace materialiser writes the shipped harness in the
 Claude-native layout - ``.claude/skills/<name>/SKILL.md`` plus reference
 material, ``.claude/agents/<persona>.md``, ``.claude/rules/<rule>.md``, and a
 root ``CLAUDE.md`` importing every rule - with strict content equality against

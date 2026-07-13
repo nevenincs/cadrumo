@@ -140,7 +140,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
 ) -> None:
     """An uncreatable log directory must NOT crash startup with a raw traceback.
 
-    Real-behavior reproduction of Windows PowerShell issue #577: the log
+    Real-behavior reproduction of a Windows PowerShell failure mode: the log
     directory derived from an inaccessible ``CADRUMO_LOCAL_STORAGE_ROOT`` cannot be
     created, and ``configure_logging`` runs at import time — before any CLI
     error boundary. The contract: no exception escapes, logging degrades to

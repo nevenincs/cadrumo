@@ -1,5 +1,5 @@
-# M303 régimen simplificado de IVA módulos engine (Phase 2: cuota devengada
-# por operaciones corrientes, tabled IAE activities). The four operator-
+# M303 régimen simplificado de IVA módulos engine (cuota devengada por
+# operaciones corrientes, tabled IAE activities). The four operator-
 # declared inputs (epígrafe + up to three módulo unit counts — the highest
 # signo count among the tabled activities, 972.1 peluquería) are calculation-
 # support casillas absent from the AEAT-published Diseño de Registros (no
@@ -9,11 +9,11 @@
 # "modelo-303-2023-modulos-iva-computed-diverges-de-c48" advisory compares
 # against the operator-declared official casilla 48 ("RS - 4T - Suma cuotas
 # derivadas régimen simplificado conjunto actividades"), which remains the
-# filed manual input (2026-07-01-modelo-303-regimen-simplificado-adr, Phase 2
-# — the cuota-devengada-only product would omit the taxpayer's real cuotas
-# soportadas por operaciones corrientes if wired directly into casilla 48
-# without operator confirmation; Phase 2 ships the computed reference and the
-# guard, not a silent substitution over the operator's declared figure).
+# filed manual input — the cuota-devengada-only product would omit the
+# taxpayer's real cuotas soportadas por operaciones corrientes if wired
+# directly into casilla 48 without operator confirmation; this engine ships
+# the computed reference and the guard, not a silent substitution over the
+# operator's declared figure.
 #
 # Grounded in LIVA art. 123.Dos.1 (cuota devengada por operaciones
 # corrientes) + Orden HAC/1347/2024 Anexo I "Instrucciones para la
@@ -22,7 +22,7 @@
 # cuota devengada, and apartado 2.3 (cuota derivada = mayor de cuota
 # devengada neta de deducibles y forfait de difícil justificación, o cuota
 # mínima) for the cuota derivada, mirroring the M131 estimación-objetiva
-# módulos engine pattern (2026-07-01-modelo-131-eo-modulos-engine-adr).
+# módulos engine pattern.
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-epigrafe"
 number = "modulos-iva-epigrafe"
