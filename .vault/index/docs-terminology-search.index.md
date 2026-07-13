@@ -57,6 +57,7 @@ related:
   - '[[2026-07-13-docs-terminology-search-W02-P02-S04]]'
   - '[[2026-07-13-docs-terminology-search-W02-P02-S05]]'
   - '[[2026-07-13-docs-terminology-search-W02-P02-S06]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S07]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -125,6 +126,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-07-13-docs-terminology-search-W02-P02-S04` - Implement the upstream-schema adapter: serialize the repo PreprocessOutput to the upstream PreprocOutput JSON contract behind a python -m entry point, with unit tests against the pinned schema major
 - `2026-07-13-docs-terminology-search-W02-P02-S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test
 - `2026-07-13-docs-terminology-search-W02-P02-S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test
+- `2026-07-13-docs-terminology-search-W02-P02-S07` - Re-scoped cutover (ADR Update 1): exclude the extracted sidecars from the dev index via .vaultragignore, retarget the terminology resolver path rules to source-file paths, correct the stale preprocess docstring to describe the sidecars' product-payload role, keep the hook-vs-sidecar parity gate as a permanent lock, and prove an equal-or-superset sweep target set - one explicit-path commit
 
 ### plan
 
