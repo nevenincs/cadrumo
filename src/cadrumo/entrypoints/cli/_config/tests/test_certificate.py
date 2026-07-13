@@ -1,8 +1,8 @@
 """CLI integration tests for ``aeat config auth certificate ...``.
 
 Exercises the real Typer command tree against a real profile bucket and
-real encrypted secure-object storage — no mocks. See GitHub issue #591
-(multi-cert source resolution and expiry/rotation awareness slices).
+real encrypted secure-object storage — no mocks. Covers multi-cert source
+resolution and expiry/rotation awareness.
 """
 
 from __future__ import annotations
@@ -190,7 +190,7 @@ def test_certificate_remove_unregistered_name_is_a_no_op(tmp_path: Path) -> None
         assert "removed\tFalse" in result.output
 
 
-# ── certificate check (expiry/rotation awareness, GitHub issue #591) ────────
+# ── certificate check (expiry/rotation awareness) ───────────────────────────
 
 
 def _build_pkcs12(

@@ -1,4 +1,4 @@
-"""CLI acceptance for the reviewed-excluded verb (issue #224).
+"""CLI acceptance for the reviewed-excluded verb.
 
 Drives the real ``aeat app ledger exclude`` CLI end-to-end: add a row, exclude
 it, and assert the uniform mutation quintet comes back with ``review_status``

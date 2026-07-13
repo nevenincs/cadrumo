@@ -122,7 +122,7 @@ class VerbInputSchema(BaseModel):
     parameters: tuple[VerbParameter, ...] = ()
     #: The command's own one-line help (its click ``short_help`` / first help
     #: line), so the MCP tool description can be verb-specific rather than the
-    #: shared family intent (ADR mcp-progressive-discovery P2/S05).
+    #: shared family intent.
     help: str = ""
 
     def json_schema(self) -> dict[str, Any]:
@@ -298,7 +298,7 @@ class SchemaResolutionError(RuntimeError):
 
     Raised by :func:`assert_schema_coverage` when the tree walk RAISED while
     materialising a lazily-loaded subcommand. Such a failure would otherwise
-    degrade silently to an argument-free schema (research finding F2), shipping a
+    degrade silently to an argument-free schema, shipping a
     verb whose parameters vanished because of a Typer declaration bug; this error
     turns that silent degradation into a loud, verb-named build-time failure.
     """

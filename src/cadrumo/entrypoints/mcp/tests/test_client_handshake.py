@@ -1,6 +1,6 @@
 """Real-client handshake conformance floor across every advertised MCP surface.
 
-The floor beneath the live subagent harness (decision record R7): a real MCP client can
+The floor beneath the live subagent harness: a real MCP client can
 initialize a session with the real server, list its resources, prompts, and tools,
 and round-trip one read-only call. The primary test uses the SDK's in-process
 memory transport against ``build_server`` for focused diagnostics; a second test

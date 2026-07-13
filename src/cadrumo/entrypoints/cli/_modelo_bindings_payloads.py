@@ -54,10 +54,8 @@ class BindingListRowPayload(OutputSchema):
 
     Carries the binding's regulatory grounding (``legal_refs`` /
     ``source_refs``, sourced from the registry binding definition) at
-    parity with the casilla half (``CasillaRowPayload``), per the
-    operator-boundary provenance-parity decision of the
-    bindings-interface-hardening ADR. ``source`` renders the typed
-    :class:`~core.BindingSourceKind` value as a string.
+    parity with the casilla half (``CasillaRowPayload``). ``source`` renders
+    the typed :class:`~core.BindingSourceKind` value as a string.
     """
 
     modelo: str
@@ -111,8 +109,7 @@ class BindingPreviewRowPayload(OutputSchema):
 
     Carries the binding's regulatory grounding (``legal_refs`` /
     ``source_refs``, sourced from the registry binding definition) at
-    parity with the casilla half, per the operator-boundary
-    provenance-parity decision of the bindings-interface-hardening ADR.
+    parity with the casilla half.
     """
 
     binding_id: BindingId

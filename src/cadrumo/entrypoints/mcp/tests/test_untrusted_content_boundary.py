@@ -104,7 +104,7 @@ def test_live_family_result_schemas_carry_no_raw_markup_field() -> None:
     assert offenders == {}, (
         "live-family result schemas relay raw portal markup instead of typed fields: "
         f"{offenders}. Extract typed fields from the portal content; never surface a raw "
-        "HTML/markup blob to the model (ADR H7)."
+        "HTML/markup blob to the model."
     )
 
 

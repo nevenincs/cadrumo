@@ -1,8 +1,7 @@
 """Decide which tools the console advertises by default.
 
 Dumping the whole ~273-verb tree into ``tools/list`` crowds out the user's
-question and degrades tool selection (ADR ``mcp-progressive-discovery`` P1,
-amending the refoundation ADR's R2 delivery posture). The console therefore
+question and degrades tool selection. The console therefore
 advertises an **orientation core** by default - the always-on floor, grounding,
 and meta-discovery tools plus the small manifest-derived orientation slice (the
 ``overview`` obligation-derivation family and the capability ``contract`` verb,
@@ -42,7 +41,7 @@ class SurfaceMode(StrEnum):
     """The advertised-tool-surface policy.
 
     ``CORE`` (the shipped default) advertises only the orientation slice up
-    front; ``FULL`` advertises every persona-scoped per-verb tool, the pre-ADR
+    front; ``FULL`` advertises every persona-scoped per-verb tool, the prior
     flat surface, kept for opt-out and for the core-vs-full measurement.
     """
 

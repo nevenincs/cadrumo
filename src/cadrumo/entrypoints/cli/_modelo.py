@@ -750,10 +750,10 @@ def work_compare_taxation(
     )
     from ._modelo_rendering import advisory_notice
 
-    # Honesty caveat (ADR 2026-07-01): the individual branch is faithful only for
+    # Honesty caveat: the individual branch is faithful only for
     # a single-earner unidad familiar. Surface it on the typed notices channel so
     # an operator is never misled into trusting a two-earner individual figure the
-    # comparator cannot compute (cli-notices-are-the-only-diagnostic-channel).
+    # comparator cannot compute.
     caveat_notice = (
         advisory_notice(
             "modelo.work.compare_taxation.individual_single_earner_only",

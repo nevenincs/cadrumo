@@ -145,9 +145,9 @@ def _root(
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
-        # Fast-path: bare `aeat --version` skips the registry load
-        # (disaster ADR Ruling 4 — registry validation must not run
-        # on the version surface). The `--detail` variant re-invokes
+        # Fast-path: bare `aeat --version` skips the registry load —
+        # registry validation must not run
+        # on the version surface. The `--detail` variant re-invokes
         # with the registry summary populated. The diagnostics import
         # is deferred here so it never loads on a non-version surface.
         from ...application.diagnostics import build_cli_version_report, render_cli_version_text
@@ -218,9 +218,8 @@ def _root(
         landing = build_root_landing_report(active)
         if active is None or not has_active_bucket_session():
             # Bare invocation with no active profile OR no open
-            # session: render the landing card and exit. Per
-            # `2026-06-03-bare-invocation-bucket-session-gate-adr`
-            # bare invocation is a metadata-emitting introspection
+            # session: render the landing card and exit. Bare
+            # invocation is a metadata-emitting introspection
             # surface analogous to --help/--version and MUST NOT
             # require an active bucket session. Reading
             # workflow_state would force session-open against the
@@ -579,7 +578,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     where ``sys.argv[0]`` is not the ``aeat`` entry-point and the
     argv-based :func:`_full_invocation_verb_path` returns ``None``.
     The bootstrap-exemption gate treats a ``None`` verb path as
-    "bare invocation" (per the bare-invocation ADR), but the caller
+    "bare invocation", but the caller
     only reaches this helper when ``ctx.invoked_subcommand`` is set —
     i.e. a real subcommand IS being dispatched and the session must
     open. Reconstructs the verb chain from the root invoked
@@ -834,7 +833,7 @@ def _localise_help_section_headers() -> None:
     frozen to English at import. The already-``tr()``-bound option *descriptions*
     localise via the :func:`_apply_language_argv_to_environment` env promotion,
     but the framework-owned section headers stayed English — the residual gap the
-    operator-surface ``--language`` help-honesty contract (ADR D6) leaves open.
+    operator-surface ``--language`` help-honesty contract leaves open.
     This rebinds those constants to the operator's resolved output language.
 
     Invocation-scoped, no cross-invocation leak: it runs once per console
@@ -933,7 +932,7 @@ def main() -> None:
     An explicit ``--language`` / ``--lang`` flag is promoted to
     ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
     render their ``tr(...)``-bound help, so the flag genuinely localises help
-    text per operator-surface ADR decision D6 (see :mod:`._language_argv`).
+    text (see :mod:`._language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved
     locale (see :func:`_localise_help_section_headers`).
     """

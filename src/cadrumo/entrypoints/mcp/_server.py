@@ -9,7 +9,7 @@ forbidden-live-write block are sourced from the SDK-independent core in this
 package; ``call_tool`` runs the deterministic CLI in a subprocess and returns its
 JSON envelope as structured content. Alongside the per-verb tools the server
 advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floor
-tool (the universal operating-layer channel of ADR R4), and serves the operating
+tool (the universal operating-layer channel), and serves the operating
 layer through real ``resources`` handlers - the concrete ``cadrumo://`` skill / rule
 / persona set, the three ``cadrumo://<kind>/{name}`` templates, and a ``read``
 resolver - and through real ``prompts`` handlers: the guided-workflow catalogue
@@ -17,7 +17,7 @@ and each prompt's embedded skill / rules, derived from ``_prompts.py``.
 :func:`build_server` owns that registration and is unit-tested against the real
 SDK without the stdio transport.
 
-Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
+The server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
 :func:`serve` resolves the active persona once, at startup, from the
 ``CADRUMO_MCP_PERSONA`` environment variable via
@@ -26,8 +26,8 @@ active, ``_list_tools`` advertises only that persona's in-scope tools
 (:func:`filter_descriptors_for_persona`) and ``_call_tool`` refuses an
 out-of-scope call (:func:`persona_scope_refusal`) before the global HITL
 ``confirmation_for_tool`` gate runs. An unset/blank env var preserves the
-full, unscoped tool surface - pre-D1 behaviour - for any un-personified
-session. See ``_persona_scope.py``'s module docstring for the known
+full, unscoped tool surface for any un-personified session. See
+``_persona_scope.py``'s module docstring for the known
 family-granularity limitation (the three modelo-lifecycle personas share one
 manifest family and are not distinguished by this gate).
 """
@@ -144,11 +144,11 @@ _SERVER_NAME = "cadrumo"
 # persona-scoped away (``execute`` applies the persona gate internally).
 _META_SEARCH_TOOL = "search"
 _META_EXECUTE_TOOL = "execute"
-# The toolset-activation meta-tool (ADR mcp-progressive-discovery P3): activating
+# The toolset-activation meta-tool: activating
 # a domain toolset adds its per-verb tools to the advertised surface (within the
 # active persona's scope) and emits tools/list_changed for clients that honour it.
 _META_TOOLSETS_TOOL = "toolsets"
-# The per-command descriptor meta-tool (ADR mcp-progressive-discovery P2/S10):
+# The per-command descriptor meta-tool:
 # returns one command's full shape by key - schema, annotations, confirmation
 # tier, declared risk, owning toolset, and reachable personas - so a model can
 # inspect a verb fully before spending an ``execute`` round-trip on it.
@@ -291,8 +291,8 @@ def _run_subprocess_tool(
     then options - so the retired ``{args: [string]}`` bag has no path back in.
 
     The call runs through :func:`~entrypoints.mcp._call_runtime.run_supervised`
-    with a per-tier wall-clock ceiling derived from the command's annotations
-    (ADR ``mcp-protocol-hardening`` H1): a hung call is terminated together with
+    with a per-tier wall-clock ceiling derived from the command's annotations:
+    a hung call is terminated together with
     its whole process tree (a live pull spawns a browser child) and returns an
     instructive, localized timed-out refusal rather than hanging the MCP call.
 
@@ -548,24 +548,24 @@ def build_server(
     )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
     # command-key -> descriptor: the resource read handler resolves a bulk
-    # resource (ADR H4) by re-running its owning read verb's descriptor as a
+    # resource by re-running its owning read verb's descriptor as a
     # supervised subprocess (which carries the active bucket session the server
     # process lacks), then returns that verb's bulk field.
     by_command_key = {descriptor.command_key: descriptor for descriptor in descriptors}
-    # The advertised per-verb surface (ADR mcp-progressive-discovery P1): CORE
-    # (default) advertises only the persona-scoped orientation slice up front;
-    # FULL advertises the whole persona-scoped set (the pre-ADR flat surface).
-    # ``by_name`` above still spans EVERY descriptor, so a verb outside the
-    # advertised surface stays reachable through the ``execute`` meta-tool and a
-    # direct call by name - it is discovered, not listed.
+    # The advertised per-verb surface: CORE (default) advertises only the
+    # persona-scoped orientation slice up front; FULL advertises the whole
+    # persona-scoped set (the previous flat surface). ``by_name`` above still
+    # spans EVERY descriptor, so a verb outside the advertised surface stays
+    # reachable through the ``execute`` meta-tool and a direct call by name -
+    # it is discovered, not listed.
     meta_tools = build_meta_sdk_tools()
-    # The hybrid command-search index backing the ``search`` meta-tool, built once
-    # over the FULL descriptor set (ADR mcp-progressive-discovery P2) so discovery
-    # reaches every verb, not only the advertised surface.
+    # The hybrid command-search index backing the ``search`` meta-tool, built
+    # once over the FULL descriptor set so discovery reaches every verb, not
+    # only the advertised surface.
     command_index = build_command_search_index(descriptors)
-    # Per-session toolset activation state (ADR mcp-progressive-discovery P3). The
-    # advertised surface is the orientation core PLUS the persona-scoped verbs of
-    # any active toolset; activating a toolset emits ``tools/list_changed``.
+    # Per-session toolset activation state. The advertised surface is the
+    # orientation core PLUS the persona-scoped verbs of any active toolset;
+    # activating a toolset emits ``tools/list_changed``.
     active_toolsets: set[Toolset] = set()
 
     def _advertised_tools() -> list[Tool]:
@@ -580,23 +580,23 @@ def build_server(
         return build_sdk_tools((*advertised, *activated))
 
     floor_tool = build_harness_floor_tool()
-    # Identity tool (ADR I1): the always-on read-only ``whoami`` that reports the
+    # Identity tool: the always-on read-only ``whoami`` that reports the
     # active taxpayer. Like the floor and grounding tools it is a console tool,
     # advertised on every session and never persona-scoped away, so an agent can
     # always confirm WHO is active before a mutating command.
     whoami_tool = build_whoami_tool()
-    # Grounding tools (ADR R3): read-only search over the bundled legal corpus
+    # Grounding tools: read-only search over the bundled legal corpus
     # and the taxpayer-facing terminology handbook. Always advertised (never
     # persona-scoped away) — every persona benefits from grounding its narration
     # in authoritative text, and neither tool mutates state.
     grounding_tools = [build_corpus_search_tool(), build_terminology_search_tool()]
 
-    # Per-session serving-path gates (ADR R6) and telemetry (ADR R7): the
+    # Per-session serving-path gates and telemetry: the
     # grounding window accumulates this session's tool-result JSON in memory
     # only; the telemetry writer (injected by the stdio runner; None in unit
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
-    # Per-session identity-read state (ADR I2): armed until an identity read has
+    # Per-session identity-read state: armed until an identity read has
     # occurred, re-armed on a profile switch. Shared by the direct and execute
     # paths below so the block-first-mutation gate is byte-identical on both.
     identity_state = SessionIdentityState()
@@ -663,9 +663,9 @@ def build_server(
 
         The supervised call blocks (Popen.communicate); running it in a worker
         thread keeps the event loop responsive for the whole - possibly
-        minutes-long - live pull. When the client supplied a progress token
-        (ADR ``mcp-protocol-hardening`` H1) an elapsed-seconds heartbeat is sent
-        every few seconds until the call completes, so a slow pull looks alive
+        minutes-long - live pull. When the client supplied a progress token, an
+        elapsed-seconds heartbeat is sent every few seconds until the call
+        completes, so a slow pull looks alive
         rather than hung; a client that sent no token still gets the off-loop run.
         """
         import anyio
@@ -705,18 +705,18 @@ def build_server(
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
         # The harness.load floor tool is advertised first and is never persona-scoped
-        # away: per ADR R4 it is the universal operating-layer channel that must reach
+        # away: it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The whoami identity tool and
-        # the grounding tools follow for the same always-available reason (ADR I1, R3):
+        # the grounding tools follow for the same always-available reason:
         # an agent must always be able to confirm the active taxpayer and ground its
         # narration, whatever the persona. The per-verb surface is the orientation core
-        # plus any active toolset (rebuilt per call so a toolset activation is reflected
-        # — ADR mcp-progressive-discovery P1/P3).
+        # plus any active toolset (rebuilt per call so a toolset activation is
+        # reflected).
         return [floor_tool, whoami_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
-        # A console identity read (whoami / harness.load) clears the gate (ADR I2):
+        # A console identity read (whoami / harness.load) clears the gate:
         # both surface the active-identity block, so either proves the agent has
         # seen who is active. These carry no registry command key, so record here
         # rather than in identity_gate_refusal (which keys off command keys).
@@ -828,7 +828,7 @@ def build_server(
             if outcome.refused is not None:
                 return CallToolResult(content=[TextContent(type="text", text=outcome.refused)], isError=True)
             envelope = outcome.envelope or {}
-            # ADR H4: thin the executed verb's bulk arrays here too, so the meta
+            # Thin the executed verb's bulk arrays here too, so the meta
             # `execute` path and the direct-call path emit one identical shape.
             thinned_envelope, links = thin_envelope(str(arguments.get("command_key", "") or ""), envelope)
             return CallToolResult(
@@ -869,7 +869,7 @@ def build_server(
         route_label = route.value
         if route is ConfirmRoute.ELICIT:
             request = confirmation_request(command_key=key)
-            # Name the active-taxpayer LABEL in the human-facing prompt (ADR I4)
+            # Name the active-taxpayer LABEL in the human-facing prompt
             # so the person approving a destructive/handoff verb sees whose data
             # it touches and can catch an Erik/Erika mismatch at the gate.
             echo = identity_elicitation_echo(active_profile_label=build_whoami_identity().active_profile)
@@ -922,7 +922,7 @@ def build_server(
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
-        # ADR H4: move the verb's declared bulk arrays out of structuredContent to
+        # Move the verb's declared bulk arrays out of structuredContent to
         # resource_link URIs a resources-capable client fetches on demand; the text
         # content still carries the full envelope for a client without resources.
         thinned_envelope, links = thin_envelope(key, envelope)
@@ -933,7 +933,7 @@ def build_server(
         content.extend(_resource_links(links))
         return CallToolResult(content=content, structuredContent=thinned_envelope, isError=is_error)
 
-    # Guided-workflow prompt channel (ADR R4): the slash-command surface a client
+    # Guided-workflow prompt channel: the slash-command surface a client
     # renders for the USER. The catalogue and each prompt's embedded skill (plus
     # the operating rules for orientation) are derived from the shipped harness in
     # ``_prompts.py``; ``get`` returns the operating brief as a user message
@@ -978,7 +978,7 @@ def build_server(
         )
         return GetPromptResult(description=document.prompt.description, messages=messages)
 
-    # Operating-layer resource channel (ADR R4): the concrete ``cadrumo://`` resource
+    # Operating-layer resource channel: the concrete ``cadrumo://`` resource
     # set and the three ``cadrumo://<kind>/{name}`` templates are derived from the
     # shipped harness tree in ``_resources.py``; ``read`` resolves a URI to the
     # document text as ``text/markdown``.
@@ -1007,7 +1007,7 @@ def build_server(
         ]
 
     async def _resolve_bulk_resource(kind: object, identity: str, uri: str) -> str:
-        """Resolve a bucket-scoped resource by re-running its owning read verb (ADR H4).
+        """Resolve a bucket-scoped resource by re-running its owning read verb.
 
         The bulk arrays a verb thins (calculation observations, evidence rows) live
         in ENCRYPTED bucket state the session-less server process cannot read, so
@@ -1052,9 +1052,9 @@ def build_server(
             raise ValueError(str(exc)) from exc
         return [ReadResourceContents(content=content.text, mime_type=content.ref.mime_type)]
 
-    # Argument autocompletion for the guided-workflow prompts (ADR
-    # mcp-progressive-discovery P5): a client completing a prompt argument
-    # (filing year, period) gets the accepted values from the typed axes.
+    # Argument autocompletion for the guided-workflow prompts: a client
+    # completing a prompt argument (filing year, period) gets the accepted
+    # values from the typed axes.
     @server.completion()
     async def _complete(ref: object, argument: CompletionArgument, context: object) -> Completion | None:
         from mcp.types import PromptReference
@@ -1071,8 +1071,7 @@ def server_initialization_options(server: Server) -> InitializationOptions:
     """Build the negotiated initialization options for ``server``.
 
     Declares ``tools.listChanged`` because the console emits
-    ``tools/list_changed`` when a toolset is activated (ADR
-    ``mcp-progressive-discovery`` P3). Centralised so production
+    ``tools/list_changed`` when a toolset is activated. Centralised so production
     (:func:`_run_server`) and the capability-posture conformance test negotiate
     the SAME capability set and cannot drift.
     """

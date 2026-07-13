@@ -1,8 +1,8 @@
-"""The Modelo 190 aggregate output renders a per-clave retención breakdown (#570).
+"""The Modelo 190 aggregate output renders a per-clave retención breakdown.
 
 ``aeat app modelo aggregate --modelo 190`` ingests the per-perceptor-clave
 withholding detail and persists it to the dedicated store the percepciones-count
-resolver reads. Before #570 its result surfaced only the observation/result
+resolver reads. Previously its result surfaced only the observation/result
 totals, so a filer could not reconcile the annual figures against the per-clave
 amounts of the individual Modelo 111 quarterly filings. The command now projects
 the ingested withholding detail into a per-clave breakdown (distinct percepción
