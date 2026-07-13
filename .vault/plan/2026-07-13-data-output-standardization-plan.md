@@ -10,18 +10,11 @@ related:
 ---
 
 
-
-
-
-
-
-
 # `data-output-standardization` plan
 
 ## Wave `W01` - Location authority
 
 Finish the state-root decision: derive every output-dir default from cadrumo_local_storage_root and relocate the two OS-tempdir durable caches under a settings-driven cache root (rulings R1, R2).
-
 
 ### Phase `W01.P01` - Root derivation
 
@@ -69,7 +62,7 @@ Hard-cut rename of app-owned aeat-star artifact names to cadrumo-star, fix the e
 Hard-cut cadrumo naming for temp prefixes, cache filenames, CWD provenance literals, and the export filename schema.
 
 - [x] `W03.P05.S14` - Rename the aeat-prefixed temp work-area and secret prefixes to cadrumo across the five sites; `src/cadrumo temp prefixes`.
-- [ ] `W03.P05.S15` - Rename the CWD-anchored dot-aeat ledger provenance literals to cadrumo marker forms; `src/cadrumo/application/ledger`.
+- [x] `W03.P05.S15` - Rename the CWD-anchored dot-aeat ledger provenance literals to cadrumo marker forms; `src/cadrumo/application/ledger`.
 - [ ] `W03.P05.S16` - Fix the export filename schema in the test corpus to modelo-id-year-period with canonical period tokens; `src/cadrumo modelo export tests`.
 
 ### Phase `W03.P06` - Env-var adjudication
