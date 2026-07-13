@@ -787,3 +787,59 @@ def test_shipped_enrolled_pages_have_no_plain_executable_fences() -> None:
         "enrolled pages must place every executable aeat invocation inside a cli-sequence "
         "directive (docs-cli-sequences ADR D7):\n  " + "\n  ".join(violations)
     )
+
+
+# A non-enrolled page whose plain fence cites a genuinely WRONG option. Proves
+# the base verb-path/option-name checks still fire on a non-enrolled page (tier
+# two) — the enrolled refusal must not have displaced them.
+_NON_ENROLLED_BAD_OPTION_FIXTURE = "# How-to\n\n```bash\naeat app ledger import --bogus-option\n```\n"
+
+
+def test_two_tier_enrollment_gate_coexists() -> None:
+    """Both tiers coexist across the enrollment boundary end to end (ADR D7).
+
+    S36's contract is the *coexistence* of the two tiers, not either tier in
+    isolation: the enrolled plain-fence refusal must apply to an enrolled page
+    *while* a non-enrolled page keeps exactly today's verb-path and option-name
+    checks. This pins the tier boundary in one place so a future change that
+    silently displaces the base checks, or leaks the enrolled refusal onto a
+    non-enrolled page, reds loudly.
+
+    Tier two (non-enrolled keeps the base checks):
+    - A non-enrolled page is never enrolled, so the plain-fence refusal does not
+      apply to it — yet its plain fence still receives the base checks, which
+      flag a genuinely wrong option.
+    - A non-enrolled page whose plain fence is correct passes the base checks
+      cleanly and is untouched by the enrolled tier.
+
+    Tier one (enrolled refuses the plain fence, base checks still apply):
+    - An enrolled page's plain executable fence is refused, and its directive
+      frame lines still receive the base verb-path and option-name checks (the
+      refusal is orthogonal to, never a replacement for, the base validation).
+    """
+    # --- Tier two: non-enrolled page keeps exactly today's checks ---
+    assert not _page_is_enrolled(_NON_ENROLLED_BAD_OPTION_FIXTURE)
+    base_violations = [
+        v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in _validate_command(c)
+    ]
+    assert any("--bogus-option" in v for v in base_violations), (
+        "a non-enrolled page must keep the verb-path and option-name checks — the "
+        "base validator must flag a wrong option in its plain fence"
+    )
+
+    assert not _page_is_enrolled(_NON_ENROLLED_FIXTURE)
+    assert [v for c in _cited_commands(_NON_ENROLLED_FIXTURE) for v in _validate_command(c)] == [], (
+        "a non-enrolled page whose plain-fence command is correct passes the base checks"
+    )
+
+    # --- Tier one: enrolled page refuses the plain fence, base checks still apply ---
+    assert _page_is_enrolled(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
+    assert _plain_executable_aeat_fences(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE), (
+        "an enrolled page's plain executable fence must be refused"
+    )
+    assert [
+        v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in _validate_command(c)
+    ] == [], (
+        "an enrolled page's directive frame lines must still conform to the live CLI — "
+        "the enrolled refusal is orthogonal to the base verb-path/option-name checks"
+    )
