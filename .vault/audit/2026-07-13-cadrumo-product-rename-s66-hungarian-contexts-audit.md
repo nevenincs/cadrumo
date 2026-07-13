@@ -1,0 +1,62 @@
+---
+tags:
+  - '#audit'
+  - '#cadrumo-product-rename-s66-hungarian-contexts'
+date: '2026-07-13'
+modified: '2026-07-13'
+related:
+  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+  - "[[2026-07-12-cadrumo-cli-executable-adr]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #audit) and one feature tag.
+     Replace cadrumo-product-rename-s66-hungarian-contexts with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `cadrumo-product-rename-s66-hungarian-contexts` audit: `S66 Hungarian context review`
+
+## Scope
+
+Independently reviewed commit `829e0f571d9b118b63a9b36c1fa95af8a237c194`
+against the accepted executable-name ADR and Step S87's contextual-casing
+authority. The review covered the Hungarian catalogue classifications, all six
+exact-value semantic assertions, sibling-locale isolation, execution-record
+truthfulness, recorded catalogue hashes, and the focused quality gates. No
+implementation changes were made as part of this review.
+
+## Findings
+
+No actionable findings.
+
+## Recommendations
+
+PASS. The target commit classifies exactly the intended six Hungarian leaves:
+three sentence-prose values use `Cadrumo`, the refusal guidance names the
+human-facing `aeat CLI`, and the two identity headings remain `CADRUMO`; the
+authority reference remains `AEAT`. The added test asserts every classified
+leaf by its complete translated value rather than mirroring implementation
+logic.
+
+The focused semantic test passed 1 test, and the complete parity module passed
+31 tests. Ruff lint, Ruff format, and Ty passed for the changed test module.
+The commit changes only the Hungarian catalogue, its semantic parity test, and
+the S66 execution record, and its scoped diff passes whitespace validation.
+English, Spanish, and Catalan catalogue blob identities are unchanged across
+the commit. Current SHA-256 values for all four catalogues exactly match those
+recorded in the appended S87 correction section, whose classification and gate
+claims are therefore supported by independently reproduced evidence.
