@@ -109,3 +109,41 @@ already canonical and required zero further command changes.
 - No locale YAML was hand-edited; the production module CLI performed the sole
   catalogue mutation. Spanish, Catalan, Hungarian, S64 through S67, S25, and all
   other reopened descendants remain outside this Step.
+
+## S87 contextual-casing correction
+
+Authority Step S87 landed at `03cd792be3` with the immutable split
+`prose_name='Cadrumo'` and `display_name='CADRUMO'`. The accepted executable
+ADR's status note remains binding: sentence prose uses `Cadrumo`, identity
+contexts may use `CADRUMO`, the human executable is `aeat`, and the authority
+is `AEAT`. Earlier all-caps sentence-prose outcomes in this record are retained
+only as historical evidence.
+
+This corrective pass used eight explicit production `locales set` operations
+against English. Seven sentence-prose leaves now use `Cadrumo`, and
+`mcp.elicitation.refusal.no_channel` now tells operators to run the equivalent
+`aeat` CLI command. The identity headings
+`cli.operator_surface.help.root.heading` and `cli.root.landing.headline`
+remain exact `CADRUMO`. No broad canonicalizer or text replacement was used.
+
+The English catalogue changed by exactly eight insertions and eight deletions,
+from SHA-256
+`06C2550F40D46982ADBBBA713D3031B1BB54CEBBE1141C80340F749C6F70325B`
+to
+`6241114C3A643E9F60283E526386080A7AD31D7A965012221F956A557D594426`.
+Spanish remained byte-identical at
+`2D97F3174AA18D65ECFBE5856A6D4FCF015606AFB54447610DE85BAFCD8E3A72`,
+Catalan at
+`9A4BBE39A1DCA9B4B42175D5DAF1DAECC0E0BCEBD354F52E759BFEFDE30BC5CC`,
+and Hungarian at
+`9F659FD5A312A7B1B1B5219A43B00285E3F3BD8CEEF81F90F6C03D2CEFE30F9B`.
+The real catalogue semantic assertion distinguishes all three naming contexts
+and preserves `AEAT` in the identity heading's authority clause.
+
+Production `audit` and `scaffold --check` reported all four catalogues healthy.
+The focused renderer, formatter-contract, locale-audit, and parity slice passed
+61 real tests. Ruff lint, Ruff format, and Ty passed for the changed semantic
+test. The first combined gate wrapper reached its orchestration timeout while
+running the otherwise independent checks; each gate was then rerun separately
+to completion. No test was skipped, patched, or converted to an expected
+failure.
