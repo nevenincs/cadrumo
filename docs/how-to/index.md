@@ -61,14 +61,8 @@ Ask which modelos apply to you and why, from your saved profile facts.
 :link: filing-calendar
 :link-type: doc
 
-See what may be due and when filing windows open and close.
-:::
-
-:::{grid-item-card} Filing Periods
-:link: filing-periods
-:link-type: doc
-
-Understand quarters, annual period codes, dates, and year-end.
+See what may be due, when filing windows open and close, and which period
+tokens address them.
 :::
 
 :::{grid-item-card} AEAT Notifications
@@ -282,7 +276,6 @@ profile-setup
 censo-update
 choose-modelo
 filing-calendar
-filing-periods
 check-aeat-notifications
 read-live-aeat-data
 import-bank-statements

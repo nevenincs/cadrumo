@@ -107,7 +107,7 @@ Execute the ratified disposition table's merges, retirement, and extraction land
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Merge filing-periods.md into filing-calendar.md as a period-tokens-and-dates subsection; `sweep inbound links; delete the merged page; `docs/how-to/filing-calendar.md docs/how-to/filing-periods.md`.
+- [x] `P01.S01` - Merge filing-periods.md into filing-calendar.md as a period-tokens-and-dates subsection; `sweep inbound links; delete the merged page; `docs/how-to/filing-calendar.md docs/how-to/filing-periods.md`.
 - [ ] `P01.S02` - Merge review-queue.md into classify-transactions.md as a what-still-needs-a-decision subsection; `sweep inbound links; delete the merged page; `docs/how-to/classify-transactions.md docs/how-to/review-queue.md`.
 - [ ] `P01.S03` - Merge classify-with-llm.md, classify-with-llm-evidence.md, and setup-llm-classification.md into one consolidated LLM-assisted-classification page; `sweep inbound links; delete the merged pages; `docs/how-to/classify-with-llm.md docs/how-to/classify-with-llm-evidence.md docs/how-to/setup-llm-classification.md`.
 - [ ] `P01.S04` - Merge justificante-receipts.md into reconcile.md as a leading pull-and-store-the-justificante section; `sweep inbound links; delete the merged page; `docs/how-to/reconcile.md docs/how-to/justificante-receipts.md`.
@@ -143,7 +143,7 @@ Regroup the how-to index and landing grid on the filing-year axes, pass the conf
 
 - [ ] `P05.S15` - Regroup docs/how-to/index.md and the landing-page route grid on the filing-year axes (entry points, profile, calendar, ledger, filings, residuals) per the ratified disposition table; `docs/how-to/index.md docs/index.md`.
 - [ ] `P05.S16` - Run the documented-command conformance gate and the Sphinx nitpicky build gate; `fix every failure the campaign's edits caused; `docs src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py dev/docs/tests/test_docs_build.py`.
-- [ ] `P05.S17` - Run the mandated fresh-context campaign-close honesty review; persist it as a vault audit and open follow-up steps for every surfaced item; `.vault/audit`.
+- [ ] `P05.S17` - Run the mandated fresh-context campaign-close honesty review; `persist it as a vault audit and open follow-up steps for every surfaced item; `.vault/audit`.
 
 ## Description
 
