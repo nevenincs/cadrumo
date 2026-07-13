@@ -30,10 +30,14 @@ executor and comparison path (W02.P05.S18; ADR D3). Three interlocking claims:
 
 from __future__ import annotations
 
+import io
 import json
 from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
+from sphinx.application import Sphinx
+from sphinx.errors import SphinxError
 
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, differing_paths
 from dev.docs.sequences import (
@@ -45,7 +49,9 @@ from dev.docs.sequences import (
     compare_transcript_to_golden,
     execute_sequence,
     parse_sequence,
+    refresh_sequences,
 )
+from dev.docs.sequences.__main__ import main as sequences_cli_main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -203,3 +209,177 @@ class TestCommittedGoldensCleanGate:
         """Every enrolled sequence re-executes clean against its committed golden."""
         problems, _advisories = check_sequences()
         assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
+
+
+# ---------------------------------------------------------------------------
+# W03.P08.S28 — both gate surfaces red on an injected divergence, green on clean
+# ---------------------------------------------------------------------------
+
+_FIXTURE_SEQUENCE_ID = "fixture-divergence"
+_FIXTURE_BODY = "\n".join(
+    [
+        "aeat --format json config profile list",
+        "@result aeat --format json config profile list",
+        "@expect exit_code == 0",
+    ],
+)
+_FIXTURE_INDEX = (
+    "# Fixture\n\n"
+    f"```{{cli-sequence}} {_FIXTURE_SEQUENCE_ID}\n"
+    ":verify: Confirm the profile listing succeeds.\n"
+    f"{_FIXTURE_BODY}\n"
+    "```\n"
+)
+
+
+@pytest.fixture
+def _hermetic_env(tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin an isolated storage root and English output for the CLI-tree walk."""
+    root = Path(str(tmp_path)) / "cadrumo-store"
+    root.mkdir()
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "en")
+
+
+def _write_fixture_docs(root: Path) -> tuple[Path, Path]:
+    """Write an isolated fixture docs tree and its own goldens root; return both.
+
+    Never touches the committed ``docs/`` tree: the page lives under a tmp docs
+    root and the golden under a tmp goldens root the directive's config seam
+    redirects to.
+    """
+    docs_root = root / "docs"
+    docs_root.mkdir(parents=True)
+    goldens_root = root / "goldens"
+    goldens_root.mkdir(parents=True)
+    (docs_root / "index.md").write_text(_FIXTURE_INDEX, encoding="utf-8")
+    return docs_root, goldens_root
+
+
+def _refresh_fixture_golden(docs_root: Path, goldens_root: Path) -> Path:
+    """Execute the fixture sequence and write its (correct) committed golden."""
+    written, problems, _advisories = refresh_sequences(docs_root=docs_root, goldens_root=goldens_root)
+    assert problems == (), problems
+    assert len(written) == 1
+    return written[0]
+
+
+def _corrupt_golden_exit_code(golden_path: Path) -> None:
+    """Inject a divergence: rewrite frame 0's exit code to a value live never emits."""
+    document = json.loads(golden_path.read_text(encoding="utf-8"))
+    document["frames"][0]["exit_code"] = 99
+    golden_path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_fixture_conf(site: Path, goldens_root: Path) -> None:
+    """Write a fixture Sphinx conf registering the directive and the build gate.
+
+    The gate is the SAME ``check_sequence_goldens`` the real ``docs/conf.py``
+    connects, so this build surface exercises the production hook, not a copy.
+    """
+    conf = (
+        'extensions = ["myst_parser"]\n'
+        'myst_enable_extensions = ["colon_fence"]\n'
+        f"cadrumo_sequences_goldens_root = {str(goldens_root)!r}\n"
+        "\n"
+        "def setup(app):\n"
+        "    from dev.docs.sequence_directive import register\n"
+        "    from dev.docs.sequence_build_gate import check_sequence_goldens\n"
+        "    register(app)\n"
+        "    app.connect('builder-inited', lambda a: check_sequence_goldens(a, pages=None))\n"
+    )
+    (site / "conf.py").write_text(conf, encoding="utf-8")
+
+
+def _build_fixture_site(root: Path, docs_root: Path, goldens_root: Path) -> str:
+    """Build the fixture page in-process and return the warning log.
+
+    Raises:
+        SphinxError: propagated from the ``builder-inited`` gate on a divergence.
+    """
+    site = root / "site"
+    site.mkdir()
+    (site / "index.md").write_text(_FIXTURE_INDEX, encoding="utf-8")
+    _write_fixture_conf(site, goldens_root)
+    warning = io.StringIO()
+    app = Sphinx(
+        srcdir=str(site),
+        confdir=str(site),
+        outdir=str(root / "_out"),
+        doctreedir=str(root / "_doctree"),
+        buildername="html",
+        status=io.StringIO(),
+        warning=warning,
+        freshenv=True,
+        warningiserror=True,
+    )
+    app.build()
+    return warning.getvalue()
+
+
+class TestBothSurfacesRedOnDivergence:
+    """W03.P08.S28: an injected golden divergence reds BOTH gate surfaces, and
+    clean goldens pass BOTH green — proving the Sphinx build hook and the pytest
+    gate share one execution path (ADR D6). The fixture tree is fully isolated;
+    the committed ``docs/`` tree is never mutated."""
+
+    def test_divergent_golden_reds_the_sphinx_build(
+        self,
+        tmp_path: Path,
+        _hermetic_env: None,
+    ) -> None:
+        """The ``builder-inited`` gate raises, naming the divergence and remedy."""
+        docs_root, goldens_root = _write_fixture_docs(tmp_path)
+        golden_path = _refresh_fixture_golden(docs_root, goldens_root)
+        _corrupt_golden_exit_code(golden_path)
+
+        with pytest.raises(SphinxError) as excinfo:
+            _build_fixture_site(tmp_path, docs_root, goldens_root)
+        message = str(excinfo.value)
+        assert "golden expects 99" in message, message
+        assert "python -m dev.docs.sequences refresh" in message, message
+
+    def test_divergent_golden_reds_the_pytest_gate(
+        self,
+        tmp_path: Path,
+        _hermetic_env: None,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """The engine check function and its CLI check mode both red, naming the
+        divergence and the refresh remedy — CI catches drift without a build."""
+        docs_root, goldens_root = _write_fixture_docs(tmp_path)
+        golden_path = _refresh_fixture_golden(docs_root, goldens_root)
+        _corrupt_golden_exit_code(golden_path)
+
+        # The engine function the S27 gate asserts empty on now reds.
+        problems, _advisories = check_sequences(docs_root=docs_root, goldens_root=goldens_root)
+        assert problems != ()
+        assert any("golden expects 99" in problem for problem in problems), problems
+
+        # The CLI check mode — the surface CI runs without a full docs build —
+        # exits non-zero and prints both the divergence and the refresh remedy.
+        exit_code = sequences_cli_main(
+            ["check", "--docs-root", str(docs_root), "--goldens-root", str(goldens_root)],
+        )
+        assert exit_code == 1
+        stderr = capsys.readouterr().err
+        assert "golden expects 99" in stderr, stderr
+        assert "python -m dev.docs.sequences refresh" in stderr, stderr
+
+    def test_clean_goldens_pass_both_surfaces_green(
+        self,
+        tmp_path: Path,
+        _hermetic_env: None,
+    ) -> None:
+        """With the correct committed golden, both surfaces pass: the engine check
+        is clean AND a real Sphinx build succeeds and renders the sequence."""
+        docs_root, goldens_root = _write_fixture_docs(tmp_path)
+        _refresh_fixture_golden(docs_root, goldens_root)
+
+        problems, _advisories = check_sequences(docs_root=docs_root, goldens_root=goldens_root)
+        assert problems == (), problems
+
+        warnings = _build_fixture_site(tmp_path, docs_root, goldens_root)
+        rendered = (tmp_path / "_out" / "index.html").read_text(encoding="utf-8")
+        assert "cadrumo-sequence" in rendered, warnings
+        assert f'data-sequence-id="{_FIXTURE_SEQUENCE_ID}"' in rendered
