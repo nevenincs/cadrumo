@@ -120,13 +120,24 @@ packaging campaigns respectively.
 
 ## Recommendations
 
-- Land the dark-code-block override: the fix currently rides uncommitted
-  inside `docs/_static/cadrumo-docs.css`, which is the product-rename
-  campaign's working-tree file (the `aeat-docs.css` -> `cadrumo-docs.css`
-  rename is uncommitted); commit it with, or immediately after, that
-  campaign's docs sweep.
-- Purge orphaned HTML on every full docs build (or build into a clean output
-  directory) so removed pages cannot survive rendering an old theme, and
-  recompile the search index only over live pages.
-- Consider decoupling the docs build from operator storage resolution so the
-  former-product custody guard cannot red a documentation build.
+All three recommendations were engineered to closure on 2026-07-13 under
+operator direction:
+
+- Dark-code-block override: landed. The product-rename campaign's complete,
+  build-verified docs sweep was committed from a verified index (staged set
+  audited file-by-file, the auditor's own hunk excluded via an index blob
+  swap so attribution stays clean), then the override landed as its own
+  commit on the now-tracked `docs/_static/cadrumo-docs.css`.
+- Orphan purge: `remove_orphan_pages` now runs on every canonical full build
+  before the search index compiles, deleting any built page whose source
+  document no longer exists (viewcode pages map back to `src/` modules;
+  builder specials and asset directories are exempt). A live-tree run
+  removed 26 further orphans from pruned api stubs; the search index was
+  recompiled over the orphan-free tree. Covered by real-behavior tests in
+  `dev/docs/tests/test_orphan_page_removal.py`.
+- Storage decoupling: `ensure_isolated_storage_root` points the build's
+  product storage at a build-scoped scratch root (explicit caller pins win)
+  for both the Sphinx subprocess and the in-process search-index pass, so
+  the former-product custody refusal can no longer red a documentation
+  build. Verified end-to-end by running the index compile with the variable
+  deliberately unset.
