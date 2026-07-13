@@ -185,7 +185,7 @@ Update product copy through locale authorities while preserving AEAT counterpart
 
 - [x] `W05.P12.S62` - Change command-help authorities to Cadrumo while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
 - [ ] `W05.P12.S63` - Update English product locale messages through the locales CLI; `English locale catalogue`.
-- [ ] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
+- [x] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
 - [ ] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.
 - [ ] `W05.P12.S66` - Update Galician product locale messages through the locales CLI; `Galician locale catalogue`.
 - [ ] `W05.P12.S67` - Regenerate locale scaffold output and pass locale parity checks; `generated locale scaffold`.
