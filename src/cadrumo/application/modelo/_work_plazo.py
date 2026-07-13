@@ -28,7 +28,7 @@ from decimal import Decimal
 from typing import Literal
 
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time import today_madrid
 from ...domain.modelos import WorkUnit
 
 _LOG = get_logger(__name__)
@@ -104,8 +104,9 @@ def modelo_work_deadline_posture(
         work_unit: The :class:`WorkUnit` whose modelo, filing year, and
             :class:`~cadrumo.core.Period` select a registry filing window.
         reference_on: Optional date from which the caller observes the voluntary
-            deadline. Defaults to the current date read through the
-            :func:`cadrumo.core.time.now` clock seam (``now().date()``) so a
+            deadline. Defaults to the current Europe/Madrid civil date
+            (:func:`cadrumo.core.time.today_madrid`) — the AEAT filing plazo is a
+            Spanish-calendar boundary — which derives from the clock seam so a
             :func:`~cadrumo.core.time.frozen_clock` scope pins it. It drives the
             deadline posture and conditional preview rate; it is not a
             presentation date.
@@ -128,7 +129,7 @@ def modelo_work_deadline_posture(
     if closes_on is None:
         return None
 
-    resolved_reference_on = reference_on or now().date()
+    resolved_reference_on = reference_on or today_madrid()
     if resolved_reference_on <= closes_on:
         return ModeloWorkDeadlinePosture(
             closes_on=closes_on,

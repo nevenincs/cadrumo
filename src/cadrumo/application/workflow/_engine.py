@@ -24,6 +24,7 @@ from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
+from ...core.time import today_madrid
 from ...domain.deadlines import (
     ModeloDeadline,
     ObligationStatus,
@@ -249,7 +250,7 @@ class WorkflowEngine:
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
-        reference_today = today or _utcnow().date()
+        reference_today = today or today_madrid()
 
         # Record run context so ``_record_site_unavailable`` can lazily
         # recompute the run_id from whichever information is latest
