@@ -9,6 +9,15 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `data-output-standardization` plan
 
@@ -21,7 +30,7 @@ Finish the state-root decision: derive every output-dir default from cadrumo_loc
 Generalise the state-root derivation table so all output-dir defaults derive from the root; delete dormant fields; verify vestigial financial catalogue dirs.
 
 - [x] `W01.P01.S01` - Extend the state-root derivation so every output-dir Settings field default derives from cadrumo_local_storage_root under the category taxonomy, eliminating PROJECT_ROOT/var defaults; `src/cadrumo/core/config.py`.
-- [ ] `W01.P01.S02` - Derive the integration-fields output dirs (financial, parity store, registry cache) from the state root and delete fields verified vestigial; `src/cadrumo/core/_config_integration_fields.py`.
+- [x] `W01.P01.S02` - Derive the integration-fields output dirs (financial, parity store, registry cache) from the state root and delete fields verified vestigial; `src/cadrumo/core/_config_integration_fields.py`.
 - [ ] `W01.P01.S03` - Delete the dormant consumer-less browser-trace dir field pair and sweep references; `src/cadrumo/core/config.py`.
 - [x] `W01.P01.S04` - Verify per-dir live-vs-vestigial write status of the var/financial catalogue dirs and record the verdicts; `.vault/audit`.
 
