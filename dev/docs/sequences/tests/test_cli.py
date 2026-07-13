@@ -14,20 +14,30 @@ from pathlib import Path
 
 import pytest
 
-from ..__main__ import check_sequences, discover_sequences, main, refresh_sequences
+from ..__main__ import (
+    COHERENCE_TIER_PREFIX,
+    check_page_coherence,
+    check_sequences,
+    discover_sequences,
+    main,
+    refresh_sequences,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _PAGE = "tutorials/cli-mode-case"
 _SEQUENCE_ID = "cli-mode-case"
 
+#: The valid-profile prerequisite sentence every enrolled test page carries
+#: above its first directive (the rollout profile-requirement gate).
+_PROFILE_PREREQUISITE = "Create a profile first with `aeat config profile create`.\n"
+
 #: A real enrolled page: one directive, a deliberately-unconsumed capture (the
 #: advisory case), and a semantically asserted result frame.
 _PAGE_TEXT = (
     "# CLI mode case\n"
     "\n"
-    "Narrative prose around the sequence.\n"
-    "\n"
+    "Narrative prose around the sequence. " + _PROFILE_PREREQUISITE + "\n"
     "```{cli-sequence} " + _SEQUENCE_ID + "\n"
     ":verify: Verify the profile listing succeeds.\n"
     "aeat --format json config profile list\n"
@@ -207,3 +217,138 @@ class TestCheckMode:
         problems, advisories = check_sequences(docs_root=docs_tree, goldens_root=refreshed_goldens)
         assert problems == ()
         assert any("run_status" in advisory for advisory in advisories)
+
+
+class TestProfilePrerequisiteGate:
+    def test_enrolled_page_without_profile_mention_is_refused(self, tmp_path: Path) -> None:
+        page = tmp_path / "no-profile.md"
+        page.write_text(
+            "# No prerequisite\n\nProse without the requirement.\n\n"
+            "```{cli-sequence} no-profile-case\n"
+            ":verify: Verify the listing succeeds.\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n'
+            "```\n",
+            encoding="utf-8",
+        )
+        _, problems = discover_sequences(docs_root=tmp_path)
+        assert any(
+            "valid-profile prerequisite" in problem and "'no-profile'" in problem and "profile-setup.md" in problem
+            for problem in problems
+        ), problems
+
+    def test_profile_link_above_the_first_directive_qualifies(self, tmp_path: Path) -> None:
+        page = tmp_path / "linked.md"
+        page.write_text(
+            "# Linked prerequisite\n\n"
+            "You need a profile: see [Create your profile](../how-to/profile-setup.md).\n\n"
+            "```{cli-sequence} linked-case\n"
+            ":verify: Verify the listing succeeds.\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n'
+            "```\n",
+            encoding="utf-8",
+        )
+        _, problems = discover_sequences(docs_root=tmp_path)
+        assert problems == ()
+
+    def test_mention_below_the_first_directive_does_not_qualify(self, tmp_path: Path) -> None:
+        page = tmp_path / "too-late.md"
+        page.write_text(
+            "# Too late\n\n"
+            "```{cli-sequence} too-late-case\n"
+            ":verify: Verify the listing succeeds.\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n'
+            "```\n\n"
+            "Afterwards: create a profile with `aeat config profile create`.\n",
+            encoding="utf-8",
+        )
+        _, problems = discover_sequences(docs_root=tmp_path)
+        assert any("valid-profile prerequisite" in problem for problem in problems), problems
+
+    def test_page_without_directives_needs_no_mention(self, tmp_path: Path) -> None:
+        (tmp_path / "plain.md").write_text("# Plain narrative page\n\nNo sequences here.\n", encoding="utf-8")
+        _, problems = discover_sequences(docs_root=tmp_path)
+        assert problems == ()
+
+
+def _coherence_page(second_expected_status: str) -> str:
+    """A two-sequence page whose second sequence only holds CUMULATIVELY.
+
+    Sequence one creates a Modelo 130 work unit; sequence two runs the SAME
+    idempotent-guarded create, which reports ``status == "reused"`` only when
+    the first sequence's state is still present — the genuine shared-sandbox
+    proof (an isolated run would report ``"created"``).
+    """
+    create = "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T"
+    return (
+        "# Coherent page\n\n"
+        "Create a profile first with `aeat config profile create`.\n\n"
+        "```{cli-sequence} coherence-first\n"
+        ":verify: Verify the draft was created.\n"
+        f"@result {create}\n"
+        '@expect result.status == "created"\n'
+        "@expect exit_code == 0\n"
+        "```\n\n"
+        "```{cli-sequence} coherence-second\n"
+        ":verify: Verify the draft is reused.\n"
+        f"@result {create}\n"
+        f'@expect result.status == "{second_expected_status}"\n'
+        "@expect exit_code == 0\n"
+        "```\n"
+    )
+
+
+class TestPageCoherenceMode:
+    def test_cumulative_page_state_is_shared_and_coherent(self, tmp_path: Path) -> None:
+        """The green proof IS the cumulative proof: sequence two's
+        ``status == "reused"`` expectation can only hold because sequence one's
+        work unit survives in the shared page sandbox."""
+        (tmp_path / "coherent.md").write_text(_coherence_page("reused"), encoding="utf-8")
+        problems = check_page_coherence(docs_root=tmp_path)
+        assert problems == (), problems
+
+    def test_incoherent_page_fails_with_the_tier_named(self, tmp_path: Path) -> None:
+        """A page whose prose-described expectation breaks under cumulative
+        state fails naming the tier, page, sequence, frame, and the live vs
+        expected values — never a golden-tier message."""
+        (tmp_path / "incoherent.md").write_text(_coherence_page("created"), encoding="utf-8")
+        problems = check_page_coherence(docs_root=tmp_path)
+        assert len(problems) == 1
+        problem = problems[0]
+        assert problem.startswith(COHERENCE_TIER_PREFIX)
+        assert "'incoherent'" in problem and "coherence-second" in problem
+        assert '@expect result.status == "created" failed' in problem
+        assert '"reused"' in problem  # the live cumulative value is named
+
+    def test_goldens_are_untouched_by_the_coherence_tier(
+        self,
+        docs_tree: Path,
+        refreshed_goldens: Path,
+    ) -> None:
+        """Coherence never reads or writes goldens: the tier passes with NO
+        goldens root at all, and the per-sequence golden check still passes
+        unchanged afterwards — the two contracts stay independent."""
+        problems = check_page_coherence(docs_root=docs_tree)
+        assert problems == ()
+        golden_problems, _ = check_sequences(docs_root=docs_tree, goldens_root=refreshed_goldens)
+        assert golden_problems == ()
+
+    def test_cli_coherence_flag_reds_with_the_tier_note(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        (tmp_path / "incoherent.md").write_text(_coherence_page("created"), encoding="utf-8")
+        exit_code = main(["check", "--coherence", "--docs-root", str(tmp_path)])
+        captured = capsys.readouterr()
+        assert exit_code == 1
+        assert COHERENCE_TIER_PREFIX in captured.err
+        assert "cumulatively in one sandbox" in captured.err
+        assert "refresh does not apply" in captured.err
+
+    def test_cli_coherence_flag_refuses_sequence_scoping(self, capsys: pytest.CaptureFixture[str]) -> None:
+        exit_code = main(["check", "--coherence", "--sequence", "anything"])
+        assert exit_code == 2
+        assert "--page, not --sequence" in capsys.readouterr().err

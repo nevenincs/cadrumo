@@ -45,6 +45,7 @@ from dev.docs.sequences import (
     SequenceGolden,
     SequenceTranscript,
     build_golden,
+    check_page_coherence,
     check_sequences,
     compare_transcript_to_golden,
     execute_sequence,
@@ -225,6 +226,7 @@ _FIXTURE_BODY = "\n".join(
 )
 _FIXTURE_INDEX = (
     "# Fixture\n\n"
+    "Create a profile first with `aeat config profile create`.\n\n"
     f"```{{cli-sequence}} {_FIXTURE_SEQUENCE_ID}\n"
     ":verify: Confirm the profile listing succeeds.\n"
     f"{_FIXTURE_BODY}\n"
@@ -383,3 +385,20 @@ class TestBothSurfacesRedOnDivergence:
         rendered = (tmp_path / "_out" / "index.html").read_text(encoding="utf-8")
         assert "cadrumo-sequence" in rendered, warnings
         assert f'data-sequence-id="{_FIXTURE_SEQUENCE_ID}"' in rendered
+
+
+class TestPageCoherenceGate:
+    """The page-coherence tier over the COMMITTED docs tree (rollout gate).
+
+    For each enrolled page: one fresh sandbox, all the page's sequences
+    executed in page order with state accumulating — what a reader following
+    the page top to bottom in one clean environment experiences. Every
+    ``@expect`` must hold against the live cumulative output. This is
+    deliberately NOT golden equality (goldens stay the per-sequence isolated
+    contract); a failure here means the PAGE's narrative does not survive its
+    own accumulated state and the page content must change.
+    """
+
+    def test_every_enrolled_page_is_coherent_top_to_bottom(self) -> None:
+        problems = check_page_coherence()
+        assert problems == (), "enrolled pages are not coherent under cumulative execution:\n" + "\n".join(problems)

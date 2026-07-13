@@ -41,7 +41,7 @@ from pydantic import BaseModel, Field
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
-from ._compare import check_transcript
+from ._compare import check_transcript, evaluate_expectations
 from ._errors import SequenceEngineError, SequenceParseError
 from ._golden_store import (
     read_golden,
@@ -49,11 +49,13 @@ from ._golden_store import (
     write_golden,
 )
 from ._parser import parse_sequence
-from ._runner import SequenceTranscript, execute_sequence
+from ._runner import SequenceTranscript, execute_page_sequences, execute_sequence
 from ._schema import ParsedSequence, SequenceId
 
 __all__ = [
+    "COHERENCE_TIER_PREFIX",
     "DiscoveredSequence",
+    "check_page_coherence",
     "check_sequences",
     "default_docs_root",
     "discover_sequences",
@@ -167,6 +169,35 @@ def _extract_directives(
     return directives
 
 
+#: A prose mention of the profile-setup command family qualifies as a
+#: valid-profile prerequisite.
+_PROFILE_COMMAND_MENTION: str = "aeat config profile"
+#: A markdown link whose TARGET names a profile page also qualifies
+#: (e.g. ``[Create a profile](profile-setup.md)``).
+_PROFILE_LINK_RE = re.compile(r"\[[^\]]*\]\([^)]*profile[^)]*\)", re.IGNORECASE)
+
+
+def _profile_prerequisite_problem(text: str, docname: str, first_directive_line: int) -> str | None:
+    """Enforce the enrolled-page valid-profile prerequisite (rollout gate).
+
+    A reader lands on an enrolled page with their own environment, where no
+    sandbox pre-provisions a profile — the page must say, BEFORE its first
+    executed sequence, that a valid profile is required and how to get one.
+    Qualifying mentions: an ``aeat config profile ...`` command in the prose, or
+    a markdown link whose target contains ``profile``.
+    """
+    prose_above = "\n".join(text.splitlines()[: first_directive_line - 1])
+    if _PROFILE_COMMAND_MENTION in prose_above or _PROFILE_LINK_RE.search(prose_above):
+        return None
+    return (
+        f"page {docname!r}: an enrolled page must state its valid-profile prerequisite "
+        f"BEFORE the first cli-sequence directive (line {first_directive_line}); qualify by "
+        f"mentioning an '{_PROFILE_COMMAND_MENTION} ...' command or linking a profile setup "
+        "page (a markdown link whose target contains 'profile', e.g. "
+        "[Create a profile](profile-setup.md)) in the prose above it"
+    )
+
+
 def discover_sequences(
     *,
     docs_root: Path | None = None,
@@ -184,7 +215,8 @@ def discover_sequences(
     Returns:
         ``(discovered, problems)``. ``problems`` accumulates unclosed fences,
         grammar/structural parse faults (each naming the page), duplicate
-        sequence ids, and an addressed page or sequence that does not exist.
+        sequence ids, an enrolled page missing its valid-profile prerequisite
+        prose, and an addressed page or sequence that does not exist.
     """
     root = docs_root if docs_root is not None else default_docs_root()
     discovered: list[DiscoveredSequence] = []
@@ -205,7 +237,12 @@ def discover_sequences(
         except OSError as exc:
             problems.append(f"page {docname!r}: cannot read ({exc})")
             continue
-        for raw in _extract_directives(text, page=docname, problems=problems):
+        raw_directives = _extract_directives(text, page=docname, problems=problems)
+        if raw_directives:
+            prerequisite_problem = _profile_prerequisite_problem(text, docname, raw_directives[0].line_number)
+            if prerequisite_problem is not None:
+                problems.append(prerequisite_problem)
+        for raw in raw_directives:
             found_id = raw.sequence_id
             if sequence_id is not None and found_id != sequence_id:
                 continue
@@ -329,6 +366,62 @@ def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> SequenceTranscript:
         return execute_sequence(sequence, sandbox_root=Path(tmp))
 
 
+#: The tier prefix every page-coherence problem leads with, so a failure is
+#: never mistaken for a golden divergence (the remedy differs: fix the page,
+#: never refresh a golden).
+COHERENCE_TIER_PREFIX: str = "page-coherence (cumulative page run, not the golden tier)"
+
+
+def check_page_coherence(
+    *,
+    docs_root: Path | None = None,
+    page: str | None = None,
+) -> tuple[str, ...]:
+    """Check every enrolled page reads true when followed top to bottom.
+
+    The page-coherence tier (rollout gate): for each enrolled page, ONE fresh
+    hermetic sandbox, all the page's sequences executed IN PAGE ORDER with
+    state accumulating across them — exactly what a reader reproducing the page
+    in one clean environment experiences. Per frame the exit-code expectation
+    is enforced (a mismatch aborts the page's cumulative run); per sequence
+    every ``@expect`` evaluates against the LIVE cumulative output. Golden
+    equality is deliberately NOT asserted here: cross-sequence state
+    accumulates by design, and goldens remain the separate per-sequence
+    isolated contract.
+
+    Returns:
+        Accumulated problems: discovery faults (shared with the golden tier)
+        plus coherence-tier failures, each prefixed with
+        :data:`COHERENCE_TIER_PREFIX` and naming the page, sequence, frame,
+        argv, and the failed expectation with actual vs expected.
+    """
+    discovered, problems = discover_sequences(docs_root=docs_root, page=page)
+    all_problems = list(problems)
+
+    by_page: dict[str, list[DiscoveredSequence]] = {}
+    for item in discovered:
+        by_page.setdefault(item.page, []).append(item)
+
+    for docname, items in by_page.items():
+        try:
+            with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
+                transcripts = execute_page_sequences(
+                    [item.sequence for item in items],
+                    label=docname,
+                    sandbox_root=Path(tmp),
+                )
+                for item, transcript in zip(items, transcripts, strict=True):
+                    all_problems.extend(
+                        f"{COHERENCE_TIER_PREFIX}: {problem}"
+                        for problem in evaluate_expectations(item.sequence, transcript, page=docname)
+                    )
+        except SequenceEngineError as exc:
+            all_problems.append(
+                f"{COHERENCE_TIER_PREFIX}: page {docname!r}: cumulative run aborted — {exc}",
+            )
+    return tuple(all_problems)
+
+
 def _build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m dev.docs.sequences",
@@ -345,6 +438,17 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         scope.add_argument("--sequence", help="one sequence id")
         sub.add_argument("--docs-root", type=Path, default=None, help=argparse.SUPPRESS)
         sub.add_argument("--goldens-root", type=Path, default=None, help=argparse.SUPPRESS)
+        if mode == "check":
+            sub.add_argument(
+                "--coherence",
+                action="store_true",
+                help=(
+                    "run the page-coherence tier instead of the golden tier: each "
+                    "enrolled page's sequences execute cumulatively in ONE sandbox, "
+                    "in page order, and every @expect must hold against the live "
+                    "cumulative output"
+                ),
+            )
     return parser
 
 
@@ -370,6 +474,26 @@ def main(argv: list[str] | None = None) -> int:
         if written and not problems:
             print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
         return 1 if problems else 0
+
+    if args.coherence:
+        if args.sequence is not None:
+            print("--coherence is a page-level tier; scope with --page, not --sequence", file=sys.stderr)
+            return 2
+        coherence_problems = check_page_coherence(docs_root=args.docs_root, page=args.page)
+        if coherence_problems:
+            for problem in coherence_problems:
+                print(f"FAIL: {problem}", file=sys.stderr)
+            print(
+                f"{len(coherence_problems)} page-coherence failure(s). This tier runs a page's "
+                "sequences cumulatively in one sandbox, in page order — fix the page's prose or "
+                "sequences so a reader following it top to bottom gets the described results. "
+                "Goldens are the separate per-sequence isolated contract; a refresh does not "
+                "apply here.",
+                file=sys.stderr,
+            )
+            return 1
+        print("cli-sequence page coherence: clean")
+        return 0
 
     problems, advisories = check_sequences(
         docs_root=args.docs_root,
