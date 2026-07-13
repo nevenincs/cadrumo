@@ -1,7 +1,7 @@
-"""Inventory tests for the `aeat config profile` operator surface.
+"""Inventory tests for the `cadrumo config profile` operator surface.
 
 Pins the plain-English operator-target verbs the profile surface
-contract mandates as reachable on the `aeat config profile` subgroup.
+contract mandates as reachable on the `cadrumo config profile` subgroup.
 Future regressions that accidentally rename or unmount a verb surface
 here, not in a shipped operator session.
 """
@@ -30,7 +30,7 @@ _OPERATOR_VERBS = (
 
 @pytest.mark.parametrize("verb", _OPERATOR_VERBS)
 def test_operator_verb_is_mounted(verb: str) -> None:
-    """Each operator-target verb resolves under `aeat config profile`."""
+    """Each operator-target verb resolves under `cadrumo config profile`."""
 
     result = invoke_cached_cli(["config", "profile", verb, "--help"])
 

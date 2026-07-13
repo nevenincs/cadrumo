@@ -3,7 +3,7 @@
 Both ``test_profile_lifecycle_verbs`` (record-level show / create / edit /
 switch / repair) and ``test_profile_lifecycle_navigation`` (per-bucket
 rename / import / delete / navigation from a no-active-session state) drive
-the same ``aeat config profile`` surface, so they share one ``seed`` primitive
+the same ``cadrumo config profile`` surface, so they share one ``seed`` primitive
 and one torn-bucket stager. Keeping those helpers in one module avoids
 duplicating the storage-provisioning subtleties (key material, active-pointer
 clearing) across two test files. The storage fixtures themselves stay local to

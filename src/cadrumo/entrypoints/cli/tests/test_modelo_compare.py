@@ -1,4 +1,4 @@
-"""Regression test for `aeat app modelo compare` (contract).
+"""Regression test for `cadrumo app modelo compare` (contract).
 
 The compare verb resolves the most recent VERIFICADO_COMPLETO (or BORRADOR)
 revision for each of two filing years and emits per-casilla delta rows
@@ -11,7 +11,7 @@ Test strategy (non-tautological):
 - Create two M130 work units (2025 and 2026) with materially different
   ingresos (casilla 01) values and identical gastos and bindings.
 - Capture per-casilla values from each ``work calculate`` JSON response.
-- Invoke ``aeat app modelo compare --year 2025 --year 2026 --modelo 130``.
+- Invoke ``cadrumo app modelo compare --year 2025 --year 2026 --modelo 130``.
 - Assert: delta rows for key output casillas (03, 04, 07, 19) match
   (year_b_value - year_a_value) derived from the two independent calculate
   calls.

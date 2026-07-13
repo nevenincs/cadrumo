@@ -1,4 +1,4 @@
-"""End-to-end gate for ``aeat app agent --output DIR --layout plugin``.
+"""End-to-end gate for ``cadrumo app agent --output DIR --layout plugin``.
 
 Asserts the CLI materialises the shipped operator harness as a schema-valid Claude
 plugin tree and emits the layout-discriminated ``agent`` envelope, without
@@ -50,6 +50,9 @@ def test_plugin_layout_emits_envelope_and_schema_valid_tree(tmp_path: Path) -> N
     assert (out / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
     assert (out / "agents" / "coordinator.md").is_file()
     assert (out / ".mcp.json").is_file()
+    mcp = json.loads((out / ".mcp.json").read_text(encoding="utf-8"))
+    server = mcp["mcpServers"]["cadrumo"]
+    assert server["args"] == ["--from", f"cadrumo[agent]=={payload['version']}", "cadrumo-mcp"]
 
     claude = shutil.which("claude")
     if claude is not None:

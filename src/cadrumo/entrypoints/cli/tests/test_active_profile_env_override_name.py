@@ -49,7 +49,7 @@ def _isolated_root(tmp_path: Path) -> Iterator[None]:
 def _create_profile_and_resolve_uuid() -> str:
     """Create a real profile via the CLI and return its minted UUID bucket id.
 
-    Mirrors a real operator's ``aeat config profile create <label>`` — it mints
+    Mirrors a real operator's ``cadrumo config profile create <label>`` — it mints
     the UUIDv4 bucket directory + manifest and writes the active-profile pointer
     to that UUID (never the label).
     """

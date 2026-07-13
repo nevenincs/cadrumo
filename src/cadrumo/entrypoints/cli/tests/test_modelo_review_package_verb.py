@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app modelo review-package build/verify``."""
+"""CLI surface tests for ``cadrumo app modelo review-package build/verify``."""
 
 from __future__ import annotations
 

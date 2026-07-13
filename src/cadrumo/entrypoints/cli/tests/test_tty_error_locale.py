@@ -37,7 +37,7 @@ def test_non_tty_refused_error_has_no_positional_args() -> None:
 def test_non_tty_refused_error_suggestion_is_accessible() -> None:
     """The suggestion kwarg is stored on the instance for the renderer."""
 
-    hint = "Run: aeat app wizard setup --profile myprofile"
+    hint = "Run: cadrumo app wizard setup --profile myprofile"
     exc = NonTtyRefusedError(hint)
     assert exc.suggestion == hint
 

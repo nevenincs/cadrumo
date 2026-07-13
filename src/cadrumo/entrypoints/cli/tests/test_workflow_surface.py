@@ -289,10 +289,10 @@ def test_root_no_args_renders_help_successfully(isolated_user_cli: Path) -> None
     result = _invoke([])
 
     assert result.exit_code == 0, result.output
-    assert "aeat config profile create NAME" in result.output
-    assert ("aeat config " + "init") not in result.output
-    assert "aeat app overview status" in result.output
-    assert "aeat app ledger import" in result.output
+    assert "cadrumo config profile create NAME" in result.output
+    assert ("cadrumo config " + "init") not in result.output
+    assert "cadrumo app overview status" in result.output
+    assert "cadrumo app ledger import" in result.output
 
 
 def test_retired_commands_are_not_registered() -> None:
@@ -343,18 +343,18 @@ def test_startup_import_failure_points_to_config_repair_without_traceback() -> N
     error = ModuleNotFoundError("No module named 'xlrd'", name="xlrd")
 
     # The startup-failure text is locale-rendered; assert the contract
-    # (names the missing dependency, points to `aeat config repair`, no
+    # (names the missing dependency, points to `cadrumo config repair`, no
     # traceback) rather than pinning an exact, translatable phrasing.
     text = _startup_import_error_text(error)
     assert "xlrd" in text, text
-    assert "aeat config repair" in text, text
+    assert "cadrumo config repair" in text, text
     assert "Traceback" not in text, text
 
     result = invoke_typer_app(_import_failure_surface("app", error), [])
 
     assert result.exit_code == 1, result.output
     assert "xlrd" in result.output
-    assert "aeat config repair" in result.output
+    assert "cadrumo config repair" in result.output
     assert "Traceback" not in result.output
 
 
@@ -366,7 +366,7 @@ def test_startup_import_failure_redacts_sensitive_dependency_name() -> None:
 
     assert profile_id not in text
     assert CLI_PROFILE_ID_PLACEHOLDER in text
-    assert "aeat config repair" in text
+    assert "cadrumo config repair" in text
 
 
 def test_version_flag_renders_backend_registry_summary() -> None:
@@ -390,10 +390,10 @@ def test_app_surface_uses_singular_user_domains() -> None:
     for command in ("overview", "ledger", "live", "modelo", "registry", "review"):
         assert command in result.output
     for removed_command in (
-        "aeat app invoice",
-        "aeat app declaration",
-        "aeat app transactions",
-        "aeat app imports",
+        "cadrumo app invoice",
+        "cadrumo app declaration",
+        "cadrumo app transactions",
+        "cadrumo app imports",
         "workspaces",
         "audits",
     ):
@@ -794,7 +794,7 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
 def test_config_profile_show_requires_active_profile_with_typed_error(
     isolated_user_cli: Path,
 ) -> None:
-    """``aeat config profile show`` rejects inspection when no profile is selected.
+    """``cadrumo config profile show`` rejects inspection when no profile is selected.
 
     The show verb reads the active profile bucket; with no active
     profile, the operation is refused with a typed CLI usage error.

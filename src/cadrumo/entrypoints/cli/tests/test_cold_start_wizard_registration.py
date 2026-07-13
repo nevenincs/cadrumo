@@ -150,7 +150,7 @@ def test_cold_process_overview_status_without_profile_registers_profile_keys(tmp
     assert result.returncode == 0, (
         f"overview status failed in a cold no-profile process: {result.stdout}\n{result.stderr}"
     )
-    assert "aeat config profile create NAME" in result.stdout
+    assert "cadrumo config profile create NAME" in result.stdout
 
 
 def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> None:

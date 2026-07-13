@@ -44,7 +44,7 @@ import click
 import typer
 from pydantic import ValidationError
 
-from ...core._config_state_root import FormerProductStateError
+from ...core import FormerProductStateError
 from ...core.click_context import json_output_requested
 from ...core.errors import (
     AeatError,
@@ -59,7 +59,7 @@ from ...domain.user_profile import StoredProfileDriftError
 
 _log = get_logger(__name__)
 
-_UNDER_TEST: ContextVar[bool] = ContextVar("aeat_cli_error_boundary_under_test", default=False)
+_UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_test", default=False)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
 
 

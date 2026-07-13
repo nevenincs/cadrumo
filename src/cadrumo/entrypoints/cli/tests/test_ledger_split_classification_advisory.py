@@ -8,7 +8,7 @@ side-effect (per ``no-silent-under-declaration`` /
 classified outcome (BUSINESS / PERSONAL / MIXED) the split emits an ``info``
 notice naming the dropped classification and pointing at ``ledger classify``.
 
-Every test drives the real ``aeat app ledger`` CLI against an isolated profile
+Every test drives the real ``cadrumo app ledger`` CLI against an isolated profile
 bucket through the real persistence stack — no mocks, no stubs, no skips.
 """
 

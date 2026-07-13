@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app diagnostics runs``.
+"""Real-behavior CLI tests for ``cadrumo app diagnostics runs``.
 
 Exercises the listing verb end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.list_recent_runs` projection,

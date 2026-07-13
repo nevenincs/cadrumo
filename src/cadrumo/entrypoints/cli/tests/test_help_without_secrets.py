@@ -4,7 +4,7 @@ Operator-surface regression for the help-tree black hole: with an active
 profile configured but ``CADRUMO_SECRET_PASSPHRASE`` unset and a
 non-interactive stdin, the root callback's bucket-session activation used
 to run before any help or usage rendering, so EVERY subgroup help
-(``aeat config --help``, ``aeat app --help``, ``aeat app ledger --help``)
+(``cadrumo config --help``, ``cadrumo app --help``, ``cadrumo app ledger --help``)
 and every unknown-command typo died with the master-key refusal (exit 5)
 instead of rendering. A newcomer could not browse the command tree before
 creating secrets and scripted ``--help`` introspection was dead.
@@ -76,8 +76,8 @@ def _run(args: list[str], tmp_path: Path) -> subprocess.CompletedProcess[str]:
 @pytest.mark.parametrize(
     ("args", "expected_row"),
     [
-        (["config", "--help"], "aeat config profile create"),
-        (["app", "--help"], "aeat app ledger import"),
+        (["config", "--help"], "cadrumo config profile create"),
+        (["app", "--help"], "cadrumo app ledger import"),
         (["app", "ledger", "--help"], "import"),
         (["app", "modelo", "--help"], "work"),
     ],
@@ -90,7 +90,7 @@ def test_subgroup_help_renders_without_passphrase(
     """Every subgroup help renders exit 0 with real content, no master key.
 
     Help prose may legitimately NAME ``CADRUMO_SECRET_PASSPHRASE`` (e.g. the
-    isolated-run instructions on ``aeat config --help``); only an actual
+    isolated-run instructions on ``cadrumo config --help``); only an actual
     value assignment is a genuine leak, so the gate checks for that
     narrower pattern rather than a blanket substring match.
     """

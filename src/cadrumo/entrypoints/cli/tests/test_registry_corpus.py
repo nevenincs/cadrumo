@@ -1,13 +1,13 @@
 """Real-behaviour tests for the legal citation + manuals CLI exposure.
 
-Tests exercise the ``aeat app registry citations`` and
-``aeat app registry manuals`` Typer surfaces end-to-end through the
+Tests exercise the ``cadrumo app registry citations`` and
+``cadrumo app registry manuals`` Typer surfaces end-to-end through the
 shared cached CLI runner, against the committed corpus on disk. No mocks /
 fakes / fixtures — every command consumes the same domain APIs the
 production runtime uses (the reviewed registry legal catalogue,
 ``cadrumo.domain.manuals.load_manual``, etc.).
 
-The CLI exposure lives under ``aeat app registry``, not under a new
+The CLI exposure lives under ``cadrumo app registry``, not under a new
 root verb. The boundary regression guard at the bottom of the file
 enforces that no ``cadrumo normatives`` or ``cadrumo manual`` top-level verb
 is registered.
@@ -218,7 +218,7 @@ def test_manuals_list_accepts_year_filter() -> None:
 
 
 def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
-    """The CLI root is restricted to ``aeat config`` and ``aeat app``
+    """The CLI root is restricted to ``cadrumo config`` and ``cadrumo app``
     only. A top-level ``cadrumo normatives`` or ``cadrumo manual`` verb is
     rejected. This test asserts no source file under
     ``entrypoints/cli/`` registers either name at the root level."""
@@ -240,7 +240,7 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
         # sub-Typer happens inside ``registry.py`` via
         # ``app.add_typer(manuals_app, name="manuals")``. That is
         # NOT a top-level root; it is registered under
-        # ``aeat app registry``.
+        # ``cadrumo app registry``.
         text = py_file.read_text(encoding="utf-8")
         hits = [needle for needle in forbidden_root_names if needle in text]
         if hits:
@@ -294,9 +294,9 @@ def test_rejected_topic_and_help_command_vocabulary_is_absent_from_help_text() -
         "cadrumo help",
         "cadrumo topic",
         "cadrumo topics",
-        "aeat app help",
-        "aeat app topic",
-        "aeat app topics",
+        "cadrumo app help",
+        "cadrumo app topic",
+        "cadrumo app topics",
     )
     for args in (
         ["--help"],

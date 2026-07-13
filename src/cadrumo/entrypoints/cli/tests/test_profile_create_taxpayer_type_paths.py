@@ -1,6 +1,6 @@
 """Non-interactive `config profile create` across the taxpayer-type axis.
 
-These tests exercise the real `aeat config profile create ... --quiet`
+These tests exercise the real `cadrumo config profile create ... --quiet`
 CLI surface for every entity type. They pin the behaviour that a legal
 entity, an attribution entity, and a natural person can each be created
 non-interactively without supplying spouse / personal-IRPF flags, that

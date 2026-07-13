@@ -17,8 +17,8 @@ global). The authoritative sources walked here are:
 - the error registry's ``ErrorCode.default_suggestion`` rows
   (``cadrumo.core.errors.ERROR_REGISTRY``) - the copy-paste recovery commands the
   CLI error boundary prints;
-- the locale catalogue's ``cli.*`` leaf strings that embed an ``aeat app`` /
-  ``aeat config`` invocation - help text, refusal messages, and next-action
+- the locale catalogue's ``cli.*`` leaf strings that embed an ``cadrumo app`` /
+  ``cadrumo config`` invocation - help text, refusal messages, and next-action
   hints rendered to the operator;
 - the workflow engine's ``next_action`` detail strings and the modelo verify
   renderer's ``next_action`` line, which name a recovery command on a failed
@@ -65,7 +65,7 @@ from ....core.i18n._render import _locale_map
 from ....domain.attachments import AttachmentSource
 from ....tests.cli_runner import cadrumo_click_command
 from .test_documented_command_conformance import (
-    _AEAT_TOKEN_RE,
+    _CADRUMO_TOKEN_RE,
     _CitedCommand,
     _parse_command_line,
     _validate_command,
@@ -105,14 +105,14 @@ def _has_params(value: object) -> TypeGuard[_CommandWithParams]:
 # is exactly the protection the rename safety net depends on.
 _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     # cadrumo.application.workflow._engine: draft-build-refused next_action.
-    "aeat app modelo work calculate",
+    "cadrumo app modelo work calculate",
     # cadrumo.application.workflow._engine: draft-has-errors next_action.
-    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
+    "cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
     # cadrumo.entrypoints.cli._modelo_rendering: verify report next_action line.
-    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
+    "cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
     # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
-    "aeat app modelo export",
-    "aeat app modelo work file",
+    "cadrumo app modelo export",
+    "cadrumo app modelo work file",
 )
 
 
@@ -123,7 +123,7 @@ def _registry_suggestion_strings() -> Iterator[tuple[str, str]]:
         suggestion = row.default_suggestion
         if suggestion is None:
             continue
-        if _AEAT_TOKEN_RE.search(suggestion) is None:
+        if _CADRUMO_TOKEN_RE.search(suggestion) is None:
             continue
         if suggestion in seen:
             continue
@@ -140,7 +140,7 @@ def _locale_command_strings() -> Iterator[tuple[str, str]]:
             continue
         if not isinstance(value, str):
             continue
-        if _AEAT_TOKEN_RE.search(value) is None:
+        if _CADRUMO_TOKEN_RE.search(value) is None:
             continue
         token = (key, value)
         if token in seen:
@@ -160,16 +160,16 @@ _COMMAND_TOKEN_RE = re.compile(
 _SENTENCE_END_RE = re.compile(r"[.;:]$")
 
 # Terminal top-level flags: nothing after them on the line is part of the
-# command. ``aeat --help for the full overview`` cites ``aeat --help``; the
+# command. ``cadrumo --help for the full overview`` cites ``cadrumo --help``; the
 # trailing ``for the full overview`` is prose. Without this stop, the prose
 # words are mis-read as a verb path and the citation fails to resolve.
 _TERMINAL_GLOBAL_FLAGS = frozenset({"--help", "-h", "--version"})
 
 
-def _command_span(after_aeat: str) -> str:
+def _command_span(after_cadrumo: str) -> str:
     """Trim trailing natural-prose from an ``cadrumo ...`` span.
 
-    A hint string commonly embeds a command inside a sentence ("Run aeat config
+    A hint string commonly embeds a command inside a sentence ("Run cadrumo config
     unlock NAME or pass --profile."). The command is the maximal leading token
     run that looks like a CLI invocation; the trailing prose ("or pass ...") is
     dropped. Each kept token also has a sentence terminator (``.``/``;``/``:``)
@@ -178,7 +178,7 @@ def _command_span(after_aeat: str) -> str:
     following token, so anything after it is prose.
     """
     kept: list[str] = []
-    for token in after_aeat.split():
+    for token in after_cadrumo.split():
         trimmed = _SENTENCE_END_RE.sub("", token)
         if not trimmed:
             break
@@ -200,7 +200,7 @@ def _cited_from_text(text: str) -> list[_CitedCommand]:
     """
     out: list[_CitedCommand] = []
     for raw_line in text.replace("`", " ").splitlines():
-        match = _AEAT_TOKEN_RE.search(raw_line)
+        match = _CADRUMO_TOKEN_RE.search(raw_line)
         if match is None:
             continue
         span = _command_span(raw_line[match.end() :].strip())
@@ -219,7 +219,7 @@ def test_registry_suggestions_present() -> None:
     registry-suggestion gate vacuously pass.
     """
     suggestions = list(_registry_suggestion_strings())
-    assert suggestions, "error registry exposes no aeat-command default_suggestions to pin"
+    assert suggestions, "error registry exposes no Cadrumo-command default_suggestions to pin"
 
 
 def test_registry_suggestions_resolve() -> None:
@@ -350,12 +350,12 @@ def _verify_select_advertised() -> frozenset[str]:
 def _enum_choice_surfaces() -> tuple[_EnumChoiceSurface, ...]:
     return (
         _EnumChoiceSurface(
-            label="aeat app ledger doclink --source",
+            label="cadrumo app ledger doclink --source",
             advertised=_doclink_source_advertised(),
             accepted=_DOCLINK_ACCEPTED_SOURCES,
         ),
         _EnumChoiceSurface(
-            label="aeat app modelo work verify --select",
+            label="cadrumo app modelo work verify --select",
             advertised=_verify_select_advertised(),
             accepted=_VERIFY_SELECT_ACCEPTED,
         ),

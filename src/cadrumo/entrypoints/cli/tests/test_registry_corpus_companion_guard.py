@@ -1,7 +1,7 @@
-"""Tests for the ``aeat app registry`` companion-absent verification guard.
+"""Tests for the ``cadrumo app registry`` companion-absent verification guard.
 
 The four registry verification verbs refuse instructively when the corpus source
-binaries shipped in the optional ``aeat_data`` companion are absent. These tests
+binaries shipped in the optional ``cadrumo_data`` companion are absent. These tests
 isolate the guard's control flow and message assembly (the real locale strings
 and refusal type) from the heavy full-registry scan that decides whether the
 binaries are present.

@@ -2,7 +2,7 @@
 
 This testimonial follows a freelance software consultant (an autónoma) on
 estimación directa simplificada filing IVA on the general regime. This suite
-drives the real ``aeat app ledger`` CLI end-to-end through their *first*
+drives the real ``cadrumo app ledger`` CLI end-to-end through their *first*
 quarterly close: import their four bank exports, narrow the review to 1T (Q1)
 2025, classify the quarter's business income and expenses against the
 ground-truth oracle, then run the readiness gates

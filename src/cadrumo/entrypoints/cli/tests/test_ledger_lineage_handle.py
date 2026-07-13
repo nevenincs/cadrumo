@@ -7,7 +7,7 @@ for storage and audit, while the operator read verbs (``history`` / ``view`` /
 ``track``) resolve any id in a row's edit-lineage chain, so a handle written
 down before a correction keeps answering afterwards.
 
-Every test here drives the real ``aeat app ledger`` CLI against an isolated
+Every test here drives the real ``cadrumo app ledger`` CLI against an isolated
 profile bucket through the real persistence stack — no mocks, no stubs, no
 skips. The lineage chain, the content-address invariant, and the per-verb
 resolution behaviour are all asserted against real catalogue state.

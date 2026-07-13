@@ -17,7 +17,7 @@ import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no lo
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ...core._config_state_root import FormerProductStateError
+from ...core import FormerProductStateError
 from ...core.errors import AeatError
 from ...core.logging import set_log_level
 

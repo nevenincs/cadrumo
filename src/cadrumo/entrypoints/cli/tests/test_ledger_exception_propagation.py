@@ -15,7 +15,7 @@ file on disk to trigger the unexpected-exception path through the real
 production call stack.  No monkeypatching, no test doubles.
 
 The call chain under test:
-  ``aeat app ledger ratios list``
+  ``cadrumo app ledger ratios list``
     → ``_ratios_bucket_and_profile()``
       → ``require_active_bucket_id()``
         → ``resolve_active_bucket_id()``

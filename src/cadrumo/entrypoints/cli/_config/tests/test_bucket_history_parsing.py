@@ -28,7 +28,7 @@ def _event_at(occurred_at: datetime) -> BucketEvent:
         "bucket_id": "p",
         "event_type": BucketEventType.PROFILE_SELECTED,
         "occurred_at": occurred_at,
-        "actor": "aeat.config.profile.history",
+        "actor": "cadrumo.config.profile.history",
         "object_type": BucketEventObjectType.PROFILE,
         "object_id": "profile-1",
         "payload": {},
