@@ -669,9 +669,8 @@ def _casilla_decimal(values: Mapping[CasillaId, Decimal], *casilla_ids: CasillaI
 def _resolve_stamped_revision_id(modelo: str, period: Period) -> str | None:
     """Resolve the registry revision id for (modelo, period) for provenance stamping.
 
-    Returns the revision id from the law-determined :func:`select_revision` result
-    (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2), or ``None``
-    on resolution failure so the stamp is never blocking at write time.
+    Returns the revision id from the law-determined :func:`select_revision` result,
+    or ``None`` on resolution failure so the stamp is never blocking at write time.
     """
     try:
         snapshot = resources().modelos.authority.snapshot(

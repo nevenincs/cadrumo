@@ -303,8 +303,7 @@ def test_assemble_observations_for_grouping_rejects_unknown_grouping() -> None:
 
 
 # ---------------------------------------------------------------------------
-# F5 — non-fabrication: mandatory AEAT fields must not be silently defaulted
-# (cross-domain-handoffs-swarm-audit 2026-05-16)
+# Non-fabrication: mandatory AEAT fields must not be silently defaulted
 # ---------------------------------------------------------------------------
 
 

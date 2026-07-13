@@ -17,8 +17,6 @@ See Also:
         Secure-object factory reached only when runtime storage is requested.
     :mod:`~adapters.persistence.profile._filing_runtime`
         Adapter-layer sibling helper with the same bucket-resolution shape.
-    ``2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit``
-        Review record that accepted this helper and its real-behavior coverage.
 """
 
 from __future__ import annotations

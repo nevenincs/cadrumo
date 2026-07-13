@@ -3,7 +3,7 @@
 Reads scanned or image evidence with a LOCAL Ollama vision model entirely on the
 host (``sensitive-financial-data-secure-storage-only``): the in-memory base64
 images are sent over loopback HTTP to the local model; nothing is written to disk
-and nothing leaves the machine. This is the ADR's default, gestor-allowed posture
+and nothing leaves the machine. This is the default, gestor-allowed posture
 for scanned/image evidence -- distinct from the consent-gated cloud subprocess
 text path used for text-layer PDFs.
 
