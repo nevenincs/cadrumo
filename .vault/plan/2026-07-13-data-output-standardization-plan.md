@@ -41,7 +41,7 @@ Move the corpus-text cache and the registry disk pickle off the OS temp dir into
 - [x] `W01.P02.S05` - Add a settings-derived corpus-text cache location, rename the cache file to the cadrumo stem, and remove the hard-coded gettempdir path; `src/cadrumo/domain/calculations/registry/_validate_evidence.py`.
 - [x] `W01.P02.S06` - Move the registry disk-cache production default under the cache root, rename the pickle stem to cadrumo, preserve xdist fingerprint sharing; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.
 - [x] `W01.P02.S07` - Add fingerprint-count eviction for accumulated registry cache pickles; `src/cadrumo/domain/calculations/registry/_loader.py`.
-- [ ] `W01.P02.S08` - Update the white-box registry-cache and authority tests for the relocated cache locations; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W01.P02.S08` - Update the white-box registry-cache and authority tests for the relocated cache locations; `src/cadrumo/domain/calculations/registry/tests`.
 
 ## Wave `W02` - Lifecycle policy
 
