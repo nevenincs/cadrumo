@@ -101,6 +101,23 @@ recompiled index (term/casilla/command tiers, rust-highlighted selection);
 Mermaid diagrams render the neutral theme in light and acceptable neutral
 grays in dark with no cold-color leak.
 
+### naming-deconflation-verified | low | product/executable/authority referents are clean on live surfaces
+
+Operator directive (2026-07-13) restated the binding naming contract of the
+accepted `cadrumo-cli-executable` ADR: `Cadrumo` is the product in all user
+documentation prose, `aeat` is reserved for the command-line executable in
+invocations, and AEAT in prose refers only to the Agencia Estatal de
+Administracion Tributaria. A sweep of the narrative sources (index, how-to,
+tutorials, explanation, architecture, runbooks, workstation setup, updates,
+disclaimer) and the generated surfaces (CLI reference, glossary) found no
+product-conflated use of `aeat`: every bare `aeat` occurrence is a fenced or
+inline-code CLI invocation, every prose AEAT names the authority ("official
+AEAT tools", "not affiliated with AEAT"), and `cadrumo.adapters.outbound.aeat`
+names the authority-boundary adapter package correctly. The two kickoff-brief
+documents and the verification marketplace proofs cite the literal plugin id
+`aeat@...` as factual transcripts; those surfaces belong to the rename and
+packaging campaigns respectively.
+
 ## Recommendations
 
 - Land the dark-code-block override: the fix currently rides uncommitted
