@@ -29,6 +29,7 @@ from dev.docs.cli_tree import (
     CliCommandNode,
     CliTree,
     CliTreePathNotFoundError,
+    CliTreePathsNotFoundError,
     ParamKind,
     assert_documented_paths_present,
     build_cli_tree_in_subprocess,
@@ -186,13 +187,28 @@ def test_assert_documented_paths_present_passes_for_real_paths(cli_tree: CliTree
     )
 
 
-def test_assert_documented_paths_present_raises_on_absent_path(cli_tree: CliTree) -> None:
-    """The batch gate fails on the first absent path."""
-    with pytest.raises(CliTreePathNotFoundError):
+def test_assert_documented_paths_present_accumulates_every_absent_path(cli_tree: CliTree) -> None:
+    """The batch gate accumulates every absent path into one raised error.
+
+    Mirrors the engine's accumulating-diagnostics convention: an author sees the
+    whole worklist in one pass, not one build failure at a time.
+    """
+    with pytest.raises(CliTreePathsNotFoundError) as excinfo:
         assert_documented_paths_present(
             cli_tree,
-            ["aeat app modelo work calculate", "aeat app nonexistent verb"],
+            [
+                "aeat app modelo work calculate",  # present — must not appear
+                "aeat app nonexistent verb",
+                "aeat app modelo work calculat",  # a typo with a near candidate
+            ],
         )
+    error = excinfo.value
+    assert set(error.path_keys) == {"aeat app nonexistent verb", "aeat app modelo work calculat"}
+    assert len(error.errors) == 2
+    # The typo carries a nearest-candidate hint; the aggregate message lists both.
+    typo_error = next(e for e in error.errors if e.path_key == "aeat app modelo work calculat")
+    assert "aeat app modelo work calculate" in typo_error.candidates
+    assert "aeat app nonexistent verb" in str(error)
 
 
 def test_write_cli_tree_emits_default_static_path(tmp_path: Path) -> None:

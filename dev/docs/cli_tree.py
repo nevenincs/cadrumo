@@ -71,6 +71,7 @@ __all__ = [
     "CliParam",
     "CliTree",
     "CliTreePathNotFoundError",
+    "CliTreePathsNotFoundError",
     "ParamKind",
     "assert_documented_paths_present",
     "build_cli_tree",
@@ -164,6 +165,28 @@ class CliTreePathNotFoundError(LookupError):
         self.candidates = tuple(candidates)
         hint = f" Nearest: {', '.join(self.candidates)}." if self.candidates else ""
         super().__init__(f"Command path {path_key!r} is not present in the cli-tree projection.{hint}")
+
+
+class CliTreePathsNotFoundError(LookupError):
+    """Raised by the batch gate when one or more documented paths are absent.
+
+    Accumulating, mirroring the engine's parser / comparison / discovery
+    convention: :func:`assert_documented_paths_present` collects every
+    :class:`CliTreePathNotFoundError` across the whole documented set and raises
+    ONE error enumerating each missing path with its nearest candidates, so an
+    author sees the entire worklist in one pass rather than fixing them one
+    build failure at a time.
+    """
+
+    def __init__(self, errors: Sequence[CliTreePathNotFoundError]) -> None:
+        self.errors = tuple(errors)
+        self.path_keys = tuple(error.path_key for error in self.errors)
+        detail = "; ".join(
+            f"{error.path_key!r} (nearest: {', '.join(error.candidates) or 'none'})" for error in self.errors
+        )
+        super().__init__(
+            f"{len(self.errors)} documented command path(s) absent from the cli-tree projection: {detail}.",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -275,7 +298,7 @@ def _build_cli_tree_loaded() -> CliTree:
     """
     from typer.main import get_command as _typer_get_command
 
-    from cadrumo.core.i18n._render import clear_output_language_cache
+    from cadrumo.core.i18n import clear_output_language_cache
     from cadrumo.entrypoints.cli import app
 
     clear_output_language_cache()
@@ -431,9 +454,18 @@ def resolve_command_path(tree: CliTree, path: str | Sequence[str]) -> CliCommand
 def assert_documented_paths_present(tree: CliTree, documented_paths: Iterable[str | Sequence[str]]) -> None:
     """Assert every documented command path resolves in ``tree``.
 
-    Raises the first :class:`CliTreePathNotFoundError` encountered — the
-    build-failing conformance gate ruling D5 describes. Callers that want the
-    full worklist should iterate :func:`resolve_command_path` themselves.
+    Accumulating: every absent path is collected and one
+    :class:`CliTreePathsNotFoundError` is raised enumerating the whole worklist
+    with each path's nearest candidates — the build-failing conformance gate
+    ruling D5 describes, surfaced in one pass. Callers wanting a single-path
+    check use :func:`resolve_command_path`, which raises the singular
+    :class:`CliTreePathNotFoundError`.
     """
+    errors: list[CliTreePathNotFoundError] = []
     for path in documented_paths:
-        resolve_command_path(tree, path)
+        try:
+            resolve_command_path(tree, path)
+        except CliTreePathNotFoundError as error:
+            errors.append(error)
+    if errors:
+        raise CliTreePathsNotFoundError(errors)
