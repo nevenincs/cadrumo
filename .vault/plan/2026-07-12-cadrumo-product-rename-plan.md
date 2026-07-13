@@ -192,6 +192,7 @@ Update product copy through locale authorities while preserving AEAT counterpart
 - [ ] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.
 - [ ] `W05.P12.S66` - Update Hungarian product locale messages through the locales CLI; `Hungarian locale catalogue`.
 - [ ] `W05.P12.S67` - Regenerate locale scaffold output and pass locale parity checks; `generated locale scaffold`.
+- [x] `W05.P12.S88` - Add safe per-locale selection to product-identity canonicalization; `src/cadrumo locale manager, CLI, and cohesive tests`.
 
 ### Phase `W05.P13` - rewrite active documentation through the mandated workflow
 

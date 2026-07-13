@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from ..core.external_constants import OutputLanguage
 from ..locales import (
     scan_namespace_markers,
     scan_source_tree,
@@ -218,6 +219,84 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
         )
         assert _leaf(data, "product", "machine_names") == (
             "Install cadrumo; launch cadrumo-mcp; read cadrumo://status."
+        )
+
+
+def test_canonicalize_product_identity_cli_selects_only_one_supported_locale(tmp_path: Path) -> None:
+    """The real command updates English without writing any sibling catalogue."""
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    for locale in OutputLanguage:
+        (locales_dir / f"{locale.value}.yml").write_text(
+            "product:\n  guidance: Cadrumo works with AEAT; run cadrumo app overview status.\n",
+            encoding="utf-8",
+        )
+    manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    sibling_bytes = {
+        locale.value: (locales_dir / f"{locale.value}.yml").read_bytes()
+        for locale in OutputLanguage
+        if locale is not OutputLanguage.EN
+    }
+
+    result = invoke_typer_app(
+        app,
+        ["canonicalize-product-identity", "--locale", "en"],
+        obj=manager,
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "1 locale catalogue(s)" in result.output
+    en_data = manager.load_locale(locales_dir / "en.yml")
+    assert _leaf(en_data, "product", "guidance") == (
+        "CADRUMO works with AEAT; run aeat app overview status."
+    )
+    assert {
+        locale: (locales_dir / f"{locale}.yml").read_bytes() for locale in sibling_bytes
+    } == sibling_bytes
+
+
+def test_canonicalize_product_identity_cli_rejects_invalid_locale_without_writing(tmp_path: Path) -> None:
+    """The production locale enum rejects traversal before the manager can write."""
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    for locale in OutputLanguage:
+        (locales_dir / f"{locale.value}.yml").write_text(
+            "product:\n  guidance: Cadrumo works with AEAT.\n",
+            encoding="utf-8",
+        )
+    manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    before = {path.name: path.read_bytes() for path in sorted(locales_dir.glob("*.yml"))}
+
+    result = invoke_typer_app(
+        app,
+        ["canonicalize-product-identity", "--locale", "../en"],
+        obj=manager,
+    )
+
+    assert result.exit_code != 0
+    assert "Invalid value" in result.output
+    assert {path.name: path.read_bytes() for path in sorted(locales_dir.glob("*.yml"))} == before
+
+
+def test_canonicalize_product_identity_cli_omission_updates_every_catalogue(tmp_path: Path) -> None:
+    """Omitting the selector preserves the original all-catalogue behavior."""
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    for locale in OutputLanguage:
+        (locales_dir / f"{locale.value}.yml").write_text(
+            "product:\n  guidance: Cadrumo works with AEAT; run cadrumo config profile status.\n",
+            encoding="utf-8",
+        )
+    manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    result = invoke_typer_app(app, ["canonicalize-product-identity"], obj=manager)
+
+    assert result.exit_code == 0, result.output
+    assert "4 locale catalogue(s)" in result.output
+    for locale in OutputLanguage:
+        data = manager.load_locale(locales_dir / f"{locale.value}.yml")
+        assert _leaf(data, "product", "guidance") == (
+            "CADRUMO works with AEAT; run aeat config profile status."
         )
 
 

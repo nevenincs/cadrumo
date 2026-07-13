@@ -27,6 +27,7 @@ class ClickInvokeKwargs(TypedDict, total=False):
     color: NotRequired[bool]
     catch_exceptions: NotRequired[bool]
     input: NotRequired[str | bytes | None]
+    obj: NotRequired[object]
 
 
 @cache

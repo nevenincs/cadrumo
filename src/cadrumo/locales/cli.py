@@ -125,9 +125,19 @@ def set_value(
 
 
 @app.command("canonicalize-product-identity")
-def canonicalize_product_identity() -> None:
-    """Normalize product display and command prefixes in every locale catalogue."""
-    updated_paths = _default_manager().canonicalize_product_identity_references()
+def canonicalize_product_identity(
+    ctx: typer.Context,
+    locale: Annotated[
+        OutputLanguage | None,
+        typer.Option("--locale", help="Update only this supported locale catalogue."),
+    ] = None,
+) -> None:
+    """Normalize product display and command prefixes in selected catalogues."""
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
+    try:
+        updated_paths = manager.canonicalize_product_identity_references(locale=locale)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc), param_hint="--locale") from exc
     typer.echo(f"canonicalized product identity references in {len(updated_paths)} locale catalogue(s)")
 
 
