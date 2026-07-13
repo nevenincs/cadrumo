@@ -242,22 +242,22 @@ test-results/
 # `aeat manual fetch` and verified against the committed manifest.json.
 # Keep raw PDFs ignored unless a registry source catalogue or committed
 # manual-corpus guard explicitly enrolls the official payload as evidence.
-src/aeat/_data/corpus/manuals/**/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2020/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2021/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2022/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2023/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2024/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2025/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2020/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2021/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2022/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2023/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2024/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2025/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf
-src/aeat/_data/corpus/manuals/**/source.html/
+src/cadrumo/_data/corpus/manuals/**/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2020/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2021/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2022/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2023/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2024/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2020/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2023/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf
+src/cadrumo/_data/corpus/manuals/**/source.html/
 
 # IDE
 .idea/
@@ -289,6 +289,12 @@ tmp/
 tmp_*/
 temp/
 cache/
+
+# Root-level ad-hoc agent run directories (the retired .runtime-sNN-*
+# convention; ruling R5 mandates scratch/ as the sole scratch location).
+# Ignored so a future one-off cannot land tracked; existing dirs are
+# cleaned up under S22.
+.runtime-*/
 
 
 # Root-level safety net for common ad-hoc output patterns that tend to
@@ -339,6 +345,22 @@ cache/
 /apex.txt
 /campaign_run.txt
 /api.bak/
+# Root-level git-diff/patch dumps from an ad-hoc revert/apply-cached run
+# (e.g. revert.patch). Never a durable repo artifact.
+/*.patch
+# One-off root-level "add_*" fixer scripts (e.g. add_frontmatter.py),
+# symmetrical with the existing write_*.py / translate_*.py / scratch_*.py
+# one-shot-script patterns above.
+/add_*.py
+# Root-level scratch text dumps that don't fit the tmp_*.txt shape above
+# (e.g. scratch_pathspec.txt from a staged-pathspec probe).
+/scratch_*.txt
+# Root-level captured command/gate output dumps (e.g. test_docs_output.txt
+# from an ad-hoc docs-gate run). Never a durable repo artifact.
+/*_output.txt
+# Root-level Playwright/browser accessibility-tree snapshot dumps
+# (e.g. rail-snap.md). Never a durable repo artifact.
+/*-snap.md
 # Underscore-prefixed one-shot agent run workspaces (persona reruns, m303/m390
 # capture dirs) — carry secrets/*.key/*.kdf/*.db; ephemeral, never in git.
 /_scratch*/
