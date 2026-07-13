@@ -1,4 +1,4 @@
-"""Contract tests for CADRUMO's canonical product identity boundary."""
+"""Contract tests for Cadrumo's canonical product identity boundary."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
     """Every externally projected product name follows the accepted CADRUMO tuple."""
     expected = ProductIdentity(
         display_name="CADRUMO",
+        prose_name="Cadrumo",
         python_package="cadrumo",
         distribution="cadrumo",
         cli_executable="aeat",
@@ -35,6 +36,13 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
     )
 
     assert expected == PRODUCT_IDENTITY
+
+
+def test_product_identity_distinguishes_prose_from_identity_context() -> None:
+    """Sentence copy and identity contexts expose their ratified casing."""
+    assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
+    assert PRODUCT_IDENTITY.display_name == "CADRUMO"
+    assert PRODUCT_IDENTITY.prose_name != PRODUCT_IDENTITY.display_name
 
 
 def test_product_identity_is_immutable() -> None:

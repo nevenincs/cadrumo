@@ -7,7 +7,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
-  - '2026-07-13-product-rename-adr'
 modified: '2026-07-13'
 ---
 # `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)

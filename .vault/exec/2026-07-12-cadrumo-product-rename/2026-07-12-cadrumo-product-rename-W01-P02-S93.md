@@ -42,3 +42,11 @@ related:
 
 - `_render.py`, the core i18n facade and tests, locale manager/CLI/tests, locale YAML, parity tests, runtime CLI implementation, and descendant CLI prose are outside this Step and were not edited.
 - S62-S67 remain open because this authority-only Step does not replace fresh descendant source, catalogue, generated parity, and locale-normalization evidence, even though the current default live help already acknowledges the binding display.
+
+## Status note: retired by S87 contextual-casing remediation
+
+The Description and Outcome above are preserved as historical execution
+evidence, not active instructions. S87 retires this reopened lane without
+re-executing it: directives to remove the title-case mandate or bind every
+prose surface to all-caps are superseded by the contextual contract of
+`Cadrumo` in sentence prose and `CADRUMO` in identity contexts.
