@@ -1,20 +1,18 @@
-# Cadrumo
+# Cadrumo documentation
 
-Cadrumo is a helper for preparing your Spanish tax forms.
+```{image} _static/index-header.png
+:alt: Paper tax forms, an envelope, a keyboard, and a calculator arranged on a desk
+:class: cadrumo-index-header
+:width: 100%
+```
 
-This is the landing page for Cadrumo and its `aeat` command-line interface (CLI). It shows how to
-turn local records into checked modelo figures and export files. You upload those
-files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
-project source is on [GitHub](https://github.com/nevenincs/cadrumo).
-
-Cadrumo is for autónomos, small businesses, and the people who help them prepare
-Spanish filing records. You prepare one taxpayer's records at a time. The
-project is pre-alpha, so expect breaking changes between versions.
-
-The guides on this page are ordered by the usual filing path. Start at the first
-thing you have not done yet. The path runs from installing the CLI and setting up
-the taxpayer, through preparing records and deciding what is due, to producing an
-export and following the full filing loop.
+This is the documentation for Cadrumo and its `aeat` command-line interface
+(CLI): turn your records into checked modelo figures and an export file, then
+upload that file to the Agencia Estatal de Administración Tributaria (AEAT)
+yourself. For what Cadrumo is and who it is for, see the
+[product page](https://cadrumo.neve.md); the source is on
+[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is pre-alpha - expect
+breaking changes between versions.
 
 ```{important}
 Cadrumo is not tax advice, is not affiliated with AEAT, and does not replace
@@ -26,6 +24,11 @@ before you rely on Cadrumo.
 
 ## Where to start
 
+These guides cover the whole preparation cycle: setting up a taxpayer
+profile, importing and classifying bank records, checking what is due, and
+preparing, verifying, and exporting each modelo. The two worked years - one
+for income tax, one for IVA - walk the full cycle with real commands.
+
 ::::{grid} 1 2 2 4
 :gutter: 3
 :class-container: cadrumo-route-grid
@@ -35,8 +38,7 @@ before you rely on Cadrumo.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this when you are new to Cadrumo and want the shortest path through profile,
-transactions, calculation, verification, and local export.
+Take the shortest path from an empty profile to an exported modelo file.
 :::
 
 :::{grid-item-card} Run through the income-tax year
@@ -44,8 +46,8 @@ transactions, calculation, verification, and local export.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this to follow a worked year of quarterly Modelo 130 instalments closing
-with the annual Modelo 100 Renta declaration, command by command.
+Follow a worked year of Modelo 130 quarters closing into the annual
+Modelo 100 Renta declaration, command by command.
 :::
 
 :::{grid-item-card} Run through the IVA year
@@ -53,8 +55,8 @@ with the annual Modelo 100 Renta declaration, command by command.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this to follow a worked year of quarterly Modelo 303 returns, the Modelo
-349 branch, and the annual Modelo 390 summary, command by command.
+Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and
+the annual Modelo 390 summary, command by command.
 :::
 
 :::{grid-item-card} Set up your taxpayer profile
@@ -62,17 +64,17 @@ Use this to follow a worked year of quarterly Modelo 303 returns, the Modelo
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this when Cadrumo does not yet know which taxpayer, activity, or local
-profile to use.
+Create the taxpayer profile and record the facts that decide which
+modelos apply.
 :::
 
-:::{grid-item-card} Work with transactions
+:::{grid-item-card} Import and manage transactions
 :link: how-to/import-bank-statements
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this when records are not yet in the ledger, or when they still need review,
-classification, export, split, merge, or evidence links.
+Import bank statements, review the rows, and attach the evidence behind
+them.
 :::
 
 :::{grid-item-card} Classify transactions
@@ -80,8 +82,8 @@ classification, export, split, merge, or evidence links.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this when imported rows need business, personal, mixed-use, category, or
-tax-field decisions.
+Decide business, personal, or mixed use and set the category and tax
+fields on each row.
 :::
 
 :::{grid-item-card} Plan your filing calendar
@@ -89,7 +91,7 @@ tax-field decisions.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this when you need to see which modelos are due and which period to prepare.
+See which modelos are due and which period to prepare next.
 :::
 
 :::{grid-item-card} Prepare your filings
@@ -97,9 +99,8 @@ Use this when you need to see which modelos are due and which period to prepare.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Use this for the repeatable loop - prepare, verify, export, file through
-AEAT, reconcile - and the per-modelo recipes: 036, 100 (Renta), 130, 303,
-349, and 390.
+Prepare, verify, export, file at AEAT, and reconcile - with a recipe per
+modelo: 036, 100 (Renta), 130, 303, 349, and 390.
 :::
 
 ::::
@@ -122,7 +123,7 @@ Quickstart <how-to/quickstart>
 First quarterly filing <how-to/first-quarterly-filing>
 The income-tax year <how-to/irpf-lifecycle>
 The IVA year <how-to/iva-lifecycle>
-Set up your workstation <workstation-setup>
+Install Cadrumo <workstation-setup>
 ```
 
 ```{toctree}

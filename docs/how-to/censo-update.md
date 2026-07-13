@@ -23,9 +23,8 @@ You need:
   tax regime, IVA regime, and enrollment facts. Read them from your Modelo 036
   copy or from the AEAT sede.
 
-Every command on this page needs your master-key passphrase. The tool prompts
-for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The tool's
-messages are in Spanish.
+Every command on this page needs your master-key passphrase; the tool
+prompts for it. The tool's messages are in Spanish.
 
 If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):

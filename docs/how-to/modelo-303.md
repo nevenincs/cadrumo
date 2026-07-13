@@ -11,8 +11,7 @@ Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
 Tributaria (AEAT). Export creates a local file that you upload through the official
 AEAT channel yourself.
 
-The tool needs a master-key passphrase. It prompts for it interactively, or
-read it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+The tool needs a master-key passphrase and prompts for it.
 
 ## The complete first-quarter chain
 

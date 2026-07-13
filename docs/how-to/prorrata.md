@@ -9,8 +9,7 @@ it to Modelo 303 and Modelo 390 automatically.
 Cadrumo does not submit anything to AEAT. The prorrata register is local,
 profile-scoped taxpayer state, not an AEAT filing surface.
 
-The tool needs a master-key passphrase. It prompts for it interactively, or
-reads it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+The tool needs a master-key passphrase and prompts for it.
 
 ## Which prorrata applies
 

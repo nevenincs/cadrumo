@@ -26,7 +26,7 @@ deadline; see [the deadline section](#the-filing-deadline-has-passed)).
 
 You need:
 
-- A master-key passphrase. Cadrumo prompts for it, or you set `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
+- A master-key passphrase. Cadrumo prompts for it.
 - An active profile with a name and surnames. The `--quiet` form skips the wizard:
 
   ```bash

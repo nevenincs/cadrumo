@@ -32,9 +32,8 @@ You need:
   `aeat`. The tool's [AEAT authentication](authenticate-with-aeat.md) is for
   read-only data pulls, not for filing.
 
-Every `aeat` command on this page needs your master-key passphrase. The tool
-prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The
-tool's messages are in Spanish.
+Every `aeat` command on this page needs your master-key passphrase; the
+tool prompts for it. The tool's messages are in Spanish.
 
 If you're new to the workflow as a whole, start with the
 [quickstart](quickstart.md).

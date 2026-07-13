@@ -8,8 +8,7 @@ income figure or a compensation amount from an earlier period.
 
 You need:
 
-- A master-key passphrase. Cadrumo prompts for it, or you set
-  `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
+- A master-key passphrase. Cadrumo prompts for it.
 - An active profile. Create one (the `--quiet` form skips the wizard):
 
   ```bash

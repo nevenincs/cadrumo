@@ -41,12 +41,8 @@ pip install "./cadrumo-0.2.0-py3-none-any.whl[agent]"
 
 `aeat` encrypts your local data with a master key derived from a passphrase.
 The first command that touches the store asks for the passphrase and the tool
-reuses it for the rest of the session. To run without a prompt, set it in the
-environment first:
-
-```bash
-export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
-```
+reuses it for the rest of the session. For unattended runs, see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 The CLI emits its help and messages in Spanish. The English text on this page
 describes what each step does.

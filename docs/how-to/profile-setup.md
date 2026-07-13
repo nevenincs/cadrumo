@@ -87,9 +87,9 @@ Spanish (for example `Tipo de entidad`, `Categorias de renta IRPF`), because
 they mirror the AEAT forms; the values you choose are stable command tokens that
 don't change with `--language`.
 
-The wizard prompts for your master-key passphrase before it stores anything. In
-a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE` first, or the command
-refuses with `CADRUMO_SECRET_PASSPHRASE is not set`.
+The wizard prompts for your master-key passphrase before it stores
+anything. For unattended runs, see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 `cadrumo` prints its prompts, refusals, and error messages in Spanish. The output
 blocks quoted below are English translations of those messages.
