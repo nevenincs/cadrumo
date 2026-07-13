@@ -4,7 +4,7 @@ Downloads real public-domain / CC0 / CC-BY invoice images into the test evidence
 corpus and writes a provenance sidecar per file (per the fixture-provenance rule:
 ``real_corpus`` plus the source URL, licence, and sha256). Run with
 ``uv run --no-sync python dev/_build_evidence_corpus.py``. This is a dev tooling
-script, not shipped or imported by ``src/aeat``.
+script, not shipped or imported by ``src/cadrumo``.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Final
 
 _UTF_8: Final[str] = "utf-8"
-_CORPUS = Path("src/aeat/application/ledger/tests/_evidence_corpus")
-_UA = "aeat-fixtures/1.0 (evidence test corpus; contact: maintainers)"
+_CORPUS = Path("src/cadrumo/application/ledger/tests/_evidence_corpus")
+_UA = "cadrumo-fixtures/1.0 (evidence test corpus; contact: maintainers)"
 _CLEAN_LICENCES = {"public domain", "cc0", "cc-by", "cc-by-sa", "pd", "pd-old", "cc-pd-mark"}
 _MAX_BYTES = 4_000_000
 

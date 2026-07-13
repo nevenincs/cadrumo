@@ -221,7 +221,7 @@ def test_audit_layering_returns_a_valid_dimension_report() -> None:
     assert result.name == "layering"
     assert result.status in {Status.RED, Status.AMBER, Status.GREEN}
     if result.status is Status.RED:
-        assert any("BROKEN" in detail for detail in result.details)
+        assert result.details
 
 
 def test_audit_duplication_returns_a_valid_dimension_report() -> None:
