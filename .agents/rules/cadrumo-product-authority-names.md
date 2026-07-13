@@ -1,7 +1,6 @@
 ---
 name: cadrumo-product-authority-names
-derived_from:
-  - "audit:2026-07-12-cadrumo-product-rename-audit"
+trigger: always_on
 ---
 
 # CADRUMO product and AEAT authority names
