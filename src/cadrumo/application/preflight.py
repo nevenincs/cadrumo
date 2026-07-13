@@ -195,7 +195,7 @@ def _auth_error_remediation(provider: str, result: str) -> str:
         if result == "expired":
             return "obtain a fresh FNMT certificate and reconfigure `aeat config auth certificate`"
         if result == "unreadable":
-            return "set the correct PKCS#12 passphrase (AEAT_CERTIFICATE_PASSWORD)"
+            return "set the correct PKCS#12 passphrase via `aeat config auth certificate secret set`"
         return "re-export a valid .p12 bundle and reconfigure `aeat config auth certificate`"
     return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth configure --provider clave_movil`"
 
