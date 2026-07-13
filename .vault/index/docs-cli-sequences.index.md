@@ -17,6 +17,10 @@ related:
   - '[[2026-07-13-docs-cli-sequences-W02-P03-S09]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P03-S10]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P03-S11]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P04-S12]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P04-S13]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P04-S14]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P04-S15]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-07-13-docs-cli-sequences-plan]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
@@ -45,6 +49,10 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-W02-P03-S09` - Implement the per-sequence sandbox runner (fresh isolated_profile_storage_root, frozen_clock, injected profile_id, English output, live tests off, invoke_cached_cli per frame)
 - `2026-07-13-docs-cli-sequences-W02-P03-S10` - Implement @capture value threading that parses a frame's JSON envelope, binds the json-path, and interpolates {name} into later frames
 - `2026-07-13-docs-cli-sequences-W02-P03-S11` - Write runner tests driving a real create-calculate-verify chain hermetically and asserting captured values thread through subsequent frames
+- `2026-07-13-docs-cli-sequences-W02-P04-S12` - Implement the golden reader and writer for committed light per-sequence JSON (resolved argv, exit code, verbatim captured envelope or text, capture bindings)
+- `2026-07-13-docs-cli-sequences-W02-P04-S13` - Implement JSON-frame comparison delegating to the observability primitives with exactly the central GOLDEN_MASK_FIELDS, refusing any per-sequence mask extension
+- `2026-07-13-docs-cli-sequences-W02-P04-S14` - Implement text-frame exact comparison with declared narrow normalisation, per-frame exit-code assertion, and @expect semantic evaluation against live output
+- `2026-07-13-docs-cli-sequences-W02-P04-S15` - Write comparison tests covering JSON match and mismatch diagnostics, text match, exit-code failure, and @expect pass and fail
 
 ### plan
 
