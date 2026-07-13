@@ -177,24 +177,7 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [
-          {
-            "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
-            "context": {
-              "article_27_assessment_status": "unassessed",
-              "closes_on": "2026-04-20",
-              "conditional_recargo_preview_band": "completed_months_2",
-              "conditional_recargo_preview_interest_applies": "False",
-              "conditional_recargo_preview_pct": "3.00",
-              "conditional_recargo_preview_reference_on": "2026-07-13",
-              "days_overdue": "84",
-              "legal_refs": "ley-58-2003:art-27.2"
-            },
-            "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
-            "severity": "warning",
-            "suggestion": null
-          }
-        ],
+        "notices": [],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
@@ -233,16 +216,9 @@
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
             "closes_on": "2026-04-20",
-            "conditional_recargo_preview": {
-              "assessment_status": "unassessed",
-              "band_id": "completed_months_2",
-              "interest_applies": false,
-              "legal_ref": "ley-58-2003:art-27.2",
-              "rate_reference_on": "2026-07-13",
-              "surcharge_pct": "3.00"
-            },
-            "days_overdue": 84,
-            "days_remaining": null
+            "conditional_recargo_preview": null,
+            "days_overdue": null,
+            "days_remaining": 19
           },
           "detail_rows": [],
           "filed_at": null,
@@ -868,7 +844,7 @@
           "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
         },
         "schema_version": "2",
-        "status": "warning"
+        "status": "success"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
