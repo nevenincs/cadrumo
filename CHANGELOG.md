@@ -10,6 +10,30 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-14
+
+First published cohort (`cadrumo`, `cadrumo-data-manuals`,
+`cadrumo-data-official` via PyPI Trusted Publishing). No `v0.2.0`
+distribution was ever published; the `v0.2.0` tag predates the fixes below.
+
+### Fixed
+
+- **Packaging:** `click` is now a declared direct dependency; `typer>=0.26`
+  stopped pulling it in, so a clean wheel install crashed on import
+  (`ModuleNotFoundError: click`). Caught by the split-install packaging
+  smoke; `uv.lock` reconciled to the committed `pyproject.toml`.
+- **Publish lane:** one GitHub environment per distribution
+  (`pypi`, `pypi-data-manuals`, `pypi-data-official`) so all three pending
+  Trusted Publishers can register from the one `publish.yml` workflow.
+- **`just doctor`** invoked a nonexistent `cadrumo` console script; the
+  human CLI is `aeat`.
+
+### Changed
+
+- **User documentation:** the installation surfaces address end users
+  installing a released package; developer-checkout setup moved to
+  `CONTRIBUTING.md`. The documented MCP command is `cadrumo-mcp`.
+
 ## [0.2.0] - 2026-07-04
 
 Prepared per issue #382. No `v0.1.0` git tag exists on the remote, so this
