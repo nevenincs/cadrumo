@@ -59,6 +59,7 @@ from dev.docs.cli_reference import (
     _assert_no_fallback_surfaces,
     _collect_commands,
     _force_lazy_imports,
+    _is_click_argument,
     _reference_subprocess_environment,
 )
 
@@ -210,19 +211,6 @@ def _is_group(cmd: click.Command) -> bool:  # type: ignore[name-defined]
 
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _is_argument(param: click.Parameter) -> bool:  # type: ignore[name-defined]
-    """Return whether ``param`` is a positional argument.
-
-    Discriminates on Click's ``param_type_name`` rather than ``isinstance`` on
-    ``click.Argument``: Typer wraps arguments in ``TyperArgument``, which is NOT
-    a ``click.Argument`` subclass, so an ``isinstance`` check silently
-    misclassifies every positional as an option.
-    """
-    return getattr(param, "param_type_name", "") == "argument"
-
-
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
-# Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _argument_metavar(param: click.Parameter) -> str:  # type: ignore[name-defined]
     """Return a deterministic metavar token for a positional argument.
 
@@ -250,7 +238,7 @@ def _project_params(cmd: click.Command) -> tuple[list[CliParam], list[str]]:  # 
     for param in cmd.params:
         if getattr(param, "param_type_name", "") not in {"argument", "option"}:
             continue
-        if _is_argument(param):
+        if _is_click_argument(param):
             names: tuple[str, ...] = tuple(getattr(param, "opts", None) or [param.name or "arg"])
             kind = ParamKind.ARGUMENT
             arg_metavars.append(_argument_metavar(param))
