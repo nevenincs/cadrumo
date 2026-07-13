@@ -1568,26 +1568,26 @@ a.sd-card:any-link,
   user-select: none;
 }
 
-/* Output region: the command's return values as a treeview-style child block —
- * inset beneath the command behind a guide rule, on a faint panel, no prompt,
- * lighter weight — so command and output read as parent and result. */
+/* Output region: the command's return values as a flat layered panel beneath
+ * the command — hierarchy carried by the background layer and spacing alone
+ * (no guide rules, no accent stripes). JSON bodies arrive Pygments-highlighted
+ * from the build, so the docs' code palette colours keys and values. */
 .cadrumo-frame-output,
 .cadrumo-frame-stderr {
-  background: color-mix(in srgb, var(--color-background-secondary) 55%, transparent);
-  border-left: 2px solid color-mix(in srgb, var(--color-brand-content) 35%, transparent);
-  border-radius: 0 var(--cadrumo-radius-s) var(--cadrumo-radius-s) 0;
+  background: color-mix(in srgb, var(--color-background-secondary) 65%, transparent);
+  border-radius: var(--cadrumo-radius-s);
   color: var(--color-foreground-secondary);
   font-weight: 400;
-  margin: 0.55rem 0 0.3rem 1.1rem;
+  margin: 0.5rem 0 0.35rem;
   overflow-x: auto;
-  padding: 0.5rem 0.85rem;
+  padding: 0.65rem 0.85rem;
   scrollbar-color: var(--color-background-border) transparent;
   scrollbar-width: thin;
   white-space: pre;
 }
 
 .cadrumo-frame-stderr {
-  border-left-color: color-mix(in srgb, var(--cadrumo-accent-danger) 55%, transparent);
+  background: color-mix(in srgb, var(--cadrumo-accent-danger) 7%, transparent);
   color: var(--cadrumo-accent-danger);
 }
 
@@ -1639,10 +1639,10 @@ a.sd-card:any-link,
  * Without the `--enhanced` class every frame renders fully highlighted with
  * its output — the no-JS transcript. */
 
-/* Active command: the one the playhead sits on — a subtle left accent, output
- * shown. */
+/* Active command: the one the playhead sits on — a full-row background tint,
+ * no accent stripes. */
 .cadrumo-sequence--enhanced .cadrumo-frame.is-active {
-  box-shadow: inset 2px 0 0 0 var(--color-brand-content);
+  background: color-mix(in srgb, var(--color-brand-content) 6%, transparent);
 }
 
 /* Output disclosure: each frame's output is individually toggleable (the
@@ -1656,18 +1656,22 @@ a.sd-card:any-link,
   display: none;
 }
 
-/* The disclosure handle: one clear chevron on its own row, aligned with the
- * output inset so it reads as the child block's handle — JS-created only. */
+/* The disclosure handle: one unmissable chevron on its own row with a real
+ * hit area — JS-created only. Stepping opens the active frame's output and
+ * never closes another frame's; this handle is the reader's own control. */
 .cadrumo-output-toggle {
   background: none;
   border: none;
   color: var(--color-foreground-muted);
   cursor: pointer;
   display: block;
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   line-height: 1;
-  margin: 0.2rem 0 0 1.1rem;
-  padding: 0.15rem 0.5rem 0.15rem 0;
+  margin: 0.25rem 0 0;
+  min-height: 1.6rem;
+  min-width: 1.9rem;
+  padding: 0.2rem 0.6rem 0.2rem 0;
+  text-align: left;
 }
 
 .cadrumo-output-toggle:hover {
