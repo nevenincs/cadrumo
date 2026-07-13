@@ -61,7 +61,7 @@ _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
 # Distilled from the mcpb manifest one-liner; keeps the never-files-live boundary
 # stated on the operator-facing surface.
 _PLUGIN_DESCRIPTION = (
-    f"Operate {PRODUCT_IDENTITY.display_name} through the Cadrumo Spanish-tax CLI: "
+    f"Operate {PRODUCT_IDENTITY.prose_name} through the Cadrumo Spanish-tax CLI: "
     "grounded search over the bundled BOE/AEAT "
     "legal corpus, situation-keyed guided workflows, and gated execution that "
     "never files to AEAT. The server advertises an orientation core by default "
