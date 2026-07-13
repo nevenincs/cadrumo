@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from .... import __version__
 from ....application.operator_surface import build_help_document
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
@@ -162,6 +163,46 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     assert "ImportError" not in combined_output
     assert "integrity-warning" not in combined_output
     assert "unreadable_rows" not in combined_output
+
+
+def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -> None:
+    """The sole human executable exposes the binding Cadrumo identity tuple."""
+    cli_executable = _installed_cli_executable()
+    env = _console_env(tmp_path)
+
+    version = subprocess.run(
+        [cli_executable, "--version"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    help_result = subprocess.run(
+        [cli_executable, "--language", "en", "--help"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    assert version.returncode == 0, version.stderr
+    assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {__version__}\n"
+    assert __version__ == "0.2.1"
+    assert help_result.returncode == 0, help_result.stderr
+    assert help_result.stdout.startswith(f"{PRODUCT_IDENTITY.display_name} -")
+    assert f"{PRODUCT_IDENTITY.cli_executable} config" in help_result.stdout
+    assert "AEAT" in help_result.stdout
+    assert f"{PRODUCT_IDENTITY.python_package} config" not in help_result.stdout
+
+    suffix = ".exe" if os.name == "nt" else ""
+    human_alias = Path(sys.executable).with_name(f"{PRODUCT_IDENTITY.python_package}{suffix}")
+    assert not human_alias.exists(), f"unexpected human CLI alias installed at {human_alias}"
 
 
 def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:

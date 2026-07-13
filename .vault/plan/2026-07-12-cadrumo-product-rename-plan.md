@@ -112,7 +112,7 @@ Make the CADRUMO distribution expose the sole human `aeat` command and the
 distinct `cadrumo-mcp` command.
 
 - [x] `W03.P05.S24` - Rename root metadata, package selection, extras, and URLs to CADRUMO; `expose `aeat` and `cadrumo-mcp` scripts; `pyproject.toml`.
-- [ ] `W03.P05.S25` - Bind CLI program identity to `aeat` and its version and help product surfaces to CADRUMO; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
+- [x] `W03.P05.S25` - Bind CLI program identity to `aeat` and its version and help product surfaces to CADRUMO; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
 - [x] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp executable/refusal modules and focused real tests`.
 - [x] `W03.P05.S27` - Update the optional-extra authority and every directly generated runtime install remedy to current `cadrumo[...]` metadata, with real degradation tests; `src/cadrumo/core/_optional_extras.py; optional-extra consumers, error registries, agent/MCP/search/corpus degradation surfaces and direct tests`.
 
