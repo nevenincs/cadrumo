@@ -100,3 +100,46 @@ related:
 - The active plan was updated through the plan CLI before the current hold to
   reopen S91 and add S92. This execution-record lane made no plan hunk, and the
   plan remains frozen while the authority overlap is resolved.
+
+## Final acceptance and closure
+
+S91 was implemented in `ee4bb7f9ad9d772461b8ef7f7cd46a14fa70b6ed`.
+Its independent audit, `9b372bba70172c8012d349a60a83bd06102fbfdf`,
+failed with two HIGH findings—incorrect root and nested formatter extraction
+and a strict-mode failed-format survivor—and one LOW correction reducing the
+reported new-test count from eleven to eight. S92 remediation
+`e513202907fec89a06cad8a0218db67c76e01243` fixed both HIGH defects;
+independent S92 audit `ee4f25296afeb4cff2ba5a6401639478bca66dd6`
+passed with no findings and confirmed both closed, without independently
+authorizing S91 closure. S94 implementation
+`132f9b5352877b9ec8e36c6c32b5373cefa529fb` and PASS audit
+`1ab78e51764147b4e308ebec0b2206ab059b70d9` subsequently cleared the separate
+authority and plan blocker while leaving reopened descendants open.
+
+Renewed acceptance against the current tree confirmed that the production
+`extract_placeholders` probe for
+`{user.name} {items[0]} {amount:{width}.{precision}f}` returns exactly
+`amount`, `items`, `precision`, `user`, and `width`. Focused production
+formatter and real-filesystem manager and live-CLI audit coverage passed all
+23 tests. The formatter cases cover clean attribute, index, and nested
+rendering; missing root and nested arguments for all five placeholders; strict
+rejection after JSON, prose, positional, and malformed format failures;
+escaped-literal success; and non-strict fallback. The manager and CLI cases
+cover boolean, null, key, root, and nested placeholder diagnostics and CLI
+rejection. Ruff format check, Ruff check, and Ty also passed across the seven
+S91 and S92 production and test Python paths.
+
+The broader i18n, locales, and parity slice was not green: 69 tests passed and
+six failed. All six failures are stale `Cadrumo` expectations—two in
+`test_render_override.py` and four in `test_parity.py`—against the
+authoritative `CADRUMO` product display; none is a locale-validator failure.
+With fresh isolated valid CADRUMO state, live
+`python -m cadrumo.locales audit` and
+`python -m cadrumo.locales scaffold --check` runs both reported `ca.yml`,
+`en.yml`, `es.yml`, and `hu.yml` as `ok`. Naming remains `CADRUMO` for product
+display, `cadrumo` for Python imports, `aeat` as the sole human CLI, and `AEAT`
+for the authority.
+
+This renewed evidence accepts and closes S91 only. S62–S67, S25, the
+S94-reopened descendants, and the feature remain open. No locale YAML or
+production code changed for this closure.
