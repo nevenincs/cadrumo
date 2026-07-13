@@ -77,9 +77,10 @@ Check this section when you need to know whether a release affects:
 
 ## Download guidance
 
-Use the latest release link when you need the current packaged version. If a
-packaged artifact is not available for your environment, use the repository and
-record the commit or tag you installed from.
+Use the latest release link when you need the current packaged version, and
+follow the [installation guide](workstation-setup.md) to install it. If no
+packaged artifact is available for your environment, open an issue so the gap
+is recorded.
 
 After installing or upgrading, run:
 

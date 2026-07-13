@@ -2,7 +2,7 @@
 
 Use this collection to look up exact Cadrumo names, boundaries, and generated
 technical surfaces while you work. For installation and first use, start with
-the [source setup](../workstation-setup.md) and
+the [installation guide](../workstation-setup.md) and
 [quickstart](../how-to/quickstart.md). For a task, choose a
 [how-to guide](../how-to/index.md). For the relationships between stages, read
 [how Cadrumo turns records into a filing-ready tax file](../explanation/index.md).

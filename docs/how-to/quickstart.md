@@ -15,11 +15,13 @@ has tax-specific setup or review choices.
 
 ## Install the CLI
 
-Install the `cadrumo` package from PyPI. Any tool that installs Python
-applications works; `pip` is the plainest path:
+Download the current `cadrumo` package from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and
+install it with `pip`; the [installation guide](../workstation-setup.md) walks
+through the full setup, including optional integrations:
 
 ```bash
-pip install cadrumo
+pip install ./cadrumo-0.2.0-py3-none-any.whl
 ```
 
 Confirm the command is on your path:
@@ -28,11 +30,11 @@ Confirm the command is on your path:
 aeat --version
 ```
 
-To use Cadrumo with an AI agent later, install the agent extra instead; see
+To use Cadrumo with an AI agent later, install the `agent` extra instead; see
 [Connect an agent](connect-an-agent.md):
 
 ```bash
-pip install "cadrumo[agent]"
+pip install "./cadrumo-0.2.0-py3-none-any.whl[agent]"
 ```
 
 ## Before you start: the master-key passphrase
