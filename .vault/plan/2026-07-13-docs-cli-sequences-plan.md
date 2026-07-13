@@ -98,9 +98,9 @@ Tokenise command lines against the materialised Click tree, register the backtic
 
 Wire the builder-inited Sphinx check hook and the dev/docs pytest gate to the same engine functions so a divergence reds both surfaces without re-implementing execution.
 
-- [ ] `W03.P08.S26` - Add the builder-inited hook in docs conf setup running the engine check mode and emitting cli-tree.json into the static output, scoped for the incremental changed-page build; `docs/conf.py`.
-- [ ] `W03.P08.S27` - Wire the pytest gate calling the same engine check functions so CI catches golden drift without a full docs build; `dev/docs/tests/test_sequence_goldens.py`.
-- [ ] `W03.P08.S28` - Verify the docs build check surface and the pytest gate both red on an injected golden divergence and both pass green on clean goldens; `dev/docs/tests/test_sequence_goldens.py`.
+- [x] `W03.P08.S26` - Add the builder-inited hook in docs conf setup running the engine check mode and emitting cli-tree.json into the static output, scoped for the incremental changed-page build; `docs/conf.py`.
+- [x] `W03.P08.S27` - Wire the pytest gate calling the same engine check functions so CI catches golden drift without a full docs build; `dev/docs/tests/test_sequence_goldens.py`.
+- [x] `W03.P08.S28` - Verify the docs build check surface and the pytest gate both red on an injected golden divergence and both pass green on clean goldens; `dev/docs/tests/test_sequence_goldens.py`.
 
 ## Wave `W04` - progressive-enhancement frontend widget
 
@@ -110,10 +110,10 @@ The vendored framework-free stepped-player enhancement over server-rendered fram
 
 Extend the vendored framework-free widget with playback controls, hover help, keyboard and reduced-motion support, and content-identical no-JS degradation.
 
-- [ ] `W04.P09.S29` - Extend the vendored widget to parse the inline JSON payload and add frame visibility toggling, prev/next/play controls, a position indicator, and full keyboard operability; `docs/_static/cadrumo-docs.js`.
-- [ ] `W04.P09.S30` - Extend the vendored stylesheet with the terminal-framed visual language, the collapsed setup disclosure, and prefers-reduced-motion handling; `docs/_static/cadrumo-docs.css`.
-- [ ] `W04.P09.S31` - Implement the hover and focus help popover keyed into cli-tree.json via one same-origin per-page fetch, opening a verb token's live help by its command-path key; `docs/_static/cadrumo-docs.js`.
-- [ ] `W04.P09.S32` - Verify no-JS content-identical degradation, keyboard and reduced-motion accessibility, and the nitpicky offline -n -W gate green on a rendered sequence page; `dev/docs/tests/test_docs_build.py`.
+- [x] `W04.P09.S29` - Extend the vendored widget to parse the inline JSON payload and add frame visibility toggling, prev/next/play controls, a position indicator, and full keyboard operability; `docs/_static/cadrumo-docs.js`.
+- [x] `W04.P09.S30` - Extend the vendored stylesheet with the terminal-framed visual language, the collapsed setup disclosure, and prefers-reduced-motion handling; `docs/_static/cadrumo-docs.css`.
+- [x] `W04.P09.S31` - Implement the hover and focus help popover keyed into cli-tree.json via one same-origin per-page fetch, opening a verb token's live help by its command-path key; `docs/_static/cadrumo-docs.js`.
+- [x] `W04.P09.S32` - Verify no-JS content-identical degradation, keyboard and reduced-motion accessibility, and the nitpicky offline -n -W gate green on a rendered sequence page; `dev/docs/tests/test_docs_build.py`.
 
 ## Wave `W05` - first enrolled tutorial content
 
@@ -123,9 +123,9 @@ Greenfield tutorial pages authored with real cli-sequence directives from birth,
 
 Author synthetic fixtures, seed recipes, and the first tutorial pages with real cli-sequence directives and committed goldens.
 
-- [ ] `W05.P10.S33` - Author the synthetic input fixtures and shared seed recipes for the first tutorials; `docs/_sequences/fixtures`.
-- [ ] `W05.P10.S34` - Author the first greenfield tutorial page with real cli-sequence directives and generate its committed goldens via the refresh CLI; `docs/tutorials`.
-- [ ] `W05.P10.S35` - Verify the tutorial sequences execute and match their goldens, the @result @expect asserts success, and the page renders stepped with content-identical no-JS output; `docs/tutorials`.
+- [x] `W05.P10.S33` - Author the synthetic input fixtures and shared seed recipes for the first tutorials; `docs/_sequences/fixtures`.
+- [x] `W05.P10.S34` - Author the first greenfield tutorial page with real cli-sequence directives and generate its committed goldens via the refresh CLI; `docs/tutorials`.
+- [x] `W05.P10.S35` - Verify the tutorial sequences execute and match their goldens, the @result @expect asserts success, and the page renders stepped with content-identical no-JS output; `docs/tutorials`.
 
 ## Wave `W06` - rollout, docs gates green, and codification candidates
 
@@ -135,9 +135,9 @@ Confirm the two-tier enrollment gate, bring the full docs gate suite green, and 
 
 Confirm the two-tier enrollment gate, bring the full docs gate suite green, and record codification candidates for post-cycle promotion.
 
-- [ ] `W06.P11.S36` - Confirm the two-tier enrollment gate refuses a plain executable fence on an enrolled page while non-enrolled pages keep the verb-path and option-name checks; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
-- [ ] `W06.P11.S37` - Run the full docs gate suite (nitpicky -n -W build, Pagefind, documented-command conformance, sequence goldens) and bring it green; `dev/docs/tests`.
-- [ ] `W06.P11.S38` - Record the three codification candidates from the ADR as post-cycle rule-promotion notes in the feature close audit; `.vault/audit`.
+- [x] `W06.P11.S36` - Confirm the two-tier enrollment gate refuses a plain executable fence on an enrolled page while non-enrolled pages keep the verb-path and option-name checks; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [x] `W06.P11.S37` - Run the full docs gate suite (nitpicky -n -W build, Pagefind, documented-command conformance, sequence goldens) and bring it green; `dev/docs/tests`.
+- [x] `W06.P11.S38` - Record the three codification candidates from the ADR as post-cycle rule-promotion notes in the feature close audit; `.vault/audit`.
 
 ## Description
 

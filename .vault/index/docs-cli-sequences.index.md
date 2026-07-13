@@ -42,6 +42,7 @@ related:
   - '[[2026-07-13-docs-cli-sequences-W05-P10-S34]]'
   - '[[2026-07-13-docs-cli-sequences-W05-P10-S35]]'
   - '[[2026-07-13-docs-cli-sequences-W06-P11-S36]]'
+  - '[[2026-07-13-docs-cli-sequences-W06-P11-S37]]'
   - '[[2026-07-13-docs-cli-sequences-W06-P11-S38]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-07-13-docs-cli-sequences-audit]]'
@@ -101,6 +102,7 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-W05-P10-S34` - Author the first greenfield tutorial page with real cli-sequence directives and generate its committed goldens via the refresh CLI
 - `2026-07-13-docs-cli-sequences-W05-P10-S35` - Verify the tutorial sequences execute and match their goldens, the @result @expect asserts success, and the page renders stepped with content-identical no-JS output
 - `2026-07-13-docs-cli-sequences-W06-P11-S36` - Confirm the two-tier enrollment gate refuses a plain executable fence on an enrolled page while non-enrolled pages keep the verb-path and option-name checks
+- `2026-07-13-docs-cli-sequences-W06-P11-S37` - Run the full docs gate suite (nitpicky -n -W build, Pagefind, documented-command conformance, sequence goldens) and bring it green
 - `2026-07-13-docs-cli-sequences-W06-P11-S38` - Record the three codification candidates from the ADR as post-cycle rule-promotion notes in the feature close audit
 
 ### plan
