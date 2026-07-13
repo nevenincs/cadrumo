@@ -65,6 +65,7 @@ Submodules
    cadrumo.core._tax_domain
    cadrumo.core._toml
    cadrumo.core.aggregation
+   cadrumo.core.atomic_write
    cadrumo.core.auth_session_keys
    cadrumo.core.click_context
    cadrumo.core.compatibility_lifecycle
