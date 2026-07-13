@@ -10,6 +10,7 @@ import os
 import re
 import tempfile
 from collections.abc import Hashable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, override
 
@@ -17,6 +18,7 @@ import yaml
 
 from ..core.errors import AeatError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
+from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
 from ..core.product_identity import PRODUCT_IDENTITY
 
@@ -29,6 +31,60 @@ _YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
 class LocaleError(AeatError):
     """Raised on locale management and parsing errors."""
+
+
+@dataclass(frozen=True)
+class LocaleScalarViolation:
+    """One locale key whose YAML leaf is not a string."""
+
+    locale_file: str
+    key: str
+    value_type: str
+
+
+@dataclass(frozen=True)
+class LocalePlaceholderVariant:
+    """The placeholder set used by one locale for a shared key."""
+
+    locale_file: str
+    placeholders: frozenset[str]
+
+
+@dataclass(frozen=True)
+class LocalePlaceholderMismatch:
+    """All differing placeholder variants for one shared locale key."""
+
+    key: str
+    variants: tuple[LocalePlaceholderVariant, ...]
+
+
+@dataclass(frozen=True)
+class LocaleFileAudit:
+    """Structured audit findings owned by one locale catalogue."""
+
+    locale_file: str
+    codebase_missing: tuple[str, ...]
+    codebase_extra: tuple[str, ...]
+    inter_locale_missing: tuple[str, ...]
+    scalar_violations: tuple[LocaleScalarViolation, ...]
+
+    @property
+    def ok(self) -> bool:
+        """Return whether this catalogue has no file-local findings."""
+        return not (self.codebase_missing or self.codebase_extra or self.inter_locale_missing or self.scalar_violations)
+
+
+@dataclass(frozen=True)
+class LocaleAuditResult:
+    """Complete production locale audit across every configured catalogue."""
+
+    files: tuple[LocaleFileAudit, ...]
+    placeholder_mismatches: tuple[LocalePlaceholderMismatch, ...]
+
+    @property
+    def ok(self) -> bool:
+        """Return whether every scalar, key, and placeholder contract passes."""
+        return all(file.ok for file in self.files) and not self.placeholder_mismatches
 
 
 class StrictUniqueKeyLoader(yaml.SafeLoader):
@@ -120,6 +176,65 @@ class LocaleManager:
 
         return scan_namespace_markers(self.src_dir)
 
+    def audit(self) -> LocaleAuditResult:
+        """Audit scalar, key-set, placeholder, and codebase parity.
+
+        Inter-locale key parity is computed from the union of every catalogue,
+        so no language is privileged as a canonical reference. Placeholder
+        parity is evaluated only for keys shared by all catalogues.
+
+        Returns:
+            Immutable structured findings for CLI rendering and quality gates.
+        """
+        locale_paths = tuple(sorted(self.locales_dir.glob("*.yml")))
+        locale_leaves = {path.name: _flatten_raw_locale_leaves(self.load_locale(path)) for path in locale_paths}
+        key_sets = {name: set(leaves) for name, leaves in locale_leaves.items()}
+        all_locale_keys = set().union(*key_sets.values()) if key_sets else set()
+        shared_keys = set.intersection(*key_sets.values()) if key_sets else set()
+        codebase_keys = self.get_codebase_keys()
+        namespace_prefixes = tuple(
+            marker.rstrip("*").rstrip(".")
+            for marker in self.get_codebase_namespaces()
+            if marker.rstrip("*").rstrip(".")
+        )
+
+        file_results: list[LocaleFileAudit] = []
+        for locale_file, leaves in locale_leaves.items():
+            keys = key_sets[locale_file]
+            violations = tuple(
+                LocaleScalarViolation(locale_file, key, type(value).__name__)
+                for key, value in sorted(leaves.items())
+                if not isinstance(value, str)
+            )
+            file_results.append(
+                LocaleFileAudit(
+                    locale_file=locale_file,
+                    codebase_missing=tuple(sorted(codebase_keys - keys)),
+                    codebase_extra=tuple(
+                        sorted(
+                            key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes)
+                        )
+                    ),
+                    inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
+                    scalar_violations=violations,
+                )
+            )
+
+        placeholder_mismatches: list[LocalePlaceholderMismatch] = []
+        for key in sorted(shared_keys):
+            values = {name: leaves[key] for name, leaves in locale_leaves.items()}
+            if not all(isinstance(value, str) for value in values.values()):
+                continue
+            variants = tuple(
+                LocalePlaceholderVariant(name, extract_placeholders(value))
+                for name, value in sorted(values.items())
+                if isinstance(value, str)
+            )
+            if len({variant.placeholders for variant in variants}) > 1:
+                placeholder_mismatches.append(LocalePlaceholderMismatch(key, variants))
+
+        return LocaleAuditResult(tuple(file_results), tuple(placeholder_mismatches))
+
     def get_yaml_keys(self, d: dict[str, LocaleNode], current_path: str = "") -> set[str]:
         """Recursively extract all dot-notated keys from a nested dictionary."""
         keys = set()
@@ -205,9 +320,7 @@ class LocaleManager:
             Paths whose parsed locale content changed.
         """
         locale_paths = (
-            (self._locale_path(locale.value),)
-            if locale is not None
-            else tuple(sorted(self.locales_dir.glob("*.yml")))
+            (self._locale_path(locale.value),) if locale is not None else tuple(sorted(self.locales_dir.glob("*.yml")))
         )
         updated_paths: list[Path] = []
         for locale_path in locale_paths:
@@ -529,6 +642,17 @@ def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> di
         else:
             flattened[path] = value
     return flattened
+
+
+def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, object]:
+    """Flatten parsed YAML without coercing invalid scalar types to strings."""
+    if isinstance(value, dict):
+        flattened: dict[str, object] = {}
+        for key, child in value.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            flattened.update(_flatten_raw_locale_leaves(child, path))
+        return flattened
+    return {prefix or "<root>": value}
 
 
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:

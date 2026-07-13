@@ -39,20 +39,15 @@ target exactly the right locale values and call sites to fix.
 from __future__ import annotations
 
 import ast
-import re
 from collections import defaultdict
 from pathlib import Path
 
 import pytest
 import yaml
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+from .. import extract_placeholders
 
-# Both placeholder styles handled by _interpolate in core.i18n._render:
-#   %{name}  — python-i18n / AEAT locale style (first substitution pass)
-#   {name}   — Python str.format style (second substitution pass)
-_PCT_PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
-_FMT_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?:![^}]*)?\}")
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_ROOT = Path(__file__).parent.parent.parent.parent  # src/cadrumo
 _LOCALES_DIR = _SRC_ROOT / "locales"
@@ -79,33 +74,6 @@ _DOWNSTREAM_FORMAT_PASSTHROUGH: frozenset[tuple[str, str]] = frozenset(
         ("cli.help.try_for_help", "help_option"),
     }
 )
-
-
-def _locale_placeholders(value: str) -> frozenset[str]:
-    """Return the set of placeholder names declared in a locale value.
-
-    Handles both ``%{name}`` (consumed by the first substitution pass in
-    ``_interpolate``) and ``{name}`` / ``{name!r}`` (consumed by
-    ``str.format`` in the second pass).  ``%{name}`` tokens are consumed
-    first so their ``{name}`` residual does not double-count them.
-    """
-    names: set[str] = set()
-    # Collect %{name} tokens and mark their positions as consumed so the
-    # format-style pass does not count the same name twice.
-    consumed: set[str] = set()
-    for m in _PCT_PLACEHOLDER_RE.finditer(value):
-        name = m.group("name")
-        names.add(name)
-        consumed.add(name)
-    # Collect {name} tokens that were NOT already consumed as %{name}.
-    # Temporarily blank out the %{…} spans so the format regex cannot
-    # re-match them.
-    scrubbed = _PCT_PLACEHOLDER_RE.sub(lambda m: " " * len(m.group(0)), value)
-    for m in _FMT_PLACEHOLDER_RE.finditer(scrubbed):
-        name = m.group("name")
-        if name not in consumed:
-            names.add(name)
-    return frozenset(names)
 
 
 def _flatten_locale(data: object, prefix: str = "") -> dict[str, str]:
@@ -205,7 +173,7 @@ def test_no_orphan_placeholder_tokens(
         if key not in canonical_locale:
             continue
         locale_val = canonical_locale[key]
-        required = _locale_placeholders(locale_val)
+        required = extract_placeholders(locale_val)
         if not required:
             continue
         all_supplied = frozenset().union(*call_kwargs_list)
@@ -239,7 +207,7 @@ def test_no_surplus_kwargs(
         if key not in canonical_locale:
             continue
         locale_val = canonical_locale[key]
-        required = _locale_placeholders(locale_val)
+        required = extract_placeholders(locale_val)
         all_supplied = frozenset().union(*call_kwargs_list)
         for kwarg in sorted(all_supplied - required):
             findings.append(f"SURPLUS  key={key!r}  kwarg={kwarg!r}  locale={locale_val[:80]!r}")

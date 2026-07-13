@@ -13,6 +13,7 @@ import re
 from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from functools import lru_cache
+from string import Formatter
 
 import i18n
 import yaml
@@ -27,13 +28,14 @@ from ..product_identity import PRODUCT_IDENTITY
 _log = get_logger(__name__)
 _INITIALISED = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
-_SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_PLACEHOLDER_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
+_FORMATTER = Formatter()
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
 _STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
-# Test-scope flag: when True, _interpolate raises UnmatchedPlaceholderError for
-# any {name} token that survives substitution.  Production code leaves this False.
+# Test-scope flag: when True, tr raises UnmatchedPlaceholderError for any
+# declared placeholder not supplied by the caller. Production leaves this False.
 _I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_placeholders", default=False)
 
 
@@ -232,13 +234,17 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     default = kwargs.pop("default", None)
     rendered = _lookup_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
+    strict_placeholders = _I18N_STRICT_PLACEHOLDERS.get()
+    unmatched_placeholders = (
+        sorted(extract_placeholders(rendered) - interpolation.keys()) if strict_placeholders else ()
+    )
     if interpolation:
         rendered = _interpolate(translation_key, rendered, interpolation)
     rendered = _normalise_product_identity_references(rendered)
-    if _I18N_STRICT_PLACEHOLDERS.get() and (match := _SURVIVING_PLACEHOLDER_RE.search(rendered)):
+    if strict_placeholders and unmatched_placeholders:
         raise UnmatchedPlaceholderError(
             key=translation_key,
-            name=match.group("name"),
+            name=unmatched_placeholders[0],
             rendered=rendered,
         )
     return rendered
@@ -254,6 +260,37 @@ def _normalise_product_identity_references(rendered: str) -> str:
     """
     rendered = _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
     return _STALE_PRODUCT_DISPLAY_RE.sub(PRODUCT_IDENTITY.display_name, rendered)
+
+
+def extract_placeholders(value: str) -> frozenset[str]:
+    """Return interpolation names consumed by the production renderer.
+
+    The renderer first replaces ``%{name}`` tokens and then delegates
+    ``{name}`` tokens to :meth:`str.format`.  Parsing the second form through
+    :class:`string.Formatter` preserves format conversions and specifications
+    while excluding escaped braces and brace-delimited prose that is not a
+    valid identifier.  Invalid format strings contribute no format-style
+    names because the production renderer likewise leaves that pass unchanged.
+
+    Args:
+        value: Locale scalar to inspect.
+
+    Returns:
+        The unique placeholder names used by either interpolation pass.
+    """
+    names = {match.group("name") for match in _PLACEHOLDER_RE.finditer(value)}
+    without_percent_tokens = _PLACEHOLDER_RE.sub(lambda match: " " * len(match.group(0)), value)
+    try:
+        format_names: set[str] = set()
+        parsed = _FORMATTER.parse(without_percent_tokens)
+        for _literal, field_name, _format_spec, _conversion in parsed:
+            if field_name is not None and _PLACEHOLDER_NAME_RE.fullmatch(field_name):
+                format_names.add(field_name)
+    except ValueError:
+        pass
+    else:
+        names.update(format_names)
+    return frozenset(names)
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
@@ -334,6 +371,7 @@ __all__ = [
     "DEFAULT_OUTPUT_LANGUAGE",
     "SUPPORTED_OUTPUT_LANGUAGES",
     "UnmatchedPlaceholderError",
+    "extract_placeholders",
     "output_language",
     "register_profile_language_resolver",
     "tr",
