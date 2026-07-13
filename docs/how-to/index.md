@@ -252,6 +252,7 @@ correct-ledger-entries
 modelo-036
 modelo-100
 modelo-130
+modelo-349
 classify-with-llm
 connect-an-agent
 review-calculation-values
