@@ -149,6 +149,57 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     assert _leaf(data, "cli", "root", "landing", "headline") == "Asistente fiscal CADRUMO"
 
 
+def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """Catalan copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "ca.yml")
+
+    assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
+        "El full de Google no està marcat com a propietat d'aquest perfil Cadrumo."
+    )
+    assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
+        "Google OAuth no pot resoldre l'estat del perfil Cadrumo seleccionat."
+    )
+    assert _leaf(data, "adapters", "google", "profile_binding", "errors", "no_active_profile") == (
+        "No hi ha cap perfil Cadrumo actiu enllaçat per a Google OAuth."
+    )
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
+        "usa la carpeta vault de Cadrumo."
+    )
+    assert _leaf(data, "cli", "config", "custody", "confirm_new_passphrase_prompt") == (
+        "Confirma la nova contrasenya del magatzem secret Cadrumo: "
+    )
+    assert _leaf(data, "cli", "config", "custody", "new_passphrase_prompt") == (
+        "Nova contrasenya del magatzem secret Cadrumo: "
+    )
+    assert _leaf(data, "cli", "config", "google", "profile_help") == (
+        "Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de flux)"
+    )
+    assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
+        "La classificació '%{value}' l'assigna Cadrumo automàticament i no es pot establir a mà. "
+        "Tria'n una: BUSINESS, PERSONAL, MIXED, o omet --classification per deixar la fila sense classificar."
+    )
+    assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
+        "La classificació '%{value}' l'assigna Cadrumo automàticament i no es pot establir a mà. "
+        "Tria'n una: BUSINESS, PERSONAL, MIXED."
+    )
+    assert _leaf(data, "mcp", "call", "timeout") == (
+        "'{command}' ha superat el limit de temps del nivell {tier} ({seconds}s) i s'ha cancel.lat. "
+        "Torna-ho a provar o executa l'ordre aeat equivalent en un terminal."
+    )
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "'{command}' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). "
+        "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre aeat CLI equivalent directament "
+        "en un terminal."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO, eina de declaracions fiscals amb l'AEAT."
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "Assistent fiscal CADRUMO"
+
+
 def test_set_locale_value_updates_one_leaf(tmp_path: Path):
     """The locale CLI write path updates a concrete leaf in a real YAML file."""
 
