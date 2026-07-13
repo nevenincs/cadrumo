@@ -542,6 +542,56 @@ def test_sequence_widget_is_wired_and_implemented() -> None:
     assert "prefers-reduced-motion" in css
 
 
+def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
+    """The widget ships the shell switcher and copy control (enhancement only), no autoplay.
+
+    The switcher toggles the server-rendered per-shell command variants by setting
+    ``data-cadrumo-shell`` on the sequence root; the copy control writes the frame's
+    authored single-line command (``data-command-line``) with a clipboard-plus-
+    ``execCommand`` fallback. Both are JS-created, so no-JS readers keep the full
+    transcript. The retired autoplay surface must stay absent.
+    """
+    js = _WIDGET_JS.read_text(encoding="utf-8")
+    for surface in (
+        "setupShellSwitcher",
+        "setupCopyButtons",
+        "cadrumo-shell-switcher",
+        "cadrumo-shell-btn",
+        "data-cadrumo-shell",
+        "cadrumo-cmd-variant",
+        "cadrumo-copy-btn",
+        "data-command-line",
+        "writeClipboard",
+        "execCommand",
+        "is-copied",
+    ):
+        assert surface in js, f"widget JS is missing the shell/copy surface {surface!r}"
+    # aria wiring for both controls (a segmented toggle and a labelled copy button).
+    assert "aria-pressed" in js
+    assert '"Copy command"' in js
+    # The copy control's brief "Copied" state uses a one-shot timeout, never a
+    # repeating timer — the no-autoplay invariant stays intact.
+    assert "setInterval" not in js
+    assert "setTimeout" in js
+
+    css = _WIDGET_CSS.read_text(encoding="utf-8")
+    for surface in (
+        ".cadrumo-cmd-variant",
+        "[data-cadrumo-shell=",
+        ".cli-continuation",
+        ".cadrumo-shell-switcher",
+        ".cadrumo-shell-btn",
+        ".cadrumo-copy-btn",
+        ".cadrumo-copy-btn.is-copied",
+        '[data-shell="pwsh"] pre code::before',
+    ):
+        assert surface in css, f"widget CSS is missing the shell/copy surface {surface!r}"
+    # The switcher and copy transitions join the reduced-motion opt-out.
+    reduced = css.split("prefers-reduced-motion")[1]
+    assert ".cadrumo-shell-btn" in reduced
+    assert ".cadrumo-copy-btn" in reduced
+
+
 @pytest.fixture
 def _isolated_sequence_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Pin isolated Cadrumo storage and English output for the in-build CLI-tree walk."""

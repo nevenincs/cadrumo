@@ -38,12 +38,84 @@ if TYPE_CHECKING:
 __all__ = [
     "CliSequenceDirective",
     "build_sequence_payload",
+    "parse_shells",
     "register",
     "render_sequence_html",
+    "wrap_token_lines",
 ]
 
 #: The pseudo-path an ``@expect`` uses to assert a frame's process exit code.
 _EXIT_CODE_PATH = "exit_code"
+
+#: The supported reader-facing shells, in canonical order. The ``:shells:``
+#: directive option is an ordered subset of these; the first entry is the tab
+#: shown by default. bash covers Linux/macOS terminals, pwsh covers Windows.
+_SUPPORTED_SHELLS: tuple[str, ...] = ("bash", "pwsh")
+
+#: The default ``:shells:`` set when the option is omitted (both, bash first).
+_DEFAULT_SHELLS: tuple[str, ...] = _SUPPORTED_SHELLS
+
+#: Per-shell line-continuation marker: a trailing ``\`` in bash, a trailing
+#: backtick in PowerShell. Rendered as its own ``cli-continuation`` span so it
+#: is styleable and excluded from copied command text.
+_SHELL_CONTINUATION: dict[str, str] = {"bash": "\\", "pwsh": "`"}
+
+#: Display-column budget for the wrapped command line (ADR wrapping ruling).
+_WRAP_WIDTH: int = 88
+
+#: Continuation-line indent, in spaces, for wrapped command lines.
+_CONTINUATION_INDENT: str = "  "
+
+
+def parse_shells(raw: str | None) -> list[str]:
+    """Parse the ``:shells:`` option into an ordered, de-duplicated shell list.
+
+    ``None`` or blank yields the default (``bash pwsh``). Every entry must be a
+    supported shell; an unknown value raises with the accepted set named.
+
+    Raises:
+        ValueError: When a value is not one of the supported shells.
+    """
+    if raw is None or not raw.strip():
+        return list(_DEFAULT_SHELLS)
+    ordered: list[str] = []
+    for shell in raw.split():
+        if shell not in _SUPPORTED_SHELLS:
+            raise ValueError(
+                f":shells: value {shell!r} is not a supported shell; "
+                f"accepted values are {', '.join(_SUPPORTED_SHELLS)}",
+            )
+        if shell not in ordered:
+            ordered.append(shell)
+    return ordered
+
+
+def wrap_token_lines(token_texts: list[str], *, width: int = _WRAP_WIDTH) -> list[list[int]]:
+    """Pack whole tokens onto display lines within ``width``, never splitting a token.
+
+    Greedy, token-boundary wrapping computed from the display widths of the
+    token texts: the first line has no indent, every continuation line is
+    indented by :data:`_CONTINUATION_INDENT`. A token that alone exceeds the
+    budget occupies its own line (it is never split). Returns the token indices
+    grouped per line; a command that fits on one line yields a single line.
+    """
+    indent = len(_CONTINUATION_INDENT)
+    lines: list[list[int]] = []
+    current: list[int] = []
+    for index, text in enumerate(token_texts):
+        if not current:
+            current.append(index)
+            continue
+        line_indent = 0 if not lines else indent
+        content = line_indent + sum(len(token_texts[i]) for i in current) + (len(current) - 1)
+        if content + 1 + len(text) <= width:
+            current.append(index)
+        else:
+            lines.append(current)
+            current = [index]
+    if current:
+        lines.append(current)
+    return lines
 
 
 def _literal_text(value: object) -> str:
@@ -99,21 +171,29 @@ def _frame_payload(
     parsed_frame: SequenceFrame,
     golden_frame: GoldenFrame,
     index: int,
+    shells: list[str],
 ) -> dict[str, Any]:
     """Build one frame's payload dict from the authored frame and its golden.
 
     The command line and its tokens come from the AUTHORED frame (``{name}``
     placeholders intact, so the reader sees the reproducible form); the output,
-    exit code, and captures come from the committed golden.
+    exit code, and captures come from the committed golden. ``wrapped`` carries
+    the token-index groupings per display line for each declared shell — the
+    packing is shell-independent (only the continuation marker differs), so the
+    groupings are identical across shells and the render appends the shell's
+    marker at build time.
     """
     from dev.docs.sequences import tokenise_command
 
     tokens = tokenise_command(parsed_frame.argv)
+    token_dicts = [token.model_dump(mode="json") for token in tokens]
+    lines = wrap_token_lines([token["text"] for token in token_dicts])
     payload: dict[str, Any] = {
         "index": index,
         "kind": parsed_frame.kind.value,
         "command_line": parsed_frame.command_line,
-        "tokens": [token.model_dump(mode="json") for token in tokens],
+        "tokens": token_dicts,
+        "wrapped": {shell: [list(line) for line in lines] for shell in shells},
         "exit_code": golden_frame.exit_code,
         "output": _output_view(golden_frame),
         "stderr": _stderr_view(golden_frame),
@@ -129,14 +209,23 @@ def _frame_payload(
     return payload
 
 
-def build_sequence_payload(sequence: ParsedSequence, golden: SequenceGolden) -> dict[str, Any]:
+def build_sequence_payload(
+    sequence: ParsedSequence,
+    golden: SequenceGolden,
+    *,
+    shells: list[str] | None = None,
+) -> dict[str, Any]:
     """Assemble the one inline payload for a sequence from its parse and golden.
+
+    ``shells`` is the ordered reader-facing shell set (default ``bash pwsh``);
+    the first entry is the default variant.
 
     Raises:
         ValueError: When the authored body and its committed golden disagree on
             frame count or a frame's kind — the golden is stale and must be
             refreshed.
     """
+    resolved_shells = shells if shells else list(_DEFAULT_SHELLS)
     if len(sequence.frames) != len(golden.frames):
         raise ValueError(
             f"the golden for {sequence.sequence_id!r} has {len(golden.frames)} frames "
@@ -149,21 +238,43 @@ def build_sequence_payload(sequence: ParsedSequence, golden: SequenceGolden) -> 
                 f"frame {index} of {sequence.sequence_id!r} is {parsed_frame.kind.value!r} in the "
                 f"body but {golden_frame.kind.value!r} in the golden; refresh the golden",
             )
-        frames.append(_frame_payload(parsed_frame, golden_frame, index))
-    return {"sequence_id": sequence.sequence_id, "verify": sequence.verify, "frames": frames}
+        frames.append(_frame_payload(parsed_frame, golden_frame, index, resolved_shells))
+    return {
+        "sequence_id": sequence.sequence_id,
+        "verify": sequence.verify,
+        "shells": resolved_shells,
+        "frames": frames,
+    }
 
 
-def _render_tokens_html(tokens: list[dict[str, Any]]) -> str:
-    """Render a frame's classified tokens as space-joined highlighted spans."""
-    spans: list[str] = []
-    for token in tokens:
-        attrs = [f'class="cli-tok cli-tok-{html.escape(token["kind"])}"']
-        if token.get("command_path"):
-            attrs.append(f'data-command-path="{html.escape(token["command_path"])}"')
-        if token.get("option_name"):
-            attrs.append(f'data-option="{html.escape(token["option_name"])}"')
-        spans.append(f"<span {' '.join(attrs)}>{html.escape(token['text'])}</span>")
-    return " ".join(spans)
+def _render_token_span(token: dict[str, Any]) -> str:
+    """Render one classified token as a highlighted span."""
+    attrs = [f'class="cli-tok cli-tok-{html.escape(token["kind"])}"']
+    if token.get("command_path"):
+        attrs.append(f'data-command-path="{html.escape(token["command_path"])}"')
+    if token.get("option_name"):
+        attrs.append(f'data-option="{html.escape(token["option_name"])}"')
+    return f"<span {' '.join(attrs)}>{html.escape(token['text'])}</span>"
+
+
+def _render_command_variant(tokens: list[dict[str, Any]], wrapped_lines: list[list[int]], shell: str) -> str:
+    """Render one shell's command variant: the wrapped tokenised lines with markers.
+
+    Each non-final display line ends with the shell's continuation marker (a
+    ``cli-continuation`` span, excluded from copied text); continuation lines are
+    indented. The variant carries ``data-shell`` so the widget can toggle it and
+    the CSS can key the shell prompt.
+    """
+    marker = _SHELL_CONTINUATION[shell]
+    rendered: list[str] = []
+    for line_index, line in enumerate(wrapped_lines):
+        indent = "" if line_index == 0 else _CONTINUATION_INDENT
+        spans = " ".join(_render_token_span(tokens[i]) for i in line)
+        is_final = line_index == len(wrapped_lines) - 1
+        continuation = "" if is_final else f' <span class="cli-continuation">{html.escape(marker)}</span>'
+        rendered.append(f"{indent}{spans}{continuation}")
+    body = "\n".join(rendered)
+    return f'<div class="cadrumo-cmd-variant" data-shell="{html.escape(shell)}"><pre><code>{body}</code></pre></div>'
 
 
 def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
@@ -187,13 +298,22 @@ def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
     return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
 
 
-def _render_frame_html(frame: dict[str, Any], verify: str) -> str:
-    """Render one frame's static HTML from its payload dict."""
+def _render_frame_html(frame: dict[str, Any], verify: str, shells: list[str]) -> str:
+    """Render one frame's static HTML from its payload dict.
+
+    The command block carries one ``cadrumo-cmd-variant`` per declared shell (the
+    CSS shows the default shell without JavaScript); the frame div carries the
+    single-line authored command in ``data-command-line`` so the widget's copy
+    control works from the static DOM without parsing the payload.
+    """
+    variants = "".join(
+        _render_command_variant(frame["tokens"], frame["wrapped"][shell], shell) for shell in shells
+    )
     parts: list[str] = [
         f'<div class="cadrumo-frame" data-frame-index="{frame["index"]}" '
-        f'data-frame-kind="{html.escape(frame["kind"])}">',
-        '<div class="cadrumo-frame-command"><pre><code>'
-        f'{_render_tokens_html(frame["tokens"])}</code></pre></div>',
+        f'data-frame-kind="{html.escape(frame["kind"])}" '
+        f'data-command-line="{html.escape(frame["command_line"])}">',
+        f'<div class="cadrumo-frame-command">{variants}</div>',
     ]
     output_html = _render_output_html(frame["output"], css_class="cadrumo-frame-output")
     if output_html:
@@ -223,13 +343,18 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
     only enhances the already-complete transcript.
     """
     sequence_id = html.escape(payload["sequence_id"])
-    frames_html = "".join(_render_frame_html(frame, payload["verify"]) for frame in payload["frames"])
+    shells = payload["shells"]
+    default_shell = html.escape(shells[0])
+    frames_html = "".join(_render_frame_html(frame, payload["verify"], shells) for frame in payload["frames"])
     payload_json = json.dumps(payload, ensure_ascii=False)
     # </script> in JSON content is escaped so the inline payload cannot break out
     # of its own script element.
     payload_json = payload_json.replace("</", "<\\/")
+    # data-cadrumo-shell selects the visible variant; set to the default here so
+    # the correct shell shows without JavaScript (the widget only updates it).
     return (
-        f'<div class="cadrumo-sequence" data-cadrumo-sequence="1" data-sequence-id="{sequence_id}">'
+        f'<div class="cadrumo-sequence" data-cadrumo-sequence="1" data-sequence-id="{sequence_id}" '
+        f'data-cadrumo-shell="{default_shell}">'
         f'{frames_html}'
         f'<script type="application/json" class="cadrumo-sequence-payload">{payload_json}</script>'
         "</div>"
@@ -253,6 +378,7 @@ class CliSequenceDirective(Directive):
     option_spec = {
         "seed": directives.unchanged,
         "verify": directives.unchanged,
+        "shells": directives.unchanged,
     }
 
     @override
@@ -281,6 +407,7 @@ class CliSequenceDirective(Directive):
         body = "\n".join(self.content)
 
         try:
+            shells = parse_shells(self.options.get("shells"))
             sequence = parse_sequence(sequence_id=sequence_id, options=options, body=body, seeds_root=seeds_root)
             # Statically refuse an enrolled sequence that reads live AEAT (a pull
             # verb or the app-live group): it is unenrollable at build time, not
@@ -288,7 +415,7 @@ class CliSequenceDirective(Directive):
             # than an opaque missing-golden failure.
             refuse_live_frames(sequence)
             golden = read_golden(page, sequence_id, goldens_root=goldens_root)
-            payload = build_sequence_payload(sequence, golden)
+            payload = build_sequence_payload(sequence, golden, shells=shells)
         except SequenceEngineError as exc:
             raise self.error(f"cli-sequence {sequence_id!r} on page {page!r}: {exc}") from exc
         except ValueError as exc:

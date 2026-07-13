@@ -1538,6 +1538,7 @@ a.sd-card:any-link,
 .cadrumo-frame {
   min-width: 0;
   padding: 0.4rem 1.15rem;
+  position: relative; /* anchor the absolute copy control */
 }
 
 .cadrumo-frame + .cadrumo-frame {
@@ -1576,8 +1577,37 @@ a.sd-card:any-link,
 
 .cadrumo-frame-command pre code::before {
   color: var(--color-brand-content);
-  content: "$ ";
   font-weight: 600;
+  user-select: none;
+}
+
+/* Shell prompt affordance, keyed by the variant's shell: bash "$ ", pwsh "> ". */
+.cadrumo-cmd-variant[data-shell="bash"] pre code::before {
+  content: "$ ";
+}
+
+.cadrumo-cmd-variant[data-shell="pwsh"] pre code::before {
+  content: "> ";
+}
+
+/* Shell variants: one command variant per declared shell. Only the variant
+ * matching the sequence root's data-cadrumo-shell shows; the directive sets that
+ * attribute to the default shell at build time, so the correct variant renders
+ * without JavaScript, and the widget switcher only updates it. */
+.cadrumo-cmd-variant {
+  display: none;
+  min-width: 0;
+}
+
+.cadrumo-sequence[data-cadrumo-shell="bash"] .cadrumo-cmd-variant[data-shell="bash"],
+.cadrumo-sequence[data-cadrumo-shell="pwsh"] .cadrumo-cmd-variant[data-shell="pwsh"] {
+  display: block;
+}
+
+/* The line-continuation marker (bash \, pwsh `): muted and unselectable, so a
+ * manual text selection never picks it up (copy uses the authored single line). */
+.cadrumo-sequence .cli-continuation {
+  color: var(--color-foreground-muted);
   user-select: none;
 }
 
@@ -1821,6 +1851,104 @@ details.cadrumo-setup[open] {
   margin: 0 0.35rem;
 }
 
+/* Shell switcher (cadrumo-docs.js): a segmented control, right-aligned in the
+ * controls row, toggling the visible command variant. A chrome-only row (no
+ * playhead) right-aligns the switcher on its own. */
+.cadrumo-shell-switcher {
+  display: inline-flex;
+  margin-left: auto;
+}
+
+.cadrumo-sequence-controls--chrome {
+  justify-content: flex-end;
+}
+
+.cadrumo-shell-btn {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.72rem;
+  height: 1.8rem;
+  line-height: 1;
+  padding: 0 0.6rem;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.cadrumo-shell-btn + .cadrumo-shell-btn {
+  border-left: none;
+}
+
+.cadrumo-shell-btn:first-child {
+  border-radius: var(--cadrumo-radius-s) 0 0 var(--cadrumo-radius-s);
+}
+
+.cadrumo-shell-btn:last-child {
+  border-radius: 0 var(--cadrumo-radius-s) var(--cadrumo-radius-s) 0;
+}
+
+.cadrumo-shell-btn[aria-pressed="true"] {
+  background: var(--color-brand-content);
+  border-color: var(--color-brand-content);
+  color: var(--color-background-primary);
+}
+
+.cadrumo-shell-btn:hover:not([aria-pressed="true"]) {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-shell-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+  position: relative;
+}
+
+/* Copy control (cadrumo-docs.js): an icon-button pinned to each command/result
+ * frame's top-right that copies the authored single-line command, flashing a
+ * brief "Copied" label. Enhancement only — JS-created, absent without JS. */
+.cadrumo-copy-btn {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-code-background) 88%, transparent);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.35rem;
+  line-height: 1;
+  padding: 0.25rem 0.4rem;
+  position: absolute;
+  right: 0.6rem;
+  top: 0.5rem;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.cadrumo-copy-btn svg {
+  flex: none;
+}
+
+.cadrumo-copy-btn:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-copy-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+.cadrumo-copy-btn.is-copied {
+  border-color: color-mix(in srgb, var(--cadrumo-accent-success) 50%, var(--color-background-border));
+  color: var(--cadrumo-accent-success);
+}
+
+.cadrumo-copy-label:not(:empty) {
+  font-family: var(--font-stack);
+  font-size: 0.72rem;
+}
+
 /* CLI hover-help popover (cadrumo-docs.js). */
 .cadrumo-cli-popover {
   background: var(--color-background-primary);
@@ -1919,7 +2047,9 @@ details.cadrumo-setup[open] {
 /* prefers-reduced-motion: the control hover transition is the only motion;
  * remove it. Playback carries no animation and no timed advance. */
 @media (prefers-reduced-motion: reduce) {
-  .cadrumo-sequence-btn {
+  .cadrumo-sequence-btn,
+  .cadrumo-shell-btn,
+  .cadrumo-copy-btn {
     transition: none;
   }
 }

@@ -763,9 +763,151 @@
     render();
   }
 
+  /* ── Shell switcher ─────────────────────────────────────────────────────
+   * Each command frame carries one div.cadrumo-cmd-variant[data-shell] per
+   * declared shell, server-rendered with that shell's wrapping and continuation
+   * marker. The CSS shows only the variant matching the root's data-cadrumo-shell
+   * (set at build to the default shell, so the correct variant shows without JS).
+   * This adds a segmented control that updates data-cadrumo-shell — per-sequence
+   * state, no global persistence. A sequence declaring a single shell gets no
+   * switcher. */
+  function setupShellSwitcher(root) {
+    var variants = root.querySelectorAll(".cadrumo-cmd-variant[data-shell]");
+    if (!variants.length) return;
+    var shells = [];
+    Array.prototype.forEach.call(variants, function (variant) {
+      var shell = variant.getAttribute("data-shell");
+      if (shell && shells.indexOf(shell) === -1) shells.push(shell);
+    });
+    if (shells.length < 2) return; // one shell — nothing to switch between
+    if (!root.getAttribute("data-cadrumo-shell")) {
+      root.setAttribute("data-cadrumo-shell", shells[0]);
+    }
+
+    var switcher = document.createElement("div");
+    switcher.className = "cadrumo-shell-switcher";
+    switcher.setAttribute("role", "group");
+    switcher.setAttribute("aria-label", "Terminal shell");
+
+    var buttons = shells.map(function (shell) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cadrumo-shell-btn";
+      btn.setAttribute("data-shell", shell);
+      btn.textContent = shell;
+      btn.setAttribute(
+        "aria-pressed",
+        root.getAttribute("data-cadrumo-shell") === shell ? "true" : "false"
+      );
+      btn.addEventListener("click", function () {
+        selectShell(shell);
+      });
+      switcher.appendChild(btn);
+      return btn;
+    });
+
+    function selectShell(shell) {
+      root.setAttribute("data-cadrumo-shell", shell);
+      buttons.forEach(function (btn) {
+        btn.setAttribute(
+          "aria-pressed",
+          btn.getAttribute("data-shell") === shell ? "true" : "false"
+        );
+      });
+    }
+
+    // Home the switcher in the playhead's controls row when it exists; otherwise
+    // (a single-frame sequence has no playhead) create a minimal chrome row.
+    var controls = root.querySelector(".cadrumo-sequence-controls");
+    if (!controls) {
+      controls = document.createElement("div");
+      controls.className = "cadrumo-sequence-controls cadrumo-sequence-controls--chrome";
+      root.appendChild(controls);
+    }
+    controls.appendChild(switcher);
+  }
+
+  /* ── Copy command ───────────────────────────────────────────────────────
+   * Every command/result frame carries data-command-line: the single-line
+   * authored command (placeholders intact, no prompt, no continuation chars).
+   * This adds a copy icon-button that writes it to the clipboard — enhancement
+   * only (JS-created), so a no-JS reader still sees the full command. */
+  var COPY_SVG =
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+    '<rect x="5.4" y="5.4" width="8.1" height="8.1" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+    '<path d="M3.5 10.5h-.6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v.6" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var COPIED_MS = 1500;
+
+  function fallbackCopy(text) {
+    try {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(area);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function writeClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(
+        function () {
+          return true;
+        },
+        function () {
+          return fallbackCopy(text);
+        }
+      );
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+
+  function setupCopyButtons(root) {
+    var frames = root.querySelectorAll(".cadrumo-frame[data-command-line]");
+    Array.prototype.forEach.call(frames, function (frame) {
+      // Setup frames live inside a collapsed disclosure; the copy affordance is
+      // for the visible command and result frames the reader runs.
+      if (frame.getAttribute("data-frame-kind") === "setup") return;
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "cadrumo-copy-btn";
+      button.setAttribute("aria-label", "Copy command");
+      button.innerHTML = COPY_SVG; // static icon markup, no user data
+      var label = document.createElement("span");
+      label.className = "cadrumo-copy-label";
+      label.setAttribute("aria-hidden", "true");
+      button.appendChild(label);
+
+      var timer = null;
+      button.addEventListener("click", function () {
+        var command = frame.getAttribute("data-command-line") || "";
+        writeClipboard(command).then(function (ok) {
+          button.classList.add("is-copied");
+          label.textContent = ok ? "Copied" : "Copy failed";
+          if (timer) window.clearTimeout(timer);
+          timer = window.setTimeout(function () {
+            button.classList.remove("is-copied");
+            label.textContent = "";
+          }, COPIED_MS);
+        });
+      });
+      frame.appendChild(button);
+    });
+  }
+
   function initSequences() {
     document.querySelectorAll("[data-cadrumo-sequence]").forEach(function (root) {
       setupSequence(root);
+      setupShellSwitcher(root);
+      setupCopyButtons(root);
     });
   }
 
