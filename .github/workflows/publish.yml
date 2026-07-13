@@ -6,7 +6,7 @@
 # There is NO automatic trigger — no tag push, no schedule — a human presses
 # the button, matching the LOCAL-ONLY HUMAN-GATED release discipline's intent.
 #
-# `aeat` publishes WHEEL-ONLY: the sdist packs the full source tree including
+# `cadrumo` publishes WHEEL-ONLY: the sdist packs the full source tree including
 # the corpus source binaries (~180 MB, over PyPI's 100 MB default cap). The
 # guards below refuse a fat artifact outright, so dispatching from a branch
 # without the wheel-split build config fails loudly instead of uploading.
@@ -23,10 +23,10 @@ on:
         description: "Distribution to publish"
         type: choice
         options:
-          - aeat
+          - cadrumo
           - cadrumo-data-manuals
           - cadrumo-data-official
-        default: aeat
+        default: cadrumo
 
 permissions:
   contents: read
@@ -43,8 +43,8 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - name: Build aeat (wheel only)
-        if: ${{ inputs.distribution == 'aeat' }}
+      - name: Build cadrumo (wheel only)
+        if: ${{ inputs.distribution == 'cadrumo' }}
         run: uv build --wheel --out-dir dist
 
       - name: Build cadrumo-data-manuals companion
@@ -66,10 +66,10 @@ jobs:
           wheel = wheels[0]
           size_mb = wheel.stat().st_size / 1e6
           print(f"{wheel.name}: {size_mb:.1f} MB")
-          # Every artifact must clear PyPI's 100 MB per-file cap now: the slim aeat
+          # Every artifact must clear PyPI's 100 MB per-file cap now: the slim cadrumo
           # wheel AND both sub-cap corpus companions. There is no size grant on
           # the critical path — a fat artifact means the wheel-split build config
-          # is missing (aeat) or the corpus seam partition needs rebalancing
+          # is missing (cadrumo) or the corpus seam partition needs rebalancing
           # (a companion).
           if size_mb > 100:
               sys.exit(f"{wheel.name} exceeds the 100 MB PyPI cap ({size_mb:.1f} MB) - was this dispatched "
@@ -79,7 +79,7 @@ jobs:
                         if n.startswith("aeat/_data/corpus/")
                         and n.lower().endswith((".pdf", ".xls", ".xlsx"))]
               if leaked:
-                  sys.exit(f"slim aeat wheel leaked {len(leaked)} corpus source binaries")
+                  sys.exit(f"slim cadrumo wheel leaked {len(leaked)} corpus source binaries")
           EOF
 
       - name: Publish to PyPI (Trusted Publishing)
