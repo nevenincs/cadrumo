@@ -48,9 +48,10 @@ def test_product_identity_distinguishes_prose_from_identity_context() -> None:
 def test_product_identity_is_immutable() -> None:
     """The runtime identity cannot be changed after import."""
     original = PRODUCT_IDENTITY
+    field_name = "display_name"
 
     with pytest.raises(AttributeError):
-        PRODUCT_IDENTITY.display_name = "Changed"  # type: ignore[misc]
+        setattr(PRODUCT_IDENTITY, field_name, "Changed")
 
     assert PRODUCT_IDENTITY is original
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"

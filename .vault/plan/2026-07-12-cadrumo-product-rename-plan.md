@@ -62,7 +62,7 @@ Create and test the single CADRUMO identity authority.
 
 - [x] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
 - [x] `W01.P02.S06` - Expose the public product identity through the package facade; `src/cadrumo/core/__init__.py`.
-- [ ] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
+- [x] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S08` - Codify that CADRUMO names the product and AEAT names the authority; `.vaultspec/rules/cadrumo-product-authority-names.md`.
 - [x] `W01.P02.S86` - Reconcile the binding CADRUMO product, aeat human CLI, and AEAT authority naming contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vaultspec/rules/cadrumo-product-authority-names.md; generated provider naming rules; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S87` - Remediate the S86 naming-authority review and retire stale all-caps repair lanes; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/adr/2026-07-13-product-rename-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vault/audit/2026-07-13-cadrumo-product-rename-s86-restored-authority-audit.md; S86, S87, S90, and S93 execution records; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
