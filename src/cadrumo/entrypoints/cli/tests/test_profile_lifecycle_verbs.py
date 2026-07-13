@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo config profile {show, create, edit, status, repair}` and switch.
+"""CLI surface tests for `aeat config profile {show, create, edit, status, repair}` and switch.
 
 The per-bucket rename / import / delete / no-active-session navigation tests
 that exercise the same surface live in the sibling
@@ -210,7 +210,7 @@ def test_config_profile_show_does_not_suggest_retired_activation_for_missing_rec
 
     assert result.exit_code == 2, result.output
     assert "readiness\tmissing_profile_record" in result.output
-    assert "next_action\tcadrumo config repair profile --profile operator" in result.output
+    assert "next_action\taeat config repair profile --profile operator" in result.output
     assert "switch" not in result.output
 
 
@@ -296,8 +296,8 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths() -> 
     assert result.exit_code != 0
     output = result.output
     # Both concrete recovery paths are named in the message body.
-    assert "cadrumo config profile create NAME" in output
-    advertised_command = "cadrumo config profile create NAME " + " ".join(
+    assert "aeat config profile create NAME" in output
+    advertised_command = "aeat config profile create NAME " + " ".join(
         _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
     )
     assert advertised_command in output

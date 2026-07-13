@@ -1,4 +1,4 @@
-"""Profile event-history command registration for ``cadrumo config profile history``.
+"""Profile event-history command registration for ``aeat config profile history``.
 
 The history command reads :class:`BucketEventHistoryRepository` and filters the
 active profile bucket's append-only events.

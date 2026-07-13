@@ -21,8 +21,8 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     job = document["jobs"]["cadrumo-lint-and-test"]
     assert job["name"] == "Cadrumo / ${{ matrix.os }} / Python ${{ matrix.python-version }}"
     commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
-    assert "uv run --no-sync cadrumo app registry verify --json" in commands
-    assert "uv run --no-sync cadrumo app registry audit-oracles --json" in commands
+    assert "uv run --no-sync aeat app registry verify --json" in commands
+    assert "uv run --no-sync aeat app registry audit-oracles --json" in commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in commands
 
 

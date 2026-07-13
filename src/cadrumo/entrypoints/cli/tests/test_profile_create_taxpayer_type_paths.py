@@ -1,6 +1,6 @@
 """Non-interactive `config profile create` across the taxpayer-type axis.
 
-These tests exercise the real `cadrumo config profile create ... --quiet`
+These tests exercise the real `aeat config profile create ... --quiet`
 CLI surface for every entity type. They pin the behaviour that a legal
 entity, an attribution entity, and a natural person can each be created
 non-interactively without supplying spouse / personal-IRPF flags, that
@@ -165,8 +165,8 @@ def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> 
     )
 
     assert result.exit_code == 0, result.output
-    assert f"{_NEXT_LABEL}\tcadrumo app modelo describe 210" in result.output
-    assert f"{_NEXT_LABEL}\tcadrumo app modelo work create" not in result.output
+    assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in result.output
+    assert f"{_NEXT_LABEL}\taeat app modelo work create" not in result.output
 
 
 def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registration() -> None:

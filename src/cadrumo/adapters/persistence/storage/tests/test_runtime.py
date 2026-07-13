@@ -265,7 +265,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
 def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
-    namespace = "aeat-test.runtime.unregistered"
+    namespace = "cadrumo-test.runtime.unregistered"
 
     with (
         override_settings(

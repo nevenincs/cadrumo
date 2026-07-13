@@ -7,6 +7,14 @@ orphan: true
 Verification record for the claude-ecosystem-packaging campaign
 (plan step W05.P13.S46), 2026-07-03.
 
+**Historical naming note.** This record preserves evidence from before the
+Cadrumo product rename. It is not current installation guidance. Current
+release material names the plugin `cadrumo` and its Model Context Protocol
+(MCP) server `cadrumo-mcp`. The human-facing `aeat` command-line interface
+(CLI) is unchanged. This record does not establish current public marketplace or
+package availability. Legacy plugin and marketplace identifiers below are quoted
+evidence only.
+
 ## Two-layer evidence
 
 1. **Scenario logic (R7 harness, pre-plugin):** the

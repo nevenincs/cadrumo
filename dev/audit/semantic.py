@@ -56,13 +56,13 @@ def run_search(query: str) -> list[dict]:
 # non-leaks. The fichero export format layer performs wire-format currency
 # ENCODING / DECODING (zero-padded implicit-decimal cents) — an outbound-adapter
 # responsibility under the hexagonal split — and delegates the actual rounding to
-# the canonical ``aeat.core.money.round_to_cents`` (imported as ``_round_to_cents``
+# the canonical ``cadrumo.core.money.round_to_cents`` (imported as ``_round_to_cents``
 # in both files). The high "currency rounding" score is concept-adjacency, not
 # duplicated domain rounding logic, so flagging them is a false positive.
 _VERIFIED_NON_LEAK_PATHS: frozenset[str] = frozenset(
     {
-        "src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py",
-        "src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py",
+        "src/cadrumo/adapters/outbound/aeat/export/_formats/_record_spec.py",
+        "src/cadrumo/adapters/outbound/aeat/export/_formats/_deserialise.py",
     }
 )
 

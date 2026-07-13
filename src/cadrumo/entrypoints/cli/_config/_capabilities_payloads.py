@@ -38,7 +38,7 @@ class CapabilityRowPayload(OutputSchema):
 
 @register_schema("config.profile.capabilities.show")
 class CapabilitiesShowResult(OutputSchema):
-    """JSON envelope for ``cadrumo config profile capabilities show``.
+    """JSON envelope for ``aeat config profile capabilities show``.
 
     The resolved posture of every service capability for the active profile,
     each with its source (profile fact / global default / safety-floor bar).
@@ -52,7 +52,7 @@ class CapabilitiesShowResult(OutputSchema):
 
 @register_schema("config.profile.capabilities.set")
 class CapabilitySetResult(OutputSchema):
-    """JSON envelope for ``cadrumo config profile capabilities set``.
+    """JSON envelope for ``aeat config profile capabilities set``.
 
     Reports the boolean profile fact written for one
     :class:`ServiceCapability`. The mutation goes through the profile

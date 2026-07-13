@@ -1,6 +1,6 @@
 """Real-behavior CLI tests for evidence-driven LLM ledger splitting.
 
-Exercises ``cadrumo app ledger split --llm`` end to end against the real CLI, real
+Exercises ``aeat app ledger split --llm`` end to end against the real CLI, real
 application use cases, and real SQLite persistence in an isolated storage root.
 No test doubles or monkeypatch: determinism comes from **dependency injection** —
 a tiny concrete :class:`LLMSplitProposer` registered through the production

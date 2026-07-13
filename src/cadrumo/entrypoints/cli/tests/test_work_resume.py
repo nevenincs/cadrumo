@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo app modelo work resume` target resolution."""
+"""CLI surface tests for `aeat app modelo work resume` target resolution."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def _done_run(run_id: str) -> WorkflowResult:
 def _builder_refused_run(run_id: str) -> WorkflowResult:
     """Build one canonical aborted run with the real builder-refusal diagnostics."""
     summary = "Draft build refused: unresolved registry input. Repair the cited draft input and recalculate."
-    next_action = "Repair the cited draft input and rerun cadrumo app modelo work calculate."
+    next_action = "Repair the cited draft input and rerun aeat app modelo work calculate."
     return WorkflowResult(
         run_id=run_id,
         started_at=_T,
@@ -241,7 +241,7 @@ def test_work_runs_localizes_one_persisted_builder_refusal_without_rewriting_it(
     assert stored_before.steps[-1].summary.startswith("Draft build refused:")
     assert stored_before.steps[-1].details is not None
     assert stored_before.steps[-1].details["next_action"] == (
-        "Repair the cited draft input and rerun cadrumo app modelo work calculate."
+        "Repair the cited draft input and rerun aeat app modelo work calculate."
     )
 
     for language, summary_prefix, action_prefix in (
@@ -258,7 +258,7 @@ def test_work_runs_localizes_one_persisted_builder_refusal_without_rewriting_it(
         assert action_prefix in text_result.output
         assert "Draft build refused:" not in text_result.output
         assert "Repair the cited draft input" not in text_result.output
-        assert "cadrumo app modelo work calculate" in text_result.output
+        assert "aeat app modelo work calculate" in text_result.output
 
         json_result = invoke_cached_cli(
             ["--language", language, "--format", "json", "app", "modelo", "work", "runs"],
@@ -270,7 +270,7 @@ def test_work_runs_localizes_one_persisted_builder_refusal_without_rewriting_it(
         assert rendered["aborted_reason"] == WorkflowAbortReason.DRAFT_HAS_ERRORS.value
         assert rendered["summary"].startswith(summary_prefix)
         assert rendered["next_action"].startswith(action_prefix)
-        assert "cadrumo app modelo work calculate" in rendered["next_action"]
+        assert "aeat app modelo work calculate" in rendered["next_action"]
 
         assert load_run(run.run_id) == stored_before
         assert [candidate.run_id for candidate in list_runs()] == [run.run_id]

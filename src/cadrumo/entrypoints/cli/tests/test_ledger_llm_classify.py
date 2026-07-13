@@ -1,6 +1,6 @@
 """Real-behavior CLI tests for LLM-assisted ledger classification.
 
-Exercises ``cadrumo app ledger classify --llm`` end to end against the real CLI,
+Exercises ``aeat app ledger classify --llm`` end to end against the real CLI,
 real application use cases, and real SQLite persistence in an isolated storage
 root. No test doubles or monkeypatch: determinism comes from
 **dependency injection** — a tiny concrete :class:`LLMClassifier` registered

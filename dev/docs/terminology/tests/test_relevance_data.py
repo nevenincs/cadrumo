@@ -47,7 +47,7 @@ _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 class _BuildSurfaces(TypedDict):
     """Resolvable target inventories for the committed relevance drift gate."""
 
-    concept_ids: set[str]
+    concept_targets: set[str]
     casilla_modelos: set[str]
     casilla_targets_by_record_id: dict[str, str]
     permalinks: set[str]
@@ -109,13 +109,17 @@ def build_surfaces() -> _BuildSurfaces:
     """The current build's resolvable surfaces, for the target-resolves gate."""
     handbook = load_terminology_handbook()
     authority = bundled_authority()
-    # Concept anchors: every enrolled concept_id.
-    concept_ids = {concept.concept_id for concept in handbook.concepts}
+    # Concept anchors: project the same approved cards that feed the search
+    # surface. Sphinx derives the anchor from the glossary headword, not from
+    # the concept id (for example, ``AEAT`` -> ``term-AEAT``).
     # Casilla modelos: every modelo with projected casilla records (read from
     # the same projection the resolver indexes, via the public projection API).
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
+    from dev.docs.terminology._concept_cards import project_concept_cards
     from dev.docs.terminology._unified_record import to_search_record
 
+    concept_cards, _concept_stats = project_concept_cards(handbook)
+    concept_targets = {to_search_record(card).target for card in concept_cards if card.is_approved}
     casilla_records, _stats = project_casilla_search_records(authority)
     unified_casillas = tuple(to_search_record(record) for record in casilla_records)
     casilla_modelos = {unified.metadata.modelo for unified in unified_casillas if unified.metadata.modelo is not None}
@@ -125,7 +129,7 @@ def build_surfaces() -> _BuildSurfaces:
         str(entry.permalink) for entry in authority.catalogues.legal.values() if getattr(entry, "permalink", None)
     }
     return {
-        "concept_ids": concept_ids,
+        "concept_targets": concept_targets,
         "casilla_modelos": casilla_modelos,
         "casilla_targets_by_record_id": casilla_targets_by_record_id,
         "permalinks": permalinks,
@@ -134,13 +138,13 @@ def build_surfaces() -> _BuildSurfaces:
 
 def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     """Return whether a deep-link target points at a surface in the current build."""
-    concept_ids = surfaces["concept_ids"]
+    concept_targets = surfaces["concept_targets"]
     casilla_modelos = surfaces["casilla_modelos"]
     permalinks = surfaces["permalinks"]
-    # Concept card anchor: _generated/glossary.html#term-<concept_id>
-    concept_match = re.fullmatch(r"_generated/glossary\.html#term-(?P<id>[a-z0-9-]+)", target)
+    # Concept card anchor: generated from the approved glossary headword.
+    concept_match = re.fullmatch(r"_generated/glossary\.html#term-[A-Za-z0-9-]+", target)
     if concept_match:
-        return concept_match.group("id") in concept_ids
+        return target in concept_targets
 
     # Casilla namespace: search.html?q=<modelo>+<number>
     casilla_match = re.fullmatch(r"search\.html\?q=(?P<modelo>[^+]+)\+.+", target)
@@ -152,7 +156,7 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
         return target in permalinks
 
     # API stub: api/<dotted>.html -> the module file must exist under src/.
-    api_match = re.fullmatch(r"api/(?P<dotted>aeat[a-zA-Z0-9_.]+)\.html", target)
+    api_match = re.fullmatch(r"api/(?P<dotted>cadrumo[a-zA-Z0-9_.]+)\.html", target)
     if api_match:
         return _module_exists(api_match.group("dotted"))
 
@@ -253,8 +257,8 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
     assert not _target_resolves("search.html?q=000+99999", build_surfaces)
     assert not _target_resolves("api/cadrumo.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
-    real_concept = next(iter(build_surfaces["concept_ids"]))
-    assert _target_resolves(f"_generated/glossary.html#term-{real_concept}", build_surfaces)
+    real_concept_target = next(iter(build_surfaces["concept_targets"]))
+    assert _target_resolves(real_concept_target, build_surfaces)
 
 
 # ---------------------------------------------------------------------------

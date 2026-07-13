@@ -97,7 +97,7 @@ def test_build_reports_the_real_signing_outcome_without_overclaiming(
     captured = capsys.readouterr()
     assert bundle.exists()
     assert f"built {bundle}" in captured.out
-    assert "aeat" not in captured.out.casefold()
+    assert "aeat.mcpb" not in captured.out.casefold()
     if not signing_available:
         assert "UNSIGNED (signer unavailable or no signing identity configured)" in captured.out
         assert captured.err == ""

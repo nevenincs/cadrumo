@@ -53,8 +53,8 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind, ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.env_scope import ready_clave_settings
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     calculate_modelo_revision,

@@ -12,15 +12,15 @@ import importlib
 from collections.abc import Iterable
 
 _LAZY_REEXPORT_MODULES: tuple[str, ...] = (
-    "aeat.core",
-    "aeat.domain.user_profile",
-    "aeat.domain.contribuyente",
-    "aeat.domain.contribuyente._keys",
-    "aeat.domain.portals",
-    "aeat.domain.transactions",
-    "aeat.application.user_profile",
-    "aeat.application.overview",
-    "aeat.application.live",
+    "cadrumo.core",
+    "cadrumo.domain.user_profile",
+    "cadrumo.domain.contribuyente",
+    "cadrumo.domain.contribuyente._keys",
+    "cadrumo.domain.portals",
+    "cadrumo.domain.transactions",
+    "cadrumo.application.user_profile",
+    "cadrumo.application.overview",
+    "cadrumo.application.live",
 )
 
 
@@ -46,7 +46,7 @@ def _module_failures(module_name: str) -> list[str]:
 
 def main() -> int:
     """Run the documented lazy re-export verification."""
-    importlib.import_module("aeat.application.wizard._compiler")
+    importlib.import_module("cadrumo.application.wizard._compiler")
     failures: list[str] = []
     for module_name in _LAZY_REEXPORT_MODULES:
         failures.extend(_module_failures(module_name))

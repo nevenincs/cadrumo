@@ -268,13 +268,13 @@ def test_history_events_are_typed_not_bare_dicts() -> None:
         "object_type": "LEDGER_TRANSACTION",
         "object_id": "a" * 64,
         "payload_version": 1,
-        "payload": {"source_command": "cadrumo app ledger add"},
+        "payload": {"source_command": "aeat app ledger add"},
     }
     result = LedgerHistoryResult.model_validate(
         {"bucket_id": "default", "transaction_id": "a" * 64, "event_count": 1, "events": [event]},
     )
     assert isinstance(result.events[0], LedgerHistoryEventPayload)
-    assert result.events[0].payload == {"source_command": "cadrumo app ledger add"}
+    assert result.events[0].payload == {"source_command": "aeat app ledger add"}
     assert LedgerHistoryResult.model_validate(result.model_dump(mode="json")) == result
 
 

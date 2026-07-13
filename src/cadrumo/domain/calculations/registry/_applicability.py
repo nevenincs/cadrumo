@@ -73,7 +73,7 @@ verdict. Adding a condition to a deadline window does not affect the
 
 Every rule carries ``legal_refs`` — scoped registry citation keys in
 the ``law-slug:art-N`` form (e.g. ``ley-35-2006:art-99``) that resolve
-against ``src/aeat/_data/registry/aeat/legal/*.toml`` — per
+against ``src/cadrumo/_data/registry/aeat/legal/*.toml`` — per
 ``.claude/rules/aeat-calculation-grounding.md``: applicability is
 regulatory data and must be registry-grounded, and every typed-ID
 reference must point at an existing registry entity. The seed table
@@ -607,7 +607,7 @@ def _undetermined_applicability(
 # Every rule below is grounded against the registry legal tables for the
 # taxpayer-type applicability model. Citation keys are scoped registry
 # keys (``law-slug:art-N``) that resolve against
-# ``src/aeat/_data/registry/aeat/legal/*.toml`` — never URLs, never
+# ``src/cadrumo/_data/registry/aeat/legal/*.toml`` — never URLs, never
 # invented slugs. Full per-entity / per-regime coverage of every
 # registered modelo is a deferred expansion.
 

@@ -6,17 +6,17 @@ consumed in the body:
 
 * ``http`` / ``num_retries`` — part of the ``google-api-python-client``
   ``execute()`` keyword contract on the ``_ExecutableRequest`` Protocol stub
-  (:mod:`aeat.adapters.outbound.google._api`). The stub body is ``...``; the
+  (:mod:`cadrumo.adapters.outbound.google._api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
 * ``fileId`` — the Drive ``get_media`` keyword on the ``_DriveFilesResource``
-  Protocol stub (:mod:`aeat.adapters.outbound.google._document_link_resolver`).
+  Protocol stub (:mod:`cadrumo.adapters.outbound.google._document_link_resolver`).
   The name is the google API's keyword and is part of the structural type.
 * ``q`` / ``pageSize`` / ``pageToken`` — the Drive ``files().list`` keyword
   contract on the same ``_DriveFilesResource`` Protocol stub. The names are the
   google API's keywords and are part of the structural type.
 * ``protocol`` — the positional argument of the ``__reduce_ex__`` dunder
   override on the decrypted-evidence tripwire
-  (:mod:`aeat.application.ledger._evidence_input`). The signature is fixed by
+  (:mod:`cadrumo.application.ledger._evidence_input`). The signature is fixed by
   the pickle protocol; the override exists to *refuse* pickling.
 * ``source_citation`` — a keyword-only parameter on
   ``dev.docs.terminology_handbook._curation.set_language_field`` kept as part of the public

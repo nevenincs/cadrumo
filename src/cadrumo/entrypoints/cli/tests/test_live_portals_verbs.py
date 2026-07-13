@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo app live portals {list, show}`."""
+"""CLI surface tests for `aeat app live portals {list, show}`."""
 
 from __future__ import annotations
 

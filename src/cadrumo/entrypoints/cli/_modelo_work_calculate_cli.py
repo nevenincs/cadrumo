@@ -115,7 +115,7 @@ _RelationOpt = Annotated[
             default=(
                 "Registry relation value as KEY=VALUE (repeatable). KEY is a registry relation id, "
                 "not a binding id; use this for cross-period or cross-modelo relation inputs. "
-                "Run `cadrumo app modelo bindings list --missing` for scoped relation guidance. "
+                "Run `aeat app modelo bindings list --missing` for scoped relation guidance. "
                 "For Modelo 200 M202 pagos fraccionados, use the mutually exclusive 40.3 casilla 34 "
                 "and 40.2 casilla 03 relation channels, setting the unused modality to 0 when "
                 "entering manual values."
@@ -515,8 +515,8 @@ def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit:
             "Saved as draft calculation revision %{revision_id} "
             "(state: %{state}). It is persisted and can be resumed later; "
             "list revisions with "
-            "`cadrumo app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` "
-            "and re-inspect this one with `cadrumo app modelo work revision %{revision_id}`."
+            "`aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` "
+            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
         ),
         revision_id=revision.calculation_revision_id,
         state=calculation_revision_state_label(revision.state.value),

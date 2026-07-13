@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for the ``cadrumo config collab recipient`` CLI.
+"""Typed ``--json`` payload schemas for the ``aeat config collab recipient`` CLI.
 
 Each class declared here is a strict :class:`~entrypoints.cli._schemas.OutputSchema`
 subclass and is decorated with :func:`~entrypoints.cli._schemas.register_schema` so
@@ -38,7 +38,7 @@ class RecipientFingerprintRowPayload(OutputSchema):
 
 @register_schema("config.collab.recipient.add")
 class ConfigCollabRecipientAddResult(OutputSchema):
-    """JSON envelope for ``cadrumo config collab recipient add``."""
+    """JSON envelope for ``aeat config collab recipient add``."""
 
     recipient_id: str
     label: str
@@ -49,7 +49,7 @@ class ConfigCollabRecipientAddResult(OutputSchema):
 
 @register_schema("config.collab.recipient.list")
 class ConfigCollabRecipientListResult(OutputSchema):
-    """JSON envelope for ``cadrumo config collab recipient list``."""
+    """JSON envelope for ``aeat config collab recipient list``."""
 
     recipients: list[RecipientFingerprintRowPayload]
     count: int
@@ -57,7 +57,7 @@ class ConfigCollabRecipientListResult(OutputSchema):
 
 @register_schema("config.collab.recipient.remove")
 class ConfigCollabRecipientRemoveResult(OutputSchema):
-    """JSON envelope for ``cadrumo config collab recipient remove``."""
+    """JSON envelope for ``aeat config collab recipient remove``."""
 
     recipient_id: str
     remaining: int

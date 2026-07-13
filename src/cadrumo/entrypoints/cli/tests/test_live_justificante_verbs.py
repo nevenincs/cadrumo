@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo app live justificante {list, view}`.
+"""CLI surface tests for `aeat app live justificante {list, view}`.
 
 The ``capture`` verb is a live read (covered by the application-layer
 orchestrator and the opt-in live test); these tests exercise the local

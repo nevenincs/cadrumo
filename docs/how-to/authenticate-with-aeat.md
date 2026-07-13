@@ -1,7 +1,7 @@
 # How to authenticate Cadrumo with AEAT
 
 Authenticate Cadrumo with Spain's Tax Agency, the Agencia Estatal de
-Administración Tributaria (AEAT), to let the `aeat` command read information
+Administración Tributaria (AEAT), to let Cadrumo's `cadrumo` command read information
 your AEAT identity authorizes. Authentication provides read-only access only.
 It never files a declaration, makes a payment, acknowledges a notification, or
 performs representative-write actions.
@@ -20,7 +20,7 @@ Cadrumo no longer retrieves these facts live.
 
 You need:
 
-- an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
+- an [active profile](profile-setup.md#what-the-active-profile-means). `cadrumo
   config auth configure` refuses with `No hay un perfil activo` until you create
   one. Create one non-interactively with `aeat config profile create me --quiet
   --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`. A NIF,

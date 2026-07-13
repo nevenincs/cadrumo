@@ -2,7 +2,7 @@
 
 The measurement substrate ADR R7 decides: capabilities are measured by LIVE
 subagent personas — a language-model (or scripted) driver plays a harness
-persona over a REAL MCP client session against the REAL ``aeat-mcp`` server,
+persona over a REAL MCP client session against the REAL ``cadrumo-mcp`` server,
 and every ``tools/call`` round-trip, narration, and elicitation exchange is
 captured verbatim as a :class:`LiveTrajectory` for scoring against the golden
 scenarios with the faithfulness and confirmation checks applied to OBSERVED
@@ -304,7 +304,7 @@ async def run_live_session_async(
 
     Args:
         server_command: The argv that starts the server (e.g.
-            ``("uv", "run", "--no-sync", "aeat-mcp")``); it is spawned as a
+            ``("uv", "run", "--no-sync", "cadrumo-mcp")``); it is spawned as a
             subprocess and spoken to over stdio.
         persona: The harness persona the driver plays; exported to the server
             via ``CADRUMO_MCP_PERSONA`` so the persona-scope gate is live.

@@ -1,4 +1,4 @@
-"""JSON payload schemas for ``cadrumo app modelo support-matrix``.
+"""JSON payload schemas for ``aeat app modelo support-matrix``.
 
 Projects :class:`~domain.calculations.registry.ModeloEntry` (and its
 nested rename / deprecation / portal-compatibility records) onto the CLI's

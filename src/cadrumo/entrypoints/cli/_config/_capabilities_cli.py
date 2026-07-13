@@ -1,4 +1,4 @@
-"""``cadrumo config profile capabilities`` — show and set per-profile service opt-in/out.
+"""``aeat config profile capabilities`` — show and set per-profile service opt-in/out.
 
 A capability is the operator's opt-in/opt-out of an external service (cloud
 evidence upload, on-host LLM vision, Google export), stored as a boolean fact on
@@ -79,7 +79,7 @@ def _register_set(capabilities_app: typer.Typer) -> None:
                 tr(
                     "cli.config.profile.capabilities.no_active_profile",
                     default=(
-                        "No active profile; select one with 'cadrumo config switch <name>' before setting a capability."
+                        "No active profile; select one with 'aeat config switch <name>' before setting a capability."
                     ),
                 ),
             )

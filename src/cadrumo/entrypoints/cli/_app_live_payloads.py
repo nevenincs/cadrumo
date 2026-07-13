@@ -472,7 +472,7 @@ class PortalEntryPayload(OutputSchema):
 
 @register_schema("app.live.portals.list")
 class PortalsListResult(OutputSchema):
-    """Typed local-catalogue result for ``cadrumo app live portals list``.
+    """Typed local-catalogue result for ``aeat app live portals list``.
 
     Rows are selected from :data:`PORTAL_REGISTRY` directly or through
     :func:`portals_by_category` / :func:`portals_for_modelo`, then projected as
@@ -486,7 +486,7 @@ class PortalsListResult(OutputSchema):
 
 @register_schema("app.live.portals.view")
 class PortalsViewResult(PortalEntryPayload):
-    """Typed local-catalogue result for ``cadrumo app live portals view``.
+    """Typed local-catalogue result for ``aeat app live portals view``.
 
     The requested portal id resolves through :func:`get_portal` and emits the
     same :class:`PortalEntryPayload` projection as the list surface.

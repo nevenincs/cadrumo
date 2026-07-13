@@ -1,4 +1,4 @@
-"""`cadrumo app ledger list --filter` real-behaviour suite.
+"""`aeat app ledger list --filter` real-behaviour suite.
 
 Drives the real CLI against the isolated profile + hand-authored ledger-corpus
 fixture and asserts that ``ledger list --filter KEY=VALUE`` narrows the listing

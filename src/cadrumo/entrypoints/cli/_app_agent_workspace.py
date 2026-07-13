@@ -1,4 +1,4 @@
-"""CLI command for ``cadrumo app agent``.
+"""CLI command for ``aeat app agent``.
 
 Materialises the shipped operator harness into an operator-chosen directory in
 the Claude-native layout (ADR R4): ``.claude/skills/<name>/SKILL.md``,
@@ -54,7 +54,7 @@ def materialise(
     ``--layout workspace`` (default) writes the Claude-native project mirror
     (``.claude/{rules,agents,skills}`` + ``CLAUDE.md``); ``--layout plugin``
     writes a one-click Claude plugin (``.claude-plugin/plugin.json`` + ``skills/``
-    + ``agents/`` + ``.mcp.json``). A group-callback (like ``cadrumo app contract``)
+    + ``agents/`` + ``.mcp.json``). A group-callback (like ``aeat app contract``)
     so it never enters the bucket session: the materialiser is profile-independent
     - it reads shipped harness data and writes it to an operator directory,
     needing no active profile or secret store.

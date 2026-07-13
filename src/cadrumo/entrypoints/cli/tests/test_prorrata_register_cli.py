@@ -1,6 +1,6 @@
 """CLI surface tests for the cross-period IVA prorrata register verbs.
 
-Exercises ``cadrumo app ledger prorrata elect-especial / elect-general / list``
+Exercises ``aeat app ledger prorrata elect-especial / elect-general / list``
 through the real Typer surface against an isolated encrypted backend (state is
 verified by reading it back through the ``list`` verb, the same session the
 write ran under), and pins the ``upsert_entry`` sector-definition preservation

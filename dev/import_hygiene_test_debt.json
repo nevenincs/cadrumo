@@ -1,390 +1,390 @@
 {
-  "$schema_note": "Checked-in allowlist for the TEST-ONLY Family-1 underscore-named remainder of the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/aeat/tests/test_import_hygiene_gate.py. Every entry here is a NAMED, REASONED test-only white-box reach into a private implementation symbol (a private repository-factory function, a private evaluator, a private module-level cache, a private constant that intentionally has no public promotion candidate) that the import-centralization campaign's Wave W05 test sweep deliberately did NOT promote to a public facade, per ADR 2026-07-01-import-centralization-adr Ruling 2/3 (an underscore-named candidate gets an individual per-symbol disposition, not mechanical promotion; promoting an internals-only helper, a private cache, or a private constant onto a public facade would pollute the facade with implementation detail no other consumer needs). The gate FAILS if a NEW, undocumented test-only underscore-named private import appears that is not in this list; it does not fail if the count is lower. A production (non-test) violation is NEVER tolerated here -- this file governs test-only debt exclusively; see dev/import_hygiene_baseline.json for the production Family-1 cycle-break baseline.",
+  "$schema_note": "Checked-in allowlist for the TEST-ONLY Family-1 underscore-named remainder of the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/cadrumo/tests/test_import_hygiene_gate.py. Every entry here is a NAMED, REASONED test-only white-box reach into a private implementation symbol (a private repository-factory function, a private evaluator, a private module-level cache, a private constant that intentionally has no public promotion candidate) that the import-centralization campaign's Wave W05 test sweep deliberately did NOT promote to a public facade, per ADR 2026-07-01-import-centralization-adr Ruling 2/3 (an underscore-named candidate gets an individual per-symbol disposition, not mechanical promotion; promoting an internals-only helper, a private cache, or a private constant onto a public facade would pollute the facade with implementation detail no other consumer needs). The gate FAILS if a NEW, undocumented test-only underscore-named private import appears that is not in this list; it does not fail if the count is lower. A production (non-test) violation is NEVER tolerated here -- this file governs test-only debt exclusively; see dev/import_hygiene_baseline.json for the production Family-1 cycle-break baseline.",
   "test_only_family1_underscore_reaches": {
     "_note": "Each site is a test file reaching a foreign package's private submodule to exercise an internal helper, evaluator, repository factory, or module-private constant/cache by name. Grouped by owning package below for readability; the gate reads the flat 'sites' list.",
     "sites": [
       {
-        "importer_path": "src/aeat/adapters/outbound/aeat/export/_formats/tests/test_record_specs.py",
+        "importer_path": "src/cadrumo/adapters/outbound/aeat/export/_formats/tests/test_record_specs.py",
         "lineno": 28,
-        "target_mod": "aeat.domain.calculations.registry._export",
+        "target_mod": "cadrumo.domain.calculations.registry._export",
         "imported_names": ["_verify_record_offsets"],
         "reason": "White-box unit test of the private fixed-width record-offset verifier used internally by the export layout compiler. No consumer outside the registry package needs this invariant check; promoting it would expose an internal correctness helper as public API."
       },
       {
-        "importer_path": "src/aeat/adapters/persistence/storage/tests/test_bundle_crash_windows.py",
+        "importer_path": "src/cadrumo/adapters/persistence/storage/tests/test_bundle_crash_windows.py",
         "lineno": 150,
-        "target_mod": "aeat.application.bucket_maintenance._service",
+        "target_mod": "cadrumo.application.bucket_maintenance._service",
         "imported_names": ["_archive_associated_data"],
         "reason": "White-box unit test of the private AEAD associated-data builder for sealed-archive crash-window coverage. Internal to the bucket-maintenance service; not a symbol any other package should construct directly."
       },
       {
-        "importer_path": "src/aeat/agent/eval/tests/test_live_harness.py",
+        "importer_path": "src/cadrumo/agent/eval/tests/test_live_harness.py",
         "lineno": 22,
-        "target_mod": "aeat.entrypoints.mcp._hitl",
+        "target_mod": "cadrumo.entrypoints.mcp._hitl",
         "imported_names": ["_LIVE_WRITE_LEAVES"],
         "reason": "White-box test asserting the private live-write leaf-command set stays empty (permanent live-submission prohibition invariant). The constant is deliberately private; a public export would invite a production caller to branch on it instead of the confirmation-policy API."
       },
       {
-        "importer_path": "src/aeat/agent/tests/test_rule_surface_conformance.py",
+        "importer_path": "src/cadrumo/agent/tests/test_rule_surface_conformance.py",
         "lineno": 120,
-        "target_mod": "aeat.entrypoints.cli._command_suggestions",
+        "target_mod": "cadrumo.entrypoints.cli._command_suggestions",
         "imported_names": ["_LAZY_REGISTRY"],
         "reason": "White-box test walking the private lazy-suggestion registry to confirm every registered rule cites a real CLI verb. Internal caching structure, not a public contract."
       },
       {
-        "importer_path": "src/aeat/application/aggregation/tests/test_ledger_filing_evidence.py",
+        "importer_path": "src/cadrumo/application/aggregation/tests/test_ledger_filing_evidence.py",
         "lineno": 47,
-        "target_mod": "aeat.application.modelo._verification_actions",
+        "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": ["_assert_evidence_covers_snapshot"],
         "reason": "White-box test of the private evidence-coverage assertion helper that guards ledger-derived revision bundling. Internal defensive check, not a reusable public primitive."
       },
       {
-        "importer_path": "src/aeat/application/aggregation/tests/test_period_boundary_authority.py",
+        "importer_path": "src/cadrumo/application/aggregation/tests/test_period_boundary_authority.py",
         "lineno": 24,
-        "target_mod": "aeat.entrypoints.cli._common",
+        "target_mod": "cadrumo.entrypoints.cli._common",
         "imported_names": ["_canonical_period", "_filter_canonical_period"],
         "reason": "White-box test of the private CLI period-token canonicalisation helpers backing the single period-filter boundary authority. Internal to the CLI's argument-parsing layer; the public authority is Period.contains()."
       },
       {
-        "importer_path": "src/aeat/application/aggregation/tests/test_service.py",
+        "importer_path": "src/cadrumo/application/aggregation/tests/test_service.py",
         "lineno": 415,
-        "target_mod": "aeat.application.review._operator",
+        "target_mod": "cadrumo.application.review._operator",
         "imported_names": ["_ACCEPTED_KIND_TO_INTERNAL"],
         "reason": "White-box test of the private operator-facing-to-internal review-kind mapping table. Internal translation table for the review adapter; not a symbol external packages construct against."
       },
       {
-        "importer_path": "src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py",
+        "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
         "lineno": 188,
-        "target_mod": "aeat.application.user_profile._bundle",
+        "target_mod": "cadrumo.application.user_profile._bundle",
         "imported_names": ["_assert_full_custody_coverage"],
         "reason": "White-box test of the private full-custody-coverage assertion used by the sealed portable-bundle exporter. Internal defensive check for the FULL custody scope, not a reusable public primitive."
       },
       {
-        "importer_path": "src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py",
+        "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
         "lineno": 211,
-        "target_mod": "aeat.application.user_profile._bundle",
+        "target_mod": "cadrumo.application.user_profile._bundle",
         "imported_names": ["_build_secure_object_custody_payload"],
         "reason": "White-box test of the private secure-object custody-payload builder that composes a portable bundle's carried rows. Internal serialisation helper, not a public construction API."
       },
       {
-        "importer_path": "src/aeat/application/bucket_maintenance/tests/test_custody_completeness.py",
+        "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
         "lineno": 247,
-        "target_mod": "aeat.application.user_profile._custody_carry",
+        "target_mod": "cadrumo.application.user_profile._custody_carry",
         "imported_names": ["_natural_key_resolvers"],
         "reason": "White-box test enumerating the private per-namespace natural-key resolver registry to confirm custody-carry coverage. Internal dispatch table, not a public registry."
       },
       {
-        "importer_path": "src/aeat/application/calculations/tests/test_modelo_100_base_negativa_general_compensation.py",
+        "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_100_base_negativa_general_compensation.py",
         "lineno": 63,
-        "target_mod": "aeat.application.modelo._verification_actions",
+        "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": ["_evaluate_verification_predicates"],
         "reason": "White-box test of the private verification-predicate evaluator against BIN carry-forward continuity scenarios. Internal formula-evaluation primitive backing verify_modelo_revision, not a standalone public entry point."
       },
       {
-        "importer_path": "src/aeat/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py",
+        "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py",
         "lineno": 58,
-        "target_mod": "aeat.application.modelo._verification_actions",
+        "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": ["_evaluate_verification_predicates"],
         "reason": "Same private verification-predicate evaluator reach as test_modelo_100_base_negativa_general_compensation.py; a second continuity-scenario suite exercising the same internal primitive."
       },
       {
-        "importer_path": "src/aeat/application/calculations/tests/test_modelo_200_dotaciones_deterioro_carry_continuity.py",
+        "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_200_dotaciones_deterioro_carry_continuity.py",
         "lineno": 54,
-        "target_mod": "aeat.application.modelo._verification_actions",
+        "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": ["_evaluate_verification_predicates"],
         "reason": "Same private verification-predicate evaluator reach as the sibling M100/M200 continuity suites; a third continuity-scenario suite exercising the same internal primitive."
       },
       {
-        "importer_path": "src/aeat/application/modelo/tests/test_actions.py",
+        "importer_path": "src/cadrumo/application/modelo/tests/test_actions.py",
         "lineno": 824,
-        "target_mod": "aeat.application.wizard._commands",
+        "target_mod": "cadrumo.application.wizard._commands",
         "imported_names": ["_IVA_REGIME_CHOICE_VALUES"],
         "reason": "White-box test cross-checking the private CLI IVA-regime choice set against the wizard's operator-selectable values. Internal CLI choice-enumeration constant, not a public contract."
       },
       {
-        "importer_path": "src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py",
+        "importer_path": "src/cadrumo/application/modelo/tests/test_cross_period_clean_state_enforcement.py",
         "lineno": 40,
-        "target_mod": "aeat.application.calculations._cross_period_clean_state",
+        "target_mod": "cadrumo.application.calculations._cross_period_clean_state",
         "imported_names": ["_OFFICIAL_SOURCE_KINDS"],
         "reason": "Safety-load-bearing white-box test asserting app_filing (local-only evidence) is NEVER a member of the private official-source-kind set (local-filed-observations-are-non-official-evidence rule). The constant is deliberately private so no production caller can widen it without editing this guarded test."
       },
       {
-        "importer_path": "src/aeat/application/modelo/tests/test_local_cross_period_carry.py",
+        "importer_path": "src/cadrumo/application/modelo/tests/test_local_cross_period_carry.py",
         "lineno": 59,
-        "target_mod": "aeat.application.calculations._cross_period_clean_state",
+        "target_mod": "cadrumo.application.calculations._cross_period_clean_state",
         "imported_names": ["_OFFICIAL_SOURCE_KINDS"],
         "reason": "Same safety-load-bearing official-source-kind guard as test_cross_period_clean_state_enforcement.py, exercised from the local cross-period carry suite."
       },
       {
-        "importer_path": "src/aeat/application/modelo/tests/test_participation_co_emission.py",
+        "importer_path": "src/cadrumo/application/modelo/tests/test_participation_co_emission.py",
         "lineno": 22,
-        "target_mod": "aeat.application.ledger._actions_common",
+        "target_mod": "cadrumo.application.ledger._actions_common",
         "imported_names": ["_blocking_modelo_references"],
         "reason": "White-box test of the private ledger-removal blocking-reference scanner that walks live revision catalogues. Internal deletion-guard helper, not a public query API."
       },
       {
-        "importer_path": "src/aeat/application/modelo/tests/test_unresolved_binding_diagnostics.py",
+        "importer_path": "src/cadrumo/application/modelo/tests/test_unresolved_binding_diagnostics.py",
         "lineno": 35,
-        "target_mod": "aeat.domain.calculations.registry._formula_runtime",
+        "target_mod": "cadrumo.domain.calculations.registry._formula_runtime",
         "imported_names": ["_evaluate_expression", "_UnresolvedFormulaDependencyError"],
         "reason": "White-box test of the private formula-expression evaluator and its private unresolved-dependency exception, exercising the non-blocking unresolved-binding diagnostic channel. Internal formula-runtime primitives, not the public calculate_registry_snapshot entry point."
       },
       {
-        "importer_path": "src/aeat/application/review/tests/test_adapters.py",
+        "importer_path": "src/cadrumo/application/review/tests/test_adapters.py",
         "lineno": 31,
-        "target_mod": "aeat.domain.invoices._repository",
+        "target_mod": "cadrumo.domain.invoices._repository",
         "imported_names": ["_INVOICE_CATALOGUE_VERSION", "_INVOICE_NAMESPACE", "_INVOICE_OBJECT_KEY"],
         "reason": "White-box test asserting review-adapter secure-object writes land under the exact private namespace/object-key/schema-version constants the invoice repository itself uses. Internal storage-addressing constants, not a public contract other packages should construct against."
       },
       {
-        "importer_path": "src/aeat/application/tests/test_error_class_registration.py",
+        "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
         "lineno": 93,
-        "target_mod": "aeat.application.auth._sessions",
+        "target_mod": "cadrumo.application.auth._sessions",
         "imported_names": ["_session_metadata_datetime"],
         "reason": "White-box test of the private session-metadata datetime coercion helper's except-clause narrowing. Internal parsing helper, not a reusable public primitive."
       },
       {
-        "importer_path": "src/aeat/application/tests/test_error_class_registration.py",
+        "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
         "lineno": 164,
-        "target_mod": "aeat.application.auth._diagnostics",
+        "target_mod": "cadrumo.application.auth._diagnostics",
         "imported_names": ["_payload"],
         "reason": "White-box test of the private auth-diagnostics payload builder's except-clause narrowing. Internal diagnostics helper, not a reusable public primitive."
       },
       {
-        "importer_path": "src/aeat/application/tests/test_error_class_registration.py",
+        "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
         "lineno": 227,
-        "target_mod": "aeat.application.auth._operator_probes",
+        "target_mod": "cadrumo.application.auth._operator_probes",
         "imported_names": ["_try_load_certificate_metadata"],
         "reason": "White-box test of the private certificate-metadata probe's except-clause narrowing (confirms RuntimeError propagates rather than being swallowed). Internal probe helper, not a reusable public primitive."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 412,
-        "target_mod": "aeat.application.live._notifications",
+        "target_mod": "cadrumo.application.live._notifications",
         "imported_names": ["_notifications_repository"],
         "reason": "White-box test of the private notifications-snapshot repository factory, part of a matrix confirming every carried secure-object namespace round-trips through custody carry. Internal repository-factory, not a public construction API."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 427,
-        "target_mod": "aeat.application.live._notifications",
+        "target_mod": "cadrumo.application.live._notifications",
         "imported_names": ["_notifications_repository"],
         "reason": "Same private notifications-repository factory reach as the adjacent save assertion in the same custody-store matrix test."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 435,
-        "target_mod": "aeat.application.live._expedientes",
+        "target_mod": "cadrumo.application.live._expedientes",
         "imported_names": ["_expedientes_repository"],
         "reason": "White-box test of the private expedientes-snapshot repository factory, part of the custody-store matrix. Internal repository-factory, not a public construction API."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 450,
-        "target_mod": "aeat.application.live._expedientes",
+        "target_mod": "cadrumo.application.live._expedientes",
         "imported_names": ["_expedientes_repository"],
         "reason": "Same private expedientes-repository factory reach as the adjacent save assertion in the same custody-store matrix test."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 457,
-        "target_mod": "aeat.application.auth._apoderado",
+        "target_mod": "cadrumo.application.auth._apoderado",
         "imported_names": ["_ApoderadoConfigRepository"],
         "reason": "White-box test of the private apoderado-config repository, part of the custody-store matrix. Internal repository, not a public construction API."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 471,
-        "target_mod": "aeat.application.auth._apoderado",
+        "target_mod": "cadrumo.application.auth._apoderado",
         "imported_names": ["_ApoderadoConfigRepository"],
         "reason": "Same private apoderado-config repository reach as the adjacent load assertion in the same custody-store matrix test."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 621,
-        "target_mod": "aeat.application.modelo._m036_lifecycle",
+        "target_mod": "cadrumo.application.modelo._m036_lifecycle",
         "imported_names": ["_m036_declaration_repository"],
         "reason": "White-box test of the private M036 declaration repository factory, part of the custody-store matrix. Internal repository-factory, not a public construction API."
       },
       {
-        "importer_path": "src/aeat/application/user_profile/tests/test_custody_store_matrix.py",
+        "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
         "lineno": 643,
-        "target_mod": "aeat.application.modelo._m036_lifecycle",
+        "target_mod": "cadrumo.application.modelo._m036_lifecycle",
         "imported_names": ["_m036_declaration_repository"],
         "reason": "Same private M036 declaration-repository factory reach as the adjacent save assertion in the same custody-store matrix test."
       },
       {
-        "importer_path": "src/aeat/application/workflow/tests/test_models.py",
+        "importer_path": "src/cadrumo/application/workflow/tests/test_models.py",
         "lineno": 23,
-        "target_mod": "aeat.adapters.outbound.aeat.browser._site_health",
+        "target_mod": "cadrumo.adapters.outbound.aeat.browser._site_health",
         "imported_names": ["_URL_ADAPTER"],
         "reason": "White-box test of the private URL-scheme-adapter registration used by the site-health browser probe. Internal wiring detail, not a public contract."
       },
       {
-        "importer_path": "src/aeat/conftest.py",
+        "importer_path": "src/cadrumo/conftest.py",
         "lineno": 85,
-        "target_mod": "aeat.domain.calculations.registry._loader",
+        "target_mod": "cadrumo.domain.calculations.registry._loader",
         "imported_names": ["_load_registry_tree_cached"],
         "reason": "Test-isolation fixture hook that clears the private registry-tree LRU cache between tests so no fixture leaks a stale compiled snapshot across test modules. Deliberately reaches the cache internals; the public authority never exposes cache-invalidation as an API."
       },
       {
-        "importer_path": "src/aeat/core/tests/test_logging.py",
+        "importer_path": "src/cadrumo/core/tests/test_logging.py",
         "lineno": 377,
-        "target_mod": "aeat.adapters.inbound.pdf._pdfplumber",
+        "target_mod": "cadrumo.adapters.inbound.pdf._pdfplumber",
         "imported_names": ["__all__"],
         "reason": "Structural introspection test reading the private _pdfplumber submodule's own __all__ list to confirm suppress_pdfminer_debug_logging stays exported from it. Testing the submodule's own export surface, not importing a symbol through it -- no promotion candidate exists."
       },
       {
-        "importer_path": "src/aeat/core/tests/test_paths.py",
+        "importer_path": "src/cadrumo/core/tests/test_paths.py",
         "lineno": 206,
-        "target_mod": "aeat.adapters.outbound.storage._local",
+        "target_mod": "cadrumo.adapters.outbound.storage._local",
         "imported_names": ["_HMAC_PREFIX_LEN", "_SIDECAR_EXTENSION", "_validate_label"],
         "reason": "White-box test of the private local-filesystem-provider path-length and label-clamping constants/helpers used by the core path-length diagnostics. Internal formatting details of one storage backend; the public Protocol boundary (StorageProvider) intentionally hides them."
       },
       {
-        "importer_path": "src/aeat/core/time/tests/test_clock.py",
+        "importer_path": "src/cadrumo/core/time/tests/test_clock.py",
         "lineno": 85,
-        "target_mod": "aeat.application.storage.calc_sheets._records",
+        "target_mod": "cadrumo.application.storage.calc_sheets._records",
         "imported_names": ["_utc_now"],
         "reason": "White-box test of the private module-local UTC-now wrapper the calc-sheets record models call, confirming it delegates to the canonical clock. Internal indirection shim, not a public timestamp API."
       },
       {
-        "importer_path": "src/aeat/domain/calculations/registry/tests/test_binding_coverage_breadth.py",
+        "importer_path": "src/cadrumo/domain/calculations/registry/tests/test_binding_coverage_breadth.py",
         "lineno": 37,
-        "target_mod": "aeat.application.modelo._calculation_actions",
+        "target_mod": "cadrumo.application.modelo._calculation_actions",
         "imported_names": ["_ENROLLED_SOURCE_KINDS"],
         "reason": "White-box breadth test reading the private enrolled-source-kind set to confirm every registry binding source is routed or explicitly deferred (no-dormant-source-resolvers rule). The set is deliberately private so only the calculate-time gate consumes it as an enforcement mechanism, not a browsable public registry."
       },
       {
-        "importer_path": "src/aeat/domain/renta/tests/test_first_slice_routing.py",
+        "importer_path": "src/cadrumo/domain/renta/tests/test_first_slice_routing.py",
         "lineno": 102,
-        "target_mod": "aeat.domain.calculations.registry._validate_references",
+        "target_mod": "cadrumo.domain.calculations.registry._validate_references",
         "imported_names": ["_CROSS_DOMAIN_SNAPSHOT_CHECKS"],
         "reason": "White-box test confirming the renta first-slice routing validator is registered in the private cross-domain snapshot-check dispatch table. Internal registry-build validator wiring, not a public contract."
       },
       {
-        "importer_path": "src/aeat/entrypoints/cli/_config/tests/test_google_sync_push.py",
+        "importer_path": "src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_push.py",
         "lineno": 20,
-        "target_mod": "aeat.adapters.outbound.storage._local",
+        "target_mod": "cadrumo.adapters.outbound.storage._local",
         "imported_names": ["LocalFileSystemProvider"],
         "reason": "White-box unit test instantiating the concrete local-filesystem StorageProvider backend directly to exercise push/manifest behaviour. The package docstring explicitly documents _local and _google_drive as private implementation details behind the StorageProvider Protocol; promoting the concrete class to the public facade would contradict that documented boundary."
       },
       {
-        "importer_path": "src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
         "lineno": 244,
-        "target_mod": "aeat.application.user_profile._orchestration",
+        "target_mod": "cadrumo.application.user_profile._orchestration",
         "imported_names": ["_write_active_profile_pointer"],
         "reason": "White-box test seeding a stale/phantom active-profile pointer to exercise a lifecycle-verb error path. Internal pointer-write primitive; the public surface is register_active_profile / select_profile, not a raw pointer write."
       },
       {
-        "importer_path": "src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
         "lineno": 653,
-        "target_mod": "aeat.application.user_profile._orchestration",
+        "target_mod": "cadrumo.application.user_profile._orchestration",
         "imported_names": ["_clear_active_profile_pointer"],
         "reason": "White-box test clearing the active-profile pointer directly to set up a no-active-profile scenario. Internal pointer-clear primitive; the public surface is logout_active_profile / remove_active_profile."
       },
       {
-        "importer_path": "src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
         "lineno": 757,
-        "target_mod": "aeat.application.user_profile._orchestration",
+        "target_mod": "cadrumo.application.user_profile._orchestration",
         "imported_names": ["_write_active_profile_pointer"],
         "reason": "Same private pointer-write primitive reach as line 244 in the same file, seeding a different phantom-pointer scenario."
       },
       {
-        "importer_path": "src/aeat/entrypoints/cli/tests/test_self_referential_string_conformance.py",
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
         "lineno": 65,
-        "target_mod": "aeat.core.i18n._render",
+        "target_mod": "cadrumo.core.i18n._render",
         "imported_names": ["_locale_map"],
         "reason": "White-box test reading the private per-locale translation-key map to detect self-referential (untranslated) string leaks. Internal catalogue cache, not the public tr() translation surface."
       },
       {
-        "importer_path": "src/aeat/entrypoints/cli/tests/test_session_lifecycle_roundtrip.py",
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_session_lifecycle_roundtrip.py",
         "lineno": 38,
-        "target_mod": "aeat.adapters.persistence.storage.master_key._active_session",
+        "target_mod": "cadrumo.adapters.persistence.storage.master_key._active_session",
         "imported_names": ["_active_session"],
         "reason": "White-box test reaching the private module-level active-session slot directly to assert session lifecycle roundtrip state that the public has_active_bucket_session()/current_active_bucket_session() accessors do not expose (raw slot identity across a save/load cycle)."
       },
       {
-        "importer_path": "src/aeat/tests/test_diagnostics_and_sidecar_rationale.py",
+        "importer_path": "src/cadrumo/tests/test_diagnostics_and_sidecar_rationale.py",
         "lineno": 21,
-        "target_mod": "aeat.adapters.outbound.storage._local",
+        "target_mod": "cadrumo.adapters.outbound.storage._local",
         "imported_names": ["LocalFileSystemProvider"],
         "reason": "Same private-implementation-behind-Protocol rationale as test_google_sync_push.py: a white-box unit test of the concrete local-filesystem backend's sidecar diagnostics, deliberately not promoted per the package's documented Protocol boundary."
       },
       {
-        "importer_path": "src/aeat/tests/test_except_clause_narrowing.py",
+        "importer_path": "src/cadrumo/tests/test_except_clause_narrowing.py",
         "lineno": 116,
-        "target_mod": "aeat.domain.calculations.registry._workbook_parity",
+        "target_mod": "cadrumo.domain.calculations.registry._workbook_parity",
         "imported_names": ["_formula_references"],
         "reason": "White-box test of the private formula-reference extractor's except-clause narrowing (TokenizerError fallback vs propagation). Internal workbook-parity helper, not a public parsing API."
       },
       {
-        "importer_path": "src/aeat/tests/test_except_clause_narrowing.py",
+        "importer_path": "src/cadrumo/tests/test_except_clause_narrowing.py",
         "lineno": 125,
-        "target_mod": "aeat.domain.calculations.registry._workbook_parity",
+        "target_mod": "cadrumo.domain.calculations.registry._workbook_parity",
         "imported_names": ["_formula_references"],
         "reason": "Same private formula-reference extractor reach as line 116 in the same file, exercising the successful-parse branch."
       },
       {
-        "importer_path": "src/aeat/tests/test_except_clause_narrowing.py",
+        "importer_path": "src/cadrumo/tests/test_except_clause_narrowing.py",
         "lineno": 162,
-        "target_mod": "aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend",
+        "target_mod": "cadrumo.adapters.inbound.declaracion._parsers._pdfplumber_backend",
         "imported_names": ["_extract_pages_text_with_pdfium_cached"],
         "reason": "White-box test of the private cached pdfium page-text extractor's except-clause narrowing against a malformed PDF. Internal parser-backend cache helper, not a public extraction API (the public surface is parse_declaracion)."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_catalogue_error_narrowing.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_catalogue_error_narrowing.py",
         "lineno": 127,
-        "target_mod": "aeat.application.modelo._verification_actions",
+        "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": ["_evaluate_advisory_predicate_fires"],
         "reason": "White-box test of the private advisory-predicate-fires evaluator's except-clause narrowing (InvalidOperation on threshold parse only). Internal verification-predicate helper, not a standalone public entry point."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_locale_and_typed_payloads.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
         "lineno": 82,
-        "target_mod": "aeat.locales._ast_scanner",
+        "target_mod": "cadrumo.locales._ast_scanner",
         "imported_names": ["_DYNAMIC_TRANSLATION_ROOTS"],
         "reason": "White-box test confirming 'wizard' is registered in the private dynamic-translation-roots set that documents f-string dynamic-dispatch survivors for the locale scanner. Internal scanner configuration, not a public locale-catalogue API."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_locale_and_typed_payloads.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
         "lineno": 96,
-        "target_mod": "aeat.locales._ast_scanner",
+        "target_mod": "cadrumo.locales._ast_scanner",
         "imported_names": ["_extract_fstring_prefixes"],
         "reason": "White-box test of the private f-string-prefix extraction helper used by the locale AST scanner. Internal scanner primitive, not a public locale-catalogue API."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_locale_and_typed_payloads.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
         "lineno": 167,
-        "target_mod": "aeat.entrypoints.cli._config._google",
+        "target_mod": "cadrumo.entrypoints.cli._config._google",
         "imported_names": ["_OAuthClientWrapper"],
         "reason": "White-box test of the private OAuth-client-payload pydantic wrapper's validate/reject behaviour. Internal Google OAuth config-loading helper, not a public CLI contract."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_locale_and_typed_payloads.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
         "lineno": 186,
-        "target_mod": "aeat.entrypoints.cli._config._google",
+        "target_mod": "cadrumo.entrypoints.cli._config._google",
         "imported_names": ["_OAuthClientWrapper"],
         "reason": "Same private OAuth-client-wrapper reach as line 167 in the same file, exercising a different validation-rejection scenario."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_locale_and_typed_payloads.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
         "lineno": 196,
-        "target_mod": "aeat.entrypoints.cli._config._google",
+        "target_mod": "cadrumo.entrypoints.cli._config._google",
         "imported_names": ["_OAuthClientWrapper"],
         "reason": "Same private OAuth-client-wrapper reach as lines 167/186 in the same file, exercising a third validation scenario."
       },
       {
-        "importer_path": "src/aeat/tests/test_wizard_locale_and_typed_payloads.py",
+        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
         "lineno": 219,
-        "target_mod": "aeat.application.invoices._importing",
+        "target_mod": "cadrumo.application.invoices._importing",
         "imported_names": ["_decode_invoice_payload"],
         "reason": "White-box test confirming the private invoice-payload decoder returns InvoiceRowPayload TypedDict instances from JSON. Internal decoding helper backing parse_invoice_payload, not a standalone public entry point."
       },
       {
-        "importer_path": "src/aeat/application/command_search/tests/test_command_ranking_golden.py",
+        "importer_path": "src/cadrumo/application/command_search/tests/test_command_ranking_golden.py",
         "lineno": 28,
-        "target_mod": "aeat.entrypoints.mcp._meta_tools",
+        "target_mod": "cadrumo.entrypoints.mcp._meta_tools",
         "imported_names": ["build_command_search_index", "search_commands"],
         "reason": "Pinned retrieval golden set (ADR mcp-progressive-discovery P2/S09) asserting the live command-ranking over build_tool_descriptors(). The ranking helpers wrap the private `search` meta-tool surface and have no public facade promotion candidate; the golden set is authored under the command_search package it validates, so it is a white-box test-only reach into the meta-tool ranking API."
       }

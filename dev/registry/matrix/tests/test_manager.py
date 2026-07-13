@@ -95,7 +95,7 @@ def test_build_capability_matrix_is_never_a_fabricated_positive() -> None:
     export_layouts rather than trusting the row, proving the row is not
     hand-computed independently of the registry data it claims to summarise.
     """
-    from aeat.domain.calculations.registry import bundled_authority
+    from cadrumo.domain.calculations.registry import bundled_authority
 
     authority = bundled_authority()
     rows = _rows()

@@ -1,4 +1,4 @@
-"""CLI surface tests for the ``cadrumo app ledger`` command tree.
+"""CLI surface tests for the ``aeat app ledger`` command tree.
 
 contract: Pin the id-prefix fallthrough locale path.
 

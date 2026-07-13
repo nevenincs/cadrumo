@@ -49,16 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # AEAT-prefixed variable is the only legitimate option. Each entry must
 # carry its rationale inline in the source — when reviewing this list,
 # verify the rationale matches "no Settings write API exists for this".
-_ALLOWLIST: frozenset[str] = frozenset(
-    {
-        # WRITE side of REPLAY_ACTIVE_ENV_VAR (subprocess-IPC). The READ
-        # side flows through Settings (see _context.py — already routed
-        # via load_settings().cadrumo_replay_active). Settings is read-only
-        # so the WRITE has no Settings equivalent; the os.environ mutation
-        # is observed by the child invocation's subsequent Settings load.
-        "core/observability/_replay.py",
-    },
-)
+_ALLOWLIST: frozenset[str] = frozenset()
 
 _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT_[A-Z0-9_]+$")
 

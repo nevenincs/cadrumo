@@ -401,7 +401,7 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
             "cli.app.modelo.work.create_reused",
             default=(
                 "Existing work unit returned (idempotent on modelo/year/period); nothing new was created. "
-                "Rename it with `cadrumo app modelo work rename`."
+                "Rename it with `aeat app modelo work rename`."
             ),
         ),
         "modelo.work.reuse",
@@ -472,8 +472,8 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             tr(
                 "cli.app.modelo.work.list_next_action",
                 default=(
-                    "Inspect one work unit's full state with `cadrumo app modelo work status`, "
-                    "then draft or recalculate it with `cadrumo app modelo work calculate`."
+                    "Inspect one work unit's full state with `aeat app modelo work status`, "
+                    "then draft or recalculate it with `aeat app modelo work calculate`."
                 ),
             ),
         )
@@ -518,11 +518,11 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             tr(
                 "cli.app.modelo.work.status_next_action",
                 default=(
-                    "Draft or recalculate this unit with `cadrumo app modelo work calculate`, "
-                    "then verify the draft with `cadrumo app modelo work verify`."
+                    "Draft or recalculate this unit with `aeat app modelo work calculate`, "
+                    "then verify the draft with `aeat app modelo work verify`."
                 ),
             ),
-            suggestion=f"cadrumo app modelo work calculate {unit.work_unit_id}",
+            suggestion=f"aeat app modelo work calculate {unit.work_unit_id}",
         )
         _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_action])
 

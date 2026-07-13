@@ -22,8 +22,8 @@ from ....domain.iva_compensation import (
     IvaCompensationReconciliationDecision,
 )
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
-from ....tests.registry_observations import registry_grounded_observations
 from ....tests.env_scope import ready_clave_settings
+from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,

@@ -42,7 +42,7 @@ REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
 # routine dev/worktree mode) "bundled" resolves to the literal in-tree
-# ``src/aeat/_data/registry/aeat`` source directory, which concurrent peer
+# ``src/cadrumo/_data/registry/aeat`` source directory, which concurrent peer
 # agents in this shared worktree edit live throughout a session. A TTL that
 # never re-checks would silently serve stale registry TOML to a long-running
 # process (an MCP server, a REPL, a background watch loop) after such an

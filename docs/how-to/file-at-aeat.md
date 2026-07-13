@@ -1,7 +1,7 @@
 # Upload your exported modelo at the AEAT portal
 
 This guide walks you through the handoff from a verified draft to a real filing
-at AEAT, as an ordered checklist. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
+at AEAT, as an ordered checklist. You prepare and export a {term}`modelo` with Cadrumo, but it never submits anything to
 AEAT. You upload the exported file at the AEAT portal yourself, signed with
 your own credentials. The `work file` command at the end records a local marker
 only; it does not and cannot file on your behalf.
@@ -28,12 +28,12 @@ You need:
   draft isn't verified yet, see [verification reports](verification-reports.md).
 - Your own AEAT portal credentials - a digital certificate or Cl@ve. These are
   your credentials for AEAT's website, separate from anything configured inside
-  `aeat`. The tool's [AEAT authentication](authenticate-with-aeat.md) is for
+  Cadrumo. Its [AEAT authentication](authenticate-with-aeat.md) is for
   read-only data pulls, not for filing.
 
-Every `aeat` command on this page needs your master-key passphrase. The tool
-prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The
-tool's messages are in Spanish.
+Cadrumo requires your master-key passphrase before every `cadrumo` command on this
+page. It prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` to run
+non-interactively. The command's messages are in Spanish.
 
 If you're new to the workflow as a whole, start with the
 [quickstart](quickstart.md).
@@ -68,7 +68,7 @@ checksum. Record the checksum - it identifies exactly which file you uploaded.
 
 ## Step 3: upload the file at the AEAT portal yourself
 
-This step happens entirely outside `aeat`, in your browser. Log in with your
+This step happens entirely outside Cadrumo, in your browser. Log in with your
 own certificate or Cl@ve - do not expect the tool to do any part of this step
 for you.
 
@@ -91,7 +91,7 @@ record against your local one.
 
 ## Step 5: record the filing locally
 
-Only after the portal submission succeeds, record the filing in `aeat`:
+Only after the portal submission succeeds, record the filing in Cadrumo:
 
 ```bash
 aeat app modelo work file --modelo 303 --year 2026 --period 1T
@@ -139,7 +139,7 @@ succeeded at the portal.
 
 Instead:
 
-1. Fix the draft in `aeat`.
+1. Fix the draft in Cadrumo.
 2. Re-verify the calculation.
 3. Re-export the filing file.
 4. Retry the upload at the portal.

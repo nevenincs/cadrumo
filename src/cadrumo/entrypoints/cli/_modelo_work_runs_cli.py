@@ -52,9 +52,9 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
 
-_DRAFT_RECALCULATE_COMMAND = "cadrumo app modelo work calculate"
+_DRAFT_RECALCULATE_COMMAND = "aeat app modelo work calculate"
 _VERIFICATION_REPORT_LIST_COMMAND = (
-    "cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
+    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
 )
 _CANONICAL_DRAFT_BUILD_REFUSED_NEXT_ACTION = f"Repair the cited draft input and rerun {_DRAFT_RECALCULATE_COMMAND}."
 _CANONICAL_VERIFICATION_REPORT_NEXT_ACTION = f"Run: {_VERIFICATION_REPORT_LIST_COMMAND}"
@@ -145,7 +145,7 @@ def register_work_run_commands(
             "cli.app.modelo.work.runs_help",
             default=(
                 "List persisted workflow runs with their run ids, newest first. "
-                "Use a run id with `cadrumo app modelo work resume`. Local-only: "
+                "Use a run id with `aeat app modelo work resume`. Local-only: "
                 "never contacts AEAT."
             ),
         ),

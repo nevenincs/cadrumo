@@ -1,7 +1,22 @@
 # How-to guides
 
-Pick the question closest to what you are trying to do. For exact command
-options, use the [command-line reference](../cli/index.rst).
+These guides take Cadrumo from local taxpayer records to a checked, exportable
+filing file. Cadrumo is the product; the Agencia Estatal de Administración
+Tributaria (AEAT) is the external tax authority. Cadrumo never submits a return
+or acts as AEAT. Read [how records become filing-ready
+figures](../explanation/from-records-to-figures.md) for that boundary, then pick
+the outcome closest to what you are trying to do.
+
+Start with the [source setup](../workstation-setup.md) if the `cadrumo` command
+does not run, or use the [quickstart](quickstart.md) for the shortest complete
+local workflow. For terminology, use the {doc}`glossary </_generated/glossary>`;
+for exact options and refusals, use the [command-line reference](../cli/index.rst).
+
+For an ordinary failure, follow [Diagnose and repair](troubleshooting.md) and
+open a [public issue](https://github.com/cadrumo/cadrumo/issues) with redacted
+output if the problem remains. Never publish taxpayer data, credentials, or a
+vulnerability in an issue. Follow the [security policy](../../SECURITY.md) for
+the private reporting route and its documented fallback.
 
 ## How do I start this?
 
@@ -185,7 +200,7 @@ Pull, store, and inspect the AEAT justificante for each filed period.
 
 ::::
 
-## How does this work?
+## How do I handle a specialist workflow?
 
 ::::{grid} 1 2 2 3
 :gutter: 3
@@ -262,7 +277,7 @@ Step-by-step recovery procedures for common refusals and failures.
 
 ::::
 
-`aeat` does not submit to AEAT. Exported files are local files. You upload them
+Cadrumo does not submit to AEAT. Exported files are local files. You upload them
 yourself through official AEAT channels and keep the justificante for your
 records.
 

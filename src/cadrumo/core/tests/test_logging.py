@@ -105,7 +105,7 @@ def _read_log_tail(path: Path, *, max_bytes: int = 64 * 1024) -> str:
 def test_prepare_log_directory_returns_none_for_creatable_path(tmp_path: Path) -> None:
     """A writable target yields no failure reason and materialises the directory."""
 
-    log_file = tmp_path / "logs" / "aeat.log"
+    log_file = tmp_path / "logs" / "cadrumo.log"
 
     reason = _prepare_log_directory(log_file)
 
@@ -124,7 +124,7 @@ def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Pa
 
     blocker = tmp_path / "not-a-directory"
     blocker.write_text("x", encoding="utf-8")
-    log_file = blocker / "logs" / "aeat.log"
+    log_file = blocker / "logs" / "cadrumo.log"
 
     reason = _prepare_log_directory(log_file)
 

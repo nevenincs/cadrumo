@@ -86,7 +86,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
         try:
             with activate_session(_control_session()):
                 SecureObjectRepository().save(
-                    namespace="aeat-tests.contamination.control",
+                    namespace="cadrumo-tests.contamination.control",
                     object_key="active-profile-row",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
@@ -98,7 +98,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
 
             with isolated_ephemeral_secure_sql(tmp_path=isolated_root):
                 SecureObjectRepository().save(
-                    namespace="aeat-tests.contamination.isolated",
+                    namespace="cadrumo-tests.contamination.isolated",
                     object_key="isolated-row",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,

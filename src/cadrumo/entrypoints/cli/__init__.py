@@ -2,8 +2,8 @@
 
 The command tree exposes two top-level namespaces:
 
-- ``cadrumo config`` — local configuration, on-ramp wizard, diagnostics.
-- ``cadrumo app`` — operational tax work: overview, ledger, modelo,
+- ``aeat config`` — local configuration, on-ramp wizard, diagnostics.
+- ``aeat app`` — operational tax work: overview, ledger, modelo,
   registry, and review.
 
 Every command in this package is a thin transport over the backend application
@@ -67,7 +67,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
 # Importing every module just to build the Cadrumo app object made
-# ``cadrumo --version`` and ``cadrumo --help`` pay that cost even though they
+# ``aeat --version`` and ``aeat --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
 # something in the owning subtree (see :mod:`._command_suggestions`).
@@ -144,7 +144,7 @@ def _root(
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
-        # Fast-path: bare `cadrumo --version` skips the registry load
+        # Fast-path: bare `aeat --version` skips the registry load
         # (disaster ADR Ruling 4 — registry validation must not run
         # on the version surface). The `--detail` variant re-invokes
         # with the registry summary populated. The diagnostics import
@@ -155,7 +155,7 @@ def _root(
         if detail:
             typer.echo(render_cli_version_text(report))
         else:
-            # The short `cadrumo --version` line is machine-format semver
+            # The short `aeat --version` line is machine-format semver
             # (e.g. "cadrumo 1.2.3") consumed by CI tooling and package
             # managers. Cadrumo policy treats semver output as machine-format,
             # not operator text, so tr() wrapping is intentionally omitted.
@@ -199,7 +199,7 @@ def _root(
             except FormerProductStateError as exc:
                 raise CliRefusedBoundaryError(
                     str(exc),
-                    suggestion="cadrumo config repair --help",
+                    suggestion="aeat config repair --help",
                 ) from exc
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
@@ -565,7 +565,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         if subcommand is None:
             return True
         command = subcommand
-    # A bare subgroup invocation (for example `cadrumo config profile`) can
+    # A bare subgroup invocation (for example `aeat config profile`) can
     # only render that group's help/callback surface. Treat it like help so
     # discovery never asks for the encrypted profile passphrase first.
     return hasattr(command, "list_commands")
@@ -623,7 +623,7 @@ def _full_invocation_verb_path() -> str | None:
     (``--version``, ``--help``, ``--language``, ``--format``, etc.)
     so the returned string is the canonical subcommand chain the
     operator typed: ``"config profile create"`` for
-    ``cadrumo --quiet config profile create alice``. Returns ``None``
+    ``aeat --quiet config profile create alice``. Returns ``None``
     for the bare invocation and for non-entrypoint processes such as
     in-process test runners.
 
@@ -696,7 +696,7 @@ def _missing_dependency_name(error: ModuleNotFoundError) -> str:
 
 
 # ---------------------------------------------------------------------
-# `cadrumo app` — workflow aggregator
+# `aeat app` — workflow aggregator
 # ---------------------------------------------------------------------
 
 
@@ -747,7 +747,7 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
 
     A :exc:`ModuleNotFoundError` from a missing optional dependency is
     converted into a failure-surface Typer that refuses cleanly and
-    points the operator at ``cadrumo config repair`` — the same behaviour
+    points the operator at ``aeat config repair`` — the same behaviour
     the eager startup path produced, now deferred to the first time the
     subtree is actually invoked.
     """
@@ -977,7 +977,7 @@ def _refuse_former_product_state_at_startup() -> None:
         _emit_error_and_exit(
             CliRefusedBoundaryError(
                 str(error),
-                suggestion="cadrumo config repair --help",
+                suggestion="aeat config repair --help",
             )
         )
 

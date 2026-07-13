@@ -28,11 +28,12 @@ _log = get_logger(__name__)
 _INITIALISED = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_STALE_CLI_EXECUTABLE_RE = re.compile(r"\baeat(?= (?:app|config|--|<))")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 # Test-scope flag: when True, _interpolate raises UnmatchedPlaceholderError for
 # any {name} token that survives substitution.  Production code leaves this False.
-_I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("aeat_i18n_strict_placeholders", default=False)
+_I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_placeholders", default=False)
 
 
 class UnmatchedPlaceholderError(CoreError):
@@ -232,6 +233,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         rendered = _interpolate(translation_key, rendered, interpolation)
+    rendered = _normalise_cli_executable_references(rendered)
     if _I18N_STRICT_PLACEHOLDERS.get() and (match := _SURVIVING_PLACEHOLDER_RE.search(rendered)):
         raise UnmatchedPlaceholderError(
             key=translation_key,
@@ -239,6 +241,17 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
             rendered=rendered,
         )
     return rendered
+
+
+def _normalise_cli_executable_references(rendered: str) -> str:
+    """Replace stale product-name command prefixes with the canonical CLI executable.
+
+    Cadrumo is both the product name and the sole human command-line executable.
+    Locale catalogues may retain older command examples during a product-copy
+    refresh, so normalize only unambiguous retired command prefixes at the shared
+    rendering boundary. Ordinary prose naming the AEAT authority remains unchanged.
+    """
+    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))

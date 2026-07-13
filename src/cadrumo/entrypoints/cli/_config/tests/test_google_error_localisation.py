@@ -1,6 +1,6 @@
-"""Locale coverage for the `cadrumo config google ...` error refusal helper.
+"""Locale coverage for the `aeat config google ...` error refusal helper.
 
-`_google_refusal` is the single chokepoint every `cadrumo config google`
+`_google_refusal` is the single chokepoint every `aeat config google`
 command routes adapter failures through. Before it existed the commands
 re-raised `CliRefusedBoundaryError(str(exc))` — a literal-positional
 refusal that rendered the adapter's English message verbatim in every

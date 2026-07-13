@@ -1,4 +1,4 @@
-"""Reconciliation command group for ``cadrumo app modelo reconcile``.
+"""Reconciliation command group for ``aeat app modelo reconcile``.
 
 ``reconcile`` is a command group expressing the two CLI standards:
 

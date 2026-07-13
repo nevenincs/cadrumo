@@ -7,12 +7,12 @@ A modelo is a Spanish tax form.
 These commands are local unless a command is under `aeat app live`. Local
 calendar commands read the [active profile](profile-setup.md#what-the-active-profile-means)
 and local registry data. They do not file, submit, or contact the Agencia
-Estatal de Administracion Tributaria (AEAT).
+Estatal de Administración Tributaria (AEAT).
 
 ## Before you start
 
 You need an [active taxpayer profile](profile-setup.md#what-the-active-profile-means),
-and the tool needs your master-key passphrase (it prompts for it, or set
+and Cadrumo needs your master-key passphrase (it prompts for it, or set
 `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs). If you do not have a
 profile, create it with [Set up your taxpayer profile](profile-setup.md).
 
@@ -133,7 +133,7 @@ To see every registered profile instead of only the
 aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles
 ```
 
-When you want to inspect obligations that `aeat` normally filters out, add
+When you want to inspect obligations that Cadrumo normally filters out, add
 `--show-suppressed`:
 
 ```bash

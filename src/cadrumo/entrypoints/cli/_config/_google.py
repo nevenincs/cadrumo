@@ -1,4 +1,4 @@
-"""Operator-facing `cadrumo config google ...` Typer commands.
+"""Operator-facing `aeat config google ...` Typer commands.
 
 Four commands wire the Google OAuth Desktop backend
 (`cadrumo.adapters.outbound.google`) into the CLI:
@@ -244,7 +244,7 @@ def google_login(
             raise GoogleAuthClientNotRegisteredError(
                 translated_message="cli.config.google.detail.client_unregistered",
                 context={"profile": active},
-                suggestion="cadrumo config google register --client-json <path>",
+                suggestion="aeat config google register --client-json <path>",
             )
         if refresh_only:
             metadata = load_metadata(active)
@@ -252,7 +252,7 @@ def google_login(
                 raise GoogleAuthExpiredError(
                     translated_message="cli.config.google.detail.no_metadata_for_refresh",
                     context={"profile": active},
-                    suggestion="cadrumo config google login",
+                    suggestion="aeat config google login",
                 )
             typed_refresh = GoogleLoginResult(
                 profile=active,
@@ -348,7 +348,7 @@ def google_logout(
     """Clear the refresh token + metadata for the active profile.
 
     The registered OAuth client is intentionally preserved: a
-    subsequent `cadrumo config google login` can re-acquire a session
+    subsequent `aeat config google login` can re-acquire a session
     without the operator re-importing the Cloud Console JSON.
     """
     try:

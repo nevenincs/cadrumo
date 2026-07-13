@@ -79,8 +79,8 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.env_scope import ready_clave_settings
+from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice
 from ...user_profile import UserProfileLifecycleRepository

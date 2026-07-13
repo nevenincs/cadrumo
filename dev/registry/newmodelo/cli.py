@@ -20,7 +20,7 @@ app = typer.Typer(
 def _default_manager() -> NewModeloScaffoldManager:
     # cli.py lives at dev/registry/newmodelo/cli.py; parents[3] is the repo root.
     repo_root = Path(__file__).resolve().parents[3]
-    modelos_root = repo_root / "src" / "aeat" / "_data" / "registry" / "aeat" / "modelos"
+    modelos_root = repo_root / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
     return NewModeloScaffoldManager(registry_modelos_root=modelos_root)
 
 
@@ -79,7 +79,7 @@ def scaffold(
     directory tree (casillas, formulas, bindings, completeness_manifest,
     verification_expectations, export_layouts, extraction_profiles,
     application_links, locales) under
-    ``src/aeat/_data/registry/aeat/modelos/<modelo_id>/``. The tree is a
+    ``src/cadrumo/_data/registry/aeat/modelos/<modelo_id>/``. The tree is a
     skeleton only: it does not validate as calc-grade until a contributor
     fills in the 12-item checklist (``python -m dev.registry.newmodelo
     checklist``), printed again below after a successful scaffold.

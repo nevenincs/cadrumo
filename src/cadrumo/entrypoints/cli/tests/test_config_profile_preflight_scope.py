@@ -85,7 +85,7 @@ def test_profile_preflight_names_profile_only_scope_for_m100() -> None:
     assert "readiness_scope\tprofile_fields_only" in result.output
     assert (
         "full_modelo_readiness_command\t"
-        "cadrumo app modelo readiness --modelo 100 --revision-id 2025 --year 2025 --period 0A"
+        "aeat app modelo readiness --modelo 100 --revision-id 2025 --year 2025 --period 0A"
     ) in result.output
 
 

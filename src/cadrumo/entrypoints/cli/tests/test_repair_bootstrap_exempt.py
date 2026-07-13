@@ -1,6 +1,6 @@
 """Roundtrip: every ``repair`` verb runs sessionless on a fresh root.
 
-The repair bootstrap contract makes the ``cadrumo config repair`` family
+The repair bootstrap contract makes the ``aeat config repair`` family
 state-free: every repair verb must run cleanly
 without an active :class:`BucketSession` on a pristine storage root.
 The original disaster welded the escape hatch shut — every documented
@@ -79,7 +79,7 @@ def test_repair_verb_runs_clean_without_session_on_fresh_root(verb: tuple[str, .
 
 
 def test_bare_repair_runs_clean_without_session_on_fresh_root(_fresh_storage_root: Path) -> None:
-    """``cadrumo config repair`` (the bare diagnostic) runs sessionless on a fresh root.
+    """``aeat config repair`` (the bare diagnostic) runs sessionless on a fresh root.
 
     The bare verb walks the full local-environment diagnostic. It must
     complete without an active session — a degraded ``overall`` status
@@ -94,7 +94,7 @@ def test_bare_repair_runs_clean_without_session_on_fresh_root(_fresh_storage_roo
 
 
 def test_integrity_registry_runs_clean_without_session_on_fresh_root(_fresh_storage_root: Path) -> None:
-    """``cadrumo config repair integrity registry`` runs sessionless on a fresh root.
+    """``aeat config repair integrity registry`` runs sessionless on a fresh root.
 
     The opt-in registry-validation verb probes the bundled registry,
     not encrypted state, so it must run without a session regardless

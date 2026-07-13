@@ -86,7 +86,7 @@ def _ensure_help_render_width() -> Iterator[None]:
 
     Tests that exercise the decision branches scope ``sys.argv`` and
     ``os.environ[COLUMNS]`` via the centralized backend helpers in
-    ``aeat.tests.env_scope`` (``scoped_sys_argv`` /
+    ``cadrumo.tests.env_scope`` (``scoped_sys_argv`` /
     ``scoped_env_var``) rather than rebinding process state directly.
     Rich reads the env var from the live environment at render time,
     so a DI-seam that bypassed the os.environ write would misrepresent

@@ -31,7 +31,7 @@ def test_generated_probes_compile_with_canonical_product_and_authority_names() -
 
     assert 'run(["cadrumo", "--version"]' in core
     assert 'run(["aeat", "--version"]' not in core
-    assert "unexpected cadrumo --version output" in core
+    assert "unexpected aeat --version output" in core
     assert "registry/aeat/modelos/036/manifest.toml" in core
     assert "corpus/aeat_official/" in core
     assert "from cadrumo.adapters.outbound.aeat.browser" in browser

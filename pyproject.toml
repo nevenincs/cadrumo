@@ -90,7 +90,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cadrumo = "cadrumo.entrypoints.cli:main"
+aeat = "cadrumo.entrypoints.cli:main"
 # Operator MCP server (the `cadrumo[agent]` capability). Refuses with an install
 # hint when the agent extra is absent, so a bare-core install carries the script
 # without the runtime.

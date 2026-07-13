@@ -1,28 +1,28 @@
-"""Contract tests for Cadrumo's canonical product identity boundary."""
+"""Contract tests for CADRUMO's canonical product identity boundary."""
 
 from __future__ import annotations
 
 import pytest
 
-import cadrumo.core as core_facade
-import cadrumo.core.product_identity as identity_module
-from cadrumo.core import (
+from .. import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     IdentityReferent,
     ProductIdentity,
 )
+from .. import __all__ as core_all
+from .. import product_identity as identity_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_product_identity_matches_the_accepted_external_tuple() -> None:
-    """Every externally projected product name follows the accepted Cadrumo tuple."""
+    """Every externally projected product name follows the accepted CADRUMO tuple."""
     expected = ProductIdentity(
-        display_name="Cadrumo",
+        display_name="CADRUMO",
         python_package="cadrumo",
         distribution="cadrumo",
-        cli_executable="cadrumo",
+        cli_executable="aeat",
         repository="cadrumo",
         mcp_server="cadrumo",
         mcp_executable="cadrumo-mcp",
@@ -45,7 +45,7 @@ def test_product_identity_is_immutable() -> None:
         PRODUCT_IDENTITY.display_name = "Changed"  # type: ignore[misc]
 
     assert PRODUCT_IDENTITY is original
-    assert PRODUCT_IDENTITY.display_name == "Cadrumo"
+    assert PRODUCT_IDENTITY.display_name == "CADRUMO"
 
 
 def test_identity_referent_vocabulary_is_closed() -> None:
@@ -63,11 +63,11 @@ def test_identity_referent_vocabulary_is_closed() -> None:
 
 def test_core_facade_reexports_the_exact_identity_objects() -> None:
     """The public facade and defining module expose one shared authority."""
-    assert core_facade.PRODUCT_IDENTITY is identity_module.PRODUCT_IDENTITY
-    assert core_facade.ProductIdentity is identity_module.ProductIdentity
-    assert core_facade.IdentityReferent is identity_module.IdentityReferent
-    assert core_facade.AEAT_AUTHORITY_SHORT_NAME is identity_module.AEAT_AUTHORITY_SHORT_NAME
-    assert set(identity_module.__all__) <= set(core_facade.__all__)
+    assert PRODUCT_IDENTITY is identity_module.PRODUCT_IDENTITY
+    assert ProductIdentity is identity_module.ProductIdentity
+    assert IdentityReferent is identity_module.IdentityReferent
+    assert AEAT_AUTHORITY_SHORT_NAME is identity_module.AEAT_AUTHORITY_SHORT_NAME
+    assert set(identity_module.__all__) <= set(core_all)
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:
@@ -78,7 +78,7 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "PRODUCT_IDENTITY",
         "IdentityReferent",
         "ProductIdentity",
-    } <= set(core_facade.__all__)
-    assert not hasattr(core_facade, "AEAT_PRODUCT_IDENTITY")
-    assert not hasattr(core_facade, "AEAT_PRODUCT")
-    assert not hasattr(core_facade, "AEAT_CLI_EXECUTABLE")
+    } <= set(core_all)
+    assert "AEAT_PRODUCT_IDENTITY" not in core_all
+    assert "AEAT_PRODUCT" not in core_all
+    assert "AEAT_CLI_EXECUTABLE" not in core_all

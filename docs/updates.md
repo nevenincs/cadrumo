@@ -5,46 +5,46 @@ download links, event notes, and support routes. The banner and footer point her
 so important project status is available from every documentation page.
 
 ```{important}
-`aeat` is pre-alpha software. Treat every release note as potentially relevant
+Cadrumo is pre-alpha software. Treat every release note as potentially relevant
 before upgrading, and verify filing deadlines, forms, and submission rules with
-official AEAT sources before you file.
+the Agencia Estatal de Administración Tributaria (AEAT) before you file.
 ```
 
 ::::{grid} 1 2 2 2
 :gutter: 3
-:class-container: aeat-route-grid
+:class-container: cadrumo-route-grid
 
 :::{grid-item-card} Latest download
-:link: https://github.com/wgergely/aeat/releases/latest
+:link: https://github.com/cadrumo/cadrumo/releases/latest
 :link-type: url
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Start with the latest release when a packaged download is available. Record the
 installed version before preparing any filing records.
 :::
 
 :::{grid-item-card} Critical updates
-:link: https://github.com/wgergely/aeat/releases
+:link: https://github.com/cadrumo/cadrumo/releases
 :link-type: url
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use release notes to check breaking changes, migration notes, supported workflows,
 and known limitations before changing versions.
 :::
 
 :::{grid-item-card} Report an issue
-:link: https://github.com/wgergely/aeat/issues
+:link: https://github.com/cadrumo/cadrumo/issues
 :link-type: url
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Open an issue for defects, confusing documentation, missing workflow coverage, or
 release notes that need clarification.
 :::
 
 :::{grid-item-card} Source repository
-:link: https://github.com/wgergely/aeat
+:link: https://github.com/cadrumo/cadrumo
 :link-type: url
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use the repository for source code, development history, project metadata, and
 links to release and issue activity.
@@ -54,12 +54,12 @@ links to release and issue activity.
 
 ## Current status
 
-`aeat` is local-first, pre-alpha software for preparing Spanish tax filing
+Cadrumo is local-first, pre-alpha software for preparing Spanish tax filing
 records. It does not submit declarations for you, does not replace official AEAT
 tools, and is not affiliated with AEAT.
 
-Expect breaking changes while the CLI workflows, generated documentation, and
-modelo coverage are still being hardened. Before relying on a version for a
+Expect breaking changes while the command-line interface (CLI) workflows,
+generated documentation, and modelo coverage are still being hardened. Before relying on a version for a
 filing period, read the release notes and keep a record of the installed version
 used to prepare the export.
 

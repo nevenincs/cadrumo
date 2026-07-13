@@ -1,4 +1,4 @@
-"""Fast-path proof: ``cadrumo --version`` and ``cadrumo --help`` never touch state.
+"""Fast-path proof: ``aeat --version`` and ``aeat --help`` never touch state.
 
 The fast-path contract closes the cold-start 10-minute hang: the
 ``--version`` and ``--help`` surfaces must return without reading
@@ -74,7 +74,7 @@ def _fastest_ms(args: list[str], *, runs: int = 5) -> tuple[float, Result]:
 
 
 def test_version_completes_under_budget_on_clean_root(_clean_storage_root: Path) -> None:
-    """``cadrumo --version`` returns inside the fast-path budget."""
+    """``aeat --version`` returns inside the fast-path budget."""
 
     _warm()
     elapsed_ms, result = _fastest_ms(["--version"])
@@ -84,7 +84,7 @@ def test_version_completes_under_budget_on_clean_root(_clean_storage_root: Path)
 
 
 def test_help_completes_under_budget_on_clean_root(_clean_storage_root: Path) -> None:
-    """``cadrumo --help`` returns inside the fast-path budget."""
+    """``aeat --help`` returns inside the fast-path budget."""
 
     _warm()
     elapsed_ms, result = _fastest_ms(["--help"])
@@ -93,7 +93,7 @@ def test_help_completes_under_budget_on_clean_root(_clean_storage_root: Path) ->
 
 
 def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
-    """``cadrumo --version`` writes nothing under the storage root.
+    """``aeat --version`` writes nothing under the storage root.
 
     A registry parse or a state read would create a database file, a
     buckets directory, or an active-profile pointer as a side effect.
@@ -109,7 +109,7 @@ def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
 
 
 def test_help_does_not_provision_storage(_clean_storage_root: Path) -> None:
-    """``cadrumo --help`` writes nothing under the storage root."""
+    """``aeat --help`` writes nothing under the storage root."""
 
     _warm()
     result = invoke_cached_cli(["--help"])

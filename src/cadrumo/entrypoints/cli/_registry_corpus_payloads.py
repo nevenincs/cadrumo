@@ -28,7 +28,7 @@ from ._schemas import OutputSchema, register_schema
 
 @register_schema("registry.citations.list")
 class CitationListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry citations list``.
+    """JSON envelope for ``aeat app registry citations list``.
 
     Mirrors :class:`RegistryCitationsListReport`:
     reviewed legal-reference rows are projected as
@@ -50,7 +50,7 @@ class CitationListResult(OutputSchema):
 
 @register_schema("registry.citations.view")
 class CitationShowResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry citations view``.
+    """JSON envelope for ``aeat app registry citations view``.
 
     Validates :class:`RegistryCitationShowReport`
     under the CLI command path ``registry.citations.view``. The inner
@@ -71,7 +71,7 @@ class CitationShowResult(OutputSchema):
 
 @register_schema("registry.citations.verify")
 class CitationVerifyResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry citations verify``.
+    """JSON envelope for ``aeat app registry citations verify``.
 
     Mirrors
     :class:`RegistryCitationsVerificationReport`.
@@ -94,7 +94,7 @@ class CitationVerifyResult(OutputSchema):
 
 @register_schema("registry.manuals.list")
 class ManualListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry manuals list``.
+    """JSON envelope for ``aeat app registry manuals list``.
 
     Mirrors :class:`RegistryManualsListReport`.
     ``parts`` contains discovered
@@ -117,7 +117,7 @@ class ManualListResult(OutputSchema):
 
 @register_schema("registry.manuals.view")
 class ManualShowResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry manuals view``.
+    """JSON envelope for ``aeat app registry manuals view``.
 
     Mirrors :class:`RegistryManualShowReport` for
     one local manual part. When extracted structure is available, ``section``
@@ -145,7 +145,7 @@ class ManualShowResult(OutputSchema):
 
 @register_schema("registry.manuals.rules")
 class ManualRulesListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry manuals rules``.
+    """JSON envelope for ``aeat app registry manuals rules``.
 
     Mirrors :class:`RegistryManualRulesReport`.
     ``rules`` contains
@@ -172,7 +172,7 @@ class ManualRulesListResult(OutputSchema):
 
 @register_schema("registry.manuals.verify")
 class ManualVerifyResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry manuals verify``.
+    """JSON envelope for ``aeat app registry manuals verify``.
 
     Mirrors :class:`RegistryManualVerificationReport`
     after manual-corpus validation and

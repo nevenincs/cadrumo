@@ -3,7 +3,7 @@
 Each result model is a strict
 :class:`OutputSchema` subclass registered under a
 stable ``command`` key so the ``_emit_envelope`` spine and the JSON-schema
-conformance gate bind the ``cadrumo app ledger prorrata`` leaves to a schema.
+conformance gate bind the ``aeat app ledger prorrata`` leaves to a schema.
 
 The register the operator writes here (regime election, differentiated-sector
 partition) is the ingress that makes the LIVA art. 106 especial apportionment and
@@ -58,17 +58,17 @@ class ProrrataElectResult(OutputSchema):
 
 @register_schema("ledger.prorrata.elect_especial")
 class ProrrataElectEspecialResult(ProrrataElectResult):
-    """JSON envelope for ``cadrumo app ledger prorrata elect-especial``."""
+    """JSON envelope for ``aeat app ledger prorrata elect-especial``."""
 
 
 @register_schema("ledger.prorrata.elect_general")
 class ProrrataElectGeneralResult(ProrrataElectResult):
-    """JSON envelope for ``cadrumo app ledger prorrata elect-general``."""
+    """JSON envelope for ``aeat app ledger prorrata elect-general``."""
 
 
 @register_schema("ledger.prorrata.declare_sector")
 class ProrrataDeclareSectorResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger prorrata declare-sector``."""
+    """JSON envelope for ``aeat app ledger prorrata declare-sector``."""
 
     bucket_id: str
     sector: SectorDefinitionPayload
@@ -77,7 +77,7 @@ class ProrrataDeclareSectorResult(OutputSchema):
 
 @register_schema("ledger.prorrata.list")
 class ProrrataListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger prorrata list``."""
+    """JSON envelope for ``aeat app ledger prorrata list``."""
 
     bucket_id: str
     entries: list[ProrrataEntryPayload]

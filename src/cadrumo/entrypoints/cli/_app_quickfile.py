@@ -1,4 +1,4 @@
-"""CLI command for ``cadrumo app quickfile`` — the one-command modelo filing chain.
+"""CLI command for ``aeat app quickfile`` — the one-command modelo filing chain.
 
 Drives the full local filing lifecycle for one ``(modelo, year, period)`` target
 in a single verb: it resolves readiness, resumes or creates the work unit,
@@ -112,7 +112,7 @@ def quickfile(
     if ctx.invoked_subcommand is not None:
         return
     activate_subcommand_output_language(ctx, output_language)
-    # ``cadrumo app quickfile`` is an ``invoke_without_command`` group, so the CLI
+    # ``aeat app quickfile`` is an ``invoke_without_command`` group, so the CLI
     # root treats it as a bare-subgroup introspection surface and skips the
     # active-bucket session activation it performs for leaf verbs. This command
     # DOES mutate profile-bound storage (calculate + verify persist), so it
@@ -206,7 +206,7 @@ def _quickfile_notices(result) -> list[Notice]:
 
     A refused verify additionally re-uses the verification report's own findings
     notices so the operator sees the exact blocking findings and their next
-    actions, identical to what ``cadrumo app modelo work verify`` would surface.
+    actions, identical to what ``aeat app modelo work verify`` would surface.
     """
     from ...application.modelo import QuickfileStage, QuickfileStageStatus
 

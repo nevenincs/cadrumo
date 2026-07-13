@@ -91,7 +91,7 @@ class TestBuildIntegrityReport:
     def test_clean_install_reports_ok(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
             _save_rows("cadrumo.workflow", 5, tag="a")
-            _save_rows("aeat.profile.bucket", 3, tag="a")
+            _save_rows("cadrumo.profile.bucket", 3, tag="a")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         assert report.readable_total == 8
         assert report.unreadable_total == 0
@@ -106,7 +106,7 @@ class TestBuildIntegrityReport:
             _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
             _save_rows("cadrumo.workflow", 5, tag="current")
-            _save_rows("aeat.profile.bucket", 3, tag="current")
+            _save_rows("cadrumo.profile.bucket", 3, tag="current")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         workflow = next(ns for ns in report.namespaces if ns.namespace == "cadrumo.workflow")
         assert workflow.readable == 5
@@ -120,15 +120,15 @@ class TestBuildIntegrityReport:
             _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
             _save_rows("cadrumo.workflow", 5, tag="current")
-            _save_rows("aeat.profile.bucket", 3, tag="current")
+            _save_rows("cadrumo.profile.bucket", 3, tag="current")
             report = build_repair_integrity_report(
-                namespace="aeat.profile.bucket",
+                namespace="cadrumo.profile.bucket",
                 repository=SecureObjectRepository(),
             )
         # Filtering to the clean namespace excludes the workflow
         # namespace's stale rows entirely.
         assert len(report.namespaces) == 1
-        assert report.namespaces[0].namespace == "aeat.profile.bucket"
+        assert report.namespaces[0].namespace == "cadrumo.profile.bucket"
         assert report.unreadable_total == 0
         assert report.check.status == "ok"
 

@@ -21,12 +21,12 @@ You need:
   encrypted storage in a session; for a non-interactive shell, set
   `CADRUMO_SECRET_PASSPHRASE`.
 
-The CLI emits its help and messages in Spanish; the English text on this page
+The `cadrumo` command-line interface (CLI) emits its help and messages in Spanish; the English text on this page
 describes what each step does.
 
 ## Two ways to hold an invoice
 
-`aeat` keeps invoices in two separate places, for two different jobs.
+Cadrumo keeps invoices in two separate places, for two different jobs.
 
 - **The invoice record** (`aeat app ledger invoice ...`) is your bookkeeping
   ledger of who owes you and whom you owe. Use it to record, list, and edit

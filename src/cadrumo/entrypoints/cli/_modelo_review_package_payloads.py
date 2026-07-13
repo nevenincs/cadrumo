@@ -1,8 +1,8 @@
 """Review-package build/verify CLI payload schemas.
 
 Strict :class:`~entrypoints.cli._schemas.OutputSchema` subclasses registered
-through :func:`~entrypoints.cli._schemas.register_schema` for the ``cadrumo app
-modelo review-package build`` and ``cadrumo app modelo review-package verify``
+through :func:`~entrypoints.cli._schemas.register_schema` for the ``aeat app
+modelo review-package build`` and ``aeat app modelo review-package verify``
 verbs. Kept in its own module (mirroring the ``_modelo_aux_payloads`` split
 for the evidence-bundle audit payloads) so the review-package CLI surface has
 one dedicated payload home.

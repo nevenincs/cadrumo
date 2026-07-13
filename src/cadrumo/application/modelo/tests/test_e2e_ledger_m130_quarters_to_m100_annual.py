@@ -84,9 +84,9 @@ from ....domain.transactions import (
 )
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.env_scope import ready_clave_settings
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ....tests.env_scope import ready_clave_settings
 from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (

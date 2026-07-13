@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``cadrumo app diagnostics llm-usage``.
+"""Real-behavior CLI tests for ``aeat app diagnostics llm-usage``.
 
 Exercises the verb end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.build_llm_usage_report`

@@ -211,7 +211,7 @@ run([sys.executable, "-m", "pip", "check"])
 
 version = run(["cadrumo", "--version"], env=clean_product_env())
 if "cadrumo " not in version.stdout:
-    raise SystemExit(f"unexpected cadrumo --version output: {version.stdout!r}")
+    raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
 root = files("cadrumo").joinpath("_data")
 missing = []

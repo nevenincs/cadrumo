@@ -74,7 +74,7 @@ aeat config profile edit <profile-name> --quiet --activity "consultoria"
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
 guess a regime or a start date.
 
-## Record a Modelo 036 filing done outside aeat
+## Record a Modelo 036 filing done outside Cadrumo
 
 If you file Modelo 036 in AEAT's sede, record that local fact separately:
 

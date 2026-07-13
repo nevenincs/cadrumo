@@ -3,7 +3,7 @@
 Persona: a Spain-resident autonoma who invoices UK (GBP) and US (USD)
 clients through Revolut and needs the foreign income plus its FX
 conversion to land correctly in the Spanish modelos. This suite drives
-the real ``cadrumo app ledger`` CLI against the operator-testimonial corpus
+the real ``aeat app ledger`` CLI against the operator-testimonial corpus
 (``revolut-multi.csv`` carries the GBP/USD/EUR rows) and records, as
 durable behaviour assertions, exactly what the operator can and cannot
 SEE about currency and FX at import / list / review / export time.

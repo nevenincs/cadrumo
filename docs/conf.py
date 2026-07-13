@@ -236,7 +236,7 @@ intersphinx_mapping = {
 }
 _SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"
 if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
-    intersphinx_mapping["aeat-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
+    intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
 
 # Offline-hermetic gate: the docs-check build sets CADRUMO_DOCS_OFFLINE to keep only
@@ -251,29 +251,29 @@ if os.environ.get("CADRUMO_DOCS_OFFLINE"):
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "Cadrumo - local Spanish tax-file automation"
+html_title = "Cadrumo - local Spanish tax preparation"
 html_short_title = "Cadrumo"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
-html_favicon = "_static/aeat-favicon.svg"
+html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
-html_css_files = ["aeat-docs.css"]
-html_js_files = ["aeat-docs.js"]
+html_css_files = ["cadrumo-docs.css"]
+html_js_files = ["cadrumo-docs.js"]
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
 html_sidebars = {
     "**": [
-        "sidebar/aeat-search.html",
+        "sidebar/cadrumo-search.html",
         "sidebar/scroll-start.html",
         "sidebar/navigation.html",
         "sidebar/scroll-end.html",
     ],
 }
 html_theme_options = {
-    "light_logo": "aeat-mark-light.svg",
-    "dark_logo": "aeat-mark-dark.svg",
+    "light_logo": "cadrumo-mark-light.svg",
+    "dark_logo": "cadrumo-mark-dark.svg",
     "sidebar_hide_name": True,
-    "announcement": "aeat-site-broadcast",
+    "announcement": "cadrumo-site-broadcast",
     "light_css_variables": {
         # Cadrumo brand tokens (Figma / marketing frontend styles.css):
         # warm paper neutrals — page #faf8f4, surface #f1eee7, border
@@ -379,18 +379,21 @@ html_theme_options = {
 }
 
 html_context = {
-    "aeat_repository_url": _REPOSITORY_URL,
-    "aeat_nav": [
+    "cadrumo_repository_url": _REPOSITORY_URL,
+    "cadrumo_nav": [
         {"label": "Guides", "doc": "how-to/index"},
         {"label": "Tutorial", "doc": "tutorials/index"},
         {"label": "CLI reference", "doc": "cli/index"},
         {"label": "How it works", "doc": "explanation/index"},
         {"label": "API", "doc": "api/cadrumo"},
     ],
-    "aeat_broadcasts": [
+    "cadrumo_broadcasts": [
         {
             "label": "Pre-alpha",
-            "message": "Breaking changes are expected. Verify official AEAT deadlines before filing.",
+            "message": (
+                "Breaking changes are expected. Verify Agencia Estatal de Administración "
+                "Tributaria (AEAT) deadlines before filing."
+            ),
             "links": [
                 {"label": "Updates", "doc": "updates"},
                 {"label": "Latest download", "url": _LATEST_RELEASE_URL},
@@ -398,7 +401,7 @@ html_context = {
             ],
         }
     ],
-    "aeat_footer_groups": [
+    "cadrumo_footer_groups": [
         {
             "title": "Stay current",
             "links": [
@@ -424,8 +427,9 @@ html_context = {
             ],
         },
     ],
-    "aeat_footer_note": (
-        "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with AEAT, "
+    "cadrumo_footer_note": (
+        "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with the "
+        "Agencia Estatal de Administración Tributaria (AEAT), "
         "and never replaces official AEAT tools or professional review."
     ),
 }
@@ -435,7 +439,7 @@ ogp_site_name = "Cadrumo documentation"
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"
-ogp_image = "_static/aeat-mark-light.svg"
+ogp_image = "_static/cadrumo-mark-light.svg"
 
 # ── Syntax highlighting ─────────────────────────────────────────────────────
 # Bare code fences are overwhelmingly operator command transcripts; lexing them
@@ -677,12 +681,10 @@ nitpick_ignore_regex = [
     # ``BindingId``, ... ) are PEP 695 aliases, not documentable classes, so a
     # ``:class:`` reference to their registry path has no py:class target. List
     # the aliases explicitly so a future real ``*Id`` class cannot be hidden.
-    # Retain the former root only for historical source docstrings; Cadrumo is
-    # the current product import root.
     # ``ModeloDetailRow`` is a re-exported alias referenced bare.
     (
         r"py:.*",
-        r"^(?:(?:aeat|cadrumo)\.)?domain\.calculations\.registry\.(?:"
+        r"^(?:cadrumo\.)?domain\.calculations\.registry\.(?:"
         r"ApplicationLinkId|BindingId|CasillaId|ConstructId|CrossReferenceId|"
         r"DeadlineWindowId|DependencyClassificationId|ExportFieldId|ExportLayoutId|"
         r"ExtractionProfileId|FormulaId|LegalRefId|ModeloId|OracleId|ParameterId|"

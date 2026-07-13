@@ -25,7 +25,7 @@ Membership criteria:
 
 The registry is referenced from the CLI root callback at active-gate
 time. The matching is full-path-prefix: a request to
-``cadrumo config profile create alice`` matches the exempt entry
+``aeat config profile create alice`` matches the exempt entry
 ``config profile create``.
 """
 
@@ -85,7 +85,7 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
     :data:`BOOTSTRAP_EXEMPT_VERB_PATHS`.
     The leading ``cadrumo`` is elided; ``verb_path`` is the dispatched subcommand
     chain as Typer reports it (e.g. ``"config profile create"`` for the full
-    operator invocation ``cadrumo config profile create alice``).
+    operator invocation ``aeat config profile create alice``).
 
     Args:
         verb_path: Space-separated verb path or ``None`` for the

@@ -28,7 +28,7 @@ result. It does not save anything. Use `antigravity` or `codex` instead of
 
 ## What the command does
 
-`aeat` loads one transaction from the
+Cadrumo loads one transaction from the
 [active profile](profile-setup.md#what-the-active-profile-means) ledger and
 sends that row to the selected local provider CLI. The provider suggests:
 

@@ -197,7 +197,7 @@ class EvidenceValidator:
             raise OSError(f"source {source.id!r} escapes source root")
         if not source_path.is_file():
             # A split install sheds the corpus source binaries from the runtime
-            # tree; the aeat_data companion supplies the same bytes at the
+            # tree; the cadrumo_data companion supplies the same bytes at the
             # mirrored relative path, keeping required_text verification
             # byte-identical to a full checkout.
             companion_path = resolve_companion_binary(*source.corpus_path.split("/"))

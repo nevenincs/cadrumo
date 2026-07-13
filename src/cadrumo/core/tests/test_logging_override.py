@@ -26,9 +26,9 @@ def test_default_log_file_path_observes_override(tmp_path: Path) -> None:
 
 def test_default_log_file_path_falls_back_to_default_without_override() -> None:
     """When no override is active the helper returns the storage-root-
-    derived default path (``<cadrumo_local_storage_root>/logs/aeat.log``),
+    derived default path (``<cadrumo_local_storage_root>/logs/cadrumo.log``),
     so the diagnostic log stays isolated per workspace."""
 
     resolved = default_log_file_path()
-    assert resolved.name == "aeat.log"
+    assert resolved.name == "cadrumo.log"
     assert resolved.parent.name == "logs"

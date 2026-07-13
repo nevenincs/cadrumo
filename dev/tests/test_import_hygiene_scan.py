@@ -68,16 +68,16 @@ def test_dunder_all_assignment_value_ignores_bare_annotation_with_no_value() -> 
 
 
 def test_discover_facades_registers_annotated_all_init_as_a_facade() -> None:
-    """``aeat.core`` declares ``__all__`` in the annotated form and must be discovered.
+    """``cadrumo.core`` declares ``__all__`` in the annotated form and must be discovered.
 
-    Exercises the real ``discover_facades`` walk over the actual ``src/aeat``
-    tree (no fixtures, no mocks) so the regression -- ``aeat.core`` silently
+    Exercises the real ``discover_facades`` walk over the actual ``src/cadrumo``
+    tree (no fixtures, no mocks) so the regression -- ``cadrumo.core`` silently
     absent from the facade set -- is caught against the live source tree.
     """
     facades = discover_facades()
 
-    assert "aeat.core" in facades
-    core_facade = facades["aeat.core"]
+    assert "cadrumo.core" in facades
+    core_facade = facades["cadrumo.core"]
     assert core_facade.has_real_all is True
     assert "Modelo" in core_facade.all_names
     assert "CasillaId" in core_facade.all_names
@@ -86,13 +86,13 @@ def test_discover_facades_registers_annotated_all_init_as_a_facade() -> None:
 def test_find_shim_modules_excludes_dunder_main_entrypoint_modules() -> None:
     """A standard ``__main__.py`` entrypoint module must never be classified as a shim.
 
-    Exercises the real classifier against ``src/aeat/locales/__main__.py`` --
+    Exercises the real classifier against ``src/cadrumo/locales/__main__.py`` --
     the live module whose ``from .cli import app`` plus
     ``if __name__ == "__main__": app()`` shape previously false-positived as a
     shim (zero real defs, one import statement) before the classifier learned
     to skip ``__main__.py`` modules as the standard entry-point pattern.
     """
-    main_path = REPO_ROOT / "src" / "aeat" / "locales" / "__main__.py"
+    main_path = REPO_ROOT / "src" / "cadrumo" / "locales" / "__main__.py"
     assert main_path.is_file()
 
     shims = find_shim_modules([main_path], facades={})
@@ -107,7 +107,7 @@ def test_find_shim_modules_still_flags_a_non_main_pure_reexport_module() -> None
     every import-only module rather than only the ``__main__.py`` entrypoint
     shape.
     """
-    reexport_path = REPO_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_schemas.py"
+    reexport_path = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_schemas.py"
     assert reexport_path.is_file()
 
     shims = find_shim_modules([reexport_path], facades={})
@@ -132,15 +132,15 @@ def test_find_underscore_in_all_violations_flags_a_private_named_export() -> Non
     exercise the finder's own logic).
     """
     facades = {
-        "aeat.fixture_pkg": FacadeInfo(
-            package="aeat.fixture_pkg",
-            path=REPO_ROOT / "src" / "aeat" / "fixture_pkg" / "__init__.py",
+        "cadrumo.fixture_pkg": FacadeInfo(
+            package="cadrumo.fixture_pkg",
+            path=REPO_ROOT / "src" / "cadrumo" / "fixture_pkg" / "__init__.py",
             all_names=["PublicThing", "_private_helper", "__all__"],
             has_real_all=True,
         ),
-        "aeat.clean_pkg": FacadeInfo(
-            package="aeat.clean_pkg",
-            path=REPO_ROOT / "src" / "aeat" / "clean_pkg" / "__init__.py",
+        "cadrumo.clean_pkg": FacadeInfo(
+            package="cadrumo.clean_pkg",
+            path=REPO_ROOT / "src" / "cadrumo" / "clean_pkg" / "__init__.py",
             all_names=["PublicOnly"],
             has_real_all=True,
         ),
@@ -148,15 +148,15 @@ def test_find_underscore_in_all_violations_flags_a_private_named_export() -> Non
 
     violations = find_underscore_in_all_violations(facades)
 
-    assert [(v.package, v.name) for v in violations] == [("aeat.fixture_pkg", "_private_helper")]
+    assert [(v.package, v.name) for v in violations] == [("cadrumo.fixture_pkg", "_private_helper")]
 
 
 def test_find_underscore_in_all_violations_ignores_facades_without_real_all() -> None:
     """A facade with no real ``__all__`` (empty / absent) yields no violations, even if named."""
     facades = {
-        "aeat.no_all_pkg": FacadeInfo(
-            package="aeat.no_all_pkg",
-            path=REPO_ROOT / "src" / "aeat" / "no_all_pkg" / "__init__.py",
+        "cadrumo.no_all_pkg": FacadeInfo(
+            package="cadrumo.no_all_pkg",
+            path=REPO_ROOT / "src" / "cadrumo" / "no_all_pkg" / "__init__.py",
             all_names=["_would_be_flagged_if_real"],
             has_real_all=False,
         ),
@@ -166,13 +166,13 @@ def test_find_underscore_in_all_violations_ignores_facades_without_real_all() ->
 
 
 def test_live_tree_has_zero_underscore_in_all_violations() -> None:
-    """The live ``src/aeat`` tree must carry zero underscore-named ``__all__`` entries.
+    """The live ``src/cadrumo`` tree must carry zero underscore-named ``__all__`` entries.
 
     Real-behavior regression pinning the disposal outcome: every previously
     private-named facade export was either promoted to a public name and its
     consumers swept, or dropped from ``__all__``. This is the scanner-level
     proof that closes the underscore-in-``__all__`` finding; the pytest gate
-    (``src/aeat/tests/test_import_hygiene_gate.py``) is the CI-wired
+    (``src/cadrumo/tests/test_import_hygiene_gate.py``) is the CI-wired
     counterpart.
     """
     facades = discover_facades()

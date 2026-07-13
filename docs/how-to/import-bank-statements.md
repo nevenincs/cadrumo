@@ -13,7 +13,7 @@ the active profile.
 
 You need:
 
-- a working `aeat` command
+- a working `cadrumo` command
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
 - a master-key passphrase. The tool prompts for it the first time it opens your
   encrypted storage in a session; for a non-interactive shell, set
@@ -45,14 +45,14 @@ negative amount is an expense. Save this as `statement.csv` and import it with
 
 ## Preview an import
 
-Run a dry run first. A dry run shows what `aeat` would import and saves no
+Run a dry run first. A dry run shows what Cadrumo would import and saves no
 rows:
 
 ```bash
 aeat app ledger import ./statement.csv --provider auto --dry-run
 ```
 
-`--provider auto` asks `aeat` to detect the statement format. The recognized
+`--provider auto` asks Cadrumo to detect the statement format. The recognized
 providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`, `excel`, `n26`, `pdf`, and
 `pdf-n26`. If detection picks the wrong format, replace `auto` with the exact
 provider - run `aeat app ledger import --help` or see the

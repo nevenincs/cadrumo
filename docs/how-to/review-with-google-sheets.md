@@ -80,7 +80,7 @@ new spreadsheet.
 
 ## Compute casilla values from the Sheet
 
-Run `compute` when you want `aeat` to calculate casilla values from the edits
+Run `compute` when you want Cadrumo to calculate casilla values from the edits
 in the Sheet. It pulls the operator-edited cells, runs the calculation engine
 over them, and displays the result. It persists nothing.
 

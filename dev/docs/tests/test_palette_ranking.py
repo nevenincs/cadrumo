@@ -3,8 +3,8 @@
 The prorrata smoke gate proves the index + injection + ``pf.search`` surface a
 concept card; this gate proves the palette's COMPOSE LADDER on top of it -- the
 exact behaviour an operator sees when they press Ctrl-K and type. It drives the
-real shipped ``docs/_static/aeat-docs.js`` (not a re-implementation): opens the
-palette, types a query, and reads the rendered ``.aeat-palette-item`` rows.
+real shipped ``docs/_static/cadrumo-docs.js`` (not a re-implementation): opens the
+palette, types a query, and reads the rendered ``.cadrumo-palette-item`` rows.
 
 It locks in two invariants found and fixed during the corpus-quality drive
 (audit ``2026-06-15-docs-terminology-search``):
@@ -51,8 +51,8 @@ _DOCS = _REPO_ROOT / "docs"
 _TRIGGER_PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>palette</title></head>
 <body>
-<button data-aeat-search data-aeat-search-url="search.html">Search</button>
-<script src="_static/aeat-docs.js"></script>
+<button data-cadrumo-search data-cadrumo-search-url="search.html">Search</button>
+<script src="_static/cadrumo-docs.js"></script>
 </body></html>
 """
 
@@ -76,7 +76,7 @@ def _build_glossary_site(out: Path) -> Path:
     src.mkdir(parents=True)
     generate_glossary_reference(src)
     (src / "conf.py").write_text(
-        'project = "aeat-palette"\nextensions = []\nhtml_theme = "basic"\n',
+        'project = "cadrumo-palette"\nextensions = []\nhtml_theme = "basic"\n',
         encoding="utf-8",
     )
     (src / "index.rst").write_text(
@@ -115,7 +115,7 @@ def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
 
     static = build / "_static"
     static.mkdir(parents=True, exist_ok=True)
-    for name in ("aeat-docs.js", "aeat-docs.css"):
+    for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
     (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
     (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
@@ -138,20 +138,20 @@ def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
             page.goto(f"{base}/palette.html", wait_until="networkidle")
             # Open the palette and type the query through the real shipped JS.
             page.keyboard.press("Control+k")
-            page.locator(".aeat-palette-input").fill("iva")
+            page.locator(".cadrumo-palette-input").fill("iva")
             # Wait until the async Pagefind cards have painted concept rows.
             page.wait_for_function(
-                "document.querySelectorAll('.aeat-palette-item--concept .aeat-palette-item-title').length > 0",
+                "document.querySelectorAll('.cadrumo-palette-item--concept .cadrumo-palette-item-title').length > 0",
                 timeout=15000,
             )
             titles = page.eval_on_selector_all(
-                ".aeat-palette-item--concept .aeat-palette-item-title",
+                ".cadrumo-palette-item--concept .cadrumo-palette-item-title",
                 "els => els.map(e => e.textContent.trim())",
             )
             # Also read the very first rendered row (any kind) to prove the
             # concept leads the whole ladder, not just its own tier.
             first_row = page.eval_on_selector_all(
-                ".aeat-palette-item .aeat-palette-item-title",
+                ".cadrumo-palette-item .cadrumo-palette-item-title",
                 "els => els.length ? els[0].textContent.trim() : ''",
             )
             browser.close()

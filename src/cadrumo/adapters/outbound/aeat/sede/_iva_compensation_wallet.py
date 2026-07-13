@@ -243,7 +243,7 @@ async def _open_authenticated_surface(
     target_year: int,
     target_period: Period,
 ) -> bool:
-    """Open an AEAT app through the selector so Cl@ve app-local state is minted."""
+    """Open an aeat app through the selector so Cl@ve app-local state is minted."""
     _assert_read_http("GET", selector_url)
     await browser_session.navigate(page, selector_url)
     await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)

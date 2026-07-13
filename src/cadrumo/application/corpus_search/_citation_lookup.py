@@ -20,7 +20,7 @@ See Also:
     :func:`~application.corpus_search.search_corpus`
         Exact citation ids short-circuit through this lookup before ranking.
     :func:`~entrypoints.mcp._resources._read_corpus_resource`
-        ``aeat://corpus`` resource reader that accepts citation ids and
+        ``cadrumo://corpus`` resource reader that accepts citation ids and
         retrieval ``corpus_ref`` values.
 """
 
@@ -94,7 +94,7 @@ class CitationLookup:
     def resolve_corpus_text(self, ref: str) -> str:
         """Resolve a citation id OR a corpus_ref (``path#anchor``) to verbatim text.
 
-        The ``aeat://corpus/{ref}`` resource accepts either form: a retrieval
+        The ``cadrumo://corpus/{ref}`` resource accepts either form: a retrieval
         hit's ``corpus_ref`` or a bare citation id. A known citation id routes
         through :meth:`resolve`; otherwise ``ref`` is read as a corpus path and
         anchor.

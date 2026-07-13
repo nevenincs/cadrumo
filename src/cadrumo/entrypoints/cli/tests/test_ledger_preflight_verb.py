@@ -1,4 +1,4 @@
-"""CLI surface tests for ``cadrumo app ledger preflight``."""
+"""CLI surface tests for ``aeat app ledger preflight``."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def test_preflight_empty_catalogue_is_ready() -> None:
     assert "issues\t0" in result.output
     assert "ready\ttrue" in result.output
     assert "advisory\tempty_ledger" in result.output
-    assert "cadrumo app ledger add --help" in result.output
-    assert "cadrumo app ledger import --help" in result.output
+    assert "aeat app ledger add --help" in result.output
+    assert "aeat app ledger import --help" in result.output
 
 
 def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
@@ -67,7 +67,7 @@ def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
     notice = envelope["notices"][0]
     assert notice["severity"] == "warning"
     assert notice["code"] == "ledger.preflight.empty_period"
-    assert notice["suggestion"] == "cadrumo app ledger add --help; cadrumo app ledger import --help"
+    assert notice["suggestion"] == "aeat app ledger add --help; aeat app ledger import --help"
     assert notice["context"] == {"period": "1T", "year": "2026"}
 
 

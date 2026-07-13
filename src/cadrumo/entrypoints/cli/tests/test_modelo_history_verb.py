@@ -1,4 +1,4 @@
-"""CLI surface tests for ``cadrumo app modelo history``.
+"""CLI surface tests for ``aeat app modelo history``.
 
 Closes the contract history-test gap: every verb in the
 link/check/preflight/reconcile/history five-verb backend-wired set now
@@ -95,7 +95,7 @@ def _active_bucket_id() -> str:
 
 
 def test_history_returns_empty_envelope_for_modelo_with_no_events() -> None:
-    """`cadrumo app modelo history --modelo 303` against an empty bucket
+    """`aeat app modelo history --modelo 303` against an empty bucket
     surfaces a typed envelope with ``count=0`` and no events."""
 
     result = invoke_cached_cli(["app", "modelo", "history", "--modelo", "303"])

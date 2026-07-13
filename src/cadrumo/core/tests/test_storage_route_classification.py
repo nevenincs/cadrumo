@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from .. import BucketPointer, write_pointer
+from .._config_state_root import FormerProductStateError
 from ..config import (
     Settings,
     StorageRouteKind,
@@ -14,7 +15,6 @@ from ..config import (
     settings_for_active_profile_bucket,
 )
 from ..errors import ActiveProfilePointerError, CoreValidationError
-from .._config_state_root import FormerProductStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

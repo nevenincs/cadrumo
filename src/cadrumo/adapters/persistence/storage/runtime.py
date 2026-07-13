@@ -308,7 +308,8 @@ def inspect_storage_runtime(
                     code=StorageRuntimeReadinessCode.SESSION_SEALED,
                     message_key="errors.storage.runtime.session_sealed",
                     message=(
-                        "the active bucket session is sealed; run `aeat config switch NAME` to re-activate the profile."
+                        "the active bucket session is sealed; run `aeat config switch NAME` "
+                        "to re-activate the profile."
                     ),
                 ),
             )

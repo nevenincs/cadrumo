@@ -7,7 +7,7 @@ CLI surface by stable verb and link to sibling docs; they never re-author flag
 help. This gate makes that contract a tested invariant rather than an
 author-discipline hope:
 
-- every ``cadrumo ...`` invocation cited in an educational doc must resolve to a
+- every ``aeat ...`` invocation cited in an educational doc must resolve to a
   real command in the live CLI tree (the longest leading verb-prefix must accept
   ``--help``), so a doc that names a retired or renamed verb reds the gate; and
 - every relative markdown link must resolve to a file that exists.
@@ -84,7 +84,7 @@ def test_educational_docs_exist() -> None:
 
 
 def test_cited_aeat_verbs_resolve() -> None:
-    """Every `cadrumo ...` command cited in the doc resolves to a live CLI verb."""
+    """Every `aeat ...` command cited in the doc resolves to a live CLI verb."""
     unresolved: list[str] = []
     for doc in _edu_docs():
         text = doc.read_text(encoding="utf-8")

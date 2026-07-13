@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload for ``cadrumo app agent``.
+"""Typed ``--json`` payload for ``aeat app agent``.
 
 The ``agent`` command materialises the shipped operator harness into an
 operator-chosen directory in one of two layout targets: the Claude-native
@@ -20,7 +20,7 @@ from ._schemas import OutputSchema, register_schema
 
 
 class AgentLayout(StrEnum):
-    """The materialisation target the ``cadrumo app agent`` command emits."""
+    """The materialisation target the ``aeat app agent`` command emits."""
 
     WORKSPACE = "workspace"
     """The Claude-native project mirror: ``.claude/{rules,agents,skills}``."""

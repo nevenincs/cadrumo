@@ -1,4 +1,4 @@
-"""CLI command for ``cadrumo app contract`` - the operator capability manifest.
+"""CLI command for ``aeat app contract`` - the operator capability manifest.
 
 Emits the operator-surface capability manifest: the backend-owned
 :class:`~application.operator_surface.OperatorSurfaceContract` (the two-root

@@ -1,4 +1,4 @@
-"""Real-behaviour sort-stability suite for ``cadrumo app ledger list`` (D5).
+"""Real-behaviour sort-stability suite for ``aeat app ledger list`` (D5).
 
 Exercises the ledger-interface-contract D5 sort directly against the pure
 ``_sort_results`` projection helper and end-to-end through

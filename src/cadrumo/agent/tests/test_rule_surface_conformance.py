@@ -328,7 +328,7 @@ def test_no_service_owner_value_collides_with_operator_prose() -> None:
 
     This must be verified empirically, not merely asserted: every
     live ``service_owner`` / ``owner`` value must be a full dotted
-    ``aeat.<layer>.<module>`` string that does not equal (nor get accidentally
+    ``cadrumo.<layer>.<module>`` string that does not equal (nor get accidentally
     substring-matched by) any bare CLI-domain noun the shipped corpus already
     uses. If this ever fails, a newly registered owner string collides with
     ordinary operator prose and the contract-side naming needs to change, not
@@ -338,8 +338,12 @@ def test_no_service_owner_value_collides_with_operator_prose() -> None:
     cli_domain_nouns = {"ledger", "modelo", "casilla", "overview", "review", "registry", "live", "contract", "agent"}
     collisions = {owner for owner in owner_tokens if owner in cli_domain_nouns}
     assert not collisions, f"service_owner/owner values collide with CLI-domain nouns: {collisions}"
-    # Every owner value is dotted and prefixed `aeat.`; no bare CLI-domain noun
+    # Every owner value is dotted and prefixed `cadrumo.`; no bare CLI-domain noun
     # is ever spelled in that shape, so a substring check against real prose
     # cannot misfire by construction. Confirm the shape invariant holds live.
-    malformed = {owner for owner in owner_tokens if not owner.startswith("aeat.") or "." not in owner[len("aeat.") :]}
+    malformed = {
+        owner
+        for owner in owner_tokens
+        if not owner.startswith("cadrumo.") or "." not in owner[len("cadrumo.") :]
+    }
     assert not malformed, f"service_owner/owner values are not dotted module paths: {malformed}"

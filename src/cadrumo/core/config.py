@@ -369,7 +369,7 @@ class Settings(AeatIntegrationSettings):
         default=False,
         description=(
             "Force ANSI colour output even when stdout is not a TTY. "
-            "Operators set this when piping cadrumo output through a terminal "
+            "Operators set this when piping Cadrumo output through a terminal "
             "renderer (less -R, gh actions, etc.). Defaults to False; the "
             "should_use_color() helper consults this and the standard NO_COLOR "
             "convention through Settings rather than reading os.environ directly."
@@ -837,7 +837,7 @@ class Settings(AeatIntegrationSettings):
     cadrumo_inbox_alert_lead_days: int = Field(
         default=7,
         description=(
-            "Lead window (days) for `cadrumo inbox next-deadline`: surface CRITICAL/HIGH "
+            "Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH "
             "notifications whose appeal_deadline falls within the next N days"
         ),
     )
@@ -1049,7 +1049,7 @@ class Settings(AeatIntegrationSettings):
         ``<cadrumo_local_storage_root>/logs`` so the diagnostic log lives
         inside the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT``
         scopes — consistent with the token directory. A system-wide
-        ``~/.config/aeat/logs/aeat.log`` mixes every workspace's (and
+        ``~/.config/cadrumo/logs/cadrumo.log`` mixes every workspace's (and
         every test run's) records into a single file; rooting the log
         under the storage root keeps each workspace's diagnostics
         isolated.

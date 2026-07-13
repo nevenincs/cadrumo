@@ -344,21 +344,21 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
 
 
 def test_cadrumo_workflow_root_command_is_unknown() -> None:
-    """`cadrumo workflow ...` is not a registered root: workflow orchestration is
-    folded under `cadrumo app modelo`."""
+    """`aeat workflow ...` is not a registered root: workflow orchestration is
+    folded under `aeat app modelo`."""
     result = invoke_cached_cli(["workflow", "--help"])
     assert result.exit_code != 0
 
 
 def test_cadrumo_run_root_command_is_unknown() -> None:
-    """`cadrumo run ...` is not a registered root: the redesigned CLI exposes
-    exactly two roots — `cadrumo config` and `cadrumo app`."""
+    """`aeat run ...` is not a registered root: the redesigned CLI exposes
+    exactly two roots — `aeat config` and `aeat app`."""
     result = invoke_cached_cli(["run", "--help"])
     assert result.exit_code != 0
 
 
 def test_app_modelo_preflight_verb_is_unknown() -> None:
-    """No standalone `cadrumo app modelo preflight` verb exists. Preflight runs
+    """No standalone `aeat app modelo preflight` verb exists. Preflight runs
     inside `verify` / `file` actions per the backend exit-cap mandate."""
     result = invoke_cached_cli(["app", "modelo", "preflight", "--help"])
     assert result.exit_code != 0

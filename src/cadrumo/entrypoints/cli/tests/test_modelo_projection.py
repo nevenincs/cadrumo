@@ -1,4 +1,4 @@
-"""Regression test for `cadrumo app modelo project` (contract).
+"""Regression test for `aeat app modelo project` (contract).
 
 The projection verb reads stored Modelo 130 quarterly calculation revisions,
 aggregates rendimiento neto and pagos fraccionados across all available
@@ -7,7 +7,7 @@ quarters, and runs the Modelo 100 registry snapshot calculation.
 Test strategy (non-tautological):
 - Drive side: create 4 M130 work units for 2024, calculate each via the
   CLI work-calculate surface, which persists CalculationRevision records.
-  Then invoke `cadrumo app modelo project --year 2024 --ccaa madrid` and
+  Then invoke `aeat app modelo project --year 2024 --ccaa madrid` and
   capture the projected M100 casilla values from the JSON response.
 - Oracle side: call `calculate_registry_snapshot` directly with the same
   accumulated M130 output injected at casilla 0171 (ingresos de explotación,

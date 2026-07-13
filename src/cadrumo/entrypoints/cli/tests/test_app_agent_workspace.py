@@ -1,4 +1,4 @@
-"""Behaviour gate for ``cadrumo app agent --output DIR`` (workspace materialiser).
+"""Behaviour gate for ``aeat app agent --output DIR`` (workspace materialiser).
 
 Asserts the group-callback command materialises the shipped operator harness into
 the chosen directory and emits a typed ``agent`` envelope, without requiring an

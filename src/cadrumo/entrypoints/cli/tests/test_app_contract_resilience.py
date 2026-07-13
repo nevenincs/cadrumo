@@ -1,6 +1,6 @@
-"""Resilience gate for the ``cadrumo app contract`` capability manifest.
+"""Resilience gate for the ``aeat app contract`` capability manifest.
 
-The operator rules mandate reading ``cadrumo app contract`` FIRST — it is the
+The operator rules mandate reading ``aeat app contract`` FIRST — it is the
 grounding entry point an LLM operator consults before doing anything else. A
 single broken result-payload module (typically an unrelated in-flight refactor
 that trips a transitive import) must therefore DEGRADE the manifest by exactly

@@ -1,4 +1,4 @@
-"""Profile bundle import/export command registration for ``cadrumo config profile``.
+"""Profile bundle import/export command registration for ``aeat config profile``.
 
 Profile import/export emits
 :class:`BucketEventHistoryRepository` lifecycle events
@@ -359,7 +359,7 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
                 "calculation revisions, and filing records. It was written to {out}. "
                 "Use it only for local/SAR handling; do not email, sync, or transfer it. "
                 "Delete it after that local/SAR handling is complete. "
-                "Use 'cadrumo config profile export --passphrase ...' for an AEAD-encrypted "
+                "Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted "
                 "structured transfer bundle. It is NOT a full backup: "
                 "attachment evidence bytes, AEAT captures, and the audit trail are "
                 "excluded. Use the encrypted recovery archive for a complete backup."
@@ -379,13 +379,13 @@ def _build_encrypted_export_notice(out: Path) -> Notice:
             "cli.config.profile.export_encrypted_info",
             default=(
                 "This profile bundle was written to {out} with AEAD passphrase encryption. "
-                "Import it with 'cadrumo config profile import PATH --passphrase ...'. "
+                "Import it with 'aeat config profile import PATH --passphrase ...'. "
                 "It carries the structured profile bundle only; use the encrypted recovery "
                 "archive for a complete backup with attachment evidence bytes and audit trail."
             ),
             out=str(out),
         ),
-        suggestion="cadrumo config profile import PATH --passphrase ...",
+        suggestion="aeat config profile import PATH --passphrase ...",
         context={"out": str(out), "transport": "passphrase-encrypted"},
     )
 
@@ -399,7 +399,7 @@ def _validate_export_transport_options(*, passphrase: str | None, cleartext_loca
     if passphrase is None and not cleartext_local:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.export_requires_transport",
-            suggestion="cadrumo config profile export NAME --to bundle.json --passphrase <passphrase>",
+            suggestion="aeat config profile export NAME --to bundle.json --passphrase <passphrase>",
         )
     if passphrase is not None and len(passphrase) < 8:
         raise _CliRefusedBoundaryError(
@@ -578,12 +578,12 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
             "cli.config.profile.import_active_switch_info",
             default=(
                 "The imported profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'cadrumo config switch <name>' to change "
+                "commands operate on it. Run 'aeat config switch <name>' to change "
                 "the active profile."
             ),
             name=target_label,
         ),
-        suggestion=f"cadrumo config switch {target_label}",
+        suggestion=f"aeat config switch {target_label}",
         context={"active_profile": target_label},
     )
 

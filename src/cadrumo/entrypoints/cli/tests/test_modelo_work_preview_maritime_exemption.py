@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo app modelo work preview-maritime-exemption`.
+"""CLI surface tests for `aeat app modelo work preview-maritime-exemption`.
 
 Exercises the verb that surfaces the maritime worker IRPF exemption
 (Art. 7.p) LIRPF / REBECA 50% / DA 41 inactive / RETMAR mandatory-filing)

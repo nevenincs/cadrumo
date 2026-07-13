@@ -401,6 +401,10 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("core.json_contract", "core.observability"),
             ImportEdge("core.json_contract", "core.output_rendering"),
             ImportEdge("core.logging", "core.config"),
+            # The former-product state-root refusal is rendered on the logging
+            # and output-rendering cold paths; both defer the leaf error import
+            # so help/version stay state-free (product-rename state boundary).
+            ImportEdge("core.logging", "core._config_state_root"),
             ImportEdge("core.logging", "core.observability"),
             ImportEdge("core.observability._context", "core.config"),
             ImportEdge("core.observability._context", "core.observability._recorder"),
@@ -413,6 +417,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("core.observability._replay", "core.observability._store"),
             ImportEdge("core.observability._sink", "core.redaction"),
             ImportEdge("core.observability._store", "core.redaction"),
+            ImportEdge("core.output_rendering", "core._config_state_root"),
             ImportEdge("core.output_rendering", "core.config"),
             ImportEdge("core.redaction", "core.errors"),
             ImportEdge("core.telemetry._http_sink", "core.logging"),
@@ -696,10 +701,16 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._censo_sync", "adapters.outbound.aeat.sede"),
             ImportEdge("application.user_profile._censo_sync", "adapters.persistence.profile.usage_ratios"),
             ImportEdge("application.user_profile._censo_sync", "application.auth"),
+            # censo vivienda-ratio read defers the profile repository/projection
+            # imports alongside the sibling deferrals above (product-rename
+            # state-boundary follow-up).
+            ImportEdge("application.user_profile._censo_sync", "application.user_profile._projections"),
+            ImportEdge("application.user_profile._censo_sync", "application.user_profile._repository"),
             ImportEdge("application.user_profile._censo_sync", "core.access_gate"),
             ImportEdge("application.user_profile._censo_sync", "core.config"),
             ImportEdge("application.user_profile._censo_sync", "domain.buckets"),
             ImportEdge("application.user_profile._censo_sync", "domain.usage_ratios"),
+            ImportEdge("application.user_profile._censo_sync", "domain.user_profile"),
             ImportEdge("application.user_profile._custody", "adapters.persistence.storage.bucket"),
             ImportEdge("application.user_profile._custody", "core"),
             ImportEdge("application.user_profile._language_resolver", "adapters.persistence.storage.bucket"),
@@ -782,8 +793,8 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
-    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 517,  # +14: readiness relation-prefill authority deferral
+    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,  # +2 state-root refusal deferrals (logging, output_rendering)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 520,  # +3 censo vivienda-ratio profile deferrals (was 517: +14 readiness relation-prefill)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -793,7 +804,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 466  # net -18 after structural lifts; 4 cycle-backed edges declared.
+_ALLOWLIST_EDGE_CEILING: int = 471  # +5 product-rename state-boundary deferrals; was 466 (net -18 after structural lifts; 4 cycle-backed edges declared).
 
 
 def _cadrumo_relative(dotted: str) -> str:

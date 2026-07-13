@@ -3,7 +3,7 @@
 Each result model is a strict
 :class:`OutputSchema` subclass registered under a
 stable ``command`` key so the ``_emit_envelope`` spine and the JSON-schema
-conformance gate bind the ``cadrumo app ledger bienes-inversion`` leaves to a schema.
+conformance gate bind the ``aeat app ledger bienes-inversion`` leaves to a schema.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ class BienInversionRecordPayload(OutputSchema):
 
 @register_schema("ledger.bienes_inversion.declare")
 class BienesInversionDeclareResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger bienes-inversion declare``."""
+    """JSON envelope for ``aeat app ledger bienes-inversion declare``."""
 
     bucket_id: str
     record: BienInversionRecordPayload
@@ -50,7 +50,7 @@ class BienesInversionDeclareResult(OutputSchema):
 
 @register_schema("ledger.bienes_inversion.list")
 class BienesInversionListResult(OutputSchema):
-    """JSON envelope for ``cadrumo app ledger bienes-inversion list``."""
+    """JSON envelope for ``aeat app ledger bienes-inversion list``."""
 
     bucket_id: str
     rows: list[BienInversionRecordPayload]

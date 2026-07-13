@@ -29,7 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
-from aeat.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry import (
     ModeloDefinition,
     ModeloRevision,
     ValidatedRegistryAuthority,

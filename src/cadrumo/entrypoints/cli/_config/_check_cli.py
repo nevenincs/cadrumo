@@ -1,4 +1,4 @@
-"""``cadrumo config check`` — the workstation doctor.
+"""``aeat config check`` — the workstation doctor.
 
 For every external service, reports the active profile's capability posture, the
 dependency availability (from the typed probes), and the exact remediation for any
