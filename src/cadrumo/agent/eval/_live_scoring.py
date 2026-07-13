@@ -1,7 +1,7 @@
 """Score a captured live trajectory against a golden scenario and the hard invariants.
 
-The judging half of ADR R7: where the golden runner asserts a DECLARED
-trajectory's properties, this module asserts the OBSERVED one — the command
+The judging half of the live-harness contract: where the golden runner asserts
+a DECLARED trajectory's properties, this module asserts the OBSERVED one — the command
 keys a live subagent persona actually issued, the narrations it actually
 produced, and the elicitation answers it actually gave. Every check that
 belongs to another layer stays caller-injected, preserving this package's
@@ -228,10 +228,10 @@ def score_live_trajectory(
 ScoreLiveTrajectory = Callable[..., LiveScenarioScore]
 
 
-# The console's long-tail discovery meta-tools (ADR ``mcp-progressive-discovery``
-# P1/P2): on the CORE surface a verb that is not in the advertised orientation
-# slice is reached by ``search``-ing for it and then ``execute``-ing the winning
-# command key. Kept as data (a default the caller may override) so this module
+# The console's long-tail discovery meta-tools: on the CORE surface a verb
+# that is not in the advertised orientation slice is reached by
+# ``search``-ing for it and then ``execute``-ing the winning command key.
+# Kept as data (a default the caller may override) so this module
 # stays SDK- and server-independent, mirroring the caller-injected leaf sets on
 # :func:`score_live_trajectory`.
 _DISCOVERY_META_TOOL_NAMES: frozenset[str] = frozenset({"search", "execute"})
@@ -240,8 +240,7 @@ _DISCOVERY_META_TOOL_NAMES: frozenset[str] = frozenset({"search", "execute"})
 class DiscoveryScore(BaseModel):
     """Selection-quality verdict for one long-tail-verb discovery trajectory.
 
-    The measurement half of ADR ``mcp-progressive-discovery`` P6 (plan step S23):
-    given an observed trajectory that set out to reach one long-tail
+    Given an observed trajectory that set out to reach one long-tail
     ``target_command_key``, this scores how efficiently the model got there.
     ``rounds_to_correct_verb`` is the 1-based ordinal of the tool call that first
     executed the target (every round-trip up to and including it), so a direct
@@ -292,10 +291,9 @@ class DiscoveryScore(BaseModel):
 class SurfaceDiscoveryComparison(BaseModel):
     """A CORE-surface discovery trajectory measured against a FULL-surface one.
 
-    The core-vs-full A/B artifact of ADR ``mcp-progressive-discovery`` P6 (plan
-    step S24): both surfaces must reach the SAME long-tail verb, and the
-    comparison quantifies the trade the ADR makes - the lean CORE surface
-    advertises far fewer tools (``core_advertised_tool_count`` vs
+    Both surfaces must reach the SAME long-tail verb, and the comparison
+    quantifies the trade-off - the lean CORE surface advertises far fewer
+    tools (``core_advertised_tool_count`` vs
     ``full_advertised_tool_count``) at the cost of a small number of extra
     discovery round-trips (``rounds_delta``), while the target stays reachable.
 
@@ -496,7 +494,7 @@ class IdentityGateRefusalFn(Protocol):
 
 
 class IdentityConfirmationScore(BaseModel):
-    """Identity-confirmation verdict for one observed trajectory (ADR I2 / I4).
+    """Identity-confirmation verdict for one observed trajectory.
 
     The measurement half of the block-first-mutation identity gate: given an
     observed session that mutates a taxpayer's draft, this replays the REAL

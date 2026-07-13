@@ -169,9 +169,8 @@ def test_calendar_keeps_unverified_posture_when_no_censo_is_verified() -> None:
     censo-verified fact, so the calendar keeps its honest ``censo.enrolment_unverified``
     posture for every censo-dependent modelo when the verified-key set is empty.
 
-    Pins the honest default the 2026-07-11-censo-operator-manual-enrolment ADR
-    preserves: an empty ``live_censo_verified_profile_keys`` (the post-retirement
-    reality) must never grant a VERIFIED enrolment state.
+    Pins the honest default: an empty ``live_censo_verified_profile_keys`` (the
+    post-retirement reality) must never grant a VERIFIED enrolment state.
     """
     calendar = build_overview_calendar(
         _profile(),

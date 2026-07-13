@@ -3,7 +3,7 @@
 M100 carried no settlement-completeness verify predicate on any revision, so a
 positive-income filer whose IRPF liability resolved to zero was granted
 ``verificado_completo`` with zero findings — the silent under-declaration class
-that the M200 base-determination (#14) and M131 pago-fraccionado advisories
+that the M200 base-determination and M131 pago-fraccionado advisories
 already guard. This module pins the M100 2024/2025 guard:
 ``implies_nonzero(["0500", "0595"])`` — when base liquidable general (0500) is
 strictly positive, the cuota resultante de la autoliquidación (0595, the

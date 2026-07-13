@@ -20,8 +20,6 @@ See Also:
         Shared typed expected-casilla set for the 2024/2025 fixtures.
     ``tests/fixtures/justificantes/_generate_modelo_100_current.py``
         Fixture generator that stamps the expected printed values.
-    ``2026-07-05-modelo-130-100-continuity-audit``
-        Current-year M100 declaration coverage, including casilla 0604.
 """
 
 from __future__ import annotations

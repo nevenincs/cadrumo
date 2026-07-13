@@ -1,7 +1,5 @@
-"""The D3 ``orden_aplicabilidad`` gate for a :class:`ModeloRevision`.
+"""The ``orden_aplicabilidad`` gate for a :class:`ModeloRevision`.
 
-D3 / Ruling 4 (period-revision-resolution ADR)
------------------------------------------------
 Every revision's ``orden_aplicabilidad`` field declares the legal-catalogue
 :class:`~cadrumo.domain.calculations.registry._schema.LegalReference` id(s) of
 the ordenes ministeriales that approve or amend the modelo form for this
@@ -14,15 +12,14 @@ revision's applicability window.  The gate is strict:
 - Every declared entry MUST also appear in (or be merged into) ``legal_refs``
   so existing snapshot ref-collection carries it.
 
-S24 / Ruling 5 boundary (R3):
-    For ``*-y-siguientes`` (open-ended) revisions the ``orden_aplicabilidad``
-    MUST cite the orden establishing the open-ended applicability — the
-    connective gate ensuring even the "y siguientes" claim is BOE-anchored.
-    Per-year norm values *inside* the open-ended revision (rate brackets,
-    thresholds) are the parameter-bracket layer's responsibility gated by
-    :func:`~cadrumo.domain.calculations.registry._validate_revision_rules.validate_bracket_table_temporal_coverage`;
-    a wrong-but-present bracket value is a legal-grounding defect, NOT a
-    resolution defect.
+For ``*-y-siguientes`` (open-ended) revisions the ``orden_aplicabilidad``
+MUST cite the orden establishing the open-ended applicability — the
+connective gate ensuring even the "y siguientes" claim is BOE-anchored.
+Per-year norm values *inside* the open-ended revision (rate brackets,
+thresholds) are the parameter-bracket layer's responsibility gated by
+:func:`~cadrumo.domain.calculations.registry._validate_revision_rules.validate_bracket_table_temporal_coverage`;
+a wrong-but-present bracket value is a legal-grounding defect, NOT a
+resolution defect.
 """
 
 from __future__ import annotations
@@ -44,7 +41,7 @@ def validate_orden_aplicabilidad(
     dangling entries, corpus-less entries, and entries absent from
     ``legal_refs`` are all current-data defects.
 
-    S24 connective gate (Ruling 5 boundary):
+    Connective gate:
         For open-ended ``*-y-siguientes`` revisions (``valid_to is None`` and
         ``period_selector.year_from`` is set) the ``orden_aplicabilidad`` MUST
         be non-empty — the open-ended applicability claim MUST be BOE-anchored.
@@ -65,8 +62,7 @@ def validate_orden_aplicabilidad(
             f"{scope}: revision {revision.id!r} (valid_from {revision.valid_from.isoformat()}) "
             f"MUST declare orden_aplicabilidad citing the orden ministerial that approves "
             f"modelo {modelo_id} for this applicability window; see "
-            f"registry-calculation-legal-grounding rule and D3 of the "
-            f"period-revision-resolution ADR",
+            f"registry-calculation-legal-grounding rule",
         )
         return hard
 
@@ -97,7 +93,7 @@ def validate_orden_aplicabilidad(
             hard.append(
                 f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
                 f"is not present in the revision's legal_refs; add it to legal_refs so "
-                f"snapshot ref-collection carries the orden (D3, period-revision-resolution ADR)",
+                f"snapshot ref-collection carries the orden",
             )
 
     return hard

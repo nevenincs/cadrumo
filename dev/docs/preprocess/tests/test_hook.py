@@ -9,10 +9,10 @@ decision D1):
   procedure recorded in the exec records);
 - the ``dev.docs.preprocess.hook`` adapter — its output must satisfy the
   pinned upstream contract shape and stay UTF-8-safe on Windows consoles;
-- the committed extraction sidecars — until the atomic cutover retires them,
-  the hook's unit texts must equal the sidecar unit texts for the same
-  source (per-kind parity), proving the hook is a re-serialisation of the
-  same extraction truth, never a divergent second extractor.
+- the committed extraction sidecars — the product's corpus payload (ADR
+  Update 1) — whose unit texts must PERMANENTLY equal the hook's for the
+  same source (per-kind parity), proving one extraction truth feeds both
+  the shipped payload and the dev index.
 """
 
 from __future__ import annotations

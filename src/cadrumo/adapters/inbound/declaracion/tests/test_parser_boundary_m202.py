@@ -1,8 +1,8 @@
 """Modelo 202 declaración extractor tests.
 
 No real Modelo 202 declaración-copy PDF specimen is bundled (Tier-R
-real-corpus acquisition for this modelo family is tracked separately; see
-issue #325). The registry ``declaracion_pdf`` extraction profile for the
+real-corpus acquisition for this modelo family is tracked separately).
+The registry ``declaracion_pdf`` extraction profile for the
 2025-y-siguientes revision is grounded against the bundled AEAT-published
 Diseño de Registro (per-clave ``[NN]`` box-number notation confirmed in
 ``corpus/aeat_official/disenos_registro/modelo_202/files/``) and the

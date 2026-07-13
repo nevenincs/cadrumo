@@ -178,7 +178,7 @@ def replay_run(
                 "obsolete write-era CLI arguments.",
             )
     settings = Settings()
-    observed = compute_corpus_sha256(PROJECT_ROOT / ".vault", settings)
+    observed = compute_corpus_sha256(settings)
     if observed != original.corpus_sha256:
         raise AeatCorpusDriftError(
             run_id=run_id,

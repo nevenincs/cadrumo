@@ -3,8 +3,7 @@
 Provides the production :class:`EcbReferenceRateProvider`, an implementation of
 :class:`domain.currency.ExchangeRateProvider` backed by the bundled
 European Central Bank ``eurofxref`` snapshot. The ECB euro reference rate is the
-official exchange-rate source selected for ledger-to-modelo conversion by the
-``ledger-fx-conversion`` ADR (Ley 46/1998 art. 36).
+official exchange-rate source for ledger-to-modelo conversion (Ley 46/1998 art. 36).
 
 The adapter keeps runtime conversion deterministic and offline: ECB EUR-base
 quotes are inverted into the ``CCY -> EUR`` multiplier expected by

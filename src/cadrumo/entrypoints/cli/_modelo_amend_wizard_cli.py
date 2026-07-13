@@ -395,7 +395,7 @@ def _prompt_amendment_kind(
 ) -> CalculationRevisionAmendmentKind:
     """Prompt for the amendment kind, restricted to what the period legally permits.
 
-    Reads the codified :func:`~core.resolve_amendment_kind_regime` for
+    Reads :func:`~core.resolve_amendment_kind_regime` for
     ``modelo`` and ``period`` so the wizard only offers (and only accepts) the
     kinds legally available for this filing — e.g. it never offers
     ``rectificativa`` for a pre-adoption period. ``amend_modelo_revision``

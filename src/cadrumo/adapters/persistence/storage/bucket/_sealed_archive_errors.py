@@ -4,8 +4,7 @@ The classes descend from the existing domain
 :class:`domain.buckets.BucketExportError` /
 :class:`BucketImportError` so the CLI boundary's
 ``command_error_boundary`` routes them through the same surface as
-the other bucket-maintenance verbs. Authority:
-``2026-06-03-bucket-sealed-archive-adr``.
+the other bucket-maintenance verbs.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ from .....domain.buckets import BucketExportError, BucketImportError
 
 
 class SealedArchiveLayoutError(BucketImportError):
-    """Raised when the sealed archive's tar layout does not match the ADR contract.
+    """Raised when the sealed archive's tar layout does not match the expected contract.
 
     The expected layout is exactly two or three named members in the
     order ``header.json``, ``payload.envelope``, and optionally

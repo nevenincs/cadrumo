@@ -1,7 +1,7 @@
 """Stable pseudonymous workspace identifier for telemetry payloads.
 
-The ADR requires every :class:`~core.telemetry.TelemetryEventPayload` to
-carry a ``workspace_hash`` rather than the operator's profile id or NIF. This
+Every :class:`~core.telemetry.TelemetryEventPayload` must carry a
+``workspace_hash`` rather than the operator's profile id or NIF. This
 module derives that hash deterministically from the local storage root path
 -- a value that already exists per-deployment, is never the taxpayer's
 identity, and is stable across repeated runs of the same installation without

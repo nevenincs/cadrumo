@@ -1,11 +1,9 @@
 """Console-entry argv pre-parse for the ``--language`` help-honesty contract.
 
 The root ``--language`` / ``--lang`` flag must localise help text, not just
-command output (operator-surface ADR decision D6,
-``2026-06-10-cli-operator-surface-adr``). Help strings are rendered by
+command output. Help strings are rendered by
 ``tr(...)`` at module-import time and the profile-owned output-language resolver
-(``2026-05-13-cli-workflow-redesign-profile-output-language-adr``) reads
-``CADRUMO_OUTPUT_LANGUAGE`` *before* import. The root Typer callback's
+reads ``CADRUMO_OUTPUT_LANGUAGE`` *before* import. The root Typer callback's
 ``override_settings`` ran too late for help text — and was never reached at all
 for a leaf ``SUB --help`` (click short-circuits the leaf ``--help`` before the
 root group callback body runs).

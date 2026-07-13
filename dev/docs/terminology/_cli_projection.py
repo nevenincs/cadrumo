@@ -1,4 +1,4 @@
-"""CLI-surface projection compiler for the docs search index (ADR D4).
+"""CLI-surface projection compiler for the docs search index.
 
 Projects the live ``aeat`` Typer/Click command tree into strict search
 records the offline docs search and the Ctrl-K command palette surface as
@@ -72,7 +72,7 @@ class _CommandPayload(TypedDict):
 
 
 class CliSurfaceRecord(SearchRecordBase):
-    """A search record for one live ``aeat`` leaf command (ADR D4).
+    """A search record for one live ``aeat`` leaf command.
 
     Identity is the full command path (e.g. ``aeat app modelo calculate``).
     The four-language ``descriptions`` map carries the command's help text
@@ -92,7 +92,7 @@ class CliSurfaceRecord(SearchRecordBase):
 
 
 class CliOptionRecord(SearchRecordBase):
-    """A search record for one option or argument of a leaf command (ADR D4).
+    """A search record for one option or argument of a leaf command.
 
     Identity is the owning command path plus the option's surface name(s).
     The four-language ``descriptions`` map carries the option help resolved

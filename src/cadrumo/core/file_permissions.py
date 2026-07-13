@@ -34,8 +34,6 @@ See Also:
     :mod:`~adapters.outbound.aeat.auth._clave_movil`
         Cl@ve Móvil provider whose active session persistence now uses secure
         objects instead of plaintext storage-state files.
-    ``2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit``
-        Review that fixed silent POSIX failure swallowing and bounded ACL calls.
 """
 
 from __future__ import annotations

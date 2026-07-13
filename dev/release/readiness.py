@@ -114,8 +114,8 @@ class ReadinessReport:
         }
 
 
-def _read_pyproject_version(repo_root: Path) -> str:
-    data = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+def _read_project_version(project_file: Path) -> str:
+    data = tomllib.loads(project_file.read_text(encoding=_UTF_8))
     return str(data["project"]["version"])
 
 
@@ -153,17 +153,26 @@ def _read_manifest_version(repo_root: Path) -> str:
 
 
 def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
-    """Confirm pyproject.toml, `__init__.py`, and the manifest report one version."""
-    pyproject_version = _read_pyproject_version(repo_root)
+    """Confirm every release authority and exact companion pin reports one version."""
+    project_versions = tuple(
+        (relative, _read_project_version(repo_root / relative)) for relative, _expected_name in _PROJECT_NAME_PATHS
+    )
+    pyproject_version = project_versions[0][1]
     init_version = _read_init_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
-    versions = {pyproject_version, init_version, manifest_version}
-    passed = len(versions) == 1 and bool(pyproject_version)
-    detail = (
-        f"pyproject={pyproject_version!r} init={init_version!r} manifest={manifest_version!r}"
-        if not passed
-        else f"all surfaces agree on {pyproject_version!r}"
+    root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    observed_pins = tuple(
+        str(requirement) for requirement in root_project["project"]["optional-dependencies"]["corpus-sources"]
     )
+    expected_pins = tuple(
+        f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
+    )
+    versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
+    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
+    surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
+    detail = f"{surfaces} init={init_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
+    if passed:
+        detail = f"all release authorities and exact companion pins agree on {pyproject_version!r}"
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
 

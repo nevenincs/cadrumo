@@ -11,10 +11,10 @@
       {
         "concept_id": "prorrata",
         "hit": true,
-        "matched_record_id": "concept:prorrata-especial",
+        "matched_record_id": "legal:ley-37-1992:art-104",
         "query": "regla de prorrata",
         "reason": "hit",
-        "target_count": 3
+        "target_count": 7
       },
       {
         "concept_id": "prorrata",
@@ -22,7 +22,7 @@
         "matched_record_id": "concept:prorrata",
         "query": "pro rata",
         "reason": "hit",
-        "target_count": 6
+        "target_count": 9
       },
       {
         "concept_id": "casilla",
@@ -38,7 +38,7 @@
         "matched_record_id": "concept:modelo-303",
         "query": "modelo 303",
         "reason": "hit",
-        "target_count": 2
+        "target_count": 4
       },
       {
         "concept_id": "recargo-equivalencia",
@@ -46,11 +46,11 @@
         "matched_record_id": "concept:recargo-equivalencia",
         "query": "recargo de equivalencia",
         "reason": "hit",
-        "target_count": 2
+        "target_count": 7
       }
     ]
   },
-  "note": "Baseline held-out miss-rate before the W03 vocabulary widening (ADR 2026-07-13 D3; threshold 0.10).",
+  "note": "Baseline held-out miss-rate before the W03 vocabulary widening (ADR 2026-07-13 D3; threshold 0.10). Re-measured over the post-cutover refreshed mapping (hook-fed source-path index).",
   "rung2": {
     "decision": "keep-deferred",
     "measured_miss_rate": 0.0,

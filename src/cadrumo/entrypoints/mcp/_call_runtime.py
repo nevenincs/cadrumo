@@ -1,14 +1,14 @@
 """Supervised subprocess runtime for the MCP call path.
 
-Every MCP tool call shells the deterministic ``aeat`` CLI. Before this module
-that shell was one ``subprocess.run`` with NO timeout (research finding F1): a
-Playwright-backed live pull that stalls - a network hang, a changed AEAT DOM
-selector - hangs the MCP call forever, and many clients time out a ``tools/call``
-well under a minute, misreading a legitimate slow pull as failure. There was
-also no way to terminate a hung child.
+Every MCP tool call shells the deterministic ``aeat`` CLI. An un-timed-out
+``subprocess.run`` risks a Playwright-backed live pull that stalls - a network
+hang, a changed AEAT DOM selector - hanging the MCP call forever, and many
+clients time out a ``tools/call`` well under a minute, misreading a legitimate
+slow pull as failure. There is also no way to terminate a hung child without an
+explicit timeout.
 
-This runtime wraps the call in a per-tier timeout (ADR ``mcp-protocol-hardening``
-H1): generous for the AEAT-sede / live family, tighter for local mutations,
+This runtime wraps the call in a per-tier timeout: generous for the
+AEAT-sede / live family, tighter for local mutations,
 tight for local reads. On timeout it terminates the WHOLE process tree - a
 Playwright pull spawns a browser child, so killing only the ``aeat`` process
 would strand the browser - and returns a typed timed-out result the caller

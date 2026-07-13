@@ -295,8 +295,7 @@ def unsupported_ledger_oss_observations(
 # for the standard IVA modelos (303 autoliquidación trimestral, 322 grupos
 # individual, 353 grupos agregado, 309 no periódica, 390 resumen anual).
 # Aggregates ledger lines by the canonical IVA classification triple
-# (IvaCategory + IvaRateKind + IvaFlowDirection) introduced by the
-# IvaFlowDirection codification slice.
+# (IvaCategory + IvaRateKind + IvaFlowDirection).
 #
 # OSS / IOSS bindings keep their dedicated source kind because they
 # additionally carry the regime + destination Member State axes; this
@@ -626,7 +625,8 @@ def unsupported_ledger_iva_observations(
 # domain-owned SpendingCategory -> casilla routing table this registry-layer
 # module cannot import directly without reversing the hexagonal dependency
 # direction); they are validated at registry load time so mismatches surface
-# before any calculation. See issue #589 (29-of-40 SpendingCategory coverage gap).
+# before any calculation. Coverage is currently a subset of the full
+# SpendingCategory routing table.
 _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = _casilla_id_set(
     "_RENTA_100_FIRST_SLICE_CASILLAS",
     "0183",

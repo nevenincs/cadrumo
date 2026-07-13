@@ -135,9 +135,7 @@ the entity type alone: `aeat app overview explain 202 --year <YEAR>`. See
   the taxpayer's INCN is at or above EUR 10.000.000, you must ask explicitly
   whether the minimum-payment floor applies and route the answer to the role
   that owns operator-entered facts - the CLI will not surface any advisory or
-  block on a silently-blank casilla `33` for such a filer.** See
-  `.vault/audit/2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit.md`
-  (finding `m202-minimo-cn-10m-no-safe-guard`) for the full grounding.
+  block on a silently-blank casilla `33` for such a filer.**
 - **The B2 sub-lane's per-tramo bases (2025-only) are ADVISORY-guarded.**
   Casillas `61`/`64` (base a tipo 3 / tipo 4) each feed a formula-derived
   importe (`63`/`66` respectively, `importe = base x porcentaje`); a positive

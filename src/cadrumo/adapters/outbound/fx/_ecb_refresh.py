@@ -5,7 +5,7 @@ Central Bank ``eurofxref-hist.xml`` full history and writes it to the bundled
 data file the runtime reads offline. Fetch and write are separated so the
 write/validate path is testable without a network round-trip.
 
-See the ``ledger-fx-conversion`` ADR: the runtime stays offline against a
+The runtime stays offline against a
 versioned bundled snapshot; this utility updates that snapshot on release.
 """
 

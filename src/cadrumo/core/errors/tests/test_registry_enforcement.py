@@ -19,12 +19,6 @@ See Also:
         the raise-site scan.
     :mod:`~core.errors`
         Public error-registry surface whose declared codes are enforced here.
-    ``.vault/audit/2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit.md``
-        Records the deterministic import and test-only subclass filtering fix
-        for this gate.
-    ``.vault/audit/2026-04-25-error-code-registry-review-audit.md``
-        Reviews the declared-registry contract and strengthened raise-site
-        enforcement.
 """
 
 from __future__ import annotations

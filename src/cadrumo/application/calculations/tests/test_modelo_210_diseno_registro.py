@@ -1,4 +1,4 @@
-"""Modelo 210 diseño-de-registro (Slice C) structural + formula-wiring parity.
+"""Modelo 210 diseño-de-registro structural + formula-wiring parity.
 
 Grounds the complete numbered liquidación casilla schema against the bundled
 AEAT layout authority ``boe-modelo-210-diseno-registro-2011`` (record identifier
@@ -8,9 +8,8 @@ T21001, version 1.1, 15/02/2012). The official form enumerates numbered boxes
 identification/domicile/property/banking segments, out of scope for the numbered
 casilla schema.
 
-Two contracts are asserted, both non-tautological per the
-``no-tautological-calculation-tests`` discipline (this tests the form's declared
-STRUCTURE and inter-casilla arithmetic WIRING, not a rate oracle):
+Two contracts are asserted, both non-tautological (this tests the form's
+declared STRUCTURE and inter-casilla arithmetic WIRING, not a rate oracle):
 
 * Structure: every official numbered box [4]-[31] is present in the revision's
   declared casilla numbering, and the layout-authority corpus artefact resolves
@@ -101,7 +100,7 @@ def test_layout_authority_corpus_artefact_resolves() -> None:
 def test_type_r_base_and_liquidacion_chain_evaluates_end_to_end(tmp_path: Path) -> None:
     """No-convenio 210 R chain: [8]=[5]-[6]-[7] → [22] → [24] → [28] → [31].
 
-    Worked input mirrors the Slice C spec example ([5]=1000, [6]=0, [7]=100 →
+    Worked input mirrors the AEAT spec example ([5]=1000, [6]=0, [7]=100 →
     [8]=900). The EU/EEA reduced rate 0.19 (casilla [21]) is read from the
     registry parameter table. The liquidación chain collapses to the
     pre-slice-C cuota_integra − retenciones result when no convenio, donativos

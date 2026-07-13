@@ -38,9 +38,9 @@ from ...domain.user_profile import (
 
 # Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
 # hash, the stored-hash snapshot pointer, and the current-hash recompute
-# result. Stays bare-str under ADR Rule 7 (fingerprint, not identity);
-# factored to a single annotated alias to remove the three-way duplication
-# of the shape literal while preserving full static type information.
+# result. Stays bare-str (fingerprint, not identity); factored to a single
+# annotated alias to remove the three-way duplication of the shape literal
+# while preserving full static type information.
 _ProfileSnapshotHash = Annotated[
     str,
     Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"),

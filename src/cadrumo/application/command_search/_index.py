@@ -2,8 +2,7 @@
 
 Ranks a free-text query against the command corpus so the ``search`` meta-tool
 bridges the operator's natural vocabulary to a command's own tokens. Three
-cooperating parts, the same shape the corpus grounding search uses (ADR
-``mcp-progressive-discovery`` P2):
+cooperating parts, the same shape the corpus grounding search uses:
 
 * a per-column FTS5 lexical index that weights the command KEY and TOOL NAME
   above curated OUTCOME ALIASES above the human DESCRIPTION above the per-verb

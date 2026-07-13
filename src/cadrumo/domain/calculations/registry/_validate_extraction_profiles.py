@@ -148,8 +148,7 @@ def validate_dotted_callable(scope: str, owner: str, dotted_path: str) -> list[s
     the adapter parser modules. Resolution — the allowed-authority prefix,
     importability, and callability of the target — is enforced by the
     adapter-legal CI gate ``test_extraction_parser_paths_resolve``, so this
-    validator stays free of any ``adapters`` coupling (static or dynamic). See
-    the ports-inversion ADR's post-close honesty-review note.
+    validator stays free of any ``adapters`` coupling (static or dynamic).
     """
     module_name, separator, attribute = dotted_path.rpartition(".")
     if not separator or not module_name or not attribute:

@@ -479,8 +479,8 @@ async def capture_justificante_snapshot_outcome(
         pdf_sha256=capture.pdf_sha256,
         captured_at=_now(),
     )
-    # Per the ADR, the capture flow stamps the official evidence onto the work
-    # unit's filing record in the same flow. Best-effort: a no-op when the period
+    # The capture flow stamps the official evidence onto the work unit's
+    # filing record in the same flow. Best-effort: a no-op when the period
     # is not yet filed in-app (the snapshot is still persisted).
     justificante = register_capture_justificante_metadata(snapshot=persisted)
     filing_record = stamp_capture_evidence_if_filed(persisted)

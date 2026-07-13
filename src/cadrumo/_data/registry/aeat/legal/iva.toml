@@ -1576,8 +1576,7 @@ required_text = [
 ]
 
 # Modelo 303 regimen simplificado de IVA: modulos-based cuota devengada
-# engine (2026-07-01-modelo-303-regimen-simplificado-adr, Phase 2). The
-# Orden HAC/1347/2024 Anexo I "Instrucciones para la aplicacion de los
+# engine. The Orden HAC/1347/2024 Anexo I "Instrucciones para la aplicacion de los
 # indices y modulos en el Impuesto sobre el Valor Anadido" fixes the LIVA
 # art. 123 mechanism: cuota devengada por operaciones corrientes = suma de
 # unidades de cada modulo x cuota devengada anual por unidad; cuota derivada

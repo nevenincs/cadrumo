@@ -1,7 +1,7 @@
 """Fetch-and-encrypt roundtrip for the repurposed ledger doclink path.
 
-The C2 ledger-evidence campaign rewired ``aeat app ledger doclink`` to resolve a
-Drive document link to its bytes and store those bytes as encrypted evidence —
+``aeat app ledger doclink`` resolves a
+Drive document link to its bytes and stores those bytes as encrypted evidence —
 never a link. This gate exercises that end to end with the storage and manifest
 path REAL (a real ``AttachmentStore`` over real SQLite) and the Drive media
 request executed through a real ``google-api-python-client`` resource pointed at

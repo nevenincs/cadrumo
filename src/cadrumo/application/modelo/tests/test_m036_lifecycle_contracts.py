@@ -1,10 +1,8 @@
 """Tests for the Modelo 036 declarative-recording verb contracts.
 
-Authority: ``2026-06-03-m036-lifecycle-verbs-research``. The
-contracts MUST type the closed-value axis (CensoModeloEventKind)
-as its enum per the architecture-boundaries rule, MUST accept
-optional sede_justificante / note, and MUST pin the
-declaration_id shape to a 64-char lowercase SHA-256 hex pattern.
+The contracts MUST type the closed-value axis (CensoModeloEventKind)
+as its enum, MUST accept optional sede_justificante / note, and MUST
+pin the declaration_id shape to a 64-char lowercase SHA-256 hex pattern.
 """
 
 from __future__ import annotations

@@ -46,8 +46,8 @@ source_refs = ["aeat-modelo-349-procedure"]
 # www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet.
 # The surface category is `authenticated_simulator`: cl@ve-movil required,
 # form-submit POST is the AEAT-prescribed query mechanism. Live execution
-# may only carry operator-authorised non-synthetic counterparty NIFs per
-# the no-synthetic-sede-live-surfaces ADR. The remote-state guard's
+# may only carry operator-authorised non-synthetic counterparty NIFs.
+# The remote-state guard's
 # HTTP-method check stays strict for `kind="http"` operations; only
 # the cross-reference's allowed_methods declaration includes POST so
 # the surface contract is honest. The forbidden_actions include the
@@ -70,7 +70,7 @@ forbidden_actions = [
     "document-submission",
     "declaration-submission",
 ]
-# Per the 2026-05-26 no-synthetic-sede-live-surfaces ADR, no AEAT-hosted
+# No AEAT-hosted
 # live cross-reference may advertise synthetic_data_allowed = true. The
 # GROI authenticated_simulator surface remains the AEAT-prescribed query
 # mechanism for Spanish counterparty ROI verification, but live execution
@@ -103,8 +103,7 @@ source_refs = ["aeat-modelo-349-procedure"]
 # half of the same Modelo 349 declarant context where GROI handles
 # Spanish counterparties). Empirically gated above cl@ve-movil so
 # declared as authenticated_simulator. Live execution may only carry
-# operator-authorised non-synthetic counterparty NIFs per the
-# no-synthetic-sede-live-surfaces ADR. Live reachability is gated on
+# operator-authorised non-synthetic counterparty NIFs. Live reachability is gated on
 # certificate provisioning — the binding declares the conceptual
 # contract and the live test will exercise it once auth is in place.
 [[revisions."2020-y-siguientes".live_cross_references]]
@@ -124,7 +123,7 @@ forbidden_actions = [
     "document-submission",
     "declaration-submission",
 ]
-# Per the 2026-05-26 no-synthetic-sede-live-surfaces ADR, no AEAT-hosted
+# No AEAT-hosted
 # live cross-reference may advertise synthetic_data_allowed = true. The
 # IXVI authenticated_simulator surface remains the AEAT-prescribed query
 # mechanism for EU NIF-IVA verification, but live execution may only

@@ -188,7 +188,7 @@ def review_show(
 def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[str]:
     """Render the review queue as tab-separated text.
 
-    When ``explain`` is True (per the --explain convention ADR), the
+    When ``explain`` is True, the
     table grows a trailing ``legal_refs`` column carrying the
     grounding citations for each finding.
     """

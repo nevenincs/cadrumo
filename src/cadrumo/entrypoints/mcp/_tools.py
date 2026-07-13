@@ -111,11 +111,11 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         cli_form = "aeat app " + key.replace(".", " ")
         intent = _family_intent(key, intent_map)
         verb_schema = verb_schemas[key]
-        # The model-facing description stays English (ADR mcp-protocol-hardening
-        # H5): the CLI form carries the verb path and the shared family intent
-        # follows. The command's own (Spanish) per-verb help is NOT put here - it
-        # feeds the search index instead (P02/S05), so discovery gains the verb
-        # vocabulary without a Spanish string on the model-facing surface.
+        # The model-facing description stays English: the CLI form carries the
+        # verb path and the shared family intent follows. The command's own
+        # (Spanish) per-verb help is NOT put here - it feeds the search index
+        # instead, so discovery gains the verb vocabulary without a Spanish
+        # string on the model-facing surface.
         description = f"Run `{cli_form}`." + (f" {intent}." if intent else "")
         annotations = annotations_for_command(command_key=key, mutability=mutability, title=cli_form)
         descriptors.append(
@@ -136,7 +136,7 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     schema = SCHEMA_REGISTRY.get(command_key)
     if schema is None:
         return {"type": "object"}
-    # ADR H4: a thinned verb moves its bulk arrays to resource_link URIs, so its
+    # A thinned verb moves its bulk arrays to resource_link URIs, so its
     # declared output schema drops those properties in lock-step with the runtime
     # envelope thinning (_result_thinning.thin_envelope) - the advertised shape
     # and the emitted structuredContent stay identical, and the size-budget gate

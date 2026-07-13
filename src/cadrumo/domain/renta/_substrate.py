@@ -7,7 +7,7 @@ are :class:`enum.StrEnum` subclasses. The pattern mirrors the
 :class:`EUMemberState`, :class:`IvaRateKind`) so the two domains share a
 single closed-membership convention for substrate axes.
 
-Per the calculation-truth-registry ADR, every Renta domain field that
+Every Renta domain field that
 classifies "what kind of X is this?" must use one of these closed enums
 rather than a free-form ``str | None``.
 """

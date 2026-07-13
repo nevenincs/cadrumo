@@ -1,6 +1,6 @@
 """Elicitation-backed CONFIRM enforcement and its capability-degradation matrix.
 
-ADR R6 makes the CONFIRM tier real: a confirm-tier tool call pauses and asks
+The CONFIRM tier is real: a confirm-tier tool call pauses and asks
 the HUMAN through MCP elicitation (accept / decline / cancel) before it runs.
 Client support for elicitation is negotiated, not assumed, so the decision of
 HOW to enforce a tier is a matrix over (policy, handoff-ness, client

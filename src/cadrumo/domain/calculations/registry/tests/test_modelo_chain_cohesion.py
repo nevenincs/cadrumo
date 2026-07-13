@@ -12,7 +12,7 @@ The AEAT filing cycle has well-defined chains where a periodic modelo
 
 Each chain is declared on the receiver side either as a ``cross_model_output``
 relation or as a ``previous_filing`` binding pointing at the feeder's
-``source_modelo``. These tests codify that expectation so a future change
+``source_modelo``. These tests enforce that expectation so a future change
 cannot silently drop the chain. When a chain is missing, the test fails
 with a message that names both the feeder and the summary modelo so the
 gap is diagnosable from the failure alone.

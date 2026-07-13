@@ -25,7 +25,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # SPLIT-CANDIDATE: further formula-op families can still be extracted.
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py": 1835,  # SPLIT-CANDIDATE
     # M131 EO-modulos engine test carries per-activity coefficient-dataset
-    # tables verified against the AEAT manual worked examples (#516); data-shaped
+    # tables verified against the AEAT manual worked examples; data-shaped
     # growth. SPLIT-CANDIDATE: split the per-activity dataset fixtures out.
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine.py": 1517,  # SPLIT-CANDIDATE
     "src/cadrumo/application/filing/tests/test_export.py": 1270,  # SPLIT-CANDIDATE
@@ -112,7 +112,7 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
         "calculate_registry_snapshot",
     ): 228,  # SPLIT-CANDIDATE
     ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_classify"): 234,  # SPLIT-CANDIDATE
-    # Extracted LLM ledger CLI verb (active LLM-ledger campaign); SPLIT-CANDIDATE.
+    # Extracted LLM ledger CLI verb; SPLIT-CANDIDATE.
     ("src/cadrumo/entrypoints/cli/_ledger_llm_cli.py", "ledger_saturate_llm"): 187,
     ("src/cadrumo/application/modelo/_quickfile.py", "run_modelo_quickfile"): 216,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/modelo/_verification_actions.py", "verify_modelo_revision"): 221,  # SPLIT-CANDIDATE

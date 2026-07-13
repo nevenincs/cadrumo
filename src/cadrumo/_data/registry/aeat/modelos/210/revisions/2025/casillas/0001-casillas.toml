@@ -3,7 +3,7 @@
 # The base / rate / cuota chain for general, ue_residente, interest,
 # ganancia_patrimonial, and the Art. 13.1.h inmobiliaria imputed-real-estate
 # base branch. Pension is covered by the live Art. 25.1.b progressive tariff
-# parameter. The Slice C diseño-de-registro pass renumbered the seven boxes that
+# parameter. The diseño-de-registro pass renumbered the seven boxes that
 # map onto official liquidación numbers (rendimientos_integros=[5],
 # gastos_deducibles=[7], base_imponible=[8], tipo_gravamen=[21],
 # cuota_integra=[22], retencion_practicada=[29], cuota_diferencial=[31]) and

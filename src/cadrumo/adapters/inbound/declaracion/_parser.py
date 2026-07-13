@@ -460,7 +460,7 @@ def _select_extraction_profile(
 
     A supplied ``extraction_profile_id`` must match a declaration-PDF profile in
     the snapshot. Otherwise the snapshot must expose exactly one matching
-    profile, preserving the ADR-approved generic parser shape: registry data
+    profile, preserving the generic parser shape: registry data
     selects per-modelo extraction behavior, not Python extractor classes.
     """
     profiles = tuple(

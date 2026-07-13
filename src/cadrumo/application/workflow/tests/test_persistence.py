@@ -165,9 +165,9 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
     """A freshly-persisted, decryptable state envelope fingerprints as ``readable``.
 
     The dry-run preview of ``repair reset-progress`` must never slander a
-    sound envelope as ``unreadable`` (persona-fleet finding H4): on a
-    fresh storage root the operator has only just written a healthy
-    state, so the classification must reflect that.
+    sound envelope as ``unreadable``: on a fresh storage root the
+    operator has only just written a healthy state, so the
+    classification must reflect that.
     """
 
     from .._models import WorkflowState

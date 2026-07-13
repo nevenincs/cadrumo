@@ -143,10 +143,8 @@ def _optional_source_casilla_ids(
     optional: a prior filing that genuinely lacks any casilla-16 entry
     ("not captured", distinct from "filed 0") must not hard-fail the carry. The
     resolver treats the absent minoración as ``Decimal`` zero and the
-    application layer surfaces the not-captured advisory naming the gap, so the
-    minoración is never silently dropped (ADR
-    ``2026-06-13-modelo-130-pagos-fraccionados-carry``, ratified casilla-16
-    filed-zero-vs-not-captured distinction; ``no-silent-under-declaration``).
+    application layer surfaces the not-captured advisory naming the gap, so
+    the minoración is never silently dropped.
 
     The positive-part casilla (casilla 07) stays REQUIRED: a payment that was
     never filed cannot be carried, so its absence is a real integrity error.

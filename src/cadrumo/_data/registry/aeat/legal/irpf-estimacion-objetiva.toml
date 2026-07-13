@@ -1,9 +1,8 @@
 # LIRPF estimación-objetiva (módulos) magnitudes excluyentes.
 #
-# PROVENANCE: agent-authored (claude-opus, 2026-06-14) under the
-# aeat-grounding-completion campaign, grounding audit finding V3 (the módulos
-# exclusion limits existed only in corpus reference text, never as enforceable
-# registry values). The legal entry below is AGENT-AUTHORED but grounded in the
+# PROVENANCE: agent-authored (claude-opus, 2026-06-14). The módulos exclusion
+# limits existed only in corpus reference text, never as enforceable registry
+# values. The legal entry below is AGENT-AUTHORED but grounded in the
 # AUTHORITATIVE bundled consolidated LIRPF corpus (ley-35-2006.html), not a
 # secondary source: the corpus cross-check therefore validates against text the
 # project already ships and trusts. The legal catalogue is a human-reviewed,

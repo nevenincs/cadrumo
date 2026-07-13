@@ -65,7 +65,7 @@ def _lookup_bracket_by_ccaa_nodes(expression: object) -> list[object]:
 
     From the 2024/2025 revisions the autonomic escala formulas (0529/0531) wrap
     their ``lookup_bracket_by_ccaa`` operators inside the LIRPF art. 64/75
-    anualidades separate-escala ``if_then_else`` régimen predicate (#532), so the
+    anualidades separate-escala ``if_then_else`` régimen predicate, so the
     dispatch table is no longer at the top level. The pre-régimen (flat) years
     yield exactly one node; the modelled years yield several (each escala term of
     the conditional). Every node must satisfy the CCAA-dispatch invariants.

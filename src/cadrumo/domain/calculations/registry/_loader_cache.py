@@ -21,10 +21,6 @@ See Also:
         Coverage for the longer bundled-root fingerprint TTL window.
     :func:`~conftest._isolate_registry_caches`
         Session fixture that clears registry caches around pytest runs.
-    Governing vault records
-        ``2026-05-20-registry-authority-flow-adr`` and
-        ``2026-06-02-registry-loader-boundary-audit`` govern the authority
-        boundary and loader-extraction cache invalidation behavior.
 """
 
 from __future__ import annotations
@@ -41,9 +37,9 @@ REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
-# routine dev/worktree mode) "bundled" resolves to the literal in-tree
-# ``src/cadrumo/_data/registry/aeat`` source directory, which concurrent peer
-# agents in this shared worktree edit live throughout a session. A TTL that
+# routine development mode) "bundled" resolves to the literal in-tree
+# ``src/cadrumo/_data/registry/aeat`` source directory, which can be edited
+# live during a session. A TTL that
 # never re-checks would silently serve stale registry TOML to a long-running
 # process (an MCP server, a REPL, a background watch loop) after such an
 # edit lands. 10 seconds is long enough to fold the several fingerprint

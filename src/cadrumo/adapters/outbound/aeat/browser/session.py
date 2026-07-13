@@ -208,7 +208,7 @@ class BrowserSession:
             )
             # When the failure is a missing browser binary (the post-install
             # `playwright install` step was skipped), name the exact fix rather
-            # than relaying a bare driver error (dependency-provisioning ADR).
+            # than relaying a bare driver error.
             hint = ""
             if "executable doesn't exist" in str(exc).lower() or "playwright install" in str(exc).lower():
                 hint = " — run 'playwright install chromium' (or 'just provision') to install the browser binary"

@@ -1,8 +1,8 @@
 """Real-behavior tests for the workstation-preflight health probes.
 
 Each probe answers one health question — per-provider certificate / Cl@ve Móvil
-configuration (#286), secure-storage / bundled-corpus / configuration preflight
-(#102), and registry referential integrity (#98) — and MUST return a typed
+configuration, secure-storage / bundled-corpus / configuration preflight,
+and registry referential integrity — and MUST return a typed
 :class:`~cadrumo.application.preflight.PreflightCheck` for both a healthy and an
 unhealthy workstation, never raising. These tests drive the real probes against
 real settings overrides, a real on-disk storage/corpus layout, and the real

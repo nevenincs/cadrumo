@@ -1,4 +1,4 @@
-"""LIRPF art. 64/75 anualidades separate-escala eligibility flag derivation (#532).
+"""LIRPF art. 64/75 anualidades separate-escala eligibility flag derivation.
 
 The régimen predicate for casillas 0528/0530/0529/0531 consumes a profile
 binding whose value is derived, not operator-typed: it is 1 (eligible — the

@@ -213,12 +213,12 @@ if TYPE_CHECKING:
     from ._testing import register_minimal_profile
     from ._validation import ProfileValidationService
 
-# W09.P43.S166: replace the prior side-effect import with an explicit
-# register call so the registration point is greppable rather than
-# hidden behind a noqa-protected import. Runs after all module-level
-# imports settle so the call sits in a clear initialiser slot. The
-# resolver implementation defers its workflow / orchestration imports
-# inside its body so this call does not trigger a heavy cascade.
+# An explicit register call replaces a side-effect import so the
+# registration point is greppable rather than hidden behind a
+# noqa-protected import. Runs after all module-level imports settle so
+# the call sits in a clear initialiser slot. The resolver implementation
+# defers its workflow / orchestration imports inside its body so this
+# call does not trigger a heavy cascade.
 _register_language_resolver()
 
 

@@ -1,4 +1,4 @@
-"""Per-sequence hermetic sandbox runner for ``cli-sequence`` frames (ADR D6, D3).
+"""Per-sequence hermetic sandbox runner for ``cli-sequence`` frames.
 
 Each :class:`~dev.docs.sequences._schema.ParsedSequence` executes in FULL
 isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_root`
@@ -13,7 +13,7 @@ and the live-AEAT gate off. Frames are invoked in-process through the cached
 Click tree (:func:`~cadrumo.tests.cli_runner.invoke_cached_cli`). Sequences never
 share state — not across pages and not within a page.
 
-Capture threading (ADR D1): after a frame executes, each of its
+Capture threading: after a frame executes, each of its
 :class:`~dev.docs.sequences._schema.CaptureBinding` json-paths is read from the
 frame's parsed JSON envelope and bound; later frames interpolate the bound value
 into their ``{name}`` placeholder tokens before execution. A capture against
@@ -22,7 +22,7 @@ capture, and an undeclared non-zero exit code are all fail-fast
 :class:`~dev.docs.sequences._errors.SequenceExecutionError` refusals — every
 later frame would otherwise run against a corrupted premise.
 
-Safety (ADR D6, ``aeat-safety-legal-gates``): a frame that would contact live
+Safety: a frame that would contact live
 AEAT is refused BEFORE any execution. Detection is fail-closed over the argv
 tokens: any non-option token equal to ``live`` or ``pull``, or starting with
 ``pull-``, marks the frame unenrollable (the ``pull`` verb family and the
@@ -32,17 +32,16 @@ is set, and never sets it.
 
 Layering note: this docs-tooling engine deliberately consumes the shared
 in-package test substrate — :mod:`cadrumo.tests.cli_runner` and
-:mod:`cadrumo.tests.secure_sql` — as decided in ADR D6 ("the executor is one
-engine ... on the existing test substrates"). Both are public, non-underscore
-modules of the shipped ``cadrumo.tests`` package and are the canonical hermetic
-in-process CLI/storage providers; duplicating them here would create the
-parallel write path the composition rules forbid.
+:mod:`cadrumo.tests.secure_sql` — rather than duplicating a second engine on
+top of it. Both are public, non-underscore modules of the shipped
+``cadrumo.tests`` package and are the canonical hermetic in-process
+CLI/storage providers; duplicating them here would create the parallel write
+path the composition rules forbid.
 
 The typed :class:`SequenceTranscript` this module returns is the input contract
-for the golden store and comparison layers (plan phases ``W02.P04`` /
-``W02.P05``): per frame it carries the argv as executed, the exit code, the
-verbatim output, the parsed envelope document (pre-mask) where the output is
-JSON, and the values captured from that frame.
+for the golden store and comparison layers: per frame it carries the argv as
+executed, the exit code, the verbatim output, the parsed envelope document
+(pre-mask) where the output is JSON, and the values captured from that frame.
 """
 
 from __future__ import annotations
@@ -95,7 +94,7 @@ __all__ = [
     "sequence_sandbox",
 ]
 
-#: The one project-wide frozen instant every sequence executes under (ADR D6).
+#: The one project-wide frozen instant every sequence executes under.
 SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
 
 #: The deterministic injected profile identity (a fixed valid UUIDv4 shape,
@@ -109,7 +108,7 @@ SANDBOX_PROFILE_LABEL: str = "docs-sequence-sandbox"
 
 #: Synthetic profile facts for the injected sandbox identity, mirroring the
 #: fact paths the workspace-initialization service persists. All values are
-#: synthetic; richer fixture state is built by ``@setup`` frames (ADR D6).
+#: synthetic; richer fixture state is built by ``@setup`` frames.
 _SANDBOX_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     UserProfileFact(path="identity.name", value="Docs"),
@@ -119,7 +118,7 @@ _SANDBOX_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="iva.regime", value="GENERAL"),
 )
 
-#: The ``@expect`` pseudo-path asserting a frame's process exit code (ADR D3).
+#: The ``@expect`` pseudo-path asserting a frame's process exit code.
 _EXIT_CODE_PATH: str = "exit_code"
 
 #: Argv tokens that mark a frame as live-AEAT and therefore unenrollable: the
@@ -134,10 +133,10 @@ _PULL_VERB_PREFIX: str = "pull-"
 #: One json-path segment: a mapping key or a ``[index]`` list address.
 _PATH_SEGMENT_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)|\[([0-9]+)\]")
 
-#: Transient shared-worktree registry-race markers (the ``aeat-local-execution``
-#: rule): a peer agent editing the registry TOML tree mid-load produces these
-#: transient failures; the frame invocation retries bounded on exactly these
-#: markers so a real refusal is never masked.
+#: Transient registry-race markers: concurrent modification of the registry
+#: TOML tree during local development produces these transient failures; the
+#: frame invocation retries bounded on exactly these markers so a real
+#: refusal is never masked.
 _TRANSIENT_REGISTRY_RACE_MARKERS: tuple[str, ...] = (
     "registry directory changed during cache fingerprinting",
     "required-role gate",
@@ -204,9 +203,9 @@ class SequenceTranscript(BaseModel):
     """The full execution transcript of one sequence in its sandbox.
 
     This is the typed input the golden store serializes and the comparison
-    layer diffs (plan ``W02.P04``). ``storage_root`` and ``workdir`` are
-    per-run sandbox paths — they exist so text-frame normalisation can replace
-    them with stable tokens (ADR D3); they are never golden content themselves.
+    layer diffs. ``storage_root`` and ``workdir`` are per-run sandbox paths —
+    they exist so text-frame normalisation can replace them with stable
+    tokens; they are never golden content themselves.
     """
 
     model_config = _STRICT_FROZEN
@@ -281,7 +280,7 @@ def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
 
 
 def _refuse_live_frames(sequence: ParsedSequence) -> None:
-    """Refuse the whole sequence when any frame would contact live AEAT (ADR D6)."""
+    """Refuse the whole sequence when any frame would contact live AEAT."""
     violations = [
         f"{_frame_at(frame)}: {frame.command_line!r} is a live-AEAT invocation "
         f"(tokens {', '.join(_live_aeat_tokens(frame))}); pull verbs and the "
@@ -345,7 +344,7 @@ def sequence_sandbox(
     sandbox_root: Path,
     fixtures_root: Path | None = None,
 ) -> Iterator[SequenceSandbox]:
-    """Open one hermetic per-sequence sandbox under ``sandbox_root`` (ADR D6).
+    """Open one hermetic per-sequence sandbox under ``sandbox_root``.
 
     Inside the scope: an isolated real-crypto storage root, the frozen
     :data:`SANDBOX_INSTANT`, the deterministic :data:`SANDBOX_PROFILE_ID`
@@ -424,7 +423,7 @@ def _resolved_argv(
 
 
 def _expected_exit_code(frame: SequenceFrame, sequence_id: str) -> int:
-    """Return the frame's declared exit-code expectation (default 0, ADR D3)."""
+    """Return the frame's declared exit-code expectation (default 0)."""
     declared = {assertion.expected for assertion in frame.expects if assertion.json_path == _EXIT_CODE_PATH}
     if not declared:
         return 0
@@ -523,10 +522,11 @@ def _capture_values(
 def _invoke_frame(args: tuple[str, ...]) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
-    The race exists only in the shared development worktree where peer agents
-    edit the registry TOML tree mid-load; under CI the tree is static, so any
-    marker match there is a genuine failure and the retry loop is skipped
-    entirely rather than burning bounded-retry latency in front of it.
+    The race exists only during local development, where concurrent
+    modification of the registry TOML tree mid-load produces these transient
+    failures; under CI the tree is static, so any marker match there is a
+    genuine failure and the retry loop is skipped entirely rather than
+    burning bounded-retry latency in front of it.
     """
     result = invoke_cached_cli(list(args))
     if os.environ.get("CI"):
@@ -609,7 +609,7 @@ def execute_sequence(
     sandbox_root: Path | None = None,
     fixtures_root: Path | None = None,
 ) -> SequenceTranscript:
-    """Execute a parsed sequence in a fresh hermetic sandbox (ADR D6).
+    """Execute a parsed sequence in a fresh hermetic sandbox.
 
     Frames execute in order through the cached in-process Click tree, each
     frame's captures binding before the next frame's placeholders interpolate.

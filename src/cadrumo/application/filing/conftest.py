@@ -6,17 +6,16 @@ copies in ``_test_repository``, ``_test_history_repository``, and
 ``_test_complementaria_repository`` collapse into one autouse conftest
 fixture.
 
-Module-scope hoisting (W30.P64.S804): the expensive bucket runtime
-(Argon2id KEK derivation, wrapped-DEK mint, session open, engine + table
-create) is provisioned once per test module by ``_active_bucket_runtime``.
-Per-test isolation is restored by the autouse ``_reset_filing_store``
-teardown, which truncates the module-shared ``secure_objects`` table
-before each test. This is the real per-test on-disk reset the S804
-infeasibility audit called for, not the fictional ``Session().begin_nested()``
-savepoint (a savepoint cannot roll back on-disk keystore/manifest state, and
-the catalogue rows are the only thing that actually accumulates). Tests that
-scan the at-rest database bytes read the module runtime's ``storage_root``
-rather than their own per-test ``tmp_path``.
+The expensive bucket runtime (Argon2id KEK derivation, wrapped-DEK mint,
+session open, engine + table create) is provisioned once per test module by
+``_active_bucket_runtime``. Per-test isolation is restored by the autouse
+``_reset_filing_store`` teardown, which truncates the module-shared
+``secure_objects`` table before each test. This is the real per-test
+on-disk reset, not a ``Session().begin_nested()`` savepoint (a savepoint
+cannot roll back on-disk keystore/manifest state, and the catalogue rows
+are the only thing that actually accumulates). Tests that scan the at-rest
+database bytes read the module runtime's ``storage_root`` rather than their
+own per-test ``tmp_path``.
 
 See Also:
     :func:`aeat-tests.secure_sql.isolated_runtime_profile`

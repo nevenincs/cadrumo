@@ -13,8 +13,8 @@
 # 29/33/37). Those predicates fired because every official numbered cuota box was
 # input_kind = "manual" and stayed zero while the semantic total was positive.
 #
-# Stage 2 (2026-06-13 dual-keying ADR) POPULATES every in-scope cuota box by a
-# single-source projection formula (input_kind = "computed"), so each box copies
+# Stage 2 POPULATES every in-scope cuota box by a single-source projection
+# formula (input_kind = "computed"), so each box copies
 # its semantic source. EVERY constituent of BOTH Stage-1 implies_any_nonzero
 # predicates (03/06/09/11/13 devengado; 29/33/37 deducible) is now a computed
 # projection. The implication antecedent-positive -> consequent-positive

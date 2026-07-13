@@ -128,7 +128,7 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
 def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     """Store a declared IRNR non-resident natural-person profile.
 
-    This is the Olivia round-16 persona (issue #536): a non-resident who
+    This profile represents a non-resident who
     is a NON_RESIDENT_IRNR contribuyente, not an IRPF resident, and who
     must file Modelo 210 (IRNR) rather than Modelo 100 (the resident IRPF
     Renta).
@@ -367,11 +367,11 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
 
 
 def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_path: Path) -> None:
-    """Issue #536: a non-resident natural person is refused an M100 calculate.
+    """A non-resident natural person is refused an M100 calculate.
 
-    The Olivia round-16 scenario: a NON_RESIDENT_IRNR contribuyente owns
-    an existing Modelo 100 work unit (created while resident, or bypassed
-    at create). The calculate service must re-check applicability against
+    A NON_RESIDENT_IRNR contribuyente owns an existing Modelo 100 work unit
+    (created while resident, or bypassed at create). The calculate service
+    must re-check applicability against
     the current profile and refuse — never silently produce a resident
     IRPF Renta calculation for a non-resident. The refusal names the IRNR
     route and the Modelo 210 path, and persists no revision.
@@ -408,7 +408,7 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
 
 
 def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural_person() -> None:
-    """Issue #536: the shared readiness gate refuses M100 for a non-resident,
+    """The shared readiness gate refuses M100 for a non-resident,
     yet accepts it for a resident — the distinction is the authoritative
     ``fiscal_residency`` signal, not a blanket refusal.
 

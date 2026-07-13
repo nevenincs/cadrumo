@@ -193,7 +193,7 @@ def suggest_reconciliations(
     suggestions: list[ReconciliationSuggestion] = []
     for invoice in unmatched_invoices:
         # ``amount`` is a non-negative magnitude; flow is carried by
-        # ``direction`` (ledger-amount-direction ADR). An ISSUED invoice
+        # ``direction``. An ISSUED invoice
         # reconciles against an INCOMING transaction, a RECEIVED invoice
         # against an OUTGOING transaction, both matched on the magnitude
         # against the invoice grand total.

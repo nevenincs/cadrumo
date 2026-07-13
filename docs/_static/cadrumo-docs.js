@@ -589,23 +589,20 @@
     });
   }
 
-  /* ── CLI sequence stepped player ───────────────────────────────────────
-   * Progressive enhancement over the server-rendered
-   * div.cadrumo-sequence transcript (ADR D5). The frames are already in the
-   * DOM as div.cadrumo-frame; without this script the reader sees the full
-   * linear transcript. When it runs, the widget only ENHANCES: it reveals the
-   * command/result frames one step at a time behind prev/next/play controls
-   * and a position indicator, and never injects or removes frame content. Each
-   * sequence on a page keeps its own independent state. */
-
-  var PLAY_INTERVAL_MS = 1800;
-
-  function prefersReducedMotion() {
-    return (
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
-  }
+  /* ── CLI sequence playhead ─────────────────────────────────────────────
+   * Progressive enhancement over the server-rendered div.cadrumo-sequence
+   * transcript (ADR D5; presentation revised per operator review). The frames
+   * are already in the DOM as div.cadrumo-frame with full token highlighting;
+   * without this script the reader sees the complete highlighted transcript.
+   *
+   * When it runs, the widget is a PLAYHEAD over a rundown: every command line
+   * stays visible at all times. Exactly one command is active — highlighted,
+   * with its output shown beneath it. Commands after the playhead are dimmed
+   * with their highlighting and output suppressed (JS-applied classes the CSS
+   * keys on — never a DOM rewrite). Prev/next (and arrow keys) move the
+   * playhead; there is no autonomous or timed advance. The widget only toggles
+   * state classes and never injects or removes frame content. Each sequence on
+   * a page keeps its own independent state. */
 
   function unescapePayload(text) {
     // The directive escapes </ as <\/ so the inline JSON cannot break out of
@@ -619,14 +616,14 @@
     try {
       return JSON.parse(unescapePayload(script.textContent));
     } catch (e) {
-      /* A malformed payload never breaks the widget; stepping is driven by the
-       * DOM frames, and the static transcript stays intact. */
+      /* A malformed payload never breaks the widget; the playhead is driven by
+       * the DOM frames, and the static transcript stays intact. */
       return null;
     }
   }
 
   function setupSequence(root) {
-    // The steppable units are the command and result frames in document order;
+    // The playhead runs over the command and result frames in document order;
     // setup frames stay as their own collapsed disclosure and are not stepped.
     var frames = Array.prototype.filter.call(
       root.querySelectorAll(".cadrumo-frame"),
@@ -634,21 +631,64 @@
         return frame.getAttribute("data-frame-kind") !== "setup";
       }
     );
-    if (frames.length < 2) return; // a single frame has nothing to step through
+    if (frames.length < 2) return; // a single frame is nothing to step through
 
     // The inline payload is the sequence's build-time contract. If it is absent
     // or malformed, leave the static transcript unenhanced rather than driving a
-    // player over a sequence whose contract we cannot validate.
+    // playhead over a sequence whose contract we cannot validate.
     if (parseSequencePayload(root) === null) return;
 
     var total = frames.length;
     var current = 0;
-    var timer = null;
+
+    /* Output disclosure: each frame's output/stderr block is toggleable by the
+     * reader and ONLY by the reader — stepping the playhead never opens or
+     * closes an output. The verification caption and its checks stay visible
+     * (they are narration, not output). The toggle is a real labelled button
+     * with an SVG chevron icon; it is JS-created, so a no-JS reader sees
+     * everything. */
+    var OUTPUT_SELECTOR = ".cadrumo-frame-output, .cadrumo-frame-stderr";
+    var CHEVRON_SVG =
+      '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+      '<path d="M5 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function setOutputOpen(frame, open) {
+      frame.classList.toggle("is-output-open", open);
+      var toggle = frame.querySelector(".cadrumo-output-toggle");
+      if (toggle) {
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        var label = toggle.querySelector(".cadrumo-output-toggle-label");
+        if (label) label.textContent = open ? "Hide output" : "Show output";
+      }
+    }
+
+    frames.forEach(function (frame) {
+      if (!frame.querySelector(OUTPUT_SELECTOR)) return;
+      var toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "cadrumo-output-toggle";
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.innerHTML = CHEVRON_SVG; // static icon markup, no user data
+      var label = document.createElement("span");
+      label.className = "cadrumo-output-toggle-label";
+      label.textContent = "Show output";
+      toggle.appendChild(label);
+      var command = frame.querySelector(".cadrumo-frame-command");
+      if (command && command.parentNode === frame) {
+        frame.insertBefore(toggle, command.nextSibling);
+      } else {
+        frame.appendChild(toggle);
+      }
+      toggle.addEventListener("click", function () {
+        setOutputOpen(frame, !frame.classList.contains("is-output-open"));
+      });
+    });
 
     var controls = document.createElement("div");
     controls.className = "cadrumo-sequence-controls";
     controls.setAttribute("role", "group");
-    controls.setAttribute("aria-label", "Sequence playback");
+    controls.setAttribute("aria-label", "Command rundown");
 
     function button(kind, label, glyph) {
       var el = document.createElement("button");
@@ -659,9 +699,8 @@
       return el;
     }
 
-    var prevBtn = button("prev", "Previous step", "&#8592;");
-    var playBtn = button("play", "Play", "&#9654;");
-    var nextBtn = button("next", "Next step", "&#8594;");
+    var prevBtn = button("prev", "Previous command", "&#8592;");
+    var nextBtn = button("next", "Next command", "&#8594;");
 
     var indicator = document.createElement("span");
     indicator.className = "cadrumo-sequence-position";
@@ -671,50 +710,25 @@
     controls.appendChild(prevBtn);
     controls.appendChild(indicator);
     controls.appendChild(nextBtn);
-    controls.appendChild(playBtn);
 
     function render() {
       frames.forEach(function (frame, index) {
-        var revealed = index <= current;
-        frame.hidden = !revealed;
+        // Commands are always visible; only the playhead state changes. The CSS
+        // keys on these classes to dim future commands (and drop their
+        // highlighting). Output disclosure is entirely the reader's: stepping
+        // neither opens nor closes any output.
         frame.classList.toggle("is-active", index === current);
+        frame.classList.toggle("is-past", index < current);
+        frame.classList.toggle("is-future", index > current);
       });
       indicator.textContent = current + 1 + " / " + total;
       prevBtn.disabled = current === 0;
       nextBtn.disabled = current === total - 1;
     }
 
-    function stopPlay() {
-      if (timer) {
-        window.clearInterval(timer);
-        timer = null;
-      }
-      playBtn.classList.remove("is-playing");
-      playBtn.setAttribute("aria-label", "Play");
-      playBtn.setAttribute("aria-pressed", "false");
-      playBtn.innerHTML = "&#9654;";
-    }
-
-    function goTo(index, viaPlay) {
+    function goTo(index) {
       current = Math.max(0, Math.min(index, total - 1));
-      if (!viaPlay) stopPlay();
       render();
-    }
-
-    function startPlay() {
-      if (current === total - 1) current = 0;
-      playBtn.classList.add("is-playing");
-      playBtn.setAttribute("aria-label", "Pause");
-      playBtn.setAttribute("aria-pressed", "true");
-      playBtn.innerHTML = "&#10073;&#10073;";
-      render();
-      timer = window.setInterval(function () {
-        if (current >= total - 1) {
-          stopPlay();
-          return;
-        }
-        goTo(current + 1, true);
-      }, PLAY_INTERVAL_MS);
     }
 
     prevBtn.addEventListener("click", function () {
@@ -722,16 +736,6 @@
     });
     nextBtn.addEventListener("click", function () {
       goTo(current + 1);
-    });
-    playBtn.addEventListener("click", function () {
-      if (timer) {
-        stopPlay();
-      } else if (prefersReducedMotion()) {
-        // Reduced-motion: no timer-driven auto-advance; play steps forward once.
-        goTo(current + 1);
-      } else {
-        startPlay();
-      }
     });
 
     // Arrow-key stepping is scoped to the widget: the listener is on the
@@ -747,8 +751,8 @@
       }
     });
 
-    // The last frame carries the controls' insertion point; place the bar
-    // after the final frame so the transcript reads top-to-bottom.
+    // Place the controls after the final frame so the rundown reads
+    // top-to-bottom with its stepper beneath it.
     var anchor = frames[total - 1];
     if (anchor.parentNode) {
       anchor.parentNode.insertBefore(controls, anchor.nextSibling);
@@ -759,9 +763,151 @@
     render();
   }
 
+  /* ── Shell switcher ─────────────────────────────────────────────────────
+   * Each command frame carries one div.cadrumo-cmd-variant[data-shell] per
+   * declared shell, server-rendered with that shell's wrapping and continuation
+   * marker. The CSS shows only the variant matching the root's data-cadrumo-shell
+   * (set at build to the default shell, so the correct variant shows without JS).
+   * This adds a segmented control that updates data-cadrumo-shell — per-sequence
+   * state, no global persistence. A sequence declaring a single shell gets no
+   * switcher. */
+  function setupShellSwitcher(root) {
+    var variants = root.querySelectorAll(".cadrumo-cmd-variant[data-shell]");
+    if (!variants.length) return;
+    var shells = [];
+    Array.prototype.forEach.call(variants, function (variant) {
+      var shell = variant.getAttribute("data-shell");
+      if (shell && shells.indexOf(shell) === -1) shells.push(shell);
+    });
+    if (shells.length < 2) return; // one shell — nothing to switch between
+    if (!root.getAttribute("data-cadrumo-shell")) {
+      root.setAttribute("data-cadrumo-shell", shells[0]);
+    }
+
+    var switcher = document.createElement("div");
+    switcher.className = "cadrumo-shell-switcher";
+    switcher.setAttribute("role", "group");
+    switcher.setAttribute("aria-label", "Terminal shell");
+
+    var buttons = shells.map(function (shell) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cadrumo-shell-btn";
+      btn.setAttribute("data-shell", shell);
+      btn.textContent = shell;
+      btn.setAttribute(
+        "aria-pressed",
+        root.getAttribute("data-cadrumo-shell") === shell ? "true" : "false"
+      );
+      btn.addEventListener("click", function () {
+        selectShell(shell);
+      });
+      switcher.appendChild(btn);
+      return btn;
+    });
+
+    function selectShell(shell) {
+      root.setAttribute("data-cadrumo-shell", shell);
+      buttons.forEach(function (btn) {
+        btn.setAttribute(
+          "aria-pressed",
+          btn.getAttribute("data-shell") === shell ? "true" : "false"
+        );
+      });
+    }
+
+    // Home the switcher in the playhead's controls row when it exists; otherwise
+    // (a single-frame sequence has no playhead) create a minimal chrome row.
+    var controls = root.querySelector(".cadrumo-sequence-controls");
+    if (!controls) {
+      controls = document.createElement("div");
+      controls.className = "cadrumo-sequence-controls cadrumo-sequence-controls--chrome";
+      root.appendChild(controls);
+    }
+    controls.appendChild(switcher);
+  }
+
+  /* ── Copy command ───────────────────────────────────────────────────────
+   * Every command/result frame carries data-command-line: the single-line
+   * authored command (placeholders intact, no prompt, no continuation chars).
+   * This adds a copy icon-button that writes it to the clipboard — enhancement
+   * only (JS-created), so a no-JS reader still sees the full command. */
+  var COPY_SVG =
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+    '<rect x="5.4" y="5.4" width="8.1" height="8.1" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+    '<path d="M3.5 10.5h-.6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v.6" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var COPIED_MS = 1500;
+
+  function fallbackCopy(text) {
+    try {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(area);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function writeClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(
+        function () {
+          return true;
+        },
+        function () {
+          return fallbackCopy(text);
+        }
+      );
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+
+  function setupCopyButtons(root) {
+    var frames = root.querySelectorAll(".cadrumo-frame[data-command-line]");
+    Array.prototype.forEach.call(frames, function (frame) {
+      // Setup frames live inside a collapsed disclosure; the copy affordance is
+      // for the visible command and result frames the reader runs.
+      if (frame.getAttribute("data-frame-kind") === "setup") return;
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "cadrumo-copy-btn";
+      button.setAttribute("aria-label", "Copy command");
+      button.innerHTML = COPY_SVG; // static icon markup, no user data
+      var label = document.createElement("span");
+      label.className = "cadrumo-copy-label";
+      label.setAttribute("aria-hidden", "true");
+      button.appendChild(label);
+
+      var timer = null;
+      button.addEventListener("click", function () {
+        var command = frame.getAttribute("data-command-line") || "";
+        writeClipboard(command).then(function (ok) {
+          button.classList.add("is-copied");
+          label.textContent = ok ? "Copied" : "Copy failed";
+          if (timer) window.clearTimeout(timer);
+          timer = window.setTimeout(function () {
+            button.classList.remove("is-copied");
+            label.textContent = "";
+          }, COPIED_MS);
+        });
+      });
+      frame.appendChild(button);
+    });
+  }
+
   function initSequences() {
     document.querySelectorAll("[data-cadrumo-sequence]").forEach(function (root) {
       setupSequence(root);
+      setupShellSwitcher(root);
+      setupCopyButtons(root);
     });
   }
 
@@ -818,9 +964,11 @@
 
     var activeToken = null;
     var intended = null;
+    var pinned = false;
 
     function hide() {
       popover.hidden = true;
+      pinned = false;
       if (activeToken) {
         activeToken.removeAttribute("aria-describedby");
         activeToken = null;
@@ -856,8 +1004,21 @@
       return li;
     }
 
-    function renderNode(node, optionName) {
+    function renderNode(node, optionName, isPinned) {
       popover.textContent = "";
+      if (isPinned) {
+        // A clicked-open popup carries its own explicit close control.
+        var close = document.createElement("button");
+        close.type = "button";
+        close.className = "cadrumo-cli-popover-close";
+        close.setAttribute("aria-label", "Close help");
+        close.textContent = "×";
+        close.addEventListener("click", function () {
+          intended = null;
+          hide();
+        });
+        popover.appendChild(close);
+      }
       appendLine("cadrumo-cli-popover-path", (node.path || []).join(" "));
       appendLine("cadrumo-cli-popover-usage", node.usage);
       appendLine("cadrumo-cli-popover-help", node.help);
@@ -899,7 +1060,7 @@
       popover.style.top = Math.round(top) + "px";
     }
 
-    function show(token) {
+    function show(token, pin) {
       var key = token.getAttribute("data-command-path");
       if (!key) return;
       intended = token;
@@ -907,40 +1068,58 @@
         if (!tree || intended !== token) return; // pointer/focus moved on
         var node = tree[key];
         if (!node) return;
-        renderNode(node, token.getAttribute("data-option"));
+        renderNode(node, token.getAttribute("data-option"), pin === true);
         popover.hidden = false;
+        pinned = pin === true;
         activeToken = token;
         token.setAttribute("aria-describedby", popover.id);
         positionNear(token);
+        // The popup must always be fully visible: when the viewport-clamped
+        // position still leaves it partly off-canvas, scroll it into view.
+        popover.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
 
     tokens.forEach(function (token) {
       if (!token.hasAttribute("tabindex")) token.setAttribute("tabindex", "0");
+      // Hover/focus give a transient preview; click PINS the popup until its
+      // close button, Escape, an outside click, or another token's pin.
       token.addEventListener("mouseenter", function () {
-        show(token);
+        if (!pinned) show(token, false);
       });
       token.addEventListener("mouseleave", function () {
-        intended = null;
-        hide();
+        if (!pinned) {
+          intended = null;
+          hide();
+        }
       });
       token.addEventListener("focus", function () {
-        show(token);
+        if (!pinned) show(token, false);
       });
       token.addEventListener("blur", function () {
-        intended = null;
-        hide();
+        if (!pinned) {
+          intended = null;
+          hide();
+        }
       });
-      // Touch: a tap toggles the popover for the tapped token.
       token.addEventListener("click", function (event) {
         event.preventDefault();
-        if (activeToken === token) {
+        event.stopPropagation();
+        if (pinned && activeToken === token) {
           intended = null;
           hide();
         } else {
-          show(token);
+          show(token, true);
         }
       });
+    });
+
+    // An outside click dismisses a pinned popup (clicks inside it stay).
+    document.addEventListener("click", function (event) {
+      if (pinned && !popover.hidden && !popover.contains(event.target)) {
+        intended = null;
+        hide();
+      }
     });
 
     document.addEventListener("keydown", function (event) {

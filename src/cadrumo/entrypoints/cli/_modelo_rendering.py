@@ -48,9 +48,9 @@ _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
 _M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
 # The canonical M100 régimen-de-atribución (actividad económica) income casilla
-# the attributed base folds into, per the 2026-07-09-m184-socio-attribution-handoff-adr
-# addendum, decision (a): 1577 stays relation-canonical and the cross-bucket value
-# enters the socio's own M100 via a documented manual --binding override on 1577.
+# the attributed base folds into: 1577 stays relation-canonical and the
+# cross-bucket value enters the socio's own M100 via a documented manual
+# --binding override on 1577.
 _M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
 _M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
 _CROSS_PERIOD_DEPENDENCY_UNCLEAN_MESSAGE = _re.compile(
@@ -88,8 +88,7 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     rows, the entity operator who files the M184 is handed, per socio, the exact
     attributed base plus the ``attribution_received`` fact keys the socio records
     on their OWN profile, and the exact ``aeat app modelo work calculate
-    --binding`` command that folds the base into the socio's Modelo 100 (per the
-    ``2026-07-09-m184-socio-attribution-handoff-adr`` addendum, decision (a): the
+    --binding`` command that folds the base into the socio's Modelo 100 (the
     cross-bucket value is carried by hand onto the relation-canonical casilla
     1577, not auto-flowed across profiles). Grounded in LIRPF arts. 86-89.
     Returns an empty list for any revision without member rows (non-M184, or an

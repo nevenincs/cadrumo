@@ -93,7 +93,7 @@ def test_modelo_build_draft_projects_registry_backed_draft(
 
 
 def test_modelo_390_export_produces_fichero_boe_from_real_registry(tmp_path: Path) -> None:
-    """Modelo 390 now ships a registry-declared fichero-BOE export layout (#508).
+    """Modelo 390 now ships a registry-declared fichero-BOE export layout.
 
     The genuinely-unsupported-modelo refusal path stays covered by
     ``test_testing_registry.test_unsupported_modelo_fails_at_registry_boundary``;

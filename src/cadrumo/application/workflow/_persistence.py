@@ -204,8 +204,7 @@ class WorkflowStateRepository:
         and may run on a cold root where ``cadrumo_database_url`` does
         not resolve (no active profile). In that case there is no
         state envelope to reset; the fingerprint records empty
-        metadata rather than crashing on the absent database
-        (disaster ADR Ruling 6).
+        metadata rather than crashing on the absent database.
         """
         try:
             metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)

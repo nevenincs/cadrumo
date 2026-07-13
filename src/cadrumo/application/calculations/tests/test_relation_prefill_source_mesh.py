@@ -1,11 +1,11 @@
 """Application tests for relation prefill source mesh enrollment.
 
-Finding F2 — cross-domain-handoffs-swarm-audit 2026-05-16: the bare
-``except Exception`` in ``resolve_relations_from_local_store`` was narrowed to
-``except RegistryValidationError`` so that unexpected failures surface instead
-of silently downgrading to ``operator_manual`` provenance. The operator-manual
-fallback is legitimate when the local store genuinely has no prior filings; it
-must not mask structural failures.
+``resolve_relations_from_local_store`` catches only
+``RegistryValidationError`` (never a bare ``except Exception``), so that
+unexpected failures surface instead of silently downgrading to
+``operator_manual`` provenance. The operator-manual fallback is legitimate
+when the local store genuinely has no prior filings; it must not mask
+structural failures.
 """
 
 from __future__ import annotations

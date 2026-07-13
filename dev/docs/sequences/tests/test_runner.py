@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the per-sequence hermetic sandbox runner (W02.P03).
+"""Real-behaviour tests for the per-sequence hermetic sandbox runner.
 
 Every test drives the REAL Cadrumo CLI in-process against a fresh
 real-crypto sandbox (genuine ``bucket-dek-v1`` bucket, encrypted SQLite,
@@ -8,7 +8,7 @@ create`` → ``work calculate`` (with real registry bindings) → ``work verify`
 whose verify gate genuinely refuses without clean cross-period evidence, so the
 terminal ``@result`` frame exercises a real declared non-zero exit.
 
-Determinism observation (formalised by the W02.P05 anti-tautology gate): two
+Determinism observation (formalised by this anti-tautology gate): two
 executions of the chain in fresh sandboxes produced ZERO pre-mask differing
 JSON paths and byte-identical raw outputs — with the clock frozen and the
 profile id injected, the work-unit and calculation-revision ids are
@@ -148,7 +148,7 @@ class TestSandboxIsolationAndDeterminism:
             residual_names |= differing_field_names(first.envelope, second.envelope)
             assert first.exit_code == second.exit_code
             # The raw outputs are byte-identical for this chain (observed and
-            # pinned; the W02.P05 gate formalises the mask-honesty proof).
+            # pinned; this gate formalises the mask-honesty proof).
             assert first.output == second.output
 
         assert residual_paths == frozenset(), sorted(residual_paths)

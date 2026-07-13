@@ -6,8 +6,8 @@ that bind the regime itself, plus the cross-version fixture-coverage harness.
 
 - **Version-milestone tripwire.** While ``COMPATIBILITY_REGIME`` is
   ``PRE_RELEASE`` the package version must stay below ``1.0.0``. This catches
-  a 1.0 cut made without consciously flipping the regime — the safety net the
-  ADR keeps behind the primary constant-owned decision.
+  a 1.0 cut made without consciously flipping the regime — the safety net
+  kept behind the primary constant-owned decision.
 - **One-way coherence.** ``RELEASED_FORMAT_FLOORS`` is populated if and only
   if the regime is ``RELEASED``. The frozen floors and the regime constant
   can never drift apart.
@@ -20,9 +20,6 @@ assertion below is either the live pre-release truth or vacuously green.
 
 Reads only the public ``cadrumo.core`` compatibility-lifecycle policy — never a
 tier's private floor/version constants, which stay intra-package.
-
-Governing vault record
-    ``2026-07-09-compatibility-lifecycle-adr``.
 """
 
 from __future__ import annotations
@@ -88,8 +85,7 @@ def test_pre_release_regime_keeps_the_package_below_the_one_point_zero_milestone
         assert _package_major_version() < 1, (
             "package version has reached 1.0 while COMPATIBILITY_REGIME is still "
             "PRE_RELEASE: flip the regime to RELEASED and freeze RELEASED_FORMAT_FLOORS "
-            "in the checkpoint commit before cutting the first release "
-            "(2026-07-09-compatibility-lifecycle-adr)"
+            "in the checkpoint commit before cutting the first release"
         )
 
 
@@ -123,8 +119,7 @@ def test_every_released_floor_key_names_a_live_format_tier() -> None:
     unknown = set(floors) - _CANONICAL_FORMAT_KEYS
     assert unknown == set(), (
         f"RELEASED_FORMAT_FLOORS names non-tier format keys {unknown}; every frozen "
-        f"floor must map to a live persisted-format tier {sorted(_CANONICAL_FORMAT_KEYS)} "
-        "(2026-07-09-compatibility-lifecycle-adr)"
+        f"floor must map to a live persisted-format tier {sorted(_CANONICAL_FORMAT_KEYS)}"
     )
 
 
@@ -172,6 +167,5 @@ def test_cross_version_fixtures_cover_every_supported_old_version() -> None:
         assert "missing_fixture_coverage" not in obligations, (
             f"released format {format_key!r} supports versions {floor}..{current - 1} but "
             f"ships no committed fixture for one of them under {_FIXTURE_ROOT / format_key}; "
-            "capture the old-version fixture in the bump commit "
-            "(2026-07-09-compatibility-lifecycle-adr)"
+            "capture the old-version fixture in the bump commit"
         )

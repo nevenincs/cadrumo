@@ -1,6 +1,6 @@
 """The ``cadrumo_terminology_search`` tool: look up taxpayer-facing tax vocabulary.
 
-ADR R3's grounding surface has a second half: the bundled Terminology Handbook,
+The grounding surface has a second half: the bundled Terminology Handbook,
 the ratified taxpayer/operator vocabulary. This tool lets the model resolve a
 plain-language term ("prorrata", "recargo de equivalencia") to its preferred
 label, short description, and concept id, so the assistant explains a concept in

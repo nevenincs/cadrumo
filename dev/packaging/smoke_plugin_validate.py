@@ -1,6 +1,6 @@
 """Materialise a fresh Claude plugin and validate it with ``claude plugin validate --strict``.
 
-The plugin generation target (ADR "Plugin generation") emits the single authored
+The plugin generation target emits the single authored
 harness source as a one-click Claude plugin. This smoke lane materialises a fresh
 plugin into a throwaway directory and runs the live ``claude plugin validate
 --strict`` oracle over it, so a schema drift between the emitter and the Claude

@@ -13,9 +13,6 @@ See Also:
     :class:`~adapters.outbound.storage._local.LocalFileSystemProvider`
         Local storage provider whose sidecar loader keeps the Mapping return
         contract.
-    ``.vault/audit/2026-05-31-codebase-solidification-audit.md``
-        Records the recurring rationale and structural-hygiene ratchets this
-        test belongs to.
 """
 
 from __future__ import annotations

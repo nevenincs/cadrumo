@@ -63,7 +63,7 @@ uv run aeat config profile create demo `
   --tax-residence-ccaa madrid
 ```
 
-The profile becomes active. All remaining commands store records and the filing workspace in the active profile.
+The profile becomes active. It is the storage authority for records you create or change and for the filing workspace. Read-only commands inspect that profile without creating records. Export writes the cleartext `.boe` file to the path you choose with `--output`.
 
 ### 2. Add two classified records
 

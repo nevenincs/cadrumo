@@ -1,4 +1,4 @@
-"""Reviewed-excluded review-state action tests (issue #224).
+"""Reviewed-excluded review-state action tests.
 
 Exercises :func:`~cadrumo.application.ledger.mark_transaction_reviewed_excluded`
 against real encrypted repositories: the operator marks an active transaction as

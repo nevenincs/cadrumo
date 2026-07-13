@@ -375,8 +375,8 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
         ("369", "esquema-importacion"),
         ("390", "2010-y-siguientes"),
         ("349", "2020-y-siguientes"),
-        # 714/2021-y-siguientes deliberately dropped: b2e72ee87e closed the
-        # M714 edge enrollment window (valid_to=2025-12-31), so it is no
+        # 714/2021-y-siguientes deliberately dropped: the M714 edge
+        # enrollment window closed (valid_to=2025-12-31), so it is no
         # longer open-ended. It still declares orden_aplicabilidad and is
         # covered by test_backfilled_revision_has_valid_orden_aplicabilidad
         # above, which asserts the connective gate regardless of window shape.
@@ -387,7 +387,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
 def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Every open-ended (*-y-siguientes / year_from with no valid_to) backfilled
     revision has orden_aplicabilidad declared — the open-ended applicability claim
-    is BOE-anchored per the connective gate (Ruling 5 boundary).
+    is BOE-anchored per the connective gate.
     """
     modelos, _catalogues = _committed_registry_tree()
     modelo = next((m for m in modelos if m.id == modelo_id), None)

@@ -6,7 +6,7 @@ honor-system declaration today — a profile can claim
 ``justificantes/<modelo_id>/`` is a reportlab-generated synthetic PDF, and no
 structural gate catches the mismatch.
 
-Task #53 (commit a04be5ff2) pinned reportlab's ``setProducer`` to the literal
+The synthetic fixture generator pins reportlab's ``setProducer`` to the literal
 ``"aeat-test-fixture-generator"`` for every synthetic fixture.  The tests in
 this module read the ``/Producer`` DocInfo field from the committed fixture PDFs
 and assert that the enum tag matches the physical evidence in the file.

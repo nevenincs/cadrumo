@@ -1,6 +1,6 @@
 """Local session telemetry: payload-free per-call trajectory records.
 
-ADR R7's operational half: every console session leaves a local, per-call
+Every console session leaves a local, per-call
 trajectory record so the harness is measurable and a live failure can be
 traced and promoted into a golden scenario. The records are deliberately
 METADATA-ONLY — tool name, command key, confirmation route, error flag,

@@ -3,8 +3,7 @@
 A capability is the operator's opt-in/opt-out of an external service (cloud
 evidence upload, on-host LLM vision, Google export), stored as a boolean fact on
 the active profile and resolved against the global safety posture by
-:func:`resolve_active_capability`
-(``service-capabilities`` ADR). ``show`` reports
+:func:`resolve_active_capability`. ``show`` reports
 the resolved posture + source of every capability; ``set`` writes one capability
 fact through the single-writer profile path.
 """

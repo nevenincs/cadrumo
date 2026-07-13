@@ -82,9 +82,8 @@ class _Modelo303CorpusFixture:
     c69: Decimal  # Resultado autoliquidacion = c66 - 0           [box 69 / iva.resultado]
     c71: Decimal  # Resultado final = c69 (no ajustes)            [box 71, 2023+ only]
     # Primitive cuota-leaf inputs that the engine sums into iva.cuota-devengada-total
-    # and iva.cuota-deducible-total per Route A of
-    # 2026-06-02-m303-parser-engine-totals-impedance-adr and the corrected encoding
-    # in the Findings section of 2026-06-03-m303-synthetic-generator-primitive-spec-adr.
+    # and iva.cuota-deducible-total (Route A of the parser-engine-totals mapping,
+    # with the corrected encoding).
     # Single-rate filer pattern: all devengada cuota on iva.repercutido.general,
     # all deducible cuota on iva.soportado.interiores; other leaves zero. This
     # preserves the existing c27/c29/c45/c46 invariants bit-for-bit.
@@ -154,9 +153,8 @@ def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> _M303PrimitivesDict:
     the field stays Decimal("0.00") on legacy fixtures with no engine impact
     because the legacy extraction profile does not target it.
 
-    Grounded in 2026-06-03-m303-synthetic-generator-primitive-spec-adr (Findings
-    section’s corrected 6-field encoding) and Route A of
-    2026-06-02-m303-parser-engine-totals-impedance-adr.
+    Uses the corrected 6-field encoding and Route A of the
+    parser-engine-totals mapping.
     """
     zero: Decimal = Decimal("0.00")
     result: _M303PrimitivesDict = {
@@ -482,7 +480,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     # Value follows on the same line after a space; named_label parser captures it.
     zero_fmt: str = _fmt_spanish(Decimal("0.00"))
 
-    # ---- Primitive cuota leaves (Route A of the parser-engine-totals-impedance ADR)
+    # ---- Primitive cuota leaves (Route A of the parser-engine-totals mapping)
     # The extraction profile targets these so the engine recomputes
     # iva.cuota-devengada-total and iva.cuota-deducible-total from the
     # primitive set. The single-rate filer pattern places all devengada on

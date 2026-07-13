@@ -1,4 +1,4 @@
-"""Real-behavior tests for ADR H4 result thinning.
+"""Real-behavior tests for result thinning.
 
 The thinning logic (:mod:`.._result_thinning`) is exercised directly - no mocks -
 and the declared thinning / resolution tables are bound to the LIVE tool surface

@@ -1,4 +1,4 @@
-"""Argument autocompletion for the guided-workflow prompts (ADR P5).
+"""Argument autocompletion for the guided-workflow prompts.
 
 The MCP ``completion/complete`` capability lets a client autocomplete a prompt
 argument as the user types it. The guided workflows accept a filing year and a

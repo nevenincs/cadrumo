@@ -355,11 +355,10 @@ def _inject_derived_minimo_descendientes_facts(
 
     * the ESTATAL aggregate, from the revision's ``renta-{year}-minimo-
       descendientes-{suffix}-{year}`` Art. 58 parameters, projected onto
-      ``renta_family.descendientes_minimos_aggregate_{year}`` — the
-      user-profile schema field the ``modelo-100-minimo-descendientes-engine``
-      ADR named as a dangling selector (declared, never populated, its former
-      binding deleted in commit ``bc3b89594``); this injector retires that gap
-      rather than minting a new key. Feeds casilla 0513 via the registry
+      ``renta_family.descendientes_minimos_aggregate_{year}`` — a
+      user-profile schema field that was previously a dangling selector
+      (declared, never populated); this injector retires that gap rather
+      than minting a new key. Feeds casilla 0513 via the registry
       binding ``renta-{year}-profile-minimo-descendientes-estatal``.
     * the AUTONÓMICO aggregate, from the SAME estatal parameters UNLESS the
       filer's declared ``tax_residence.ccaa`` has a wired divergent tranche

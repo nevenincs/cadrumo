@@ -14,7 +14,7 @@ calendar reads to decide whether censo enrolment is AEAT-verified.
 an AEAT-verified censo fact. With the live scrape retired nothing stamps
 them, so the overview calendar's verified-key set stays empty and every
 censo-derived obligation keeps its ``censo.enrolment_unverified``
-posture — the honest default the retirement ADR preserves.
+posture — the honest default.
 """
 
 from __future__ import annotations

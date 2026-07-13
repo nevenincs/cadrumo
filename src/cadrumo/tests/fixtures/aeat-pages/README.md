@@ -4,7 +4,7 @@ Hand-curated, PII-scrubbed snapshots of live AEAT *Sede Electrónica*
 status pages. Used by unit tests colocated under
 `src/aeat/status/_parsers/`.
 
-## Trimming procedure (mirrors the ADR)
+## Trimming procedure
 
 1. Capture `page.content()` from a live authenticated session (or
    the AEAT anónimo demo page if available).

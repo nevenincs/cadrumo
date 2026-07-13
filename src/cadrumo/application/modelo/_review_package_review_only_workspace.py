@@ -1,8 +1,6 @@
 """Review-only workspace mode for a decrypted, recipient-encrypted review package.
 
-This module closes the "review-only *workspace* mode" item left open on
-issue #421 (`2026-07-04-recipient-encryption-adr` and its follow-up slices):
-distinct from the per-package ``review_only`` flag carried by
+Distinct from the per-package ``review_only`` flag carried by
 :class:`~application.modelo.RecipientEncryptedPackage` (which only tags
 the sealed envelope's disposition), this module materialises a recovered
 package into a typed, read-only workspace view and enforces -- structurally,

@@ -22,7 +22,7 @@
 # (a declared code with no projection, or a projected code not declared here).
 #
 # Only the RATE-CONCEPT-grounded codes are declared. The bundled TRLIRNR corpus
-# is a Phase-1 extract carrying Art. 25 letters a) general 24%, b) pensiones,
+# is a partial extract carrying Art. 25 letters a) general 24%, b) pensiones,
 # and f) 19% dividendos/intereses/ganancias only; the special-rate letters
 # c/d/e/g/h are absent. The cánones codes 08/09/10/11/12/32 ARE enrolled: cánones
 # has no specific letter in the consolidated Art. 25.1, so it is the general
@@ -32,8 +32,8 @@
 # special letter, NOT cánones proper), reaseguros 19 (Art. 25.1.e 1.5%),
 # navegación 20 (Art. 25.1.d 4%), imposición complementaria 27 (Art. 19.2), and
 # premios de loterías 31 (D.A. 5ª gravamen especial). They enrol code-by-code
-# once the full consolidated Art. 25 is fetched, per the m210-irnr-phase-2-engine
-# ADR (Slice A). Force-mapping any to a rate would fabricate it.
+# once the full consolidated Art. 25 is fetched. Force-mapping any to a rate
+# would fabricate it.
 
 [[revisions."2025".parameters]]
 id = "m210-tipo-renta-code-2025"

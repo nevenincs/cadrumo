@@ -17,14 +17,14 @@ With the exempt path (0003 = €24.000, exempt casilla = €8.000):
   casilla 0012 = 24.000 - 8.000 = 16.000
 
 Difference = €8.000 gross base → downstream IRPF impact ≈ €2.034,91 at
-marginal rate ~25.4% (confirmed by Yara round-14 audit #186).
+marginal rate ~25.4%.
 
 Anti-tautology: injecting different INSS amounts produces proportional
 changes in casilla 0012 (total computable income).
 
-These tests use structural verification of the formula expression to avoid
-the cross-campaign binding drift that blocks full M100 engine runs in the
-current working tree. The CLI help-surface test verifies end-to-end wiring.
+These tests use structural verification of the formula expression rather
+than a full M100 engine run. The CLI help-surface test verifies end-to-end
+wiring.
 """
 
 from __future__ import annotations

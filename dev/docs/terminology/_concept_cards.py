@@ -1,4 +1,4 @@
-"""Concept-card projection compiler for the docs search index (ADR D4).
+"""Concept-card projection compiler for the docs search index.
 
 Projects every curated :class:`~dev.docs.terminology_handbook.ConceptRecord` from the
 Terminology Handbook into a strict
@@ -19,8 +19,7 @@ Legal grounding (the calculation-grounding contract)
 ----------------------------------------------------
 Each concept's ``legal_refs`` are resolved through the SAME legal
 catalogue the registry calculation engine grounds against -- the validated
-authority's ``catalogues.legal`` mapping (per ``aeat-registry-authority-flow``
-and ``aeat-calculation-grounding``) -- into typed
+authority's ``catalogues.legal`` mapping -- into typed
 :class:`~dev.docs.terminology._concept_cards.LegalGroundingLink` entries
 carrying the BOE permalink and the anchored corpus reference. A ``legal_ref``
 that does not resolve is reported, never echoed as a dead id: the Handbook
@@ -65,7 +64,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class LegalGroundingLink(BaseModel):
-    """A resolved legal-grounding link for a concept card (ADR D4).
+    """A resolved legal-grounding link for a concept card.
 
     The ``legal_ref`` id resolved against the legal catalogue into a
     BOE permalink plus the anchored corpus reference -- the same grounding
@@ -84,7 +83,7 @@ class LegalGroundingLink(BaseModel):
 
 
 class LocalisedDefinition(BaseModel):
-    """A concept's longer definition in one language (ADR D2 language tier).
+    """A concept's longer definition in one language.
 
     ``short_description`` is the card/tooltip text (always present on every
     authored language section); ``definition`` is the longer grounded prose
@@ -100,7 +99,7 @@ class LocalisedDefinition(BaseModel):
 
 
 class TermAlias(BaseModel):
-    """One alias of a concept in one language (ADR D2 term tier).
+    """One alias of a concept in one language.
 
     Carries the surface ``label``, its normative ``term_status``, the
     ``language`` it belongs to, and the unaccented / misspelt
@@ -117,7 +116,7 @@ class TermAlias(BaseModel):
 
 
 class ConceptCardRecord(SearchRecordBase):
-    """A first-class search record for one Handbook concept (ADR D4).
+    """A first-class search record for one Handbook concept.
 
     The ``descriptions`` map (inherited) carries the per-language
     ``short_description`` -- the card text the palette renders. The richer
@@ -171,9 +170,9 @@ def project_concept_cards(
     Args:
         handbook: The compiled Handbook to project; defaults to a fresh
             validated load of the bundled authoring tree (the loader's full
-            ADR-D8 gate inventory runs, so a malformed Handbook fails here
-            rather than shipping a half-mapped card set). Injectable so a
-            test can drive a narrowed handbook deterministically.
+            gate inventory runs, so a malformed Handbook fails here rather
+            than shipping a half-mapped card set). Injectable so a test can
+            drive a narrowed handbook deterministically.
         legal_catalogue: A mapping of legal-ref id to a catalogue entry
             exposing ``permalink`` / ``corpus_ref`` / ``document_id`` /
             ``notes``. Defaults to the bundled registry authority's legal

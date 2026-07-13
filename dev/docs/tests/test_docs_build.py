@@ -300,6 +300,69 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
     )
 
 
+def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
+    """A real focused HTML build and shipped SVGs expose the canonical identity."""
+    from bs4 import BeautifulSoup
+    from defusedxml import ElementTree
+
+    docs_source = tmp_path / "docs-source"
+    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "api", "cli"))
+    output = tmp_path / "html"
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_DOCS_ONLY": "index.md",
+        "CADRUMO_DOCS_MASTER_DOC": "index",
+        "CADRUMO_DOCS_SINGLE_PAGE": "1",
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "html",
+            "-j",
+            "1",
+            str(docs_source),
+            str(output),
+            str(docs_source / "index.md"),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    rendered = BeautifulSoup((output / "index.html").read_text(encoding="utf-8"), "html.parser")
+    assert rendered.title is not None
+    assert rendered.title.get_text(strip=True) == "Cadrumo documentation - local Spanish tax preparation"
+    site_name = rendered.find("meta", property="og:site_name")
+    assert site_name is not None
+    assert site_name.get("content") == "Cadrumo documentation"
+    heading = rendered.find("h1")
+    assert heading is not None
+    assert heading.get_text(" ", strip=True).startswith("Cadrumo documentation")
+    assert "Copyright © 2026, the Cadrumo authors" in rendered.get_text(" ", strip=True)
+    assert "advice from a qualified professional" in rendered.get_text(" ", strip=True)
+
+    namespace = "{http://www.w3.org/2000/svg}"
+    for filename in ("cadrumo-mark-light.svg", "cadrumo-mark-dark.svg"):
+        mark = ElementTree.parse(_DOCS / "_static" / filename).getroot()
+        assert mark is not None
+        assert mark.findtext(f"{namespace}title") == "Cadrumo documentation"
+        assert mark.findtext(f"{namespace}desc", "").startswith("The Cadrumo mark")
+        assert [element.text for element in mark.iter(f"{namespace}text")] == ["CADRUMO"]
+
+    favicon = ElementTree.parse(_DOCS / "_static" / "cadrumo-favicon.svg").getroot()
+    assert favicon is not None
+    assert favicon.attrib["aria-label"] == "Cadrumo mark"
+
+
 # ---------------------------------------------------------------------------
 # W04.P09.S32 — progressive-enhancement sequence widget verification
 #
@@ -437,7 +500,7 @@ def test_sequence_widget_assets_make_no_external_requests() -> None:
 
 
 def test_sequence_widget_is_wired_and_implemented() -> None:
-    """conf.py ships both assets and the sources carry the player and hover-help surfaces."""
+    """conf.py ships both assets and the sources carry the playhead and hover-help surfaces."""
     conf = (_DOCS / "conf.py").read_text(encoding="utf-8")
     assert '"cadrumo-docs.css"' in conf
     assert '"cadrumo-docs.js"' in conf
@@ -445,11 +508,88 @@ def test_sequence_widget_is_wired_and_implemented() -> None:
     js = _WIDGET_JS.read_text(encoding="utf-8")
     for surface in ("initSequences", "setupSequence", "initHoverHelp", "cadrumo-sequence-payload", "cli-tree.json"):
         assert surface in js, f"widget JS is missing {surface!r}"
+    # The playhead model: JS-applied state classes, not frame hiding.
+    for surface in ('"is-active"', '"is-past"', '"is-future"'):
+        assert surface in js, f"widget JS is missing the playhead state {surface}"
+    # The operator redesign removed autonomous/timed advance entirely; no play
+    # button, no timer, no reduced-motion autoplay branch may return.
+    for banned in ("setInterval", "startPlay", "PLAY_INTERVAL_MS", "prefersReducedMotion", "frame.hidden"):
+        assert banned not in js, f"widget JS must not carry the retired autoplay surface {banned!r}"
+    # Per-frame output disclosure: outputs are individually toggleable, the
+    # command line never is (the toggle governs only the output selector set).
+    for surface in ('"cadrumo-output-toggle"', '"is-output-open"', "setOutputOpen"):
+        assert surface in js, f"widget JS is missing the output-disclosure surface {surface}"
+    assert ".cadrumo-frame-command" not in js.split("OUTPUT_SELECTOR =")[1].split(";")[0], (
+        "the output disclosure must never govern the command line itself"
+    )
 
     css = _WIDGET_CSS.read_text(encoding="utf-8")
-    for surface in (".cadrumo-sequence", ".cli-tok-placeholder", ".cadrumo-sequence-controls", ".cadrumo-cli-popover"):
+    for surface in (
+        ".cadrumo-sequence",
+        ".cli-tok-placeholder",
+        ".cadrumo-sequence-controls",
+        ".cadrumo-cli-popover",
+        ".cadrumo-frame.is-future",
+        ".cadrumo-output-toggle",
+        ":not(.is-output-open)",
+        "--font-stack--monospace",
+    ):
         assert surface in css, f"widget CSS is missing {surface!r}"
+    # No terminal-chrome title bar (the removed top decorative rectangle).
+    assert "cadrumo-sequence::before" not in css
+    # No play-button styling remains.
+    assert "cadrumo-sequence-btn--play" not in css
     assert "prefers-reduced-motion" in css
+
+
+def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
+    """The widget ships the shell switcher and copy control (enhancement only), no autoplay.
+
+    The switcher toggles the server-rendered per-shell command variants by setting
+    ``data-cadrumo-shell`` on the sequence root; the copy control writes the frame's
+    authored single-line command (``data-command-line``) with a clipboard-plus-
+    ``execCommand`` fallback. Both are JS-created, so no-JS readers keep the full
+    transcript. The retired autoplay surface must stay absent.
+    """
+    js = _WIDGET_JS.read_text(encoding="utf-8")
+    for surface in (
+        "setupShellSwitcher",
+        "setupCopyButtons",
+        "cadrumo-shell-switcher",
+        "cadrumo-shell-btn",
+        "data-cadrumo-shell",
+        "cadrumo-cmd-variant",
+        "cadrumo-copy-btn",
+        "data-command-line",
+        "writeClipboard",
+        "execCommand",
+        "is-copied",
+    ):
+        assert surface in js, f"widget JS is missing the shell/copy surface {surface!r}"
+    # aria wiring for both controls (a segmented toggle and a labelled copy button).
+    assert "aria-pressed" in js
+    assert '"Copy command"' in js
+    # The copy control's brief "Copied" state uses a one-shot timeout, never a
+    # repeating timer — the no-autoplay invariant stays intact.
+    assert "setInterval" not in js
+    assert "setTimeout" in js
+
+    css = _WIDGET_CSS.read_text(encoding="utf-8")
+    for surface in (
+        ".cadrumo-cmd-variant",
+        "[data-cadrumo-shell=",
+        ".cli-continuation",
+        ".cadrumo-shell-switcher",
+        ".cadrumo-shell-btn",
+        ".cadrumo-copy-btn",
+        ".cadrumo-copy-btn.is-copied",
+        '[data-shell="pwsh"] pre code::before',
+    ):
+        assert surface in css, f"widget CSS is missing the shell/copy surface {surface!r}"
+    # The switcher and copy transitions join the reduced-motion opt-out.
+    reduced = css.split("prefers-reduced-motion")[1]
+    assert ".cadrumo-shell-btn" in reduced
+    assert ".cadrumo-copy-btn" in reduced
 
 
 @pytest.fixture

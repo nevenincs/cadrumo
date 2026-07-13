@@ -495,8 +495,7 @@ def test_binding_count_is_exactly_38() -> None:
     the anualidades_sin_minimo_descendientes eligibility flag for the
     Art. 64/75 separate-escala régimen, and the Art. 58/61 LIRPF mínimo por
     descendientes ESTATAL and AUTONÓMICO aggregates — casillas 0513/0514 —
-    added by the Option A engine (#515) and its Comunidad de Madrid
-    autonómico-override follow-on (#593))
+    including the Comunidad de Madrid autonómico-override)
     plus 11 family-repeating-collection bindings (per-dependent / per-spouse
     / per-child arrays whose cardinality follows the operator's declared
     family composition).

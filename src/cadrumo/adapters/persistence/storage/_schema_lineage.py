@@ -16,15 +16,12 @@ schema version 1. A future schema bump MUST land the one-hop upgrader for
 its namespace in the same change, or the lineage gate
 (``tests/test_schema_lineage.py``) fails — that gate is what makes "a
 version bump strands years-old taxpayer data" structurally impossible.
-:data:`SECURE_OBJECT_DURABILITY_FLOOR` moves forward only through a
-superseding accepted ADR.
+:data:`SECURE_OBJECT_DURABILITY_FLOOR` moves forward only deliberately, once
+every version below it is no longer readable by any live consumer.
 
 See Also:
     :func:`~adapters.persistence.storage.sql._secure_object_row_codec.secure_object_record_from_row`
         Row decode path that applies this policy before returning a record.
-    Governing vault record
-        ``2026-07-08-released-data-durability-adr`` (version gates become
-        ceilings with an upgrade dispatch).
 """
 
 from __future__ import annotations
@@ -40,8 +37,7 @@ from .errors import EnvelopeVersionError, StorageValidationError
 SecureObjectSchemaUpgrader = Callable[[bytes], bytes]
 
 #: Oldest secure-object schema version every read path keeps readable.
-#: Starts at the from-birth version; moves forward only through a
-#: superseding accepted ADR.
+#: Starts at the from-birth version; moves forward only deliberately.
 SECURE_OBJECT_DURABILITY_FLOOR: Final[int] = 1
 
 _SCHEMA_UPGRADERS: dict[tuple[str, int], SecureObjectSchemaUpgrader] = {}

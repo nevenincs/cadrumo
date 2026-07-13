@@ -57,8 +57,7 @@ def test_floor_matches_the_regime_expected_floor() -> None:
         "pre-release it must equal the current archive version (the archive tier has "
         "no upgrade dispatch, so a lower floor has no mechanism behind it); either "
         "raise the floor in the same change (dropping older archives) or land a "
-        "version-aware reader/restore transform with an old-archive restorability test "
-        "(2026-07-09-compatibility-lifecycle-adr)"
+        "version-aware reader/restore transform with an old-archive restorability test"
     )
 
 

@@ -36,8 +36,7 @@ regulated tax value.
 model-selected ``iva_category`` and the system-DERIVED ``taxable_base`` /
 ``iva_rate`` / ``iva_amount``. The model still never emits a number — the rate
 is looked up from the registry and the base and amount are derived with
-``round_to_cents`` (see ``2026-06-04-llm-ledger-classification-adr``).
-``irpf_category`` remains operator-only.
+``round_to_cents``. ``irpf_category`` remains operator-only.
 """
 
 from __future__ import annotations
@@ -271,8 +270,8 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     model-missing failure escaped every CLI ``except`` clause as a raw
     ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
     an ``LLMClassifierError`` (which the classify CLI already renders) carrying the
-    exact remediation from :func:`probe_ollama_vision`
-    (``dependency-provisioning`` ADR: probe -> typed refusal with the fix).
+    exact remediation from :func:`probe_ollama_vision` (probe -> typed refusal
+    with the fix).
     """
     import httpx
 

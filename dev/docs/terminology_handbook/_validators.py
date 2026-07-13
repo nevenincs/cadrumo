@@ -1,7 +1,6 @@
 """Validation gates for the compiled Terminology Handbook.
 
-These gates implement ADR decisions D2 and D8 (the loader-validation
-inventory) as :data:`~dev.docs.terminology_handbook._loader.HandbookValidator`
+These gates are :data:`~dev.docs.terminology_handbook._loader.HandbookValidator`
 callables bolted onto the loader's validation seam -- the loader body is
 untouched. Each gate is a factory returning a closure over the assembled,
 narrower-derived :class:`~dev.docs.terminology_handbook._loader.TerminologyHandbook`;
@@ -11,8 +10,7 @@ order the loader runs them.
 The legal-ref gate resolves against the SAME legal catalogue the
 registry calculation engine uses -- the authority's
 :class:`~cadrumo.domain.calculations.registry.RegistryCatalogues` ``legal``
-mapping, keyed by legal-ref id -- per the registry-authority-flow and
-registry-calculation-legal-grounding rules. It accepts an injected id
+mapping, keyed by legal-ref id. It accepts an injected id
 set so a unit test can resolve against a small synthetic catalogue,
 defaulting to the bundled authority's catalogue for production and the
 bundled-handbook gate.
@@ -113,7 +111,7 @@ def relation_integrity_validator() -> HandbookValidator:
 
 
 def lifecycle_replaced_by_validator() -> HandbookValidator:
-    """Gate: lifecycle / ``replaced_by`` integrity per ADR D2.
+    """Gate: lifecycle / ``replaced_by`` integrity.
 
     Enforces, beyond the per-record biconditional the schema already
     holds (``replaced_by`` set exactly when ``retired``):
@@ -122,8 +120,8 @@ def lifecycle_replaced_by_validator() -> HandbookValidator:
       concept -- a tombstone must redirect to a live successor, never to
       another tombstone;
     * a ``deprecated`` concept, when it declares ``replaced_by``, also
-      points at a non-retired concept (ADR D2 / research P4: deprecated
-      carries an optional successor; if declared it must be live);
+      points at a non-retired concept (deprecated carries an optional
+      successor; if declared it must be live);
     * the ``replaced_by`` graph is acyclic -- no concept reaches itself by
       following successors.
     """
@@ -153,7 +151,7 @@ def lifecycle_replaced_by_validator() -> HandbookValidator:
 
 
 def approved_completeness_validator() -> HandbookValidator:
-    """Gate: an ``approved`` concept is curation-complete (ADR D2 / D8).
+    """Gate: an ``approved`` concept is curation-complete.
 
     An ``approved`` concept MUST carry, in its ``es`` section, a non-empty
     ``definition`` AND a ``source`` citation, and EVERY authored language
@@ -194,7 +192,7 @@ def approved_completeness_validator() -> HandbookValidator:
 
 
 def default_handbook_validators(legal_ref_ids: Container[str] | None = None) -> tuple[HandbookValidator, ...]:
-    """Return the full ADR D8 gate inventory in loader-run order.
+    """Return the full validation gate inventory in loader-run order.
 
     Args:
         legal_ref_ids: Forwarded to :func:`legal_refs_resolve_validator`;

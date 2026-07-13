@@ -158,8 +158,7 @@ class BrowseBucketCommand(BaseModel):
     The current shape is namespace-level only: it returns each
     namespace and its row count without decrypting payloads. Key-level
     browse requires decryption and a ``SensitivityClass`` redaction
-    policy, both deferred to a follow-up Step under the
-    composition-pattern ADR.
+    policy, both deferred to a follow-up change.
     """
 
     model_config = STRICT_FROZEN_CONFIG

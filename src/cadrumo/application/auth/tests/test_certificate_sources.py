@@ -2,7 +2,7 @@
 
 Exercises the application service against a real workflow-state
 repository (secure-object persisted, encrypted at rest) — no mocks or
-fakes. See GitHub issue #591 (multi-cert source resolution slice).
+fakes.
 """
 
 from __future__ import annotations

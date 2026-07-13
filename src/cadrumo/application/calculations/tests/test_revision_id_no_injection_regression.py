@@ -2,7 +2,6 @@
 a stored, literal, or operator-supplied ``revision_id`` into
 ``authority.snapshot()`` resolution.
 
-Ratifies Ruling 1 of the period-revision-resolution decision (2026-06-10):
 ``select_revision``, reached exclusively through
 ``ValidatedRegistryAuthority.snapshot`` (or, for work-unit addressing,
 ``resolve_registry_revision_for_work_target``), is THE single

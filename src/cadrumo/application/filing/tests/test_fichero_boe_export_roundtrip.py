@@ -1,6 +1,6 @@
 """Export -> fichero-BOE -> parse -> strict-equality round-trip CI gate.
 
-Regression prevention for issue #277: a computed modelo draft is exported to the
+A computed modelo draft is exported to the
 AEAT fixed-width register (fichero-BOE), the exported bytes are parsed back
 through the registry export layout, and every parser-covered casilla is asserted
 identical to the source draft (strict per-casilla Decimal equality across the

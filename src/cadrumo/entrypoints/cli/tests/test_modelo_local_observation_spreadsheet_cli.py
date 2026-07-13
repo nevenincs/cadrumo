@@ -1,4 +1,4 @@
-"""CLI ``--file`` spreadsheet import for local filed observations (issue #273).
+"""CLI ``--file`` spreadsheet import for local filed observations.
 
 A cert-free path: a hand-authored CSV or XLSX spreadsheet of
 ``casilla_code, value`` rows reconstructs a past filing's casilla values into a

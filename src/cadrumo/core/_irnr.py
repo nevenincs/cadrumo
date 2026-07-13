@@ -143,8 +143,8 @@ class TipoRentaGroundingTier(StrEnum):
     "HOJA INFORMATIVA 210 - TIPOS DE RENTA") is a numeric code list, but the
     rate each code bears is only bundled-verifiable for the codes whose rate
     concept is named by a bundled TRLIRNR Art. 25 letter (the shipped corpus
-    is a Phase-1 extract carrying Art. 25 letters a, b, and f only; the
-    special-rate letters c/d/e/g/h are absent). This tier records, per
+    carries Art. 25 letters a, b, and f only; the special-rate letters
+    c/d/e/g/h are absent). This tier records, per
     declared code, how its :class:`TipoRentaIrnr` rate concept is grounded:
 
     Members:
@@ -366,7 +366,7 @@ def project_m210_tipo_renta_code(code: str) -> TipoRentaIrnr:
 
 
 # Official HOJA INFORMATIVA 210 codes that are REAL AEAT tipo-de-renta codes but
-# whose rate is NOT yet grounded against the bundled corpus (the Phase-1 TRLIRNR
+# whose rate is NOT yet grounded against the bundled corpus (the bundled TRLIRNR
 # extract carries only Art. 25 letters a/b/f): asistencia técnica 13
 # (cánones-ADJACENT in the HOJA INFORMATIVA — a possible non-bundled special
 # letter, NOT cánones proper, so deliberately NOT promoted with the cánones

@@ -1,7 +1,7 @@
 """The real network-transmitting :class:`~core.telemetry.TelemetrySink`.
 
-:class:`~core.telemetry.HttpTelemetrySink` is the transport slice deferred by
-``2026-07-04-remote-telemetry-adr``: every prior piece (the consent gate, the
+:class:`~core.telemetry.HttpTelemetrySink` is the transport that was
+deliberately deferred until every earlier piece (the consent gate, the
 closed allowlisted :class:`~core.telemetry.TelemetryEventPayload`, and
 :class:`~core.telemetry.LocalNoopTelemetrySink`) proved the pipeline
 end-to-end without ever touching the network. This module adds the one sink
@@ -17,8 +17,8 @@ Two additional invariants beyond the consent gate keep this sink safe:
 
 1. **No configured endpoint means no send, unconditionally.** A sink built
    without :attr:`~core.config.Settings.cadrumo_telemetry_endpoint` set (the
-   ADR's documented default -- ``None``, scaffolded but read by no transport
-   in the prior slice) is a no-op, mirroring
+   documented default -- ``None``, scaffolded but read by no other transport)
+   is a no-op, mirroring
    :class:`~core.telemetry.LocalNoopTelemetrySink`'s inertness. This
    protects a deployment that flips ``cadrumo_telemetry_opt_in`` and a tier on
    without ever configuring where to send data.

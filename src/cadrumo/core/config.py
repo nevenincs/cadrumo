@@ -772,9 +772,8 @@ class Settings(AeatIntegrationSettings):
     # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
     # opt-in exception governed by the same off-host consent shape as
     # cadrumo_evidence_cloud_upload_permitted / cadrumo_evidence_gestor_mode
-    # (sensitive-financial-data-secure-storage-only; see
-    # 2026-07-04-remote-telemetry-adr). No transport reads these fields yet in
-    # this slice; the gate and the allowlisted payload schema are built first.
+    # (sensitive-financial-data-secure-storage-only). No transport reads these
+    # fields yet; the gate and the allowlisted payload schema are built first.
     cadrumo_telemetry_opt_in: bool = Field(
         default=False,
         description=(
@@ -802,8 +801,8 @@ class Settings(AeatIntegrationSettings):
     cadrumo_telemetry_endpoint: str | None = Field(
         default=None,
         description=(
-            "Remote telemetry collector URL. Scaffolded for a future transport slice; no code in the "
-            "current telemetry package reads or dials this field."
+            "Remote telemetry collector URL, consumed by HttpTelemetrySink when "
+            "a call site opts into real transmission. Unset means no dial target."
         ),
     )
 
@@ -861,12 +860,11 @@ class Settings(AeatIntegrationSettings):
     cadrumo_m210_engine_live: bool = Field(
         default=False,
         description=(
-            "Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo "
+            "Gate the M210 IRNR engine, which currently covers only TRLIRNR Art. 25 "
+            "letters a, b, and f. When False (default) `aeat app modelo "
             "work create --modelo 210` emits the Path-B refusal stub. When True "
             "the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen "
-            "dispatch + representante-fiscal predicate + cuota composition). "
-            "Flipped to True only after persona-replay acceptance gates pass per "
-            "the m210-irnr-full-engine ADR section D5."
+            "dispatch + representante-fiscal predicate + cuota composition)."
         ),
     )
 
@@ -977,8 +975,7 @@ class Settings(AeatIntegrationSettings):
             # Delegate to the canonical pointer-file reader rather
             # than re-implementing the TOML parse inline. The reader
             # uses strict pydantic validation; this preserves the
-            # one-resolver invariant the disaster ADR Ruling 2
-            # mandates.
+            # one-resolver invariant for the active-profile pointer.
             from . import pointer_path, read_pointer
 
             try:

@@ -4,8 +4,7 @@ Every unit test in ``test_attribution_received_advisory`` passes ``profile_recor
 explicitly; this file exercises the PRODUCTION branch that loads the
 :class:`UserProfileRecord` from a real encrypted bucket via
 :class:`UserProfileLifecycleRepository` (the ``profile_record=None`` default),
-plus the :class:`ProfileNotFoundError` guard. Real secure store, no mocks — the
-socio-attribution honesty review (F4) flagged this branch as untested.
+plus the :class:`ProfileNotFoundError` guard. Real secure store, no mocks.
 """
 
 from __future__ import annotations

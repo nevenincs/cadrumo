@@ -1,17 +1,16 @@
-"""Madrid nacimiento/adopción D4 indeterminate-eligibility advisory for verification.
+"""Madrid nacimiento/adopción indeterminate-eligibility advisory for verification.
 
 The Madrid nacimiento/adopción deducción autonómica (casilla 1039, DL 1/2010
 arts. 4 y 18.1) auto-populates on the calculate path only for the determinable
 single/monoparental individual filer
 (:func:`~application.modelo._profile_binding._inject_derived_autonomic_deduccion_facts`);
 a tributación conjunta declaration or a married/pareja-de-hecho filer is
-fail-closed by design (ADR ``2026-07-01-autonomic-deduccion-auto-trigger-adr``,
-decision D4) because the unidad-familiar 61.860 € límite needs the spouse's
-base imponible, which the app does not persist. That fail-closed branch
-resolves casilla 1039 to zero with no operator-facing signal that the
+fail-closed by design because the unidad-familiar 61.860 € límite needs the
+spouse's base imponible, which the app does not persist. That fail-closed
+branch resolves casilla 1039 to zero with no operator-facing signal that the
 entitlement might still exist.
 
-This module implements the deferred D4 advisory: when the filer is a Madrid
+This module implements the advisory: when the filer is a Madrid
 resident with at least one nacimiento/adopción-eligible descendant, the unit is
 indeterminate (conjunta or married/partnered), and casilla 1039 has resolved to
 zero, emit a non-blocking ADVISORY prompting the operator to confirm eligibility

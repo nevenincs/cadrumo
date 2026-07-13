@@ -1,4 +1,4 @@
-"""Live test for :func:`cadrumo.adapters.outbound.aeat.sede.walk_declarations_register` (#239).
+"""Live test for :func:`cadrumo.adapters.outbound.aeat.sede.walk_declarations_register`.
 
 Drives the *Consultar declaraciones presentadas* form against
 the real AEAT sede with a Cl@ve-móvil session. It is deselected when:

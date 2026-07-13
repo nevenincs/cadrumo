@@ -5,7 +5,7 @@ a schema-shaped plugin over a real
 filesystem ``tmp_path``: a ``.claude-plugin/plugin.json`` manifest carrying the
 required publication fields, a top-level ``skills/`` and ``agents/`` tree, and an
 ``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server. The agent frontmatter maps
-to plugin-native fields and never carries the vaultspec ``mode:`` field. Where the
+to plugin-native fields and never carries the harness-authoring ``mode:`` field. Where the
 ``claude`` CLI is on PATH, the emitted tree is additionally asserted to pass
 ``claude plugin validate --strict``; the structural assertions always run so the
 suite never silently degrades to a validator-only skip.
@@ -55,14 +55,15 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:
 
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     assert document["name"] == "cadrumo"
+    assert document["displayName"] == "CADRUMO Spanish tax assistant"
     assert document["version"] == manifest.version
     assert document["defaultEnabled"] is False
     assert document["license"] == "Apache-2.0"
-    assert isinstance(document["author"], dict) and document["author"]["name"]
+    assert document["author"] == {"name": "CADRUMO tax assistant project"}
     assert isinstance(document["keywords"], list) and document["keywords"]
     # The one-liner distilled from the mcpb manifest states the never-files boundary.
     assert "never files" in document["description"].lower()
-    assert "Cadrumo Spanish-tax CLI" in document["description"]
+    assert document["description"].startswith("Operate Cadrumo through the Cadrumo Spanish-tax CLI:")
     assert "aeat Spanish-tax CLI" not in document["description"]
 
 
@@ -92,7 +93,7 @@ def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path) -> No
         frontmatter = _agent_frontmatter(agents_dir / f"{slug}.md")
         assert frontmatter["name"] == slug
         assert isinstance(frontmatter["description"], str) and frontmatter["description"].strip()
-        # The vaultspec mode: field is not a Claude field and must never be emitted.
+        # The harness-authoring mode: field is not a Claude field and must never be emitted.
         assert "mode" not in frontmatter
 
 

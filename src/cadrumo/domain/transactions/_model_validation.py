@@ -18,10 +18,6 @@ See Also:
         Typed domain error raised for validation failures.
     :func:`~core.time.validate_utc_aware`
         UTC-awareness gate wrapped into the transaction error hierarchy.
-    Governing vault records
-        ``2026-05-27-source-jurisdiction-axis-adr`` and
-        ``2026-05-28-source-jurisdiction-axis-audit`` capture the transaction
-        model axis and validator behavior this helper preserves.
 """
 
 from __future__ import annotations

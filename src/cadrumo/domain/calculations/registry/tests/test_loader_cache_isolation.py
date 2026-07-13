@@ -1,19 +1,19 @@
-"""Registry loader cache isolation under pytest (the #44 test-isolation fix).
+"""Registry loader cache isolation under pytest.
 
 The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is keyed by
 file mtime and SHARED across pytest-xdist worker processes, so a parallel ``-n`` run
-could serve a stale/transient compiled registry from one worker to another (the #44
-isolation gap that flaked the M303-2009 ledger tests under the P05 sweep). The loader
-originally skipped that disk pickle under pytest ENTIRELY -- including collection
-before ``PYTEST_CURRENT_TEST`` is set -- which closed the #44 race but forced every
-xdist worker and every subprocess-spawning test to independently pay the full
+could serve a stale/transient compiled registry from one worker to another, flaking
+tests that depend on a specific registry compile. The loader originally skipped that
+disk pickle under pytest ENTIRELY -- including collection before
+``PYTEST_CURRENT_TEST`` is set -- which closed that race but forced every xdist
+worker and every subprocess-spawning test to independently pay the full
 multi-second registry compile, since a cold compile+validate of the bundled tree
 costs single-to-double-digit seconds on this codebase's registry size.
 
 The gate is now scoped to the ROOT: a mutable/synthetic root (a ``tmp_path`` test
 fixture, or any path that is not the resolved package-bundled root) keeps the disk
-pickle disabled under pytest, preserving the #44 invariant exactly -- such a root can
-be edited mid-run by the very test that built it. The package-bundled, read-only
+pickle disabled under pytest, preserving the isolation invariant exactly -- such a
+root can be edited mid-run by the very test that built it. The package-bundled, read-only
 registry tree is never mutated during a run, so it is exempt: under pytest it now
 shares ONE compiled disk pickle across every worker/subprocess that requests it,
 collapsing N independent cold compiles into one compile the rest read.
@@ -31,8 +31,8 @@ The bundled-tree fingerprint TTL tests below pin a related but distinct
 invariant: the fingerprint cache's directory-mtime walk is only skippable for
 the package-bundled, read-only registry tree, never for a mutable authoring
 tree (a ``tmp_path`` synthetic registry, or any path other than the bundled
-root), so a peer's live TOML edit in this shared worktree is never masked by
-an overlong TTL window.
+root), so a live TOML edit to an authoring tree is never masked by an
+overlong TTL window.
 """
 
 from __future__ import annotations

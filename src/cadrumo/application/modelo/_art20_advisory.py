@@ -2,9 +2,9 @@
 
 The Art. 20 reduction remains a manual Modelo 100 casilla until the engine has
 the cross-section ``otras rentas distintas del trabajo`` aggregate needed to
-prove eligibility. This module implements the ADR's Phase-1 choice: emit a
+prove eligibility. This module emits a
 non-blocking :class:`ModeloVerificationFinding` when the RNT band makes a
-zero general reduction suspicious, but do not block a legitimate zero.
+zero general reduction suspicious, but does not block a legitimate zero.
 
 See Also:
     :func:`application.modelo._verification_actions._collect_revision_verification_findings`

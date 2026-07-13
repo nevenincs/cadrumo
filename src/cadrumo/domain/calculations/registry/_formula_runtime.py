@@ -1193,9 +1193,8 @@ def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpres
     two Orden annexes carry distinct per-activity module sets and distinct
     euro figures, so they are two coefficient parameters, never conflated).
 
-    An untabled epígrafe (bounded first-slice per the
-    ``2026-07-01-modelo-303-regimen-simplificado-adr``) or a blank epígrafe
-    resolves to ``Decimal('0')`` — this op feeds an internal-only
+    An untabled epígrafe (a deliberately bounded first-slice coverage set) or
+    a blank epígrafe resolves to ``Decimal('0')`` — this op feeds an internal-only
     advisory-support casilla, never the filed casilla 48 directly, so a zero
     here means "the table-driven engine has no coverage for this activity",
     not "the cuota is zero". The ``advisory_when_computed_diverges``

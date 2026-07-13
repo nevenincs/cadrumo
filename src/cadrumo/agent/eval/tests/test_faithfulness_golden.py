@@ -1,7 +1,7 @@
-"""Faithfulness gate wired end-to-end for the operator golden-task eval (category 9).
+"""Faithfulness gate wired end-to-end for the operator golden-task eval.
 
-Covers eval-catalogue category 9 (hallucinated numeric, high severity): a
-hallucinated numeric is the load-bearing risk for regulated filing narration,
+Guards against a hallucinated numeric - the load-bearing risk for regulated filing
+narration,
 since a plausible-looking but fabricated casilla value reads as authoritative
 to an operator who cannot tell it apart from a real one.
 
@@ -9,7 +9,7 @@ This module dispatches a REAL ``modelo.work.calculate`` for M130 through the
 actual CLI command handling (the identical transport
 :func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects the
 ``cadrumo_modelo_work_calculate`` MCP tool call onto, mirroring
-``test_response_provenance_golden.py``'s category-3 dispatch), seeds the exact
+``test_response_provenance_golden.py``'s dispatch), seeds the exact
 AEAT DR 130 Instrucciones worked-example inputs (ingresos 12.000, gastos 4.000)
 so casilla 07 resolves to the same 1.600,00 EUR oracle figure
 ``test_modelo_130_value_oracle.py`` grounds, runs the real
@@ -67,7 +67,7 @@ _REVISION = "2019-y-siguientes"
 # grounds: ingresos 12.000, gastos 4.000 -> rendimiento neto 8.000 -> casilla 04 =
 # 20 % x 8.000 = 1.600 -> casilla 07 = 1.600,00 EUR (IRPF Ley 35/2006 Art. 99,
 # RD 439/2007 Art. 110). Real narration quoting this real figure must not be
-# flagged - the false-positive proof this category exists to close.
+# flagged - the false-positive proof this gate exists to close.
 _GROUNDED_ORACLE_NARRATION = "La cuota del pago fraccionado (casilla 07) es de 1.600,00 EUR."
 # A plausible but never-computed figure - absent from the captured tool JSON by
 # construction, so a flag on it is a genuine detection, not a coincidence.

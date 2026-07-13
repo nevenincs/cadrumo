@@ -4,13 +4,13 @@
   "language": "es",
   "hits": [
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-102.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-102.html",
       "line_start": 3,
       "line_end": 3,
       "score": 0.994483
     },
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html",
       "line_start": 2393,
       "line_end": 2393,
       "score": 0.994483
@@ -28,7 +28,7 @@
       "score": 0.994188
     },
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html",
       "line_start": 2400,
       "line_end": 2403,
       "score": 0.991871
@@ -46,13 +46,13 @@
       "score": 0.990215
     },
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-102.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-102.html",
       "line_start": 1,
       "line_end": 1,
       "score": 0.975931
     },
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html",
       "line_start": 2390,
       "line_end": 2391,
       "score": 0.975931
@@ -76,13 +76,13 @@
       "score": 0.897989
     },
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html",
       "line_start": 3,
       "line_end": 4,
       "score": 0.896995
     },
     {
-      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html.extracted.md",
+      "path": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html",
       "line_start": 2409,
       "line_end": 2410,
       "score": 0.896995

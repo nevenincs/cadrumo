@@ -7,8 +7,8 @@ overlaying that profile fact onto the global
 ``Settings`` default and the global safety floor, returning a typed
 :class:`CapabilityDecision` with the reason.
 
-The load-bearing invariant (``service-capabilities`` ADR): a capability may only
-NARROW the global safety floor, never widen it. For ``cloud_evidence_upload`` the
+The load-bearing invariant: a capability may only NARROW the global safety
+floor, never widen it. For ``cloud_evidence_upload`` the
 gestor-mode bar is applied FIRST and absolutely — no profile opt-in can re-enable
 cloud upload for a gestor deployment. The resolver is the single place this is
 computed; every gate routes through it.

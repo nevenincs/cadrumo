@@ -872,8 +872,7 @@ def config_profile_rename(
     The verb routes through :class:`BucketMaintenanceService` so the
     operator invocation co-emits ``BUCKET_RENAMED`` (maintenance verb)
     alongside the ``PROFILE_RENAMED`` lifecycle event the inner
-    single-writer primitive emits, per the composition ADR's two-event
-    audit contract.
+    single-writer primitive emits, giving the audit trail both events.
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.bucket_maintenance import (

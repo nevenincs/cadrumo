@@ -1,5 +1,5 @@
-# M303 régimen simplificado de IVA módulos engine formulas (Phase 2 tabled
-# activities, 2026-07-01-modelo-303-regimen-simplificado-adr).
+# M303 régimen simplificado de IVA módulos engine formulas (tabled
+# activities).
 #
 # Cuota devengada por operaciones corrientes: dispatches the units×coefficient
 # product through the m303_resolve_modulos_iva_cuota_devengada op, which reads
@@ -33,14 +33,14 @@ required_text = [
 # deducir siempre este forfait, a diferencia de las cuotas soportadas reales
 # por adquisiciones concretas, que dependen de hechos del contribuyente aún
 # no modelados) o (b) la cuota mínima (porcentaje de la actividad × cuota
-# devengada, Orden Anexo II). Phase 2 omits real cuotas soportadas por
+# devengada, Orden Anexo II). This engine omits real cuotas soportadas por
 # operaciones corrientes (adquisiciones de bienes/servicios distintos de
 # activos fijos) because those depend on operator-declared purchase facts not
 # yet captured — the internal reference intentionally reads only the
 # universally-available 1 por ciento forfait, so it may understate the true
 # net deduction the taxpayer can legitimately claim; it never over-states the
 # cuota, so it stays a safe floor-oriented reference, not a wrong-figure
-# fabrication (2026-07-01-modelo-303-regimen-simplificado-adr Phase 2 scope).
+# fabrication.
 [[revisions."2023-y-siguientes".formulas]]
 id = "modelo-303-2023-modulos-iva-cuota-derivada"
 target_casilla_id = "modulos-iva-cuota-derivada"

@@ -29,7 +29,7 @@ the cent regardless of the rounding residual, which is exactly the
 invariant the :class:`cadrumo.domain.transactions.Transaction` model
 enforces.
 
-Authority: ``2026-06-04-llm-ledger-classification-adr``. The rate values
+The rate values
 are grounded in ``registry/aeat/iva/rates.toml`` (Spain general 21 /
 reduced 10 / super-reduced 4 / zero 0; LIVA art. 90/91, year-scoped).
 """

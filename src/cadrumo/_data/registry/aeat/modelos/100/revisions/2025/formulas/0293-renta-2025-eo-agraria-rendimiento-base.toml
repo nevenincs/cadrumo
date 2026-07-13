@@ -68,9 +68,8 @@
 # 0294-renta-2025-eo-agraria-reducciones-fase-4a.toml. Fase 4a apartado 3
 # (gastos extraordinarios, casilla 1552) and Fase 5a (art. 32 irregularidad,
 # casilla 1554) remain the manual operator-entered casillas already declared
-# on this revision — bounded per the
-# 2026-07-01-modelo-131-eo-modulos-engine-adr's incremental phasing
-# discipline.
+# on this revision — bounded by the incremental engine-authoring
+# discipline this table follows.
 
 [[revisions."2025".formulas]]
 id = "renta-2025-eo-agraria-rendimiento-base-mejillon-batea"

@@ -7,19 +7,19 @@
 ```
 
 This is the documentation for Cadrumo and its `aeat` command-line interface
-(CLI): turn your records into checked modelo figures and an export file, then
-upload that file to the Agencia Estatal de Administración Tributaria (AEAT)
-yourself. For what Cadrumo is and who it is for, see the
+(CLI). Cadrumo turns your records into checked modelo figures and an export
+file. You upload that file to the Agencia Estatal de Administración Tributaria
+(AEAT) yourself. For what Cadrumo is and who it is for, see the
 [product page](https://cadrumo.neve.md); the source is on
 [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is pre-alpha - expect
 breaking changes between versions.
 
 ```{important}
 Cadrumo is not tax advice, is not affiliated with AEAT, and does not replace
-AEAT's official tools or professional advice. It builds, checks, and exports
-files locally. You file through official AEAT channels yourself and remain
-responsible for every declaration you submit. Read the [full disclaimer](disclaimer.md)
-before you rely on Cadrumo.
+AEAT's official tools or advice from a qualified professional. It builds,
+checks, and exports files locally. You file through official AEAT channels
+yourself and remain responsible for every declaration you submit. Read the
+[full disclaimer](disclaimer.md) before you rely on Cadrumo.
 ```
 
 ## Where to start
@@ -107,11 +107,11 @@ modelo: 036, 100 (Renta), 130, 303, 349, and 390.
 
 ## Search everything
 
-Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search the whole
-documentation: tax concepts, casillas, commands, and every guide, ranked so
-the exact term you type leads. For exact commands and options, open the
-[command-line reference](cli/index.rst); for how records become modelo
-figures and what checks run, read [how it works](explanation/index.md).
+Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax concepts,
+casillas, commands, and guides; exact term matches appear first. Use the
+[command-line reference](cli/index.rst) for commands and options, and
+[how it works](explanation/index.md) for how records become modelo figures and
+what checks run.
 
 ```{toctree}
 :hidden:

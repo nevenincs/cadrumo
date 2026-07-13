@@ -1,5 +1,4 @@
-# M131 estimación-objetiva módulos engine formulas (Phase 1/Phase 2 tabled
-# activities).
+# M131 estimación-objetiva módulos engine formulas (tabled activities).
 #
 # Fase 1ª — rendimiento neto previo: dispatches the units×coefficient product
 # through the m131_resolve_modulos_previo op, which reads the epígrafe (text)
@@ -42,8 +41,7 @@ required_text = [
 # inversión, so the amortization figure is supplied by the operator rather
 # than derived from an asset register the engine does not have; a blank
 # input simply omits this legitimate additional reduction (never over-states
-# the minorado, per the ADR's Option D concern about over-statement, which
-# does not apply here since omission only under-claims a reduction, never
+# the minorado, since omission only under-claims a reduction, never
 # fabricates one). Both minoraciones feed an internal advisory-support
 # casilla that never substitutes for the operator's manual casilla 01.
 [[revisions."2025".formulas]]

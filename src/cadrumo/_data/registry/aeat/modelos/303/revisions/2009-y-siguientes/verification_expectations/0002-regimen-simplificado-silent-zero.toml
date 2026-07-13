@@ -1,6 +1,5 @@
-# Régimen simplificado silent-under-declaration ADVISORY (Phase 1 of the
-# modulos_iva_aggregation engine; 2026-07-01-modelo-303-regimen-simplificado-adr,
-# Option C). Casillas 47-58 (the régimen simplificado apartado, LIVA arts.
+# Régimen simplificado silent-under-declaration ADVISORY, part of the
+# modulos_iva_aggregation engine. Casillas 47-58 (the régimen simplificado apartado, LIVA arts.
 # 122-124) are ALL input_kind = "manual" with no binding or formula — the
 # per-activity módulos computation (número de unidades de cada módulo x
 # importe del módulo, índices correctores, cuota mínima) is performed on the

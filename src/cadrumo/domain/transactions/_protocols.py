@@ -63,8 +63,8 @@ class TransactionCatalogueRepositoryProtocol(Protocol):
         filing date would return. They MUST also represent every remaining
         catalogue transaction (regardless of any other field) either as
         row-level out-of-window index entries during migration or as the compact
-        count/date-span summary authorized by the latency ADR -- never
-        silently omit one from either half. Summary payloads must carry only
+        count/date-span summary -- never silently omit one from either half.
+        Summary payloads must carry only
         plaintext date-index facts, never decrypted transaction fields.
 
         Args:

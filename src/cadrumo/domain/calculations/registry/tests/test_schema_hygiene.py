@@ -17,7 +17,6 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingTypedEnumKind
-from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind
 from .. import revision_reference_identity_failures
@@ -240,14 +239,12 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     Per-formula oracle grounding is required. This gate enumerates Modelo 100
     formulas and counts how many target casillas appear in at least one replay
     payload's canonical ``expected_by_casilla_id`` or ``observed_by_casilla_id``
-    mapping. The output is written to ``.vault/audit/renta-formula-oracle-coverage.txt`` for audit-trail
-    visibility.
+    mapping.
 
-    The gate is dormant during initial scaffolding (no captured payloads → no
-    enforcement). As soon as ANY payload exists, the gate enforces that every
-    formula target whose casilla appears in at least one captured payload's
-    expected/observed set is grounded; the inventory of un-grounded targets is
-    persisted for capture-work scheduling.
+    Replay payloads must only reference casillas Modelo 100 actually declares.
+    Beyond that the gate is dormant while no payload has been captured; as soon
+    as ANY payload exists it enforces that the captured set grounds at least one
+    formula target, which catches a payload-schema mismatch.
     """
 
     replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
@@ -261,19 +258,6 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     )
     formula_targets = _modelo_100_formula_targets(modelos)
     grounded = formula_targets & captured_targets
-    ungrounded = sorted(formula_targets - captured_targets)
-    metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-formula-oracle-coverage.txt"
-    metrics_path.parent.mkdir(parents=True, exist_ok=True)
-    metrics_path.write_text(
-        f"formula_targets_total: {len(formula_targets)}\n"
-        f"formula_targets_grounded: {len(grounded)}\n"
-        f"formula_targets_ungrounded: {len(ungrounded)}\n"
-        f"coverage_pct: {(100.0 * len(grounded) / len(formula_targets)) if formula_targets else 0.0:.1f}\n",
-        encoding="utf-8",
-    )
-    # Soft gate during scaffolding: only fail when payloads exist AND targets are
-    # missing oracle grounding. The full hard-fail mode lands once the baseline
-    # capture set covers the cuota chain (#81 follow-up).
     if captured_targets and not grounded:
         raise AssertionError(
             "Renta WEB Open replay payloads exist but cover zero formula targets — payload schema mismatch?",

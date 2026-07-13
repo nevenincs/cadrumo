@@ -475,8 +475,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     dry-run preview under K2, and asserts the preview reports two
     unreadable / one readable row while leaving ``secure_objects``
     untouched and never creating the quarantine archive table — the
-    contract the ``repair quarantine --dry-run`` surface relies on
-    (persona-fleet finding H3).
+    contract the ``repair quarantine --dry-run`` surface relies on.
     """
     import sqlite3
 

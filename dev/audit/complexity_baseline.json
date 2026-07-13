@@ -1,5 +1,5 @@
 {
-  "_comment": "Grandfathered complexity debt for dev/audit/complexity.py. Each entry is a SPLIT-CANDIDATE the owning campaign should pay down. Regenerate ONLY via `python -m dev.audit.complexity --write-baseline` (production) or `python -m dev.audit.complexity --tests --write-baseline` when intentionally accepting new debt or after paying debt down. The 'production' and 'tests' sections are independent scopes. Keys: 'path::function' (cyclomatic, cognitive) and 'path' (maintainability). Values are the worst tolerated score.",
+  "_comment": "Grandfathered complexity debt for dev/audit/complexity.py. Each entry is a SPLIT-CANDIDATE its owning area should pay down. Regenerate ONLY via `python -m dev.audit.complexity --write-baseline` (production) or `python -m dev.audit.complexity --tests --write-baseline` when intentionally accepting new debt or after paying debt down. The 'production' and 'tests' sections are independent scopes. Keys: 'path::function' (cyclomatic, cognitive) and 'path' (maintainability). Values are the worst tolerated score.",
   "production": {
     "cyclomatic": {
       "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py::Modelo100ObservedV2025Extractor": 15,

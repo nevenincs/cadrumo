@@ -9,9 +9,9 @@ functions directly.
 The base class implements the ``get(key)`` / ``clear_cache``
 contract on top of an unbounded ``dict[K, T]``. Subclasses
 override ``_load(key) -> T`` to perform the actual file read
-and Pydantic validation. The cache strategy is documented in
-the resource-management-api ADR: process-lifetime memoisation,
-no eviction, because the bundled data is immutable per install.
+and Pydantic validation. The cache strategy is process-lifetime
+memoisation with no eviction, because the bundled data is
+immutable per install.
 """
 
 from __future__ import annotations

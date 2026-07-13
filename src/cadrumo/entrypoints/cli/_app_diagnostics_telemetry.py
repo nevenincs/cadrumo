@@ -1,8 +1,7 @@
 """CLI commands for the ``aeat app diagnostics telemetry`` subcommand group.
 
 Provides the ``status`` and ``flush`` verbs over the default-off,
-consent-gated remote telemetry tier (``2026-07-04-remote-telemetry-adr``,
-GitHub issue #407): ``status`` reports the deployment's current posture
+consent-gated remote telemetry tier: ``status`` reports the deployment's current posture
 (opt-in, tier, gestor mode, endpoint) without ever emitting anything;
 ``flush`` builds the one aggregate local-run payload a real send would
 transmit and, by default (``--dry-run``, the CLI default), only PREVIEWS

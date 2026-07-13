@@ -7,7 +7,7 @@ LICENSE text and the project ``NOTICE`` attribution file inside its artifacts
 the explicit PEP 639 ``license-files`` declaration in each ``pyproject.toml``;
 this gate pins the declaration and the presence of the referenced files so a
 future edit cannot silently drop the attribution chain back to hatchling's
-implicit glob defaults (license-posture ADR).
+implicit glob defaults.
 
 The companion NOTICE files additionally scope the Apache-2.0 licence to the
 project's packaging and derived works — never the underlying official AEAT/BOE

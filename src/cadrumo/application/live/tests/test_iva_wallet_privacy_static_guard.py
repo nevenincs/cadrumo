@@ -1,4 +1,4 @@
-"""Static privacy guards for live IVA wallet source and vault artefacts."""
+"""Static privacy guard for the live IVA wallet source surfaces."""
 
 from __future__ import annotations
 
@@ -16,14 +16,11 @@ _LIVE_IVA_WALLET_SURFACES = (
     "src/cadrumo/application/live/*iva_wallet*.py",
     "src/cadrumo/application/live/*iva_remote_state*.py",
     "src/cadrumo/adapters/outbound/aeat/sede/*iva_compensation_wallet*.py",
-    ".vault/plan/2026-05-19-live-iva-compensation-wallet-plan.md",
-    ".vault/audit/*live-iva-compensation-wallet*.md",
-    ".vault/audit/*iva-wallet-live-history*.md",
 )
 
 
 def test_live_iva_wallet_surfaces_do_not_commit_valid_looking_taxpayer_identifiers() -> None:
-    """Live wallet source and vault tracking must not carry taxpayer-shaped literals."""
+    """Live wallet source must not carry taxpayer-shaped literals."""
 
     offenders: list[str] = []
     for pattern in _LIVE_IVA_WALLET_SURFACES:

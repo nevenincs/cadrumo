@@ -14,10 +14,6 @@ See Also:
         Public domain facade this test pins to the implementation object.
     :func:`~domain.calculations.registry._applicability.iter_modelo_applicability_rules`
         Canonical rule-table iterator checked for annual withholding refs.
-    ``2026-05-26-cross-domain-continuity-audit``
-        Audit finding that required the stale application copy to collapse.
-    ``2026-06-02-registry-applicability-boundary-audit``
-        Boundary audit preserving the focused registry applicability facade.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Frame-grammar parser for the ``cli-sequence`` MyST directive (ADR D1, D4).
+"""Frame-grammar parser for the ``cli-sequence`` MyST directive.
 
 Parses a directive body of plain frame lines into a strict
 :class:`~dev.docs.sequences._schema.ParsedSequence`. The grammar, line by line:
@@ -17,7 +17,7 @@ raw text into ordered frame builders plus a list of accumulated problem strings,
 with no structural judgement -- it is shared with the seed-recipe loader
 (``_seeds.py``). :func:`parse_sequence` is the public entry: it inlines a
 ``:seed:`` recipe when requested, runs the line pass over the body, then enforces
-the sequence-result contract (ADR D4) and placeholder resolution, raising a single
+the sequence-result contract and placeholder resolution, raising a single
 accumulating :class:`~dev.docs.sequences._errors.SequenceParseError` naming every
 fault. No fault aborts the pass; the author sees the whole worklist at once.
 """
@@ -52,8 +52,8 @@ __all__ = ["parse_frame_lines", "parse_sequence"]
 
 #: The sole human CLI executable; every frame command leads with this token.
 _EXECUTABLE: str = "aeat"
-#: The ``@expect`` pseudo-path asserting a frame's process exit code (ADR D3);
-#: its literal MUST be an integer.
+#: The ``@expect`` pseudo-path asserting a frame's process exit code; its
+#: literal MUST be an integer.
 _EXIT_CODE_PATH: str = "exit_code"
 
 
@@ -256,8 +256,8 @@ def _parse_expect(rest: str, source: str, line_number: int, problems: list[str])
     if literal:
         value, literal_ok = _parse_expect_literal(literal, source, line_number, problems)
         ok = ok and literal_ok
-    # ADR D3: exit_code is an integer exit status; a bool is not an exit code
-    # even though ``bool`` is an ``int`` subclass in Python.
+    # exit_code is an integer exit status; a bool is not an exit code even
+    # though ``bool`` is an ``int`` subclass in Python.
     if ok and json_path == _EXIT_CODE_PATH and not (isinstance(value, int) and not isinstance(value, bool)):
         problems.append(
             f"{_at(source, line_number)}: @expect {_EXIT_CODE_PATH} value {literal!r} must be an integer literal",
@@ -360,7 +360,7 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
 
 
 def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str]) -> None:
-    """Enforce the exactly-one-terminal-@result contract (ADR D4)."""
+    """Enforce the exactly-one-terminal-@result contract."""
     result_indices = [index for index, builder in enumerate(builders) if builder.kind is FrameKind.RESULT]
     if not result_indices:
         problems.append("a sequence must end in exactly one @result frame; found none")
@@ -416,8 +416,8 @@ def parse_sequence(
     """Parse a ``cli-sequence`` directive into a strict :class:`ParsedSequence`.
 
     Inlines the ``:seed:`` recipe (when present) as leading setup frames, parses
-    the directive body, then enforces the sequence-result contract (ADR D4),
-    unique capture names, and prior-capture placeholder resolution. Every grammar
+    the directive body, then enforces the sequence-result contract, unique
+    capture names, and prior-capture placeholder resolution. Every grammar
     and structural fault is accumulated and raised together.
 
     Args:

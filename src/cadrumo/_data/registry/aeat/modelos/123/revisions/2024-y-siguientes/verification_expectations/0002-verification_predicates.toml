@@ -25,9 +25,8 @@
 # the implication holds trivially when casilla 06 is absent or non-positive,
 # so a filer with no retenible activity in the quarter raises nothing.
 #
-# rd-439-2007:art-75 closes DFR-M123-RIRPF-EXONERATION-CORPUS (audit
-# 2026-07-01-modelo-verify-nonzero-guards-audit): its apartado 3 is the
-# type-based retention-exoneration list (rentas exceptuadas de la obligacion
+# rd-439-2007:art-75 closes DFR-M123-RIRPF-EXONERATION-CORPUS: its apartado 3
+# is the type-based retention-exoneration list (rentas exceptuadas de la obligacion
 # de retener). Only letras b) (Letras del Tesoro / valores del Banco de
 # España) and c) (primas de conversion de obligaciones en acciones) reach
 # rendimientos del capital mobiliario, and both describe income with no

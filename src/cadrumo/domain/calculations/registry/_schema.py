@@ -976,8 +976,7 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # non-zero base_imponible), the one shape implies_nonzero cannot
         # express because its trigger is a categorical equality, not a
         # numeric antecedent. See the casilla_equals_implies_nonzero branch in
-        # _evaluate_advisory_predicate_fires and the
-        # m210-categorical-conditional-predicate ADR.
+        # _evaluate_advisory_predicate_fires.
         "casilla_equals_implies_nonzero",
         # casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
         # "profile_field"]) — categorical-antecedent / profile-state-consequent
@@ -1040,9 +1039,8 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # so a discrepancy is a prompt to review, not a refusal. Authored for
         # the M131 estimación-objetiva módulos engine (casilla 01 "Suma de
         # rendimientos netos" vs the internal
-        # modulos-rendimiento-neto-actividad reference), per
-        # no-silent-under-declaration and the
-        # 2026-07-01-modelo-131-eo-modulos-engine-adr Phase 1 guard. See the
+        # modulos-rendimiento-neto-actividad reference), guarding against a
+        # silent under-declaration. See the
         # advisory_when_computed_diverges branch in
         # _evaluate_advisory_predicate_fires.
         "advisory_when_computed_diverges",
@@ -1074,8 +1072,7 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # base" carry (BIN, pending credits, recargo carryforward). As a
         # BLOCKING_RULE it holds when the balance reconciles; as an ADVISORY it
         # fires when it does not. See the roll_forward_balances branch in
-        # _evaluate_predicate_expression / _evaluate_advisory_predicate_fires and
-        # the modelo-200-bin-continuity ADR.
+        # _evaluate_predicate_expression / _evaluate_advisory_predicate_fires.
         "roll_forward_balances",
     },
 )
@@ -1133,8 +1130,7 @@ class VerificationPredicateDefinition(RegistryModel):
       than non-zero to mirror the regulatory phrasing; a casilla with a
       negative value does not trigger the implication. A missing
       consequent value evaluates to ``Decimal(0)`` and therefore
-      violates the predicate when the antecedent is positive. Added by
-      the dsl-conditional-predicate ADR.
+      violates the predicate when the antecedent is positive.
     - ``implies_any_nonzero(["antecedent_id", "c1_id", "c2_id", ...])`` —
       the N-consequent generalisation of ``implies_nonzero``: predicate
       holds iff ``casilla_values[antecedent] <= 0`` OR **at least one**
@@ -1157,12 +1153,10 @@ class VerificationPredicateDefinition(RegistryModel):
       profile field is present and non-empty. Returns ``False``
       (predicate violated) only when the applicability filter activates
       AND the profile field is ``None`` / empty. A sibling of
-      ``implies_nonzero`` per the dsl-conditional-predicate ADR — the
-      conditional non-zero requirement is the same semantic shape, but
-      the gating signal is profile state (e.g. fiscal_residency,
-      ue_eee_status) rather than another casilla value. First use site:
-      M210 representante-fiscal gate per m210-irnr-full-engine ADR
-      §D2.5 (TRLIRNR Art 10).
+      ``implies_nonzero`` — the conditional non-zero requirement is the
+      same semantic shape, but the gating signal is profile state (e.g.
+      fiscal_residency, ue_eee_status) rather than another casilla value.
+      First use site: M210 representante-fiscal gate (TRLIRNR Art 10).
     - ``profile_flag_enabled("profile_field_name")`` — profile-state
       advisory: predicate FIRES (ADVISORY shown) iff the named boolean
       TaxpayerProfile field is true. ADVISORY-only. Authored for the Modelo
@@ -1179,10 +1173,9 @@ class VerificationPredicateDefinition(RegistryModel):
       ``BLOCKING_RULE`` branch is implemented, mirroring the existing
       ``equals`` (BLOCKING-only) / ``advisory_when_ratio_ge`` (ADVISORY-only)
       asymmetry. Authored for the M210 IRNR inmobiliaria branch, the one
-      no-silent-under-declaration shape ``implies_nonzero`` cannot express
-      because its trigger is a categorical equality (``tipo_renta ==
-      "inmobiliaria"``) rather than a numeric antecedent. See the
-      m210-categorical-conditional-predicate ADR.
+      shape ``implies_nonzero`` cannot express because its trigger is a
+      categorical equality (``tipo_renta == "inmobiliaria"``) rather than
+      a numeric antecedent, guarding against a silent under-declaration.
     - ``deduccion_requires_adquisicion_before(["amount_casilla_id",
       "acquisition_date_casilla_id", "construction_date_casilla_id",
       "cutoff_iso"])`` — eligibility-conditional advisory: FIRES (ADVISORY
@@ -1239,8 +1232,7 @@ class ModeloRevision(RegistryModel):
     (e.g. ``["orden-hac-277-2026:art-3"]`` for M100 ejercicio 2025).
 
     The field is mandatory at validation time: every revision must cite the
-    Ordenes that approve or amend the form for its applicability window. See
-    the ``period-revision-resolution`` ADR, Ruling 4 / D3.
+    Ordenes that approve or amend the form for its applicability window.
     """
 
     id: RevisionId

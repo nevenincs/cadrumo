@@ -65,7 +65,7 @@ _M100_COMPUTED_CASILLAS: frozenset[CasillaId] = _casilla_ids(
     "0432",
     "0500",
     # Casilla 0505 (base liquidable general sometida a gravamen) is computed
-    # from 0500 (max(0, 0500)) from the 2020-2023 revisions onward (#532 Phase 2,
+    # from 0500 (max(0, 0500)) from the 2020-2023 revisions onward (also
     # matching 2024/2025); it can no longer be supplied as a leaf input and the
     # engine derives it through the base-liquidable chain.
     "0505",

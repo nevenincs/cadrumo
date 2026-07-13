@@ -68,11 +68,10 @@ AEAT_WRITE_FORBIDDEN_ACTIONS: tuple[str, ...] = (
 # TGVI online (Transmisión y Gestión de Volúmenes de Información) creates
 # a FINALIZED state visible in declaration-history surfaces, configurable
 # for substitutive replacement of prior filings, and logged as an upload
-# attempt regardless of presentation. Per the live-parity-oracle ADR
-# decision D13a, these surfaces are forbidden under the production-NIF
-# classification; oracle adapters that target them must run only under
-# AEAT pre-production with test NIFs and declare the test environment
-# explicitly in their catalogue registration.
+# attempt regardless of presentation. These surfaces are forbidden under
+# the production-NIF classification; oracle adapters that target them
+# must run only under AEAT pre-production with test NIFs and declare the
+# test environment explicitly in their catalogue registration.
 AEAT_WRITE_FORBIDDEN_VERB_TOKENS: frozenset[str] = frozenset(
     {
         # Spanish action verbs (write-class)

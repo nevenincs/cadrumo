@@ -22,9 +22,7 @@ invented).
 
 Everything here runs on-host and in-memory only. The evidence bytes and the
 extracted text never touch disk and are never sent to a cloud provider or an
-LLM (``sensitive-financial-data-secure-storage-only``,
-``2026-06-10-llm-evidence-classification-adr``). This module makes no network
-call and performs no filesystem write.
+LLM. This module makes no network call and performs no filesystem write.
 
 A scan-only PDF (no embedded text layer) or an image attachment has nothing for
 :func:`~application.ledger.extract_invoice_fields` to read, so

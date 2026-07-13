@@ -2,8 +2,8 @@
 # (resultados negativos de trimestres anteriores) MUST NOT exceed C10
 # (cuota positiva del trimestre). Source: AEAT M131 instructions
 # "en ningún caso podrá figurar en la casilla 11 un importe superior a
-# la cantidad positiva consignada en la casilla 10". P08.S47 enforces
-# this via the cap_le_when_positive predicate DSL operator.
+# la cantidad positiva consignada en la casilla 10". Enforced via the
+# cap_le_when_positive predicate DSL operator.
 [[revisions."2025".verification_predicates]]
 predicate_id = "modelo-131-2025-c11-cap-by-c10"
 expression = 'cap_le_when_positive(["11", "10"])'
@@ -36,8 +36,8 @@ legal_refs = ["rd-439-2007:art-110"]
 # There is no legitimate positive-C01/zero-C02 case, so the advisory is
 # false-positive-free. The durable fix is modelling the módulos determination
 # itself (Orden de módulos signos × índices correctores) so C01 and C02 become
-# computed — a campaign-sized follow-up; until it lands this advisory makes the
-# under-declaration non-silent, mirroring the M200 base-imponible advisory.
+# computed; until it lands this advisory makes the under-declaration
+# non-silent, mirroring the M200 base-imponible advisory.
 [[revisions."2025".verification_predicates]]
 predicate_id = "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos"
 expression = 'implies_nonzero(["01", "02"])'
@@ -45,8 +45,8 @@ finding_kind = "ADVISORY"
 legal_refs = ["rd-439-2007:art-110"]
 
 # Table-driven-engine-vs-operator-declared discrepancy (M131 estimación-
-# objetiva módulos engine, 2026-07-01-modelo-131-eo-modulos-engine-adr).
-# Casilla 01 ("Suma de rendimientos netos") stays a manual operator input;
+# objetiva módulos engine). Casilla 01 ("Suma de rendimientos netos") stays a
+# manual operator input;
 # for a tabled IAE activity (see 0002-modulos-coeficientes.toml for the
 # current phased coverage) the units×coefficient engine now produces a
 # computed reference figure (modulos-rendimiento-neto-actividad, Fase 1ª +
@@ -64,8 +64,7 @@ finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1"]
 
 # Índice-exceso (b.3) / índices-especiales incompatibility ADVISORY (mirrors
-# the M100 EO-agraria índice-incompatibility advisory,
-# 2026-07-01-modelo-131-eo-modulos-engine-adr Phase 2 scope note). Orden
+# the M100 EO-agraria índice-incompatibility advisory). Orden
 # HAC/1347/2024 Anexo II, instrucción 2.3 declares (see
 # orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades):
 #

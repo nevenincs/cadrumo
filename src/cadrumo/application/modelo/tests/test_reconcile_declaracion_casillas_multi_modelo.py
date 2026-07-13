@@ -1,4 +1,4 @@
-"""Real-behavior tests for casilla-level declaración reconcile enrollment (#438).
+"""Real-behavior tests for casilla-level declaración reconcile enrollment.
 
 Extends the coverage :mod:`test_reconcile_declaracion_casillas` established for
 Modelo 130 to the five modelos enrolled in
@@ -16,7 +16,7 @@ reading the registry TOML alongside
 to target the exact casilla-id vocabulary its verification expectations
 reconcile — the same parity Modelo 130 established first. Real-PDF
 ``bbox_anchored``/``named_label`` extraction stays Tier-R and out of scope
-here (tracked separately, blocked on #332-337); this suite tests the
+here (tracked separately); this suite tests the
 ``_reconcile_parsed_declaracion`` seam directly with a synthetically
 constructed
 :class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`,

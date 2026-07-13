@@ -141,7 +141,7 @@ def test_no_new_type_ignore_without_rationale() -> None:
     - Sites already in the ratchet are skipped (tracked for paydown).
     - Any site NOT in the ratchet must have a rationale marker on the same line
       or in the 3 lines immediately above.
-    - New files or new suppressions added by any campaign are automatically
+    - New files or new suppressions are automatically
       covered — no exclusion registration required.
 
     To remediate a known-violating site: add a marker comment (preferred) or

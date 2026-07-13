@@ -84,8 +84,8 @@ _MANIFEST_FILENAME = "corpus.manifest.json"
 
 
 # Sha-256 content-fingerprint shape shared by the per-entry file digest and
-# the self-attesting manifest digest. Stays bare-str under ADR Rule 7
-# (fingerprint, not identity); factored to a single module-local constraint
+# the self-attesting manifest digest. Stays bare-str deliberately (it is a
+# fingerprint, not an identity); factored to a single module-local constraint
 # kwargs mapping to remove the duplication of the shape literal.
 class _Sha256FieldKwargs(TypedDict):
     min_length: int

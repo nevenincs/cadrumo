@@ -1,12 +1,11 @@
-"""Negotiated MCP capability posture is pinned (ADR H9).
+"""Negotiated MCP capability posture is pinned.
 
 Builds the real server via :func:`build_server` and asserts the EXACT capability
 set the server negotiates through ``create_initialization_options()``: tools,
 prompts, and resources are advertised (their handlers are registered);
-completions and logging are asserted-ABSENT (no handler is registered yet — the
-sibling discovery ADR adds completions/list-changed, and this pin flags that
-arrival); and every ``listChanged`` / ``subscribe`` sub-flag is pinned to its
-current value so a future capability shift cannot land silently.
+logging is asserted-ABSENT (no handler is registered); and every
+``listChanged`` / ``subscribe`` sub-flag is pinned to its current value so a
+future capability shift cannot land silently.
 
 When the ``cadrumo[agent]`` SDK extra is absent the SDK-dependent build is
 asserted to refuse at the optional-dependency boundary — the same
@@ -43,16 +42,15 @@ def test_negotiated_capability_set_is_pinned() -> None:
     assert capabilities.prompts is not None
     assert capabilities.resources is not None
 
-    # completions IS declared: the discovery ADR (P5) registers a completion
-    # handler for the guided-workflow prompt arguments. logging stays absent;
-    # pinning None makes its arrival a caught change.
+    # completions IS declared: the server registers a completion handler for
+    # the guided-workflow prompt arguments. logging stays absent; pinning None
+    # makes its arrival a caught change.
     assert capabilities.completions is not None
     assert capabilities.logging is None
 
     # tools.listChanged IS declared: the console emits tools/list_changed on a
-    # toolset activation (ADR mcp-progressive-discovery P3). The remaining
-    # list-changed / subscribe sub-flags stay off and are pinned so a future
-    # capability shift cannot land silently.
+    # toolset activation. The remaining list-changed / subscribe sub-flags stay
+    # off and are pinned so a future capability shift cannot land silently.
     assert capabilities.tools.listChanged is True
     assert capabilities.prompts.listChanged is False
     assert capabilities.resources.listChanged is False

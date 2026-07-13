@@ -5,16 +5,12 @@ so pytest actually collects them: ``pyproject.toml`` sets
 ``python_files = ["test_*.py"]``, so a function defined only inside
 ``_authenticator_support.py`` (which intentionally does not match that glob,
 per the module's own "shared support for split adapter tests" docstring) is
-never collected — the module's own docstring for
-``test_reauthenticate_does_not_deadlock`` and its 12 siblings were silently
-dead before this file existed, per the ``import-single-canonical-source``
-discovery discipline: a function existing is not the same as it running.
+never collected — a function existing is not the same as it running.
 
-Also closes the two remaining genuine test-coverage gaps tracked by
-GitHub issue #590 (deferred from the #193 access-gate cohesion close):
+Also covers two genuine test-coverage gaps:
 
 * ``reauthenticate()`` happy path with a fake browser factory.
-* (The third deferred item — a byte-for-byte parity test between
+* (The other item — a byte-for-byte parity test between
   ``AeatAccessGate.require_live_write()`` and
   ``SubmissionEngine._submit_with_transport()`` — is obsolete:
   ``_submit_with_transport`` no longer exists anywhere in the codebase. See

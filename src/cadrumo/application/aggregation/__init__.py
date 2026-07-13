@@ -196,7 +196,6 @@ from ._service import (
     get_per_modelo_aggregation_contract,
 )
 from ._source_mesh import (
-    DEFERRED_SOURCE_KIND_TARGETS,
     DEFERRED_SOURCE_KINDS,
     RESERVED_SOURCE_KINDS,
     BindingSourceDisposition,
@@ -207,7 +206,6 @@ from ._source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
     CallerOverrideDisposition,
-    DeferredSourceTarget,
     ModeloSourceResolver,
     SourceMeshError,
     build_binding_source_dispositions,
@@ -224,7 +222,6 @@ __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
     "DEFERRED_SOURCE_KINDS",
-    "DEFERRED_SOURCE_KIND_TARGETS",
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
@@ -251,7 +248,6 @@ __all__ = [
     "CounterpartAggregation",
     "CounterpartObservation",
     "CounterpartSourceKind",
-    "DeferredSourceTarget",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
     "ForeignAssetIngestObservation",

@@ -4,7 +4,7 @@ Provides the ``run-health``, ``runs``, ``latency``, ``errors``, and
 ``llm-usage`` verbs: local-only, read-only reports over recent LLM
 classification/completion run timing (duration, provider, outcome), so an
 operator can diagnose a slow LLM-backed run, a stale/expired auth session, or
-a recurring failure mode without leaving the host (GitHub issue #407).
+a recurring failure mode without leaving the host.
 ``run-health`` folds the run telemetry with the persisted-AEAT-session
 staleness probe into one aggregate-by-provider report; ``runs`` lists the
 individual recorded runs, most-recent-first; ``latency`` reports P50/P95/P99

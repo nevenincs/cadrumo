@@ -1,4 +1,4 @@
-"""Modelo 210 IRNR España-Alemania dividend ceiling resolution (#216).
+"""Modelo 210 IRNR España-Alemania dividend ceiling resolution.
 
 Grounds the Spain-Germany double-taxation treaty (CDI firmado 03-02-2011, en
 vigor 18-10-2012, BOE-A-2012-10212) dividend source-state ceiling against the

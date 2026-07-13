@@ -1,7 +1,7 @@
 """Monthly code-health report: composition, classification, and real invocation.
 
-Exercises ``dev.audit.report`` -- the tool answering issue #416 ("Contributors
-get monthly shadowing/duplication/layering reports with red/amber"). The
+Exercises ``dev.audit.report`` -- the tool giving contributors monthly
+shadowing/duplication/layering reports with red/amber severity. The
 module composes the four EXISTING scanners already shipped under ``dev/``
 (``dev.import_hygiene_scan`` Family-3 for shadowing, the ``jscpd`` wrapper for
 duplication, ``lint-imports`` / ``.importlinter`` for layering,

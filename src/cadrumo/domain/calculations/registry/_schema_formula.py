@@ -162,8 +162,7 @@ class KeyedBracketEntry(RegistryModel):
     ``(key, year)`` — there is no notion of interval overlap because the
     domain is enum-discrete, not numeric-continuous.
 
-    First consumer: M210 IRNR Phase 1 ``m210-tipo-gravamen-2025`` per
-    the m210-irnr-full-engine ADR.
+    First consumer: M210 IRNR ``m210-tipo-gravamen-2025``.
     """
 
     key: str = Field(min_length=1, max_length=64)

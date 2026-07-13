@@ -37,9 +37,9 @@ is the *wiring* invariant — year N+1's casilla 110 equals year N's
 persisted ``iva.compensacion-disponible-fin-periodo`` — which LIVA art. 99
 defines as the prior-period credit carried forward. A registry-gap
 WORKAROUND supplies ``modelo-303-autoconsumo-promotor-base = 0`` because
-that ``source = "profile"`` binding (added by an unrelated campaign) is not
-populated on the direct-calculate path; the workaround is documented inline
-and does not modify the peer-owned registry file.
+that ``source = "profile"`` binding is not populated on the direct-calculate
+path; the workaround is documented inline and does not modify the registry
+file.
 """
 
 from __future__ import annotations
@@ -95,14 +95,13 @@ _M303_COMPENSACION_PENDIENTE_CASILLA: CasillaId = _casilla_id(
 )
 _M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
-#: WORKAROUND R2 — the 303 2023+ revision carries a ``source = "profile"``
+#: WORKAROUND — the 303 2023+ revision carries a ``source = "profile"``
 #: binding ``modelo-303-autoconsumo-promotor-base`` (LIVA art. 9.1.c / 79.4
-#: autoconsumo del promotor) introduced by an unrelated campaign. The
-#: direct-calculate path does not run the profile resolver, so the binding is
-#: unpopulated and the engine refuses ("missing binding fact"). Supplying it as
-#: zero (no autoconsumo del promotor for this filer) lets the engine resolve the
-#: dependent casilla. This is a registry-gap workaround, NOT a fix of the
-#: peer-owned registry file.
+#: autoconsumo del promotor). The direct-calculate path does not run the
+#: profile resolver, so the binding is unpopulated and the engine refuses
+#: ("missing binding fact"). Supplying it as zero (no autoconsumo del
+#: promotor for this filer) lets the engine resolve the dependent casilla.
+#: This is a registry-gap workaround, NOT a fix of the registry file.
 _AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
 
 #: The Administración del Estado attribution ratio (casilla 65). For a

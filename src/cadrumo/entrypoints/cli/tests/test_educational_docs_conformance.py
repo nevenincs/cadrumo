@@ -12,8 +12,8 @@ author-discipline hope:
   ``--help``), so a doc that names a retired or renamed verb reds the gate; and
 - every relative markdown link must resolve to a file that exists.
 
-The gate binds to CLI *verbs* (not module paths), so it survives the module
-relocation campaign that churns the autodoc tree.
+The gate binds to CLI *verbs* (not module paths), so it survives module
+relocations that churn the autodoc tree.
 """
 
 from __future__ import annotations

@@ -1,7 +1,6 @@
 """Response-layer provenance gate for the operator golden-task eval.
 
-Closes eval-catalogue category 3 (dropped provenance at the RESPONSE layer,
-``.vault/research/2026-07-01-agent-harness-research.md``): the runner's existing
+Guards against provenance dropped at the RESPONSE layer: the runner's existing
 provenance dimension (``_check_provenance``) inspects the REGISTRY snapshot, which
 proves the registry itself is grounded but NOT that the CLI/MCP
 ``modelo.work.calculate`` RESPONSE payload actually relayed that grounding — the
@@ -19,8 +18,7 @@ payload the operator actually reads.
 
 No mocks: every seeded row is a genuine ``TransactionCatalogueRepository`` write
 and every response value is what the real registry engine plus the real CLI
-envelope serializer produced (``no-tautological-calculation-tests``,
-``aeat-quality-gates``).
+envelope serializer produced.
 """
 
 from __future__ import annotations

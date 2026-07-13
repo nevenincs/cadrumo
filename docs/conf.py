@@ -23,6 +23,8 @@ from sphinx.deprecation import RemovedInSphinx90Warning
 _PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY  # noqa: E402
+
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
 
@@ -49,10 +51,10 @@ _RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
 _LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 
 # ── Project metadata ────────────────────────────────────────────────────────
-project = str(_PYPROJECT["name"])
+project = PRODUCT_IDENTITY.display_name
 author = ", ".join(author["name"] for author in _PYPROJECT.get("authors", []))
 # Human-facing footer credit; the packaging author handle stays in pyproject.
-copyright = "2026, the cadrumo authors"
+copyright = f"2026, the {PRODUCT_IDENTITY.prose_name} authors"
 release = str(_PYPROJECT["version"])
 version = release
 
@@ -250,13 +252,13 @@ if os.environ.get("CADRUMO_DOCS_OFFLINE"):
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "Cadrumo - local Spanish tax preparation"
-html_short_title = "Cadrumo"
+html_title = f"{PRODUCT_IDENTITY.prose_name} documentation - local Spanish tax preparation"
+html_short_title = f"{PRODUCT_IDENTITY.prose_name} documentation"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
 html_meta = {
     "description": (
-        "Local tax engine with CLI, MCP, rules, skills, and scoped agents. "
-        "Deterministic calculations. LLM-assisted operation. No filing."
+        "Cadrumo helps you prepare, check, and export Spanish tax files locally. "
+        "Cadrumo never files or submits them for you."
     ),
 }
 html_favicon = "_static/cadrumo-favicon.svg"
@@ -434,12 +436,12 @@ html_context = {
     "cadrumo_footer_note": (
         "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with the "
         "Agencia Estatal de Administración Tributaria (AEAT), "
-        "and never replaces official AEAT tools or professional review."
+        "and never replaces official AEAT tools or advice from a qualified professional."
     ),
 }
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
-ogp_site_name = "Cadrumo documentation"
+ogp_site_name = f"{PRODUCT_IDENTITY.prose_name} documentation"
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"
@@ -1030,8 +1032,8 @@ def setup(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
 
         The projection is a build-time asset the ``cli-sequence`` frontend widget
-        fetches for hover help (ADR ``2026-07-13-docs-cli-sequences-adr`` D5); it
-        is gitignored and regenerated, never committed. Guarded like the sibling
+        fetches for hover help. It is gitignored and regenerated, never
+        committed. Guarded like the sibling
         CLI-reference hook: an incremental changed-page build whose artifact
         already exists skips the projection's subprocess cost (the CLI tree
         cannot change on a docs-only page build).
@@ -1044,7 +1046,7 @@ def setup(app):
         emit_cli_tree(app, specific_sources=_specific_build_sources())
 
     def _check_cli_sequences(app):
-        """Fail the build on any cli-sequence golden divergence (ADR D6).
+        """Fail the build on any cli-sequence golden divergence.
 
         The docs-build half of the two-surfaces-one-engine gate: runs the engine
         check mode so a divergence or a failed ``@expect`` reds the build. Scoped
@@ -1086,7 +1088,7 @@ def setup(app):
     app.add_directive("legacy", _LegacyDirective)
 
     # Register the cli-sequence directive: server-rendered executed-CLI frames
-    # plus one inline JSON payload per sequence (docs-cli-sequences ADR D5).
+    # plus one inline JSON payload per sequence.
     from dev.docs.sequence_directive import register as _register_cli_sequence
 
     _register_cli_sequence(app)

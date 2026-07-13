@@ -1,6 +1,6 @@
 """Guided-workflow prompts embed the shipped skills and orient the session.
 
-Proves the guided-workflow prompt channel (decision record R4): the catalogue is exactly the shipped
+Proves the guided-workflow prompt channel: the catalogue is exactly the shipped
 skills plus the orientation entry, every skill prompt embeds its ``SKILL.md``
 verbatim as a resource, the orientation prompt embeds the operator rules, and an
 unknown prompt name maps to a clean protocol error. The SDK-independent
@@ -117,6 +117,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
         assert {prompt.name for prompt in listed} == {entry.name for entry in build_prompt_catalogue()}
         workflow = next(prompt for prompt in listed if prompt.name != ORIENTATION_PROMPT_NAME)
         period_argument = next(argument for argument in workflow.arguments or [] if argument.name == "period")
+        assert (period_argument.description or "").startswith("The AEAT period code.")
         assert all(pattern in (period_argument.description or "") for pattern in accepted_period_patterns())
         assert "ANUAL" not in (period_argument.description or "")
 
@@ -199,7 +200,7 @@ def test_server_get_prompt_unknown_name_is_a_protocol_error() -> None:
 
 
 def test_workflow_prompts_declare_typed_arguments_orientation_does_not() -> None:
-    # ADR P5: guided workflows accept filing_year + period; orientation takes none.
+    # Guided workflows accept filing_year + period; orientation takes none.
     catalogue = {entry.name: entry for entry in build_prompt_catalogue()}
     orientation = catalogue[ORIENTATION_PROMPT_NAME]
     assert orientation.arguments == ()
@@ -213,12 +214,11 @@ def test_workflow_prompts_declare_typed_arguments_orientation_does_not() -> None
 
 
 def test_prompt_get_substitutes_the_supplied_scope_into_the_brief() -> None:
-    workflow_name = next(
-        entry.name for entry in build_prompt_catalogue() if entry.name != ORIENTATION_PROMPT_NAME
-    )
+    workflow_name = next(entry.name for entry in build_prompt_catalogue() if entry.name != ORIENTATION_PROMPT_NAME)
     document = prompt_document(workflow_name, {"filing_year": "2026", "period": "3T"})
     assert "filing year 2026" in document.brief_text
     assert "period 3T" in document.brief_text
+    assert "taxpayer files with AEAT themselves" in document.brief_text
     # No arguments -> no scope line appended.
     bare = prompt_document(workflow_name, None)
     assert "Scope for this run" not in bare.brief_text

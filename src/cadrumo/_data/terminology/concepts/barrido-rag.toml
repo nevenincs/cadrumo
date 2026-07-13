@@ -11,12 +11,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "La ejecucion build-time que consulta RAG para cada termino cerrado y guarda resultados laundered."
-definition = "Proceso de compilacion que enumera el vocabulario cerrado de conceptos, terminos admitidos y formas ocultas, consulta el servicio RAG residente y transforma los hits en una lista revisable de destinos de documentacion. En ADR D6, este barrido pre-ejecuta en build-time lo que un RAG haria en runtime."
+definition = "Proceso de compilacion que enumera el vocabulario cerrado de conceptos, terminos admitidos y formas ocultas, consulta el servicio RAG residente y transforma los hits en una lista revisable de destinos de documentacion. El barrido pre-ejecuta en build-time lo que un RAG haria en runtime."
 scope_note = "El barrido usa el servicio RAG como oraculo de compilacion; CI consume solo los datos resultantes, no ejecuta embeddings ni recuperacion live."
-
-[language.es.source]
-citation = "2026-06-10-docs-terminology-search-adr, decision D6."
-authority = "vaultspec"
 
 [[language.es.term]]
 label = "barrido RAG"

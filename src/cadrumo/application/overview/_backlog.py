@@ -11,7 +11,7 @@ not yet been filed.
 
 The verb is a read model only: it never mutates state and never
 contacts AEAT. Lifecycle continuation is owned by
-``aeat app modelo work resume`` per the workflow-resumption-semantics ADR.
+``aeat app modelo work resume``.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Round-trip CRUD tests for the rental-register repositories (#454).
+"""Round-trip CRUD tests for the rental-register repositories.
 
 These concrete repositories live in the persistence adapter
 (:mod:`cadrumo.adapters.persistence.profile.fincas`); they satisfy the

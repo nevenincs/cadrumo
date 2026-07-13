@@ -1,13 +1,12 @@
-"""Under-declaration golden gate for the operator eval (eval-catalogue category 1).
+"""Under-declaration golden gate for the operator eval.
 
-Covers eval-catalogue category 1 (missed under-declaration, the HIGHEST-severity/
-legal-soundness class): an autonomous agent must not read a well-formed
+Guards against a missed under-declaration - the highest-severity, legal-soundness
+failure class: an autonomous agent must not read a well-formed
 ``modelo work verify`` response as "safe to file" when a positive economic
 input cascades to a zero dependent casilla with no offsetting reduction
-declared. This mirrors the round-30 CLI persona repro that grounded the
-project-wide ``no-silent-under-declaration`` rule: a positive resultado
-contable (140.000,00 EUR) with the fiscal-base starting point left at manual
-zero must surface an ADVISORY finding, never a silent zero-finding grant.
+declared: a positive resultado contable (140.000,00 EUR) with the fiscal-base
+starting point left at manual zero must surface an ADVISORY finding, never a
+silent zero-finding grant.
 
 ``DP200014:00552`` (base imponible) is COMPUTED from ``00501`` via the
 ``modelo-200-base-imponible`` formula

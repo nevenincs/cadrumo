@@ -9,8 +9,8 @@ entrypoint name→UUID normalization, a label-valued ``CADRUMO_ACTIVE_PROFILE`` 
 every profile-bound command hard-miss with a "no registered bucket manifest"
 refusal. This module pins the fixed behaviour by driving the REAL CLI root
 callback (the normalization site) against a REAL profile created through the real
-``config profile create`` flow: exactly the operator path the persona swarm
-missed. The fixed contract feeds a UUID into the single canonical route
+``config profile create`` flow: exactly the operator path that previously
+broke. The fixed contract feeds a UUID into the single canonical route
 resolver after normalizing the operator-facing display label.
 """
 

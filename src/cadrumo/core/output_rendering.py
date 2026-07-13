@@ -122,9 +122,9 @@ def reveal_cli_identifiers_opt_in() -> bool:
     """Resolve the profile/bucket identifier reveal opt-out at the output boundary.
 
     Reading :func:`cadrumo.core.config.load_settings` here keeps the policy
-    decision at the central success-output privacy boundary (per the
-    centralized-output-redaction ADR) and keeps the pure redaction module free
-    of a Settings dependency. Default off preserves the paste-safe placeholder
+    decision at the central success-output privacy boundary and keeps the
+    pure redaction module free of a Settings dependency. Default off
+    preserves the paste-safe placeholder
     behaviour; an operator sets ``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` to opt out.
     Both success-output emitters — :func:`render_command_output` and the JSON
     envelope :func:`cadrumo.core.json_contract.emit_json_success` — consult this

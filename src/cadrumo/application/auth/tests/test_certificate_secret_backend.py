@@ -9,8 +9,7 @@ under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore
 :func:`~application.auth.remove_operator_certificate_source_secret`,
 :func:`~application.auth.resolve_certificate_source_secret`) against a
 real workflow-state repository, mirroring the pattern already
-established for the sibling certificate-source registry tests. See
-GitHub issue #591 (cert-secret backend abstraction slice).
+established for the sibling certificate-source registry tests.
 
 See Also:
     :mod:`~application.auth._certificate_secret_backend`

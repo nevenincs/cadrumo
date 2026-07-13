@@ -45,7 +45,7 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
             "into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is "
             "document/OCR-grade and runs on normal consumer hardware (modest GPU or "
             "CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for "
-            "CPU-only/low-memory (see the consumer-hardware vision-model ADR)"
+            "CPU-only/low-memory hardware"
         ),
     )
     cadrumo_llm_default_max_tokens: int = Field(

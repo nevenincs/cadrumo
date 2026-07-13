@@ -9,8 +9,7 @@ browse. It contributes bucket-maintenance audit events through
 :class:`domain.buckets.BucketEventHistoryRepository` while the
 inner profile primitives keep emitting their lifecycle events.
 
-Authority: ``2026-06-03-cli-workflow-redesign-adr`` (composition
-pattern). The service does not re-implement a cross-store write; it
+The service does not re-implement a cross-store write; it
 delegates to the existing top-level user-profile re-exports:
 :func:`application.user_profile.rename_profile`,
 :func:`application.user_profile.delete_profile_with_lifecycle_span`,
@@ -38,9 +37,9 @@ digests, so import re-saves them through the recipient bucket's
 re-encrypts under that bucket's DEK.
 This package exposes the lifecycle composition verbs ``archive``,
 ``browse``, ``delete``, ``disk_usage``, ``export``, ``import``, ``inspect``,
-``rename``, and ``restore``. The ``search`` verb is deferred behind its own
-ADR because it must route through domain repositories instead of decrypting
-secure-object storage directly.
+``rename``, and ``restore``. The ``search`` verb is deferred; it must route
+through domain repositories instead of decrypting secure-object storage
+directly.
 
 :meth:`BucketMaintenanceService.disk_usage` measures a bucket's on-disk
 footprint by summing regular-file byte sizes under its fixed directory

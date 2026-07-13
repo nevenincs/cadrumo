@@ -1,4 +1,4 @@
-"""The bucket-scoped bulk resources (ADR H4): templates, and the in-process refusal.
+"""The bucket-scoped bulk resources: templates, and the in-process refusal.
 
 Calculation observations and evidence rows are ENCRYPTED per-bucket state; the
 session-less server process cannot decrypt them, so they are template-only

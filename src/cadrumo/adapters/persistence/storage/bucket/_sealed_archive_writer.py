@@ -6,8 +6,6 @@ and an optional recovery-wrap member. Metadata for every tar member
 is normalised at write time (timestamps pinned to the header's
 ``created_at``, mode pinned to ``0o400``, ownership cleared) so two
 same-bucket exports differ only in the header's ``created_at`` field.
-
-Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 """
 
 from __future__ import annotations
@@ -24,7 +22,7 @@ from ._sealed_archive_errors import SealedArchiveWriteError
 
 # Canonical member names. The layout MUST stay positional — the
 # reader validates the order. New member kinds open a new archive
-# schema version per the ADR.
+# schema version.
 HEADER_MEMBER_NAME = "header.json"
 PAYLOAD_MEMBER_NAME = "payload.envelope"
 RECOVERY_WRAP_MEMBER_NAME = "recovery.wrap"

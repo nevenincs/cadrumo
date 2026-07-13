@@ -9,9 +9,9 @@
 # ledger re-selection, NO relation, NO previous_filing carry — one value keeps
 # exactly one aggregation path (one-aggregation-path-pull-equals-calculate,
 # calculation-source-canonical-mechanism). Each projection carries the box's own
-# legal_refs verbatim (registry-calculation-legal-grounding). Authorised by the
-# 2026-06-13 dual-keying ADR. Registered by id in revision.toml's formulas list;
-# the directory-mode loader merges this fragment into revisions.formulas.
+# legal_refs verbatim (registry-calculation-legal-grounding). Registered by id
+# in revision.toml's formulas list; the directory-mode loader merges this
+# fragment into revisions.formulas.
 
 # Devengado régimen-general cuotas.
 [[revisions.2023-y-siguientes.formulas]]

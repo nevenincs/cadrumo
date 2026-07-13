@@ -49,13 +49,12 @@ from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Signatures of the concurrent-registry-write race documented by the
-# ``aeat-local-execution`` rule: in the shared worktree a peer agent may be
+# Signatures of a concurrent-registry-write race: a concurrent process may be
 # editing the registry TOML tree while these tests load it, producing a
-# transient mid-edit validation/fingerprint error. The rule's guidance is to
-# re-run rather than triage as a regression; ``_invoke`` encodes that as a
-# bounded retry keyed strictly on these transient markers so a real failure
-# (a genuine refusal, a wrong value) is never masked.
+# transient mid-edit validation/fingerprint error. Re-run rather than triage
+# as a regression; ``_invoke`` encodes that as a bounded retry keyed strictly
+# on these transient markers so a real failure (a genuine refusal, a wrong
+# value) is never masked.
 _TRANSIENT_REGISTRY_RACE_MARKERS = (
     "registry directory changed during cache fingerprinting",
     "required-role gate",

@@ -2,10 +2,10 @@
 
 Mounted on ``config auth`` as ``aeat config auth certificate ...``.
 Register, enumerate, select, remove, and check the expiry/rotation
-health of named PKCS#12 certificate sources — the multi-cert slice of
-GitHub issue #591 (a gestor managing several taxpayers registers one
-certificate per entity and selects the active one, rather than
-re-running ``auth configure --file`` on every switch). ``secret`` is the
+health of named PKCS#12 certificate sources — multi-cert support lets
+a gestor managing several taxpayers register one certificate per
+entity and select the active one, rather than re-running
+``auth configure --file`` on every switch. ``secret`` is the
 per-source passphrase slice: instead of one global, env-only
 ``AEAT_CERTIFICATE_PASSWORD_SECRET`` shared by whichever source happens
 to be active, ``certificate secret set`` binds a passphrase to one

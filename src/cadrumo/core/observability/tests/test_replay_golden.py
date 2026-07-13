@@ -16,7 +16,7 @@ from typing import Any, cast
 
 import pytest
 
-from ...config import PROJECT_ROOT, Settings, override_settings
+from ...config import Settings, override_settings
 from ...json_contract import OutputSchema, emit_json_success
 from .. import (
     AeatObservabilityError,
@@ -87,7 +87,7 @@ def _save_replay_fixture(
     snapshot_id: str = "snap-A",
     with_envelope: bool = True,
 ) -> RunTrace:
-    trace = _build_trace(run_id, corpus_sha256=compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings()))
+    trace = _build_trace(run_id, corpus_sha256=compute_corpus_sha256(Settings()))
     save_trace(trace)
     if with_envelope:
         save_envelope(trace.run_id, _capture_document(label=label, snapshot_id=snapshot_id))

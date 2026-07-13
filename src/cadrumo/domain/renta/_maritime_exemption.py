@@ -139,7 +139,7 @@ class MaritimeWorkerFacts:
 
 
 # ---------------------------------------------------------------------------
-# Binding selector predicates (S08 / S09 / S10)
+# Binding selector predicates
 # ---------------------------------------------------------------------------
 
 
@@ -150,7 +150,7 @@ def art_7p_eligible(facts: MaritimeWorkerFacts) -> bool:
     - worker_class == "trabajador_del_mar"
     - vessel_flag == "foreign" OR waters_type == "international"
 
-    The ADR notes that international waters qualify for foreign-flagged
+    International waters qualify for foreign-flagged
     vessels per AEAT accepted practice, confirmed by TEAR Galicia
     December 2024 for Galician fishing crew and by Supreme Court doctrine
     extended April 2025 to military Navy in NATO/UN sea operations.
@@ -202,7 +202,7 @@ def da41_eligible(facts: MaritimeWorkerFacts) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Exemption calculations (S12 / S13 / S14 / S15)
+# Exemption calculations
 # ---------------------------------------------------------------------------
 
 

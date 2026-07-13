@@ -425,7 +425,7 @@ def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
     identical). Each choice is hinted with a concise description from
     :data:`_IVA_CATEGORY_HINTS`. The model SELECTS a category only; every
     regulated euro figure is derived downstream from the registry rate, never
-    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+    emitted by the model.
 
     Returns:
         One :class:`IvaCategoryChoice` per :class:`cadrumo.domain.iva.IvaCategory`,
@@ -448,7 +448,7 @@ def prompt_spec_with_saturation_fields(
     ``business_pct``) so one reviewed suggestion can carry the rich tax
     metadata. The model selects categories only; the regulated rate, taxable
     base, and IVA amount are derived downstream from the registry, never
-    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+    emitted by the model.
 
     Args:
         classifications: Optional override for the classification choices;

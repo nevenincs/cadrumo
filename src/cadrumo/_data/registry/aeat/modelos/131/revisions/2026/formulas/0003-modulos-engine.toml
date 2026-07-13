@@ -1,6 +1,5 @@
-# M131 estimación-objetiva módulos engine formulas — 2026 per-year roll-forward
-# (2026-07-01-modelo-131-eo-modulos-engine-adr, Phase 4; #516). Replicates the
-# 2025 revision's four-fase formula chain unchanged (same rounding, same
+# M131 estimación-objetiva módulos engine formulas — 2026 per-year roll-forward.
+# Replicates the 2025 revision's four-fase formula chain unchanged (same rounding, same
 # op wiring); only the parameter/legal_refs bindings are re-pointed at the
 # 2026 revision's own coefficient table and the Orden HAC/1425/2025 legal
 # catalogue entries (verified byte-identical against the 2025 Orden's figures
@@ -53,8 +52,7 @@ required_text = [
 # inversión, so the amortization figure is supplied by the operator rather
 # than derived from an asset register the engine does not have; a blank
 # input simply omits this legitimate additional reduction (never over-states
-# the minorado, per the ADR's Option D concern about over-statement, which
-# does not apply here since omission only under-claims a reduction, never
+# the minorado, since omission only under-claims a reduction, never
 # fabricates one). Both minoraciones feed an internal advisory-support
 # casilla that never substitutes for the operator's manual casilla 01.
 [[revisions."2026".formulas]]

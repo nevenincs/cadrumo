@@ -11,19 +11,17 @@ they derived independently.
 
 This module makes the classification ONE declared, typed record keyed by command
 key. The destructive / handoff / live-write axes - the genuinely-judgment ones -
-are DECLARED per command in :mod:`~application.operator_surface._risk_table`
-(ADR ``mcp-protocol-hardening`` H3, as its wording actually decided: "declared
-data keyed by command key ... with a parity gate"); read_only and idempotent are
-derived from the manifest family mutability, and open_world is derived from the
-``app.live.``/``pull`` facts. The MCP annotation projection and the HITL
-confirmation tier both consume :func:`command_classification`, so the client hint
-and the server gate read one authority and cannot drift, and the no-silent-default
-parity gate asserts every mutating-family command carries an explicit declaration.
+are DECLARED per command in :mod:`~application.operator_surface._risk_table`;
+read_only and idempotent are derived from the manifest family mutability, and
+open_world is derived from the ``app.live.``/``pull`` facts. The MCP annotation
+projection and the HITL confirmation tier both consume
+:func:`command_classification`, so the client hint and the server gate read one
+authority and cannot drift, and the no-silent-default parity gate asserts every
+mutating-family command carries an explicit declaration.
 
 This replaces the earlier leaf-NAME frozensets, which matched on the command key's
 trailing word and so let a new mutating verb named ``purge``/``wipe``/``finalize``
-fall through, classify non-destructive, and auto-approve (the safety finding of the
-2026-07-08 MCP console review).
+fall through, classify non-destructive, and auto-approve.
 """
 
 from __future__ import annotations
