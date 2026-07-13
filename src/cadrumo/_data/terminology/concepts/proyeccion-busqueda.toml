@@ -11,12 +11,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "La compilacion que convierte conceptos, casillas, CLI y paginas en registros de busqueda."
-definition = "Transformacion build-time que toma los conceptos del Terminology Handbook, las casillas proyectadas desde el registro, las superficies CLI y las paginas construidas, y las convierte en registros tipados para la busqueda offline. En ADR D4 y D5, esta proyeccion une las clases de resultado antes de inyectarlas en Pagefind."
+definition = "Transformacion build-time que toma los conceptos del Terminology Handbook, las casillas proyectadas desde el registro, las superficies CLI y las paginas construidas, y las convierte en registros tipados para la busqueda offline. La proyeccion une las clases de resultado antes de inyectarlas en Pagefind."
 scope_note = "Las casillas concretas se proyectan desde el registro; no se curan como fragmentos del Handbook."
-
-[language.es.source]
-citation = "2026-06-10-docs-terminology-search-adr, decisiones D4 y D5."
-authority = "vaultspec"
 
 [[language.es.term]]
 label = "proyeccion de busqueda"

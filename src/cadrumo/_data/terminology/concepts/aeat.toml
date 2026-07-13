@@ -11,14 +11,14 @@ domain = "concepto"
 lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-5"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "Agencia Estatal de Administracion Tributaria, la autoridad fiscal espanola."
-definition = "Agencia Estatal de Administracion Tributaria: el organismo publico que gestiona y recauda los principales tributos del Estado espanol. El contribuyente presenta sus declaraciones ante la AEAT; esta aplicacion nunca presenta nada en su nombre."
+short_description = "Agencia Estatal de Administración Tributaria, la autoridad fiscal española."
+definition = "Agencia Estatal de Administración Tributaria: el organismo público que gestiona y recauda los principales tributos del Estado español. El contribuyente presenta sus declaraciones ante la AEAT; esta aplicación nunca presenta nada en su nombre."
 
 [language.es.source]
-citation = "Sede Electronica de la AEAT (agenciatributaria.gob.es) y Ley 58/2003, General Tributaria."
+citation = "Sede Electrónica de la AEAT (agenciatributaria.gob.es) y Ley 58/2003, General Tributaria."
 authority = "aeat"
 
 [[language.es.term]]
@@ -30,14 +30,14 @@ label = "Agencia Tributaria"
 term_status = "admitted"
 
 [language.en]
-short_description = "The Spanish Tax Agency (Agencia Estatal de Administracion Tributaria)."
+short_description = "The Spanish Tax Agency (Agencia Estatal de Administración Tributaria)."
 
 [[language.en.term]]
 label = "AEAT"
 term_status = "preferred"
 
 [language.ca]
-short_description = "Agencia Estatal d'Administracio Tributaria, l'autoritat fiscal espanyola."
+short_description = "Agencia Estatal d'Administració Tributaria, l'autoritat fiscal espanyola."
 
 [language.hu]
-short_description = "A spanyol Adohivatal (Agencia Estatal de Administracion Tributaria)."
+short_description = "A spanyol Adóhivatal (Agencia Estatal de Administración Tributaria)."
