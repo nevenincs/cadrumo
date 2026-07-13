@@ -1,0 +1,41 @@
+"""The ``cli-sequence`` documentation execution engine (docs tooling).
+
+This package is the one hermetic engine behind the ``cli-sequence`` MyST
+directive: it parses a directive body into typed frames, executes each frame in a
+per-sequence sandbox, compares the result against a committed golden, and drives
+the refresh / check CLI. It lives under ``dev/docs`` (docs tooling per the
+tooling-separation ADR) and imports the production ``cadrumo`` package from
+outside.
+
+This module currently exposes the frame-grammar parser (ADR rulings D1 / D4) and
+the ``:seed:`` recipe loader (ADR D6). The runner, golden store, comparison, and
+CLI land in later phases and extend this facade.
+"""
+
+from __future__ import annotations
+
+from ._errors import SequenceEngineError, SequenceParseError
+from ._parser import parse_frame_lines, parse_sequence
+from ._schema import (
+    CaptureBinding,
+    ExpectAssertion,
+    FrameKind,
+    ParsedSequence,
+    SequenceFrame,
+)
+from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
+
+__all__ = [
+    "SEED_SUFFIX",
+    "CaptureBinding",
+    "ExpectAssertion",
+    "FrameKind",
+    "ParsedSequence",
+    "SequenceEngineError",
+    "SequenceFrame",
+    "SequenceParseError",
+    "default_seeds_root",
+    "load_seed_frames",
+    "parse_frame_lines",
+    "parse_sequence",
+]
