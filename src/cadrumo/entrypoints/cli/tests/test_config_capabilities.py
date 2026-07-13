@@ -111,7 +111,7 @@ def test_config_check_flags_opted_in_capability_with_missing_dependency() -> Non
 def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
     """Every Google-write CLI leaf is gated on google_export, not just `export`.
 
-    Closes honesty-review finding H1: with the capability off, each Drive/Sheets
+    With the capability off, each Drive/Sheets
     write verb refuses with the capability message *before* any Google call.
     """
     off = invoke_cached_cli(["config", "profile", "capabilities", "set", "google_export", "off"])

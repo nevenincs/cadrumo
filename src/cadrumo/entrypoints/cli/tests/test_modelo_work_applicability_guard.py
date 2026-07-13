@@ -1,6 +1,6 @@
 """End-to-end CLI verification for the ``work create`` applicability guard.
 
-Round-4 finding M4: ``modelo work create --modelo 202`` succeeded for a
+Previously ``modelo work create --modelo 202`` succeeded for a
 natural person with no guard — the operator could provision a work unit
 for a modelo their taxpayer model positively excludes, and the engine
 would then be asked to run an Impuesto sobre Sociedades cuota for a

@@ -1,7 +1,7 @@
 """Real-behavior tests for ``modelo work create --quiet`` output trimming.
 
-Issue #578 (ux:cli-output) added a verb-level ``--quiet`` to
-``aeat app modelo work create`` that suppresses the human-readable
+A verb-level ``--quiet`` on
+``aeat app modelo work create`` suppresses the human-readable
 confirmation prose while leaving the machine surface (the
 ``--format json`` :class:`SchemaEnvelope` and its notices) untouched.
 
@@ -16,8 +16,7 @@ The tests deliberately avoid the full CLI dispatch and the plazo/deadline
 projection so the quiet contract is verified without loading the modelo
 registry — the output-trimming decision is pure transport logic that owes
 nothing to registry validation, and the ``work create`` dispatch path
-eagerly validates the whole registry (which peer legal-grounding
-campaigns keep in flight in this shared worktree). A Modelo 130 unit is
+eagerly validates the whole registry. A Modelo 130 unit is
 used so the Modelo-100 filing-obligation advisory channel
 short-circuits to empty, isolating the confirmation-prose trimming under
 test.

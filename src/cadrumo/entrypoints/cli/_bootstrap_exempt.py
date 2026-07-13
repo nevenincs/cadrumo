@@ -89,8 +89,7 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
 
     Args:
         verb_path: Space-separated verb path or ``None`` for the
-            bare invocation. ``None`` is treated as exempt per
-            ADR ``2026-06-03-bare-invocation-bucket-session-gate``:
+            bare invocation. ``None`` is treated as exempt:
             bare invocation (no subcommand, only top-level flags
             like ``--language``, ``--format``, ``--help``,
             ``--version``) is a metadata-emitting introspection

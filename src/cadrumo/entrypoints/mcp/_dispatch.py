@@ -24,7 +24,7 @@ _NON_TOOL_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
 # The client-side namespace prefix a Claude plugin prepends to every tool name
 # (``mcp__plugin_<plugin>_<server>__``). The plugin and the server are both named
 # ``cadrumo``, so the budget accounts for both canonical product segments and
-# the over-length verbs carry declared short forms (ADR mcp-progressive-discovery P4).
+# the over-length verbs carry declared short forms.
 CLIENT_NAME_PREFIX = "mcp__plugin_cadrumo_cadrumo__"
 # The practical prefixed-name ceiling clients enforce.
 TOOL_NAME_BUDGET = 64

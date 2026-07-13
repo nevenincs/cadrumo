@@ -38,7 +38,7 @@ def test_no_verb_output_schema_exceeds_the_size_budget() -> None:
     ]
     assert over == [], (
         f"output schemas over the {_OUTPUT_SCHEMA_BUDGET_CHARS}-char budget "
-        f"(move bulk arrays to a resource_link per ADR H4): {over}"
+        f"(move bulk arrays to a resource_link): {over}"
     )
 
 

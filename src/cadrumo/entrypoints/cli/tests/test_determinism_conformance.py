@@ -1,6 +1,6 @@
 """Determinism-conformance axis over the ``--format json`` command surface.
 
-An opt-in axis: for each command a campaign ENROLS as replayable, this gate
+An opt-in axis: for each command explicitly ENROLLED as replayable, this gate
 captures the command's emitted ``SchemaEnvelope`` twice under a frozen clock with
 injected identity against REAL repositories, canonicalises and masks via the
 shared substrate primitive, and asserts byte-identical full-envelope equality. An

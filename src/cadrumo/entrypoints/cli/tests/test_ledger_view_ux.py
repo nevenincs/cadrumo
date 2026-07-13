@@ -312,7 +312,7 @@ def test_ledger_view_surfaces_manual_decision_provenance(tmp_path: Path) -> None
     the transaction's active decision; ``view`` must expose ``classified_by``,
     ``classified_at``, ``classification_confidence``, and
     ``classification_reason`` on both the text and JSON surfaces so an
-    operator can read the "why" from a single command (#231).
+    operator can read the "why" from a single command.
     """
     txn = _imported_transaction_id(tmp_path)
 

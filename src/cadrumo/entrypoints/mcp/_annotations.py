@@ -30,8 +30,8 @@ class McpAnnotations(BaseModel):
     """SDK-independent MCP tool annotations for one command.
 
     Maps to the MCP ``ToolAnnotations`` hint fields, derived from the single
-    :func:`~application.operator_surface.classify_command` authority (ADR
-    ``mcp-protocol-hardening`` H3). ``read_only_hint`` mirrors the family
+    :func:`~application.operator_surface.classify_command` authority.
+    ``read_only_hint`` mirrors the family
     mutability; ``destructive_hint`` is true only for irreversible
     state-destroying verbs; ``idempotent_hint`` for pure repeatable reads;
     ``open_world_hint`` for a verb that reaches the outside AEAT sede.

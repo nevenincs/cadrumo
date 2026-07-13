@@ -3,9 +3,8 @@
 For every external service, reports the active profile's capability posture, the
 dependency availability (from the typed probes), and the exact remediation for any
 gap. Exits non-zero when a capability the profile opted into has a missing
-dependency — the operator asked for a service that is not provisioned
-(``dependency-provisioning`` ADR). Named ``check`` because ``config doctor`` is a
-retired command path.
+dependency — the operator asked for a service that is not provisioned. Named
+``check`` because ``config doctor`` is a retired command path.
 """
 
 from __future__ import annotations
@@ -50,9 +49,9 @@ def register(app: typer.Typer) -> None:
         playwright = probe_playwright_browser()
         extras = probe_optional_extras()
         dependencies = [d.model_dump() for d in (ollama, *providers, playwright, *extras)]
-        # Per-provider cert/clave health (#286), storage/corpus/env preflight (#102),
-        # and registry referential integrity (#98). Report-only: a red preflight row
-        # is surfaced for operator visibility but does not, on its own, flip the
+        # Per-provider cert/clave health, storage/corpus/env preflight, and
+        # registry referential integrity. Report-only: a red preflight row is
+        # surfaced for operator visibility but does not, on its own, flip the
         # capability/dependency exit contract below.
         preflight = [row.model_dump(mode="json") for row in run_preflight_checks()]
         any_provider = any(p.available for p in providers)

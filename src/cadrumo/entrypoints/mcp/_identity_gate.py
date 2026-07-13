@@ -1,4 +1,4 @@
-"""Per-session block-first-mutation identity gate (ADR I2 / I4).
+"""Per-session block-first-mutation identity gate.
 
 A tax filing MUST be tied to the correct taxpayer: Erika must not file while
 Erik is the active profile. This module enforces, in the pre-tool-use layer,
@@ -75,7 +75,7 @@ _FIRST_MUTATION_REFUSED_DEFAULT = (
     "profiles."
 )
 
-#: English default for the elicitation identity echo (ADR I4). Human-facing
+#: English default for the elicitation identity echo. Human-facing
 #: (rendered by the client to the taxpayer), so it is localized.
 _ELICITATION_ECHO_DEFAULT = "Acting as the taxpayer profile: %{label}."
 
@@ -132,7 +132,7 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
       switch.
 
     The refusal text carries no interpolation, so it is byte-identical on both
-    call paths - the gate-invariance both prior MCP ADRs require.
+    call paths.
     """
     if command_key in PROFILE_SWITCHING_COMMANDS:
         state.rearm()
@@ -148,7 +148,7 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
 
 
 def identity_elicitation_echo(*, active_profile_label: str | None) -> str:
-    """Return the localized identity echo prefixed to a CONFIRM elicitation (ADR I4).
+    """Return the localized identity echo prefixed to a CONFIRM elicitation.
 
     Names the active-profile LABEL (never the redacted UUID) so the human
     approving a destructive or handoff verb sees whose data it touches and can

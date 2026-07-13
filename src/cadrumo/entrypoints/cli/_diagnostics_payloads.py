@@ -239,9 +239,8 @@ class TelemetryStatusResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics telemetry status``.
 
     Mirrors :class:`~application.diagnostics_telemetry.TelemetryStatusReport`.
-    Default-off, consent-gated remote telemetry posture
-    (``2026-07-04-remote-telemetry-adr``); this verb never emits anything, it
-    only reports the currently-effective :class:`~core.config.Settings`
+    Default-off, consent-gated remote telemetry posture; this verb never
+    emits anything, it only reports the currently-effective :class:`~core.config.Settings`
     fields plus the derived verdict a fully-acknowledged invocation would
     currently receive.
     """

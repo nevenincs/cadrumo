@@ -260,7 +260,7 @@ def _required_positional_count(cmd: click.Command) -> int:
 _PLACEHOLDER_RE = re.compile(r"^(<[^>]+>|[A-Z][A-Z0-9_-]*)$")
 
 # A ``{name}`` interpolation token — the cli-sequence directive's placeholder
-# class (docs-cli-sequences ADR D1): a value captured at build time from a prior
+# class: a value captured at build time from a prior
 # frame's envelope and threaded into a later frame's command line. It fills a
 # positional slot exactly like ``<id>`` and is never validated as an option
 # name. The inner name matches the engine's capture-identifier grammar.
@@ -321,8 +321,8 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
     # Some doc lines prefix the command with a shell sigil or a tab-led label.
     # A cli-sequence frame's ``@setup`` / ``@result`` sigil precedes the ``aeat``
-    # token and is dropped here by anchoring on ``aeat`` (docs-cli-sequences ADR
-    # D1); ``@capture`` / ``@expect`` lines carry no ``aeat`` token and are
+    # token and is dropped here by anchoring on ``aeat``;
+    # ``@capture`` / ``@expect`` lines carry no ``aeat`` token and are
     # skipped upstream, so a frame line validates like any other cited invocation.
     m = _AEAT_TOKEN_RE.search(cleaned)
     if m is None:
@@ -372,7 +372,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
             seen_verb = True
         elif _INTERP_PLACEHOLDER_RE.match(tok):
             # A ``{name}`` interpolation is always a positional placeholder, never
-            # a subcommand — a cli-sequence threaded capture (ADR D1).
+            # a subcommand — a cli-sequence threaded capture.
             has_positional = True
         else:
             # Decide: is this still a verb token or a positional? Lowercase
@@ -445,7 +445,7 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
 
 
 # ---------------------------------------------------------------------------
-# Enrolled-page tier (docs-cli-sequences ADR D7)
+# Enrolled-page tier
 # ---------------------------------------------------------------------------
 
 # A backtick-fenced ``cli-sequence`` directive: ```` ```{cli-sequence} <id> ````.
@@ -467,7 +467,7 @@ def _plain_executable_aeat_fences(text: str) -> list[str]:
     """Return executable ``aeat`` invocation lines in PLAIN fences of an enrolled page.
 
     On an enrolled page every executable ``aeat`` invocation must live inside a
-    ``{cli-sequence}`` directive (ADR D7): a plain ```` ``` ```` fence (bash,
+    ``{cli-sequence}`` directive: a plain ```` ``` ```` fence (bash,
     console, text) carrying a concrete ``aeat`` invocation is refused. The
     ``{cli-sequence}`` directive fences are the sanctioned executed surface and
     are exempt, and inline-backtick verb references (narrative) are never scanned
@@ -685,7 +685,7 @@ def test_documented_commands_conform(doc) -> None:
 
 
 # ---------------------------------------------------------------------------
-# cli-sequence grammar and enrolled-page tier (docs-cli-sequences ADR D1 / D7)
+# cli-sequence grammar and enrolled-page tier
 # ---------------------------------------------------------------------------
 
 # A cli-sequence directive body: ``@setup`` / ``@result`` frame sigils precede
@@ -709,15 +709,13 @@ aeat app modelo work calculate {work_unit_id}
 # narrative inline-backtick reference (permitted) and no plain executable fence.
 _ENROLLED_CLEAN_FIXTURE = (
     "# Calculate Modelo 303\n\n"
-    "Introduce the quarter with `aeat app modelo work create` (narrative).\n\n"
-    + _CLI_SEQUENCE_BODY_FIXTURE
+    "Introduce the quarter with `aeat app modelo work create` (narrative).\n\n" + _CLI_SEQUENCE_BODY_FIXTURE
 )
 
 # An enrolled page that ALSO carries a plain ```bash fence with an executable
 # ``aeat`` invocation — the refusal case.
 _ENROLLED_WITH_PLAIN_FENCE_FIXTURE = (
-    _CLI_SEQUENCE_BODY_FIXTURE
-    + "\nThen import more data:\n\n```bash\naeat app ledger import --file extra.csv\n```\n"
+    _CLI_SEQUENCE_BODY_FIXTURE + "\nThen import more data:\n\n```bash\naeat app ledger import --file extra.csv\n```\n"
 )
 
 # A non-enrolled page with a plain executable fence — untouched by the enrolled
@@ -751,7 +749,7 @@ def test_cli_sequence_frame_lines_conform_as_ordinary_invocations() -> None:
 
 
 def test_enrolled_page_refuses_plain_executable_fence() -> None:
-    """On an enrolled page a plain executable ``aeat`` fence is refused (ADR D7).
+    """On an enrolled page a plain executable ``aeat`` fence is refused.
 
     A page carrying a ``{cli-sequence}`` directive is enrolled; every executable
     invocation must then live inside a sequence. A plain ```` ```bash ```` fence
@@ -774,13 +772,13 @@ def test_enrolled_page_refuses_plain_executable_fence() -> None:
 
 
 def test_shipped_enrolled_pages_have_no_plain_executable_fences() -> None:
-    """No shipped enrolled page carries a plain executable ``aeat`` fence (ADR D7).
+    """No shipped enrolled page carries a plain executable ``aeat`` fence.
 
     Scans every user-facing doc, applies the enrolled-page refusal to those that
     carry a ``{cli-sequence}`` directive, and fails if any enrolled page cites an
     executable ``aeat`` invocation outside a sequence. This gates real enrolled
-    pages as they land (the first arrive with the tutorials wave); it is a live
-    scan, not a skip, so it protects the surface the moment a page enrolls.
+    pages as they land; it is a live scan, not a skip, so it protects the
+    surface the moment a page enrolls.
     """
     violations: list[str] = []
     for doc in _flat_docs():
@@ -791,7 +789,7 @@ def test_shipped_enrolled_pages_have_no_plain_executable_fences() -> None:
             violations.append(f"{doc.relative_to(PROJECT_ROOT)}: plain executable fence `{line}`")
     assert not violations, (
         "enrolled pages must place every executable aeat invocation inside a cli-sequence "
-        "directive (docs-cli-sequences ADR D7):\n  " + "\n  ".join(violations)
+        "directive:\n  " + "\n  ".join(violations)
     )
 
 
@@ -799,18 +797,15 @@ def test_shipped_enrolled_page_scan_is_not_vacuous() -> None:
     """At least one shipped page is enrolled, so the enrolled-page scan has a real subject.
 
     The enrolled-page refusal scan (above) passes vacuously when no shipped page
-    carries a ``{cli-sequence}`` directive — exactly the state before the first
-    tutorials-wave page landed. With ``docs/how-to/first-quarterly-filing.md``
-    now enrolled, the scan exercises a real enrolled instance; this tripwire
+    carries a ``{cli-sequence}`` directive. With ``docs/how-to/first-quarterly-filing.md``
+    enrolled, the scan exercises a real enrolled instance; this tripwire
     (the enrolled-page analogue of :func:`test_gate_scans_a_realistic_invocation_count`)
     fails loudly if the enrolled surface ever silently collapses back to zero, so
     the refusal tier and the co-located golden gate cannot rot into vacuity behind
     a green suite.
     """
     enrolled = [
-        doc.relative_to(PROJECT_ROOT)
-        for doc in _flat_docs()
-        if _page_is_enrolled(doc.read_text(encoding="utf-8"))
+        doc.relative_to(PROJECT_ROOT) for doc in _flat_docs() if _page_is_enrolled(doc.read_text(encoding="utf-8"))
     ]
     assert enrolled, (
         "no shipped page carries a `{cli-sequence}` directive, so the enrolled-page "
@@ -825,9 +820,9 @@ _NON_ENROLLED_BAD_OPTION_FIXTURE = "# How-to\n\n```bash\naeat app ledger import 
 
 
 def test_two_tier_enrollment_gate_coexists() -> None:
-    """Both tiers coexist across the enrollment boundary end to end (ADR D7).
+    """Both tiers coexist across the enrollment boundary end to end.
 
-    S36's contract is the *coexistence* of the two tiers, not either tier in
+    The contract is the *coexistence* of the two tiers, not either tier in
     isolation: the enrolled plain-fence refusal must apply to an enrolled page
     *while* a non-enrolled page keeps exactly today's verb-path and option-name
     checks. This pins the tier boundary in one place so a future change that
@@ -848,9 +843,7 @@ def test_two_tier_enrollment_gate_coexists() -> None:
     """
     # --- Tier two: non-enrolled page keeps exactly today's checks ---
     assert not _page_is_enrolled(_NON_ENROLLED_BAD_OPTION_FIXTURE)
-    base_violations = [
-        v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in _validate_command(c)
-    ]
+    base_violations = [v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in _validate_command(c)]
     assert any("--bogus-option" in v for v in base_violations), (
         "a non-enrolled page must keep the verb-path and option-name checks — the "
         "base validator must flag a wrong option in its plain fence"
@@ -866,9 +859,7 @@ def test_two_tier_enrollment_gate_coexists() -> None:
     assert _plain_executable_aeat_fences(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE), (
         "an enrolled page's plain executable fence must be refused"
     )
-    assert [
-        v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in _validate_command(c)
-    ] == [], (
+    assert [v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in _validate_command(c)] == [], (
         "an enrolled page's directive frame lines must still conform to the live CLI — "
         "the enrolled refusal is orthogonal to the base verb-path/option-name checks"
     )

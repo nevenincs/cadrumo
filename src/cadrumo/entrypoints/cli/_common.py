@@ -312,8 +312,7 @@ def _translate(translatable: str) -> str:
 #
 # The ledger ``--period`` surface speaks ONE strict operator grammar — the
 # canonical AEAT modelo tokens (``0A`` annual, ``1T``-``4T`` quarters,
-# ``01``-``12`` months) the modelo surfaces already teach, per the
-# operator-surface ADR decision D4 as amended 2026-06-10 (one strict period
+# ``01``-``12`` months) the modelo surfaces already teach (one strict period
 # grammar everywhere, AEAT tokens only). Those tokens carry no year of their
 # own, so every ledger ``--period`` command also takes ``--year`` to supply
 # the year context — exactly the modelo ``--year``/``--period`` composition,
@@ -453,8 +452,8 @@ def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
 # the ``_DECIMAL_RE`` shape the declaration-edit path enforces
 # (``cadrumo.application.review._edit``), tightened to a two-digit fractional cap so
 # the Spanish thousands-grouping shape ``1.000`` (a dot followed by three digits)
-# refuses rather than silently becoming ``1.0`` — the F1 silent-misparse the
-# input-localisation ADR closes. ``1234.56`` (two fractional digits) and a bare
+# refuses rather than silently becoming ``1.0`` — a silent misparse this
+# closes. ``1234.56`` (two fractional digits) and a bare
 # ``1000`` / ``0`` accept; ``1.000``, ``1.234,56``, ``1e3``, ``NaN``,
 # ``Infinity`` all refuse. The regex runs *before* ``Decimal(...)`` so the
 # refusal carries the instructive, localised message; ``is_finite()`` is

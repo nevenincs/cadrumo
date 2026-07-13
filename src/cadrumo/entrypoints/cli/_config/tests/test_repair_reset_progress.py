@@ -128,7 +128,7 @@ def test_reset_progress_dry_run_returns_fingerprint_without_deleting_row() -> No
     assert fingerprint["byte_length"] is not None and fingerprint["byte_length"] > 0
     # A freshly-seeded, healthy workflow-state envelope must classify as
     # ``readable`` — the dry-run preview must not slander a sound
-    # envelope as ``unreadable`` (persona-fleet finding H4).
+    # envelope as ``unreadable``.
     assert fingerprint["reason_class"] == "readable"
     assert _row_exists()
 
@@ -157,7 +157,7 @@ def test_reset_progress_with_yes_deletes_row_emits_event_and_reload_is_empty() -
     assert payload["dry_run"] is False
     # The seeded envelope is healthy, so the reset fingerprint records
     # ``readable`` — the operator reset a sound envelope deliberately,
-    # not because it was corrupt (persona-fleet finding H4).
+    # not because it was corrupt.
     assert payload["fingerprint"]["reason_class"] == "readable"
 
     assert not _row_exists()
