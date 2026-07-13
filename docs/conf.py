@@ -389,8 +389,7 @@ html_theme_options = {
 html_context = {
     "cadrumo_repository_url": _REPOSITORY_URL,
     "cadrumo_nav": [
-        {"label": "Guides", "doc": "how-to/index"},
-        {"label": "Tutorial", "doc": "tutorials/index"},
+        {"label": "Getting started", "doc": "how-to/index"},
         {"label": "CLI reference", "doc": "cli/index"},
         {"label": "How it works", "doc": "explanation/index"},
         {"label": "API", "doc": "api/cadrumo"},

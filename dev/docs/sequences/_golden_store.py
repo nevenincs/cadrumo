@@ -67,7 +67,7 @@ SANDBOX_STORAGE_ROOT_TOKEN: str = "<sandbox-storage-root>"  # noqa: S105 - a dis
 SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display placeholder, not a secret
 
 #: A page identifier: the docname-style path of the enrolled docs page relative
-#: to ``docs/`` (e.g. ``tutorials/first-filing`` or ``how-to/modelo-303``),
+#: to ``docs/`` (e.g. ``how-to/irpf-lifecycle`` or ``how-to/modelo-303``),
 #: forward slashes, no suffix, no traversal.
 PageId = Annotated[
     str,
@@ -155,7 +155,7 @@ def _validated_page(page: str) -> str:
         raise SequenceGoldenError(
             f"page identifier {page!r} must be the docname-style path of the enrolled "
             "page relative to docs/ (forward slashes, lowercase, no suffix, no traversal), "
-            "e.g. 'tutorials/first-filing'",
+            "e.g. 'how-to/irpf-lifecycle'",
         )
     return stripped
 

@@ -11,11 +11,11 @@ does not submit them to the Agencia Estatal de Administración Tributaria
 (AEAT). At each filing you upload the exported file yourself through the
 AEAT portal.
 
-The persona and the ledger continue from the IRPF tutorial: Ana García
+The persona and the ledger continue from the income-tax run-through: Ana García
 López, consultant, activity started January 1, 2026. The same sale and
 expense rows you recorded there carry their IVA detail (taxable base, rate,
 IVA amount), so they feed the IVA calculations without re-entry - one
-ledger, two tax angles. If you have not run that tutorial's stage 1 and
+ledger, two tax angles. If you have not run that run-through's stage 1 and
 stage 2 `profile create` and `ledger add` commands, run them first.
 
 The CLI prints help, labels, and messages in Spanish. This page keeps the
@@ -83,7 +83,7 @@ IVA charged (repercutido), the purchase's 105 of deductible IVA paid
 Ana's rows the quarter ends with IVA to pay - repercutido exceeds soportado.
 
 Upload the file at the portal, then record and evidence the filing - the
-same closing rhythm as every filing in these tutorials:
+same closing rhythm as every filing in these run-throughs:
 
 ```bash
 aeat app modelo work file --modelo 303 --year 2026 --period 1T
@@ -91,13 +91,13 @@ aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
 ```
 
 The per-box detail of this workflow is
-[Prepare a Modelo 303 IVA filing](../how-to/modelo-303.md).
+[Prepare a Modelo 303 IVA filing](modelo-303.md).
 
 ## Stage 3: a credit quarter, and the carry
 
 Suppose the second quarter goes the other way: Ana buys a laptop and other
 equipment, and her deductible IVA exceeds what she charged. Record the
-quarter's rows (the IRPF tutorial's stage 3 rows, plus the equipment):
+quarter's rows (the income-tax run-through's stage 3 rows, plus the equipment):
 
 ```bash
 aeat app ledger add --date 2026-06-20 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id material_oficina --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
@@ -137,7 +137,7 @@ aeat app live verify nif-iva DE123456789
 
 The full workflow - invoice records, the operation keys, rectifications of
 earlier periods - is
-[Prepare a Modelo 349 recapitulative declaration](../how-to/modelo-349.md).
+[Prepare a Modelo 349 recapitulative declaration](modelo-349.md).
 The same operations also feed the 303's intra-community boxes; keep the two
 consistent by fixing the underlying records, never the declarations.
 
@@ -166,7 +166,7 @@ aeat app modelo reconcile pull --modelo 390 --year 2026 --period 0A
 ```
 
 The per-box detail is
-[Prepare the annual Modelo 390 summary](../how-to/modelo-390.md).
+[Prepare the annual Modelo 390 summary](modelo-390.md).
 
 ## What you completed
 
@@ -178,8 +178,8 @@ annual summary that reconciled against the four quarters on your own record.
 ## Next steps
 
 - [The income-tax year](irpf-lifecycle.md) - the same persona through IRPF.
-- [Prepare a Modelo 303 IVA filing](../how-to/modelo-303.md)
-- [Prepare the annual Modelo 390 summary](../how-to/modelo-390.md)
-- [Prepare a Modelo 349 recapitulative declaration](../how-to/modelo-349.md)
-- [Deduct input IVA under prorrata](../how-to/prorrata.md) - when your
+- [Prepare a Modelo 303 IVA filing](modelo-303.md)
+- [Prepare the annual Modelo 390 summary](modelo-390.md)
+- [Prepare a Modelo 349 recapitulative declaration](modelo-349.md)
+- [Deduct input IVA under prorrata](prorrata.md) - when your
   activity mixes IVA-taxed and exempt operations.

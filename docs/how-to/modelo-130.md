@@ -146,7 +146,7 @@ instalments are folded into Modelo 100 as payments on account. See
 
 ## Next steps
 
-- [The income-tax year (tutorial)](../tutorials/irpf-lifecycle.md)
+- [The income-tax year (run-through)](irpf-lifecycle.md)
 - [The filing workflow: work units and calculation revisions](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Upload your exported modelo at the AEAT portal](file-at-aeat.md)

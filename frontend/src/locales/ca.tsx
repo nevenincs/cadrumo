@@ -151,7 +151,7 @@ export const ca: Copy = {
     kicker: 'Documentació',
     heading: 'Aprèn-ne més.',
     summary:
-      'Guies, tutorials i referència per a qui presenta els seus propis impostos i per als professionals que els ajuden.',
+      'Guies, recorreguts complets i referència per a qui presenta els seus propis impostos i per als professionals que els ajuden.',
     open: 'Obre la documentació',
     listLabel: 'Seccions de la documentació',
     links: [
@@ -160,12 +160,12 @@ export const ca: Copy = {
         description: 'Instal·la, configura i prepara el teu primer model.',
       },
       {
-        title: 'Tutorial: un Modelo 130 de principi a fi',
-        description: "Segueix una declaració des dels registres fins a l'exportació.",
+        title: 'Recorre un any de presentacions',
+        description: "Segueix l'any de l'IRPF i el de l'IVA, model a model.",
       },
       {
-        title: 'Guies pràctiques',
-        description: 'Receptes orientades a tasques per a situacions habituals.',
+        title: 'Primers passos',
+        description: 'Et dirigeix a la guia adequada per a cada tasca de presentació.',
       },
       {
         title: 'Com funciona',
@@ -335,7 +335,7 @@ export const ca: Copy = {
       "Un assistent fiscal espanyol, impulsat per un motor determinista i un arnès d'agents.",
     columns: [
       { heading: 'Producte', labels: ['Instal·lar el plugin', 'Funcions', 'Com funciona'] },
-      { heading: 'Documentació', labels: ['Guia ràpida', 'Tutorial', 'Arquitectura'] },
+      { heading: 'Documentació', labels: ['Guia ràpida', 'Primers passos', 'Arquitectura'] },
       { heading: 'Comunitat', labels: ['GitHub', 'PyPI: cadrumo', 'cadrumo.neve.md'] },
     ],
     disclaimerPill: 'cadrumo',

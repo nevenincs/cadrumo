@@ -147,7 +147,7 @@ export const en: Copy = {
     kicker: 'Documentation',
     heading: 'Learn more.',
     summary:
-      'Guides, tutorials, and reference for people filing their own taxes and the professionals who help them.',
+      'Guides, run-throughs, and reference for people filing their own taxes and the professionals who help them.',
     open: 'Open documentation',
     listLabel: 'Documentation sections',
     links: [
@@ -156,12 +156,12 @@ export const en: Copy = {
         description: 'Install, configure, and prepare your first modelo.',
       },
       {
-        title: 'Tutorial: a Modelo 130 end to end',
-        description: 'Follow one filing from records to export.',
+        title: 'Run through a filing year',
+        description: 'Follow the income-tax and IVA years, modelo by modelo.',
       },
       {
-        title: 'How-to guides',
-        description: 'Task-focused recipes for common filing situations.',
+        title: 'Getting started',
+        description: 'Routes you to the right guide for each filing task.',
       },
       {
         title: 'How it works',
@@ -320,7 +320,7 @@ export const en: Copy = {
       'A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness.',
     columns: [
       { heading: 'Product', labels: ['Install plugin', 'Capabilities', 'How it works'] },
-      { heading: 'Docs', labels: ['Quickstart', 'Tutorial', 'Architecture'] },
+      { heading: 'Docs', labels: ['Quickstart', 'Getting started', 'Architecture'] },
       { heading: 'Community', labels: ['GitHub', 'PyPI: cadrumo', 'cadrumo.neve.md'] },
     ],
     disclaimerPill: 'cadrumo',
