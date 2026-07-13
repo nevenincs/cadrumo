@@ -204,6 +204,24 @@ all = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# Deny-by-default. Without an explicit target, hatchling packs every
+# non-gitignored path into the sdist — which meant publishing the project's own
+# development harness (the `.vault/` record, `.vaultspec/`, `.claude/`, `dev/`)
+# inside the product's source distribution. The sdist carries what is needed to
+# build the wheel and nothing else; anything absent from this list is not shipped.
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/cadrumo",
+  "pyproject.toml",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "NOTICE",
+  "THIRD_PARTY_NOTICES.md",
+  "SECURITY.md",
+  "PRIVACY.md",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/cadrumo"]
 # Test modules and fixtures serve no installed consumer: the suites run from
