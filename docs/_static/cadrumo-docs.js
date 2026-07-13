@@ -623,14 +623,10 @@
   }
 
   function setupSequence(root) {
-    // The playhead runs over the command and result frames in document order;
-    // setup frames stay as their own collapsed disclosure and are not stepped.
-    var frames = Array.prototype.filter.call(
-      root.querySelectorAll(".cadrumo-frame"),
-      function (frame) {
-        return frame.getAttribute("data-frame-kind") !== "setup";
-      }
-    );
+    // The playhead runs over every frame in document order — setup frames are
+    // ordinary steppable frames (no collapsed disclosure); the position
+    // indicator counts them too.
+    var frames = Array.prototype.slice.call(root.querySelectorAll(".cadrumo-frame"));
     if (frames.length < 2) return; // a single frame is nothing to step through
 
     // The inline payload is the sequence's build-time contract. If it is absent
@@ -816,15 +812,12 @@
       });
     }
 
-    // Home the switcher in the playhead's controls row when it exists; otherwise
-    // (a single-frame sequence has no playhead) create a minimal chrome row.
-    var controls = root.querySelector(".cadrumo-sequence-controls");
-    if (!controls) {
-      controls = document.createElement("div");
-      controls.className = "cadrumo-sequence-controls cadrumo-sequence-controls--chrome";
-      root.appendChild(controls);
-    }
-    controls.appendChild(switcher);
+    // Home the switcher in a slim block header bar at the TOP of the sequence,
+    // right-aligned; the bottom controls row keeps only prev/next + position.
+    var bar = document.createElement("div");
+    bar.className = "cadrumo-sequence-bar";
+    bar.appendChild(switcher);
+    root.insertBefore(bar, root.firstChild);
   }
 
   /* ── Copy command ───────────────────────────────────────────────────────
@@ -873,9 +866,8 @@
   function setupCopyButtons(root) {
     var frames = root.querySelectorAll(".cadrumo-frame[data-command-line]");
     Array.prototype.forEach.call(frames, function (frame) {
-      // Setup frames live inside a collapsed disclosure; the copy affordance is
-      // for the visible command and result frames the reader runs.
-      if (frame.getAttribute("data-frame-kind") === "setup") return;
+      // Every frame is a visible command the reader can copy (setup frames are
+      // no longer folded away).
       var button = document.createElement("button");
       button.type = "button";
       button.className = "cadrumo-copy-btn";

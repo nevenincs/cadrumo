@@ -1545,6 +1545,41 @@ a.sd-card:any-link,
   border-top: 1px solid color-mix(in srgb, var(--color-background-border) 40%, transparent);
 }
 
+/* Per-step header: the "do this" instruction line above each command — a step
+ * number badge plus an imperative description, in the text (not mono) type so it
+ * reads as prose guidance rather than terminal output. */
+.cadrumo-frame-header {
+  align-items: baseline;
+  display: flex;
+  font-family: var(--font-stack);
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.cadrumo-frame-step {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-radius: 999px;
+  color: var(--color-foreground-muted);
+  display: inline-flex;
+  flex: none;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  height: 1.25rem;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  align-self: center;
+}
+
+.cadrumo-frame-desc {
+  color: var(--color-foreground-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 /* Command line: a bold JetBrains Mono row led by a prompt affordance, so the
  * command reads instantly as the instruction (distinct from its output). The
  * transparent border reserves the active playhead's hugging border, so the
@@ -1753,24 +1788,11 @@ a.sd-card:any-link,
   text-decoration: none;
 }
 
-/* Setup frames stay a quiet, collapsed preparation disclosure. */
-details.cadrumo-setup > summary {
-  color: var(--color-foreground-muted);
-  cursor: pointer;
-  font-family: var(--font-stack);
-  font-size: 0.76rem;
-  letter-spacing: 0.02em;
-  padding: 0.4rem 1.15rem;
-  text-transform: uppercase;
-  user-select: none;
-}
-
-details.cadrumo-setup > summary:hover {
+/* Setup frames are ordinary visible steppable frames — context, not the lesson,
+ * so their command is very slightly muted against the command/result frames. */
+.cadrumo-frame[data-frame-kind="setup"] .cadrumo-frame-command pre code {
   color: var(--color-foreground-secondary);
-}
-
-details.cadrumo-setup[open] {
-  border-bottom: 1px solid color-mix(in srgb, var(--color-background-border) 40%, transparent);
+  font-weight: 500;
 }
 
 /* The active result frame's verification caption and its imperative checks. */
@@ -1851,16 +1873,19 @@ details.cadrumo-setup[open] {
   margin: 0 0.35rem;
 }
 
-/* Shell switcher (cadrumo-docs.js): a segmented control, right-aligned in the
- * controls row, toggling the visible command variant. A chrome-only row (no
- * playhead) right-aligns the switcher on its own. */
-.cadrumo-shell-switcher {
-  display: inline-flex;
-  margin-left: auto;
+/* Shell switcher (cadrumo-docs.js): a segmented control in a slim block header
+ * bar at the top of the sequence, right-aligned; toggles the visible command
+ * variant. */
+.cadrumo-sequence-bar {
+  align-items: center;
+  border-bottom: 1px solid var(--color-background-border);
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 1.15rem;
 }
 
-.cadrumo-sequence-controls--chrome {
-  justify-content: flex-end;
+.cadrumo-shell-switcher {
+  display: inline-flex;
 }
 
 .cadrumo-shell-btn {

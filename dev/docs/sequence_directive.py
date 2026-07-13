@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import html
 import json
+from functools import cache
 from typing import TYPE_CHECKING, Any, override
 
 from docutils import nodes
@@ -33,7 +34,8 @@ from docutils.parsers.rst import Directive, directives
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-    from dev.docs.sequences import GoldenFrame, ParsedSequence, SequenceFrame, SequenceGolden
+    from dev.docs.cli_tree import CliTree
+    from dev.docs.sequences import CommandToken, GoldenFrame, ParsedSequence, SequenceFrame, SequenceGolden
 
 __all__ = [
     "CliSequenceDirective",
@@ -60,7 +62,7 @@ _DEFAULT_SHELLS: tuple[str, ...] = _SUPPORTED_SHELLS
 #: is styleable and excluded from copied command text.
 _SHELL_CONTINUATION: dict[str, str] = {"bash": "\\", "pwsh": "`"}
 
-#: Display-column budget for the wrapped command line (ADR wrapping ruling).
+#: Display-column budget for the wrapped command line.
 _WRAP_WIDTH: int = 88
 
 #: Continuation-line indent, in spaces, for wrapped command lines.
@@ -136,6 +138,56 @@ def _expect_narration(json_path: str, expected: object) -> str:
     return f"Confirm {json_path} reads {_literal_text(expected)}."
 
 
+def _first_sentence(text: str) -> str:
+    """Return the first sentence of a help string (whitespace collapsed)."""
+    collapsed = " ".join(text.split())
+    if not collapsed:
+        return ""
+    dot = collapsed.find(". ")
+    if dot != -1:
+        return collapsed[: dot + 1]
+    return collapsed
+
+
+@cache
+def _cli_tree() -> CliTree:
+    """Build and cache the in-process ``cli-tree.json`` projection for header fallback."""
+    from dev.docs.cli_tree import build_cli_tree
+
+    return build_cli_tree()
+
+
+def _leaf_help_summary(tokens: tuple[CommandToken, ...]) -> str:
+    """Return the deepest verb's help first sentence, or the bare verb path.
+
+    The header falls back to the leaf command's own help so an un-annotated frame
+    still reads as an instruction; when no leaf help resolves in the projection,
+    the bare command path is the last resort.
+    """
+    from dev.docs.cli_tree import resolve_command_path
+
+    verb_kinds = {"executable", "group", "leaf"}
+    verb_paths = [token.command_path for token in tokens if token.kind.value in verb_kinds and token.command_path]
+    leaf_path = verb_paths[-1] if verb_paths else "aeat"
+    try:
+        node = resolve_command_path(_cli_tree(), leaf_path)
+    except LookupError:
+        return leaf_path
+    return _first_sentence(node.help) or leaf_path
+
+
+def _frame_header(parsed_frame: SequenceFrame, tokens: tuple[CommandToken, ...]) -> str:
+    """Return one frame's imperative header line (the "do this" instruction).
+
+    The authored ``@step`` sentence (``SequenceFrame.step_description``) wins when
+    present; otherwise the leaf verb's help summary carries the instruction.
+    """
+    authored = getattr(parsed_frame, "step_description", None)
+    if authored and authored.strip():
+        return authored.strip()
+    return _leaf_help_summary(tokens)
+
+
 def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
     """Project a golden frame's primary stream to a ``{format, body}`` view.
 
@@ -191,6 +243,7 @@ def _frame_payload(
     payload: dict[str, Any] = {
         "index": index,
         "kind": parsed_frame.kind.value,
+        "header": _frame_header(parsed_frame, tokens),
         "command_line": parsed_frame.command_line,
         "tokens": token_dicts,
         "wrapped": {shell: [list(line) for line in lines] for shell in shells},
@@ -309,10 +362,17 @@ def _render_frame_html(frame: dict[str, Any], verify: str, shells: list[str]) ->
     variants = "".join(
         _render_command_variant(frame["tokens"], frame["wrapped"][shell], shell) for shell in shells
     )
+    header = (
+        '<div class="cadrumo-frame-header">'
+        f'<span class="cadrumo-frame-step">{frame["index"] + 1}</span>'
+        f'<span class="cadrumo-frame-desc">{html.escape(frame["header"])}</span>'
+        "</div>"
+    )
     parts: list[str] = [
         f'<div class="cadrumo-frame" data-frame-index="{frame["index"]}" '
         f'data-frame-kind="{html.escape(frame["kind"])}" '
         f'data-command-line="{html.escape(frame["command_line"])}">',
+        header,
         f'<div class="cadrumo-frame-command">{variants}</div>',
     ]
     output_html = _render_output_html(frame["output"], css_class="cadrumo-frame-output")
@@ -329,10 +389,7 @@ def _render_frame_html(frame: dict[str, Any], verify: str, shells: list[str]) ->
             )
             parts.append(f'<ul class="cadrumo-expects">{checks}</ul>')
     parts.append("</div>")
-    body = "".join(parts)
-    if frame["kind"] == "setup":
-        return f'<details class="cadrumo-setup"><summary>Preparation</summary>{body}</details>'
-    return body
+    return "".join(parts)
 
 
 def render_sequence_html(payload: dict[str, Any]) -> str:

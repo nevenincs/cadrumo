@@ -1,4 +1,4 @@
-"""Directive and tokeniser gate for the ``cli-sequence`` MyST directive (ADR D1 / D5).
+"""Directive and tokeniser gate for the ``cli-sequence`` MyST directive.
 
 Two tiers, both real, no mocks or skips:
 
@@ -189,7 +189,7 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     assert "\n" in create_output["body"]
     assert "\\n" not in create_output["body"]
 
-    # The result frame carries the imperative expect narration (ADR D4).
+    # The result frame carries the imperative expect narration.
     result = payload["frames"][3]
     assert result["expects"][0]["json_path"] == "result.status"
     assert result["expects"][0]["narration"] == "Confirm result.status reads verified_complete."
@@ -200,7 +200,14 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     assert 'class="cadrumo-sequence"' in html
     assert f'data-sequence-id="{_SEQUENCE_ID}"' in html
     assert 'class="cli-tok cli-tok-leaf" data-command-path="aeat app modelo work calculate"' in html
-    assert '<details class="cadrumo-setup"><summary>Preparation</summary>' in html
+    # Setup frames render un-folded: an ordinary visible frame, no disclosure.
+    assert "cadrumo-setup" not in html
+    assert "<details" not in html
+    assert 'class="cadrumo-frame" data-frame-index="0" data-frame-kind="setup"' in html
+    # Every frame carries a per-step header (a 1-based badge + imperative line).
+    assert html.count('class="cadrumo-frame-header"') == 4
+    assert '<span class="cadrumo-frame-step">1</span>' in html
+    assert '<span class="cadrumo-frame-step">4</span>' in html
     # JSON outputs render as the readable highlighted document: the Pygments
     # classes are present and the double-encoded `"{\n` noise signature is not.
     assert 'class="cadrumo-frame-output highlight" data-format="json">' in html
@@ -346,7 +353,7 @@ _INDEX_LIVE_AEAT = (
 
 
 def test_directive_refuses_live_aeat_frame_statically(tmp_path: Path, _isolated_storage: None) -> None:
-    """A directive whose frame reads live AEAT is refused at build time (ADR D6/D7).
+    """A directive whose frame reads live AEAT is refused at build time.
 
     The refusal fires statically — before any golden is read — so a ``pull`` verb
     or an ``app live`` frame cannot be enrolled even if a golden were fabricated.
@@ -527,3 +534,63 @@ def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_storage: None
     assert "not a supported shell" in warnings
     assert "bash" in warnings and "pwsh" in warnings  # the accepted set is named
     assert "cadrumo-sequence" not in html
+
+
+# ---------------------------------------------------------------------------
+# Per-step headers and unfolded setup frames (round 4)
+# ---------------------------------------------------------------------------
+
+
+def test_authored_step_header_flows_to_payload() -> None:
+    """An authored @step sentence becomes the frame's header, over the help fallback."""
+    sequence = parse_sequence(
+        sequence_id="step-demo",
+        options={"verify": "Confirm the verification."},
+        body=(
+            "@step Create the quarterly draft.\n"
+            "@result aeat app modelo work verify wu\n"
+            '@expect exit_code == 0'
+        ),
+    )
+    golden = SequenceGolden(
+        sequence_id="step-demo",
+        frames=(
+            GoldenFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "app", "modelo", "work", "verify", "wu"),
+                exit_code=0,
+                envelope={"schema_version": 1, "command": "c", "status": "ok", "notices": [], "result": {}},
+                envelope_source="stdout",
+            ),
+        ),
+    )
+    payload = build_sequence_payload(sequence, golden)
+    assert payload["frames"][0]["header"] == "Create the quarterly draft."
+
+
+def test_frame_headers_fall_back_to_leaf_help() -> None:
+    """Without @step every frame still carries an imperative header from the leaf help."""
+    sequence = _parsed_sequence()
+    payload = build_sequence_payload(sequence, _golden())
+    headers = [frame["header"] for frame in payload["frames"]]
+    # Every frame carries a non-empty header (payload contract for the widget).
+    assert all("header" in frame for frame in payload["frames"])
+    assert all(header for header in headers)
+    # The verify frame's header is drawn from the verb's help, not the bare path.
+    verify_header = payload["frames"][3]["header"]
+    assert verify_header != "aeat app modelo work verify"
+    assert len(verify_header) > 3
+
+
+def test_setup_frames_render_unfolded_with_headers() -> None:
+    """Setup frames render as ordinary visible frames — no disclosure, with a header."""
+    sequence = _parsed_sequence()
+    payload = build_sequence_payload(sequence, _golden())
+    html = render_sequence_html(payload)
+    assert "<details" not in html
+    assert "cadrumo-setup" not in html
+    # The setup frame (index 0) is a plain frame carrying its own step header.
+    assert 'data-frame-kind="setup"' in html
+    assert html.index('data-frame-kind="setup"') < html.index("cadrumo-frame-header") + len(html)
+    # The step badge numbering is 1-based across all frames, setup included.
+    assert '<span class="cadrumo-frame-step">1</span>' in html
