@@ -36,12 +36,6 @@ See Also:
     :mod:`~tests.test_any_param_rationale_inventory`
         Parameter-level ``Any`` rationale ratchet that protects the same typed
         boundary documentation standard.
-    ``.vault/audit/2026-05-31-codebase-solidification-audit.md``
-        Records the standing inventory ratchets, including this cast marker
-        guard, that defend the converged hardening state.
-    ``.vault/audit/2026-06-03-suite-redgreen-longtail-discovery-audit.md``
-        Classifies missing cast, Any, and type-ignore markers as mechanical
-        source-documentation violations.
 """
 
 from __future__ import annotations

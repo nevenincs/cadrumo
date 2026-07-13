@@ -1,7 +1,6 @@
-"""Exit-code-as-verdict golden gate for the operator eval (eval-catalogue category 7).
+"""Exit-code-as-verdict golden gate for the operator eval.
 
-Closes eval-catalogue category 7 (exit-code misread as crash,
-``.vault/research/2026-07-01-agent-harness-research.md``): a non-zero CLI process
+Guards against an exit code being misread as a crash: a non-zero CLI process
 exit code paired with a well-formed JSON envelope is a domain VERDICT the operator
 must read and act on, not a crash to abort on or retry blindly.
 
@@ -13,8 +12,7 @@ no prior filed M100 for the preceding year), decodes the real stdout envelope, a
 feeds the real exit code plus the real envelope into
 :func:`cadrumo.agent.eval.check_exit_code_scenario`. No mocks: the exit code, the
 envelope shape, the ``status``, and the continuation-command citation are all
-real CLI/registry output (``no-tautological-calculation-tests``,
-``aeat-quality-gates``).
+real CLI/registry output.
 """
 
 from __future__ import annotations
