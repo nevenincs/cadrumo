@@ -10,12 +10,12 @@
   },
   "server": {
     "type": "binary",
-    "entry_point": "aeat-mcp",
+    "entry_point": "cadrumo-mcp",
     "mcp_config": {
-      "command": "aeat-mcp",
+      "command": "cadrumo-mcp",
       "args": [],
       "env": {
-        "AEAT_MCP_PERSONA": "${user_config.persona}"
+        "CADRUMO_MCP_PERSONA": "${user_config.persona}"
       }
     }
   },
@@ -29,10 +29,10 @@
     }
   },
   "tools": [
-    { "name": "aeat_harness_load", "description": "Load the operator rules and active persona (the universal operating-layer floor)." },
-    { "name": "aeat_corpus_search", "description": "Search the bundled BOE/AEAT legal corpus for grounding." },
-    { "name": "aeat_terminology_search", "description": "Look up a Spanish tax term in the bundled terminology handbook." },
-    { "name": "aeat_contract", "description": "Read the operator-surface capability contract." },
+    { "name": "cadrumo_harness_load", "description": "Load the operator rules and active persona (the universal operating-layer floor)." },
+    { "name": "cadrumo_corpus_search", "description": "Search the bundled BOE/AEAT legal corpus for grounding." },
+    { "name": "cadrumo_terminology_search", "description": "Look up a Spanish tax term in the bundled terminology handbook." },
+    { "name": "cadrumo_contract", "description": "Read the operator-surface capability contract." },
     { "name": "search", "description": "Search the aeat command surface by keyword." },
     { "name": "execute", "description": "Execute one aeat command by key through the safety gates." }
   ],
