@@ -45,7 +45,7 @@ from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time import today_madrid
 from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
@@ -491,7 +491,7 @@ def overview_status(
     # default advisory the calendar does, so status never reads as complete while
     # obligations go unscoped. The coverage report rides the Notice channel.
     if current is not None and current.active_profile_bucket_id() is not None:
-        status_today = now().date()
+        status_today = today_madrid()
         status_cal = build_overview_calendar(
             _profile_to_taxpayer(current),
             OverviewCalendarRange(
@@ -633,7 +633,7 @@ def overview_calendar(
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
-        today=now().date(),
+        today=today_madrid(),
         raw_values=raw_values,
         show_suppressed=show_suppressed,
         events=events,
@@ -687,7 +687,7 @@ def _overview_calendar_all_profiles(
     )
     from ...application.workflow import list_profile_buckets
 
-    today = now().date()
+    today = today_madrid()
     buckets = list_profile_buckets()
     active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is BucketLifecycleStatus.ACTIVE}
 
@@ -811,7 +811,7 @@ def overview_agenda(
     from ...application.user_profile import record_to_values
 
     current = _state()
-    as_of_date = _parse_iso_date(as_of, label="--date") if as_of else now().date()
+    as_of_date = _parse_iso_date(as_of, label="--date") if as_of else today_madrid()
     if horizon_days <= 0:
         raise _bad(
             tr(
