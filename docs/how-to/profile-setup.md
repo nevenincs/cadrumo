@@ -37,7 +37,7 @@ Switch to another taxpayer before working on it:
 aeat config switch my-other-profile
 ```
 
-Switching changes which local ledger, modelo drafts, and filing markers `cadrumo
+Switching changes which local ledger, modelo drafts, and filing markers `aeat
 app` commands use. The switch verb is `aeat config switch`, not `aeat config
 profile switch`.
 
