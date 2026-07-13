@@ -252,7 +252,7 @@ def build_overview_explain(
         raise OverviewExplainError(
             translated_message="application.overview.explain.errors.modelo_blank",
         )
-    reference_today = today or date.today()
+    reference_today = today or now().date()
     resolved_year = year or reference_today.year
 
     if not _modelo_is_registered(modelo_id):

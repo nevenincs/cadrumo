@@ -249,7 +249,7 @@ class WorkflowEngine:
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
-        reference_today = today or date.today()
+        reference_today = today or _utcnow().date()
 
         # Record run context so ``_record_site_unavailable`` can lazily
         # recompute the run_id from whichever information is latest

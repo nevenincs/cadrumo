@@ -171,7 +171,7 @@ class DeadlineEngine:
                 are registered for ``year`` — the benign data gap callers
                 degrade around.
         """
-        reference_today = today or date.today()
+        reference_today = today or now().date()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         obligations: list[ModeloDeadline] = []
         for modelo, revision, window in self._deadline_windows(year):
@@ -267,7 +267,7 @@ class DeadlineEngine:
             modelo: The AEAT modelo identifier to look up.
             year: Optional fiscal year; defaults to the current year.
         """
-        selected_year = year or date.today().year
+        selected_year = year or now().date().year
         windows = [
             window
             for code, revision, window in self._deadline_windows(selected_year)
@@ -294,7 +294,7 @@ class DeadlineEngine:
             modelo: The AEAT modelo identifier to check.
             year: Optional fiscal year; defaults to the current year.
         """
-        selected_year = year or date.today().year
+        selected_year = year or now().date().year
         return any(
             code == modelo
             and self._schedule_applies(profile, revision, window)
@@ -404,7 +404,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
         The earliest non-overdue :class:`ModeloDeadline`, or ``None``
         if no such obligation exists.
     """
-    reference_today = today or date.today()
+    reference_today = today or now().date()
     upcoming = [o for o in schedule.obligations if o.closes_on >= reference_today]
     if not upcoming:
         return None

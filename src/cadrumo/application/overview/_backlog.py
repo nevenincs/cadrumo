@@ -128,7 +128,7 @@ def build_overview_backlog(
     Returns an :class:`OverviewBacklog` with the backlog items and the
     calendar range used for the computation.
     """
-    resolved_as_of = as_of or date.today()
+    resolved_as_of = as_of or now().date()
     resolved_from = from_date or min(
         resolved_as_of - timedelta(days=_DEFAULT_LOOKBACK_DAYS),
         _earliest_active_work_unit_date(work_units, fallback=resolved_as_of),

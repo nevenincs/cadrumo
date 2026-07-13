@@ -89,6 +89,7 @@ from ..core import BindingSourceKind, Period, resolve_active_bucket_id
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
+from ..core.time import now
 from ..domain.calculations.registry import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..domain.deadlines import (
     DeadlineEngine,
@@ -1102,7 +1103,7 @@ def build_operator_state_projection(
         it mutates no store.
     """
     _ensure_profile_key_registry_registered()
-    reference_today = today or date.today()
+    reference_today = today or now().date()
     active_bucket_id = resolve_active_bucket_id()
     has_active_profile = active_bucket_id is not None
 
