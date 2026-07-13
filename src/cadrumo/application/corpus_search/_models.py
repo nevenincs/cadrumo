@@ -144,7 +144,7 @@ class RetrievalHit(BaseModel):
     """One fused hybrid-retrieval result over the corpus.
 
     ``text`` is the verbatim chunk prose (the snippet source); ``corpus_ref``
-    grounds it in the bundled source (and is the ``aeat://corpus/{ref}`` key
+    grounds it in the bundled source (and is the ``cadrumo://corpus/{ref}`` key
     that resolves the full verbatim text). ``score`` is the fused RRF score;
     ``lexical_rank`` / ``semantic_rank`` record the per-side contribution
     (``None`` when a side did not surface the chunk).
