@@ -25,7 +25,7 @@ transaction keeps the absolute magnitude plus OFX-native raw fields.
 ``ofx`` optional extra (license-posture ADR): the import is lazy, guarded by
 :func:`~core.require_optional_extra`, so a bare-core install keeps the rest
 of the ledger import surface and refuses OFX sources with the
-``pip install aeat-cli[ofx]`` hint.
+``pip install cadrumo[ofx]`` hint.
 """
 
 from __future__ import annotations
@@ -127,7 +127,7 @@ class OfxProvider(FinancialProvider):
         as a plain probe miss (so ``--provider auto`` detection of other
         formats keeps working), while a source that clearly IS OFX raises the
         instructive :class:`~core.MissingOptionalExtraError` naming the
-        ``pip install aeat-cli[ofx]`` remediation — never a silent
+        ``pip install cadrumo[ofx]`` remediation — never a silent
         "no provider matched".
 
         Returns:

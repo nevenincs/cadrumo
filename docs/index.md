@@ -6,7 +6,7 @@ Cadrumo is a helper for preparing your Spanish tax forms. It ships as the
 This is the landing page for Cadrumo's documentation. It shows how to
 turn local records into checked modelo figures and export files. You upload those
 files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
-project source is on [GitHub](https://github.com/nevenincs/aeat).
+project source is on [GitHub](https://github.com/nevenincs/cadrumo).
 
 Cadrumo is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The

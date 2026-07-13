@@ -5,11 +5,11 @@
 This policy covers the Cadrumo project: the `aeat` software (the CLI, the MCP
 console, and the agent harness), the website at
 [cadrumo.neve.md](https://cadrumo.neve.md), and this repository at
-[github.com/nevenincs/aeat](https://github.com/nevenincs/aeat).
+[github.com/nevenincs/cadrumo](https://github.com/nevenincs/cadrumo).
 
 **Responsible party:** Gergely Wootsch, the legal entity behind
 [neve.md](https://neve.md) and the publisher of the Cadrumo project. Contact:
-<hello@neve.md>, the [issue tracker](https://github.com/nevenincs/aeat/issues),
+<hello@neve.md>, the [issue tracker](https://github.com/nevenincs/cadrumo/issues),
 or the private channel in [`SECURITY.md`](SECURITY.md) for sensitive reports.
 
 ## The short version

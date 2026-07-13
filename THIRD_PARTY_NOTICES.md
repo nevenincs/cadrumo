@@ -38,7 +38,7 @@ using the model above; they contain no third-party model weights.
 
 ## Runtime dependency licence disclosure
 
-The `aeat-cli` distribution contains only this project's own code
+The `cadrumo` distribution contains only this project's own code
 (Apache-2.0). It does not vendor or bundle any third-party package; declared
 dependencies are resolved and installed separately by the user's installer
 from PyPI under their own licences. Two declared dependencies carry
@@ -46,10 +46,10 @@ non-permissive licences and are disclosed here explicitly:
 
 - **ofxtools** — GPL-3.0-only (https://github.com/csingley/ofxtools). An
   OPTIONAL dependency, gated behind the `ofx` extra
-  (`pip install aeat-cli[ofx]`), backing the OFX/QFX bank-statement import
+  (`pip install cadrumo[ofx]`), backing the OFX/QFX bank-statement import
   provider; a bare-core install carries no strong-copyleft dependency at all.
   Apache-2.0 is one-way compatible with GPL-3.0, so a combined installation
-  is lawful; however, anyone who redistributes `aeat-cli` TOGETHER WITH the
+  is lawful; however, anyone who redistributes `cadrumo` TOGETHER WITH the
   installed `ofx` extra (a container image, a frozen binary, a vendored
   bundle) must comply with the GPL-3.0 for the combined work. This project
   itself ships no such combined artifact: the PyPI wheels contain no
@@ -67,7 +67,7 @@ its own package metadata.
 ## Bundled AEAT / BOE corpus: reuse of public-sector information
 
 The corpus under `src/aeat/_data/corpus/` (and its companion distributions
-`aeat-data-manuals` and `aeat-data-official`) reproduces official Spanish
+`cadrumo-data-manuals` and `cadrumo-data-official`) reproduces official Spanish
 public-sector documents: consolidated legal texts from the Boletín Oficial
 del Estado (BOE) and manuals, diseños de registro, and workbooks published
 by the Agencia Estatal de Administración Tributaria (AEAT).

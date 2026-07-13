@@ -192,7 +192,7 @@ export const en: Copy = {
         <>
           Contact: <a href="mailto:hello@neve.md">hello@neve.md</a>, or through the project’s
           canonical repository,{' '}
-          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (issues and
+          <a href="https://github.com/nevenincs/cadrumo">github.com/nevenincs/cadrumo</a> (issues and
           security contacts are listed there).
         </>,
       ],
@@ -247,7 +247,7 @@ export const en: Copy = {
           The Cadrumo software follows the same policy: your financial records stay in
           encrypted storage on your own machine, and the software sends no telemetry to us.
           See the project’s{' '}
-          <a href="https://github.com/nevenincs/aeat/blob/main/PRIVACY.md">privacy policy</a>.
+          <a href="https://github.com/nevenincs/cadrumo/blob/main/PRIVACY.md">privacy policy</a>.
         </>,
         <>
           Because we hold no personal data about you, data-subject requests under Articles
@@ -280,7 +280,7 @@ export const en: Copy = {
         <>
           Cadrumo is open source under the <strong>Apache License 2.0</strong>. The source of
           this website and of the software lives at{' '}
-          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a>.
+          <a href="https://github.com/nevenincs/cadrumo">github.com/nevenincs/cadrumo</a>.
         </>,
         <>
           The page you are reading ships React and ReactDOM (MIT licence) and the typefaces
@@ -321,7 +321,7 @@ export const en: Copy = {
     columns: [
       { heading: 'Product', labels: ['Install plugin', 'Capabilities', 'How it works'] },
       { heading: 'Docs', labels: ['Quickstart', 'Tutorial', 'Architecture'] },
-      { heading: 'Community', labels: ['GitHub', 'PyPI: aeat-cli', 'cadrumo.neve.md'] },
+      { heading: 'Community', labels: ['GitHub', 'PyPI: cadrumo', 'cadrumo.neve.md'] },
     ],
     disclaimerPill: 'cadrumo',
     disclaimerText:

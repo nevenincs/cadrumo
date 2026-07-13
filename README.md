@@ -1,8 +1,8 @@
-# aeat
+# Cadrumo
 
-A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness.
+A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness. Published on PyPI as [`cadrumo`](https://pypi.org/project/cadrumo/); the command-line tool it installs is named `aeat` after the forms it computes.
 
-At the core of `aeat` is a comprehensive command line that you and your agent operate together. It's for autónomos, small businesses, and the people who help them file. It ingests your financial records, calculates each modelo's figures, and prepares the filing: checked against the form's rules, grounded in the regulation that defines each casilla, and exported ready to upload. Your responsibility is to verify the result and to file it yourself, through the official channels of the Agencia Estatal de Administración Tributaria (AEAT).
+At the core of Cadrumo is a comprehensive command line (`aeat`) that you and your agent operate together. It's for autónomos, small businesses, and the people who help them file. It ingests your financial records, calculates each modelo's figures, and prepares the filing: checked against the form's rules, grounded in the regulation that defines each casilla, and exported ready to upload. Your responsibility is to verify the result and to file it yourself, through the official channels of the Agencia Estatal de Administración Tributaria (AEAT).
 
 You run it as a Claude plugin, through any Model Context Protocol (MCP) client, or directly at the terminal. Describe your situation in plain language; the assistant drives the toolkit, and the deterministic engine computes every figure and cites the legal rule behind it.
 
@@ -54,7 +54,7 @@ Consequential actions pass a human-in-the-loop gate: reads run freely, local cha
 
 ### The CLI as the brain
 
-Under the harness sits `aeat`, a Python CLI published on PyPI as [`aeat-cli`](https://pypi.org/project/aeat-cli/). It's a self-contained tax engine and works without any AI in the loop:
+Under the harness sits `aeat`, a Python CLI published on PyPI as [`cadrumo`](https://pypi.org/project/cadrumo/). It's a self-contained tax engine and works without any AI in the loop:
 
 - Modelo definitions live in a versioned registry compiled from TOML. Every casilla carries the legal references and official sources that define it, keyed by filing year and revision.
 - Every command emits a versioned JSON envelope with a stable exit-code table and typed notices, so an assistant or a script reads outcomes without scraping text.
@@ -65,7 +65,7 @@ Under the harness sits `aeat`, a Python CLI published on PyPI as [`aeat-cli`](ht
 
 ### The Claude plugin (recommended)
 
-You need [Claude Code](https://claude.com/claude-code) or the Claude desktop app, plus [uv](https://docs.astral.sh/uv/); the plugin launches the published `aeat-cli` package with `uvx`.
+You need [Claude Code](https://claude.com/claude-code) or the Claude desktop app, plus [uv](https://docs.astral.sh/uv/); the plugin launches the published `cadrumo` package with `uvx`.
 
 ```
 /plugin marketplace add nevenincs/neve-marketplace
@@ -79,14 +79,14 @@ One install carries the skills, the personas, and the operating console. Then as
 If you prefer the terminal, or want the console in a different MCP client:
 
 ```bash
-uv tool install aeat-cli
+uv tool install cadrumo
 aeat --version
 ```
 
 Every command carries its own `--help`. Any MCP client runs the same console with:
 
 ```bash
-uvx --from "aeat-cli[agent]" aeat-mcp
+uvx --from "cadrumo[agent]" aeat-mcp
 ```
 
 If you want to inspect or adapt the harness itself, `aeat app agent --output=<dir>` writes it to disk as a Claude-native workspace, and `aeat app agent --output=<dir> --layout=plugin` writes the plugin tree.
@@ -112,7 +112,7 @@ Run `just docs` to build the rendered site, which adds the command-line and API 
 
 ## Getting help
 
-Report bugs and ask questions on the [issue tracker](https://github.com/nevenincs/aeat/issues). Report a security vulnerability privately instead, following [`SECURITY.md`](SECURITY.md).
+Report bugs and ask questions on the [issue tracker](https://github.com/nevenincs/cadrumo/issues). Report a security vulnerability privately instead, following [`SECURITY.md`](SECURITY.md).
 
 ## Contributing
 

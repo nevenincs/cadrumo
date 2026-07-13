@@ -80,11 +80,11 @@ Anthropic-API provider, and OFX/QFX bank-statement import are optional package
 extras. Install only the ones you need:
 
 ```bash
-pip install "aeat-cli[google]"
-pip install "aeat-cli[browser]"
-pip install "aeat-cli[anthropic]"
-pip install "aeat-cli[ofx]"
-pip install "aeat-cli[all]"
+pip install "cadrumo[google]"
+pip install "cadrumo[browser]"
+pip install "cadrumo[anthropic]"
+pip install "cadrumo[ofx]"
+pip install "cadrumo[all]"
 ```
 
 `aeat config check` lists each extra and prints the exact install command for any

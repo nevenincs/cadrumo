@@ -184,7 +184,7 @@ export const es: Copy = {
         <>
           Contacto: <a href="mailto:hello@neve.md">hello@neve.md</a>, o a través del
           repositorio canónico del proyecto,{' '}
-          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (allí se
+          <a href="https://github.com/nevenincs/cadrumo">github.com/nevenincs/cadrumo</a> (allí se
           indican los canales de incidencias y de seguridad).
         </>,
       ],
@@ -243,7 +243,7 @@ export const es: Copy = {
           El software Cadrumo sigue la misma política: tus registros financieros permanecen
           cifrados en tu propia máquina y el software no nos envía telemetría alguna. Consulta
           la{' '}
-          <a href="https://github.com/nevenincs/aeat/blob/main/PRIVACY.md">
+          <a href="https://github.com/nevenincs/cadrumo/blob/main/PRIVACY.md">
             política de privacidad
           </a>{' '}
           del proyecto.
@@ -280,7 +280,7 @@ export const es: Copy = {
         <>
           Cadrumo es código abierto bajo la <strong>Apache License 2.0</strong>. El código de
           este sitio y del software vive en{' '}
-          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a>.
+          <a href="https://github.com/nevenincs/cadrumo">github.com/nevenincs/cadrumo</a>.
         </>,
         <>
           La página que estás leyendo distribuye React y ReactDOM (licencia MIT) y las
@@ -322,7 +322,7 @@ export const es: Copy = {
     columns: [
       { heading: 'Producto', labels: ['Instalar el plugin', 'Funciones', 'Cómo funciona'] },
       { heading: 'Documentación', labels: ['Guía rápida', 'Tutorial', 'Arquitectura'] },
-      { heading: 'Comunidad', labels: ['GitHub', 'PyPI: aeat-cli', 'cadrumo.neve.md'] },
+      { heading: 'Comunidad', labels: ['GitHub', 'PyPI: cadrumo', 'cadrumo.neve.md'] },
     ],
     disclaimerPill: 'cadrumo',
     disclaimerText:

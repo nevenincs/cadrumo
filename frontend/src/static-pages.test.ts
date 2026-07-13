@@ -55,7 +55,7 @@ describe('landing head metadata', () => {
     expect(raw).toBeTruthy()
     const graph = JSON.parse(raw as string)['@graph'] as Array<Record<string, unknown>>
     const software = graph.find((node) => node['@type'] === 'SoftwareApplication')
-    expect(software?.downloadUrl).toBe('https://pypi.org/project/aeat-cli/')
+    expect(software?.downloadUrl).toBe('https://pypi.org/project/cadrumo/')
     expect(software?.softwareHelp).toBe('https://cadrumo.neve.md/docs/')
     expect(software?.license).toBe('https://www.apache.org/licenses/LICENSE-2.0')
   })

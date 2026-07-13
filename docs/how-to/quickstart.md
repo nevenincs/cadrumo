@@ -15,11 +15,11 @@ has tax-specific setup or review choices.
 
 ## 1. Install the CLI
 
-Install the `aeat-cli` package from PyPI. Any tool that installs Python
+Install the `cadrumo` package from PyPI. Any tool that installs Python
 applications works; `pip` is the plainest path:
 
 ```bash
-pip install aeat-cli
+pip install cadrumo
 ```
 
 Confirm the command is on your path:
@@ -32,7 +32,7 @@ To use Cadrumo with an AI agent later, install the agent extra instead; see
 [Connect an agent](connect-an-agent.md):
 
 ```bash
-pip install "aeat-cli[agent]"
+pip install "cadrumo[agent]"
 ```
 
 ## Before you start: the master-key passphrase

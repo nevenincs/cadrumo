@@ -19,10 +19,10 @@ construction, exactly like the CLI.
 
 ## 1. Install the agent extra
 
-The MCP runtime is an optional extra of the same `aeat-cli` package:
+The MCP runtime is an optional extra of the same `cadrumo` package:
 
 ```bash
-pip install "aeat-cli[agent]"
+pip install "cadrumo[agent]"
 ```
 
 Confirm the server script is on your path:
