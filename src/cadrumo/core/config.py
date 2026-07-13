@@ -534,6 +534,14 @@ class Settings(AeatIntegrationSettings):
             "sanitisation."
         ),
     )
+    cadrumo_wallet_diagnostic_retention_days: int = Field(
+        default=30,
+        ge=1,
+        description=(
+            "Retention window in days for wallet diagnostic dump files; when the "
+            "opt-in dump directory is configured, dump files older than this are pruned"
+        ),
+    )
     cadrumo_active_profile: str | None = Field(
         default=None,
         description=(
