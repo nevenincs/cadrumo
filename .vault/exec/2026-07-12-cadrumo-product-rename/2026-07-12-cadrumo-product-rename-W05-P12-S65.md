@@ -50,20 +50,24 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
-
-- Restore the Catalan catalogue byte-for-byte from the committed authority after an external writer introduced lossy encoding damage.
-- Rewrite 209 product-owned command, profile, environment, vault, and landing-copy leaves through `cadrumo.locales set` under an isolated Cadrumo state root.
-- Preserve AEAT authority, registry taxonomy, legal, portal, session, and evidence terminology.
-- Verify every locale CLI mutation with pre/post hashing, YAML parsing, and replacement-character rejection.
-- Audit the finished catalogue for rename residue, catalogue drift, translation honesty, and locale coverage.
+- Snapshot all four locale catalogue hashes before mutation.
+- Run the reviewed Catalan-only production command `python -m cadrumo.locales canonicalize-product-identity --locale ca` under isolated local storage.
+- Compare every parsed changed leaf with the production identity normaliser and classify each change by referent.
+- Verify catalogue audits, focused tests, sibling hash equality, raw residue classification, and live Catalan help output.
 
 ## Outcome
 
-The Catalan catalogue now names Cadrumo as the product and uses `cadrumo` for operator commands while retaining AEAT wherever it denotes the external tax authority. The intended-key audit reports zero remaining product rename leaves. Catalogue audit reports exactly the 30 shared missing scaffold keys reserved for `W05.P12.S67`, with no extras. Four focused locale honesty and coverage tests pass.
+- The command changed exactly 39 semantic leaves: 26 command-leading references became `aeat`, and 13 product-display references became `CADRUMO`.
+- Parsed key sets are identical before and after the mutation, and every changed value equals the production normaliser result.
+- The Catalan catalogue hash changed from `9A6F5FE244A671515A6EB66E40817EAA918077791123342759708A1FD19FD12E` to `91573AD9E6529EF9BDFFE9BAB9B12593C7DA6DA8A221E5BF0654FD5FAFCD6888`.
+- English, Spanish, and Hungarian hashes remained unchanged.
+- Catalogue scaffold and audit checks passed for all four locales; 38 focused tests passed; live Catalan help presents `CADRUMO`, `AEAT`, and the `aeat` command without stale title-case or command-leading forms.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
-
-Three external-write incidents occurred during execution. The first exposed transient malformed YAML; the second overwrote early Catalan text through a lossy code page and introduced replacement characters. Work stopped at each safety gate. Recovery used an `apply_patch` reverse patch to reconstruct the catalogue from the current committed blob, after which all intended mutations were replayed exclusively through the locale CLI. A later concurrent scaffold added 30 premature placeholder leaves and restored stale command values. The final recovery removed exactly those 30 leaves and repaired the stale product-command values through the locale CLI. The 30 cross-locale scaffold keys remain deliberately absent for `W05.P12.S67`.
+- The production YAML serializer produced a 169-insertion and 176-deletion textual diff; semantic comparison isolated the 39 intended leaf changes.
+- No questionable replacements were found. `AEAT` remained at 231 occurrences and `CADRUMO_` remained at 21 occurrences.
+- Raw Catalan residue is classified as 13 `CADRUMO` product displays, 21 `CADRUMO_*` settings, 225 `aeat` command prefixes, one `registry/aeat/treaties/` authority taxonomy path, 227 standalone `AEAT` authority references, and four `AEAT_*` authority settings.
+- The only valid remaining lowercase `cadrumo` machine or historical residue is `cadrumo-vault/` in `cli.config.google.sync.calc.export_help`. No lowercase `cadrumo` setting, MCP executable, URI scheme, or companion namespace is present.
+- English, Spanish, and Catalan targeted residue is zero. Remaining Hungarian display/command residue is 6/24 for S66.
+- No locale YAML was hand-edited.
