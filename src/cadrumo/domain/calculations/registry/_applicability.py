@@ -96,6 +96,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
+from ....core.time import today_madrid
 from ...deadlines import FiscalResidency, IVARegime
 from ...deadlines.taxpayer_model import (
     EntityType,
@@ -1533,13 +1534,14 @@ def derive_modelo_applicability(
         profile: The operator's three-axis taxpayer model.
         modelo: The AEAT modelo identifier to decide.
         today: Reference date for the Beckham window check. Defaults to
-            ``date.today()`` when ``None``. Pass an explicit date in tests
-            so results are deterministic.
+            the Europe/Madrid civil date (``today_madrid()``) when ``None`` —
+            the six-year window is a Spanish-calendar boundary. Pass an explicit
+            date in tests so results are deterministic.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
     """
-    _today = today if today is not None else date.today()
+    _today = today if today is not None else today_madrid()
     beckham_window_active = profile.beckham_window_active(_today)
 
     # The Art. 93 impatriado route is a modelo-level switch while the

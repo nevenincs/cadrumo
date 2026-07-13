@@ -58,30 +58,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: reason: it IS the seam, returning real wall-clock when unfrozen.
 _SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
 
-#: Sanctioned bare wall-clock reads, keyed by ``src/cadrumo``-relative POSIX path
-#: → reason. Two categories, each a stated per-entry reason, never a mute button:
-#: (1) injectable live-AEAT sites that fall back to a bare ``datetime.now`` on the
-#: live path where the deterministic seam is deliberately barred (it refuses under
-#: ``CADRUMO_LIVE_TESTS_ENABLED``); (2) regulated date-boundary ``date.today()``
-#: defaults whose local→UTC seam conversion could shift a *regulated tax outcome*
-#: across a calendar boundary and therefore needs a grounding decision rather than
-#: a mechanical sweep (reported for follow-up, not silenced). Every entry accepts an
-#: explicit injected reference so tests are deterministic.
+#: Injectable live-AEAT sites permitted to fall back to a bare ``datetime.now``.
+#: Keyed by ``src/cadrumo``-relative POSIX path → reason. Each accepts an explicit
+#: ``now=`` parameter (so tests inject a fixed instant) and reads wall-clock only as
+#: the default; the deterministic seam is deliberately barred on the live path (it
+#: refuses under ``CADRUMO_LIVE_TESTS_ENABLED``), so the fallback is load-bearing, not a
+#: mute button. The two regulated ``date.today()`` defaults formerly parked here (the
+#: IVA-rate effective-date and the Beckham six-year-window reference) were resolved by
+#: the 2026-07-14 Madrid-civil-date ruling: both now default to
+#: :func:`cadrumo.core.time.today_madrid`, so the gate ratchets shut on them.
 _ALLOWLIST: dict[str, str] = {
-    "domain/invoices/_enums.py": (
-        "Regulated date-boundary default pending a clock-seam grounding decision: the "
-        "IVA-rate lookup effective date (`on_date or date.today()`) selects a rate by "
-        "calendar date, so converting the local-date default to the UTC seam "
-        "(`now().date()`) can shift the selected rate across an AEAT rate-change date "
-        "boundary. Tests pass an explicit `on_date`; conversion needs grounding, not a sweep."
-    ),
-    "domain/calculations/registry/_applicability.py": (
-        "Regulated date-boundary default pending a clock-seam grounding decision: the "
-        "Beckham (Art. 93 impatriado) six-year-window check reference date "
-        "(`today if today is not None else date.today()`) is evaluated as-of the current "
-        "date, so a local→UTC seam shift can flip window activity across a year boundary. "
-        "Tests pass an explicit `today`; conversion needs grounding, not a sweep."
-    ),
     "application/auth/_acquisition_lock.py": (
         "Injectable live-AEAT site: the auth acquisition-lock staleness check accepts "
         "an explicit `now=` and falls back to wall-clock only on the live path, where "

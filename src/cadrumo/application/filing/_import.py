@@ -44,11 +44,11 @@ from dataclasses import dataclass
 from datetime import UTC
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
-from zoneinfo import ZoneInfo
 
 from ...adapters.inbound.justificante import parse_justificante
 from ...core import Period, PeriodError
 from ...core.logging import get_logger
+from ...core.time import MADRID_TZ
 from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
 from ...domain.justificante import Justificante
 from .runtime import ModeloOperatorProfile
@@ -57,8 +57,6 @@ if TYPE_CHECKING:
     from ...domain.submission import ModeloPresentado
 
 _logger = get_logger(__name__)
-
-_MADRID_TZ = ZoneInfo("Europe/Madrid")
 
 _EMPTY_CASILLA_WARNING: str = "filing.import.empty_casilla_warning"
 
@@ -257,7 +255,7 @@ def _build_submission_record(
     """
     from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
-    submitted_at = justificante.presented_at.replace(tzinfo=_MADRID_TZ).astimezone(UTC)
+    submitted_at = justificante.presented_at.replace(tzinfo=MADRID_TZ).astimezone(UTC)
     submission_id = hashlib.sha256(f"{justificante.csv}:{draft.draft_id}".encode()).hexdigest()[:16]
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.1",
