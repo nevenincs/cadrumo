@@ -47,7 +47,7 @@ env-var mapping is direct, e.g. `aeat_base_url` reads `AEAT_BASE_URL`).
 
 ## Findings
 
-### authority-referent-urls-and-templates | low | 9 fields stay AEAT_: base URL, sede/status/Cl@ve template paths
+### authority-referent-urls-and-templates | low | 7 fields stay AEAT_: base URL, sede/status/Cl@ve template paths
 
 `aeat_base_url` (AEAT sede electrónica base URL), `aeat_clave_sede_access_url_template`,
 `aeat_clave_permanente_sede_access_url_template`, `aeat_sede_expedientes_path`,
