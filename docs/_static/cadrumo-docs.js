@@ -589,23 +589,20 @@
     });
   }
 
-  /* ── CLI sequence stepped player ───────────────────────────────────────
-   * Progressive enhancement over the server-rendered
-   * div.cadrumo-sequence transcript (ADR D5). The frames are already in the
-   * DOM as div.cadrumo-frame; without this script the reader sees the full
-   * linear transcript. When it runs, the widget only ENHANCES: it reveals the
-   * command/result frames one step at a time behind prev/next/play controls
-   * and a position indicator, and never injects or removes frame content. Each
-   * sequence on a page keeps its own independent state. */
-
-  var PLAY_INTERVAL_MS = 1800;
-
-  function prefersReducedMotion() {
-    return (
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
-  }
+  /* ── CLI sequence playhead ─────────────────────────────────────────────
+   * Progressive enhancement over the server-rendered div.cadrumo-sequence
+   * transcript (ADR D5; presentation revised per operator review). The frames
+   * are already in the DOM as div.cadrumo-frame with full token highlighting;
+   * without this script the reader sees the complete highlighted transcript.
+   *
+   * When it runs, the widget is a PLAYHEAD over a rundown: every command line
+   * stays visible at all times. Exactly one command is active — highlighted,
+   * with its output shown beneath it. Commands after the playhead are dimmed
+   * with their highlighting and output suppressed (JS-applied classes the CSS
+   * keys on — never a DOM rewrite). Prev/next (and arrow keys) move the
+   * playhead; there is no autonomous or timed advance. The widget only toggles
+   * state classes and never injects or removes frame content. Each sequence on
+   * a page keeps its own independent state. */
 
   function unescapePayload(text) {
     // The directive escapes </ as <\/ so the inline JSON cannot break out of
@@ -619,14 +616,14 @@
     try {
       return JSON.parse(unescapePayload(script.textContent));
     } catch (e) {
-      /* A malformed payload never breaks the widget; stepping is driven by the
-       * DOM frames, and the static transcript stays intact. */
+      /* A malformed payload never breaks the widget; the playhead is driven by
+       * the DOM frames, and the static transcript stays intact. */
       return null;
     }
   }
 
   function setupSequence(root) {
-    // The steppable units are the command and result frames in document order;
+    // The playhead runs over the command and result frames in document order;
     // setup frames stay as their own collapsed disclosure and are not stepped.
     var frames = Array.prototype.filter.call(
       root.querySelectorAll(".cadrumo-frame"),
@@ -634,21 +631,20 @@
         return frame.getAttribute("data-frame-kind") !== "setup";
       }
     );
-    if (frames.length < 2) return; // a single frame has nothing to step through
+    if (frames.length < 2) return; // a single frame is nothing to step through
 
     // The inline payload is the sequence's build-time contract. If it is absent
     // or malformed, leave the static transcript unenhanced rather than driving a
-    // player over a sequence whose contract we cannot validate.
+    // playhead over a sequence whose contract we cannot validate.
     if (parseSequencePayload(root) === null) return;
 
     var total = frames.length;
     var current = 0;
-    var timer = null;
 
     var controls = document.createElement("div");
     controls.className = "cadrumo-sequence-controls";
     controls.setAttribute("role", "group");
-    controls.setAttribute("aria-label", "Sequence playback");
+    controls.setAttribute("aria-label", "Command rundown");
 
     function button(kind, label, glyph) {
       var el = document.createElement("button");
@@ -659,9 +655,8 @@
       return el;
     }
 
-    var prevBtn = button("prev", "Previous step", "&#8592;");
-    var playBtn = button("play", "Play", "&#9654;");
-    var nextBtn = button("next", "Next step", "&#8594;");
+    var prevBtn = button("prev", "Previous command", "&#8592;");
+    var nextBtn = button("next", "Next command", "&#8594;");
 
     var indicator = document.createElement("span");
     indicator.className = "cadrumo-sequence-position";
@@ -671,50 +666,24 @@
     controls.appendChild(prevBtn);
     controls.appendChild(indicator);
     controls.appendChild(nextBtn);
-    controls.appendChild(playBtn);
 
     function render() {
       frames.forEach(function (frame, index) {
-        var revealed = index <= current;
-        frame.hidden = !revealed;
+        // Commands are always visible; only the playhead state changes. The CSS
+        // keys on these classes to dim future commands (and drop their
+        // highlighting) and to show output for the active command alone.
         frame.classList.toggle("is-active", index === current);
+        frame.classList.toggle("is-past", index < current);
+        frame.classList.toggle("is-future", index > current);
       });
       indicator.textContent = current + 1 + " / " + total;
       prevBtn.disabled = current === 0;
       nextBtn.disabled = current === total - 1;
     }
 
-    function stopPlay() {
-      if (timer) {
-        window.clearInterval(timer);
-        timer = null;
-      }
-      playBtn.classList.remove("is-playing");
-      playBtn.setAttribute("aria-label", "Play");
-      playBtn.setAttribute("aria-pressed", "false");
-      playBtn.innerHTML = "&#9654;";
-    }
-
-    function goTo(index, viaPlay) {
+    function goTo(index) {
       current = Math.max(0, Math.min(index, total - 1));
-      if (!viaPlay) stopPlay();
       render();
-    }
-
-    function startPlay() {
-      if (current === total - 1) current = 0;
-      playBtn.classList.add("is-playing");
-      playBtn.setAttribute("aria-label", "Pause");
-      playBtn.setAttribute("aria-pressed", "true");
-      playBtn.innerHTML = "&#10073;&#10073;";
-      render();
-      timer = window.setInterval(function () {
-        if (current >= total - 1) {
-          stopPlay();
-          return;
-        }
-        goTo(current + 1, true);
-      }, PLAY_INTERVAL_MS);
     }
 
     prevBtn.addEventListener("click", function () {
@@ -722,16 +691,6 @@
     });
     nextBtn.addEventListener("click", function () {
       goTo(current + 1);
-    });
-    playBtn.addEventListener("click", function () {
-      if (timer) {
-        stopPlay();
-      } else if (prefersReducedMotion()) {
-        // Reduced-motion: no timer-driven auto-advance; play steps forward once.
-        goTo(current + 1);
-      } else {
-        startPlay();
-      }
     });
 
     // Arrow-key stepping is scoped to the widget: the listener is on the
@@ -747,8 +706,8 @@
       }
     });
 
-    // The last frame carries the controls' insertion point; place the bar
-    // after the final frame so the transcript reads top-to-bottom.
+    // Place the controls after the final frame so the rundown reads
+    // top-to-bottom with its stepper beneath it.
     var anchor = frames[total - 1];
     if (anchor.parentNode) {
       anchor.parentNode.insertBefore(controls, anchor.nextSibling);
