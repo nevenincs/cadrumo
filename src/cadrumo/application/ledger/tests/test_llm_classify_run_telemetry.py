@@ -4,8 +4,7 @@ Exercises :func:`suggest_llm_classification` against a REAL subprocess CLI
 (``python -c <script>``, no mocks) and asserts one
 :class:`~cadrumo.adapters.outbound.llm.LLMRunRecord` is persisted per call, on
 both the success and the hallucination-refusal (failure) branches -- the
-run-timing capture added for the local-only run-health diagnostic surface
-(GitHub issue #407).
+run-timing capture that backs the local-only run-health diagnostic surface.
 """
 
 from __future__ import annotations

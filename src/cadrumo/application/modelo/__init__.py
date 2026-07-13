@@ -21,8 +21,7 @@ those services, including :class:`CalculationRevisionState`,
 :class:`ModeloRecordStatus`, :class:`ModeloVerificationFindingKind`, and
 :class:`VerificationCompletenessStatus`. ``CalculationRevision``, ``WorkUnit``,
 ``CalculationRevisionAmendmentKind``, and ``ExternalEvidenceKind`` are
-NOT re-exported here; :mod:`domain.modelos` is their sole canonical source
-(import-centralization ADR ruling 5).
+NOT re-exported here; :mod:`domain.modelos` is their sole canonical source.
 
 Verification, filing, and export remain owned by their focused service modules.
 :func:`verify_modelo_revision` persists a verification

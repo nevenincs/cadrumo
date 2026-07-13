@@ -27,8 +27,7 @@ Key exports:
 :func:`domain.invoices.link_transaction`,
 :func:`domain.invoices.suggest_reconciliations`, and
 :func:`domain.invoices.verify_link_consistency` are NOT re-exported here;
-:mod:`domain.invoices` is their sole canonical source
-(import-centralization ADR ruling 5).
+:mod:`domain.invoices` is their sole canonical source.
 
 See Also:
     :mod:`domain.invoices`

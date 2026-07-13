@@ -1,13 +1,11 @@
-"""Stamped_revision_id roundtrip and R2 carry-gate tests.
-
-Tests for the period-revision-resolution decision, Ruling 3 / R2:
+"""Stamped_revision_id roundtrip and revision-stamp carry-gate tests.
 
 - ``_ObservationEnvelopePayload.stamped_revision_id`` survives the
   encrypted-storage roundtrip with a non-default (non-None) value.
 - ``save_observation`` derives the law-determined stamp when callers omit it.
 - Anti-tautology proof: nulling ``stamped_revision_id`` in the on-disk JSON
   envelope refuses on reload.
-- R2 carry gate in ``resolve_bindings_from_local_store``: a divergent or
+- Carry gate in ``resolve_bindings_from_local_store``: a divergent or
   unreconfirmable stamped revision blocks the carry (binding absent from
   resolved map), and a matching stamp carries cleanly.
   Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding

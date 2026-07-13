@@ -3,8 +3,7 @@
 :data:`BundleId` and :data:`EvidenceId` pin the hex-64 sha-256 shape
 minted by the evidence bundle pipeline. The aliases live in the
 evidence application package because the bundle and per-record evidence
-ids are minted in the application layer (no single domain owner) per ADR
-Rule 6 application-layer placement.
+ids are minted in the application layer (no single domain owner).
 """
 
 from __future__ import annotations
