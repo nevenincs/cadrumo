@@ -24,7 +24,7 @@ Behavior-preserving only:
   using relative imports for its own package tree keeps using relative
   imports for the rewritten statement when the facade is reachable via a
   relative path of the same or lower depth; otherwise falls back to the
-  absolute ``aeat....`` form, which is always valid).
+  absolute ``cadrumo....`` form, which is always valid).
 * Intra-package imports are always left untouched -- the scanner's
   ``find_private_import_violations`` already excludes same-package
   importers.
@@ -33,8 +33,8 @@ Read-only unless ``--apply`` is passed. ``--only-file PATH`` restricts the
 rewrite to one file (useful for verifying a single batch before committing).
 
     python dev/import_centralization_codemod.py --apply
-    python dev/import_centralization_codemod.py --apply --only-file src/aeat/application/modelo/_calculation_actions.py
-    python dev/import_centralization_codemod.py --apply --tests-only --only-file src/aeat/domain/modelos/tests/test_foo.py
+    python dev/import_centralization_codemod.py --apply --only-file src/cadrumo/application/modelo/_calculation_actions.py
+    python dev/import_centralization_codemod.py --apply --tests-only --only-file src/cadrumo/domain/modelos/tests/test_foo.py
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ from typing import Final
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
-PKG_ROOT = SRC_ROOT / "aeat"
+PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = "utf-8"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -75,7 +75,7 @@ def _relative_prefix_for(importer_mod: str, importer_is_pkg: bool, target_mod: s
     """Return a relative ``from`` clause (e.g. ``...core``) reaching *target_mod*.
 
     Returns ``None`` when the target cannot be expressed relatively (should not
-    happen for any ``aeat.*`` target, but guards against edge cases at the
+    happen for any ``cadrumo.*`` target, but guards against edge cases at the
     package root).
     """
     importer_parts = importer_mod.split(".")
@@ -97,14 +97,14 @@ def _relative_prefix_for(importer_mod: str, importer_is_pkg: bool, target_mod: s
 
 
 def _existing_import_style(tree: ast.Module) -> str:
-    """Return 'relative' or 'absolute' -- whichever this file's aeat.* imports mostly use."""
+    """Return 'relative' or 'absolute' -- whichever this file's cadrumo.* imports mostly use."""
     relative = 0
     absolute = 0
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             if node.level and node.level > 0:
                 relative += 1
-            elif node.module and node.module.startswith("aeat"):
+            elif node.module and node.module.startswith("cadrumo"):
                 absolute += 1
     return "relative" if relative >= absolute else "absolute"
 
@@ -128,7 +128,7 @@ def _format_import_stmt(
 def collect_plans(
     *, only_file: Path | None, include_tests: bool = False, tests_only: bool = False
 ) -> tuple[list[RewritePlan], dict[str, scan.FacadeInfo]]:
-    """Collect every rewritable ``ImportFrom`` statement under ``src/aeat``.
+    """Collect every rewritable ``ImportFrom`` statement under ``src/cadrumo``.
 
     ``include_tests=False`` (the default) preserves the Wave W02
     production-only behavior. ``include_tests=True`` also visits test
@@ -161,7 +161,7 @@ def collect_plans(
             if not isinstance(node, ast.ImportFrom):
                 continue
             target = scan.resolve_relative_import(mod, is_pkg, node.level, node.module)
-            if target is None or not target.startswith("aeat"):
+            if target is None or not target.startswith("cadrumo"):
                 continue
             if not scan.has_private_component(target):
                 continue
