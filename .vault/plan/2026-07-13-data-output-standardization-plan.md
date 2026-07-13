@@ -9,6 +9,15 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `data-output-standardization` plan
 
@@ -51,7 +60,7 @@ Rotating log handler and retention prunes for the unbounded artifact families, f
 
 Structural test asserting every settings dir field maps to a declared lifecycle class.
 
-- [ ] `W02.P04.S13` - Author the structural lifecycle gate asserting every settings dir field declares exactly one lifecycle class; `src/cadrumo/core/tests`.
+- [x] `W02.P04.S13` - Author the structural lifecycle gate asserting every settings dir field declares exactly one lifecycle class; `src/cadrumo/core/tests`.
 
 ## Wave `W03` - Naming standardization
 
