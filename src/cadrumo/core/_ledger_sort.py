@@ -1,4 +1,4 @@
-"""Closed sort axes for the ``aeat app ledger list`` surface.
+"""Closed sort axes for the ``cadrumo app ledger list`` surface.
 
 The ledger-interface-contract ADR (D5) adds a stable, operator-selectable
 sort to ``ledger list``. The two axes are declared here in ``core/`` — the

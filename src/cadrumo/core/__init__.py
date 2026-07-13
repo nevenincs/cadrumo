@@ -69,6 +69,7 @@ from ._amendment_kind_regime import (
 )
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ._config_state_root import FormerProductStateError
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import (
@@ -205,6 +206,7 @@ __all__: list[str] = [
     "ConvenioOverrideKind",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",
+    "FormerProductStateError",
     "GoogleCredentialSourceKind",
     "IdentityReferent",
     "IntracomOperationType",

@@ -111,7 +111,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             source=source,
             status="none",
             profile_total_keys=total_keys,
-            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+            next_action="cadrumo config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
 
     try:
@@ -131,7 +131,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             profile_total_keys=total_keys,
             repairable_by_clearing_pointer=source == "pointer",
             next_action=(
-                "aeat config repair profile --clear-active --yes"
+                "cadrumo config repair profile --clear-active --yes"
                 if source == "pointer"
                 else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
@@ -146,7 +146,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             profile_total_keys=total_keys,
             repairable_by_clearing_pointer=source == "pointer",
             next_action=(
-                "aeat config repair profile --clear-active --yes"
+                "cadrumo config repair profile --clear-active --yes"
                 if source == "pointer"
                 else "unset CADRUMO_ACTIVE_PROFILE or set it to a registered profile"
             ),
@@ -166,7 +166,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             profile_total_keys=total_keys,
             repairable_by_clearing_pointer=source == "pointer",
             next_action=(
-                "aeat config repair profile --clear-active --yes"
+                "cadrumo config repair profile --clear-active --yes"
                 if source == "pointer"
                 else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
@@ -185,7 +185,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             profile_total_keys=total_keys,
             repairable_by_clearing_pointer=source == "pointer",
             next_action=(
-                "aeat config repair profile --clear-active --yes"
+                "cadrumo config repair profile --clear-active --yes"
                 if source == "pointer"
                 else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
@@ -199,7 +199,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             profile_total_keys=total_keys,
             repairable_by_clearing_pointer=source == "pointer",
             next_action=(
-                "aeat config repair profile --clear-active --yes"
+                "cadrumo config repair profile --clear-active --yes"
                 if source == "pointer"
                 else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
@@ -218,9 +218,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         profile_total_keys=validation.total_keys,
         missing_required=validation.missing_required,
         next_action=(
-            "aeat app overview status"
+            "cadrumo app overview status"
             if validation.valid
-            else f"aeat config profile edit {registered_pointer.label}"
+            else f"cadrumo config profile edit {registered_pointer.label}"
         ),
     )
 

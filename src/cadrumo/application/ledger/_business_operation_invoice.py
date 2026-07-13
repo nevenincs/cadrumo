@@ -227,7 +227,7 @@ def derive_business_operation_invoice_id(
     Mirrors :func:`cadrumo.domain.transactions.derive_transaction_id`: a SHA-256
     digest (truncated to 16 hex chars, the prior surrogate's width) over the
     record's identifying fields, so the id is stable under a frozen-clock replay
-    and directly referenceable as an ``aeat app ledger invoice`` argument,
+    and directly referenceable as an ``cadrumo app ledger invoice`` argument,
     needing no output mask. ``created_at`` plus the ``disambiguator`` ordinal
     preserve the genuine-duplicate case: two legitimately distinct invoices must
     keep distinct ids, so the mint site increments ``disambiguator`` on the rare

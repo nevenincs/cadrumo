@@ -66,7 +66,7 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
             "transaction_count": len(transaction_ids),
             "sample_transaction_ids": transaction_ids[:3],
         },
-        suggestion="aeat app ledger invoice add --help",
+        suggestion="cadrumo app ledger invoice add --help",
     )
 
 

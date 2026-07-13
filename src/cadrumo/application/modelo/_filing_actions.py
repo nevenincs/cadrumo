@@ -141,7 +141,7 @@ def file_modelo_revision(
 ) -> ModeloRecord:
     """Mark a verified-complete revision as the current internal filed answer.
 
-    This is the application service behind ``aeat app modelo work file``. It is
+    This is the application service behind ``cadrumo app modelo work file``. It is
     a local state transition, not an AEAT presentation: the resulting
     :class:`ModeloRecord` has ``aeat_accepted=False`` and no
     external evidence.
@@ -366,8 +366,8 @@ def _require_filing_preconditions(
         error_type=ModeloFilingEvidenceMissingError,
         surface="internal filing",
         suggestion=(
-            "aeat app ledger evidence add PATH; "
-            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+            "cadrumo app ledger evidence add PATH; "
+            "cadrumo app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
         ),
     )
     require_profile_ready_for_work_unit(work_unit)

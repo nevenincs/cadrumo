@@ -37,7 +37,7 @@ from ._calendar_models import (
     OverviewCensoEnrolmentState,
 )
 
-_PROFILE_EDIT_FIX_COMMAND = "aeat config profile edit"
+_PROFILE_EDIT_FIX_COMMAND = "cadrumo config profile edit"
 
 _PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingProxyType(
     {
@@ -202,16 +202,16 @@ _CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
 
 _CENSO_ENROLMENT_WARNING_CODE = "censo.enrolment_unverified"
 _CENSO_ENROLMENT_WARNING_MESSAGE = "cli.overview.warning.censo_enrolment_unverified"
-_CENSO_ENROLMENT_FIX_COMMAND = "aeat config profile edit"
+_CENSO_ENROLMENT_FIX_COMMAND = "cadrumo config profile edit"
 _JUSTIFICANTE_UNVERIFIED_WARNING_CODE = "filing.justificante_unverified"
 _JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE = "cli.overview.warning.justificante_unverified"
-_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
+_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND = "cadrumo app live filed pull --modelo MODELO --year YEAR --period PERIOD"
 _AEAT_EVIDENCE_CONFLICT_WARNING_CODE = "filing.aeat_evidence_conflict"
 _AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_conflict"
-_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
+_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "cadrumo app live filed pull --modelo MODELO --year YEAR --period PERIOD"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
-_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND = "aeat app modelo describe 303"
+_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND = "cadrumo app modelo describe 303"
 
 
 def calendar_censo_enrolment_profile_keys() -> tuple[str, ...]:
@@ -305,7 +305,7 @@ def _calendar_unverified_justificante_warnings(
     Both entry-level ``OverviewCalendarEntry.filing_evidence`` rows and filing
     :class:`OverviewCalendarEvent` rows are scanned. Period-specific
     remediation is used only when all affected rows collapse to one
-    ``aeat app live filed pull`` command.
+    ``cadrumo app live filed pull`` command.
     """
     affected_modelos: set[str] = set()
     fix_commands: set[str] = set()
@@ -411,7 +411,7 @@ def _filed_pull_command(
     """Return the period-specific filed-history pull command when possible."""
     if filing_year is None or period is None:
         return fallback
-    return f"aeat app live filed pull --modelo {modelo} --year {filing_year} --period {period.registry_token}"
+    return f"cadrumo app live filed pull --modelo {modelo} --year {filing_year} --period {period.registry_token}"
 
 
 def _single_fix_command_or_fallback(commands: set[str], *, fallback: str) -> str:

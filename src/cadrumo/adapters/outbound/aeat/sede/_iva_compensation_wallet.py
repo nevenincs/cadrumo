@@ -109,7 +109,7 @@ async def fetch_iva_compensation_wallet(
     """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     if target_period.filing_year != target_year:
@@ -243,7 +243,7 @@ async def _open_authenticated_surface(
     target_year: int,
     target_period: Period,
 ) -> bool:
-    """Open an AEAT app through the selector so Cl@ve app-local state is minted."""
+    """Open an cadrumo app through the selector so Cl@ve app-local state is minted."""
     _assert_read_http("GET", selector_url)
     await browser_session.navigate(page, selector_url)
     await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)

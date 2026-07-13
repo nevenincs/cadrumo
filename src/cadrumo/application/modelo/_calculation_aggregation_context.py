@@ -63,7 +63,7 @@ def load_bucket_aggregation_context(
             f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period.registry_token!r} "
             f"is now {snapshot.revision.id!r}. "
             f"The registry's law-mapping was corrected after this work unit was created. "
-            f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
+            f"Re-create the work unit (discard this one and run `cadrumo app modelo work create`) "
             f"to bind it to the current law-determined revision.",
         )
     return work_unit, snapshot

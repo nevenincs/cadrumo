@@ -2,7 +2,7 @@
 
 Callers import review enums, models, adapters, and projections exclusively from
 :mod:`application.review`; private underscore modules remain implementation
-details. The canonical CLI surface is ``aeat app review queue`` and ``show``.
+details. The canonical CLI surface is ``cadrumo app review queue`` and ``show``.
 Those commands are read-only: queue adapters load bucket-scoped source records,
 derive severity, and emit typed rows without mutating ledger, invoice, filing, or
 modelo state.

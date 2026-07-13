@@ -137,7 +137,7 @@ def resolve_modelo_100_borrador_bindings(
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
             context={"borrador_snapshot_id": command.borrador_snapshot_id},
-            suggestion=exc.suggestion or "aeat app live borrador 100 list",
+            suggestion=exc.suggestion or "cadrumo app live borrador 100 list",
         ) from exc
     _assert_same_axis(
         bucket_id=command.bucket_id,
@@ -148,7 +148,7 @@ def resolve_modelo_100_borrador_bindings(
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_not_active",
-            suggestion="aeat app live borrador 100 list",
+            suggestion="cadrumo app live borrador 100 list",
         )
 
     eligible_bindings = _borrador_capable_bindings(registry_snapshot)

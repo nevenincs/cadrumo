@@ -7,11 +7,11 @@ tests.
 
 Registered entries:
 
-  - ``aeat app ledger evidence``     (locked CRUD reference shape)
-  - ``aeat app ledger invoice``      (link-orthogonal CRUD, --kind issued|received)
-  - ``aeat app ledger ratios``       (key-value-as-record exception)
-  - ``aeat app ledger inventory``    (lifecycle operations)
-  - ``aeat config auth apoderado``   (lifecycle operations)
+  - ``cadrumo app ledger evidence``     (locked CRUD reference shape)
+  - ``cadrumo app ledger invoice``      (link-orthogonal CRUD, --kind issued|received)
+  - ``cadrumo app ledger ratios``       (key-value-as-record exception)
+  - ``cadrumo app ledger inventory``    (lifecycle operations)
+  - ``cadrumo config auth apoderado``   (lifecycle operations)
 
 Each entry documents the noun-group's intended verb set plus its
 declared exception class. The conformance harness in
@@ -33,13 +33,13 @@ from ._crud_contract import (
 
 EVIDENCE = MutatingNounGroupContract(
     noun="purchase_invoice_evidence",
-    cli_path="aeat app ledger evidence",
+    cli_path="cadrumo app ledger evidence",
     # Reference shape: strict 5-verb CRUD, no orthogonal axes.
 )
 
 INVOICE = MutatingNounGroupContract(
     noun="invoice",
-    cli_path="aeat app ledger invoice",
+    cli_path="cadrumo app ledger invoice",
     # One unified invoice noun-group gated by ``--kind issued|received``.
     # The persisted payable_invoice / collectible_invoice taxonomy is
     # selected by --kind; the operator surface is a single CRUD noun-group
@@ -50,7 +50,7 @@ INVOICE = MutatingNounGroupContract(
 
 USAGE_RATIOS = MutatingNounGroupContract(
     noun="usage_ratio",
-    cli_path="aeat app ledger ratios",
+    cli_path="cadrumo app ledger ratios",
     # Key-value-as-record exception; the operator edits
     # keyed scalars (per-category proportions) rather than entities.
     exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
@@ -65,7 +65,7 @@ USAGE_RATIOS = MutatingNounGroupContract(
 
 INVENTORY = MutatingNounGroupContract(
     noun="inventory_actividad",
-    cli_path="aeat app ledger inventory",
+    cli_path="cadrumo app ledger inventory",
     # Lifecycle-only exception: create + movement add + valuation
     # preview are distinct named operations rather than CRUD-shaped
     # surfaces — inventory entries do not behave as mutable records
@@ -77,7 +77,7 @@ INVENTORY = MutatingNounGroupContract(
 
 APODERADO = MutatingNounGroupContract(
     noun="apoderado",
-    cli_path="aeat config auth apoderado",
+    cli_path="cadrumo config auth apoderado",
     # Lifecycle-only exception: an apoderado is configured or cleared
     # as a whole; configure + clear are state transitions and
     # status + check are read-only — there are no per-field CRUD

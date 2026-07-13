@@ -93,11 +93,11 @@ class TestCatalogueUniquePaths:
 
 class TestCatalogueLookup:
     def test_find_resolves_known_paths(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger evidence") is EVIDENCE
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat config auth apoderado") is APODERADO
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo app ledger evidence") is EVIDENCE
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo config auth apoderado") is APODERADO
 
     def test_find_returns_none_on_unknown_path(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app foo bar") is None
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo app foo bar") is None
 
 
 class TestRequiredAuditClosure:
@@ -105,17 +105,17 @@ class TestRequiredAuditClosure:
     corresponding catalogue entry."""
 
     def test_invoice_noun_group_is_represented(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger invoice") is not None
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger payable-invoice") is None
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger collectible-invoice") is None
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo app ledger invoice") is not None
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo app ledger payable-invoice") is None
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo app ledger collectible-invoice") is None
 
     def test_apoderado_subgroup_is_represented(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat config auth apoderado") is not None
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo config auth apoderado") is not None
 
     def test_inventory_noun_group_is_represented(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger inventory") is not None
+        assert BUILTIN_CRUD_CATALOGUE.find("cadrumo app ledger inventory") is not None
 
     def test_ratios_key_value_exception_is_represented(self) -> None:
-        entry = BUILTIN_CRUD_CATALOGUE.find("aeat app ledger ratios")
+        entry = BUILTIN_CRUD_CATALOGUE.find("cadrumo app ledger ratios")
         assert entry is not None
         assert entry.exception is NounGroupExceptionKind.KEY_VALUE_AS_RECORD

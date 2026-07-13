@@ -142,10 +142,10 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert detail.nie_soporte_fingerprint == "sha256:support"
         assert detail.certificate_path_fingerprint == "sha256:certpath"
         assert detail.operator_report_commands == (
-            "aeat config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
-            "aeat config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",
-            "aeat config auth diagnostics report diag-new --phone-state app_did_not_prompt",
-            "aeat config auth diagnostics report diag-new --phone-state operator_did_not_check",
+            "cadrumo config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
+            "cadrumo config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",
+            "cadrumo config auth diagnostics report diag-new --phone-state app_did_not_prompt",
+            "cadrumo config auth diagnostics report diag-new --phone-state operator_did_not_check",
         )
         assert detail.html_excerpt == "[redacted html captured: 72 chars]"
         assert "sensitive form fields" not in detail.html_excerpt

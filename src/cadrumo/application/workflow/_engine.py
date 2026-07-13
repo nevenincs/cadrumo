@@ -76,9 +76,9 @@ from ._protocols import (
 )
 
 _logger = get_logger(__name__)
-_DRAFT_RECALCULATE_COMMAND = "aeat app modelo work calculate"
+_DRAFT_RECALCULATE_COMMAND = "cadrumo app modelo work calculate"
 _VERIFICATION_REPORT_LIST_COMMAND = (
-    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
+    "cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
 )
 _DRAFT_BUILD_REFUSED_NEXT_ACTION = f"Repair the cited draft input and rerun {_DRAFT_RECALCULATE_COMMAND}."
 _VERIFICATION_REPORT_NEXT_ACTION = f"Run: {_VERIFICATION_REPORT_LIST_COMMAND}"
@@ -468,7 +468,7 @@ class WorkflowEngine:
                 f"period={obligation.period} opens on {obligation.opens_on.isoformat()}; "
                 "the AEAT filing-obligation window is not open yet. Filing-to-fichero does "
                 "not require this step: export the verified-complete revision with "
-                "'aeat app modelo export' — that is the local finish line. 'work file' "
+                "'cadrumo app modelo export' — that is the local finish line. 'work file' "
                 "is the optional internal mark-as-filed step for when the obligation window is open.",
             )
             steps.append(

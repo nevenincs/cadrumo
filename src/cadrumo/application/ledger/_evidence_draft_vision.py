@@ -136,14 +136,14 @@ def parse_vision_extraction_response(text: str) -> _VisionExtractedFields:
     if payload is None:
         raise PurchaseInvoiceEvidenceInputError(
             f"on-host vision model returned no parsable JSON object: {text[:200]!r}",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+            suggestion="cadrumo app ledger evidence extract --evidence-id <id>",
         )
     try:
         return _VisionExtractedFields.model_validate_json(payload)
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
             f"on-host vision model response failed schema validation: {str(exc)[:200]}",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+            suggestion="cadrumo app ledger evidence extract --evidence-id <id>",
         ) from exc
 
 

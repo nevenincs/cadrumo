@@ -55,7 +55,7 @@ def test_review_queue_row_rejects_blank_legal_refs() -> None:
             state=ReviewState.PENDING,
             blocking=True,
             current_owner_surface="app modelo",
-            canonical_next_command="aeat app modelo work verify draft-abc",
+            canonical_next_command="cadrumo app modelo work verify draft-abc",
             since=datetime(2026, 4, 20, 12, 0, tzinfo=UTC),
             summary="modelo 303 finding",
             legal_refs=(" ",),

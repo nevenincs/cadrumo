@@ -14,10 +14,11 @@ fields are validated against path-traversal at construction.
 Operator workflow (via the ``cadrumo security verify-corpus`` CLI):
 
 - ``cadrumo security verify-corpus --corpus manuals`` — re-walk the
-  manuals root and exit non-zero with a per-file diff on drift.
 - ``cadrumo security verify-corpus --corpus manuals --regenerate``
-  — re-walk and rewrite the manifest in place after intentional
-  corpus updates.
+  manual-verification scope before running it.
+
+The API in this module owns manifest regeneration after an intentional corpus
+update; it is not exposed as a separate human CLI command.
 
 This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded

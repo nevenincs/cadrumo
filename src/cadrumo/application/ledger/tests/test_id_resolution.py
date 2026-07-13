@@ -146,7 +146,7 @@ def _lineage_entry(previous_transaction_id: str) -> TransactionEditLineageEntry:
     return TransactionEditLineageEntry(
         previous_transaction_id=previous_transaction_id,
         actor="operator",
-        source_command="aeat app ledger update",
+        source_command="cadrumo app ledger update",
         edited_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
     )
 

@@ -11,7 +11,7 @@ ONLY from tests: no production code writes an ``ESPECIAL`` register entry or a
 ``SectorDefinition``.
 
 This test closes that gap. It drives the register write through the EXACT
-application service the ``aeat app ledger prorrata`` CLI verbs call
+application service the ``cadrumo app ledger prorrata`` CLI verbs call
 (:meth:`ProrrataRegisterService.declare` for ``elect-especial`` /
 ``elect-general``, :meth:`ProrrataRegisterService.declare_sector` for
 ``declare-sector``) and tags each ledger row with the operator-declared

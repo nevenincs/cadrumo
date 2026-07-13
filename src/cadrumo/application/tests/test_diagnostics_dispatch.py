@@ -85,7 +85,7 @@ def test_overall_status_returns_ok_when_every_check_is_ok() -> None:
 def test_overall_status_returns_warn_when_any_check_is_warn_and_none_fail() -> None:
     checks = (
         DiagnosticCheck(name="a", status="ok", summary="alpha"),
-        DiagnosticCheck(name="b", status="warn", summary="beta", next_action="aeat config repair"),
+        DiagnosticCheck(name="b", status="warn", summary="beta", next_action="cadrumo config repair"),
         DiagnosticCheck(name="c", status="ok", summary="gamma"),
     )
 
@@ -105,10 +105,10 @@ def test_overall_status_fail_priority_overrides_warn() -> None:
     """A single ``fail`` outranks any number of ``warn`` checks —
     the rollup never downgrades fail → warn."""
     checks = (
-        DiagnosticCheck(name="a", status="warn", summary="alpha", next_action="aeat config repair"),
-        DiagnosticCheck(name="b", status="warn", summary="beta", next_action="aeat config repair"),
+        DiagnosticCheck(name="a", status="warn", summary="alpha", next_action="cadrumo config repair"),
+        DiagnosticCheck(name="b", status="warn", summary="beta", next_action="cadrumo config repair"),
         DiagnosticCheck(name="c", status="fail", summary="gamma", dead_end="terminal"),
-        DiagnosticCheck(name="d", status="warn", summary="delta", next_action="aeat config repair"),
+        DiagnosticCheck(name="d", status="warn", summary="delta", next_action="cadrumo config repair"),
     )
 
     assert _overall_status(checks) == "fail"
@@ -135,7 +135,7 @@ def test_profile_check_no_active_profile_returns_warn_with_setup_next_action() -
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+    assert result.next_action == "cadrumo config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
 
 
 def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_action() -> None:
@@ -146,14 +146,14 @@ def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_ac
     report = _wizard_status(
         profile_ready=False,
         missing_required=("tax_id", "ccaa"),
-        next_action="aeat config profile edit NAME",
+        next_action="cadrumo config profile edit NAME",
     )
 
     result = _profile_check(report)
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config profile edit NAME"
+    assert result.next_action == "cadrumo config profile edit NAME"
     finding_keys = {finding.summary.split(" — ", 1)[0] for finding in result.findings}
     assert "tax_id" in finding_keys
     assert "ccaa" in finding_keys
@@ -183,7 +183,7 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
         active_profile="operator",
         profile_ready=False,
         missing_required=("tax_id",),
-        next_action="aeat config profile edit NAME",
+        next_action="cadrumo config profile edit NAME",
     )
 
     result = _profile_check(report)
@@ -205,7 +205,7 @@ def test_auth_check_no_provider_returns_warn_with_auth_setup_next_action() -> No
 
     assert result.name == "auth.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config auth configure --provider certificate --file PATH"
+    assert result.next_action == "cadrumo config auth configure --provider certificate --file PATH"
 
 
 def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
@@ -216,7 +216,7 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
     assert result.name == "auth.readiness"
     assert result.status == "warn"
     assert "certificate" in result.summary
-    assert result.next_action == "aeat config auth test --provider certificate"
+    assert result.next_action == "cadrumo config auth test --provider certificate"
 
 
 def test_auth_check_uses_configured_provider_for_session_probe() -> None:
@@ -227,7 +227,7 @@ def test_auth_check_uses_configured_provider_for_session_probe() -> None:
     assert result.name == "auth.readiness"
     assert result.status == "warn"
     assert "clave_movil" in result.summary
-    assert result.next_action == "aeat config auth test --provider clave_movil"
+    assert result.next_action == "cadrumo config auth test --provider clave_movil"
 
 
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:

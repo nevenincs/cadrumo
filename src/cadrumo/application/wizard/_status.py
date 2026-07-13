@@ -2,7 +2,7 @@
 
 ``build_wizard_status`` projects the active workflow state into a
 strict :class:`WizardStatusReport` consumed by the config repair surface
-and the ``aeat config profile status`` command. ``load_active_taxpayer_profile``
+and the ``cadrumo config profile status`` command. ``load_active_taxpayer_profile``
 is the typed bridge the deadline engine and the filing runtime call
 to obtain an ``TaxpayerProfile`` from the active profile bucket.
 """
@@ -125,16 +125,16 @@ def _next_wizard_action(
     login_ready: bool,
 ) -> str:
     if not has_profile:
-        return "aeat config profile create NAME"
+        return "cadrumo config profile create NAME"
     if missing_required:
-        return "aeat config profile edit NAME"
+        return "cadrumo config profile edit NAME"
     if missing_enrolment:
-        return "aeat config profile edit NAME"
+        return "cadrumo config profile edit NAME"
     if not auth_provider:
-        return "aeat config auth configure --provider certificate --file PATH"
+        return "cadrumo config auth configure --provider certificate --file PATH"
     if not login_ready:
-        return f"aeat config auth test --provider {auth_provider}"
-    return "aeat app overview status"
+        return f"cadrumo config auth test --provider {auth_provider}"
+    return "cadrumo app overview status"
 
 
 def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:

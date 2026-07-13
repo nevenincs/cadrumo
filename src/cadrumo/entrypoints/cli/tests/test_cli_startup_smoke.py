@@ -36,7 +36,7 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
     )
     token = config_module._settings_override.set(settings)
     try:
-        sys.argv = ["cadrumo", *cli_args]
+        sys.argv = ["aeat", *cli_args]
         from cadrumo.entrypoints.cli import main
 
         main()

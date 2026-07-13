@@ -181,7 +181,7 @@ def attach_manual_transaction_evidence(
     actor: str,
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),
-    source_command: str = "aeat app ledger attach",
+    source_command: str = "cadrumo app ledger attach",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,

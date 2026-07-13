@@ -395,11 +395,11 @@ def absent_corpus_companion_binaries(registry_root: Path, *, source_root: Path) 
     """Return the loud advisory for corpus source binaries absent from tree and companion.
 
     Loads the shared source catalogue for ``registry_root`` and resolves every
-    cited corpus binary against ``source_root`` and the optional ``aeat_data``
+    cited corpus binary against ``source_root`` and the optional ``cadrumo_data``
     companion. An empty tuple means every declared binary is present and
     byte-integrity verifiable; a non-empty tuple is the loud advisory the
     split-install path surfaces, naming the missing set and the
-    ``cadrumo[corpus-sources]`` install hint. The ``aeat app registry``
+    ``cadrumo[corpus-sources]`` install hint. The ``cadrumo app registry``
     verification verbs consult this to refuse instructively when the companion
     is required and absent.
     """

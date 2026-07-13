@@ -1,6 +1,6 @@
 """Active-profile resolver for the Google OAuth Desktop integration.
 
-Every ``aeat config google ...`` command and every secure-store read or write
+Every ``cadrumo config google ...`` command and every secure-store read or write
 performed by :mod:`adapters.outbound.google._oauth_flow` and
 :mod:`adapters.outbound.google._session_store` is scoped to one AEAT
 profile. :func:`adapters.outbound.google.resolve_active_profile` obtains
@@ -33,7 +33,7 @@ def resolve_active_profile() -> str:
         :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
             When the :func:`core.resolve_active_bucket_id` precedence
             chain resolves to no profile. The error carries a ``suggestion``
-            pointing to ``aeat config profile create NAME`` and a ``context``
+            pointing to ``cadrumo config profile create NAME`` and a ``context``
             payload naming the failed resolution attempt for renderers.
     """
     resolved = resolve_active_bucket_id()

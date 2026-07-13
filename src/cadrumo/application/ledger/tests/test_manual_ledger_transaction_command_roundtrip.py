@@ -72,7 +72,7 @@ def _populated_command() -> ManualLedgerTransactionCommand:
         attachment_ids=("attach.invoice.pdf", "attach.delivery-note.pdf"),
         notes="Q2 office expense, mixed personal/business",
         actor="operator-jdoe",
-        source_command="aeat app ledger add --interactive",
+        source_command="cadrumo app ledger add --interactive",
         idempotency_key="cmd-2025-04-15-0001",
     )
 
@@ -91,7 +91,7 @@ def _populated_internal_transfer_command() -> ManualLedgerTransactionCommand:
         # INTERNAL_TRANSFER forbids every tax / evidence field — must
         # be absent on the wire and on reload.
         actor="operator-jdoe",
-        source_command="aeat app ledger add --interactive",
+        source_command="cadrumo app ledger add --interactive",
     )
 
 

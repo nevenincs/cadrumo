@@ -183,7 +183,7 @@ def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: 
         items = transactions_pending(settings, bucket_id=_PROFILE_ID)
 
     assert len(items) == 1
-    assert items[0].drill_command == f"aeat app ledger review {items[0].source.transaction_id}"
+    assert items[0].drill_command == f"cadrumo app ledger review {items[0].source.transaction_id}"
     assert " edit " not in items[0].drill_command
     assert "--set" not in items[0].drill_command
 
@@ -541,7 +541,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].draft_id == "d_stale"
     summary_key = items[0].summary
     assert summary_key == "review.filing.stale_approval_summary"
-    assert items[0].drill_command.startswith("aeat app review view ")
+    assert items[0].drill_command.startswith("cadrumo app review view ")
 
 
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:

@@ -1,7 +1,7 @@
 """Bank-statement provider contract and concrete file-ingest implementations.
 
 Defines the financial-statement provider contract and the concrete per-format
-parsers behind ``aeat app ledger import``. Detection picks the right provider
+parsers behind ``cadrumo app ledger import``. Detection picks the right provider
 for a file; each provider parses a bank statement into
 :class:`domain.transactions.RawTransaction` records plus an explicit
 :class:`domain.transactions.TransactionDirection`. The provider layer

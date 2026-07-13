@@ -1,7 +1,7 @@
 """Online modelo-export request-pipeline integration.
 
 The live Drive/Sheets write itself is validated by manual operator testing
-(``aeat config google sync calc export`` against a real account) — write-shaped
+(``cadrumo config google sync calc export`` against a real account) — write-shaped
 online tests are project-forbidden. What CAN and
 MUST be gated in CI is that, for a real modelo, the apply adapter assembles the
 COMPLETE set of Google-Sheets API write requests from the plan with no network:

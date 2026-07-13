@@ -174,7 +174,7 @@ def amend_modelo_revision[CasillaKey](
         amended return.
 
     See Also:
-        ``aeat app modelo work amend``:
+        ``cadrumo app modelo work amend``:
             CLI command that validates ``--from-filing-record``, ``--kind``,
             ``--reason``, and ``--set`` before calling this service.
         :func:`~cadrumo.application.modelo.import_external_filing_evidence`:

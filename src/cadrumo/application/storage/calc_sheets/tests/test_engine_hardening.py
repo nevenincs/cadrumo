@@ -42,7 +42,7 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
     assert plan.guide.paragraphs[0] == f"{snapshot.modelo.title} - period 1T / 2025."
     assert "Edit only the cells in the 'Entradas' tab." in plan.guide.paragraphs[1]
     assert plan.guide.paragraphs[2] == (
-        "To pull your edits into local storage, run 'aeat config google sync calc pull' from the CLI."
+        "To pull your edits into local storage, run 'cadrumo config google sync calc pull' from the CLI."
     )
 
 

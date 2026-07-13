@@ -1,4 +1,4 @@
-"""Operator-facing extensions for the ``aeat app ledger ratios`` verb-group.
+"""Operator-facing extensions for the ``cadrumo app ledger ratios`` verb-group.
 
 The existing usage-ratio CRUD verbs (``list``/``set``/``unset``) live in
 the application-layer ledger actions backed by the domain

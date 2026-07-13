@@ -263,6 +263,6 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectR
             transaction_id=tx.transaction_id,
             patch=ManualLedgerTransactionPatch(notes="tweak"),
             actor="operator",
-            source_command="aeat app ledger update",
+            source_command="cadrumo app ledger update",
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
         )

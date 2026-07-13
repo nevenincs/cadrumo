@@ -86,7 +86,7 @@ def _valid_command_paths() -> frozenset[str]:
 
 def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
     # Reuse the CLI's own payload-discovery + projection so the gate sees exactly
-    # the surface an operator's `aeat app contract` would.
+    # the surface an operator's `cadrumo app contract` would.
     from ...entrypoints.cli import command_schema_refs
 
     return command_schema_refs()
@@ -302,7 +302,7 @@ def test_no_operator_document_names_a_package_internal() -> None:
     false-positive here: every ``service_owner`` / ``owner`` value is a full
     dotted ``aeat.<layer>.<module>`` string, and no CLI verb or domain noun is
     ever written in that dotted form (a CLI invocation is space-separated,
-    e.g. ``aeat app modelo work calculate``), so a plain-word match is
+    e.g. ``cadrumo app modelo work calculate``), so a plain-word match is
     structurally impossible - see
     ``test_no_service_owner_value_collides_with_operator_prose`` for the
     empirical proof against the current, unmodified operator corpus.

@@ -68,7 +68,7 @@ def save_client(profile: str, client: OAuthClient) -> None:
     The record is written under
     :data:`adapters.persistence.storage.GOOGLE_OAUTH_CLIENT_NAMESPACE`
     with :class:`adapters.persistence.storage.SensitivityClass`
-    ``SECRET`` so ``aeat config google login`` and Drive credential hydration
+    ``SECRET`` so ``cadrumo config google login`` and Drive credential hydration
     can reload the operator-imported Desktop OAuth client.
     """
     _repository().save(
@@ -263,7 +263,7 @@ def delete_session(profile: str) -> tuple[bool, bool]:
     Removes only the
     :data:`adapters.persistence.storage.GOOGLE_OAUTH_TOKEN_NAMESPACE` and
     :data:`adapters.persistence.storage.GOOGLE_OAUTH_METADATA_NAMESPACE`
-    records, matching ``aeat config google logout``. The registered
+    records, matching ``cadrumo config google logout``. The registered
     :class:`adapters.outbound.google.OAuthClient` and
     :class:`adapters.outbound.google.DriveConfig` remain available so a
     later login can reuse the Cloud Console JSON and the same Drive root

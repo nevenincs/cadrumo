@@ -57,7 +57,7 @@ for genuinely lightweight setup (:class:`core.identity.ProfileId`
 and the active-profile language-resolver registration) so the boundary
 itself does not drag the domain portable-export / registry / service
 module surfaces into ``sys.modules``. The state-free CLI surfaces
-(``aeat``, ``aeat --version``, ``aeat --help``) must not pay the
+(``aeat``, ``cadrumo --version``, ``cadrumo --help``) must not pay the
 registry cost via this boundary, which the
 :mod:`entrypoints.cli.test_lazy_command_tree` gate and the
 producer-side probe in

@@ -13,7 +13,7 @@ host: there is no network transport, only the same encrypted local
 secure-object backend every other diagnostic store uses.
 
 This is the durable capture half of the local-only run-diagnostics surface
-(``aeat app diagnostics run-health``): a slow or failing LLM-backed
+(``cadrumo app diagnostics run-health``): a slow or failing LLM-backed
 classification run is otherwise invisible until an operator notices a stuck
 CLI invocation.
 

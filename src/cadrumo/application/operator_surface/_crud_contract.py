@@ -8,7 +8,7 @@ collectible invoices, profile values, auth providers, apoderado
 configuration, inventory rows, bucket records, usage ratios) must
 satisfy this contract or declare an explicit exception.
 
-The reference shape is the ``aeat app ledger evidence`` verb group:
+The reference shape is the ``cadrumo app ledger evidence`` verb group:
 five CRUD verbs with strict semantics. Orthogonal-axis verbs and
 lifecycle-state verbs remain at the noun-group level but are
 explicitly demoted to sub-verbs, not CRUD substitutes. Key-value-as-
@@ -141,7 +141,7 @@ class MutatingNounGroupContract(BaseModel):
     noun: str = Field(min_length=1, description="canonical noun (e.g. 'payable_invoice')")
     cli_path: str = Field(
         min_length=1,
-        description="Typer mount path (e.g. 'aeat app ledger invoice')",
+        description="Typer mount path (e.g. 'cadrumo app ledger invoice')",
     )
     exception: NounGroupExceptionKind = Field(
         default=NounGroupExceptionKind.STRICT_CRUD,
@@ -248,7 +248,7 @@ class CrudContractCatalogue(BaseModel):
 
         Args:
             cli_path: The Typer mount path to look up (e.g.
-                ``"aeat app ledger invoice"``).
+                ``"cadrumo app ledger invoice"``).
         """
         for entry in self.entries:
             if entry.cli_path == cli_path:

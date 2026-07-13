@@ -23,7 +23,7 @@ def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository)
         bucket_id=_BUCKET_ID,
         transaction_id=parent_result.ref.transaction_id,
         actor="operator-A",
-        source_command="aeat app ledger archive",
+        source_command="cadrumo app ledger archive",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )

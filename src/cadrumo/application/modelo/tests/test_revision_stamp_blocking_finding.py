@@ -73,7 +73,7 @@ def test_registry_revision_divergence_produces_blocking_finding_with_grounding()
     assert "registry_revision_divergence" in finding.message
     assert finding.next_action is not None
     assert "re-stamped under the current revision" in finding.next_action
-    assert "aeat app live filed pull-sources --modelo 303 --year 2025 --period 1T" in finding.next_action
+    assert "cadrumo app live filed pull-sources --modelo 303 --year 2025 --period 1T" in finding.next_action
     assert "ley-58-2003:art-119" in finding.legal_refs
     assert finding.source_refs == _M303_REQUIREMENT_SOURCE_REFS
 
@@ -109,5 +109,5 @@ def test_registry_revision_divergence_next_action_names_re_file_remediation() ->
 
     assert "does not re-confirm" in next_action
     assert "re-stamped under the current revision" in next_action
-    assert "aeat app live filed pull-sources --modelo 303 --year 2025 --period 1T" in next_action
+    assert "cadrumo app live filed pull-sources --modelo 303 --year 2025 --period 1T" in next_action
     assert "Import or capture the upstream justificante/CSV/live evidence" not in next_action

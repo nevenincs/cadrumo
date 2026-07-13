@@ -141,7 +141,7 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
         linked_invoice_ids=("inv-2025-001",),
         bucket_id="b" * 32,
         captured_by="cli/aeat",
-        source_command="aeat app attachments ingest",
+        source_command="cadrumo app attachments ingest",
         metadata={"vendor": "ACME SL", "currency": "EUR"},
         notes="Test attachment for roundtrip coverage.",
     )

@@ -1,4 +1,4 @@
-"""Typed catalogue for ``aeat config auth providers``.
+"""Typed catalogue for ``cadrumo config auth providers``.
 
 :class:`AuthProviderListing` records feed :data:`AUTH_PROVIDER_CATALOGUE`; the
 query helpers expose implemented and reserved provider ids to the operator
@@ -16,7 +16,7 @@ from ...core.i18n import Translatable as tr
 
 
 class AuthProviderListing(BaseModel):
-    """One row in the ``aeat config auth providers`` catalogue.
+    """One row in the ``cadrumo config auth providers`` catalogue.
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,

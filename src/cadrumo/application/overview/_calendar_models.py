@@ -388,7 +388,7 @@ class SuppressedCalendarEntry(BaseModel):
 
 
 class OverviewCalendar(BaseModel):
-    """Result of an ``aeat app overview calendar`` query.
+    """Result of an ``cadrumo app overview calendar`` query.
 
     ``entries`` contains legal filing windows, ``events`` contains additive
     local observations, and ``suppressed_entries`` preserves filtered

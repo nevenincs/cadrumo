@@ -20,7 +20,7 @@ def test_censo_stale_refused_carries_registered_error_code() -> None:
 
     assert code.code == "REFUSED_MODELO_CENSO_STALE"
     assert code.category.value == "REFUSED"
-    assert code.default_suggestion == "aeat app modelo work calculate"
+    assert code.default_suggestion == "cadrumo app modelo work calculate"
 
 
 def test_censo_stale_refused_carries_context_through_init() -> None:

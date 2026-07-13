@@ -283,7 +283,7 @@ class TestArgvReconstruction:
             ),
             (
                 "multiple-positionals",
-                "aeat app modelo work file",
+                "cadrumo app modelo work file",
                 (
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),
@@ -383,7 +383,7 @@ class TestReplayActiveEnvVarCanonicity:
 
         pkg_root = Path(__file__).parents[1]
         # Split the search token so this test file does not self-match.
-        literal = "AEAT_REPLAY" + "_ACTIVE"
+        literal = "CADRUMO_REPLAY" + "_ACTIVE"
 
         hits: list[tuple[Path, int, str]] = []
         for py_file in sorted(pkg_root.glob("*.py")):
@@ -395,13 +395,13 @@ class TestReplayActiveEnvVarCanonicity:
 
         assert hits, "literal not found anywhere — canonical definition missing"
 
-        # Exactly one hit, and it must be the assignment in _replay.py:26.
+        # Exactly one hit, and it must be the canonical assignment in _replay.py.
         assert len(hits) == 1, (
             f"Expected exactly one occurrence of the literal across non-test package files; "
             f"found {len(hits)}:\n" + "\n".join(f"  {f.name}:{ln}  {src}" for f, ln, src in hits)
         )
-        canonical_file, canonical_line, _ = hits[0]
+        canonical_file, _canonical_line, canonical_source = hits[0]
         assert canonical_file.name == "_replay.py", (
             f"Canonical definition must be in _replay.py, found in {canonical_file.name}"
         )
-        assert canonical_line == 26, f"Canonical definition must be at line 26, found at line {canonical_line}"
+        assert canonical_source.startswith("REPLAY_ACTIVE_ENV_VAR = ")

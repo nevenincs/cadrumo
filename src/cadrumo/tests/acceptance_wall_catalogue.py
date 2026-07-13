@@ -219,7 +219,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=259,
         capability=(
             "The operator sets their own home-office/mileage/phone usage ratio once via "
-            "`aeat app ledger ratios set`, and it sticks -- never re-entered."
+            "`cadrumo app ledger ratios set`, and it sticks -- never re-entered."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_ratios_verbs.py",
         test_function="test_ratios_set_persists_and_list_reflects",
@@ -229,7 +229,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         capability=(
             "The operator has the justificante PDF of a filing already made on the AEAT portal and "
             "reconciles a local work unit against it without any AEAT certificate authentication -- "
-            "`aeat app modelo reconcile file --file`."
+            "`cadrumo app modelo reconcile file --file`."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_happy_path",
@@ -295,7 +295,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=326,
         capability=(
             "The operator has their Modelo 303 declaración PDF and reconciles a work unit against it "
-            "via `aeat app modelo reconcile file --kind declaration`: the tool re-derives every "
+            "via `cadrumo app modelo reconcile file --kind declaration`: the tool re-derives every "
             "printed casilla against the computed revision and reports a real casilla-level "
             "divergence, not a header-only compare."
         ),
@@ -306,7 +306,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=321,
         capability=(
             "The operator has their Modelo 130 declaración PDF and reconciles a work unit against it "
-            "via `aeat app modelo reconcile file --kind declaration`: a computed casilla that "
+            "via `cadrumo app modelo reconcile file --kind declaration`: a computed casilla that "
             "disagrees with the filed declaración is caught as a real divergence, not a silent "
             "identity match."
         ),
@@ -317,7 +317,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=318,
         capability=(
             "The operator has their Modelo 111 declaración PDF and reconciles a work unit against it "
-            "via `aeat app modelo reconcile file --kind declaration`, even though the fixture's own "
+            "via `cadrumo app modelo reconcile file --kind declaration`, even though the fixture's own "
             "header lacks a detectable ejercicio stamp -- the work unit's own known context lets the "
             "parse succeed, and a computed casilla that disagrees with the filed declaración is "
             "still caught as a real divergence."
@@ -329,7 +329,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=327,
         capability=(
             "The operator has their Modelo 390 (IVA resumen anual) declaración PDF and reconciles a "
-            "work unit against it via `aeat app modelo reconcile file --kind declaration`: a computed "
+            "work unit against it via `cadrumo app modelo reconcile file --kind declaration`: a computed "
             "IVA anual casilla that disagrees with the filed declaración is caught as a real "
             "divergence."
         ),
@@ -340,7 +340,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=328,
         capability=(
             "The operator has their Modelo 190 (resumen anual de retenciones) declaración PDF and "
-            "reconciles a work unit against it via `aeat app modelo reconcile file --kind "
+            "reconciles a work unit against it via `cadrumo app modelo reconcile file --kind "
             "declaration`: a computed retenciones-total casilla that disagrees with the filed "
             "declaración is caught as a real divergence, the Tier-S summary return "
             "calc-verify-roundtrip claim."

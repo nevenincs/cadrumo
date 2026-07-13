@@ -28,7 +28,7 @@ class GoogleCredentialSourceKind(StrEnum):
 
     Members:
         OAUTH_DESKTOP: The existing, default per-profile interactive OAuth
-            Desktop consent flow (``aeat config google register`` /
+            Desktop consent flow (``cadrumo config google register`` /
             ``login``). Persists a long-lived refresh token per profile via
             :class:`~adapters.outbound.google.OAuthClient` and
             :class:`~adapters.outbound.google.OAuthToken`.

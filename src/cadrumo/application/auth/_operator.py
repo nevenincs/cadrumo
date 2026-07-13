@@ -108,7 +108,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
     Raises:
         AuthConfigureNoActiveBucketError: When no active profile bucket
-            exists yet. The operator must run ``aeat config profile create NAME`` first.
+            exists yet. The operator must run ``cadrumo config profile create NAME`` first.
         AuthConfigureDanglingActiveProfileError: When the active-profile
             pointer does not resolve to a registered bucket.
 
@@ -305,7 +305,7 @@ def _auth_configure_result(
         )
     complete, incomplete_reason = _certificate_completeness(provider, certificate_path)
     if not complete:
-        next_action = f"aeat config auth configure --provider {provider} --file PATH"
+        next_action = f"cadrumo config auth configure --provider {provider} --file PATH"
     elif provider == AuthProviderKind.CLAVE_MOVIL.value and alignment in {
         "mismatch",
         "clave_identity_missing",
@@ -318,9 +318,9 @@ def _auth_configure_result(
         # (persona-fleet finding G2).
         next_action = _identity_alignment_next_action(alignment)
     elif provider == AuthProviderKind.CLAVE_MOVIL.value:
-        next_action = "aeat config auth test --provider clave_movil"
+        next_action = "cadrumo config auth test --provider clave_movil"
     else:
-        next_action = f"aeat config auth test --provider {provider}"
+        next_action = f"cadrumo config auth test --provider {provider}"
     return AuthConfigureResult(
         provider=provider,
         file=str(certificate_path) if certificate_path is not None else "",

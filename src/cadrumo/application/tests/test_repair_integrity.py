@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Two fixed, distinct 32-byte master keys. Rows written under one and
 # probed under the other are genuinely undecryptable -- the exact
-# production condition `aeat config repair` exists to surface.
+# production condition `cadrumo config repair` exists to surface.
 _KEY_A = b"\xa1" * 32
 _KEY_B = b"\xb2" * 32
 _ROW_WRITTEN_AT = datetime(2026, 5, 28, 13, 5, 0, tzinfo=UTC)
@@ -91,7 +91,7 @@ class TestBuildIntegrityReport:
     def test_clean_install_reports_ok(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
             _save_rows("cadrumo.workflow", 5, tag="a")
-            _save_rows("aeat.profile.bucket", 3, tag="a")
+            _save_rows("cadrumo.profile.bucket", 3, tag="a")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         assert report.readable_total == 8
         assert report.unreadable_total == 0
@@ -106,29 +106,29 @@ class TestBuildIntegrityReport:
             _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
             _save_rows("cadrumo.workflow", 5, tag="current")
-            _save_rows("aeat.profile.bucket", 3, tag="current")
+            _save_rows("cadrumo.profile.bucket", 3, tag="current")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         workflow = next(ns for ns in report.namespaces if ns.namespace == "cadrumo.workflow")
         assert workflow.readable == 5
         assert workflow.unreadable == 2
         assert report.unreadable_total == 2
         assert report.check.status == "fail"
-        assert report.check.next_action == "aeat config repair quarantine --yes"
+        assert report.check.next_action == "cadrumo config repair quarantine --yes"
 
     def test_namespace_filter_restricts_scope(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
             _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
             _save_rows("cadrumo.workflow", 5, tag="current")
-            _save_rows("aeat.profile.bucket", 3, tag="current")
+            _save_rows("cadrumo.profile.bucket", 3, tag="current")
             report = build_repair_integrity_report(
-                namespace="aeat.profile.bucket",
+                namespace="cadrumo.profile.bucket",
                 repository=SecureObjectRepository(),
             )
         # Filtering to the clean namespace excludes the workflow
         # namespace's stale rows entirely.
         assert len(report.namespaces) == 1
-        assert report.namespaces[0].namespace == "aeat.profile.bucket"
+        assert report.namespaces[0].namespace == "cadrumo.profile.bucket"
         assert report.unreadable_total == 0
         assert report.check.status == "ok"
 
