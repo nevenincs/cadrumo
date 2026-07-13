@@ -105,15 +105,13 @@ modelo: 036, 100 (Renta), 130, 303, 349, and 390.
 
 ::::
 
-## Go straight to reference
+## Search everything
 
-Already know the workflow? Go straight to the reference you need:
-
-- the [Getting started page](how-to/index.md) for the modelo run-throughs
-  and task guides
-- the [command-line reference](cli/index.rst) for exact commands and options
-- [how it works](explanation/index.md) for how records become modelo figures,
-  what checks run, and how official rule sources are tracked
+Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search the whole
+documentation: tax concepts, casillas, commands, and every guide, ranked so
+the exact term you type leads. For exact commands and options, open the
+[command-line reference](cli/index.rst); for how records become modelo
+figures and what checks run, read [how it works](explanation/index.md).
 
 ```{toctree}
 :hidden:

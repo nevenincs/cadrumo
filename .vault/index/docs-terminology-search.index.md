@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-terminology-search'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-13'
+modified: '2026-07-13'
 related:
   - '[[2026-06-10-docs-terminology-search-W01-P01-S01]]'
   - '[[2026-06-10-docs-terminology-search-W01-P01-S02]]'
@@ -51,6 +51,7 @@ related:
   - '[[2026-06-15-docs-terminology-search-adr]]'
   - '[[2026-06-15-docs-terminology-search-audit]]'
   - '[[2026-06-15-docs-terminology-search-plan]]'
+  - '[[2026-07-13-docs-terminology-search-research]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -118,3 +119,4 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 ### research
 
 - `2026-06-10-docs-terminology-search-research` - `docs-terminology-search` research: `precompiled docs terminology search backend`
+- `2026-07-13-docs-terminology-search-research` - `docs-terminology-search` research: `corpus-derived precompiled search status and next wave`
