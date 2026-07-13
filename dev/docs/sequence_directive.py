@@ -345,8 +345,11 @@ def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
         from pygments.formatters import HtmlFormatter
         from pygments.lexers import JsonLexer
 
+        # No `highlight` class here: the docs' `.content .highlight` code-block
+        # chrome would out-specify this panel's layout. The token spans are
+        # coloured by the panel's own palette in cadrumo-docs.css.
         body = highlight(view["body"], JsonLexer(), HtmlFormatter(nowrap=True)).rstrip("\n")
-        return f'<pre class="{css_class} highlight" data-format="{data_format}">{body}</pre>'
+        return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
     body = html.escape(view["body"])
     return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
 

@@ -1521,28 +1521,29 @@ a.sd-card:any-link,
  * track the docs code styling (JetBrains Mono via --font-stack--monospace,
  * 0.85rem / 1.7 line height). */
 
+/* The block is a light group: a slim top bar, one CARD per step, and the
+ * stepper row. Each step is a single self-contained pill — header, command,
+ * and output live inside one bounded element that clips its own content. */
 .cadrumo-sequence {
-  background: var(--color-code-background);
-  border: 1px solid var(--color-background-border);
-  border-radius: var(--cadrumo-radius-s);
+  background: transparent;
   color: var(--color-code-foreground);
   font-family: var(--font-stack--monospace);
   font-size: 0.85rem;
   line-height: 1.7;
   margin: 1.5rem 0;
   min-width: 0;
-  overflow: hidden; /* nothing inside may escape the display's bounding box */
   tab-size: 2;
 }
 
 .cadrumo-frame {
+  background: var(--color-code-background);
+  border: 1.5px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  margin: 0.65rem 0;
   min-width: 0;
-  padding: 0.4rem 1.15rem;
+  overflow: hidden; /* nothing may escape the step card's edge */
+  padding: 0.55rem 0.9rem 0.6rem;
   position: relative; /* anchor the absolute copy control */
-}
-
-.cadrumo-frame + .cadrumo-frame {
-  border-top: 1px solid color-mix(in srgb, var(--color-background-border) 40%, transparent);
 }
 
 /* Per-step header: the "do this" instruction line above each command — a step
@@ -1582,14 +1583,10 @@ a.sd-card:any-link,
 
 /* Command line: a bold JetBrains Mono row led by a prompt affordance, so the
  * command reads instantly as the instruction (distinct from its output). The
- * transparent border reserves the active playhead's hugging border, so the
- * highlight never shifts layout. */
+ * playhead highlight now lives on the step card itself. */
 .cadrumo-frame-command {
-  border: 1.5px solid transparent;
-  border-radius: var(--cadrumo-radius-s);
-  margin: 0 -0.55rem;
   min-width: 0;
-  padding: 0.15rem 0.55rem;
+  padding: 0.1rem 0;
 }
 
 .cadrumo-frame-command pre {
@@ -1646,29 +1643,58 @@ a.sd-card:any-link,
   user-select: none;
 }
 
-/* Output region: the command's return values as a flat layered panel beneath
- * the command — hierarchy carried by the background layer and spacing alone
- * (no guide rules, no accent stripes). JSON bodies arrive Pygments-highlighted
- * from the build, so the docs' code palette colours keys and values. */
+/* Output region: the command's return values inside the same step card —
+ * terminal output at a smaller size than the command core, soft-wrapped so
+ * lines never run past the card's edge, height-capped with its own scroll.
+ * The Pygments token classes are coloured by the panel's OWN palette below
+ * (never the docs' `.highlight` code-block chrome, whose box rules would
+ * override this panel's layout). */
 .cadrumo-frame-output,
 .cadrumo-frame-stderr {
   background: color-mix(in srgb, var(--color-background-secondary) 65%, transparent);
   border-radius: var(--cadrumo-radius-s);
   color: var(--color-foreground-secondary);
+  font-size: 0.78rem;
   font-weight: 400;
+  line-height: 1.6;
   margin: 0.5rem 0 0.35rem;
   max-height: 24rem;
   max-width: 100%;
-  overflow: auto;
-  padding: 0.65rem 0.85rem;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  padding: 0.6rem 0.8rem;
   scrollbar-color: var(--color-background-border) transparent;
   scrollbar-width: thin;
-  white-space: pre;
+  white-space: pre-wrap;
 }
 
 .cadrumo-frame-stderr {
   background: color-mix(in srgb, var(--cadrumo-accent-danger) 7%, transparent);
   color: var(--cadrumo-accent-danger);
+}
+
+/* JSON token palette for the output panel — self-owned, theme-aware. */
+.cadrumo-frame-output .nt {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-frame-output .s1,
+.cadrumo-frame-output .s2 {
+  color: var(--cadrumo-accent-success);
+}
+
+.cadrumo-frame-output .mi,
+.cadrumo-frame-output .mf {
+  color: var(--cadrumo-accent-warning);
+}
+
+.cadrumo-frame-output .kc {
+  color: var(--color-foreground-primary);
+  font-style: italic;
+}
+
+.cadrumo-frame-output .p {
+  color: var(--color-foreground-muted);
 }
 
 /* Token kinds — the server-rendered, correct-by-construction highlighting
@@ -1719,10 +1745,10 @@ a.sd-card:any-link,
  * Without the `--enhanced` class every frame renders fully highlighted with
  * its output — the no-JS transcript. */
 
-/* Active command: an unmistakable border hugging the current command line,
- * with a faint fill — the playhead. */
-.cadrumo-sequence--enhanced .cadrumo-frame.is-active .cadrumo-frame-command {
-  background: color-mix(in srgb, var(--color-brand-content) 7%, transparent);
+/* Active step: the playhead is the CARD — an unmistakable brand border hugs
+ * the whole current step (header, command, and output as one element). */
+.cadrumo-sequence--enhanced .cadrumo-frame.is-active {
+  background: color-mix(in srgb, var(--color-brand-content) 4%, var(--color-code-background));
   border-color: var(--color-brand-content);
 }
 
@@ -1828,10 +1854,9 @@ a.sd-card:any-link,
  * plus a position indicator — no autonomous playback. */
 .cadrumo-sequence-controls {
   align-items: center;
-  border-top: 1px solid var(--color-background-border);
   display: flex;
   gap: 0.4rem;
-  padding: 0.5rem 1.15rem;
+  padding: 0.35rem 0.1rem;
 }
 
 .cadrumo-sequence-btn {
@@ -1878,10 +1903,9 @@ a.sd-card:any-link,
  * variant. */
 .cadrumo-sequence-bar {
   align-items: center;
-  border-bottom: 1px solid var(--color-background-border);
   display: flex;
   justify-content: flex-end;
-  padding: 0.4rem 1.15rem;
+  padding: 0.1rem 0.1rem 0.15rem;
 }
 
 .cadrumo-shell-switcher {
