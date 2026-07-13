@@ -117,6 +117,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
         assert {prompt.name for prompt in listed} == {entry.name for entry in build_prompt_catalogue()}
         workflow = next(prompt for prompt in listed if prompt.name != ORIENTATION_PROMPT_NAME)
         period_argument = next(argument for argument in workflow.arguments or [] if argument.name == "period")
+        assert (period_argument.description or "").startswith("The AEAT period code.")
         assert all(pattern in (period_argument.description or "") for pattern in accepted_period_patterns())
         assert "ANUAL" not in (period_argument.description or "")
 
@@ -217,6 +218,7 @@ def test_prompt_get_substitutes_the_supplied_scope_into_the_brief() -> None:
     document = prompt_document(workflow_name, {"filing_year": "2026", "period": "3T"})
     assert "filing year 2026" in document.brief_text
     assert "period 3T" in document.brief_text
+    assert "taxpayer files with AEAT themselves" in document.brief_text
     # No arguments -> no scope line appended.
     bare = prompt_document(workflow_name, None)
     assert "Scope for this run" not in bare.brief_text
