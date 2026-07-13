@@ -9,38 +9,8 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace docs-cli-sequences with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S22 and 2026-07-13-docs-cli-sequences-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Implement the Python tokeniser against the materialised Click tree, classifying executable, verb path, option, option value, positional value, and interpolated placeholder tokens with a command-path key on each verb token and ## Scope
-
-- `dev/docs/sequences/_tokeniser.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Implement the Python tokeniser against the materialised Click tree, classifying executable, verb path, option, option value, positional value, and interpolated placeholder tokens with a command-path key on each verb token
 
@@ -65,3 +35,4 @@ related:
 ## Notes
 
 - Materialising the tree needs an isolated storage root and English output pinned (the reference-generator environment); a bare interpreter with a stale retired-product database in the default storage root raises before the walk. The docs build already sandboxes storage, so the directive path is unaffected.
+- Review LOW (informational, no code change): the `_is_option_token` helper classifies any token starting with a hyphen (length > 1) as an option, so a bare negative-number positional such as `-5` would be misclassified as an option token. This is latent and cosmetic — no current CLI leaf takes a bare negative-number positional, and a `{name}` placeholder or `--opt=value` is unaffected — so it is recorded rather than fixed; revisit if a leaf ever documents a negative-number positional.
