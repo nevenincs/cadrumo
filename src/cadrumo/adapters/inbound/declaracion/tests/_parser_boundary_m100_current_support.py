@@ -17,9 +17,6 @@ See Also:
         Core casilla-id validator used to keep fixture expectations typed.
     ``tests/fixtures/justificantes/_generate_modelo_100_current.py``
         Fixture generator that stamps the corresponding printed values.
-    ``2026-07-05-modelo-130-100-continuity-audit`` and
-    ``2026-05-21-declaracion-extraction-architecture-adr``
-        Current-year M100 declaration coverage and registry parser context.
 """
 
 from __future__ import annotations

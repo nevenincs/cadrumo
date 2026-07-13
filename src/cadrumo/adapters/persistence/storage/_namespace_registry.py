@@ -401,9 +401,9 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 # retención) for the M180/M193 calc-mesh perceptor-count resolver. The
 # DEDICATED store lets the distinct-NIF count be computed from one persisted
 # source shared by the pull and calculate surfaces — never the wrong sum of
-# quarterly aggregate counts (retenciones-perceptor-count ADR 2026-06-24).
+# quarterly aggregate counts.
 # FINANCIAL sensitivity: perceptor NIFs are identity-bearing financial data and
-# live encrypted at rest, never plaintext (sensitive-financial-data-secure-storage-only).
+# live encrypted at rest, never plaintext.
 RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="retencion_observations",
     namespace="cadrumo.retenciones.observations",

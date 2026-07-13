@@ -68,8 +68,7 @@ def test_every_registered_namespace_upgrade_chain_is_complete() -> None:
     assert broken == {}, (
         "secure-object namespaces declare a schema_version without a complete "
         f"durability-floor upgrade chain: {broken}; register the missing one-hop "
-        "upgrader(s) in the same change as the version bump "
-        "(2026-07-08-released-data-durability-adr)"
+        "upgrader(s) in the same change as the version bump"
     )
 
 

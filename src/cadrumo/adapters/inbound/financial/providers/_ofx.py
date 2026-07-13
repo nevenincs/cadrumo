@@ -22,7 +22,7 @@ Each OFX transaction is projected into a
 transaction keeps the absolute magnitude plus OFX-native raw fields.
 
 ``ofxtools`` is GPL-3.0-only and therefore capability-gated behind the
-``ofx`` optional extra (license-posture ADR): the import is lazy, guarded by
+``ofx`` optional extra: the import is lazy, guarded by
 :func:`~core.require_optional_extra`, so a bare-core install keeps the rest
 of the ledger import surface and refuses OFX sources with the
 ``pip install cadrumo[ofx]`` hint.

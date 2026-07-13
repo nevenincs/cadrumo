@@ -144,9 +144,9 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
         f"{pfx}modelo-111-retenciones-periodicas": Decimal("0"),
         f"{pfx}modelo-123-retenciones-periodicas": Decimal("0"),
         # Childless borrador fixture: Art. 58/61 LIRPF mínimo por descendientes
-        # aggregate is zero for a childless profile (minimo-descendientes-engine decision, option A).
+        # aggregate is zero for a childless profile.
         f"{pfx}profile-minimo-descendientes-estatal": Decimal("0"),
-        # Parte autonómica (#593): non-Madrid corpus fixture mirrors the estatal zero.
+        # Parte autonómica: non-Madrid corpus fixture mirrors the estatal zero.
         f"{pfx}profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
