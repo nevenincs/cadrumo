@@ -560,7 +560,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports_fichero_boe(
     assert verified.ledger_filing_snapshot is not None
     assert verified.ledger_filing_evidence is not None
 
-    output_path = tmp_path / "modelo-303-1T.boe"
+    output_path = tmp_path / f"modelo-303-{_YEAR}-1T.boe"
     export = export_modelo_revision(
         ModeloExportCommand(
             calculation_revision_id=revision.calculation_revision_id,
@@ -686,7 +686,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
         )
         assert report.granted_verificado_completo is True, report.findings
 
-        quarter_output = tmp_path / f"m303-{_IRENE_YEAR}-{period}.boe"
+        quarter_output = tmp_path / f"modelo-303-{_IRENE_YEAR}-{period}.boe"
         exported = export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=revision.calculation_revision_id,
@@ -756,7 +756,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
 
     # The annual resumen exports fixed-width bytes the same way each M303
     # quarter does above, rather than refusing with ModeloExportUnsupportedError.
-    annual_output = tmp_path / f"m390-{_IRENE_YEAR}.boe"
+    annual_output = tmp_path / f"modelo-390-{_IRENE_YEAR}-0A.boe"
     annual_export = export_modelo_revision(
         ModeloExportCommand(
             calculation_revision_id=annual.calculation_revision_id,
