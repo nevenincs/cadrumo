@@ -41,7 +41,7 @@ def test_extract_placeholders_matches_renderer_grammar() -> None:
     )
 
     assert extract_placeholders(value) == frozenset({"amount", "subject", "ratio"})
-    assert extract_placeholders("%{kept} {discarded} broken {") == frozenset({"kept"})
+    assert extract_placeholders("%{kept} {discarded} broken {") == frozenset({"kept", "discarded"})
 
 
 def test_audit_rejects_boolean_and_null_leaves(tmp_path: Path) -> None:
@@ -135,6 +135,29 @@ def test_audit_reports_missing_renamed_and_extra_placeholders(
     mismatch = result.placeholder_mismatches[0]
     assert mismatch.key == "message"
     assert {variant.locale_file: variant.placeholders for variant in mismatch.variants} == expected
+
+
+def test_audit_reports_root_and_nested_format_field_drift(tmp_path: Path) -> None:
+    """Audit parity includes runtime roots and nested specification kwargs."""
+    result = _manager_for(
+        tmp_path,
+        {
+            "ca": "message: '{user.name} {amount:{width}.{precision}f}'\n",
+            "en": "message: '{user.name} {amount:{width}.{precision}f}'\n",
+            "es": "message: '{account.name} {amount:{width}f}'\n",
+            "hu": "message: '{user.name} {amount:{width}.{precision}f}'\n",
+        },
+    ).audit()
+
+    assert len(result.placeholder_mismatches) == 1
+    mismatch = result.placeholder_mismatches[0]
+    assert mismatch.key == "message"
+    assert {variant.locale_file: variant.placeholders for variant in mismatch.variants} == {
+        "ca.yml": frozenset({"user", "amount", "width", "precision"}),
+        "en.yml": frozenset({"user", "amount", "width", "precision"}),
+        "es.yml": frozenset({"account", "amount", "width"}),
+        "hu.yml": frozenset({"user", "amount", "width", "precision"}),
+    }
 
 
 def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path: Path) -> None:

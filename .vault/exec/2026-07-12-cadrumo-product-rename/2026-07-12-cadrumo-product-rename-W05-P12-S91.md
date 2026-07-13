@@ -53,7 +53,7 @@ related:
   `placeholder mismatch` together with the locale file, dotted key, runtime
   type, and complete placeholder variants. A failed structured report exits
   with status one; a clean report retains the established per-file `ok` output.
-- Eleven new real-filesystem audit tests cover bool and null leaves, symmetric
+- Eight new real-filesystem audit tests cover bool and null leaves, symmetric
   key drift, missing, renamed, and extra placeholders in both syntaxes,
   conversions, escaped and literal braces, the live Typer rejection path, and
   successful validation of all committed catalogues. The pre-existing
@@ -71,6 +71,14 @@ related:
   `vault check all` returned zero errors; the eighty-six warnings are existing
   modified stamps, scaffold annotations, and feature-index drift outside S91's
   owned paths.
+- Independent review commit `9b372bba` returned **FAIL** with two HIGH findings
+  and one LOW evidence defect. The first HIGH found that extraction omitted
+  attribute and indexed roots and nested format-specification fields. The second
+  HIGH found that strict rendering could return an unresolved supported named
+  token after the format pass failed. The LOW finding corrected this record's
+  new-test count from eleven to eight.
+- S91 is reopened pending independent re-review. S92 owns the two HIGH
+  remediations; S67 remains required and open.
 
 ## Notes
 
@@ -89,3 +97,6 @@ related:
   result is clean against a real discovered source key.
 - No locale YAML, runtime command surface, documentation, packaging, or
   persistence file changed. Independent formal review follows this Step.
+- The active plan was updated through the plan CLI before the current hold to
+  reopen S91 and add S92. This execution-record lane made no plan hunk, and the
+  plan remains frozen while the authority overlap is resolved.

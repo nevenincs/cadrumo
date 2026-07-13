@@ -28,7 +28,7 @@ from ..product_identity import PRODUCT_IDENTITY
 _log = get_logger(__name__)
 _INITIALISED = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
-_PLACEHOLDER_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
+_FORMAT_FIELD_ROOT_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?=$|[.\[])")
 _FORMATTER = Formatter()
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
 _STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
@@ -236,15 +236,18 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     strict_placeholders = _I18N_STRICT_PLACEHOLDERS.get()
     unmatched_placeholders = (
-        sorted(extract_placeholders(rendered) - interpolation.keys()) if strict_placeholders else ()
+        sorted(extract_placeholders(rendered) - interpolation.keys()) if strict_placeholders else []
     )
+    failed_format_placeholders: list[str] = []
     if interpolation:
-        rendered = _interpolate(translation_key, rendered, interpolation)
+        rendered, format_succeeded = _interpolate_with_status(translation_key, rendered, interpolation)
+        if strict_placeholders and not format_succeeded:
+            failed_format_placeholders = sorted(_extract_format_placeholder_roots(rendered))
     rendered = _normalise_product_identity_references(rendered)
-    if strict_placeholders and unmatched_placeholders:
+    if strict_placeholders and (unmatched_placeholders or failed_format_placeholders):
         raise UnmatchedPlaceholderError(
             key=translation_key,
-            name=unmatched_placeholders[0],
+            name=(unmatched_placeholders or failed_format_placeholders)[0],
             rendered=rendered,
         )
     return rendered
@@ -266,11 +269,13 @@ def extract_placeholders(value: str) -> frozenset[str]:
     """Return interpolation names consumed by the production renderer.
 
     The renderer first replaces ``%{name}`` tokens and then delegates
-    ``{name}`` tokens to :meth:`str.format`.  Parsing the second form through
-    :class:`string.Formatter` preserves format conversions and specifications
-    while excluding escaped braces and brace-delimited prose that is not a
-    valid identifier.  Invalid format strings contribute no format-style
-    names because the production renderer likewise leaves that pass unchanged.
+    ``{name}`` tokens to :meth:`str.format`. Parsing the second form through
+    :class:`string.Formatter` preserves conversions and specifications. Root
+    kwargs consumed by attribute and index fields are returned, and nested
+    replacement fields inside format specifications are inspected recursively.
+    Escaped braces and brace-delimited prose are excluded. For malformed
+    strings, independently valid fields are recovered without representing the
+    malformed format string itself as complete or renderable.
 
     Args:
         value: Locale scalar to inspect.
@@ -280,17 +285,70 @@ def extract_placeholders(value: str) -> frozenset[str]:
     """
     names = {match.group("name") for match in _PLACEHOLDER_RE.finditer(value)}
     without_percent_tokens = _PLACEHOLDER_RE.sub(lambda match: " " * len(match.group(0)), value)
-    try:
-        format_names: set[str] = set()
-        parsed = _FORMATTER.parse(without_percent_tokens)
-        for _literal, field_name, _format_spec, _conversion in parsed:
-            if field_name is not None and _PLACEHOLDER_NAME_RE.fullmatch(field_name):
-                format_names.add(field_name)
-    except ValueError:
-        pass
-    else:
-        names.update(format_names)
+    names.update(_extract_format_placeholder_roots(without_percent_tokens))
     return frozenset(names)
+
+
+def _extract_format_placeholder_roots(value: str) -> frozenset[str]:
+    """Return named root kwargs consumed by the format pass.
+
+    Malformed strings are scanned for independently valid replacement fields
+    so strict mode can still reject supported tokens around the damaged region.
+    The recovery path never treats the malformed whole as a valid format.
+    """
+    parsed = _parse_format_placeholder_roots(value)
+    if parsed is not None:
+        return frozenset(parsed)
+    return frozenset(_recover_format_placeholder_roots(value))
+
+
+def _parse_format_placeholder_roots(value: str) -> set[str] | None:
+    """Parse one valid format fragment, or return ``None`` when malformed."""
+    try:
+        fields = tuple(_FORMATTER.parse(value))
+    except ValueError:
+        return None
+
+    names: set[str] = set()
+    for _literal, field_name, format_spec, _conversion in fields:
+        if field_name is not None:
+            root = _FORMAT_FIELD_ROOT_RE.match(field_name)
+            if root is not None:
+                names.add(root.group("name"))
+        if format_spec:
+            nested = _parse_format_placeholder_roots(format_spec)
+            if nested is None:
+                names.update(_recover_format_placeholder_roots(format_spec))
+            else:
+                names.update(nested)
+    return names
+
+
+def _recover_format_placeholder_roots(value: str) -> set[str]:
+    """Recover valid fields surrounding malformed brace syntax."""
+    names: set[str] = set()
+    index = 0
+    while index < len(value):
+        if value.startswith("{{", index):
+            index += 2
+            continue
+        if value[index] != "{":
+            index += 1
+            continue
+
+        recovered_end: int | None = None
+        for closing in range(index + 1, len(value)):
+            if value[closing] != "}":
+                continue
+            fragment = value[index : closing + 1]
+            parsed = _parse_format_placeholder_roots(fragment)
+            if parsed is None:
+                continue
+            names.update(parsed)
+            recovered_end = closing + 1
+            break
+        index = recovered_end if recovered_end is not None else index + 1
+    return names
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
@@ -348,6 +406,17 @@ def _humanise_key(translation_key: str) -> str:
 
 
 def _interpolate(translation_key: str, rendered: str, values: Mapping[str, object]) -> str:
+    rendered, _format_succeeded = _interpolate_with_status(translation_key, rendered, values)
+    return rendered
+
+
+def _interpolate_with_status(
+    translation_key: str,
+    rendered: str,
+    values: Mapping[str, object],
+) -> tuple[str, bool]:
+    """Interpolate a value and report whether the format pass completed."""
+
     def _replace(match: re.Match[str]) -> str:
         name = match.group("name")
         if name not in values:
@@ -356,7 +425,7 @@ def _interpolate(translation_key: str, rendered: str, values: Mapping[str, objec
 
     rendered = _PLACEHOLDER_RE.sub(_replace, rendered)
     try:
-        return rendered.format(**values)
+        return rendered.format(**values), True
     except (KeyError, IndexError, ValueError) as exc:
         _log.debug(
             "i18n: unable to interpolate locale key %s; returning partially rendered value (%s)",
@@ -364,7 +433,7 @@ def _interpolate(translation_key: str, rendered: str, values: Mapping[str, objec
             type(exc).__name__,
             exc_info=True,
         )
-        return rendered
+        return rendered, False
 
 
 __all__ = [
