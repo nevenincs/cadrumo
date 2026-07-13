@@ -44,7 +44,7 @@ You need:
   aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
   ```
 
-If you want to understand how filings and saved calculations fit together, read [the filing spine](filing-spine.md) first.
+If you want to understand how filings and saved calculations fit together, read [The filing workflow](filing-spine.md) first.
 
 ## Run verification
 
@@ -54,7 +54,7 @@ Run verification against the filing you want to check. Name the modelo, the year
 aeat app modelo work verify --modelo 303 --year 2026 --period 1T
 ```
 
-Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to `12` for months.
+Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to `12` for months - see [Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
 
 With the profile and draft above, this first-period Modelo 303 passes. When the draft passes, the result shows `granted_verificado_completo` `true` and a `completeness_status` of `complete` - the saved calculation is now verified and ready to export.
 
@@ -210,5 +210,5 @@ If a report or an error message does not match what this guide describes, see [D
 
 - [File at AEAT](file-at-aeat.md): upload the exported file at the AEAT portal.
 - [Review your calculation values](review-calculation-values.md): check and correct the inputs behind each casilla.
-- [The filing spine](filing-spine.md): how filings, saved calculations, and reports fit together.
+- [The filing workflow](filing-spine.md): how filings, saved calculations, and reports fit together.
 - [CLI reference](../cli/index.rst): every command and option.

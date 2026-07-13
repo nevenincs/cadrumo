@@ -54,7 +54,7 @@ aeat app ledger preflight --year 2026 --period 1T
 aeat app ledger status
 ```
 
-The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Work with transactions](import-bank-statements.md), then run the calculation again.
+The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Import and manage transactions](import-bank-statements.md), then run the calculation again.
 
 ## A required value is missing
 

@@ -17,7 +17,7 @@ You need:
 
 - An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
-- A ledger with transactions in it. See [Work with Transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
+- A ledger with transactions in it. See [Import and manage transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
 
 The CLI help and error text render in Spanish, even though this guide is in English. When a step sends you to `--help`, expect Spanish option names.
 
@@ -291,7 +291,7 @@ with `ledger view` before calculating.
 
 ## Next steps
 
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
 - [How your records become tax figures](../explanation/from-records-to-figures.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

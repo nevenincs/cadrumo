@@ -13,7 +13,7 @@ then calculate, verify, and export a Modelo 130 for the first quarter of 2026.
 Every command below is run in order. It links to deeper guides whenever a step
 has tax-specific setup or review choices.
 
-## 1. Install the CLI
+## Install the CLI
 
 Install the `cadrumo` package from PyPI. Any tool that installs Python
 applications works; `pip` is the plainest path:
@@ -124,7 +124,7 @@ Imported rows arrive without a tax category and must be classified before they
 count in a calculation (see the next step). The `ledger add` rows above are
 already classified, so you can skip straight to step 4.
 
-Use [Work with Transactions](import-bank-statements.md) for the full
+Use [Import and manage transactions](import-bank-statements.md) for the full
 transaction workflow: import, add, update, remove, review, classify, allocate,
 and run readiness checks.
 
@@ -163,7 +163,7 @@ yet. Running it again returns the existing workspace.
 are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
 
 For more on how the tool organises your filing work behind the scenes, see
-[How the tool organises your filing work](filing-spine.md).
+[The filing workflow](filing-spine.md).
 
 ## 5. Calculate the values
 
@@ -270,7 +270,7 @@ To compare your local record with the AEAT receipt, see
 
 - [Set up your taxpayer profile](profile-setup.md) if profile facts are still
   incomplete.
-- [Work with Transactions](import-bank-statements.md) when your ledger is
+- [Import and manage transactions](import-bank-statements.md) when your ledger is
   not ready yet.
 - [Classify transactions](classify-transactions.md) before calculating from
   imported rows.

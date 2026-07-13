@@ -55,8 +55,7 @@ links to release and issue activity.
 ## Current status
 
 Cadrumo is local-first, pre-alpha software for preparing Spanish tax filing
-records. It does not submit declarations for you, does not replace official AEAT
-tools, and is not affiliated with AEAT.
+records ([read the full disclaimer](disclaimer.md)).
 
 Expect breaking changes while the command-line interface (CLI) workflows,
 generated documentation, and modelo coverage are still being hardened. Before relying on a version for a
@@ -91,7 +90,7 @@ $ aeat --version
 Keep that version with the local export, AEAT submission receipt, and any
 reconciliation notes for the filing period.
 
-## Events and deadlines
+## Deadlines and project announcements
 
 This documentation may describe filing workflows and preparation order, but it
 does not publish an authoritative tax calendar. Always confirm deadlines,

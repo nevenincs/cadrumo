@@ -25,7 +25,7 @@ explicit Cadrumo setting overrides them.
 Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A former
 `aeat-vault/` folder is not adopted.
 
-## Former-state hard cut
+## Old `aeat`-named storage is refused, not migrated
 
 Cadrumo refuses recognizable former product state. This includes a sibling
 `aeat` application-state directory, an `aeat.db` database, `aeat.*`,

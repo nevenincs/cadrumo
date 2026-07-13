@@ -8,7 +8,7 @@ You need:
 
 - An active taxpayer profile. Evidence is stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
-- Transactions in your ledger. If your ledger is empty, see [Work with transactions](import-bank-statements.md) first.
+- Transactions in your ledger. If your ledger is empty, see [Import and manage transactions](import-bank-statements.md) first.
 - The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
 
 ## Add an evidence record
@@ -61,81 +61,14 @@ Re-run the same command any time — a file already fetched is recognized by its
 
 Gmail bulk-fetch is not available yet.
 
-## Track invoice records
+## Invoice records are a separate feature
 
-An invoice record tracks the invoice itself — who owes whom, for what amount
-— independently of any bank movement or stored document. Use it when you
-issue or receive an invoice that is not settled yet, or when you want the
-invoice facts queryable on their own.
-
-Register an invoice:
-
-```bash
-aeat app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --total-amount 121.00
-```
-
-`--kind` is required on every invoice command: `issued` means a customer owes
-you (an invoice you issued); `received` means you owe a supplier (an invoice
-you received). The counterparty identifier, invoice number, and invoice date
-(YYYY-MM-DD) are required; the amount fields are optional.
-
-For an intra-community EU operation, add the counterparty's country and EU
-IVA identifier, and the operation type used by Modelo 349:
-
-```bash
-aeat app ledger invoice add --kind issued --counterparty-nif X1234567X --invoice-number "2026-0007" --invoice-date 2026-03-12 --country-code DE --eu-iva-id DE345678901 --operation-type S
-```
-
-Work with stored invoice records:
-
-```bash
-aeat app ledger invoice list
-aeat app ledger invoice view <invoice-id> --kind received
-aeat app ledger invoice update <invoice-id> --kind received --total-amount 121.00
-aeat app ledger invoice remove <invoice-id> --kind received --yes
-```
-
-`list` shows both kinds unless you filter with `--kind`. `view`, `update`,
-and `remove` need `--kind` to address the record; `remove` refuses without
-`--yes`. An unambiguous prefix of the invoice id is enough.
-
-An invoice record from `invoice add` stands on its own and is not the record
-`link --invoice-id` binds. `link --invoice-id` expects an id from the
-reconciliation invoice catalogue, not an id from `invoice add`; passing an
-`invoice add` id is refused.
-
-## Link an invoice to a transaction
-
-To bind an invoice to the transaction that settles it, create the invoice in
-the reconciliation catalogue, then link it. Create the catalogue invoice:
-
-```bash
-aeat app ledger invoice catalogue create --kind received --counterparty-nif A58818501 --counterparty-name "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21
-```
-
-`--kind`, `--counterparty-nif`, `--counterparty-name`, `--invoice-number`,
-`--invoice-date` (YYYY-MM-DD), and `--taxable-base` are required; `--iva-rate`
-takes one of 0, 4, 10, or 21 (omit it for an exempt invoice). The command
-prints the catalogue invoice id - a long id distinct from the short
-`invoice add` id. Note it down.
-
-Bind it to the transaction it settles:
-
-```bash
-aeat app ledger link <transaction-id> --invoice-id <catalogue-invoice-id>
-```
-
-The link is bidirectional: the invoice records the transaction and the
-transaction records the invoice. The invoice must belong to the active profile;
-an invoice from a different profile is refused. List the catalogue invoices any
-time:
-
-```bash
-aeat app ledger invoice catalogue list
-```
-
-To bind a document (a PDF or image) to a transaction, store it as evidence and
-link that instead - see below.
+An invoice *record* - who owes whom, for what amount - is not a stored
+document. [Manage business invoices](manage-invoices.md) owns invoice
+records: registering issued and received invoices, the reconciliation
+catalogue, and linking a catalogue invoice to the transaction that settles
+it. This page is about the documents - PDFs and images - you store as
+evidence and link to transactions.
 
 ## List, view, update, and remove evidence records
 
@@ -181,7 +114,7 @@ Ledger exports include the evidence link with each transaction. Ledger-derived c
 
 ## Next steps
 
-- [Work with transactions](import-bank-statements.md) - bring more transactions into the ledger.
+- [Import and manage transactions](import-bank-statements.md) - bring more transactions into the ledger.
 - [Correct mistakes in your ledger](correct-ledger-entries.md) - fix mistakes in transaction rows.
 - [Classify transactions](classify-transactions.md) - assign tax categories to your transactions.
 - [CLI reference](../cli/index.rst) - the full command surface.

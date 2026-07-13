@@ -24,7 +24,7 @@ Modelo 390 is the annual summary of your quarterly IVA filings. To prepare it:
 The rest of this guide walks through these steps with the checks each one
 needs. To understand how the tool organises the filing work behind the
 commands, read
-[The filing workflow: work units and calculation revisions](filing-spine.md)
+[The filing workflow](filing-spine.md)
 after this guide.
 
 ## Setup steps before you start
@@ -67,7 +67,7 @@ The implemented 390 registry bindings include 303 quarter sums for annual
 devengada, deducible, and regimen-general result reconciliation. They also
 include compensation values copied or summed from the same year's 303 periods.
 
-## The 303 evidence the verify gate requires
+## What each Modelo 303 quarter needs before you verify
 
 Modelo 390 verification depends on the four quarterly Modelo 303 returns.
 `work calculate` for Modelo 390 produces a draft, but `work verify` hard-blocks
@@ -342,7 +342,7 @@ aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
 aeat app modelo audit replay <bundle-id>
 ```
 
-## Current policy limits
+## What Modelo 390 does not check for you
 
 The current implementation supports Modelo 390's annual 303 reconciliation in
 the registry, but it does not enforce every operational policy you might want
@@ -381,6 +381,6 @@ need, report that gap instead of documenting it as enforced behavior.
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [How to reconcile a filed Modelo against its justificante](reconcile.md)
-- [The filing workflow: work units and calculation revisions](filing-spine.md)
+- [The filing workflow](filing-spine.md)
 - [Diagnose and repair your local setup](troubleshooting.md)
 - [CLI reference](../cli/index.rst)

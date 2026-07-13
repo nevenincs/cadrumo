@@ -229,7 +229,7 @@ registry/help text identifies the relation you need:
 aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
 ```
 
-## Supply rows for multi-record informativa modelos
+## Add rows for list-based forms (184, 232, 347, 349)
 
 Some informational modelos report a list of records rather than one set of boxes:
 attribution members (Modelo 184), related-party operations (Modelo 232),
@@ -310,7 +310,7 @@ submit anything to AEAT.
 ## Where to go next
 
 - [Quickstart: produce a modelo file](quickstart.md)
-- [Standard prepare-and-export workflow](filing-spine.md)
+- [The filing workflow](filing-spine.md)
 - [How to prepare a Modelo 303 quarterly filing](modelo-303.md)
 - [How to prepare the annual Modelo 390 summary](modelo-390.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)

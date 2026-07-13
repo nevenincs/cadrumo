@@ -1,4 +1,4 @@
-# How to authenticate Cadrumo with AEAT
+# Authenticate Cadrumo with AEAT
 
 Authenticate Cadrumo with Spain's Tax Agency, the Agencia Estatal de
 Administración Tributaria (AEAT), to let Cadrumo's `aeat` command read information
@@ -190,7 +190,7 @@ If a previous login was interrupted and left the authentication step stuck, use
 `--reset-lock`. Run it when `login` reports another login is in progress but it
 is not.
 
-## Clear local auth metadata
+## Clear saved authentication
 
 Clear one provider:
 

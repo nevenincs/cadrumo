@@ -76,19 +76,11 @@ guess a regime or a start date.
 
 ## Record a Modelo 036 filing done outside Cadrumo
 
-If you file Modelo 036 in AEAT's sede, record that local fact separately:
-
-```bash
-aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
-aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
-aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
-```
-
-These commands record that you filed the Modelo 036 alta, modificacion, or baja
-through AEAT. They never file with AEAT themselves. After you record a filing,
-update the profile fields the filing changed. For the flags, the success
-output, and what the record does and does not change, see
-[Record a Modelo 036 declaration you filed at AEAT](modelo-036.md).
+If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, record
+that fact locally so later filings can rely on it.
+[Record a Modelo 036 declaration you filed at AEAT](modelo-036.md) owns the
+commands, the success output, and what the record does and does not change.
+After you record a filing, update the profile fields the filing changed.
 
 ## Check the profile afterwards
 
@@ -122,5 +114,5 @@ filing year.
 
 - [Set up your taxpayer profile](profile-setup.md)
 - [Plan your filing calendar](filing-calendar.md)
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

@@ -59,6 +59,6 @@ This division is the point. The tool removes the re-typing and the arithmetic; y
 
 ## Where this sits in the journey
 
-This page covered the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [Understanding the AEAT pipeline](index.md) overview maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
+This page covered the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [how-it-works overview](index.md) maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
 
 Once your figures are settled - including the ones carried in from earlier filings - the next concept is checking and sharing them. Continue with [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).

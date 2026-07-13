@@ -1,4 +1,4 @@
-# Get started: from bank records to a filed modelo
+# The filing journey: from bank records to a filed modelo
 
 New to Cadrumo? This guide maps the whole journey - from your bank records to a
 tax form you file yourself - and points you to the right guide at each stage.
@@ -55,7 +55,7 @@ Your tax figures come from the income and expense records in your ledger. Import
 bank statement, or add rows by hand. Nothing is imported until you run an import
 command.
 
-Continue with: [Work with transactions](import-bank-statements.md).
+Continue with: [Import and manage transactions](import-bank-statements.md).
 
 ## Stage 3 - Classify each transaction
 
