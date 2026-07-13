@@ -90,7 +90,7 @@ def test_stale_product_identity_normalises_without_corrupting_machine_or_authori
     )
 
     assert rendered == (
-        "Cadrumo prepares the draft for AEAT; run aeat\n"
+        "CADRUMO prepares the draft for AEAT; run aeat\n"
         "app modelo work calculate or aeat manual fetch. Install cadrumo; "
         "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE."
     )
@@ -101,7 +101,7 @@ def test_live_translation_normalises_stale_root_help_identity() -> None:
     heading = _render.tr("cli.operator_surface.help.root.heading", locale="es")
     command_help = _render.tr("cli.operator_surface.help.root.paragraph_type_help", locale="es")
 
-    assert heading == "Cadrumo, herramienta de declaraciones fiscales con la AEAT."
+    assert heading == "CADRUMO, herramienta de declaraciones fiscales con la AEAT."
     assert "aeat <comando> --help" in command_help
     assert "cadrumo <comando> --help" not in command_help
 
