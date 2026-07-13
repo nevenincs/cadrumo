@@ -339,6 +339,44 @@ def _provision_sandbox_profile() -> None:
         )
 
 
+#: Environment prefixes scrubbed from the process environment for the whole
+#: sandbox scope: the operator's ambient ``CADRUMO_*`` / ``AEAT_*`` machine
+#: state (auth credentials, Cl@ve identifiers, live opt-ins, machine-local
+#: paths) must never be observable by a docs sequence execution — both a
+#: privacy boundary (``sensitive-financial-data``) and a determinism one.
+_SCRUBBED_ENV_PREFIXES: tuple[str, ...] = ("CADRUMO_", "AEAT_")
+
+#: Deliberate pins that survive the scrub. ``CADRUMO_LOCAL_STORAGE_ROOT`` is
+#: the process-level isolation seam itself (``ensure_isolated_storage_root``);
+#: removing it would UNPIN the guard that keeps import-time settings resolution
+#: off the operator's real product state. The English output pin rides
+#: ``override_settings``, not the environment, so it needs no entry here.
+_ENV_SCRUB_ALLOWLIST: frozenset[str] = frozenset({"CADRUMO_LOCAL_STORAGE_ROOT"})
+
+
+@contextmanager
+def _neutralized_ambient_env() -> Iterator[None]:
+    """Remove ambient ``CADRUMO_*`` / ``AEAT_*`` env vars for the scope.
+
+    Settings resolution inside the sandbox re-reads the process environment on
+    every :class:`Settings` instantiation, so any operator-exported variable
+    would otherwise flow straight into sandboxed frame executions. Everything
+    removed is restored verbatim on exit. NOTE the residual channel this scrub
+    deliberately does not touch: the project-root ``env/.env`` dotenv is loaded
+    by pydantic-settings via an ABSOLUTE path and can also carry operator
+    values; neutralizing it is a settings-surface decision, not a sandbox one.
+    """
+    removed: dict[str, str] = {}
+    for key in list(os.environ):
+        upper = key.upper()
+        if upper.startswith(_SCRUBBED_ENV_PREFIXES) and upper not in _ENV_SCRUB_ALLOWLIST:
+            removed[key] = os.environ.pop(key)
+    try:
+        yield
+    finally:
+        os.environ.update(removed)
+
+
 @contextmanager
 def sequence_sandbox(
     *,
@@ -350,9 +388,11 @@ def sequence_sandbox(
 
     Inside the scope: an isolated real-crypto storage root, the frozen
     :data:`SANDBOX_INSTANT`, the deterministic :data:`SANDBOX_PROFILE_ID`
-    registered and active, ``cadrumo_output_language`` pinned to English, and
-    the process working directory moved to a scratch ``workdir`` seeded with a
-    copy of the committed synthetic fixtures — so a frame's relative
+    registered and active, ``cadrumo_output_language`` pinned to English, the
+    operator's ambient ``CADRUMO_*`` / ``AEAT_*`` environment scrubbed for the
+    whole scope (restored on exit; the storage-root isolation pin survives),
+    and the process working directory moved to a scratch ``workdir`` seeded
+    with a copy of the committed synthetic fixtures — so a frame's relative
     ``fixtures/...`` input reads the committed artifact's copy and a frame's
     relative ``--output`` lands inside the sandbox, never in the repository.
 
@@ -382,6 +422,7 @@ def sequence_sandbox(
 
     dispose_engine()
     with (
+        _neutralized_ambient_env(),
         override_settings(cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=sandbox_root) as storage_root,
         frozen_clock(SANDBOX_INSTANT),
