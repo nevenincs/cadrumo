@@ -109,6 +109,8 @@ the process environment wins over the `.env` file.
 | `CADRUMO_LIVE_TESTS_GOOGLE` | str | empty | Opt-in flag (set to '1') to run @pytest.mark.aeat_live Google (OAuth / Drive) tests against real Google services |
 | `CADRUMO_LLM_ANTHROPIC_API_KEY` | SecretStr | (secret) | Anthropic API key (env only, never logged) |
 | `CADRUMO_LLM_CACHE_DIR` | Path | (derived) | Directory for on-disk LLM cache entries |
+| `CADRUMO_LLM_CACHE_MAX_RECORDS` | int | `5000` | Maximum number of LLM response-cache entries retained; oldest excess entries are pruned |
+| `CADRUMO_LLM_CACHE_RETENTION_DAYS` | int | `30` | Retention window in days for on-disk LLM response-cache entries; older entries are pruned |
 | `CADRUMO_LLM_DEFAULT_MAX_TOKENS` | int | `1024` | Default maximum output tokens when an LLM request omits ``max_tokens`` |
 | `CADRUMO_LLM_DEFAULT_TEMPERATURE` | float | `0.0` | Default sampling temperature when an LLM request omits ``temperature`` |
 | `CADRUMO_LLM_DEFAULT_TIMEOUT_S` | int | `60` | Default timeout for LLM provider calls in seconds |
@@ -126,6 +128,8 @@ the process environment wins over the `.env` file.
 | `CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS` | int | `5000` | Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned |
 | `CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS` | int | `30` | Retention window in days for local LLM run-telemetry records; older records are pruned |
 | `CADRUMO_LLM_USAGE_DIR` | Path | (derived) | Directory for append-only LLM usage JSONL logs |
+| `CADRUMO_LLM_USAGE_MAX_RECORDS` | int | `5000` | Maximum number of LLM usage records retained; oldest excess records are pruned |
+| `CADRUMO_LLM_USAGE_RETENTION_DAYS` | int | `30` | Retention window in days for LLM usage records; older records are pruned |
 | `CADRUMO_LLM_VISION_READ_TIMEOUT_S` | int | `300` | Per-request timeout for the on-host local vision read; larger than the general LLM timeout because a local vision model on consumer hardware (CPU or a modest GPU) can take one to several minutes to read an invoice |
 | `CADRUMO_LOCAL_STORAGE_ROOT` | Path | (derived) | Root directory for the LocalFileSystemProvider backend. Each namespace becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file paired with a `.meta.json` sidecar. The default is installed-run aware: a source checkout resolves to `PROJECT_ROOT/var/storage`, while an installed distribution roots at the platform user-data directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or `~/Library/Application Support/cadrumo/storage`) so the encrypted store never lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` override wins over the derived default. |
 | `CADRUMO_LOG_DIR` | Path | unset | Diagnostic-log root directory. The ``None`` default here is a placeholder: when the field is not explicitly set, the model validator roots it at ``<cadrumo_local_storage_root>/logs`` so the diagnostic log lives under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's log. An explicit ``CADRUMO_LOG_DIR`` override wins over the derived default. |

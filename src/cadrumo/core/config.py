@@ -783,6 +783,26 @@ class Settings(AeatIntegrationSettings):
         ge=1,
         description="Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned",
     )
+    cadrumo_llm_cache_retention_days: int = Field(
+        default=30,
+        ge=1,
+        description="Retention window in days for on-disk LLM response-cache entries; older entries are pruned",
+    )
+    cadrumo_llm_cache_max_records: int = Field(
+        default=5000,
+        ge=1,
+        description="Maximum number of LLM response-cache entries retained; oldest excess entries are pruned",
+    )
+    cadrumo_llm_usage_retention_days: int = Field(
+        default=30,
+        ge=1,
+        description="Retention window in days for LLM usage records; older records are pruned",
+    )
+    cadrumo_llm_usage_max_records: int = Field(
+        default=5000,
+        ge=1,
+        description="Maximum number of LLM usage records retained; oldest excess records are pruned",
+    )
     cadrumo_llm_default_timeout_s: int = Field(
         default=60,
         description="Default timeout for LLM provider calls in seconds",
