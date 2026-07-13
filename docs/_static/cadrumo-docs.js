@@ -589,10 +589,174 @@
     });
   }
 
+  /* ── CLI sequence stepped player ───────────────────────────────────────
+   * Progressive enhancement over the server-rendered
+   * div.cadrumo-sequence transcript (ADR D5). The frames are already in the
+   * DOM as div.cadrumo-frame; without this script the reader sees the full
+   * linear transcript. When it runs, the widget only ENHANCES: it reveals the
+   * command/result frames one step at a time behind prev/next/play controls
+   * and a position indicator, and never injects or removes frame content. Each
+   * sequence on a page keeps its own independent state. */
+
+  var PLAY_INTERVAL_MS = 1800;
+
+  function unescapePayload(text) {
+    // The directive escapes </ as <\/ so the inline JSON cannot break out of
+    // its script element; reverse that before parsing.
+    return text.replace(/<\\\//g, "</");
+  }
+
+  function parseSequencePayload(root) {
+    var script = root.querySelector("script.cadrumo-sequence-payload");
+    if (!script) return null;
+    try {
+      return JSON.parse(unescapePayload(script.textContent));
+    } catch (e) {
+      /* A malformed payload never breaks the widget; stepping is driven by the
+       * DOM frames, and the static transcript stays intact. */
+      return null;
+    }
+  }
+
+  function setupSequence(root) {
+    // The steppable units are the command and result frames in document order;
+    // setup frames stay as their own collapsed disclosure and are not stepped.
+    var frames = Array.prototype.filter.call(
+      root.querySelectorAll(".cadrumo-frame"),
+      function (frame) {
+        return frame.getAttribute("data-frame-kind") !== "setup";
+      }
+    );
+    if (frames.length < 2) return; // a single frame has nothing to step through
+
+    parseSequencePayload(root); // parsed for validation; stepping uses the DOM
+
+    var total = frames.length;
+    var current = 0;
+    var timer = null;
+
+    var controls = document.createElement("div");
+    controls.className = "cadrumo-sequence-controls";
+    controls.setAttribute("role", "group");
+    controls.setAttribute("aria-label", "Sequence playback");
+
+    function button(kind, label, glyph) {
+      var el = document.createElement("button");
+      el.type = "button";
+      el.className = "cadrumo-sequence-btn cadrumo-sequence-btn--" + kind;
+      el.setAttribute("aria-label", label);
+      el.innerHTML = glyph;
+      return el;
+    }
+
+    var prevBtn = button("prev", "Previous step", "&#8592;");
+    var playBtn = button("play", "Play", "&#9654;");
+    var nextBtn = button("next", "Next step", "&#8594;");
+
+    var indicator = document.createElement("span");
+    indicator.className = "cadrumo-sequence-position";
+    indicator.setAttribute("aria-live", "polite");
+    indicator.setAttribute("aria-atomic", "true");
+
+    controls.appendChild(prevBtn);
+    controls.appendChild(indicator);
+    controls.appendChild(nextBtn);
+    controls.appendChild(playBtn);
+
+    function render() {
+      frames.forEach(function (frame, index) {
+        var revealed = index <= current;
+        frame.hidden = !revealed;
+        frame.classList.toggle("is-active", index === current);
+      });
+      indicator.textContent = current + 1 + " / " + total;
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === total - 1;
+    }
+
+    function stopPlay() {
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+      playBtn.classList.remove("is-playing");
+      playBtn.setAttribute("aria-label", "Play");
+      playBtn.setAttribute("aria-pressed", "false");
+      playBtn.innerHTML = "&#9654;";
+    }
+
+    function goTo(index, viaPlay) {
+      current = Math.max(0, Math.min(index, total - 1));
+      if (!viaPlay) stopPlay();
+      render();
+    }
+
+    function startPlay() {
+      if (current === total - 1) current = 0;
+      playBtn.classList.add("is-playing");
+      playBtn.setAttribute("aria-label", "Pause");
+      playBtn.setAttribute("aria-pressed", "true");
+      playBtn.innerHTML = "&#10073;&#10073;";
+      render();
+      timer = window.setInterval(function () {
+        if (current >= total - 1) {
+          stopPlay();
+          return;
+        }
+        goTo(current + 1, true);
+      }, PLAY_INTERVAL_MS);
+    }
+
+    prevBtn.addEventListener("click", function () {
+      goTo(current - 1);
+    });
+    nextBtn.addEventListener("click", function () {
+      goTo(current + 1);
+    });
+    playBtn.addEventListener("click", function () {
+      if (timer) {
+        stopPlay();
+      } else {
+        startPlay();
+      }
+    });
+
+    // Arrow-key stepping is scoped to the widget: the listener is on the
+    // sequence root, so it only fires when a control inside it holds focus,
+    // and it never collides with the global Ctrl/Cmd-K palette.
+    root.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goTo(current + 1);
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goTo(current - 1);
+      }
+    });
+
+    // The last frame carries the controls' insertion point; place the bar
+    // after the final frame so the transcript reads top-to-bottom.
+    var anchor = frames[total - 1];
+    if (anchor.parentNode) {
+      anchor.parentNode.insertBefore(controls, anchor.nextSibling);
+    } else {
+      root.appendChild(controls);
+    }
+    root.classList.add("cadrumo-sequence--enhanced");
+    render();
+  }
+
+  function initSequences() {
+    document.querySelectorAll("[data-cadrumo-sequence]").forEach(function (root) {
+      setupSequence(root);
+    });
+  }
+
   ready(function () {
     initBroadcast();
     initNavActive();
     initCommandBlocks();
     initPalette();
+    initSequences();
   });
 })();
