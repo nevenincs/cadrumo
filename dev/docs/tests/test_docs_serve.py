@@ -37,6 +37,7 @@ from dev.docs.serve import (
     read_state,
     resolve_target,
     serve_command,
+    start_ipv6_relay,
     write_state,
 )
 
@@ -173,6 +174,29 @@ def test_probe_port_dirty_when_a_non_http_listener_holds_it() -> None:
 def test_probe_port_serving_against_a_live_sphinx_page(sphinx_http_server: int) -> None:
     """A live 2xx Sphinx page classifies SERVING through the real socket path."""
     assert probe_port("127.0.0.1", sphinx_http_server) is PortStatus.SERVING
+
+
+def test_ipv6_relay_bridges_to_the_ipv4_listener(sphinx_http_server: int) -> None:
+    """The IPv6 relay makes the IPv4-only server answer on [::1] at the same port.
+
+    Windows resolves the machine's own hostname to IPv6 first, so without the
+    relay a browser at http://<hostname>:<port>/ gets connection-refused while
+    curl over 127.0.0.1 works — the docs must be reachable over both stacks.
+    The fetch goes over the real IPv6 loopback socket (not probe_port, whose
+    bind-availability check cannot see a wildcard-IPv6 listener from a specific
+    ::1 bind on Windows).
+    """
+    import urllib.request
+
+    relay = start_ipv6_relay(sphinx_http_server)
+    if relay is None:
+        pytest.skip("IPv6 is unavailable on this host")
+    try:
+        with urllib.request.urlopen(f"http://[::1]:{sphinx_http_server}/", timeout=3) as response:
+            assert response.status == 200
+            assert _looks_like_sphinx(response.read().decode("utf-8", "replace"))
+    finally:
+        relay.close()
 
 
 # ── State file round-trip ─────────────────────────────────────────────────────
