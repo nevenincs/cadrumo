@@ -9,15 +9,6 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `data-output-standardization` plan
 
@@ -79,7 +70,7 @@ Hard-cut cadrumo naming for temp prefixes, cache filenames, CWD provenance liter
 Per-field ownership table for AEAT-prefixed app-owned settings, the renames it authorizes, and the full prose-surface sweep.
 
 - [x] `W03.P06.S17` - Author the per-field ownership adjudication table for AEAT-prefixed app-owned settings; `.vault/audit`.
-- [ ] `W03.P06.S18` - Execute the settings-field renames the table authorizes, hard-cut, updating the dotenv exclusion set where product-state-selecting; `src/cadrumo/core/config.py`.
+- [x] `W03.P06.S18` - Execute the settings-field renames the table authorizes, hard-cut, updating the dotenv exclusion set where product-state-selecting; `src/cadrumo/core/config.py`.
 - [ ] `W03.P06.S19` - Sweep docs, locales, error-registry suggestions, and the agent harness for every renamed variable; `renamed env-var prose surfaces`.
 
 ## Wave `W04` - Scratch and repo hygiene
