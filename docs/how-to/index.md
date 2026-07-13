@@ -72,13 +72,6 @@ tokens address them.
 Capture, list, and view official AEAT notifications from your electronic inbox.
 :::
 
-:::{grid-item-card} Read Live AEAT Data
-:link: read-live-aeat-data
-:link-type: doc
-
-Pull read-only data from AEAT: censo, notifications, filed returns, and receipts.
-:::
-
 :::{grid-item-card} Work with Transactions
 :link: import-bank-statements
 :link-type: doc
@@ -251,7 +244,6 @@ censo-update
 choose-modelo
 filing-calendar
 check-aeat-notifications
-read-live-aeat-data
 import-bank-statements
 classify-transactions
 ledger-evidence
