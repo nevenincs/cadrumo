@@ -262,3 +262,37 @@ class TestCaptureFailureDiagnostics:
         message = str(excinfo.value)
         assert "app modelo work create" in message  # the resolved argv
         assert "@expect exit_code ==" in message  # the instructive remedy
+
+
+class TestNumericJsonPathResolution:
+    """The digit-segment resolution rule of the json-path evaluator.
+
+    An all-digit DOTTED segment is a string object key first (casilla numbers
+    are JSON object keys) and a list index only when the node is a list; the
+    bracketed form stays list-only. Both directions are pinned so neither can
+    silently shadow the other.
+    """
+
+    def test_digit_segment_resolves_a_string_object_key(self) -> None:
+        from .._runner import _resolve_json_path
+
+        document = {"result": {"casilla_values": {"03": "500.00", "01": "1000.00"}}}
+        assert _resolve_json_path(document, "result.casilla_values.03") == (True, "500.00")
+        assert _resolve_json_path(document, "result.casilla_values.01") == (True, "1000.00")
+        assert _resolve_json_path(document, "result.casilla_values.99") == (False, None)
+
+    def test_digit_segment_resolves_a_list_index_when_the_node_is_a_list(self) -> None:
+        from .._runner import _resolve_json_path
+
+        document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
+        assert _resolve_json_path(document, "result.items.1.id") == (True, "second")
+        assert _resolve_json_path(document, "result.items.2.id") == (False, None)
+        # The bracketed form remains the explicit list address for the same node.
+        assert _resolve_json_path(document, "result.items[0].id") == (True, "first")
+
+    def test_bracket_form_never_indexes_an_object(self) -> None:
+        from .._runner import _resolve_json_path
+
+        document = {"result": {"casilla_values": {"0": "zero-key"}}}
+        assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
+        assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
