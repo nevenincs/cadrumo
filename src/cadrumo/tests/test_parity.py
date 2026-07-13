@@ -78,6 +78,44 @@ def test_locale_integrity(manager):
         pytest.fail("\n".join(errors))
 
 
+def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """English copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "en.yml")
+
+    assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
+        "The Google Sheet is not marked as owned by this Cadrumo profile."
+    )
+    assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
+        "Google OAuth cannot resolve the selected Cadrumo profile state."
+    )
+    assert _leaf(data, "adapters", "google", "profile_binding", "errors", "no_active_profile") == (
+        "No active Cadrumo profile is bound for Google OAuth."
+    )
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "Google Drive vault folder {vault_folder_name} belongs to the former product and cannot be used; "
+        "use the Cadrumo vault instead."
+    )
+    assert _leaf(data, "cli", "config", "custody", "confirm_new_passphrase_prompt") == (
+        "Confirm new Cadrumo secret-store passphrase: "
+    )
+    assert _leaf(data, "cli", "config", "custody", "new_passphrase_prompt") == ("New Cadrumo secret-store passphrase: ")
+    assert _leaf(data, "cli", "config", "google", "profile_help") == (
+        "Cadrumo profile name override (default = active profile on workflow state)"
+    )
+
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "'{command}' needs a human confirmation, and this client does not support elicitation. "
+        "Run it from a client that can ask you questions, or run the equivalent aeat CLI command directly "
+        "in a terminal."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO - local-first workflow for Spanish tax work with AEAT"
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Tax Assistant"
+
+
 def test_set_locale_value_updates_one_leaf(tmp_path: Path):
     """The locale CLI write path updates a concrete leaf in a real YAML file."""
 
