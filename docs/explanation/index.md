@@ -46,6 +46,8 @@ A first draft is rarely the last word. You can adjust figures, re-run the calcul
 
 Some forms depend on figures you already filed - an annual summary that draws on the quarters, for example. The tool carries those earlier numbers forward so a later form stays consistent with what came before, and it tells you when an earlier filing isn't ready yet. See [How filings build on earlier ones](building-on-earlier-filings.md).
 
+For the annual Renta declaration specifically - the largest form and the one that gathers the whole year - a dedicated deep dive walks through where every value comes from and how to trace it, commands included: [Deep dive: how the Renta declaration is assembled](renta-and-bindings.md).
+
 ---
 
 ## Reviewing your numbers and producing the upload file
@@ -83,6 +85,7 @@ When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). 
 from-records-to-figures
 editing-and-verifying
 building-on-earlier-filings
+renta-and-bindings
 reviewing-and-exporting
 recording-a-filing-and-the-boundary
 ```
