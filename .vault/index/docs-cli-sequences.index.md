@@ -14,6 +14,9 @@ related:
   - '[[2026-07-13-docs-cli-sequences-W02-P02-S06]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P02-S07]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P02-S08]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P03-S09]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P03-S10]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P03-S11]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-07-13-docs-cli-sequences-plan]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
@@ -39,6 +42,9 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-W02-P02-S06` - Enforce the sequence-result contract at parse time, refusing a sequence with zero, multiple, or non-terminal @result frames
 - `2026-07-13-docs-cli-sequences-W02-P02-S07` - Implement :seed: recipe inlining that prepends a shared @setup fragment from the named seed file before the sequence's own frames
 - `2026-07-13-docs-cli-sequences-W02-P02-S08` - Write parser unit tests covering grammar acceptance, every refusal case, capture and expect binding, and seed inlining
+- `2026-07-13-docs-cli-sequences-W02-P03-S09` - Implement the per-sequence sandbox runner (fresh isolated_profile_storage_root, frozen_clock, injected profile_id, English output, live tests off, invoke_cached_cli per frame)
+- `2026-07-13-docs-cli-sequences-W02-P03-S10` - Implement @capture value threading that parses a frame's JSON envelope, binds the json-path, and interpolates {name} into later frames
+- `2026-07-13-docs-cli-sequences-W02-P03-S11` - Write runner tests driving a real create-calculate-verify chain hermetically and asserting captured values thread through subsequent frames
 
 ### plan
 
