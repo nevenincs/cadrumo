@@ -394,7 +394,7 @@ def run_workbook_with_libreoffice(
     if resolved.suffix.lower() != _XLSX_EXTENSION:
         raise RegistryValidationError("LibreOffice runner currently accepts only XLSX workbooks")
 
-    with TemporaryDirectory(prefix="aeat-workbook-") as tmp:
+    with TemporaryDirectory(prefix="cadrumo-workbook-") as tmp:
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
         output_dir.mkdir()
@@ -545,7 +545,7 @@ def _converted_binary_xls_path(
     *,
     runner: Path,
 ) -> Iterator[Path]:
-    with TemporaryDirectory(prefix="aeat-xls-conversion-") as tmp:
+    with TemporaryDirectory(prefix="cadrumo-xls-conversion-") as tmp:
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
         output_dir.mkdir()

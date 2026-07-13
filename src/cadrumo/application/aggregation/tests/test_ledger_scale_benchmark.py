@@ -344,7 +344,7 @@ def scale_bucket() -> Iterator[SecureObjectRepository]:
     import tempfile
 
     with (
-        tempfile.TemporaryDirectory(prefix="aeat-scale-bench-") as tmp_dir,
+        tempfile.TemporaryDirectory(prefix="cadrumo-scale-bench-") as tmp_dir,
         isolated_runtime_profile(tmp_path=Path(tmp_dir), bucket_id=_BUCKET_ID) as profile,
     ):
         _seed_scale_ledger(profile.repository)

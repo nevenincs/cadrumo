@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 _factory_lock = Lock()
 _singleton_store: SecretStore | None = None
-_DEFAULT_TEMPFILE_PREFIX = "aeat-secret"
+_DEFAULT_TEMPFILE_PREFIX = "cadrumo-secret"
 _EMPTY_SUFFIX = ""
 _TEMPFILE_PREFIX_SEPARATOR = "-"
 _FORBIDDEN_TEMPFILE_TOKEN_CHARS = frozenset(("/", "\\", "\0"))
@@ -202,7 +202,7 @@ def materialise_secret(
             the process-wide singleton from :func:`get_secret_store`
             is used.
         prefix: Filename prefix for the tempfile. Defaults to
-            ``aeat-secret``.
+            ``cadrumo-secret``.
         suffix: Filename suffix (e.g. ``.json`` for a Google
             service-account JSON file). Defaults to empty.
 
