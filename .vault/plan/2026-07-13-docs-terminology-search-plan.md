@@ -109,7 +109,7 @@ Ground every later decision in committed measurements: corpus coverage of the sh
 
 Read-only measurement runs against the resident RAG service producing committed reports.
 
-- [ ] `W01.P01.S01` - Generate the coverage report: derive the candidate query surface from calc-grade casilla labels/sections and legal-catalogue provision vocabulary, list every derivable target with no inbound relevance entry, and commit the report; `dev/docs/terminology/, .vault/audit/`.
+- [x] `W01.P01.S01` - Generate the coverage report: derive the candidate query surface from calc-grade casilla labels/sections and legal-catalogue provision vocabulary, list every derivable target with no inbound relevance entry, and commit the report; `dev/docs/terminology/, .vault/audit/`.
 - [x] `W01.P01.S02` - Run the held-out golden queries through the shipped relevance mapping with the miss-rate machinery and commit the baseline miss-rate report; `dev/docs/terminology/_miss_rate.py, .vault/audit/`.
 - [x] `W01.P01.S03` - Inventory the synonym candidate queue (mined, unratified) and commit the inventory with a ratify-or-clear disposition per candidate; `dev/docs/terminology/_synonym_mining.py, .vault/audit/`.
 
