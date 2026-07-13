@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -353,6 +354,74 @@ def _targets_for_docs_root(original_docs_root: Path, copied_docs_root: Path, tar
     return mapped
 
 
+def docs_build_jobs(env: Mapping[str, str]) -> str:
+    """Resolve the Sphinx ``-j`` parallelism from the deployment override.
+
+    Defaults to ``auto`` (one worker per core) so local and CI builds keep the
+    full-parallel read. The deployment sets ``AEAT_DOCS_JOBS=1`` to serialize
+    the build, so the single-writer sitemap and Pagefind passes run without a
+    cross-worker race. A set value must be ``auto`` or a positive integer
+    worker count.
+
+    Args:
+        env: The build environment mapping to read the override from.
+
+    Returns:
+        The ``-j`` value string to hand to ``sphinx-build``.
+
+    Raises:
+        SystemExit: If the override is set to a non-positive or non-integer
+            value, so a bad deployment knob fails loudly rather than silently
+            degrading parallelism.
+    """
+    raw = env.get("AEAT_DOCS_JOBS")
+    if raw is None or raw == "auto":
+        return "auto"
+    try:
+        jobs = int(raw)
+    except ValueError:
+        raise SystemExit(
+            f"AEAT_DOCS_JOBS must be 'auto' or a positive integer worker count; got {raw!r}.",
+        ) from None
+    if jobs < 1:
+        raise SystemExit(f"AEAT_DOCS_JOBS must be a positive integer worker count; got {raw!r}.")
+    return str(jobs)
+
+
+#: The two search-index contracts the deployment may select. ``full`` runs the
+#: custom-record injection (concept/casilla/CLI records boosted by the sweep);
+#: ``pages`` indexes only the rendered HTML pages, shipping a lighter index with
+#: no injected navigation records.
+_PAGEFIND_MODES = ("full", "pages")
+
+
+def pagefind_index_mode(env: Mapping[str, str]) -> str:
+    """Resolve the Pagefind indexing contract from the deployment override.
+
+    Defaults to ``full`` so local docs keep the injected concept/casilla/CLI
+    records. The deployment may set ``AEAT_DOCS_PAGEFIND_MODE=pages`` to index
+    only the rendered pages, skipping the custom-record injection seam.
+
+    Args:
+        env: The build environment mapping to read the override from.
+
+    Returns:
+        Either ``full`` or ``pages``.
+
+    Raises:
+        SystemExit: If the override names an unsupported mode, so the
+            deployment cannot silently select an unknown search contract.
+    """
+    raw = env.get("AEAT_DOCS_PAGEFIND_MODE")
+    if raw is None:
+        return "full"
+    if raw not in _PAGEFIND_MODES:
+        raise SystemExit(
+            f"AEAT_DOCS_PAGEFIND_MODE must be one of {', '.join(_PAGEFIND_MODES)}; got {raw!r}.",
+        )
+    return raw
+
+
 def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page: bool = False) -> None:
     """Run Sphinx against the selected targets.
 
@@ -366,7 +435,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     docs_root = repo_root / "docs"
     targets = plan.targets
     ensure_isolated_storage_root()
-    command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", "auto"]
+    command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs(os.environ)]
     env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
     if strict:
         command.extend(["-n", "-W"])
@@ -456,17 +525,26 @@ def compile_search_index(
     Args:
         html_root: The built Sphinx HTML output directory to index.
         repo_root: Repository root (for the committed relevance sweep file).
-        injector: Optional pre-built injection callback. Defaults to the full
-            record injector (concepts + casillas + CLI). Injectable so a test
-            can drive a small real injector without paying the full
-            materialisation cost; production always uses the default.
+        injector: Optional pre-built injection callback. When omitted, the
+            injector is chosen from :func:`pagefind_index_mode`: the ``full``
+            contract builds the record injector (concepts + casillas + CLI),
+            while the deployment ``pages`` contract injects no custom records
+            and indexes only the rendered pages. Injectable so a test can drive
+            a small real injector without paying the full materialisation cost.
     """
     ensure_isolated_storage_root()
     from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
     from dev.docs.pagefind_inject import InjectionStats, build_record_injector
 
     captured: list[InjectionStats] = []
-    resolved_injector = build_record_injector(repo_root, on_complete=captured.append) if injector is None else injector
+    if injector is not None:
+        resolved_injector = injector
+    elif pagefind_index_mode(os.environ) == "pages":
+        # Deployment ``pages`` contract: index the rendered HTML pages only,
+        # skipping the custom-record injection seam entirely.
+        resolved_injector = None
+    else:
+        resolved_injector = build_record_injector(repo_root, on_complete=captured.append)
     try:
         outcome = build_search_index(html_root, inject=resolved_injector)
     except PagefindUnavailableError as exc:
