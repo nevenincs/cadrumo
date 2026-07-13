@@ -9,6 +9,15 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `data-output-standardization` plan
 
@@ -31,7 +40,7 @@ Move the corpus-text cache and the registry disk pickle off the OS temp dir into
 
 - [x] `W01.P02.S05` - Add a settings-derived corpus-text cache location, rename the cache file to the cadrumo stem, and remove the hard-coded gettempdir path; `src/cadrumo/domain/calculations/registry/_validate_evidence.py`.
 - [x] `W01.P02.S06` - Move the registry disk-cache production default under the cache root, rename the pickle stem to cadrumo, preserve xdist fingerprint sharing; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.
-- [ ] `W01.P02.S07` - Add fingerprint-count eviction for accumulated registry cache pickles; `src/cadrumo/domain/calculations/registry/_loader.py`.
+- [x] `W01.P02.S07` - Add fingerprint-count eviction for accumulated registry cache pickles; `src/cadrumo/domain/calculations/registry/_loader.py`.
 - [ ] `W01.P02.S08` - Update the white-box registry-cache and authority tests for the relocated cache locations; `src/cadrumo/domain/calculations/registry/tests`.
 
 ## Wave `W02` - Lifecycle policy
