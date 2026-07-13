@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
+
 import pytest
 
 from .. import (
@@ -24,7 +27,7 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         python_package="cadrumo",
         distribution="cadrumo",
         cli_executable="aeat",
-        repository="cadrumo",
+        repository="nevenincs/cadrumo",
         mcp_server="cadrumo",
         mcp_executable="cadrumo-mcp",
         mcp_tool_prefix="cadrumo",
@@ -36,6 +39,29 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
     )
 
     assert expected == PRODUCT_IDENTITY
+
+
+@pytest.mark.parametrize(
+    "relative_pyproject",
+    (
+        Path("pyproject.toml"),
+        Path("packaging/cadrumo_data_manuals/pyproject.toml"),
+        Path("packaging/cadrumo_data_official/pyproject.toml"),
+    ),
+)
+def test_repository_metadata_consumes_the_owner_qualified_slug(
+    relative_pyproject: Path,
+) -> None:
+    """Root and companion metadata project the canonical repository slug."""
+    repository_root = Path(__file__).resolve().parents[4]
+    pyproject = tomllib.loads((repository_root / relative_pyproject).read_text(encoding="utf-8"))
+    repository_url = f"https://github.com/{PRODUCT_IDENTITY.repository}"
+
+    assert pyproject["project"]["urls"] == {
+        "Homepage": repository_url,
+        "Issues": f"{repository_url}/issues",
+        "Repository": repository_url,
+    }
 
 
 def test_product_identity_distinguishes_prose_from_identity_context() -> None:
