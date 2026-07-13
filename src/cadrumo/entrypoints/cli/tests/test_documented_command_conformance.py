@@ -94,7 +94,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # All user-facing doc surfaces. The flat ``docs/*.md`` pages and the root
 # ``README.md`` are the surfaces the verb-only conformance gate never covered.
 _FLAT_DOC_GLOBS = ("docs/*.md",)
-_TREE_DOC_DIRS = ("docs/explanation", "docs/how-to")
+_TREE_DOC_DIRS = (
+    "docs/explanation",
+    "docs/how-to",
+    "docs/reference",
+    "docs/verification",
+    "docs/architecture",
+)
 
 # Inline backticks and fenced blocks are the only authoritative command
 # surfaces; a bare ``aeat ...`` in prose is not a cited invocation.
