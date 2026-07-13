@@ -25,7 +25,7 @@ _OBJECT_KEY = "wallet:2026-secret"
 
 
 def _context(format_name: str) -> typer.Context:
-    # Get the cadrumo CLI command and narrow it to TyperGroup for compatibility with typer.Context.
+    # Get the Cadrumo CLI command and narrow it to TyperGroup for compatibility with typer.Context.
     root_cmd = cadrumo_click_command()
     assert isinstance(root_cmd, TyperGroup)
     ctx = typer.Context(root_cmd)
