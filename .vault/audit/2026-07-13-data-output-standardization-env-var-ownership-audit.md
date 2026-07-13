@@ -28,8 +28,12 @@ field group. This table is the authorising input for Steps S18 (execute the
 renames) and S19 (sweep docs/locales/error-registry/harness), which the plan's
 parallelization notes gate behind S17 landing first.
 
-Total field count: 47 (`config.py` 32, `_config_runtime_fields.py` 5,
-`_config_timeouts.py` 10). Every field maps to exactly one of three referent
+Total field count: 49 (`config.py` 33, `_config_runtime_fields.py` 5,
+`_config_timeouts.py` 11 -- corrected at S18 execution time; the original
+summary arithmetic here undercounted both `config.py` and
+`_config_timeouts.py` by one field each, though every individual field below
+already carried a complete, correct verdict). Every field maps to exactly
+one of three referent
 buckets per R6: **authority referent** (AEAT's own URL, template path, or
 verbatim bundled content — stays `AEAT_*`), **app-owned control** (a Cadrumo
 policy knob, timeout, selector, or location the application owns — migrates to
@@ -223,20 +227,25 @@ every group in this table.
 
 ## Recommendations
 
-- **S18 scope**: rename 43 of 47 fields to `CADRUMO_*` (all of
-  browser-automation-controls, proxy-and-rate-policy,
+- **S18 scope, corrected at execution time**: rename 39 of 49 fields to
+  `CADRUMO_*` (all of browser-automation-controls, proxy-and-rate-policy,
   auth-timeouts-and-provider-policy, corpus-loading-policy-flags, the four
   migrating identity-adjacent-certificate-fields, all five
   identity-adjacent-clave-dni-nie-fields, and `aeat_iva_catalogue_root`). Keep
-  4 fields `AEAT_*` (`aeat_base_url`, the 6 sede/status/Cl@ve URL templates
-  already counted under authority-referent-urls-and-templates plus
-  `aeat_certificate_verify_url` — 7 total stay AEAT_, not 4; see that finding
-  for the exact list), `aeat_manuals_root`, `aeat_normatives_root`, and
-  `aeat_authoritative_language_aeat_terms` — 10 fields stay `AEAT_*` in total
-  (7 URL/template + 2 corpus roots + 1 language directive), 37 migrate.
-  Recount: 47 total = 10 KEEP + 37 RENAME (32 config.py fields minus 10 KEEP
-  = 22 migrate from config.py; all 5 `_config_runtime_fields.py` fields
-  migrate; all 10 `_config_timeouts.py` fields migrate; 22 + 5 + 10 = 37).
+  10 fields `AEAT_*` total (`aeat_base_url`, the 6 sede/status/Cl@ve URL
+  templates already counted under authority-referent-urls-and-templates,
+  `aeat_certificate_verify_url` — 7 total URL/template fields — plus
+  `aeat_manuals_root`, `aeat_normatives_root`, and
+  `aeat_authoritative_language_aeat_terms`). Recount, corrected: 49 total =
+  10 KEEP + 39 RENAME (33 `config.py` fields minus 10 KEEP = 23 migrate from
+  `config.py`; all 5 `_config_runtime_fields.py` fields migrate; all 11
+  `_config_timeouts.py` fields migrate; 23 + 5 + 11 = 39). The original
+  "47 total / 37 migrate" arithmetic undercounted by 2 (a `config.py` field
+  and a `_config_timeouts.py` field were both present in the per-field
+  findings above with correct verdicts, but omitted from the summary
+  addition); every individual field verdict in the Findings section above
+  was already correct and complete, so S18 executes against the corrected
+  count with no re-adjudication needed.
 - Every rename in S18 is hard-cut per `no-legacy-compatibility`: no dual-read,
   no alias, add the retired `AEAT_*` name to `_LEGACY_PRODUCT_DOTENV_NAMES`
   only where the field was ever product-state-selecting (none of these 37
