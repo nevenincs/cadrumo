@@ -118,6 +118,7 @@ runbooks/index
 :caption: Everyday use
 
 cli/index
+reference/index
 ```
 
 ```{toctree}
