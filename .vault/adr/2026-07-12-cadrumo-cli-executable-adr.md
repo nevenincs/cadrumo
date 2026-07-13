@@ -136,34 +136,3 @@ required when it denotes the sole executable or the authority. Reviews must
 classify those uses by contract and referent rather than mechanically rename
 them. A future request to add `cadrumo` as another executable requires a new
 decision because it would change the single-command guarantee.
-
-## Status note: the single binding naming ADR
-
-Operator decision recorded 2026-07-13, during the 476-to-main reconciliation:
-the `aeat` executable STAYS, and this ADR is the ONE binding naming authority
-for the product/executable/import identity. The decision resolves the
-inter-ADR conflict as follows:
-
-- `2026-07-12-cadrumo-product-rename-adr` is formally superseded by this ADR
-  (its `cadrumo` executable requirement was the conflicting element this ADR
-  always replaced; the supersession is now recorded in frontmatter).
-- `2026-07-13-product-rename-adr` remains accepted for its Stage-A scope only
-  (distribution names, repository `nevenincs/cadrumo`, marketplace and
-  marketing surfaces). Its Stage-B console-script rename
-  (`aeat`/`aeat-mcp` to `cadrumo`/`cadrumo-mcp`) is STRUCK by this decision:
-  the sole human executable is exactly `aeat`, permanently, unless a future
-  ADR supersedes this one. The remaining Stage-B items that do not touch the
-  executable (MCP tool prefix, envelope identifiers, locale citations) follow
-  the identity boundary this ADR defines.
-- Display casing: active prose follows the shipped corpus and the Stage-A
-  ADR - `Cadrumo` in sentence prose, `CADRUMO` acceptable in identity
-  contexts; the "exactly CADRUMO" casing sentence in this ADR's
-  Considerations is relaxed to that corpus convention by this note.
-
-The binding naming tuple, in one place: product `Cadrumo` (prose) /
-`CADRUMO` (identity contexts); sole human executable `aeat`; MCP server
-script `cadrumo-mcp`; Python import root `cadrumo`; PyPI distributions
-`cadrumo`, `cadrumo-data-manuals`, `cadrumo-data-official`; repository
-`nevenincs/cadrumo`; product env-var prefix `CADRUMO_*`; authority-owned
-vocabulary (`AEAT_CERTIFICATE_*`, `AEAT_BROWSER_*`, modelo/casilla domain
-terms) stays `AEAT`/Spanish per the Spanish-stem rule.

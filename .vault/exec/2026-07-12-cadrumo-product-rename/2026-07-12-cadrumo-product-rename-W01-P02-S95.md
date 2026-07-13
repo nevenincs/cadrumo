@@ -42,3 +42,4 @@ related:
 - Historical quoted commit title `"restore canonical Cadrumo executable"` remains verbatim because it names an earlier commit, not the current display contract.
 - Vault checks pass for ADR status, frontmatter, markdown, and placeholders. Modified-stamp and annotation checks retain only pre-existing warnings outside the S95-owned documents.
 - Plan validation retains the known non-monotonic `PLAN022` warning. Rule sync dry-run reports the CADRUMO naming rule unchanged in every provider; unrelated generated wrapper documents remain drifted.
+- Concurrent merge `f70329749d` absorbed the staged S95 baseline while resolving a foreign marketplace conflict; this closeout removes the conflicting title-case status note introduced by that merge.
