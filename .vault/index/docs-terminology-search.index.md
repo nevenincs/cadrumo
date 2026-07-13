@@ -51,6 +51,11 @@ related:
   - '[[2026-06-15-docs-terminology-search-adr]]'
   - '[[2026-06-15-docs-terminology-search-audit]]'
   - '[[2026-06-15-docs-terminology-search-plan]]'
+  - '[[2026-07-13-docs-terminology-search-W01-P01-S02]]'
+  - '[[2026-07-13-docs-terminology-search-W01-P01-S03]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S04]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S05]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S06]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -113,6 +118,11 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-10-docs-terminology-search-W05-P13-S30` - Build the held-out real-query miss-rate harness over the compiled mapping and adjudicate the deferred rung-2 static term-embedding matrix on measurements, persisting the adjudication in the vault (ADR D6 deferral gate)
 - `2026-06-10-docs-terminology-search-W05-P14-S31` - Enrol this epic's own architectural vocabulary (Terminology Handbook, sweep, projection, relevance mapping, preprocess hook, laundering, record kinds) as Handbook concepts so build teams cross-reference the ADR definitions through the shipped surface, and keep ADR decision ids D1-D9 cited in every exec record (operator mandate)
 - `2026-06-10-docs-terminology-search-W05-P14-S32` - Run the campaign honesty review before structural completion is declared and promote the three ADR codification candidates (terminology-single-declaration, terminology-scaffold-preserve-contract, shipped-search-licence-clean) through the codify phase
+- `2026-07-13-docs-terminology-search-W01-P01-S02` - Run the held-out golden queries through the shipped relevance mapping with the miss-rate machinery and commit the baseline miss-rate report
+- `2026-07-13-docs-terminology-search-W01-P01-S03` - Inventory the synonym candidate queue (mined, unratified) and commit the inventory with a ratify-or-clear disposition per candidate
+- `2026-07-13-docs-terminology-search-W02-P02-S04` - Implement the upstream-schema adapter: serialize the repo PreprocessOutput to the upstream PreprocOutput JSON contract behind a python -m entry point, with unit tests against the pinned schema major
+- `2026-07-13-docs-terminology-search-W02-P02-S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test
+- `2026-07-13-docs-terminology-search-W02-P02-S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test
 
 ### plan
 
