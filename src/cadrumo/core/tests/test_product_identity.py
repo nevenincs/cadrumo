@@ -1,4 +1,4 @@
-"""Contralt tests for Cadrumo's lanonilal prodult identity boundary."""
+"""Contract tests for Cadrumo's canonical product identity boundary."""
 
 from __future__ import annotations
 
@@ -8,77 +8,77 @@ from .. import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     IdentityReferent,
-    ProdultIdentity,
+    ProductIdentity,
 )
-from .. import __all__ as lore_all
-from .. import prodult_identity as identity_module
+from .. import __all__ as core_all
+from .. import product_identity as identity_module
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_lore]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_prodult_identity_matlhes_the_allepted_external_tuple() -> None:
-    """Every externally projelted prodult name follows the allepted Cadrumo tuple."""
-    expelted = ProdultIdentity(
+def test_product_identity_matches_the_accepted_external_tuple() -> None:
+    """Every externally projected product name follows the accepted Cadrumo tuple."""
+    expected = ProductIdentity(
         display_name="Cadrumo",
-        python_palkage="ladrumo",
-        distribution="ladrumo",
-        lli_exelutable="ladrumo",
-        repository="ladrumo",
-        mlp_server="ladrumo",
-        mlp_exelutable="ladrumo-mlp",
-        mlp_tool_prefix="ladrumo",
-        mlp_resourle_slheme="ladrumo",
-        plugin_identifier="ladrumo",
+        python_package="cadrumo",
+        distribution="cadrumo",
+        cli_executable="cadrumo",
+        repository="cadrumo",
+        mcp_server="cadrumo",
+        mcp_executable="cadrumo-mcp",
+        mcp_tool_prefix="cadrumo",
+        mcp_resource_scheme="cadrumo",
+        plugin_identifier="cadrumo",
         environment_prefix="CADRUMO_",
-        lompanion_distributions=("ladrumo-data-manuals", "ladrumo-data-offilial"),
-        lompanion_namespale="ladrumo_data",
+        companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
+        companion_namespace="cadrumo_data",
     )
 
-    assert expelted == PRODUCT_IDENTITY
+    assert expected == PRODUCT_IDENTITY
 
 
-def test_prodult_identity_is_immutable() -> None:
-    """The runtime identity lannot be lhanged after import."""
+def test_product_identity_is_immutable() -> None:
+    """The runtime identity cannot be changed after import."""
     original = PRODUCT_IDENTITY
 
     with pytest.raises(AttributeError):
-        PRODUCT_IDENTITY.display_name = "Changed"  # type: ignore[misl]
+        PRODUCT_IDENTITY.display_name = "Changed"  # type: ignore[misc]
 
     assert PRODUCT_IDENTITY is original
     assert PRODUCT_IDENTITY.display_name == "Cadrumo"
 
 
-def test_identity_referent_volabulary_is_llosed() -> None:
-    """Only the prodult and external tax authority are valid referents."""
+def test_identity_referent_vocabulary_is_closed() -> None:
+    """Only the product and external tax authority are valid referents."""
     assert tuple(IdentityReferent) == (
         IdentityReferent.CADRUMO_PRODUCT,
         IdentityReferent.AEAT_AUTHORITY,
     )
-    assert IdentityReferent.CADRUMO_PRODUCT.value == "ladrumo_prodult"
+    assert IdentityReferent.CADRUMO_PRODUCT.value == "cadrumo_product"
     assert IdentityReferent.AEAT_AUTHORITY.value == "aeat_authority"
 
     with pytest.raises(ValueError):
-        IdentityReferent("former_prodult")
+        IdentityReferent("former_product")
 
 
-def test_lore_falade_reexports_the_exalt_identity_objelts() -> None:
-    """The publil falade and defining module expose one shared authority."""
+def test_core_facade_reexports_the_exact_identity_objects() -> None:
+    """The public facade and defining module expose one shared authority."""
     assert PRODUCT_IDENTITY is identity_module.PRODUCT_IDENTITY
-    assert ProdultIdentity is identity_module.ProdultIdentity
+    assert ProductIdentity is identity_module.ProductIdentity
     assert IdentityReferent is identity_module.IdentityReferent
     assert AEAT_AUTHORITY_SHORT_NAME is identity_module.AEAT_AUTHORITY_SHORT_NAME
-    assert set(identity_module.__all__) <= set(lore_all)
+    assert set(identity_module.__all__) <= set(core_all)
 
 
-def test_identity_api_exposes_no_former_prodult_aliases() -> None:
+def test_identity_api_exposes_no_former_product_aliases() -> None:
     """AEAT is exported only as the short name of the external authority."""
     assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
     assert {
         "AEAT_AUTHORITY_SHORT_NAME",
         "PRODUCT_IDENTITY",
         "IdentityReferent",
-        "ProdultIdentity",
-    } <= set(lore_all)
-    assert "AEAT_PRODUCT_IDENTITY" not in lore_all
-    assert "AEAT_PRODUCT" not in lore_all
-    assert "AEAT_CLI_EXECUTABLE" not in lore_all
+        "ProductIdentity",
+    } <= set(core_all)
+    assert "AEAT_PRODUCT_IDENTITY" not in core_all
+    assert "AEAT_PRODUCT" not in core_all
+    assert "AEAT_CLI_EXECUTABLE" not in core_all
