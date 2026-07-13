@@ -54,8 +54,8 @@ adapters:
           de tornar a autenticar-vos.
         approval_timeout: L'autenticació per navegador de Cl@ve Móvil no s'ha completat
           dins del temps configurat.
-        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE no està configurat; configureu el
-          vostre DNI o NIE abans d'autenticar-vos.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no està configurat; configureu
+          el vostre DNI o NIE abans d'autenticar-vos.
         initial_navigation_timeout: La navegacio inicial a Cl@ve Movil no s'ha completat
           dins del temps configurat.
         metadata_invalid: Les metadades de sessió de Cl@ve Móvil no són vàlides o
@@ -474,12 +474,12 @@ application:
         una data-hora o cadena ISO-8601.
     operator:
       alignment:
-        both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+        both_missing_detail: No estan configurades ni la identitat Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           ni l'identificador fiscal del perfil actiu. Configura tots dos amb el mateix
           DNI/NIE abans de l'autenticació AEAT en directe.
         both_missing_next_action: Edita el perfil actiu amb 'aeat config profile edit
           NOM --tax-id DNI/NIE' i configura el mateix DNI/NIE per a Cl@ve Mòbil.
-        clave_identity_missing_detail: La identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+        clave_identity_missing_detail: La identitat Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           no està configurada, de manera que no es pot comparar amb l'identificador
           fiscal del perfil actiu. Configura-la amb el DNI/NIE del perfil actiu.
         clave_identity_missing_next_action: Configura el DNI/NIE de Cl@ve Mòbil perquè
@@ -573,8 +573,8 @@ application:
     sessions:
       errors:
         clave_identity_missing: L'autenticació Cl@ve Móvil en directe requereix un
-          DNI/NIE configurat (AEAT_CLAVE_MOVIL_DNI_NIE) abans de fer servir cap sessió
-          AEAT.
+          DNI/NIE configurat (CADRUMO_CLAVE_MOVIL_DNI_NIE) abans de fer servir cap
+          sessió AEAT.
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
