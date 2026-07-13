@@ -119,6 +119,7 @@ Already know the workflow? Go straight to the reference you need:
 
 Getting started <how-to/index>
 Quickstart <how-to/quickstart>
+First quarterly filing <how-to/first-quarterly-filing>
 The income-tax year <how-to/irpf-lifecycle>
 The IVA year <how-to/iva-lifecycle>
 Set up your workstation <workstation-setup>
