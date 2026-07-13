@@ -1,6 +1,10 @@
 # How filings build on earlier ones
 
-Some forms can't be filled from a single period's records alone. A yearly summary needs the quarters that came before it. An income-tax return needs the instalments you paid through the year. This page explains why that happens, how the tool carries figures forward from your earlier filings, and - just as important - what it leaves for you to check. It's for anyone preparing a form that depends on earlier periods or on the whole year.
+This page covers the connections between filings: why a yearly summary needs
+the quarters that came before it, how the tool carries figures forward from
+your earlier filings, and - just as important - what it leaves for you to
+check. It is for anyone preparing a form that depends on earlier periods or
+on the whole year.
 
 If you want how a single period's figures are built from your records, see [How your records become tax figures](from-records-to-figures.md). This page is about the connections *between* filings.
 

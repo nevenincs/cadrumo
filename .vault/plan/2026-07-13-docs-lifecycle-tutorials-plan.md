@@ -113,7 +113,7 @@ Execute the ratified disposition table's merges, retirement, and extraction land
 - [x] `P01.S04` - Merge justificante-receipts.md into reconcile.md as a leading pull-and-store-the-justificante section; `sweep inbound links; delete the merged page; `docs/how-to/reconcile.md docs/how-to/justificante-receipts.md`.
 - [x] `P01.S05` - Retire read-live-aeat-data.md, redistributing its live-pull content to check-aeat-notifications.md, censo-update.md, and reconcile.md; `sweep inbound links; `docs/how-to/read-live-aeat-data.md docs/how-to/check-aeat-notifications.md docs/how-to/censo-update.md docs/how-to/reconcile.md`.
 - [x] `P01.S06` - Land the extracted explanation-page signals tightened on their receiving pages (verify-state taxonomy, revision immutability, xlsx-vs-Sheets, fingerprint purpose, reconcile scope, mixed-cost splitting, import readiness); `docs/how-to/verification-reports.md docs/how-to/filing-spine.md docs/how-to/review-with-google-sheets.md docs/how-to/file-at-aeat.md docs/how-to/reconcile.md docs/how-to/classify-transactions.md docs/how-to/import-bank-statements.md`.
-- [ ] `P01.S07` - Trim the five explanation pages to tightened conceptual cores now that their actionable signal has confirmed homes; `add the this-page-covers opening paragraph to every touched page; `docs/explanation`.
+- [x] `P01.S07` - Trim the five explanation pages to tightened conceptual cores now that their actionable signal has confirmed homes; `add the this-page-covers opening paragraph to every touched page; `docs/explanation`.
 
 ### Phase `P02` - Author the Tier-1 modelo pages
 
