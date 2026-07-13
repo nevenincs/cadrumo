@@ -294,7 +294,7 @@ async def _capture_iva_compensation_history_with_session(
                             declaration,
                             artefact_sink=store.persist_artefact,
                         ),
-                        timeout=settings.aeat_live_iva_declaration_capture_timeout_ms / 1000,
+                        timeout=settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000,
                     )
                 except (TimeoutError, _AeatError, OSError) as exc:
                     failed_declarations.append(_failed_declaration_ref(declaration, exc))
@@ -707,7 +707,7 @@ async def _capture_iva_remote_state_for_active_storage(
     _assert_target_period_year(target_year=target_year, target_period=target_period)
     settings = _load_settings()
     async with _suppress_live_iva_playwright_cancellation_noise(
-        drain_ms=settings.aeat_live_iva_cancellation_drain_ms,
+        drain_ms=settings.cadrumo_live_iva_cancellation_drain_ms,
         restore_on_exit=False,
     ):
         if year_from > year_to:
@@ -794,7 +794,7 @@ async def _capture_iva_remote_state_for_active_storage(
                     progress_context=wallet_progress,
                 ),
                 surface=LiveIvaReadSurface.WALLET_CARTERA,
-                timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+                timeout_ms=settings.cadrumo_live_iva_surface_timeout_ms,
                 progress_context=wallet_progress,
             )
         except (TimeoutError, _AeatError, OSError) as exc:
@@ -818,7 +818,7 @@ async def _capture_iva_remote_state_for_active_storage(
 
 def _filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, year_to: int) -> int:
     year_count = max(1, year_to - year_from + 1)
-    return settings.aeat_live_iva_surface_timeout_ms * year_count
+    return settings.cadrumo_live_iva_surface_timeout_ms * year_count
 
 
 async def _capture_iva_compensation_history_by_year_with_session(

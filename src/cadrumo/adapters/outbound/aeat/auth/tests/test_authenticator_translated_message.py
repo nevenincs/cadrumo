@@ -124,9 +124,9 @@ def _settings_for(bundle_path: Path) -> Settings:
     returned Settings context within override_settings().
     """
     return Settings(
-        aeat_certificate_path=bundle_path,
-        aeat_certificate_password_secret=SecretStr(_SECRET),
-        aeat_certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+        cadrumo_certificate_path=bundle_path,
+        cadrumo_certificate_password_secret=SecretStr(_SECRET),
+        cadrumo_certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
         aeat_certificate_verify_url="https://127.0.0.1:1/",
         cadrumo_token_dir=bundle_path.parent / ".tokens",
         cadrumo_local_storage_root=bundle_path.parent / "storage",

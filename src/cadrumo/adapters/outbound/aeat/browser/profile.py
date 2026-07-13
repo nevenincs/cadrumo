@@ -40,12 +40,12 @@ def _browser_locale_default() -> str | None:
     instantiated) confines any settings-data drift to the code path
     that genuinely needs the browser adapter.
     """
-    return _Settings().aeat_browser_locale
+    return _Settings().cadrumo_browser_locale
 
 
 def _browser_timezone_default() -> str | None:
     """Resolve the default browser timezone lazily (see :func:`_browser_locale_default`)."""
-    return _Settings().aeat_browser_timezone
+    return _Settings().cadrumo_browser_timezone
 
 
 @dataclass
@@ -63,9 +63,9 @@ class Profile:
         name: A unique identifier for this profile.
         storage_state_path: Path to the JSON file containing cookies and localStorage.
         user_agent: Optional custom User-Agent string.
-        locale: Optional locale (e.g., 'es-ES'); defaults to ``Settings.aeat_browser_locale``.
+        locale: Optional locale (e.g., 'es-ES'); defaults to ``Settings.cadrumo_browser_locale``.
         timezone_id: Optional timezone (e.g., 'Europe/Madrid'); defaults to
-            ``Settings.aeat_browser_timezone``.
+            ``Settings.cadrumo_browser_timezone``.
     """
 
     name: str

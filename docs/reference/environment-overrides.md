@@ -16,52 +16,13 @@ the process environment wins over the `.env` file.
 
 | Variable | Type | Default | What it controls |
 | --- | --- | --- | --- |
-| `AEAT_AUTH_PROVIDER` | AuthProviderKindSetting | unset | Default auth provider for `aeat config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
-| `AEAT_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for AEAT authentication probes in milliseconds |
 | `AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS` | str | `es` | Authoritative language for domain terminology (modelos, registry definitions, references). |
 | `AEAT_BASE_URL` | str | (derived) | AEAT sede electrónica base URL |
-| `AEAT_BROWSER_BUSCAR_SETTLE_MS` | int | `3000` | Settle delay (ms) after the AEAT 'Buscar' button before reading the results table |
-| `AEAT_BROWSER_CHANNEL` | str | `chrome` | Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge') |
-| `AEAT_BROWSER_CLOSE_TIMEOUT_MS` | int | `5000` | Best-effort timeout (ms) for Playwright browser context/session cleanup during AEAT live auth and read flows. Cleanup must not leave a command hanging after the primary operation has already failed or timed out. |
-| `AEAT_BROWSER_FORM_INTERACTION_TIMEOUT_MS` | int | `10000` | Timeout for individual form interactions (fill/click/wait) in milliseconds |
-| `AEAT_BROWSER_HEADLESS` | bool | `true` | Run browser in headless mode |
-| `AEAT_BROWSER_LOCALE` | str | `es-ES` | Default browser locale passed to Playwright context (BCP-47 tag) |
-| `AEAT_BROWSER_NAVIGATION_TIMEOUT_MS` | int | `30000` | Default Playwright navigation timeout (milliseconds) for AEAT sede pages |
-| `AEAT_BROWSER_SELECTOR_PROBE_TIMEOUT_MS` | int | `2500` | Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages |
-| `AEAT_BROWSER_TIMEZONE` | str | `Europe/Madrid` | Default IANA timezone string passed to Playwright context |
-| `AEAT_BROWSER_VER_CLICK_TIMEOUT_MS` | int | `15000` | Timeout (ms) for the AEAT declarations 'Ver' button click and navigation |
-| `AEAT_BROWSER_VIEWPORT_HEIGHT` | int | `900` | Default Playwright viewport height (px) for AEAT sede sessions |
-| `AEAT_BROWSER_VIEWPORT_WIDTH` | int | `1366` | Default Playwright viewport width (px) for AEAT sede sessions |
-| `AEAT_CERTIFICATE_BACKEND` | CertificateBackend | `playwright_context` | Which certificate backend to use: playwright_context or httpx_fallback |
-| `AEAT_CERTIFICATE_FRIENDLY_NAME` | str | unset | Optional human-readable label for the certificate |
-| `AEAT_CERTIFICATE_PASSWORD_SECRET` | SecretStr | (secret) | PKCS#12 passphrase (env only, never logged or persisted) |
-| `AEAT_CERTIFICATE_PATH` | Path | unset | Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle |
 | `AEAT_CERTIFICATE_VERIFY_URL` | str | (derived) | Target URL for cadrumo.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test |
-| `AEAT_CLAVE_MOVIL_DNI_FECHA` | str | unset | DNI validity / expiry date (YYYY-MM-DD) used by the non-QR Cl@ve Móvil fallback form. Applies when the configured identity is a DNI. |
-| `AEAT_CLAVE_MOVIL_DNI_NIE` | SecretStr | (secret) | Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. Used to stamp the persisted session with the operator's identity and to pre-fill the non-QR fallback form. AEAT-regulated personal identifier under Spanish tax law; typed as SecretStr to prevent leakage through repr / model_dump / ValidationError. |
-| `AEAT_CLAVE_MOVIL_NIE_SOPORTE` | SecretStr | (secret) | NIE support number (número de soporte) used by the non-QR Cl@ve Móvil fallback form. Applies when the configured identity is a NIE. AEAT-regulated personal identifier; typed as SecretStr to prevent leakage. |
-| `AEAT_CLAVE_MOVIL_TIMEOUT_MS` | int | `120000` | Maximum time (milliseconds) the Cl@ve Móvil provider waits for AEAT browser-side authentication completion before aborting. Production runs must fail fast enough for an operator to retry deliberately rather than leaving a pending request dangling. |
-| `AEAT_CLAVE_PERMANENTE_DNI_NIE` | SecretStr | (secret) | Taxpayer DNI/NIE for `aeat config auth configure --provider clave_permanente`. Used as the Cl@ve IdP login username and to stamp the persisted session with the operator's identity. AEAT-regulated personal identifier under Spanish tax law; typed as SecretStr to prevent leakage through repr / model_dump / ValidationError. |
-| `AEAT_CLAVE_PERMANENTE_PASSWORD` | SecretStr | (secret) | Cl@ve Permanente password for the DNI/NIE + password login form. Same treatment as the certificate passphrase: env var only, never stored in a committed env file, never logged. |
 | `AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page used by the Cl@ve Permanente login flow. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
-| `AEAT_CLAVE_PERMANENTE_TIMEOUT_MS` | int | `60000` | Maximum time (milliseconds) the Cl@ve Permanente provider waits for the AEAT/Cl@ve IdP login form round-trip to complete before aborting. Routine Cl@ve Permanente login is headless-automatable (DNI/NIE + password, no SMS), so this window is shorter than the human-in-the-loop Cl@ve Móvil timeout. |
-| `AEAT_CLAVE_PREFER_NON_QR` | bool | `false` | When true, the Cl@ve Móvil provider uses the non-QR fallback (DNI/NIE + contraste) rather than the QR code. This still requires operator-mediated completion in Cl@ve. |
 | `AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
-| `AEAT_IVA_CATALOGUE_ROOT` | Path | (derived) | Root directory for the hand-reviewed IVA taxonomy catalogue |
-| `AEAT_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS` | int | `30000` | Timeout (ms) for one AEAT filed-declaration register query for a single modelo/year. Bulk filed-history reads use this per-query budget so one slow modelo cannot block all later modelos from returning typed failures. |
-| `AEAT_LIVE_IVA_CANCELLATION_DRAIN_MS` | int | `250` | Drain delay (ms) after a bounded live IVA read surface is cancelled, giving Playwright browser tasks time to report cancellation-only errors before the loop handler is restored. |
-| `AEAT_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS` | int | `240000` | Top-level CLI watchdog timeout (ms) for the combined read-only IVA remote-state command. This must exceed the normal auth and surface budgets but remain below operator shell/tool timeouts so the CLI can cancel and clean up inside its own process. |
-| `AEAT_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS` | int | `120000` | Timeout (ms) for one Modelo 303 filed-declaration observation inside a combined live IVA filed-history read. Must be lower than the outer live IVA surface timeout so partial filed-history failures can return a structured report before the whole surface is cancelled. |
-| `AEAT_LIVE_IVA_SURFACE_TIMEOUT_MS` | int | `180000` | Outer timeout (ms) for each live IVA read surface inside a combined remote-state acquisition. Individual browser stages have their own shorter timeouts; this bounds the whole filed-history or wallet/cartera surface. |
-| `AEAT_MANUALS_HTTP_TIMEOUT_S` | float | `60.0` | HTTP timeout (seconds) for AEAT manual PDF downloads |
-| `AEAT_MANUALS_REVIEW_REQUIRED` | bool | `true` | When True, manual corpus verification rejects any Manual/Section/Rule record missing definition-review metadata; when False the rejection is downgraded to a warning |
 | `AEAT_MANUALS_ROOT` | Path | (derived) | Root directory for the structured AEAT Manual práctico corpus |
 | `AEAT_NORMATIVES_ROOT` | Path | (derived) | Root directory for the bundled legal normatives corpus |
-| `AEAT_PROXY_BYPASS` | str | empty | Comma-separated list of domains to bypass the proxy |
-| `AEAT_PROXY_PASSWORD_SECRET` | SecretStr | (secret) | Password for proxy authentication |
-| `AEAT_PROXY_URL` | str | empty | Proxy URL (e.g., 'http://proxy.example.com:8080') |
-| `AEAT_PROXY_USERNAME` | str | empty | Username for proxy authentication |
-| `AEAT_RATE_LIMIT_DELAY_SECONDS` | float | `2.0` | Minimum delay between AEAT requests in seconds |
 | `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes' — the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
 | `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Overrideable per campaign. |
 | `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Overrideable for campaign drift. |
@@ -70,14 +31,40 @@ the process environment wins over the `.env` file.
 | `CADRUMO_ATTACHMENTS_DIR` | Path | (derived) | Root directory for the attachment byte and manifest store |
 | `CADRUMO_AUDIT_DIR` | Path | (derived) | Directory for the governed audit sink (redacted, classification-aware) |
 | `CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S` | int | `180` | Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows |
-| `CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S` | int | `90` | Headroom (seconds) added to ``aeat_clave_movil_timeout_ms`` for the acquisition lock TTL |
+| `CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S` | int | `90` | Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the acquisition lock TTL |
+| `CADRUMO_AUTH_PROVIDER` | AuthProviderKindSetting | unset | Default auth provider for `aeat config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
+| `CADRUMO_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for AEAT authentication probes in milliseconds |
 | `CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS` | str | `en` | Authoritative language for internal code and documentation |
 | `CADRUMO_BLOB_STORE_DIR` | Path | (derived) | Directory containing the encrypted blob store (content-addressed, classification-aware) |
+| `CADRUMO_BROWSER_BUSCAR_SETTLE_MS` | int | `3000` | Settle delay (ms) after the AEAT 'Buscar' button before reading the results table |
+| `CADRUMO_BROWSER_CHANNEL` | str | `chrome` | Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge') |
+| `CADRUMO_BROWSER_CLOSE_TIMEOUT_MS` | int | `5000` | Best-effort timeout (ms) for Playwright browser context/session cleanup during AEAT live auth and read flows. Cleanup must not leave a command hanging after the primary operation has already failed or timed out. |
+| `CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS` | int | `10000` | Timeout for individual form interactions (fill/click/wait) in milliseconds |
+| `CADRUMO_BROWSER_HEADLESS` | bool | `true` | Run browser in headless mode |
+| `CADRUMO_BROWSER_LOCALE` | str | `es-ES` | Default browser locale passed to Playwright context (BCP-47 tag) |
+| `CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS` | int | `30000` | Default Playwright navigation timeout (milliseconds) for AEAT sede pages |
+| `CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS` | int | `2500` | Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages |
+| `CADRUMO_BROWSER_TIMEZONE` | str | `Europe/Madrid` | Default IANA timezone string passed to Playwright context |
+| `CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS` | int | `15000` | Timeout (ms) for the AEAT declarations 'Ver' button click and navigation |
+| `CADRUMO_BROWSER_VIEWPORT_HEIGHT` | int | `900` | Default Playwright viewport height (px) for AEAT sede sessions |
+| `CADRUMO_BROWSER_VIEWPORT_WIDTH` | int | `1366` | Default Playwright viewport width (px) for AEAT sede sessions |
 | `CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES` | int | `15` | Fallback idle-lock window (minutes) when a bucket manifest omits the value |
 | `CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S` | float | `0.1` | Polling interval (seconds) for bucket lockfile acquisition retries |
 | `CADRUMO_CALC_SHEETS_RECALC_DELAY_S` | float | `2.0` | Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls |
 | `CADRUMO_CERT_CRITICAL_DAYS` | int | `14` | Critical threshold (days) for the certificate pre-expiry gate: certificates with <= this many days remaining are CRITICAL and must be renewed before authenticated AEAT work continues |
 | `CADRUMO_CERT_WARN_DAYS` | int | `60` | Warning threshold (days) for the certificate pre-expiry gate: certificates with <= this many days remaining are surfaced as WARN |
+| `CADRUMO_CERTIFICATE_BACKEND` | CertificateBackend | `playwright_context` | Which certificate backend to use: playwright_context or httpx_fallback |
+| `CADRUMO_CERTIFICATE_FRIENDLY_NAME` | str | unset | Optional human-readable label for the certificate |
+| `CADRUMO_CERTIFICATE_PASSWORD_SECRET` | SecretStr | (secret) | PKCS#12 passphrase (env only, never logged or persisted) |
+| `CADRUMO_CERTIFICATE_PATH` | Path | unset | Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle |
+| `CADRUMO_CLAVE_MOVIL_DNI_FECHA` | str | unset | DNI validity / expiry date (YYYY-MM-DD) used by the non-QR Cl@ve Móvil fallback form. Applies when the configured identity is a DNI. |
+| `CADRUMO_CLAVE_MOVIL_DNI_NIE` | SecretStr | (secret) | Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. Used to stamp the persisted session with the operator's identity and to pre-fill the non-QR fallback form. AEAT-regulated personal identifier under Spanish tax law; typed as SecretStr to prevent leakage through repr / model_dump / ValidationError. |
+| `CADRUMO_CLAVE_MOVIL_NIE_SOPORTE` | SecretStr | (secret) | NIE support number (número de soporte) used by the non-QR Cl@ve Móvil fallback form. Applies when the configured identity is a NIE. AEAT-regulated personal identifier; typed as SecretStr to prevent leakage. |
+| `CADRUMO_CLAVE_MOVIL_TIMEOUT_MS` | int | `120000` | Maximum time (milliseconds) the Cl@ve Móvil provider waits for AEAT browser-side authentication completion before aborting. Production runs must fail fast enough for an operator to retry deliberately rather than leaving a pending request dangling. |
+| `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` | SecretStr | (secret) | Taxpayer DNI/NIE for `aeat config auth configure --provider clave_permanente`. Used as the Cl@ve IdP login username and to stamp the persisted session with the operator's identity. AEAT-regulated personal identifier under Spanish tax law; typed as SecretStr to prevent leakage through repr / model_dump / ValidationError. |
+| `CADRUMO_CLAVE_PERMANENTE_PASSWORD` | SecretStr | (secret) | Cl@ve Permanente password for the DNI/NIE + password login form. Same treatment as the certificate passphrase: env var only, never stored in a committed env file, never logged. |
+| `CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS` | int | `60000` | Maximum time (milliseconds) the Cl@ve Permanente provider waits for the AEAT/Cl@ve IdP login form round-trip to complete before aborting. Routine Cl@ve Permanente login is headless-automatable (DNI/NIE + password, no SMS), so this window is shorter than the human-in-the-loop Cl@ve Móvil timeout. |
+| `CADRUMO_CLAVE_PREFER_NON_QR` | bool | `false` | When true, the Cl@ve Móvil provider uses the non-QR fallback (DNI/NIE + contraste) rather than the QR code. This still requires operator-mediated completion in Cl@ve. |
 | `CADRUMO_CLI_REVEAL_IDENTIFIERS` | bool | `false` | Reveal raw profile and bucket identifiers in CLI success output instead of the paste-safe ``<profile-id>`` / ``<bucket-id>`` placeholders. Default off keeps the centralised-output-redaction policy (profile/bucket UUIDs are redacted so diagnostics are safe to paste into shared notes). A multi-client gestor who must disambiguate which bucket a command addressed sets ``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` to opt out. This only un-redacts the opaque profile/bucket UUIDs; NIF/NIE/CIF tax identities, bearer tokens, URLs, and secure-object keys stay redacted unconditionally. |
 | `CADRUMO_CORPUS_TEXT_CACHE_DIR` | Path | (derived) | Directory for the registry corpus source-text validation cache (normalised text keyed by content fingerprint) |
 | `CADRUMO_DATABASE_URL` | str | empty | SQLAlchemy URL for the primary persistence backend. When empty, the model validator resolves the URL through the active-profile precedence chain to ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``; with no active profile it derives a root-level fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so the URL is never empty when the storage root is set. Tests that need a deterministic location supply this field explicitly; production reads the computed value. |
@@ -102,9 +89,15 @@ the process environment wins over the `.env` file.
 | `CADRUMO_INBOX_DIR` | Path | (derived) | Directory where the persisted Inbox JSON file lives |
 | `CADRUMO_INBOX_PDF_DIR` | Path | (derived) | Directory where downloaded notification PDFs are stored |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
+| `CADRUMO_IVA_CATALOGUE_ROOT` | Path | (derived) | Root directory for the hand-reviewed IVA taxonomy catalogue |
 | `CADRUMO_JUSTIFICANTE_PARSER_BACKEND` | JustificanteParserBackendSetting | `pdfplumber` | Parser backend for `cadrumo.adapters.inbound.justificante` |
 | `CADRUMO_JUSTIFICANTES_DIR` | Path | (derived) | Directory where parsed justificante PDFs and metadata are stored |
 | `CADRUMO_LIBREOFFICE_EXECUTABLE` | Path | unset | Optional explicit path to the soffice / libreoffice binary used by the workbook-parity scanner. When None the scanner resolves it from PATH. |
+| `CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS` | int | `30000` | Timeout (ms) for one AEAT filed-declaration register query for a single modelo/year. Bulk filed-history reads use this per-query budget so one slow modelo cannot block all later modelos from returning typed failures. |
+| `CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS` | int | `250` | Drain delay (ms) after a bounded live IVA read surface is cancelled, giving Playwright browser tasks time to report cancellation-only errors before the loop handler is restored. |
+| `CADRUMO_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS` | int | `240000` | Top-level CLI watchdog timeout (ms) for the combined read-only IVA remote-state command. This must exceed the normal auth and surface budgets but remain below operator shell/tool timeouts so the CLI can cancel and clean up inside its own process. |
+| `CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS` | int | `120000` | Timeout (ms) for one Modelo 303 filed-declaration observation inside a combined live IVA filed-history read. Must be lower than the outer live IVA surface timeout so partial filed-history failures can return a structured report before the whole surface is cancelled. |
+| `CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS` | int | `180000` | Outer timeout (ms) for each live IVA read surface inside a combined remote-state acquisition. Individual browser stages have their own shorter timeouts; this bounds the whole filed-history or wallet/cartera surface. |
 | `CADRUMO_LIVE_TESTS_ENABLED` | str | empty | Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services |
 | `CADRUMO_LIVE_TESTS_GOOGLE` | str | empty | Opt-in flag (set to '1') to run @pytest.mark.aeat_live Google (OAuth / Drive) tests against real Google services |
 | `CADRUMO_LLM_ANTHROPIC_API_KEY` | SecretStr | (secret) | Anthropic API key (env only, never logged) |
@@ -140,7 +133,14 @@ the process environment wins over the `.env` file.
 | `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_M210_ENGINE_LIVE` | bool | `false` | Gate the M210 IRNR engine, which currently covers only TRLIRNR Art. 25 letters a, b, and f. When False (default) `aeat app modelo work create --modelo 210` emits the Path-B refusal stub. When True the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen dispatch + representante-fiscal predicate + cuota composition). |
+| `CADRUMO_MANUALS_HTTP_TIMEOUT_S` | float | `60.0` | HTTP timeout (seconds) for AEAT manual PDF downloads |
+| `CADRUMO_MANUALS_REVIEW_REQUIRED` | bool | `true` | When True, manual corpus verification rejects any Manual/Section/Rule record missing definition-review metadata; when False the rejection is downgraded to a warning |
 | `CADRUMO_OUTPUT_LANGUAGE` | OutputLanguage | `es` | Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default. |
+| `CADRUMO_PROXY_BYPASS` | str | empty | Comma-separated list of domains to bypass the proxy |
+| `CADRUMO_PROXY_PASSWORD_SECRET` | SecretStr | (secret) | Password for proxy authentication |
+| `CADRUMO_PROXY_URL` | str | empty | Proxy URL (e.g., 'http://proxy.example.com:8080') |
+| `CADRUMO_PROXY_USERNAME` | str | empty | Username for proxy authentication |
+| `CADRUMO_RATE_LIMIT_DELAY_SECONDS` | float | `2.0` | Minimum delay between AEAT requests in seconds |
 | `CADRUMO_REGISTRY_DISK_CACHE_DIR` | Path | unset | Override for the cross-process registry disk-pickle directory. When unset, production derives <cadrumo_local_storage_root>/cache/registry and pytest runs share the host temp directory for the immutable bundled-root pickle. Set only by test isolation to redirect the cache onto a test-owned directory, so a test asserting exclusive pickle state never races sibling pytest-xdist workers. |
 | `CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES` | int | `8` | Maximum number of registry disk-cache pickles retained per cache directory; after each write the oldest excess pickles are pruned (best-effort) so accumulated per-fingerprint pickles cannot grow without bound. |
 | `CADRUMO_REGISTRY_PARITY_STORE_DIR` | Path | (derived) | Directory where registry parity tape artifacts are archived by default |

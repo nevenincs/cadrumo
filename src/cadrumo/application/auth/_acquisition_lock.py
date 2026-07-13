@@ -227,7 +227,7 @@ def acquire_auth_acquisition_lock(
 def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
     """Return the acquisition-lock TTL for a provider."""
     if kind is AuthProviderKind.CLAVE_MOVIL:
-        return int(settings.aeat_clave_movil_timeout_ms / 1000) + settings.cadrumo_auth_clave_movil_lock_buffer_s
+        return int(settings.cadrumo_clave_movil_timeout_ms / 1000) + settings.cadrumo_auth_clave_movil_lock_buffer_s
     return settings.cadrumo_auth_certificate_lock_ttl_s
 
 

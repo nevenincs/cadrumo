@@ -339,7 +339,7 @@ def test_live_surface_timeout_is_typed_and_classified() -> None:
 
 
 def test_filed_history_surface_timeout_scales_with_requested_years() -> None:
-    settings = Settings(aeat_live_iva_surface_timeout_ms=180_000)
+    settings = Settings(cadrumo_live_iva_surface_timeout_ms=180_000)
 
     assert _filed_history_surface_timeout_ms(settings, year_from=2026, year_to=2026) == 180_000
     assert _filed_history_surface_timeout_ms(settings, year_from=2022, year_to=2026) == 900_000

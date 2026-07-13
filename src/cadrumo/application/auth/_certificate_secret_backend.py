@@ -2,7 +2,7 @@
 
 Before this module, the certificate auth provider's passphrase came from
 exactly one place: the env-only, never-persisted
-:attr:`~core.config.Settings.aeat_certificate_password_secret`. That is a single
+:attr:`~core.config.Settings.cadrumo_certificate_password_secret`. That is a single
 global secret shared by whichever certificate happens to be active — it cannot
 express "the personal certificate uses passphrase A, the apoderado-acme
 certificate uses passphrase B" once

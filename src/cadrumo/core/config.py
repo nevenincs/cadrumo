@@ -481,7 +481,7 @@ class Settings(AeatIntegrationSettings):
         default_factory=lambda: bundled_path("corpus", "manuals"),
         description="Root directory for the structured AEAT Manual práctico corpus",
     )
-    aeat_manuals_review_required: bool = Field(
+    cadrumo_manuals_review_required: bool = Field(
         default=True,
         description=(
             "When True, manual corpus verification rejects any Manual/Section/Rule record "
@@ -494,7 +494,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── IVA catalogue (cadrumo.domain.iva) ──────────────────────────────────
-    aeat_iva_catalogue_root: Path = Field(
+    cadrumo_iva_catalogue_root: Path = Field(
         default_factory=lambda: bundled_path("registry", "aeat", "iva", "catalogues"),
         description="Root directory for the hand-reviewed IVA taxonomy catalogue",
     )
@@ -509,11 +509,11 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Browser Automation ──────────────────────────────────────────────────
-    aeat_browser_channel: str = Field(
+    cadrumo_browser_channel: str = Field(
         default="chrome",
         description="Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')",
     )
-    aeat_browser_headless: bool = Field(
+    cadrumo_browser_headless: bool = Field(
         default=True,
         description="Run browser in headless mode",
     )
@@ -551,23 +551,23 @@ class Settings(AeatIntegrationSettings):
             "installs; the pointer file is the canonical default."
         ),
     )
-    aeat_proxy_url: str = Field(
+    cadrumo_proxy_url: str = Field(
         default="",
         description="Proxy URL (e.g., 'http://proxy.example.com:8080')",
     )
-    aeat_proxy_username: str = Field(
+    cadrumo_proxy_username: str = Field(
         default="",
         description="Username for proxy authentication",
     )
-    aeat_proxy_password_secret: SecretStr | None = Field(
+    cadrumo_proxy_password_secret: SecretStr | None = Field(
         default=None,
         description="Password for proxy authentication",
     )
-    aeat_proxy_bypass: str = Field(
+    cadrumo_proxy_bypass: str = Field(
         default="",
         description="Comma-separated list of domains to bypass the proxy",
     )
-    aeat_rate_limit_delay_seconds: float = Field(
+    cadrumo_rate_limit_delay_seconds: float = Field(
         default=2.0,
         description="Minimum delay between AEAT requests in seconds",
     )
@@ -584,19 +584,19 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── AEAT certificate authentication ─────────────────────────────────────
-    aeat_certificate_path: Path | None = Field(
+    cadrumo_certificate_path: Path | None = Field(
         default=None,
         description="Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle",
     )
-    aeat_certificate_password_secret: SecretStr | None = Field(
+    cadrumo_certificate_password_secret: SecretStr | None = Field(
         default=None,
         description="PKCS#12 passphrase (env only, never logged or persisted)",
     )
-    aeat_certificate_friendly_name: str | None = Field(
+    cadrumo_certificate_friendly_name: str | None = Field(
         default=None,
         description="Optional human-readable label for the certificate",
     )
-    aeat_certificate_backend: CertificateBackend = Field(
+    cadrumo_certificate_backend: CertificateBackend = Field(
         default=CertificateBackend.PLAYWRIGHT_CONTEXT,
         description="Which certificate backend to use: playwright_context or httpx_fallback",
     )
@@ -604,7 +604,7 @@ class Settings(AeatIntegrationSettings):
         default_factory=_default_aeat_sede_origin_with_slash,
         description="Target URL for cadrumo.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
     )
-    aeat_auth_timeout_ms: int = Field(
+    cadrumo_auth_timeout_ms: int = Field(
         default=30_000,
         ge=1,
         description="Playwright navigation timeout for AEAT authentication probes in milliseconds",
@@ -632,7 +632,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── AEAT auth provider default ──────────────────────────────────────────
-    aeat_auth_provider: AuthProviderKindSetting | None = Field(
+    cadrumo_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
             "Default auth provider for `aeat config auth status` / `test` when "
@@ -642,7 +642,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Cl@ve Móvil ─────────────────────────────────────────────────────────
-    aeat_clave_movil_dni_nie: SecretStr | None = Field(
+    cadrumo_clave_movil_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
             "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
@@ -652,7 +652,7 @@ class Settings(AeatIntegrationSettings):
             "prevent leakage through repr / model_dump / ValidationError."
         ),
     )
-    aeat_clave_movil_dni_fecha: str | None = Field(
+    cadrumo_clave_movil_dni_fecha: str | None = Field(
         default=None,
         description=(
             "DNI validity / expiry date (YYYY-MM-DD) used by the "
@@ -660,7 +660,7 @@ class Settings(AeatIntegrationSettings):
             "configured identity is a DNI."
         ),
     )
-    aeat_clave_movil_nie_soporte: SecretStr | None = Field(
+    cadrumo_clave_movil_nie_soporte: SecretStr | None = Field(
         default=None,
         description=(
             "NIE support number (número de soporte) used by the "
@@ -669,7 +669,7 @@ class Settings(AeatIntegrationSettings):
             "identifier; typed as SecretStr to prevent leakage."
         ),
     )
-    aeat_clave_prefer_non_qr: bool = Field(
+    cadrumo_clave_prefer_non_qr: bool = Field(
         default=False,
         description=(
             "When true, the Cl@ve Móvil provider uses the non-QR fallback "
@@ -677,7 +677,7 @@ class Settings(AeatIntegrationSettings):
             "requires operator-mediated completion in Cl@ve."
         ),
     )
-    aeat_clave_movil_timeout_ms: int = Field(
+    cadrumo_clave_movil_timeout_ms: int = Field(
         default=120_000,
         ge=30_000,
         le=120_000,
@@ -706,7 +706,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Cl@ve Permanente ────────────────────────────────────────────────────
-    aeat_clave_permanente_dni_nie: SecretStr | None = Field(
+    cadrumo_clave_permanente_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
             "Taxpayer DNI/NIE for `aeat config auth configure "
@@ -717,7 +717,7 @@ class Settings(AeatIntegrationSettings):
             "leakage through repr / model_dump / ValidationError."
         ),
     )
-    aeat_clave_permanente_password: SecretStr | None = Field(
+    cadrumo_clave_permanente_password: SecretStr | None = Field(
         default=None,
         description=(
             "Cl@ve Permanente password for the DNI/NIE + password login "
@@ -725,7 +725,7 @@ class Settings(AeatIntegrationSettings):
             "only, never stored in a committed env file, never logged."
         ),
     )
-    aeat_clave_permanente_timeout_ms: int = Field(
+    cadrumo_clave_permanente_timeout_ms: int = Field(
         default=60_000,
         ge=15_000,
         le=120_000,
@@ -1007,9 +1007,9 @@ class Settings(AeatIntegrationSettings):
 
     @model_validator(mode="after")
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
-        if self.aeat_live_iva_declaration_capture_timeout_ms >= self.aeat_live_iva_surface_timeout_ms:
+        if self.cadrumo_live_iva_declaration_capture_timeout_ms >= self.cadrumo_live_iva_surface_timeout_ms:
             raise ValueError(
-                "aeat_live_iva_declaration_capture_timeout_ms must be lower than aeat_live_iva_surface_timeout_ms",
+                "cadrumo_live_iva_declaration_capture_timeout_ms must be lower than cadrumo_live_iva_surface_timeout_ms",
             )
         return self
 
@@ -1113,7 +1113,7 @@ class Settings(AeatIntegrationSettings):
         return self
 
     @field_validator(
-        "aeat_certificate_path",
+        "cadrumo_certificate_path",
         mode="before",
     )
     @classmethod
@@ -1124,7 +1124,7 @@ class Settings(AeatIntegrationSettings):
         return value
 
     @field_validator(
-        "aeat_certificate_password_secret",
+        "cadrumo_certificate_password_secret",
         "cadrumo_llm_anthropic_api_key",
         "cadrumo_llm_openai_api_key",
         "cadrumo_llm_gemini_api_key",
@@ -1146,11 +1146,11 @@ class Settings(AeatIntegrationSettings):
         return value
 
     @field_validator(
-        "aeat_clave_movil_dni_nie",
-        "aeat_clave_movil_dni_fecha",
-        "aeat_clave_movil_nie_soporte",
-        "aeat_clave_permanente_dni_nie",
-        "aeat_clave_permanente_password",
+        "cadrumo_clave_movil_dni_nie",
+        "cadrumo_clave_movil_dni_fecha",
+        "cadrumo_clave_movil_nie_soporte",
+        "cadrumo_clave_permanente_dni_nie",
+        "cadrumo_clave_permanente_password",
         mode="before",
     )
     @classmethod
@@ -1160,7 +1160,7 @@ class Settings(AeatIntegrationSettings):
             return None
         return value
 
-    @field_validator("aeat_clave_movil_dni_fecha")
+    @field_validator("cadrumo_clave_movil_dni_fecha")
     @classmethod
     def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
         """Reject DNI validity dates that are not canonical ``YYYY-MM-DD``.
@@ -1176,11 +1176,11 @@ class Settings(AeatIntegrationSettings):
         import re as _re
 
         if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-            raise CoreValidationError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
+            raise CoreValidationError("CADRUMO_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
         try:
             date.fromisoformat(value)
         except ValueError as exc:
-            raise CoreValidationError("AEAT_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
+            raise CoreValidationError("CADRUMO_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
         return value
 
     @field_validator(
@@ -1232,9 +1232,9 @@ class Settings(AeatIntegrationSettings):
         "cadrumo_registry_disk_cache_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "aeat_iva_catalogue_root",
+        "cadrumo_iva_catalogue_root",
         "cadrumo_corpus_text_cache_dir",
-        "aeat_certificate_path",
+        "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
         "cadrumo_llm_run_telemetry_dir",

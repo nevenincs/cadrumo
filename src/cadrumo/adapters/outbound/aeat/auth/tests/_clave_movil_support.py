@@ -317,20 +317,20 @@ class _InitialNavigationTimeoutBrowserSession(_RecordingBrowserSession):
 def _settings_for(tmp_path: Path, **env: str) -> Settings:
     env_overrides = {key.lower(): value for key, value in env.items()}
     expected_keys = {
-        "aeat_clave_movil_dni_fecha",
-        "aeat_clave_movil_dni_nie",
-        "aeat_clave_movil_nie_soporte",
-        "aeat_clave_prefer_non_qr",
+        "cadrumo_clave_movil_dni_fecha",
+        "cadrumo_clave_movil_dni_nie",
+        "cadrumo_clave_movil_nie_soporte",
+        "cadrumo_clave_prefer_non_qr",
     }
     unexpected = set(env_overrides) - expected_keys
     assert unexpected == set()
     return Settings(
         cadrumo_token_dir=tmp_path,
         cadrumo_local_storage_root=tmp_path / "storage",
-        aeat_clave_prefer_non_qr=_bool_setting(env_overrides.get("aeat_clave_prefer_non_qr")),
-        aeat_clave_movil_dni_nie=_secret_or_none(env_overrides.get("aeat_clave_movil_dni_nie")),
-        aeat_clave_movil_dni_fecha=env_overrides.get("aeat_clave_movil_dni_fecha"),
-        aeat_clave_movil_nie_soporte=_secret_or_none(env_overrides.get("aeat_clave_movil_nie_soporte")),
+        cadrumo_clave_prefer_non_qr=_bool_setting(env_overrides.get("cadrumo_clave_prefer_non_qr")),
+        cadrumo_clave_movil_dni_nie=_secret_or_none(env_overrides.get("cadrumo_clave_movil_dni_nie")),
+        cadrumo_clave_movil_dni_fecha=env_overrides.get("cadrumo_clave_movil_dni_fecha"),
+        cadrumo_clave_movil_nie_soporte=_secret_or_none(env_overrides.get("cadrumo_clave_movil_nie_soporte")),
     )
 
 
