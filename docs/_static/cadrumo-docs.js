@@ -600,6 +600,13 @@
 
   var PLAY_INTERVAL_MS = 1800;
 
+  function prefersReducedMotion() {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
   function unescapePayload(text) {
     // The directive escapes </ as <\/ so the inline JSON cannot break out of
     // its script element; reverse that before parsing.
@@ -629,7 +636,10 @@
     );
     if (frames.length < 2) return; // a single frame has nothing to step through
 
-    parseSequencePayload(root); // parsed for validation; stepping uses the DOM
+    // The inline payload is the sequence's build-time contract. If it is absent
+    // or malformed, leave the static transcript unenhanced rather than driving a
+    // player over a sequence whose contract we cannot validate.
+    if (parseSequencePayload(root) === null) return;
 
     var total = frames.length;
     var current = 0;
@@ -716,6 +726,9 @@
     playBtn.addEventListener("click", function () {
       if (timer) {
         stopPlay();
+      } else if (prefersReducedMotion()) {
+        // Reduced-motion: no timer-driven auto-advance; play steps forward once.
+        goTo(current + 1);
       } else {
         startPlay();
       }
