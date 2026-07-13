@@ -193,7 +193,7 @@ adapters:
           folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent
             jelolve; az operatori adatok vedelmeben az iras megtagadva.
           former_vault_folder: A Google Drive vault mappa {vault_folder_name} az elozo
-            termekhez tartozik es nem hasznalhato; hasznalja a CADRUMO vault mappat.
+            termekhez tartozik es nem hasznalhato; hasznalja a Cadrumo vault mappat.
           googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem
             importalhato; futtassa: `uv sync`, majd probalja ujra.'
           media_non_bytes: A Google Drive medialetoltes {payload_type} tipust adott
@@ -3771,7 +3771,7 @@ cli:
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
       source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
         nem rezidens IRNR profiloknal.
-      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a CADRUMO automatikusan
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
@@ -3959,7 +3959,7 @@ cli:
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
         sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
         bevallható alap- és áfa-gyermekekre váljon szét.
-      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a CADRUMO automatikusan
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
@@ -4450,7 +4450,7 @@ cli:
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
         diagnostics_review_queue: Függőben lévő felülvizsgálati munka listázása.
         footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app --help.'
-        heading: CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
+        heading: Cadrumo - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
         ledger_allocate: Üzleti célú vagy adóelosztási metaadatok hozzárendelése.
         ledger_archive: Főkönyvi tranzakció archiválása az előzmények törlése nélkül.
         ledger_attach: Bizonyíték csatolása egy főkönyvi tranzakcióhoz.
@@ -4812,7 +4812,7 @@ cli:
     format_help: 'Kimeneti formátum: text, json, table, csv.'
     help_help: Súgó megjelenítése.
     landing:
-      headline: CADRUMO Adóasszisztens
+      headline: Cadrumo Adóasszisztens
       help_line: 'További súgó: `aeat --help`, `aeat config --help` vagy `aeat app
         --help`. A globális kapcsolókat (`--format json`, `--language hu`, `--profile
         NÉV`, `--quiet`, `--verbose`, `--debug`) az alparancs ELÉ kell helyezni, pl.
@@ -6057,7 +6057,7 @@ mcp:
         tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
       no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
         támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
-        tud kérdezni, vagy futtasd a megfelelő CADRUMO CLI parancsot közvetlenül a
+        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI parancsot közvetlenül a
         terminálban.
   faithfulness:
     advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
