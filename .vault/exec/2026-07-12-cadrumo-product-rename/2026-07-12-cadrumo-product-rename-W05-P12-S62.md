@@ -116,3 +116,30 @@ scan reports 13 title-case occurrences in Catalan, 10 in English, 7 in Spanish,
 and 6 in Hungarian. The command-leading lowercase `cadrumo` residue scan reports
 no matches. S63 through S66 retain ownership of catalogue mutations through the
 locale CLI, and S67 retains the final generated parity proof.
+
+## Ratified authority correction
+
+Authority Step S86 landed at `4cb1006b6e` and records the binding casing
+convention in the accepted executable ADR's status note: sentence prose uses
+`Cadrumo`, identity contexts may use `CADRUMO`, the sole human executable is
+`aeat`, and the Spanish authority remains `AEAT`. This later ruling supersedes
+the earlier all-caps sentence-prose claims retained above as historical
+execution evidence.
+
+This corrective S62 pass removed the blanket `Cadrumo`-to-`CADRUMO` rewrite
+from both production normalization boundaries. The shared renderer and locale
+manager now normalize only unambiguous command-leading stale `cadrumo` tokens
+to `aeat`. They preserve sentence-case `Cadrumo`, intentional identity-context
+`CADRUMO`, lowercase package and MCP identifiers, `CADRUMO_*` environment
+names, and `AEAT` authority prose. The locale maintenance command description
+now states that it normalizes stale command prefixes. No locale catalogue was
+modified; S63 through S66 retain ownership of catalogue corrections.
+
+Real-behavior verification passed 60 focused renderer, formatter-contract,
+locale-audit, and parity tests. Ruff lint, Ruff format, and Ty passed for all
+five changed Python files. The production locale CLI reported all four
+catalogues healthy through both `audit` and `scaffold --check` using isolated
+valid local state. An initial read-only locale CLI attempt used the invalid
+secret-store value `local` and failed validation before catalogue access; the
+correct `unsecured` value then passed. No failure was hidden, skipped, or
+converted to an expected failure.

@@ -467,17 +467,15 @@ def _yaml_quoted_scalar(value: str) -> str:
 
 
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
-_STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
 
 
 def _normalise_product_identity_references(value: str) -> str:
-    """Align product prose and command examples with the canonical identity."""
-    value = _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
-    return _STALE_PRODUCT_DISPLAY_RE.sub(PRODUCT_IDENTITY.display_name, value)
+    """Align command examples with the canonical human executable."""
+    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
 
 
 def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
-    """Recursively normalize product display and command references."""
+    """Recursively normalize stale human-command references."""
     if isinstance(value, dict):
         return _normalise_product_identity_mapping(value)
     if isinstance(value, str):
