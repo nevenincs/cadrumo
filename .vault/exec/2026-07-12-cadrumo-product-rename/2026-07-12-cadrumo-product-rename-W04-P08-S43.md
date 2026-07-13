@@ -9,39 +9,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S43 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rename server, tool prefixes, subprocess argv, and product environment names while retaining authority language and ## Scope
-
-- `src/cadrumo/entrypoints/mcp/_server.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Rename server, tool prefixes, subprocess argv, and product environment names while retaining authority language
 
 ## Scope
@@ -56,6 +23,7 @@ related:
 - Retarget timeout guidance and server-owned meta-tool descriptions to sentence-prose `Cadrumo`.
 - Preserve AEAT live-write, authority adapter, and legal language, consume S44's completed resource-scheme result, and defer broad tool-prefix budgets to S46.
 - Exercise the server identity, product-facing meta-tool copy, and a real end-to-end subprocess-backed `contract` meta-execution.
+- Derive the protocol server name from `PRODUCT_IDENTITY.mcp_server` and make the focused contract test assert that authority relationship instead of duplicating its current literal value.
 
 ## Outcome
 
@@ -75,9 +43,11 @@ command; it does not rely on a runner fake or a `cadrumo` executable alias.
 
 - The active environment exposes `aeat` as the human CLI and no `cadrumo`
   executable. The subprocess test passes against that binding directly.
-- Nineteen focused MCP integration tests pass against the real SDK where
-  installed. Ruff, formatting, and Ty pass on the focused server and test
-  surface; the resource-kind annotation and optional SDK-description narrowing
-  now express the existing runtime contracts without ignores.
+- Eighteen focused MCP integration tests pass against the real SDK with project
+  addopts cleared so the direct module is actually collected. Ruff, formatting,
+  and Ty pass on the focused server and test surface; the resource-kind
+  annotation and optional SDK-description narrowing now express the existing
+  runtime contracts without ignores.
 - Server-owned resource documentation now reflects S44's completed `cadrumo://` scheme. Retained AEAT live-write wording and outbound-adapter paths identify the Spanish tax authority and are not product aliases.
 - Broad per-verb tool prefixes live in `_dispatch.py` and the MCP test budgets assigned to S46, outside this Step.
+- This remediation cross-carries a concurrent mechanical removal of generated scaffold comments from this record; no peer-authored evidence prose was removed or rewritten.
