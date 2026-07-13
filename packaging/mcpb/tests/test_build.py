@@ -113,9 +113,7 @@ def test_build_reports_the_real_signing_outcome_without_overclaiming(
         assert captured.err == ""
     else:
         assert "[UNSIGNED (signer unavailable or no signing identity configured)]" in captured.out
-        assert captured.err.startswith(
-            "mcpb sign failed (no identity?); shipping unsigned:"
-        )
+        assert captured.err.startswith("mcpb sign failed (no identity?); shipping unsigned:")
 
 
 def test_manifest_version_matches_the_package_release() -> None:

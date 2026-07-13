@@ -74,3 +74,8 @@ S54 removed those substitutes and observes only the actual host state, including
 the distinct diagnostics for an unavailable signer, a real successful signer,
 or a real signer failure. The tests do not claim installation, publisher
 verification, or a configured release identity.
+
+The mandatory independent review found one low-severity Ruff formatting defect
+in the real signer-failure assertion. A formatting-only remediation applied the
+formatter's exact wrap, after which Ruff formatting, lint, and all six MCPB tests
+passed without behavior changes.
