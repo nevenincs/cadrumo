@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+import cadrumo.core as core_module
+
 from .. import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
@@ -17,6 +19,15 @@ from .. import __all__ as core_all
 from .. import product_identity as identity_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_IDENTITY_EXPORTS = frozenset(
+    {
+        "AEAT_AUTHORITY_SHORT_NAME",
+        "PRODUCT_IDENTITY",
+        "IdentityReferent",
+        "ProductIdentity",
+    }
+)
 
 
 def test_product_identity_matches_the_accepted_external_tuple() -> None:
@@ -97,23 +108,21 @@ def test_identity_referent_vocabulary_is_closed() -> None:
 
 
 def test_core_facade_reexports_the_exact_identity_objects() -> None:
-    """The public facade and defining module expose one shared authority."""
-    assert PRODUCT_IDENTITY is identity_module.PRODUCT_IDENTITY
-    assert ProductIdentity is identity_module.ProductIdentity
-    assert IdentityReferent is identity_module.IdentityReferent
-    assert AEAT_AUTHORITY_SHORT_NAME is identity_module.AEAT_AUTHORITY_SHORT_NAME
-    assert set(identity_module.__all__) <= set(core_all)
+    """The defining module and core facade expose one closed identity API."""
+    assert set(identity_module.__all__) == _IDENTITY_EXPORTS
+    identity_objects = tuple(getattr(identity_module, name) for name in _IDENTITY_EXPORTS)
+    assert {
+        name
+        for name in core_all
+        if any(getattr(core_module, name) is identity_object for identity_object in identity_objects)
+    } == _IDENTITY_EXPORTS
+
+    for export_name in _IDENTITY_EXPORTS:
+        assert getattr(core_module, export_name) is getattr(identity_module, export_name)
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:
-    """AEAT is exported only as the short name of the external authority."""
+    """AEAT is public only as the explicit external-authority short name."""
     assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
-    assert {
-        "AEAT_AUTHORITY_SHORT_NAME",
-        "PRODUCT_IDENTITY",
-        "IdentityReferent",
-        "ProductIdentity",
-    } <= set(core_all)
-    assert "AEAT_PRODUCT_IDENTITY" not in core_all
-    assert "AEAT_PRODUCT" not in core_all
-    assert "AEAT_CLI_EXECUTABLE" not in core_all
+    assert {name for name in core_all if name.casefold().startswith("aeat")} == {"AEAT_AUTHORITY_SHORT_NAME"}
+    assert "__getattr__" not in vars(identity_module)
