@@ -107,3 +107,36 @@ catalogue migration.
 - No locale YAML was hand-edited; the production module CLI performed the sole
   catalogue mutation. English, Catalan, Hungarian, S65 through S67, S25, and
   every other open descendant remain outside this Step.
+
+## S87 contextual-casing correction
+
+Authority Step S87 at `03cd792be3` binds `prose_name='Cadrumo'` separately
+from identity-context `display_name='CADRUMO'`, while retaining `aeat` as the
+sole human executable and `AEAT` as the authority. Earlier all-caps prose
+claims in this record are retained only as historical evidence.
+
+This pass used five explicit production `locales set` operations against
+Spanish. Three sentence-prose leaves now use `Cadrumo`; `mcp.call.timeout` and
+`mcp.elicitation.refusal.no_channel` now direct operators to the human `aeat`
+command. The identity headings `cli.operator_surface.help.root.heading` and
+`cli.root.landing.headline` remain exact `CADRUMO`. No broad canonicalizer or
+text replacement was used.
+
+Spanish changed by exactly five insertions and five deletions, from SHA-256
+`2D97F3174AA18D65ECFBE5856A6D4FCF015606AFB54447610DE85BAFCD8E3A72`
+to
+`02C6765D56B101DDF3F9E81833DC55A47A62CE033319FC7A0EEE9BC9EA996104`.
+English remained byte-identical at
+`6241114C3A643E9F60283E526386080A7AD31D7A965012221F956A557D594426`,
+Catalan at
+`9A4BBE39A1DCA9B4B42175D5DAF1DAECC0E0BCEBD354F52E759BFEFDE30BC5CC`,
+and Hungarian at
+`9F659FD5A312A7B1B1B5219A43B00285E3F3BD8CEEF81F90F6C03D2CEFE30F9B`.
+The real Spanish catalogue assertion covers all seven classified keys and
+preserves the `AEAT` authority referent in the root identity heading.
+
+Production `audit` and `scaffold --check` reported all four catalogues healthy.
+The renderer, formatter-contract, locale-audit, and parity slice passed 62 real
+tests. Ruff lint, Ruff format, and Ty passed for the changed semantic test, and
+the scoped diff passes whitespace validation. No test was skipped, patched, or
+converted to an expected failure.
