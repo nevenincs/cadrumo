@@ -35,7 +35,7 @@ number = "iva.resultado-regimen-general"
 casilla_id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
 
-# Cross-member reconciliation casillas (A2 ADR): the per_grupo_member sums of
+# Cross-member reconciliation casillas: the per_grupo_member sums of
 # the members' 322 result casillas. Part of the 353 calculation closure, so the
 # completeness manifest must list them too (the test_record_design drift gate
 # requires manifest == closure).

@@ -1,18 +1,14 @@
 """Lazy-import policy gate: sanctioned classes, allowlist, and count ratchet.
 
-Discharges register item D7 of the architecture-remediation program (decision
-record ``2026-07-02-arch-remediation-lazy-import-policy``). The architecture
-review measured ~815 function-local relative imports in production. The idiom
-spans very different intents: decision-record-sanctioned lazy resource loaders
-and CLI cold-start deferrals at one end, and first-party module-cycle breaks
-plus cross-layer softening at the other, where a cycle "fixed" by deferring an
+Production carries roughly 815 function-local relative imports. The idiom
+spans very different intents: sanctioned lazy resource loaders and CLI
+cold-start deferrals at one end, and first-party module-cycle breaks plus
+cross-layer softening at the other, where a cycle "fixed" by deferring an
 import is hidden from the import-TIME graph the layered-contract linter audits
-rather than removed. This gate draws the policy line the governing decision
-record mandates.
+rather than removed. This gate draws the policy line between the two.
 
-Five sanctioned classes are inherited from four accepted decision records plus the
-core-authority protect list, recognised STRUCTURALLY here, and never need an
-allowlist entry:
+Five sanctioned classes plus the core-authority protect list are recognised
+STRUCTURALLY here, and never need an allowlist entry:
 
 1. Core resource-repository deferred loaders -- a function-local first-party
    import under ``core/resources/`` (the resource-management deferral; the audit
@@ -20,8 +16,8 @@ allowlist entry:
 2. CLI cold-start / PEP 562 package-boundary deferrals -- a function-local
    import anywhere under ``entrypoints/cli/`` (the cold-start budget enforced by
    ``test_lazy_command_tree.py``) or an import inside a package ``__getattr__``
-   body (the PEP 562 boundary of the user-profile lazy-import decision record
-   and its application-boundary-lazy-by-default successor).
+   body (the PEP 562 boundary applied to the user-profile lazy import and
+   its application-boundary-lazy-by-default successor).
 3. ``TYPE_CHECKING`` blocks -- type-only, never executed at runtime.
 4. Optional third-party dependency guards -- an import inside a
    ``try: ... except ImportError`` (or ``ModuleNotFoundError``) handler.
@@ -42,7 +38,7 @@ stubs): it collects every function-local import, excludes the sanctioned classes
 structurally, and checks the remainder against the declared allowlist. The
 allowlist edge set and its per-class site-count ceilings ratchet -- an increase
 requires editing the declaration in the same commit; a decrease (the
-ports-inversion campaign deletes the domain->adapters edges; cycles get
+domain->adapters edges are deleted via the ports-inversion; cycles get
 restructured) is free, because the discovered set is only ever asserted to be a
 SUBSET of the declaration.
 """
@@ -69,7 +65,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class SanctionedClass(StrEnum):
     """The five inherited import-deferral classes recognised structurally.
 
-    Members are ordered as the governing decision record lists them. The value
+    Members are ordered by their sanctioning rationale below. The value
     is the operator-facing label surfaced in a gate failure so an author who
     trips an unsanctioned site sees the full sanctioned taxonomy to classify
     against.
@@ -88,9 +84,9 @@ FIVE_SANCTIONED_CLASSES: tuple[SanctionedClass, ...] = tuple(SanctionedClass)
 class Disposition(StrEnum):
     """The restructuring disposition an unsanctioned edge is held under."""
 
-    DELETE_VIA_PORTS_INVERSION = "delete via the ports-inversion campaign"
+    DELETE_VIA_PORTS_INVERSION = "delete via the ports-inversion work"
     RESTRUCTURE_CYCLE = "restructure the module-load cycle"
-    KEEP_BOOTSTRAP = "keep -- bootstrap machinery accepted by its ADR"
+    KEEP_BOOTSTRAP = "keep -- accepted bootstrap machinery"
     PENDING_REVIEW = "pending restructure review"
 
 
@@ -112,22 +108,20 @@ class UnsanctionedClass(StrEnum):
 
 
 # Reason + disposition metadata for each unsanctioned class. The reason names the
-# origin; the disposition is the standing worklist verdict. The two named
-# bootstrap/cycle classes carry their existing decision-record citations.
+# origin; the disposition is the standing worklist verdict.
 _CLASS_METADATA: dict[UnsanctionedClass, tuple[str, Disposition]] = {
     UnsanctionedClass.ERROR_REGISTRY_BOOTSTRAP: (
         "core/errors deferred-bind queue resolves error classes inside a "
-        "circular-import window (core-authority ADR protect list).",
+        "circular-import window (a protected core-authority boundary).",
         Disposition.KEEP_BOOTSTRAP,
     ),
     UnsanctionedClass.NAMED_CYCLE_BREAK: (
-        "application/overview/_coverage defers an import explicitly to break a "
-        "module-load cycle (named in the architecture-review audit).",
+        "application/overview/_coverage defers an import explicitly to break a module-load cycle.",
         Disposition.RESTRUCTURE_CYCLE,
     ),
     UnsanctionedClass.PORTS_INVERSION_PENDING: (
         "domain package binds a persistence adapter through a deferred import; "
-        "the ports-inversion ADR deletes this seam per domain.",
+        "the ports-inversion work deletes this seam per domain.",
         Disposition.DELETE_VIA_PORTS_INVERSION,
     ),
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: (
@@ -171,9 +165,8 @@ class _LocalImport(NamedTuple):
 
 # Baseline allowlist: every current unsanctioned function-local first-party
 # import EDGE, grouped by unsanctioned class. Generated once from the gate's own
-# AST walk at the register-item-D7 baseline (HEAD 2026-07-02) and asserted to be
-# a SUPERSET of the live discovered set thereafter, so the ports-inversion
-# campaign's edge removals never fight this declaration. To ADD a new edge, add
+# AST walk and asserted to be a SUPERSET of the live discovered set thereafter,
+# so the ports-inversion edge removals never fight this declaration. To ADD a new edge, add
 # it here in the same commit and raise the matching per-class ceiling below; to
 # REMOVE one, deletion is free (the subset check still holds).
 _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
@@ -458,7 +451,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.auth", "core.i18n"),
             ImportEdge("application.auth._acquisition_lock", "core"),
             ImportEdge("application.auth._apoderado", "core.config"),
-            # certificate-source registry operator verbs (#591 slice): mirrors
+            # certificate-source registry operator verbs mirror
             # the sibling `_operator` deferrals below for the same targets.
             ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.profile.buckets"),
             ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.storage"),

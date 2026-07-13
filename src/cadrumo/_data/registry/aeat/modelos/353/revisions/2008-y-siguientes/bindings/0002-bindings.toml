@@ -1,6 +1,6 @@
 # Modelo 353 (agregado del grupo) cross-member previous_filing bindings.
 #
-# A2 ADR (353<-322 grupo-entidades aggregation): each grupo member files its
+# 353<-322 grupo-entidades aggregation: each grupo member files its
 # own monthly Modelo 322; the entidad dominante's 353 aggregates them. These
 # three previous_filing bindings sum each of the three shared result casillas
 # across ALL members for the same month via the per_grupo_member grouping axis

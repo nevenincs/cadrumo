@@ -27,7 +27,7 @@ The gate has two jobs:
 
 CRITICAL DESIGN: the gate is GREEN at partial rollout. An empty manifest yields
 ``authorized 0/<fleet size>`` and passes, because there are zero *invalid* entries —
-the campaign ratchets coverage rather than the gate being permanently red until full
+coverage ratchets up over time rather than the gate being permanently red until full
 coverage (a permanent-red gate would violate ``aeat-quality-gates``). A fake,
 single-year, missing-test, or contract-less entry turns the gate RED.
 """
@@ -104,14 +104,9 @@ def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:
     62 is the count of registry-loadable modelo directories under
     ``src/cadrumo/_data/registry/aeat/modelos/`` today (verified against the live
     registry by :func:`test_canonical_fleet_covers_every_loadable_modelo` below,
-    which asserts zero drift in either direction). A prior worktree-consolidation
-    commit (``c955c0496d``) accidentally dropped the registry TOML for six
-    modelos (136, 189, 280, 289, 345, 379) that a parallel registry-grounding
-    campaign had freshly authored and committed one commit earlier
-    (``fee68502dd``, ``96265d0169``, ``1600c030b0``, ``536a82183f``,
-    ``47e63c7797``, ``395ea08329``), while leaving this assertion bumped to a
-    ``66`` that was never actually achieved. The registry TOML for those six
-    modelos has been restored (byte-identical to the pre-consolidation commit)
+    which asserts zero drift in either direction). The registry TOML for six
+    modelos (136, 189, 280, 289, 345, 379) that had been accidentally dropped
+    has been restored (byte-identical to the pre-loss state)
     and they were removed from :data:`cadrumo.core.UNMODELED_OBLIGATIONS`
     accordingly. 45 was the honest, registry-verified count once the accidental
     data loss was corrected; it became 46 when Modelo 182 (donativos, donaciones

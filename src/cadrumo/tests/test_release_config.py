@@ -1,4 +1,4 @@
-"""Tripwire tests for the release-please LOCAL-only workflow (#60).
+"""Tripwire tests for the release-please LOCAL-only workflow.
 
 These tests validate the project-meta files that drive `just release`:
 
