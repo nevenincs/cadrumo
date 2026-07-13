@@ -193,6 +193,48 @@ def _command_option_names(cmd: click.Command) -> frozenset[str]:
     return frozenset(names)
 
 
+def _value_consuming_option_names(cmd: click.Command) -> frozenset[str]:
+    """Option strings on ``cmd`` that consume a following value token.
+
+    A boolean flag (``--force`` / ``--no-force``) or a counting option
+    (``-v -v``) takes no value; every other option consumes the next token as
+    its value. Knowing this set for the *resolved* command lets the
+    dead-subcommand check tell an option value (``--layout plugin``) apart from
+    a subcommand name — the root-global heuristic in the string parser cannot,
+    because it runs before the command is known.
+    """
+    names: set[str] = set()
+    for param in cmd.params:
+        if getattr(param, "param_type_name", None) != "option":
+            continue
+        if getattr(param, "is_flag", False) or getattr(param, "count", False):
+            continue
+        names.update(param.opts)
+        names.update(param.secondary_opts)
+    return frozenset(names)
+
+
+def _option_value_tokens(tokens: tuple[str, ...], value_consuming: frozenset[str]) -> set[str]:
+    """Tokens in ``tokens`` consumed as the value of a value-consuming option.
+
+    Walks the ordered stream and, for each cited value-consuming option written
+    without an inline ``=value``, marks the next token as its value. Used to
+    exclude an option value from the dead-subcommand check.
+    """
+    consumed: set[str] = set()
+    expect_value = False
+    for tok in tokens:
+        if expect_value:
+            consumed.add(tok)
+            expect_value = False
+            continue
+        if tok.startswith("-") and tok != "-":
+            name = tok.split("=", 1)[0]
+            if "=" not in tok and name in value_consuming:
+                expect_value = True
+    return consumed
+
+
 def _required_positional_count(cmd: click.Command) -> int:
     """Number of required, non-variadic positional arguments on ``cmd``."""
     count = 0
@@ -222,6 +264,13 @@ class _CitedCommand:
     # True when at least one non-flag token follows the verb path (a value or
     # a placeholder) — used to evaluate the missing-required-positional check.
     has_positional_token: bool
+    # The full ordered token stream after the executable token (verb tokens,
+    # options, option values, positionals), preserved so the dead-subcommand
+    # check can consult the resolved command's value-consuming options and tell
+    # an option *value* apart from a subcommand. Defaults to empty for the
+    # directly-constructed fixtures in the tests, which exercise the option-name
+    # and verb-resolution paths that do not need the ordered stream.
+    tokens: tuple[str, ...] = ()
 
 
 def _strip_inline_comment(line: str) -> str:
@@ -319,6 +368,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
         verb_tokens=tuple(verb_tokens),
         cited_options=tuple(cited_options),
         has_positional_token=has_positional,
+        tokens=tuple(tokens),
     )
 
 
@@ -409,13 +459,21 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
     # GROUP takes no positional arguments — a leftover verb token under a
     # group can only be a subcommand name that does not exist (the shape that
     # let `aeat app ledger payable-invoice` pass while uninvokable after the
-    # invoice unification rename).
+    # invoice unification rename). A leftover token that is really the *value*
+    # of a value-consuming option on the resolved group (`aeat app agent
+    # --layout plugin`) is NOT a dead subcommand: the string parser cannot know
+    # the group's options, so it over-collects the value into the verb path;
+    # exclude those values by consulting the resolved command's real params.
     if hasattr(cmd, "list_commands") and leftover:
-        violations.append(
-            f"`{cited.raw}` cites `{leftover[0]}`, which is not a subcommand of "
-            f"the group `aeat {' '.join(resolved.resolved_path)}`",
-        )
-        return violations
+        value_consuming = _value_consuming_option_names(cmd) | _value_consuming_option_names(_root_command())
+        option_values = _option_value_tokens(cited.tokens, value_consuming)
+        dead = [tok for tok in leftover if tok not in option_values]
+        if dead:
+            violations.append(
+                f"`{cited.raw}` cites `{dead[0]}`, which is not a subcommand of "
+                f"the group `aeat {' '.join(resolved.resolved_path)}`",
+            )
+            return violations
 
     # Missing-required-positional (the ``profile create`` shape) is
     # deliberately NOT enforced here: see the module docstring's limitation
@@ -512,6 +570,42 @@ def test_live_introspection_matches_reality() -> None:
         has_positional_token=True,
     )
     assert not _validate_command(live_with_positional)
+
+
+def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
+    """A value-consuming option's value under a group is not a dead subcommand.
+
+    ``aeat app agent --layout plugin`` cites the real ``--layout`` option of the
+    ``app agent`` group with the value ``plugin``. The string parser cannot know
+    the group's options, so it over-collects ``plugin`` into the verb path and
+    longest-prefix resolution leaves it as a leftover under a live group. Without
+    consulting the resolved command's params, the gate wrongly flagged ``plugin``
+    as a dead subcommand. The validator must treat it as the option value it is,
+    while still refusing a genuinely non-existent subcommand under the same
+    group.
+    """
+    # Precondition: `app agent` is a live group and `--layout` is a real,
+    # value-consuming option of it (guards the fixture against CLI drift).
+    agent = _resolve_path(("app", "agent"))
+    assert agent.resolved_path == ("app", "agent")
+    assert agent.command is not None
+    assert hasattr(agent.command, "list_commands")
+    assert "--layout" in _value_consuming_option_names(agent.command)
+
+    layout_value = _parse_command_line("aeat app agent --layout plugin")
+    assert layout_value is not None
+    assert layout_value.tokens == ("app", "agent", "--layout", "plugin")
+    assert not _validate_command(layout_value), (
+        "the value of a value-consuming option must not be flagged as a dead subcommand"
+    )
+
+    # A fabricated, genuinely non-existent subcommand under the same live group
+    # (with no option consuming it) must still be refused.
+    dead = _parse_command_line("aeat app agent totally-fake-subcommand")
+    assert dead is not None
+    flagged = _validate_command(dead)
+    assert flagged, "a genuinely dead subcommand under a live group must be refused"
+    assert "totally-fake-subcommand" in flagged[0]
 
 
 @pytest.mark.parametrize("doc", _flat_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
