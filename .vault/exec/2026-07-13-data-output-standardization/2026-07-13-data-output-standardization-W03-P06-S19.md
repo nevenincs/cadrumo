@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-14'
 step_id: 'S19'
 related:
   - "[[2026-07-13-data-output-standardization-plan]]"
@@ -76,6 +76,53 @@ campaign (S17 to S19) is now structurally complete: every field is
 renamed, every code consumer swept, every generated doc regenerated,
 and the one confirmed user-facing prose citation routed through the
 locales CLI.
+
+## Review follow-up (wave-3)
+
+The wave-3 review returned REVISION REQUIRED on this Phase: one MEDIUM
+plus two LOW findings, closed in commit `71edd51918`.
+
+- **MEDIUM** -- `src/cadrumo/application/preflight.py:198`
+  (`_auth_error_remediation`, the `certificate` / `"unreadable"` branch)
+  still cited the dead `AEAT_CERTIFICATE_PASSWORD` literal. This name was
+  never one of the 39 fields the S17 table adjudicated -- it does not
+  match any live Settings field (the real field is
+  `cadrumo_certificate_password_secret`, env var
+  `CADRUMO_CERTIFICATE_PASSWORD_SECRET`) -- so the S18/S19 field-literal
+  sweeps correctly reported zero hits against their own worklist while
+  missing this pre-existing, differently-spelled stale citation. Fixed
+  by routing the hint to the live CLI verb
+  (`` `aeat config auth certificate secret set` ``, confirmed against the
+  live Typer tree: `auth_app` -> `certificate_app` -> `secret_app` ->
+  `set`) rather than naming any env var, matching the sibling hints on
+  the surrounding lines. Confirmed `preflight.py` carries no `tr()`
+  calls, so no locale-key routing applied here. Re-ran the full
+  `test_preflight.py` suite across all three modules (36 tests, green)
+  and a final repo-wide `AEAT_CERTIFICATE_PASSWORD` sweep: remaining
+  hits are exclusively pre-existing `.vault/` historical records (18
+  files, left untouched per the same historical-record rationale as the
+  main sweep), the two benign wizard-widget echo-string tests the
+  reviewer already identified
+  (`application/wizard/tests/test_questionary_smoke.py`,
+  `application/wizard/tests/test_widgets.py` -- arbitrary password-input
+  fixture strings, unrelated to the real field name), and
+  `.agents/testimonials/authenticate-with-aeat.md`, a dated
+  (2026-06-18) persona-testimonial record of what a past session found
+  wrong in the docs at that time -- judged out of scope on the same
+  historical-record basis as `.vault/`, since rewriting it would
+  falsify what that session actually observed.
+- **LOW 1** -- the S17 audit doc's
+  `authority-referent-urls-and-templates` finding heading said "9 fields
+  stay AEAT_" while its own body enumerated exactly 7 (the 10-KEEP total
+  across all findings was correct). Fixed the heading to say "7 fields".
+- **LOW 2** -- ran
+  `vaultspec-core vault check annotations --feature
+  data-output-standardization --fix`; reported clean (no scaffold
+  annotation residue found in the S22 audit doc or any other feature
+  document at the time this ran).
+
+Commit `71edd51918` (`preflight.py` + the S17 audit doc heading fix; the
+LOW-2 annotation check made no file changes).
 
 ## Notes
 
