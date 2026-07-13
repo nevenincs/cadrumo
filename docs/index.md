@@ -75,21 +75,23 @@ tax-field decisions.
 Use this when you need to see which modelos are due and which period to prepare.
 :::
 
-:::{grid-item-card} Follow the Filing Workflow
+:::{grid-item-card} Prepare Your Filings
 :link: how-to/filing-spine
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when you want the full repeatable loop: prepare, verify, export, file
-through AEAT, and keep local history.
+Use this for the repeatable loop - prepare, verify, export, file through
+AEAT, reconcile - and the per-modelo recipes: 036, 100 (Renta), 130, 303,
+349, and 390.
 :::
 
-:::{grid-item-card} Build Your First Modelo 130 Filing
+:::{grid-item-card} Follow a Whole Filing Year
 :link: tutorials/index
 :link-type: doc
 :class-card: aeat-route-card
 
-A guided walkthrough from setup through the final local export.
+Two guided lifecycle tutorials: the income-tax year (Modelo 130 into the
+annual Renta) and the IVA year (Modelo 303 into the annual 390).
 :::
 
 ::::
