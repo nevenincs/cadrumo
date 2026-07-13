@@ -61,3 +61,10 @@ short literal list and therefore missed valid prohibited forms such as
 families for Python imports/modules, distribution installation, uv package
 selection, former distribution names, and former source paths. Exact `aeat`
 human CLI invocations and AEAT authority prose remain explicitly accepted.
+
+The follow-up review found two remaining boundary defects. The Python-module
+family now covers dotted submodules such as `python -m aeat.cli`, and the
+distribution-install family stops at shell command separators instead of
+consuming a later allowed `aeat` CLI invocation or AEAT authority sentence.
+Direct witnesses cover both rejected former-product forms and allowed chained
+commands. All twenty-five structural cases, Ruff lint, Ruff format, and Ty pass.

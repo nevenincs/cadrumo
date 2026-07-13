@@ -20,11 +20,13 @@ _PROHIBITED_AEAT_PRODUCT_FORMS = (
     ),
     (
         "python-module",
-        re.compile(r"(?i)\bpython(?:\d+(?:\.\d+)*)?\s+-m\s+aeat(?=\s|$)"),
+        re.compile(r"(?i)\bpython(?:\d+(?:\.\d+)*)?\s+-m\s+aeat(?:\.[a-z_]\w*)*(?=\s|$)"),
     ),
     (
         "distribution-install",
-        re.compile(r"""(?i)\b(?:(?:uv\s+)?pip\s+install|uv\s+add)\b[^\r\n]*?(?<![\w-])aeat(?=\[|\s|$|[<>=!~@;"'])"""),
+        re.compile(
+            r"""(?i)\b(?:(?:uv\s+)?pip\s+install|uv\s+add)\b[^&|;\r\n]*?(?<![\w-])aeat(?=\[|\s|$|[<>=!~@;"'])"""
+        ),
     ),
     (
         "uv-package",
@@ -94,6 +96,8 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
         "uv run --no-sync aeat app registry verify --json",
         "aeat --version",
         "echo 'AEAT is the Spanish tax authority'",
+        "uv add cadrumo && aeat --version",
+        "pip install cadrumo && echo AEAT is the Spanish tax authority",
     ),
 )
 def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
@@ -110,9 +114,12 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
         ("import aeat.core", "python-import"),
         ('python -c "import os, aeat as retired"', "python-import"),
         ("python -m aeat config check", "python-module"),
+        ("python -m aeat.cli check", "python-module"),
         ("uv pip install aeat", "distribution-install"),
         ('uv pip install "aeat"', "distribution-install"),
         ('pip install "aeat[agent]>=1"', "distribution-install"),
+        ("uv add cadrumo aeat", "distribution-install"),
+        ("pip install cadrumo aeat>=1", "distribution-install"),
         ("uv run --package aeat python verify.py", "uv-package"),
         ("uv run --package=aeat python verify.py", "uv-package"),
         ("uv run --with 'aeat==1.2.3' python verify.py", "uv-package"),
