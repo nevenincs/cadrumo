@@ -284,7 +284,7 @@ def _auth_configure_result(
     settings = load_settings()
     provider_identity = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
-        provider_identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip().upper()
+        provider_identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip().upper()
     alignment = "not_applicable"
     alignment_detail = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
@@ -314,8 +314,7 @@ def _auth_configure_result(
     }:
         # A Cl@ve identity that does not align with the active profile
         # cannot pass live auth; `auth test` would only re-report the
-        # same mismatch. Route the operator to the actual fix instead
-        # (persona-fleet finding G2).
+        # same mismatch. Route the operator to the actual fix instead.
         next_action = _identity_alignment_next_action(alignment)
     elif provider == AuthProviderKind.CLAVE_MOVIL.value:
         next_action = "aeat config auth test --provider clave_movil"
@@ -364,8 +363,8 @@ def _identity_alignment_detail(
     """Explain a Cl@ve identity-alignment verdict in operator language.
 
     A bare ``identity_alignment: mismatch`` token states *that*
-    something is wrong but never *what* is compared or how to fix it
-    (persona-fleet finding G2). This returns a sentence naming the two
+    something is wrong but never *what* is compared or how to fix it.
+    This returns a sentence naming the two
     compared values — the Cl@ve identity's DNI/NIE and the active
     profile's tax id — and the concrete step the operator must take.
     """
@@ -430,7 +429,7 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
     encrypted AEAT session token persisted on disk for the probed
     provider and reports whether one is present and whether it is still
     within its idle deadline. This gives ``auth test`` an observable
-    behaviour beyond ``auth status`` (persona-fleet finding G5).
+    behaviour beyond ``auth status``.
 
     When the operator passes ``--provider`` the requested provider is
     actively probed. When no provider is requested, ``auth test`` scopes
@@ -502,6 +501,7 @@ def build_live_auth_preflight_report(
         provider_kind,
         settings=resolved_settings,
     )
+    certificate_path = resolved_settings.cadrumo_certificate_path
     return LiveAuthPreflightReport(
         provider=probe.provider,
         configured=probe.configured,
@@ -516,22 +516,22 @@ def build_live_auth_preflight_report(
         identity_kind=_live_auth_identity_kind(provider_kind, settings=resolved_settings),
         auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
         prefer_non_qr=(
-            resolved_settings.aeat_clave_prefer_non_qr if provider_kind is AuthProviderKind.CLAVE_MOVIL else None
+            resolved_settings.cadrumo_clave_prefer_non_qr if provider_kind is AuthProviderKind.CLAVE_MOVIL else None
         ),
-        timeout_ms=resolved_settings.aeat_clave_movil_timeout_ms
+        timeout_ms=resolved_settings.cadrumo_clave_movil_timeout_ms
         if provider_kind is AuthProviderKind.CLAVE_MOVIL
         else None,
-        dni_fecha_configured=bool((resolved_settings.aeat_clave_movil_dni_fecha or "").strip())
+        dni_fecha_configured=bool((resolved_settings.cadrumo_clave_movil_dni_fecha or "").strip())
         if provider_kind is AuthProviderKind.CLAVE_MOVIL
         else None,
-        nie_soporte_configured=bool(unwrap_optional_secret(resolved_settings.aeat_clave_movil_nie_soporte).strip())
+        nie_soporte_configured=bool(unwrap_optional_secret(resolved_settings.cadrumo_clave_movil_nie_soporte).strip())
         if provider_kind is AuthProviderKind.CLAVE_MOVIL
         else None,
-        certificate_path_configured=resolved_settings.aeat_certificate_path is not None,
+        certificate_path_configured=certificate_path is not None,
         certificate_file_present=bool(
-            resolved_settings.aeat_certificate_path is not None and resolved_settings.aeat_certificate_path.is_file(),
+            certificate_path is not None and certificate_path.is_file(),
         ),
-        certificate_backend=resolved_settings.aeat_certificate_backend.value,
+        certificate_backend=resolved_settings.cadrumo_certificate_backend.value,
         persisted_session_present=probe.persisted_session_present,
         persisted_session_expired=probe.persisted_session_expired,
         persisted_session_state=probe.persisted_session_state,
@@ -788,7 +788,7 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
     the state projection cross the env-var / workflow-state seam.
     """
     if provider_kind is AuthProviderKind.CERTIFICATE:
-        cert_path = settings.aeat_certificate_path
+        cert_path = settings.cadrumo_certificate_path
         if cert_path is None:
             from ..workflow import workflow_state_repository
 
@@ -805,7 +805,7 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
             )
     if (
         provider_kind is AuthProviderKind.CLAVE_MOVIL
-        and not unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip()
+        and not unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip()
     ):
         raise AuthLoginPreconditionError(
             translated_message="application.auth.operator.login.refused_clave_movil_identity_unset",
@@ -835,8 +835,8 @@ def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
     state = workflow_state_repository().load()
     if state.auth.provider:
         return AuthProviderKind(state.auth.provider)
-    if settings.aeat_auth_provider is not None:
-        return AuthProviderKind(settings.aeat_auth_provider.value)
+    if settings.cadrumo_auth_provider is not None:
+        return AuthProviderKind(settings.cadrumo_auth_provider.value)
     return AuthProviderKind.CERTIFICATE
 
 
