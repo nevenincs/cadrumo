@@ -11,7 +11,7 @@ over two thousand casillas and two hundred formulas - and it is the one
 filing that gathers the whole year: your ledger, your profile facts, your
 quarterly instalments, and the withholdings others reported on your behalf.
 For how those values arrive and how to trace any figure to its source, read
-[How the Renta declaration is assembled](../explanation/renta-and-bindings.md)
+[How the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
 - this page stays with the commands.
 
 `aeat` does not submit Modelo 100 to AEAT. Export creates a local file that
@@ -29,7 +29,7 @@ you upload through the official AEAT channel yourself.
   with `aeat config profile descendiente add/list/remove`.
 - Bring the year's ledger to clean and classified - Modelo 100 aggregates
   income and deductible expenses across the whole year. See
-  [Work with Transactions](import-bank-statements.md) and
+  [Import and manage transactions](import-bank-statements.md) and
   [Classify transactions](classify-transactions.md); confirm with
   `aeat app ledger preflight --year 2025 --period 0A`.
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
@@ -105,7 +105,7 @@ aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
 
 ## Next steps
 
-- [How the Renta declaration is assembled](../explanation/renta-and-bindings.md)
+- [How the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
 - [Prepare a Modelo 130 IRPF instalment](modelo-130.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Upload your exported modelo at the AEAT portal](file-at-aeat.md)

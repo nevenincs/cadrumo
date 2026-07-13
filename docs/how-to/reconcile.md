@@ -28,8 +28,7 @@ You need:
 
 To create a profile, see [Set up your taxpayer profile](profile-setup.md). For
 the filing workflow, see the [quickstart](quickstart.md). Every command on
-this page needs your master-key passphrase; the tool prompts for it, or set
-`CADRUMO_SECRET_PASSPHRASE` to run non-interactively.
+this page needs your master-key passphrase; the tool prompts for it.
 
 ## Pull and store the justificante
 

@@ -56,7 +56,7 @@ official evidence is still missing — so you see what must be resolved before
 this period can safely build on the ones before it. For the background, see
 [Building on earlier filings](../explanation/building-on-earlier-filings.md).
 
-## Audit the lifecycle of a modelo
+## See everything that happened to a filing
 
 Stream every recorded lifecycle event — calculations, verification passes
 and refusals, filings, amendments, imports — for one modelo:
@@ -68,7 +68,7 @@ aeat app modelo history --modelo 303 --year 2026
 Add `--period` to narrow to one period. This is the modelo-wide audit trail;
 for the event stream of a single workspace, use
 `aeat app modelo work history` — see
-[How the tool organises your filing work](filing-spine.md).
+[The filing workflow](filing-spine.md).
 
 ## Compare two filing years
 
@@ -149,6 +149,6 @@ review stage:
   fill missing values readiness or verification surfaced.
 - [Building on earlier filings](../explanation/building-on-earlier-filings.md)
   — how cross-period dependencies work.
-- [How the tool organises your filing work](filing-spine.md) — workspaces,
+- [The filing workflow](filing-spine.md) — workspaces,
   revisions, and per-workspace history.
 - [CLI reference](../cli/index.rst) — full option reference.

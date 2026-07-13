@@ -7,7 +7,7 @@ Fix wrong transactions in your ledger without losing track of what changed. Ever
 You need:
 
 - An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
 - A ledger with transactions in it.
 
 To find the transaction you want to fix, list your transactions and view one in detail:
@@ -151,7 +151,7 @@ If a command refuses or fails, check the [troubleshooting guide](troubleshooting
 
 ## Next steps
 
-- [Work with transactions](import-bank-statements.md) - bring in new transactions.
+- [Import and manage transactions](import-bank-statements.md) - bring in new transactions.
 - [Attach evidence to transactions](ledger-evidence.md) - back your corrections with receipts.
 - [Classify transactions](classify-transactions.md) - prepare corrected rows for tax calculations.
 - [CLI reference](../cli/index.rst) - full field detail for every ledger command.

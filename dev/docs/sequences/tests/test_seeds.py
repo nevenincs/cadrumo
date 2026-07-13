@@ -14,8 +14,11 @@ from pathlib import Path
 import pytest
 
 from .. import (
+    SANDBOX_PROFILE_LABEL,
+    SEED_SUFFIX,
     FrameKind,
     SequenceParseError,
+    default_seeds_root,
     load_seed_frames,
     parse_sequence,
 )
@@ -140,3 +143,77 @@ def test_seed_grammar_faults_are_located_in_the_recipe(tmp_path: Path) -> None:
     assert any(
         "seed:broken line 1" in problem and "must invoke 'aeat'" in problem for problem in excinfo.value.problems
     )
+
+
+# --- Committed seed recipes stay bound to the sandbox contract -------------
+#
+# A committed recipe runs inside the runner's sandbox, whose one profile is
+# registered under ``SANDBOX_PROFILE_LABEL``. A recipe frame that addresses a
+# profile must therefore use exactly that label — a hardcoded copy silently
+# breaks every enrolled page at docs-build time the day the constant moves.
+# These tests bind the committed literals to the constant so a rename fails
+# HERE, naming the seed and line, instead of failing in the docs build.
+
+
+def _committed_seeds() -> list[Path]:
+    return sorted(default_seeds_root().glob(f"*{SEED_SUFFIX}"))
+
+
+def _profile_label_positional(argv: tuple[str, ...]) -> str | None:
+    """Return the profile-label positional of a ``config profile <verb>`` frame.
+
+    The label is the first positional token after the verb, skipping options
+    and their space-separated values (an ``=``-joined value rides its option
+    token). Returns ``None`` for frames that do not address a profile.
+    """
+    tokens = list(argv)
+    try:
+        anchor = next(
+            index for index in range(len(tokens) - 1) if tokens[index] == "config" and tokens[index + 1] == "profile"
+        )
+    except StopIteration:
+        return None
+    previous_was_option = False
+    for token in tokens[anchor + 3 :]:  # after "config profile <verb>"
+        if token.startswith("-"):
+            previous_was_option = "=" not in token
+            continue
+        if previous_was_option:
+            previous_was_option = False
+            continue
+        return token
+    return None
+
+
+def test_committed_seeds_parse_cleanly() -> None:
+    """Every committed recipe loads without problems, so a broken seed reds the
+    engine suite instead of the next docs build."""
+    seeds = _committed_seeds()
+    assert seeds, f"no committed seed recipes under {default_seeds_root()}"
+    for path in seeds:
+        _, problems = load_seed_frames(path.stem)
+        assert problems == [], f"{path.name}: {problems}"
+
+
+def test_committed_seed_profile_labels_are_the_sandbox_label() -> None:
+    """F3 binding: every profile-addressing frame in a committed recipe uses
+    the CURRENT ``SANDBOX_PROFILE_LABEL`` — renaming the constant fails here,
+    naming the seed and line, not silently at docs-build time."""
+    labelled_frames = 0
+    for path in _committed_seeds():
+        builders, problems = load_seed_frames(path.stem)
+        assert problems == [], f"{path.name}: {problems}"
+        for builder in builders:
+            label = _profile_label_positional(builder.argv)
+            if label is None:
+                continue
+            labelled_frames += 1
+            assert label == SANDBOX_PROFILE_LABEL, (
+                f"{path.name} line {builder.line_number}: profile label {label!r} "
+                f"must be the sandbox profile label {SANDBOX_PROFILE_LABEL!r} "
+                "(the runner registers exactly one profile, under that label)"
+            )
+    # Anti-vacuity ratchet: the corpus currently addresses the profile at least
+    # once; if a future recipe reshape removes every such frame, this assert
+    # fails so the binding is consciously re-anchored rather than rotting.
+    assert labelled_frames > 0, "no committed seed frame addresses a profile; re-anchor this binding test"

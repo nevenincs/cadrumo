@@ -35,6 +35,10 @@ dependencies = [
   "argon2-cffi>=23.1.0,<26",
   # HTML parsing for status readers.
   "beautifulsoup4>=4.12,<5",
+  # Direct first-party imports (CadrumoTyperGroup command suggestions,
+  # wizard prompt types, click context helpers). typer>=0.26 no longer
+  # declares click, so the dependency must be explicit here.
+  "click>=8.1,<9",
   # PKCS#12 parsing for client-certificate auth.
   "cryptography>=47.0.0,<48",
   # XML parsing.
@@ -337,7 +341,6 @@ dev = [
   "sphinx-design>=0.6",
   "sphinx-notfound-page>=1.1",
   "sphinxext-opengraph>=0.9",
-  "sphinx-sitemap>=2.6",
   # Hover tooltip cards on :term: cross-references. With hoverxref_roles=["term"],
   # every :term: reference to a generated glossary entry shows the definition on
   # hover - the curated short description surfaces without a page load. The
@@ -697,6 +700,8 @@ convention = "google"
 # without shell=True") is a heuristic ban that does not recognise our
 # controlled-argv pattern; granted per-file.
 "dev/docs/cli_reference.py" = ["S603", "F401"]
+"dev/docs/cli_tree.py" = ["S603"]
+"dev/docs/tests/test_cli_tree.py" = ["S603"]
 "dev/docs/terminology/_cli_projection.py" = ["S603"]
 "dev/docs/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/cadrumo/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]

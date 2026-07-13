@@ -11,8 +11,7 @@ económicas en estimación directa. Pago fraccionado."
 `aeat` does not submit Modelo 130 to AEAT. Export creates a local file that
 you upload through the official AEAT channel yourself.
 
-The tool needs a master-key passphrase. It prompts for it interactively, or
-reads `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+The tool needs a master-key passphrase and prompts for it.
 
 ## The complete first-quarter chain
 
@@ -146,8 +145,8 @@ instalments are folded into Modelo 100 as payments on account. See
 
 ## Next steps
 
-- [The income-tax year (tutorial)](../tutorials/irpf-lifecycle.md)
-- [The filing workflow: work units and calculation revisions](filing-spine.md)
+- [The income-tax year (run-through)](irpf-lifecycle.md)
+- [The filing workflow](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Upload your exported modelo at the AEAT portal](file-at-aeat.md)
 - [Reconcile a filing](reconcile.md)

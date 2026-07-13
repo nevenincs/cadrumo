@@ -13,13 +13,15 @@ then calculate, verify, and export a Modelo 130 for the first quarter of 2026.
 Every command below is run in order. It links to deeper guides whenever a step
 has tax-specific setup or review choices.
 
-## 1. Install the CLI
+## Install the CLI
 
-Install the `cadrumo` package from PyPI. Any tool that installs Python
-applications works; `pip` is the plainest path:
+Download the current `cadrumo` package from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and
+install it with `pip`; the [installation guide](../workstation-setup.md) walks
+through the full setup, including optional integrations:
 
 ```bash
-pip install cadrumo
+pip install ./cadrumo-0.2.0-py3-none-any.whl
 ```
 
 Confirm the command is on your path:
@@ -28,23 +30,19 @@ Confirm the command is on your path:
 aeat --version
 ```
 
-To use Cadrumo with an AI agent later, install the agent extra instead; see
+To use Cadrumo with an AI agent later, install the `agent` extra instead; see
 [Connect an agent](connect-an-agent.md):
 
 ```bash
-pip install "cadrumo[agent]"
+pip install "./cadrumo-0.2.0-py3-none-any.whl[agent]"
 ```
 
 ## Before you start: the master-key passphrase
 
 `aeat` encrypts your local data with a master key derived from a passphrase.
 The first command that touches the store asks for the passphrase and the tool
-reuses it for the rest of the session. To run without a prompt, set it in the
-environment first:
-
-```bash
-export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
-```
+reuses it for the rest of the session. For unattended runs, see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 The CLI emits its help and messages in Spanish. The English text on this page
 describes what each step does.
@@ -124,7 +122,7 @@ Imported rows arrive without a tax category and must be classified before they
 count in a calculation (see the next step). The `ledger add` rows above are
 already classified, so you can skip straight to step 4.
 
-Use [Work with Transactions](import-bank-statements.md) for the full
+Use [Import and manage transactions](import-bank-statements.md) for the full
 transaction workflow: import, add, update, remove, review, classify, allocate,
 and run readiness checks.
 
@@ -163,7 +161,7 @@ yet. Running it again returns the existing workspace.
 are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
 
 For more on how the tool organises your filing work behind the scenes, see
-[How the tool organises your filing work](filing-spine.md).
+[The filing workflow](filing-spine.md).
 
 ## 5. Calculate the values
 
@@ -270,7 +268,7 @@ To compare your local record with the AEAT receipt, see
 
 - [Set up your taxpayer profile](profile-setup.md) if profile facts are still
   incomplete.
-- [Work with Transactions](import-bank-statements.md) when your ledger is
+- [Import and manage transactions](import-bank-statements.md) when your ledger is
   not ready yet.
 - [Classify transactions](classify-transactions.md) before calculating from
   imported rows.

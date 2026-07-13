@@ -589,10 +589,374 @@
     });
   }
 
+  /* ── CLI sequence stepped player ───────────────────────────────────────
+   * Progressive enhancement over the server-rendered
+   * div.cadrumo-sequence transcript (ADR D5). The frames are already in the
+   * DOM as div.cadrumo-frame; without this script the reader sees the full
+   * linear transcript. When it runs, the widget only ENHANCES: it reveals the
+   * command/result frames one step at a time behind prev/next/play controls
+   * and a position indicator, and never injects or removes frame content. Each
+   * sequence on a page keeps its own independent state. */
+
+  var PLAY_INTERVAL_MS = 1800;
+
+  function prefersReducedMotion() {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function unescapePayload(text) {
+    // The directive escapes </ as <\/ so the inline JSON cannot break out of
+    // its script element; reverse that before parsing.
+    return text.replace(/<\\\//g, "</");
+  }
+
+  function parseSequencePayload(root) {
+    var script = root.querySelector("script.cadrumo-sequence-payload");
+    if (!script) return null;
+    try {
+      return JSON.parse(unescapePayload(script.textContent));
+    } catch (e) {
+      /* A malformed payload never breaks the widget; stepping is driven by the
+       * DOM frames, and the static transcript stays intact. */
+      return null;
+    }
+  }
+
+  function setupSequence(root) {
+    // The steppable units are the command and result frames in document order;
+    // setup frames stay as their own collapsed disclosure and are not stepped.
+    var frames = Array.prototype.filter.call(
+      root.querySelectorAll(".cadrumo-frame"),
+      function (frame) {
+        return frame.getAttribute("data-frame-kind") !== "setup";
+      }
+    );
+    if (frames.length < 2) return; // a single frame has nothing to step through
+
+    // The inline payload is the sequence's build-time contract. If it is absent
+    // or malformed, leave the static transcript unenhanced rather than driving a
+    // player over a sequence whose contract we cannot validate.
+    if (parseSequencePayload(root) === null) return;
+
+    var total = frames.length;
+    var current = 0;
+    var timer = null;
+
+    var controls = document.createElement("div");
+    controls.className = "cadrumo-sequence-controls";
+    controls.setAttribute("role", "group");
+    controls.setAttribute("aria-label", "Sequence playback");
+
+    function button(kind, label, glyph) {
+      var el = document.createElement("button");
+      el.type = "button";
+      el.className = "cadrumo-sequence-btn cadrumo-sequence-btn--" + kind;
+      el.setAttribute("aria-label", label);
+      el.innerHTML = glyph;
+      return el;
+    }
+
+    var prevBtn = button("prev", "Previous step", "&#8592;");
+    var playBtn = button("play", "Play", "&#9654;");
+    var nextBtn = button("next", "Next step", "&#8594;");
+
+    var indicator = document.createElement("span");
+    indicator.className = "cadrumo-sequence-position";
+    indicator.setAttribute("aria-live", "polite");
+    indicator.setAttribute("aria-atomic", "true");
+
+    controls.appendChild(prevBtn);
+    controls.appendChild(indicator);
+    controls.appendChild(nextBtn);
+    controls.appendChild(playBtn);
+
+    function render() {
+      frames.forEach(function (frame, index) {
+        var revealed = index <= current;
+        frame.hidden = !revealed;
+        frame.classList.toggle("is-active", index === current);
+      });
+      indicator.textContent = current + 1 + " / " + total;
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === total - 1;
+    }
+
+    function stopPlay() {
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+      playBtn.classList.remove("is-playing");
+      playBtn.setAttribute("aria-label", "Play");
+      playBtn.setAttribute("aria-pressed", "false");
+      playBtn.innerHTML = "&#9654;";
+    }
+
+    function goTo(index, viaPlay) {
+      current = Math.max(0, Math.min(index, total - 1));
+      if (!viaPlay) stopPlay();
+      render();
+    }
+
+    function startPlay() {
+      if (current === total - 1) current = 0;
+      playBtn.classList.add("is-playing");
+      playBtn.setAttribute("aria-label", "Pause");
+      playBtn.setAttribute("aria-pressed", "true");
+      playBtn.innerHTML = "&#10073;&#10073;";
+      render();
+      timer = window.setInterval(function () {
+        if (current >= total - 1) {
+          stopPlay();
+          return;
+        }
+        goTo(current + 1, true);
+      }, PLAY_INTERVAL_MS);
+    }
+
+    prevBtn.addEventListener("click", function () {
+      goTo(current - 1);
+    });
+    nextBtn.addEventListener("click", function () {
+      goTo(current + 1);
+    });
+    playBtn.addEventListener("click", function () {
+      if (timer) {
+        stopPlay();
+      } else if (prefersReducedMotion()) {
+        // Reduced-motion: no timer-driven auto-advance; play steps forward once.
+        goTo(current + 1);
+      } else {
+        startPlay();
+      }
+    });
+
+    // Arrow-key stepping is scoped to the widget: the listener is on the
+    // sequence root, so it only fires when a control inside it holds focus,
+    // and it never collides with the global Ctrl/Cmd-K palette.
+    root.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goTo(current + 1);
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goTo(current - 1);
+      }
+    });
+
+    // The last frame carries the controls' insertion point; place the bar
+    // after the final frame so the transcript reads top-to-bottom.
+    var anchor = frames[total - 1];
+    if (anchor.parentNode) {
+      anchor.parentNode.insertBefore(controls, anchor.nextSibling);
+    } else {
+      root.appendChild(controls);
+    }
+    root.classList.add("cadrumo-sequence--enhanced");
+    render();
+  }
+
+  function initSequences() {
+    document.querySelectorAll("[data-cadrumo-sequence]").forEach(function (root) {
+      setupSequence(root);
+    });
+  }
+
+  /* ── CLI token hover help ───────────────────────────────────────────────
+   * A verb/option token in a sequence carries a data-command-path key that
+   * indexes the build-emitted cli-tree.json help projection (ADR D5). On hover
+   * or focus the token opens a popover with that command's live help, usage,
+   * and parameters. The projection is fetched once per page, lazily on the
+   * first hover intent, over a same-origin relative URL derived from this
+   * script's own src; a fetch failure degrades to no hover help (no console
+   * noise) and leaves the static transcript untouched. */
+
+  function cliTreeUrl() {
+    // Derive _static/cli-tree.json from this script's own src, so the fetch is
+    // same-origin and page-depth-independent without hard-coding a path.
+    var script = document.querySelector('script[src*="cadrumo-docs.js"]');
+    if (!script || !script.src) return null;
+    try {
+      return new URL("cli-tree.json", script.src).href;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function initHoverHelp() {
+    var tokens = document.querySelectorAll(
+      ".cadrumo-sequence .cli-tok[data-command-path]"
+    );
+    if (!tokens.length) return;
+    var url = cliTreeUrl();
+    if (!url) return;
+
+    var treePromise = null;
+    function loadTree() {
+      if (treePromise) return treePromise;
+      treePromise = fetch(url, { credentials: "same-origin" })
+        .then(function (response) {
+          return response.ok ? response.json() : null;
+        })
+        .catch(function () {
+          /* Absent projection (e.g. a dev preview built without the emit hook):
+           * hover help is simply unavailable, silently. */
+          return null;
+        });
+      return treePromise;
+    }
+
+    var popover = document.createElement("div");
+    popover.className = "cadrumo-cli-popover";
+    popover.id = "cadrumo-cli-popover";
+    popover.setAttribute("role", "tooltip");
+    popover.hidden = true;
+    document.body.appendChild(popover);
+
+    var activeToken = null;
+    var intended = null;
+
+    function hide() {
+      popover.hidden = true;
+      if (activeToken) {
+        activeToken.removeAttribute("aria-describedby");
+        activeToken = null;
+      }
+    }
+
+    function appendLine(className, text) {
+      if (!text) return;
+      var el = document.createElement("p");
+      el.className = className;
+      el.textContent = text;
+      popover.appendChild(el);
+    }
+
+    function appendParam(param) {
+      var li = document.createElement("li");
+      var name = document.createElement("span");
+      name.className = "cadrumo-cli-popover-param-name";
+      name.textContent = (param.names || []).join(", ");
+      li.appendChild(name);
+      if (param.required) {
+        var req = document.createElement("span");
+        req.className = "cadrumo-cli-popover-param-req";
+        req.textContent = "required";
+        li.appendChild(req);
+      }
+      if (param.help) {
+        var help = document.createElement("span");
+        help.className = "cadrumo-cli-popover-param-help";
+        help.textContent = param.help;
+        li.appendChild(help);
+      }
+      return li;
+    }
+
+    function renderNode(node, optionName) {
+      popover.textContent = "";
+      appendLine("cadrumo-cli-popover-path", (node.path || []).join(" "));
+      appendLine("cadrumo-cli-popover-usage", node.usage);
+      appendLine("cadrumo-cli-popover-help", node.help);
+      var params = node.params || [];
+      // When the token is a specific option, lead with just that option's
+      // parameter; otherwise list the command's parameters.
+      var shown = params;
+      if (optionName) {
+        shown = params.filter(function (param) {
+          return (param.names || []).indexOf(optionName) >= 0;
+        });
+        if (!shown.length) shown = params;
+      }
+      if (shown.length) {
+        var list = document.createElement("ul");
+        list.className = "cadrumo-cli-popover-params";
+        shown.slice(0, 12).forEach(function (param) {
+          list.appendChild(appendParam(param));
+        });
+        popover.appendChild(list);
+      }
+    }
+
+    function positionNear(token) {
+      var rect = token.getBoundingClientRect();
+      var margin = 8;
+      var doc = document.documentElement;
+      var pw = popover.offsetWidth;
+      var ph = popover.offsetHeight;
+      var left = rect.left + window.pageXOffset;
+      var maxLeft = window.pageXOffset + doc.clientWidth - pw - margin;
+      if (left > maxLeft) left = maxLeft;
+      if (left < window.pageXOffset + margin) left = window.pageXOffset + margin;
+      var top = rect.bottom + window.pageYOffset + 6;
+      if (rect.bottom + ph + 12 > doc.clientHeight && rect.top - ph - 6 > 0) {
+        top = rect.top + window.pageYOffset - ph - 6;
+      }
+      popover.style.left = Math.round(left) + "px";
+      popover.style.top = Math.round(top) + "px";
+    }
+
+    function show(token) {
+      var key = token.getAttribute("data-command-path");
+      if (!key) return;
+      intended = token;
+      loadTree().then(function (tree) {
+        if (!tree || intended !== token) return; // pointer/focus moved on
+        var node = tree[key];
+        if (!node) return;
+        renderNode(node, token.getAttribute("data-option"));
+        popover.hidden = false;
+        activeToken = token;
+        token.setAttribute("aria-describedby", popover.id);
+        positionNear(token);
+      });
+    }
+
+    tokens.forEach(function (token) {
+      if (!token.hasAttribute("tabindex")) token.setAttribute("tabindex", "0");
+      token.addEventListener("mouseenter", function () {
+        show(token);
+      });
+      token.addEventListener("mouseleave", function () {
+        intended = null;
+        hide();
+      });
+      token.addEventListener("focus", function () {
+        show(token);
+      });
+      token.addEventListener("blur", function () {
+        intended = null;
+        hide();
+      });
+      // Touch: a tap toggles the popover for the tapped token.
+      token.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (activeToken === token) {
+          intended = null;
+          hide();
+        } else {
+          show(token);
+        }
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !popover.hidden) {
+        intended = null;
+        hide();
+      }
+    });
+  }
+
   ready(function () {
     initBroadcast();
     initNavActive();
     initCommandBlocks();
     initPalette();
+    initSequences();
+    initHoverHelp();
   });
 })();

@@ -1,4 +1,4 @@
-# Get started: from bank records to a filed modelo
+# The filing journey: from bank records to a filed modelo
 
 New to Cadrumo? This guide maps the whole journey - from your bank records to a
 tax form you file yourself - and points you to the right guide at each stage.
@@ -31,11 +31,11 @@ walks the commands.
 ## Before you begin
 
 Install `cadrumo` and confirm it runs. See
-[Set up your workstation](../workstation-setup.md) for installation.
+[Install Cadrumo](../workstation-setup.md) for installation.
 
 Every command that touches your data needs your master-key passphrase, which
-protects your encrypted local store. The tool prompts for it the first time in a
-session, or you set `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
+protects your encrypted local store. The tool prompts for it the first
+time in a session.
 
 The command help, prompts, and messages render in Spanish to match the official
 AEAT forms, even though these guides are in English.
@@ -55,7 +55,7 @@ Your tax figures come from the income and expense records in your ledger. Import
 bank statement, or add rows by hand. Nothing is imported until you run an import
 command.
 
-Continue with: [Work with transactions](import-bank-statements.md).
+Continue with: [Import and manage transactions](import-bank-statements.md).
 
 ## Stage 3 - Classify each transaction
 

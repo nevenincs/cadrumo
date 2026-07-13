@@ -76,6 +76,10 @@ docs/cli/
 # Glossary is generated fresh at build time from the approved Terminology
 # Handbook concepts (docs/conf.py builder-inited); never committed.
 docs/_generated/
+# cli-tree.json help projection is generated fresh at build time from the live
+# command tree (docs/conf.py builder-inited); the widget fetches it same-origin
+# from _static. Never committed, so it cannot drift.
+docs/_static/cli-tree.json
 # Compiled Pagefind search index (ADR D5: uncommitted, regenerated every docs
 # build like docs/_build). The canonical output lives under docs/_build/html/
 # pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.

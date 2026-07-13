@@ -18,9 +18,9 @@ You need:
 
 - An active profile - see [set up your taxpayer profile](profile-setup.md) -
   and at least one transaction in its ledger to classify. See
-  [Work with Transactions](import-bank-statements.md).
+  [Import and manage transactions](import-bank-statements.md).
 - Your master-key passphrase. The command opens the encrypted ledger, so it
-  prompts for the passphrase (or reads `CADRUMO_SECRET_PASSPHRASE` when set).
+  prompts for the passphrase.
 - A provider CLI installed, on `PATH`, and logged in.
 
 The runtime emits help, prompts, and messages in Spanish.
@@ -123,7 +123,7 @@ business share through the normal
 After important corrections, re-run
 `aeat app ledger preflight --year 2026 --period 1T`.
 
-## Saturate the tax fields
+## Fill in the tax fields automatically
 
 A plain applied suggestion saves the classification and the expense
 category; it does not fill in the regulated tax fields. Add `--saturate` to
@@ -206,10 +206,9 @@ Override the vision model for one run with `--vision-model qwen2.5vl:7b`.
 Reading a text-layer PDF through a cloud provider requires all of the
 following, or the command refuses and explains why:
 
-- The deployment permits it: an administrator sets
-  `CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=1`. It is off by default.
-- The deployment is not in gestor mode: `CADRUMO_EVIDENCE_GESTOR_MODE=1`
-  categorically bars cloud evidence reading, whatever else is set.
+- The installation permits it. Cloud evidence reads are off by default
+  and stay off in gestor installations; whoever administers the
+  installation decides this deployment setting.
 - You acknowledge it on this run with `--evidence-acknowledged`. The
   acknowledgement is never remembered; pass it every time.
 
@@ -256,20 +255,13 @@ combine with the manual override flags.
   up. When the printed IVA does not match the computed IVA, the review shows
   an advisory so you can check before filing.
 
-### Evidence settings reference
+### Evidence deployment settings
 
-These settings are environment variables; the consent settings default to
-the safest value:
+Consent and model settings are deployment configuration, off by default
+and administered outside this workflow. The full list lives in the
+[environment overrides reference](../reference/environment-overrides.md).
 
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED` | off | Must be on to allow any cloud evidence read |
-| `CADRUMO_EVIDENCE_GESTOR_MODE` | off | When on, bars cloud evidence reading entirely |
-| `CADRUMO_LLM_OLLAMA_VISION_MODEL` | `qwen2.5vl:3b` | The local vision model for image reads |
-| `CADRUMO_LLM_OLLAMA_NUM_CTX` | `8192` | The local model context window |
-| `CADRUMO_LLM_VISION_READ_TIMEOUT_S` | `300` | Seconds to wait for a local vision read |
-
-## Provenance you can audit
+## See how each suggestion was produced
 
 Every applied result records how it was produced, so a later review shows
 the source:
@@ -309,6 +301,6 @@ provider unless your provider setup and privacy policy permit it.
 
 - [Classify transactions](classify-transactions.md)
 - [Attach invoices and receipts](ledger-evidence.md)
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

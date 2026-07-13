@@ -11,8 +11,7 @@ Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
 Tributaria (AEAT). Export creates a local file that you upload through the official
 AEAT channel yourself.
 
-The tool needs a master-key passphrase. It prompts for it interactively, or
-read it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+The tool needs a master-key passphrase and prompts for it.
 
 ## The complete first-quarter chain
 
@@ -151,7 +150,7 @@ aeat app modelo work status --modelo 303 --year 2026 --period 1T
 
 For routine work, the visible target (`--modelo`, `--year`, `--period`) is all
 you need. Reference-number workflows are covered in
-[The filing workflow: work units and calculation revisions](filing-spine.md).
+[The filing workflow](filing-spine.md).
 
 ## Check the ledger period
 
@@ -288,7 +287,7 @@ aeat app modelo work file --modelo 303 --year 2026 --period 1T
 
 `work file` is an internal local marker, not an AEAT submission.
 
-## Periods, carry-forward, and unclear cases
+## Periods, carry-forward, and special cases
 
 Modelo 303 supports quarterly and monthly period tokens in the registry. The
 profile determines which cadence appears in the filing calendar: ordinary
@@ -323,7 +322,7 @@ filing pass.
 
 ## Next steps
 
-- [The filing workflow: work units and calculation revisions](filing-spine.md)
+- [The filing workflow](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Plan your filing calendar](filing-calendar.md)
 - [Reconcile a filing](reconcile.md)

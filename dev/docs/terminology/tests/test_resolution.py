@@ -235,7 +235,7 @@ def test_resolver_reuse_avoids_reprojection() -> None:
 
     shared = TargetResolver()
     first = resolve_chunk_hits((_hit("docs/index.md"),), resolver=shared)
-    second = resolve_chunk_hits((_hit("docs/tutorials/index.md"),), resolver=shared)
+    second = resolve_chunk_hits((_hit("docs/how-to/quickstart.md"),), resolver=shared)
     assert first.resolved_count == 1
     assert second.resolved_count == 1
 

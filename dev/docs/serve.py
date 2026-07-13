@@ -49,6 +49,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
@@ -491,13 +492,29 @@ def _build_env(repo_root: Path) -> dict[str, str]:
     pydantic-model rebuild and the CLI-reference generation, leaving autodoc to
     crash on a not-fully-defined model. The dev server always serves the whole
     site, so force both build-time steps on via the conf.py overrides.
+
+    Ambient Cadrumo product and AEAT authority settings are stripped and the
+    local-storage root is pinned to an isolated temp directory, mirroring the
+    CLI-reference generator's subprocess environment: a developer workstation
+    whose real storage root holds retired ``aeat``-named state otherwise trips
+    the former-product refusal inside ``conf.py``'s settings construction and
+    kills every rebuild.
     """
-    return {
-        **os.environ,
-        "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
-        "CADRUMO_DOCS_FORCE_DEFERRED_MODELS": "1",
-        "CADRUMO_DOCS_FORCE_CLI_REFERENCE": "1",
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.upper().startswith(("CADRUMO_", "AEAT_"))
     }
+    environment.update(
+        {
+            "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
+            "CADRUMO_DOCS_FORCE_DEFERRED_MODELS": "1",
+            "CADRUMO_DOCS_FORCE_CLI_REFERENCE": "1",
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-"),
+        }
+    )
+    return environment
 
 
 def _pipe(source: socket.socket, sink: socket.socket) -> None:

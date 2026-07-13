@@ -18,7 +18,7 @@ Use Google Sheets when you want to review and adjust.
 You need:
 
 - an active profile; see [Set up your taxpayer profile](profile-setup.md)
-- classified transaction data; see [Work with Transactions](import-bank-statements.md)
+- classified transaction data; see [Import and manage transactions](import-bank-statements.md)
 - a modelo and period ready enough to calculate
 - a Google API credentials file (a Desktop OAuth client JSON from the
   [Google Cloud Console](https://console.cloud.google.com/))
@@ -72,7 +72,7 @@ Use `--prefill-relations` only when you want the spreadsheet to include values
 carried from related filings, such as annual summaries or prior-quarter
 carryovers.
 
-## Pull operator edits
+## Pull your edits back
 
 After reviewing or editing the workbook, pull typed edits back from the Sheet:
 
@@ -100,7 +100,7 @@ aeat config google sync calc compute --modelo 303 --year 2026 --period 1T --spre
 The compute command checks that the spreadsheet matches the expected filing
 period. If it refuses, re-export and retry from the new spreadsheet.
 
-## Verify the calculation surface
+## Check the spreadsheet calculation
 
 Run the calc-sheets verification command for the same modelo, year, and period:
 
@@ -119,7 +119,7 @@ aeat config google sync calc verify --modelo 303 --year 2026 --period 1T --scena
 Verification compares the calculation surfaces implemented by the app. It does
 not submit a filing to AEAT.
 
-## Mirror encrypted records to Drive
+## Back up your encrypted records to Drive
 
 Keep an off-machine copy of your encrypted records by mirroring them to the
 configured Drive folder:
@@ -169,7 +169,7 @@ For casilla-level manual inputs, bindings, offsets, and revisions, use
 
 ## Next steps
 
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Classify transactions](classify-transactions.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

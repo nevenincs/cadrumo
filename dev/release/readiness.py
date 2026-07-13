@@ -188,7 +188,7 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "cadrumo/cadrumo", gh_executable: str | None = None
+    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 

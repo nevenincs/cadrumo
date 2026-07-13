@@ -78,7 +78,7 @@ adapters:
         conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
           i contradictòries.
         foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
-          d'aquest perfil Cadrumo.
+          d'aquest perfil CADRUMO.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
         spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
@@ -112,7 +112,7 @@ adapters:
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
-          Cadrumo seleccionat.
+          CADRUMO seleccionat.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
@@ -131,7 +131,7 @@ adapters:
           canvia el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:
       errors:
-        no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google
+        no_active_profile: No hi ha cap perfil CADRUMO actiu enllaçat per a Google
           OAuth.
       suggestions:
         create_profile: Executeu `aeat config profile create NAME --tax-id <NIF>`
@@ -204,7 +204,7 @@ adapters:
             de l operador.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
-            de Cadrumo.
+            de CADRUMO.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             es pot importar; executa `uv sync` i torna-ho a provar.
           media_non_bytes: La descarrega de mitjans de Google Drive ha retornat {payload_type}
@@ -2985,7 +2985,7 @@ cli:
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        Cadrumo: '
+        CADRUMO: '
       data_loss_warning: Anota ara aquesta clau de recuperacio. AEAT no desa la clau
         de recuperacio en clar i no la pot tornar a mostrar.
       errors:
@@ -2993,7 +2993,7 @@ cli:
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
+      new_passphrase_prompt: 'Nova contrasenya del magatzem secret CADRUMO: '
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
@@ -3094,7 +3094,7 @@ cli:
         existent)
       logout_help: Esborrar el token de refresc i les metadades; conservar el client
         registrat
-      profile_help: Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de
+      profile_help: Perfil CADRUMO a usar (per defecte = perfil actiu de l'estat de
         flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
       register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
@@ -3826,7 +3826,7 @@ cli:
         de l'IRPF (art. 93.5 segregació).
       source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
         perfils de no resident IRNR.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna CADRUMO
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
@@ -4008,7 +4008,7 @@ cli:
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria. Torna a executar amb --auto-split per separar-les en
         fills de base i IVA declarables de manera independent.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna CADRUMO
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
@@ -4489,7 +4489,7 @@ cli:
         diagnostics_review_queue: Mostrar la cua de revisio pendent.
         footer: Executeu 'aeat <ordre> --help' per obtenir mes informacio sobre cada
           ordre.
-        heading: Cadrumo, eina de declaracions fiscals amb l'AEAT.
+        heading: CADRUMO, eina de declaracions fiscals amb l'AEAT.
         ledger_allocate: Assignar transaccions a un periode fiscal.
         ledger_archive: Arxivar entrades del llibre de transaccions.
         ledger_attach: Adjuntar un fitxer d'origen a una entrada del llibre.
@@ -4856,7 +4856,7 @@ cli:
     format_help: 'Format de sortida: text, json, table, csv.'
     help_help: Mostra l'ajuda.
     landing:
-      headline: Assistent fiscal Cadrumo
+      headline: Assistent fiscal CADRUMO
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
         app --help`. Els modificadors globals (`--format json`, `--language ca`, `--profile
         NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS del subcomandament,
@@ -6158,7 +6158,7 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre Cadrumo equivalent
+      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre CADRUMO equivalent
       en un terminal.'
   elicitation:
     confirm:
@@ -6176,7 +6176,7 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
         la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre Cadrumo CLI equivalent directament en
+        fer-te preguntes, o executa l''ordre CADRUMO CLI equivalent directament en
         un terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]

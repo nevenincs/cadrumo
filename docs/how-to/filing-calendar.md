@@ -14,8 +14,8 @@ Estatal de Administración Tributaria (AEAT).
 ## Before you start
 
 You need an [active taxpayer profile](profile-setup.md#what-the-active-profile-means),
-and Cadrumo needs your master-key passphrase (it prompts for it, or set
-`CADRUMO_SECRET_PASSPHRASE` for non-interactive runs). If you do not have a
+and Cadrumo needs your master-key passphrase (it prompts for it). If you
+do not have a
 profile, create it with [Set up your taxpayer profile](profile-setup.md).
 
 The profile must declare at least one obligation, or these commands refuse with
@@ -101,7 +101,7 @@ aeat app overview backlog --from 2026-01-01 --to 2026-06-30
 Backlog is a local planning tool. It does not prove what AEAT has or has not
 received. It depends on the [active profile](profile-setup.md#what-the-active-profile-means),
 local filing markers, and local registry rules. For the local filing lifecycle,
-see [The filing workflow: work units and calculation revisions](filing-spine.md).
+see [The filing workflow](filing-spine.md).
 
 ## What upcoming modelos will I have to file?
 
@@ -215,7 +215,7 @@ Then follow the filing workflow for the target modelo, year, and period:
 - [Quickstart: produce a modelo file](quickstart.md)
 - [How to prepare a Modelo 303 quarterly filing](modelo-303.md)
 - [How to prepare the annual Modelo 390 summary](modelo-390.md)
-- [The filing workflow: work units and calculation revisions](filing-spine.md)
+- [The filing workflow](filing-spine.md)
 
 ## If results look wrong
 
@@ -234,6 +234,6 @@ For exact command flags and output fields, use the
 
 - [Set up your taxpayer profile](profile-setup.md)
 - [Check AEAT notifications](check-aeat-notifications.md)
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Quickstart: produce a modelo file](quickstart.md)
 - [CLI reference](../cli/index.rst)

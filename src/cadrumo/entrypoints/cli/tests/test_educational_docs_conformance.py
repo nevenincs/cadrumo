@@ -1,7 +1,7 @@
 """Single-source conformance gate for the educational documentation surface.
 
 Per the ``docs-educational-surface`` contract, the Diataxis educational docs
-(``docs/tutorials``, ``docs/explanation``, ``docs/how-to``) and the
+(``docs/explanation``, ``docs/how-to``) and the
 developer-facing architecture overview (``docs/architecture``) reference the live
 CLI surface by stable verb and link to sibling docs; they never re-author flag
 help. This gate makes that contract a tested invariant rather than an
@@ -29,7 +29,7 @@ from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_EDU_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to", "docs/architecture")
+_EDU_DIRS = ("docs/explanation", "docs/how-to", "docs/architecture")
 
 # A leading run of lowercase verb-ish tokens after `cadrumo` (subcommands use
 # lowercase words and hyphens). Args (NAME, paths) and flags (-x/--x) end the run.
@@ -80,7 +80,7 @@ def _cited_commands(text: str) -> set[tuple[str, ...]]:
 def test_educational_docs_exist() -> None:
     """The educational surface is present."""
     docs = _edu_docs()
-    assert docs, "no educational docs found under docs/{tutorials,explanation,how-to}/"
+    assert docs, "no educational docs found under docs/{explanation,how-to}/"
 
 
 def test_cited_aeat_verbs_resolve() -> None:

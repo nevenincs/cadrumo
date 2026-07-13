@@ -1,73 +1,54 @@
-# Set up a fresh workstation
+# Install Cadrumo
 
-Use this the first time you install Cadrumo on a clean machine. It takes you from
-an empty checkout to a working tool, shows you how to check what is missing, and
-lets you choose which optional services to turn on.
+This page covers the first-time installation of Cadrumo on your computer: get
+the package, confirm the `aeat` command works, and turn on the optional
+services you want.
 
-Cadrumo works without any optional service. Google export, on-host LLM vision, and
-cloud LLM upload are opt-in. The core filing workflow runs with none of them.
+Cadrumo works without any optional service. Google export, on-host LLM vision,
+and cloud LLM upload are opt-in. The core filing workflow runs with none of
+them.
 
-## Install the environment
+## Before you start
 
-Choose one of two paths: install directly on your machine, or open the
-project in a ready-made container.
+You need:
 
-### Option A: install on your machine
+- Python 3.13 or newer, with `pip` available.
+- Around 200 MB of free disk space.
 
-Install the project and its tools in one step:
+## Get the package
 
-```bash
-just bootstrap
-```
+Download the current Cadrumo package from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest). Each
+release lists its downloadable files and release notes; record the version you
+install, as [Updates and downloads](updates.md) recommends.
 
-This installs the Python environment, syncs every dependency group, and runs the
-readiness check at the end.
-
-### Option B: open in a devcontainer
-
-The repository ships a `Dockerfile` and a `.devcontainer/devcontainer.json`
-with Python 3.13, `uv`, and headless-Chromium already installed, so you skip
-the manual `uv sync` / `playwright install` steps entirely.
-
-With VS Code and the Dev Containers extension, open the project folder and
-choose "Reopen in Container". The first build installs every dependency group
-and pre-bakes the Playwright browser; later reopens reuse the cached image.
-
-Without VS Code, build and run the image directly:
+Install the downloaded wheel file:
 
 ```bash
-just devcontainer-build
-docker run --rm -it -v "$(pwd)":/workspace cadrumo-devcontainer bash
+pip install ./cadrumo-0.2.0-py3-none-any.whl
 ```
 
-Verify the image installs cleanly and its toolchain works end to end:
+Confirm the command is on your path:
 
 ```bash
-just devcontainer-test
+aeat --version
 ```
-
-The container has no interactive display, so live AEAT browser reads run
-headless (`AEAT_BROWSER_HEADLESS=true` is set for you). Your digital
-certificate is personal, per-machine data — it is never baked into the
-image. Mount it or set `AEAT_CERTIFICATE_PATH` after the container starts if
-you need `aeat app live ...` inside the container; see
-[Authenticate with AEAT](how-to/authenticate-with-aeat.md).
 
 ## Check what is ready
 
 Ask `aeat` what is installed and what is missing:
 
 ```bash
-just doctor
+aeat config check
 ```
 
-`just doctor` runs `aeat config check`. The report lists each external
-dependency, whether it is available, and the exact command to fix any gap. It
-also shows your profile's capability posture. It exits with an error when a
-capability you turned on has a missing dependency.
+The report lists each external dependency, whether it is available, and the
+exact command to fix any gap. It also shows your profile's capability posture.
+It exits with an error when a capability you turned on has a missing
+dependency.
 
-Run the check directly for machine-readable output. `--format json` is a global
-flag, so it goes before the command:
+Run the check for machine-readable output when you script the setup.
+`--format json` is a global flag, so it goes before the command:
 
 ```bash
 aeat --format json config check
@@ -77,32 +58,30 @@ aeat --format json config check
 
 The core install is lean. Google export, the live AEAT browser, the
 Anthropic-API provider, and OFX/QFX bank-statement import are optional package
-extras. Install only the ones you need:
+extras. Name the extras you need when you install the wheel:
 
 ```bash
-pip install "cadrumo[google]"
-pip install "cadrumo[browser]"
-pip install "cadrumo[anthropic]"
-pip install "cadrumo[ofx]"
-pip install "cadrumo[all]"
+pip install "./cadrumo-0.2.0-py3-none-any.whl[google,browser]"
 ```
 
-`aeat config check` lists each extra and prints the exact install command for any
-that is missing. A feature whose extra is not installed refuses with the same
-hint instead of failing obscurely.
+The available extras are `google`, `browser`, `anthropic`, `ofx`, `agent`, and
+`all`. `aeat config check` lists each extra and prints the exact install
+command for any that is missing. A feature whose extra is not installed
+refuses with the same hint instead of failing obscurely.
 
 ## Provision optional dependencies
 
 Install the optional browser and model dependencies when you need them.
 
-Install the Playwright browser used for live AEAT reads:
+Install the browser used for live AEAT reads. The `browser` extra provides the
+`playwright` command:
 
 ```bash
-just provision
+playwright install chromium
 ```
 
-Install the on-host vision model used to read invoices. Start the Ollama server
-and pull the model named in the report:
+Install the on-host vision model used to read invoices. Start the Ollama
+server and pull the model named in the report:
 
 ```bash
 ollama serve
@@ -113,7 +92,7 @@ Install a cloud LLM provider CLI when you want cloud classification. Put its
 executable on `PATH` and sign in with that provider's own flow. See
 [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider).
 
-Run `just doctor` again after each change to confirm the gap is closed.
+Run `aeat config check` again after each change to confirm the gap is closed.
 
 ## Choose your service capabilities
 

@@ -18,8 +18,7 @@ You need:
   if none is set, the command refuses. See
   [Set up your taxpayer profile](profile-setup.md).
 - A master-key passphrase. The tool prompts for it the first time it opens your
-  encrypted storage in a session; for a non-interactive shell, set
-  `CADRUMO_SECRET_PASSPHRASE`.
+  encrypted storage in a session.
 
 The `aeat` command-line interface (CLI) emits its help and messages in Spanish; the English text on this page
 describes what each step does.
@@ -203,7 +202,7 @@ through the OSS-specific workflow.
 ## Where to go next
 
 - [Attach invoices and receipts](ledger-evidence.md)
-- [Work with transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [How to prepare a Modelo 303 quarterly filing](modelo-303.md)
 - [CLI reference](../cli/index.rst)

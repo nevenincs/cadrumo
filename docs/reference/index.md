@@ -2,7 +2,7 @@
 
 Use this collection to look up exact Cadrumo names, boundaries, and generated
 technical surfaces while you work. For installation and first use, start with
-the [source setup](../workstation-setup.md) and
+the [installation guide](../workstation-setup.md) and
 [quickstart](../how-to/quickstart.md). For a task, choose a
 [how-to guide](../how-to/index.md). For the relationships between stages, read
 [how Cadrumo turns records into a filing-ready tax file](../explanation/index.md).
@@ -21,6 +21,10 @@ application programming interface (API) are Cadrumo product surfaces.
   layout, former-state refusal, local export, live-read, and filing boundaries.
 - [Registry, legal sources, and Python API](registry-legal-api.md) - grounding
   sources and generated public API pages.
+- [Environment overrides](environment-overrides.md) - every environment
+  variable the application reads, generated from the live settings model.
+  Advanced deployment and development configuration; no user workflow needs
+  them.
 
 Terms are defined in the {doc}`glossary </_generated/glossary>`. For ordinary
 failures, use [Diagnose and repair](../how-to/troubleshooting.md) and then the
@@ -36,4 +40,5 @@ identity-and-naming
 commands-and-configuration
 filesystem-state-and-safety
 registry-legal-api
+environment-overrides
 ```

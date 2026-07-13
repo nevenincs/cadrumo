@@ -7,11 +7,15 @@ One comparison policy per frame kind, applied to an executed
 - **JSON frames** compare via the shared observability substrate —
   ``canonicalise`` + ``mask_document`` with exactly the central
   ``GOLDEN_MASK_FIELDS`` — over the FULL envelope (shared spine plus result),
-  reporting the post-mask ``differing_paths`` on failure. This module
-  deliberately exposes NO mask parameter anywhere: the executor never declares
-  its own mask set and a sequence cannot carry a per-sequence mask extension
-  (the one dishonesty lever the substrate ADR names); a newly nondeterministic
-  field is enrolled in the one central set with its anti-tautology proof.
+  reporting the post-mask ``differing_paths`` on failure. This module exposes
+  NO mask parameter and never overrides ``mask_document``'s central default:
+  the executor never declares its own mask set and a sequence cannot carry a
+  per-sequence mask extension (the one dishonesty lever the substrate ADR
+  names). Both properties are pinned — a signature gate and an AST gate over
+  this module's ``mask_document`` calls in ``tests/test_compare.py``, plus the
+  executor-level double-run proof in ``dev/docs/tests/test_sequence_goldens.py``
+  — so a newly nondeterministic field is enrolled in the one central set with
+  its anti-tautology proof, never masked locally.
 - **Text frames** compare by exact string equality after the declared narrow
   normalisation (:func:`~dev.docs.sequences._golden_store.normalise_text_output`
   — sandbox paths to stable tokens, centrally-masked ids to the sentinel),

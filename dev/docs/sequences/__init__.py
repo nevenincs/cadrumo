@@ -10,12 +10,22 @@ outside.
 This module exposes the frame-grammar parser (ADR rulings D1 / D4), the
 ``:seed:`` recipe loader (ADR D6), the per-sequence hermetic sandbox runner
 with ``@capture`` threading (ADR D6 / D3), the committed golden store (ADR D2),
-and the golden comparison plus ``@expect`` evaluation tier (ADR D3 / D4). The
-refresh/check CLI lands in the next phase and extends this facade.
+the golden comparison plus ``@expect`` evaluation tier (ADR D3 / D4), the
+discovery/refresh/check engine functions behind ``python -m dev.docs.sequences``
+— the one execution path the Sphinx build hook and the pytest gate both wire —
+the build-time command-line tokeniser (ADR D5), and the static live-AEAT
+enrollment refusal (``refuse_live_frames`` / ``live_aeat_tokens``, ADR D6/D7).
 """
 
 from __future__ import annotations
 
+from .__main__ import (
+    DiscoveredSequence,
+    check_sequences,
+    default_docs_root,
+    discover_sequences,
+    refresh_sequences,
+)
 from ._compare import (
     assert_transcript_matches_golden,
     check_transcript,
@@ -57,6 +67,8 @@ from ._runner import (
     execute_sequence,
     sequence_sandbox,
 )
+from ._runner import _live_aeat_tokens as live_aeat_tokens
+from ._runner import _refuse_live_frames as refuse_live_frames
 from ._schema import (
     CaptureBinding,
     ExpectAssertion,
@@ -65,6 +77,7 @@ from ._schema import (
     SequenceFrame,
 )
 from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
+from ._tokeniser import CommandToken, TokenKind, command_path_key, tokenise_command
 
 __all__ = [
     "SANDBOX_INSTANT",
@@ -75,6 +88,8 @@ __all__ = [
     "SEED_SUFFIX",
     "CaptureBinding",
     "CapturedValue",
+    "CommandToken",
+    "DiscoveredSequence",
     "EnvelopeSource",
     "ExpectAssertion",
     "FrameExecution",
@@ -90,16 +105,22 @@ __all__ = [
     "SequenceParseError",
     "SequenceSandbox",
     "SequenceTranscript",
+    "TokenKind",
     "assert_transcript_matches_golden",
     "build_golden",
+    "check_sequences",
     "check_transcript",
+    "command_path_key",
     "compare_transcript_to_golden",
+    "default_docs_root",
     "default_fixtures_root",
     "default_goldens_root",
     "default_seeds_root",
+    "discover_sequences",
     "evaluate_expectations",
     "execute_sequence",
     "golden_path",
+    "live_aeat_tokens",
     "load_seed_frames",
     "masked_envelope_values",
     "normalise_text_output",
@@ -107,6 +128,9 @@ __all__ = [
     "parse_sequence",
     "read_golden",
     "refresh_invocation",
+    "refresh_sequences",
+    "refuse_live_frames",
     "sequence_sandbox",
+    "tokenise_command",
     "write_golden",
 ]

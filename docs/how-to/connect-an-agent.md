@@ -7,9 +7,9 @@ deterministic engine, and nothing is ever submitted to the Agencia Estatal de
 Administración Tributaria (AEAT): the agent surface exposes the same local,
 gated commands the CLI does.
 
-## What the agent surface is
+## What the agent connection is
 
-Cadrumo ships an MCP (Model Context Protocol) server, `aeat-mcp`, alongside the
+Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, alongside the
 `aeat` command. MCP is an open standard that lets assistants call tools. Any
 MCP-capable client can connect; Claude is one such client.
 
@@ -19,19 +19,22 @@ construction, exactly like the CLI.
 
 ## 1. Install the agent extra
 
-The MCP runtime is an optional extra of the same `cadrumo` package:
+The MCP runtime is an optional extra of the same `cadrumo` package. Download
+the package from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and
+install it with the extra named:
 
 ```bash
-pip install "cadrumo[agent]"
+pip install "./cadrumo-0.2.0-py3-none-any.whl[agent]"
 ```
 
 Confirm the server script is on your path:
 
 ```bash
-aeat-mcp --help
+cadrumo-mcp --help
 ```
 
-Without the extra, `aeat-mcp` refuses with an install hint instead of running.
+Without the extra, `cadrumo-mcp` refuses with an install hint instead of running.
 
 ## 2. Connect Claude through the plugin
 
@@ -49,22 +52,23 @@ boundary.
 
 ## 3. Connect any other MCP client
 
-Register `aeat-mcp` as a stdio server in your client's MCP configuration:
+Register `cadrumo-mcp` as a stdio server in your client's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "aeat": {
-      "command": "aeat-mcp",
+      "command": "cadrumo-mcp",
       "args": []
     }
   }
 }
 ```
 
-The server uses the same local encrypted store and the same active profile as
-the CLI, and prompts for the master-key passphrase the same way. Set
-`CADRUMO_SECRET_PASSPHRASE` in the server's environment to run without a prompt.
+The server uses the same local encrypted store and the same active profile
+as the CLI. A server cannot answer a passphrase prompt, so configure the
+passphrase for unattended runs first - see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 ## What the agent can and cannot do
 

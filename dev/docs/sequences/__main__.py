@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -103,14 +104,24 @@ def _page_files(docs_root: Path) -> list[Path]:
     return pages
 
 
+@dataclass(frozen=True)
+class _RawDirective:
+    """One extracted-but-unparsed ``cli-sequence`` directive on a page."""
+
+    sequence_id: str
+    options: dict[str, str | None]
+    body: str
+    line_number: int
+
+
 def _extract_directives(
     text: str,
     *,
     page: str,
     problems: list[str],
-) -> list[tuple[str, dict[str, str | None], str, int]]:
-    """Extract ``(sequence_id, options, body, line_number)`` per directive on a page."""
-    directives: list[tuple[str, dict[str, str | None], str, int]] = []
+) -> list[_RawDirective]:
+    """Extract every ``cli-sequence`` directive's raw parts from a page."""
+    directives: list[_RawDirective] = []
     lines = text.splitlines()
     index = 0
     while index < len(lines):
@@ -144,7 +155,14 @@ def _extract_directives(
                 f"page {page!r} line {opened_at}: cli-sequence {sequence_id!r} directive fence is never closed",
             )
             continue
-        directives.append((sequence_id, options, "\n".join(body_lines), opened_at))
+        directives.append(
+            _RawDirective(
+                sequence_id=sequence_id,
+                options=options,
+                body="\n".join(body_lines),
+                line_number=opened_at,
+            ),
+        )
     return directives
 
 
@@ -186,11 +204,8 @@ def discover_sequences(
         except OSError as exc:
             problems.append(f"page {docname!r}: cannot read ({exc})")
             continue
-        for found_id, options, body, line_number in _extract_directives(
-            text,
-            page=docname,
-            problems=problems,
-        ):
+        for raw in _extract_directives(text, page=docname, problems=problems):
+            found_id = raw.sequence_id
             if sequence_id is not None and found_id != sequence_id:
                 continue
             if found_id in seen_ids:
@@ -202,7 +217,7 @@ def discover_sequences(
                 continue
             seen_ids[found_id] = docname
             try:
-                sequence = parse_sequence(sequence_id=found_id, options=options, body=body)
+                sequence = parse_sequence(sequence_id=found_id, options=raw.options, body=raw.body)
             except SequenceParseError as exc:
                 problems.extend(f"page {docname!r}: {problem}" for problem in exc.problems)
                 continue
@@ -210,7 +225,7 @@ def discover_sequences(
                 DiscoveredSequence(
                     page=docname,
                     sequence_id=found_id,
-                    line_number=line_number,
+                    line_number=raw.line_number,
                     sequence=sequence,
                 ),
             )
