@@ -27,7 +27,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from zoneinfo import ZoneInfo
 
 from ..errors import CoreValidationError
 from ..logging import get_logger
@@ -59,6 +60,39 @@ def now() -> datetime:
     if frozen is not None:
         return frozen
     return datetime.now(tz=UTC)
+
+
+MADRID_TZ = ZoneInfo("Europe/Madrid")
+"""Spain's peninsular civil timezone, the authority for regulated calendar boundaries.
+
+Spanish tax calendar boundaries are governed by Spain's official civil date, not
+the UTC date: filing plazos at the AEAT sede electrónica follow peninsular
+official time (Ley 39/2015 art. 31), and the IVA rate of an operation is the one
+in force at devengo (LIVA art. 90.Dos with art. 75) — a Spanish-calendar fact.
+The civil date leads UTC by one to two hours around midnight.
+"""
+
+
+def today_madrid() -> date:
+    """Return the current civil date in Europe/Madrid, derived from the clock seam.
+
+    This is the authority a regulated date-boundary comparison defaults to (a
+    filing plazo, an IVA rate-change date, a statutory-window year boundary) —
+    :func:`now` (UTC) reports yesterday's Spanish date for up to two hours every
+    night, selecting the wrong side of such a boundary in that window. Because
+    it derives from :func:`now`, :func:`frozen_clock` pins it with zero new seam
+    state; determinism is inherited, not re-engineered.
+
+    Convention: a *regulated or civil-date* reference-date default reads
+    :func:`today_madrid`; a raw UTC calendar date (e.g. the date component of a
+    UTC timestamp) reads ``now().date()``. The two are not interchangeable at the
+    nightly boundary, so a reference date that legally binds to the Spanish
+    calendar MUST use :func:`today_madrid`.
+
+    Returns:
+        The current calendar :class:`datetime.date` in Europe/Madrid civil time.
+    """
+    return now().astimezone(MADRID_TZ).date()
 
 
 def clock_is_frozen() -> bool:

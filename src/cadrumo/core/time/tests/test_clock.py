@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
 from ...config import override_settings
 from ...errors import CoreValidationError
-from .. import clock_is_frozen, frozen_clock, now
+from .. import MADRID_TZ, clock_is_frozen, frozen_clock, now, today_madrid
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -87,3 +87,29 @@ class TestFrozenClockSeam:
         assert _utc_now is now
         with frozen_clock(self._INSTANT):
             assert _utc_now() == self._INSTANT
+
+
+class TestTodayMadrid:
+    """The Madrid civil-date accessor: seam-derived, boundary-correct."""
+
+    def test_madrid_tz_is_europe_madrid(self) -> None:
+        assert str(MADRID_TZ) == "Europe/Madrid"
+
+    def test_tracks_the_seam_date_away_from_the_boundary(self) -> None:
+        """At 09:00Z (11:00 Madrid) the UTC date and the Madrid civil date agree."""
+        with frozen_clock(datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)):
+            assert now().date() == date(2026, 4, 1)
+            assert today_madrid() == date(2026, 4, 1)
+
+    def test_boundary_instant_madrid_civil_date_leads_utc_by_a_day(self) -> None:
+        """At 23:30Z on New Year's Eve, Madrid (UTC+1) has already turned the year.
+
+        This is the exact window the date-boundary ruling exists for: a regulated
+        comparison built on the UTC date would read 2026-12-31 while the Spanish
+        civil date — the legal authority — is already 2027-01-01. ``frozen_clock``
+        pins both, proving the derivation and the boundary semantics deterministic.
+        """
+        with frozen_clock(datetime(2026, 12, 31, 23, 30, 0, tzinfo=UTC)):
+            assert now().date() == date(2026, 12, 31)
+            assert today_madrid() == date(2027, 1, 1)
+        assert not clock_is_frozen()
