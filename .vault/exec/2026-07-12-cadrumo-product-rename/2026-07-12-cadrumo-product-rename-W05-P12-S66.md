@@ -9,39 +9,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S66 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Update Hungarian product locale messages through the locales CLI and ## Scope
-
-- `Hungarian locale catalogue` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Update Hungarian product locale messages through the locales CLI
 
 ## Scope
@@ -71,3 +38,77 @@ related:
 - The valid remaining lowercase `cadrumo` residues are exactly `cadrumo_secret_store_backend` in `adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic` and `cadrumo-vault/` in `cli.config.google.sync.calc.export_help`. No lowercase MCP executable, URI scheme, or companion namespace is present.
 - Targeted title-case and command-leading residue is zero in all four catalogues.
 - No locale YAML was hand-edited.
+
+## Regression ancestry and corrective restoration
+
+The original S66 transaction changed 28 Hungarian leaves: 22 command-bearing
+leaves contained 24 stale command prefixes that became `aeat`, and six
+product-display references became `CADRUMO`. Commit `38894cae07` later changed
+those six display leaves back to title-case `Cadrumo` under the repudiated
+second casing ruling. Hungarian command guidance remained canonical and
+required no further command change.
+
+S95 restored the binding all-caps runtime tuple, S96 established reciprocal
+supersession for the conflicting July 13 ADR, and S97 clarified that ADR as
+historical evidence only. S62 then restored and independently passed the
+shared renderer and locale-maintenance expectations; S63, S64, and S65
+restored and independently passed the English, Spanish, and Catalan
+catalogues. This corrective S66 pass therefore changes only the six Hungarian
+display leaves left by `38894cae07` and retains the original 28-change evidence
+above as historical proof of the first catalogue migration.
+
+## Corrective semantic evidence
+
+- Before mutation, the Hungarian catalogue was 451,606 bytes with SHA-256
+  `F7D1A4DA52D5578A5FC0CDAF7125201169E73922E06C4B87BA614E8330AE0942`.
+- After the production Hungarian-only canonicalizer, it is 458,599 bytes with
+  SHA-256
+  `9F659FD5A312A7B1B1B5219A43B00285E3F3BD8CEEF81F90F6C03D2CEFE30F9B`.
+- Parsed comparison proves exactly six changed leaves, each equal to the
+  production normalizer's `Cadrumo` to `CADRUMO` result. There are zero command
+  changes, key additions, key removals, type changes, or other semantic
+  changes. The YAML diff is exactly six insertions and six deletions.
+- All four catalogues contained exactly 3,702 keys before mutation. Hungarian
+  retains exactly 3,702 keys, every leaf remains a string, and its production
+  placeholder-map digest is unchanged at
+  `ECF9F59F5BF1E0228F5FD6836595940F7B9150C7824453C8B1DC771DC8CEC918`.
+- English remained byte-identical at 403,956 bytes and
+  `06C2550F40D46982ADBBBA713D3031B1BB54CEBBE1141C80340F749C6F70325B`;
+  Spanish remained byte-identical at 449,246 bytes and
+  `2D97F3174AA18D65ECFBE5856A6D4FCF015606AFB54447610DE85BAFCD8E3A72`;
+  Catalan remained byte-identical at 442,017 bytes and
+  `9A4BBE39A1DCA9B4B42175D5DAF1DAECC0E0BCEBD354F52E759BFEFDE30BC5CC`.
+- Hungarian now contains zero exact title-case `Cadrumo` references and zero
+  production-classified command-leading lowercase `cadrumo` references. Its
+  six exact `CADRUMO` displays, 20 `CADRUMO_` environment references, 215
+  `aeat` command prefixes, one Hungarian prose reference to the `aeat` product
+  CLI, 222 standalone `AEAT` authority references, four `AEAT_*` authority
+  settings, and one `registry/aeat/treaties/` authority path remain correctly
+  classified. The exact lowercase
+  `cadrumo_secret_store_backend` setting and `cadrumo-vault/` storage name each
+  remain once as valid machine identifiers.
+
+## Corrective verification
+
+- The production `audit` and `scaffold --check` commands report all four
+  catalogues healthy.
+- The locale audit, S92 formatter grammar, placeholder parity, catalogue
+  parity, and translation-honesty slice passed 54 tests.
+- Isolated live `aeat --language hu --help` contains exact `CADRUMO`, `AEAT`,
+  and 27 lowercase `aeat` command references. It contains neither exact
+  title-case `Cadrumo` nor a command-leading lowercase `cadrumo` token.
+- Every production command and live-help probe used a fresh isolated
+  `CADRUMO_LOCAL_STORAGE_ROOT` with valid unsecured local state.
+- No Python path changed, so Ruff, formatting, and Ty are not applicable to
+  this catalogue-only transaction. `git diff --check` passes, and the
+  Hungarian YAML diff is exactly six insertions and six deletions.
+- Plan validation passes with the known `PLAN022` ordering warning. Focused
+  frontmatter, Markdown, and placeholder checks pass, and S66 has no remaining
+  scaffold annotation. The feature-tagged broad Vault check remains nonzero on
+  348 unrelated legacy structure and feature-folder errors plus pre-existing
+  modified-stamp, annotation, and stale-index warnings; references, schema,
+  ADR status, rename integrity, and encoding are clean. No global Vault repair
+  or index regeneration was attempted.
+- No locale YAML was hand-edited; the production module CLI performed the sole
+  catalogue mutation. English, Spanish, Catalan, S67, S25, and every other
+  open descendant remain outside this Step.
