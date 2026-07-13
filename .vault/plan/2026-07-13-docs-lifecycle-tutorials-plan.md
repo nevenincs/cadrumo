@@ -141,7 +141,7 @@ Author the IRPF-year and IVA-year on-rails tutorials over one shared persona and
 
 Regroup the how-to index and landing grid on the filing-year axes, pass the conformance and Sphinx gates, and run the mandated campaign-close honesty review
 
-- [ ] `P05.S15` - Regroup docs/how-to/index.md and the landing-page route grid on the filing-year axes (entry points, profile, calendar, ledger, filings, residuals) per the ratified disposition table; `docs/how-to/index.md docs/index.md`.
+- [x] `P05.S15` - Regroup docs/how-to/index.md and the landing-page route grid on the filing-year axes (entry points, profile, calendar, ledger, filings, residuals) per the ratified disposition table; `docs/how-to/index.md docs/index.md`.
 - [ ] `P05.S16` - Run the documented-command conformance gate and the Sphinx nitpicky build gate; `fix every failure the campaign's edits caused; `docs src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py dev/docs/tests/test_docs_build.py`.
 - [ ] `P05.S17` - Run the mandated fresh-context campaign-close honesty review; `persist it as a vault audit and open follow-up steps for every surfaced item; `.vault/audit`.
 
