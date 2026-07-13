@@ -62,7 +62,8 @@ class AeatCorpusDriftError(AeatObservabilityError):
     Attributes:
         run_id: Identifier of the recorded run being replayed.
         recorded: ``corpus_sha256`` captured at the original run.
-        observed: ``corpus_sha256`` computed against the current tree.
+        observed: ``corpus_sha256`` computed against the current
+            configuration.
         entrypoint: CLI entrypoint string of the recorded run.
     """
 
@@ -79,7 +80,8 @@ class AeatCorpusDriftError(AeatObservabilityError):
         Args:
             run_id: Identifier of the recorded run being replayed.
             recorded: ``corpus_sha256`` captured at the original run.
-            observed: ``corpus_sha256`` computed against the current tree.
+            observed: ``corpus_sha256`` computed against the current
+            configuration.
             entrypoint: CLI entrypoint string of the recorded run.
         """
         super().__init__(

@@ -2,9 +2,8 @@
 
 The deterministic-output substrate captures the verbatim emitted
 :class:`~core.json_contract.SchemaEnvelope` document so a recorded
-run can be replayed and asserted byte-identical after masking (ADR
-``2026-06-30-deterministic-output-replay-substrate``). The sink is a
-context variable holding a list; it is unset (``None``) in production,
+run can be replayed and asserted byte-identical after masking. The sink
+is a context variable holding a list; it is unset (``None``) in production,
 so :func:`record_emitted_envelope` is a no-op unless a
 :func:`capture_envelopes` scope has armed it — the emit path pays only a
 single ``ContextVar.get`` when capture is off.
