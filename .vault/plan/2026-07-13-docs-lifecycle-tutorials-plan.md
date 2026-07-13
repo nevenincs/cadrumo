@@ -119,7 +119,7 @@ Execute the ratified disposition table's merges, retirement, and extraction land
 
 Fill the operator-named per-modelo gaps (130, 100, 349) on the modelo-303 template with live-verified commands
 
-- [ ] `P02.S08` - Author docs/how-to/modelo-130.md on the modelo-303 template with live-verified commands and the this-page-covers opening; `docs/how-to/modelo-130.md`.
+- [x] `P02.S08` - Author docs/how-to/modelo-130.md on the modelo-303 template with live-verified commands and the this-page-covers opening; `docs/how-to/modelo-130.md`.
 - [ ] `P02.S09` - Author docs/how-to/modelo-100.md as a condensed how-to cross-linking the Renta deep-dive for mechanism, with live-verified commands including the annual period token; `docs/how-to/modelo-100.md`.
 - [ ] `P02.S10` - Author docs/how-to/modelo-349.md covering the intra-community recapitulative flow with live-verified commands; `docs/how-to/modelo-349.md`.
 
