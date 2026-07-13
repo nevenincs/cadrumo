@@ -7,17 +7,23 @@ OpenID Connect (OIDC). It never uses a repository token.
 
 ## Current release blockers
 
-Public publication remains blocked by these gates:
+The canonical repository slug is **`nevenincs/cadrumo`** (operator ruling
+2026-07-14; the `cadrumo/cadrumo` organization move is deferred — if it ever
+happens, re-register every Trusted Publisher first, because PyPI matches the
+exact owner/repository claim in the OIDC token). Public publication remains
+blocked by these gates:
 
-- Issue [#476](https://github.com/cadrumo/cadrumo/issues/476) must contain the
-  complete `W05.P11.S61` external name and repository reservation evidence. It
-  must also record the gate as cleared.
-- The `just release` recipe still targets `nevenincs/cadrumo`. Package metadata,
-  readiness checks, and the S61 evidence must agree on `cadrumo/cadrumo` before
-  you run the preview.
-- `W05.P13.S73` is the release-note command canonicalization gate. It must
-  update and verify `docs/_release_notes_template.md` and `docs/updates.md`
-  before you draft release notes or publish an update.
+- Issue [#612](https://github.com/nevenincs/cadrumo/issues/612) must contain
+  the complete `W05.P11.S61` external name reservation evidence — the three
+  `cadrumo*` pending Trusted Publishers, marketplace identifiers, and the
+  domain/trademark review — and record the gate as cleared.
+- The former-name PyPI projects `aeat-data-manuals` and `aeat-data-official`
+  (0.1.0–0.2.0) must be removed or fully yanked before the `cadrumo` cohort
+  publishes; see "Former-name package cleanup" below.
+- `W05.P13.S73` release-note command canonicalization: verified 2026-07-14 —
+  `docs/_release_notes_template.md` and `docs/updates.md` already use the
+  canonical surface per the `cadrumo-cli-executable` ADR (`aeat` human CLI,
+  `cadrumo` package/distribution, `cadrumo-mcp` MCP command).
 
 Don't dispatch [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
 until the publication gates are clear. Local builds, green tests,
@@ -38,17 +44,16 @@ the remaining release mechanics:
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml)
   defines the clean Linux artifact checks and retained evidence.
 - [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
-  [`docs/updates.md`](docs/updates.md) become release authorities only after
-  the S73 gate changes their product command to `cadrumo`. Until S73 is
-  complete, stop before drafting release notes or publishing an update from
-  either file.
+  [`docs/updates.md`](docs/updates.md) are the release-note authorities; both
+  were verified canonical against the `cadrumo-cli-executable` ADR on
+  2026-07-14 (`aeat` human CLI, `cadrumo` distribution).
 - [`SECURITY.md`](SECURITY.md) defines private vulnerability reporting.
 
 The release comprises three version-locked PyPI distributions:
 
 | Distribution | Contents | Installed command |
 | --- | --- | --- |
-| `cadrumo` | Core product wheel | `cadrumo` and `cadrumo-mcp`; running `cadrumo-mcp` requires `cadrumo[agent]` |
+| `cadrumo` | Core product wheel | `aeat` and `cadrumo-mcp`; running `cadrumo-mcp` requires `cadrumo[agent]` |
 | `cadrumo-data-manuals` | Reviewed manual corpus | None |
 | `cadrumo-data-official` | Reviewed official and normative corpus | None |
 
@@ -61,14 +66,23 @@ sources in Portable Document Format (PDF), legacy Microsoft Excel Spreadsheet
 
 ## Publication prerequisites
 
+### Former-name package cleanup
+
+The pre-rename companion projects `aeat-data-manuals` and `aeat-data-official`
+are live on PyPI. Before publishing the `cadrumo` cohort: delete both projects
+(project **Settings → Delete project**) or, if preservation is preferred, yank
+every release and remove their Trusted Publishers so nothing can publish under
+the former identity. Also remove any account-level *pending* publishers still
+registered for former `aeat*` names. Record the action in issue #612.
+
 ### External reservation evidence
 
-Issue #476 must identify the evidence, reviewer, and confirmation date for each
+Issue #612 must identify the evidence, reviewer, and confirmation date for each
 of these items:
 
 - The PyPI names `cadrumo`, `cadrumo-data-manuals`, and
   `cadrumo-data-official`.
-- The `cadrumo/cadrumo` repository and organization position.
+- The `nevenincs/cadrumo` repository position.
 - The Cadrumo marketplace identifiers and executable expectations.
 - Relevant domains and the Spanish and European Union trademark position.
 - One PyPI Trusted Publisher for each of the three distributions.
@@ -84,13 +98,16 @@ All three registrations must use these exact values:
 | Setting | Required value |
 | --- | --- |
 | PyPI project | The matching distribution name |
-| GitHub owner | `cadrumo` |
+| GitHub owner | `nevenincs` |
 | GitHub repository | `cadrumo` |
 | Workflow | `publish.yml` |
 | Environment | `pypi` |
 
-The GitHub `pypi` environment must exist and restrict deployment to authorized
-maintainers. The workflow must retain `id-token: write` and `contents: read` on
+The GitHub `pypi` environment must exist. Required-reviewer protection is not
+available for this private repository on the current billing plan, so the
+human gate is the manual `workflow_dispatch` itself (issue #612 records the
+acceptance); add required reviewers if the plan or visibility ever changes.
+The workflow must retain `id-token: write` and `contents: read` on
 the publish job. Trusted Publishing supplies a short-lived OIDC credential.
 Don't create or store a PyPI application programming interface (API) token for
 this release path. Don't add a PyPI token or `UV_PUBLISH_TOKEN` to GitHub, a
@@ -109,7 +126,7 @@ Use a clean `main` checkout with:
 - `just`
 - Git
 - Node.js and `npx`
-- GitHub CLI (`gh`), authenticated to `cadrumo/cadrumo`
+- GitHub CLI (`gh`), authenticated to `nevenincs/cadrumo`
 - Permission to push the release tag, dispatch Actions, and approve the
   `pypi` environment
 
@@ -127,7 +144,7 @@ git status --short
 ```
 
 If Python reports a version other than 3.13 or a tool is unavailable, stop. If
-`gh` can't read `cadrumo/cadrumo`, stop. If the remote doesn't match the S61
+`gh` can't read `nevenincs/cadrumo`, stop. If the remote doesn't match the S61
 evidence or `git status --short` isn't empty, stop.
 
 Don't work around a repository mismatch with a different remote or an ad hoc
@@ -137,8 +154,9 @@ release-please command.
 
 Cadrumo is a hard cut, not a compatibility release:
 
-- `cadrumo` is the sole human command. Don't publish or document an `aeat`
-  product-command alias.
+- `aeat` is the sole human command-line interface (CLI) executable; it names
+  the Cadrumo command contract (`cadrumo-cli-executable` ADR). Don't expose
+  `cadrumo` as a second human executable.
 - `cadrumo-mcp` is the sole Model Context Protocol (MCP) command.
 - Product imports, environment variables, plugin identifiers, resource schemes,
   and local state use the Cadrumo identity.
@@ -169,7 +187,7 @@ unexpected advisory, stop.
    unavailable GitHub state and missing packaging evidence are advisories.
    If GitHub issue state is unavailable, a `priority:P0-blocker` issue is open,
    or current packaging evidence is absent or failed, stop. Independently
-   confirm that issue #476 records the S61 external reservation gate as cleared.
+   confirm that issue #612 records the S61 external reservation gate as cleared.
 
 2. Run the release and packaging checks:
 
@@ -189,7 +207,7 @@ unexpected advisory, stop.
    `skipped`, unavailable tooling, or any indeterminate result as a failure.
 
 3. If the `just release` target and the cleared S61 evidence both name
-   `cadrumo/cadrumo`, preview the release-please proposal:
+   `nevenincs/cadrumo`, preview the release-please proposal:
 
    ```console
    just release
@@ -275,7 +293,7 @@ Emergency hotfixes may skip the soak. Use the cycle times in
 
 ## Publish with Trusted Publishing
 
-Recheck issue #476 immediately before pushing. If S61 isn't still complete,
+Recheck issue #612 immediately before pushing. If S61 isn't still complete,
 stop without pushing or dispatching.
 
 1. Push only the reviewed `main` commit and the one final tag:
@@ -291,7 +309,7 @@ stop without pushing or dispatching.
 2. Dispatch the core distribution from the final tag:
 
    ```console
-   gh workflow run publish.yml --repo cadrumo/cadrumo --ref vX.Y.Z -f distribution=cadrumo
+   gh workflow run publish.yml --repo nevenincs/cadrumo --ref vX.Y.Z -f distribution=cadrumo
    ```
 
 3. Inspect and approve the `pypi` environment deployment. Confirm the job uses
@@ -308,8 +326,8 @@ stop without pushing or dispatching.
 5. Dispatch and verify each companion as a separate manual job:
 
    ```console
-   gh workflow run publish.yml --repo cadrumo/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-manuals
-   gh workflow run publish.yml --repo cadrumo/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-official
+   gh workflow run publish.yml --repo nevenincs/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-manuals
+   gh workflow run publish.yml --repo nevenincs/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-official
    ```
 
    Wait for the first companion job to finish before dispatching the second.
