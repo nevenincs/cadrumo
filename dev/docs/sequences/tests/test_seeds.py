@@ -1,4 +1,4 @@
-"""Real-behaviour tests for ``:seed:`` recipe loading and inlining (ADR D6).
+"""Real-behaviour tests for ``:seed:`` recipe loading and inlining.
 
 These prove that a named seed recipe of ``@setup`` frames is read from disk,
 parsed, and inlined before a sequence's own frames; that its captures thread into
@@ -217,3 +217,34 @@ def test_committed_seed_profile_labels_are_the_sandbox_label() -> None:
     # once; if a future recipe reshape removes every such frame, this assert
     # fails so the binding is consciously re-anchored rather than rotting.
     assert labelled_frames > 0, "no committed seed frame addresses a profile; re-anchor this binding test"
+
+
+def test_seed_step_descriptions_inline_with_their_frames(tmp_path: Path) -> None:
+    """An ``@step`` in a recipe rides its ``@setup`` frame through inlining,
+    located in the recipe for diagnostics, exactly like the frame itself."""
+    _write_seed(
+        tmp_path,
+        "with-steps",
+        "@step Create the taxpayer profile.\n"
+        "@setup aeat config profile create --nif 12345678Z\n"
+        "@setup aeat app ledger import --file fixtures/2026-1t-statement.csv\n",
+    )
+    sequence = _parse_with_seed(tmp_path, seed="with-steps")
+
+    first, second = sequence.frames[0], sequence.frames[1]
+    assert first.step_description == "Create the taxpayer profile."
+    assert first.source == "seed:with-steps"
+    assert second.step_description is None
+
+
+def test_seed_trailing_step_is_located_in_the_recipe(tmp_path: Path) -> None:
+    _write_seed(
+        tmp_path,
+        "trailing-step",
+        "@setup aeat config profile create --nif 12345678Z\n@step This attaches to nothing.\n",
+    )
+    with pytest.raises(SequenceParseError) as excinfo:
+        _parse_with_seed(tmp_path, seed="trailing-step")
+    assert any(
+        "seed:trailing-step line 2" in problem and "trailing @step" in problem for problem in excinfo.value.problems
+    )
