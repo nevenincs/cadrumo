@@ -1038,4 +1038,10 @@ def setup(app):
     app.connect("missing-reference", _resolve_short_reference, priority=700)
     app.add_role("paramref", _paramref_role)
     app.add_directive("legacy", _LegacyDirective)
+
+    # Register the cli-sequence directive: server-rendered executed-CLI frames
+    # plus one inline JSON payload per sequence (docs-cli-sequences ADR D5).
+    from dev.docs.sequence_directive import register as _register_cli_sequence
+
+    _register_cli_sequence(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}
