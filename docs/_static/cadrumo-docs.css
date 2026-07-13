@@ -1643,13 +1643,39 @@ a.sd-card:any-link,
   box-shadow: inset 2px 0 0 0 var(--color-brand-content);
 }
 
-/* Non-active commands: collapse output for minimal density. Past commands keep
- * their highlighting and stay legible; only their output is put away. */
-.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-active) .cadrumo-frame-output,
-.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-active) .cadrumo-frame-stderr,
-.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-active) .cadrumo-verify,
-.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-active) .cadrumo-expects {
+/* Output disclosure: each frame's output is individually toggleable (the
+ * command line never is). The playhead resets the disclosure — active frame
+ * open, others closed — and the reader may reopen any frame to compare.
+ * Without JS no frame carries the enhanced class, so everything renders. */
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-frame-output,
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-frame-stderr,
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-verify,
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-expects {
   display: none;
+}
+
+/* The disclosure handle: a single quiet chevron on its own hairline row —
+ * present only when JS runs, styled to near-invisibility until wanted. */
+.cadrumo-output-toggle {
+  background: none;
+  border: none;
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1;
+  margin: 0.15rem 0 0;
+  padding: 0.1rem 0.3rem 0.1rem 0;
+}
+
+.cadrumo-output-toggle:hover {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-output-toggle:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
 }
 
 /* Future commands: dimmed to a tertiary tone with highlighting dropped — a
