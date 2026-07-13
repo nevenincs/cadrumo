@@ -9,6 +9,7 @@ related:
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-06-10-docs-terminology-search-research]]'
 ---
+
 <!-- LINK RULES:
      - [[wiki-links]] are ONLY for .vault/ documents in the
        related: field above.
@@ -54,8 +55,8 @@ Extend the sweep query vocabulary from the coverage report over the bundled lega
 
 Author the widened query vocabulary from the coverage report, reindex, sweep, wrangle, and land the reviewed mapping diff.
 
-- [ ] `W03.P03.S08` - Author the widened query vocabulary from the coverage report through the Handbook enrolment surfaces, keeping the synonym ratification ratchet; `src/cadrumo/_data/terminology/`.
-- [ ] `W03.P03.S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff; `src/cadrumo/_data/terminology/relevance/relevance.json`.
+- [x] `W03.P03.S08` - Author the widened query vocabulary from the coverage report through the Handbook enrolment surfaces, keeping the synonym ratification ratchet; `src/cadrumo/_data/terminology/`.
+- [x] `W03.P03.S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff; `src/cadrumo/_data/terminology/relevance/relevance.json`.
 
 ## Wave `W04` - Rung-2 gate
 
@@ -65,7 +66,7 @@ Take the deferred rung-2 decision on the post-widening miss-rate number per ADR 
 
 Re-measure the held-out miss-rate post-widening and apply the ADR D3 numeric gate.
 
-- [ ] `W04.P04.S10` - Re-run the held-out miss-rate over the widened mapping, commit the measurement, and apply the ADR D3 gate: implement rung 2 only above the ten-percent top-five miss line, else record the standing baseline; `dev/docs/terminology/, .vault/audit/`.
+- [x] `W04.P04.S10` - Re-run the held-out miss-rate over the widened mapping, commit the measurement, and apply the ADR D3 gate: implement rung 2 only above the ten-percent top-five miss line, else record the standing baseline; `dev/docs/terminology/, .vault/audit/`.
 
 ## Description
 

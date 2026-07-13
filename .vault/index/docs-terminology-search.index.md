@@ -58,6 +58,9 @@ related:
   - '[[2026-07-13-docs-terminology-search-W02-P02-S05]]'
   - '[[2026-07-13-docs-terminology-search-W02-P02-S06]]'
   - '[[2026-07-13-docs-terminology-search-W02-P02-S07]]'
+  - '[[2026-07-13-docs-terminology-search-W03-P03-S08]]'
+  - '[[2026-07-13-docs-terminology-search-W03-P03-S09]]'
+  - '[[2026-07-13-docs-terminology-search-W04-P04-S10]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -127,6 +130,9 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-07-13-docs-terminology-search-W02-P02-S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test
 - `2026-07-13-docs-terminology-search-W02-P02-S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test
 - `2026-07-13-docs-terminology-search-W02-P02-S07` - Re-scoped cutover (ADR Update 1): exclude the extracted sidecars from the dev index via .vaultragignore, retarget the terminology resolver path rules to source-file paths, correct the stale preprocess docstring to describe the sidecars' product-payload role, keep the hook-vs-sidecar parity gate as a permanent lock, and prove an equal-or-superset sweep target set - one explicit-path commit
+- `2026-07-13-docs-terminology-search-W03-P03-S08` - Author the widened query vocabulary from the coverage report through the Handbook enrolment surfaces, keeping the synonym ratification ratchet
+- `2026-07-13-docs-terminology-search-W03-P03-S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff
+- `2026-07-13-docs-terminology-search-W04-P04-S10` - Re-run the held-out miss-rate over the widened mapping, commit the measurement, and apply the ADR D3 gate: implement rung 2 only above the ten-percent top-five miss line, else record the standing baseline
 
 ### plan
 
