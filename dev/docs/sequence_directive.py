@@ -33,8 +33,7 @@ from docutils.parsers.rst import Directive, directives
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-    from dev.docs.sequences._golden_store import GoldenFrame, SequenceGolden
-    from dev.docs.sequences._schema import ParsedSequence, SequenceFrame
+    from dev.docs.sequences import GoldenFrame, ParsedSequence, SequenceFrame, SequenceGolden
 
 __all__ = [
     "CliSequenceDirective",
@@ -106,7 +105,7 @@ def _frame_payload(
     placeholders intact, so the reader sees the reproducible form); the output,
     exit code, and captures come from the committed golden.
     """
-    from dev.docs.sequences._tokeniser import tokenise_command
+    from dev.docs.sequences import tokenise_command
 
     tokens = tokenise_command(parsed_frame.argv)
     payload: dict[str, Any] = {
@@ -248,8 +247,12 @@ class CliSequenceDirective(Directive):
         """Parse the body, render from the committed golden, and emit the frames + payload."""
         from pathlib import Path
 
-        from dev.docs.sequences import parse_sequence, read_golden
-        from dev.docs.sequences._errors import SequenceEngineError
+        from dev.docs.sequences import (
+            SequenceEngineError,
+            parse_sequence,
+            read_golden,
+            refuse_live_frames,
+        )
 
         sequence_id = self.arguments[0].strip()
         env = self.state.document.settings.env
@@ -266,6 +269,11 @@ class CliSequenceDirective(Directive):
 
         try:
             sequence = parse_sequence(sequence_id=sequence_id, options=options, body=body, seeds_root=seeds_root)
+            # Statically refuse an enrolled sequence that reads live AEAT (a pull
+            # verb or the app-live group): it is unenrollable at build time, not
+            # only at execution (ADR D6/D7), so the author gets a clear error
+            # here rather than an opaque missing-golden failure.
+            refuse_live_frames(sequence)
             golden = read_golden(page, sequence_id, goldens_root=goldens_root)
             payload = build_sequence_payload(sequence, golden)
         except SequenceEngineError as exc:
