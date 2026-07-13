@@ -146,6 +146,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_REGISTRY_PARITY_STORE_DIR` | Path | (derived) | Directory where registry parity tape artifacts are archived by default |
 | `CADRUMO_REPLAY_ACTIVE` | str | empty | Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry |
 | `CADRUMO_RUNS_DIR` | Path | (derived) | Directory where run traces and JSONL event logs are persisted (one subdirectory per run_id, containing trace.json + events.jsonl) |
+| `CADRUMO_RUNS_RETENTION_DAYS` | int | `30` | Retention window in days for per-run trace directories; older run directories are pruned |
 | `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. Default None — the master-key loader refuses operation on None or empty value to preserve fail-closed behaviour. Operator-facing env var is CADRUMO_SECRET_PASSPHRASE. |
 | `CADRUMO_SECRET_STORE_BACKEND` | SecretStoreBackend | `auto` | Master-key backend for the secret store. auto = OS keychain when available, encrypted file fallback otherwise. keyring = OS keychain only (refuses to fall back). file = encrypted file only (required for CI / headless). unsecured = testing-only mode with a published deterministic key; requires cadrumo_allow_unencrypted=true and refuses real NIFs. |
 | `CADRUMO_SECRET_STORE_DIR` | Path | (derived) | Directory for the encrypted secret-store master-key file and ciphertext records |

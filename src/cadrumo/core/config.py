@@ -965,6 +965,11 @@ class Settings(AeatIntegrationSettings):
             "(one subdirectory per run_id, containing trace.json + events.jsonl)"
         ),
     )
+    cadrumo_runs_retention_days: int = Field(
+        default=30,
+        ge=1,
+        description="Retention window in days for per-run trace directories; older run directories are pruned",
+    )
 
     # ── Justificante parser ─────────────────────────────────────────────────
     cadrumo_justificantes_dir: Path = Field(
