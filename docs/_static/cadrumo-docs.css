@@ -9,6 +9,7 @@
  *   3. Base + motion         8. Code surfaces
  *   4. Site header           9. Components (admonitions, cards, tabs, tables)
  *   5. Broadcast strip      10. Footer, palette, responsive
+ *                          11. CLI sequence player
  */
 
 /* ── 1. Fonts (self-hosted, SIL OFL 1.1 — no third-party font CDN) ────── */
@@ -1505,5 +1506,320 @@ a.sd-card:any-link,
   .cadrumo-header,
   .cadrumo-broadcast {
     display: none;
+  }
+}
+
+/* ── 11. CLI sequence player ───────────────────────────────────────────
+ * The server-rendered `cli-sequence` transcript (ADR D5): a terminal-framed
+ * card of command/output frames that cadrumo-docs.js progressively enhances
+ * into a stepped player. Every rule reads a Furo custom property, so light and
+ * dark themes both resolve; no frame is hidden by CSS alone, so a no-JS reader
+ * always sees the complete transcript. */
+
+.cadrumo-sequence {
+  background: var(--color-code-background);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  color: var(--color-code-foreground);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.85rem;
+  line-height: 1.65;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Terminal title bar with the three window dots. */
+.cadrumo-sequence::before {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-background-border);
+  content: "";
+  display: block;
+  height: 2.1rem;
+  box-shadow:
+    1rem 1.05rem 0 -0.68rem var(--cadrumo-accent-danger),
+    1.6rem 1.05rem 0 -0.68rem var(--cadrumo-accent-warning),
+    2.2rem 1.05rem 0 -0.68rem var(--cadrumo-accent-success);
+}
+
+.cadrumo-frame {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-background-border) 55%, transparent);
+  padding: 0.85rem 1.15rem;
+}
+
+.cadrumo-frame:last-of-type {
+  border-bottom: 0;
+}
+
+.cadrumo-sequence--enhanced .cadrumo-frame.is-active {
+  background: color-mix(in srgb, var(--color-brand-content) 6%, transparent);
+  box-shadow: inset 3px 0 0 0 var(--color-brand-content);
+}
+
+.cadrumo-frame-command pre,
+.cadrumo-frame-output,
+.cadrumo-frame-stderr {
+  background: transparent;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  white-space: pre;
+}
+
+.cadrumo-frame-command pre code {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  padding: 0;
+}
+
+/* The shell prompt marker precedes each command line. */
+.cadrumo-frame-command pre code::before {
+  color: var(--color-foreground-muted);
+  content: "$ ";
+  user-select: none;
+}
+
+.cadrumo-frame-output,
+.cadrumo-frame-stderr {
+  color: var(--color-foreground-secondary);
+  margin-top: 0.55rem;
+}
+
+.cadrumo-frame-stderr {
+  color: var(--cadrumo-accent-danger);
+}
+
+/* Token kinds — highlighting is correct by construction (Python-side against
+ * the live Click tree), so each kind gets a distinct, theme-aware colour. */
+.cadrumo-sequence .cli-tok-executable,
+.cadrumo-sequence .cli-tok-leaf {
+  color: var(--color-brand-content);
+  font-weight: 600;
+}
+
+.cadrumo-sequence .cli-tok-group {
+  color: var(--color-foreground-primary);
+  font-weight: 550;
+}
+
+.cadrumo-sequence .cli-tok-option {
+  color: light-dark(#55876b, #9dc2ac);
+}
+
+.cadrumo-sequence .cli-tok-option_value,
+.cadrumo-sequence .cli-tok-argument {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-sequence .cli-tok-placeholder {
+  color: var(--cadrumo-accent-warning);
+  font-style: italic;
+}
+
+/* A verb token carrying live help invites a hover; mark it discoverable. */
+.cadrumo-sequence .cli-tok[data-command-path] {
+  cursor: help;
+  text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 3px;
+}
+
+.cadrumo-sequence .cli-tok[data-command-path]:hover,
+.cadrumo-sequence .cli-tok[data-command-path]:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+.cadrumo-sequence .cli-tok[data-command-path]:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+/* Setup frames are preparation: a collapsed disclosure above the transcript. */
+details.cadrumo-setup {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-background-border) 55%, transparent);
+}
+
+details.cadrumo-setup > summary {
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  font-family: var(--font-stack);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.6rem 1.15rem;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+details.cadrumo-setup > summary:hover {
+  color: var(--color-foreground-secondary);
+}
+
+details.cadrumo-setup[open] > summary {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-background-border) 40%, transparent);
+}
+
+/* The result frame's verification caption and its imperative expect checks. */
+.cadrumo-verify {
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack);
+  font-weight: 600;
+  margin: 0.75rem 0 0;
+}
+
+.cadrumo-expects {
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack);
+  font-size: 0.82rem;
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+}
+
+.cadrumo-expects > li {
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.cadrumo-expects > li::before {
+  color: var(--cadrumo-accent-success);
+  content: "\2713";
+  left: 0.2rem;
+  position: absolute;
+}
+
+/* Playback controls (created by cadrumo-docs.js; absent without JS). */
+.cadrumo-sequence-controls {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-top: 1px solid var(--color-background-border);
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.55rem 1.15rem;
+}
+
+.cadrumo-sequence-btn {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  height: 1.9rem;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  width: 2rem;
+}
+
+.cadrumo-sequence-btn:hover:not(:disabled) {
+  background: var(--color-background-hover);
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-sequence-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+.cadrumo-sequence-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.cadrumo-sequence-btn--play.is-playing {
+  border-color: var(--color-brand-content);
+  color: var(--color-brand-content);
+}
+
+.cadrumo-sequence-position {
+  color: var(--color-foreground-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0.35rem 0 0.15rem;
+}
+
+/* CLI hover-help popover (cadrumo-docs.js S31). */
+.cadrumo-cli-popover {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  box-shadow: var(--cadrumo-shadow-pop);
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.85rem;
+  position: absolute;
+  z-index: 60;
+}
+
+.cadrumo-cli-popover[hidden] {
+  display: none;
+}
+
+.cadrumo-cli-popover-path {
+  color: var(--color-brand-content);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cadrumo-cli-popover-usage {
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  margin: 0.35rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cadrumo-cli-popover-help {
+  margin: 0.45rem 0 0;
+}
+
+.cadrumo-cli-popover-params {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.cadrumo-cli-popover-params > li {
+  margin-top: 0.35rem;
+}
+
+.cadrumo-cli-popover-param-name {
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.cadrumo-cli-popover-param-req {
+  color: var(--cadrumo-accent-warning);
+  font-size: 0.7rem;
+  margin-left: 0.3rem;
+  text-transform: uppercase;
+}
+
+.cadrumo-cli-popover-param-help {
+  color: var(--color-foreground-secondary);
+  display: block;
+}
+
+/* prefers-reduced-motion: playback still works, but every transition is
+ * instantaneous and no revealing animation runs. */
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-sequence,
+  .cadrumo-frame,
+  .cadrumo-sequence-btn {
+    transition: none;
   }
 }
