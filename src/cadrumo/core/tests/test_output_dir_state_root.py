@@ -1,8 +1,7 @@
 """State-root derivation for every generated-output directory.
 
-The data-output-standardization ADR (ruling R1) finished the packaging
-decision that durable state must not default under ``PROJECT_ROOT`` on an
-installed run: every output directory now derives its default from
+Durable state must not default under ``PROJECT_ROOT`` on an installed run:
+every output directory derives its default from
 ``cadrumo_local_storage_root`` through the ``_STATE_ROOT_DERIVED_DIRS``
 taxonomy, and an explicit per-field override still wins. These tests pin the
 derivation for the whole table so a new output dir cannot silently reintroduce
