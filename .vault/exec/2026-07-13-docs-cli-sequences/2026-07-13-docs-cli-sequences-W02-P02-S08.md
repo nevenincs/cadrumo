@@ -62,3 +62,5 @@ All 30 tests pass with no mocks, skips, or xfail. Ruff lint and format are clean
 ## Notes
 
 The dev/docs test convention requires exactly one `hex_*` marker; the tests carry `unit`, `hex_core`, and `docs`. No skipped or tautological assertions.
+
+Review cycle: the initial parser commit was reviewed PASS-WITH-FINDINGS, closed by a follow-up commit that fixed the unbalanced-placeholder-brace silent miss, bounded the sequence id / seed name / verify length in the parser off the shared schema constraints (so an over-long value accumulates as a parse error rather than a raw pydantic ValidationError), required an integer literal for the exit_code expect, located the duplicate-capture diagnostic at the capture line, and derived the parser regexes from the schema patterns pinned by a parity test. The re-check confirmed all findings closed with the typed surface unchanged. Test count rose from 30 to 40.
