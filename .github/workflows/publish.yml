@@ -36,7 +36,11 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: pypi
+    # One environment per distribution: PyPI's PENDING trusted publishers are
+    # unique on (owner, repo, workflow, environment) EXCLUDING the project
+    # name, so three pending registrations from this one workflow must each
+    # carry a distinct environment.
+    environment: ${{ fromJSON('{"cadrumo":"pypi","cadrumo-data-manuals":"pypi-data-manuals","cadrumo-data-official":"pypi-data-official"}')[inputs.distribution] }}
     permissions:
       id-token: write
       contents: read
