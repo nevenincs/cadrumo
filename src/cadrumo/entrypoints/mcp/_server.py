@@ -102,6 +102,7 @@ from ._persona_scope import (
 from ._prompts import PromptNotFoundError, build_prompt_catalogue, prompt_document
 from ._resources import (
     BUCKET_SCOPED_RESOURCE_KINDS,
+    HarnessResourceKind,
     HarnessResourceNotFoundError,
     list_harness_resource_templates,
     list_harness_resources,
@@ -1006,7 +1007,7 @@ def build_server(
             for template in list_harness_resource_templates()
         ]
 
-    async def _resolve_bulk_resource(kind: object, identity: str, uri: str) -> str:
+    async def _resolve_bulk_resource(kind: HarnessResourceKind, identity: str, uri: str) -> str:
         """Resolve a bucket-scoped resource by re-running its owning read verb.
 
         The bulk arrays a verb thins (calculation observations, evidence rows) live
