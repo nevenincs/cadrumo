@@ -91,7 +91,7 @@ One mandated scratch convention, gitignore repair, removal of tracked run artifa
 Gitignore repair, tracked-artifact removal, scratch convention, runtime-s retirement.
 
 - [x] `W04.P07.S20` - Repair gitignore: fix dead src/aeat corpus-manual rules, add runtime-s pattern, broaden root-level scratch patterns; `.gitignore`.
-- [ ] `W04.P07.S21` - Remove the tracked repo-root run artifacts from version control; `repo-root run artifacts`.
+- [x] `W04.P07.S21` - Remove the tracked repo-root run artifacts from version control; `repo-root run artifacts`.
 - [ ] `W04.P07.S22` - Clean stale scratch and runtime-s directories after confirming no active-agent ownership, and document the scratch naming schema; `scratch`.
 
 ## Wave `W05` - Writer consolidation
