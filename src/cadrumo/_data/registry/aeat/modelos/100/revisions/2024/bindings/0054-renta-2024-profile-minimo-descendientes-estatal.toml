@@ -5,8 +5,8 @@
 # menor-3 supplement (2.800 €), and applies the Art. 61.1ª custodia-compartida
 # prorrata (0.5) per descendant, projecting the result onto the Decimal fact
 # `renta_family.descendientes_minimos_aggregate_2024` (the user-profile schema
-# field the modelo-100-minimo-descendientes-engine ADR named as a dangling
-# selector, its former binding deleted in commit bc3b89594 -- retired here).
+# field named as a dangling selector, its former binding deleted in commit
+# bc3b89594 -- retired here).
 # Feeds casilla 0513 (estatal) only — casilla 0514 (autonómico) is fed by the
 # sibling binding `renta-2024-profile-minimo-descendientes-autonomico`, which
 # resolves each tranche against the filer's declared tax-residence CCAA (some

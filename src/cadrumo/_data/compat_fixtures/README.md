@@ -22,6 +22,3 @@ subdirectory (`secure_object/`, `bundle/`, `archive/`) named by the version
 it was written under. The coverage harness then asserts a fixture exists for
 every version from the frozen floor up to the current version, so a bump that
 strands an older shape fails the gate.
-
-Governing vault record: `2026-07-09-compatibility-lifecycle-adr`, building on
-`2026-07-08-released-data-durability-adr`.

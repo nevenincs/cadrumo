@@ -10,9 +10,9 @@
 # remaining official boxes.
 #
 # Modelling notes (grounded, non-fabricating):
-#  - The engine keeps ONE branching base_imponible ([8]) per the 2026-07-09
-#    Phase-2 ADR O2 decision (one casilla schema, code-keyed branches). The
-#    alternate type-I direct base [4] and type-G direct base [18] are declared
+#  - The engine keeps ONE branching base_imponible ([8]) (one casilla schema,
+#    code-keyed branches). The alternate type-I direct base [4] and type-G
+#    direct base [18] are declared
 #    as operator-input boxes for the paths the branching engine does not compute.
 #  - Signed money boxes (ganancias, ingreso/devolución anterior) carry no
 #    non_negative constraint: a ganancia patrimonial may be a loss, and the

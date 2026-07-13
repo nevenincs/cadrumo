@@ -5,8 +5,8 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    # Primitive cuota leaves — Route A of the parser-engine-totals-impedance
-    # ADR (2026-06-02). The 2009-y-siguientes revision has no
+    # Primitive cuota leaves — Route A of the parser-engine-totals impedance
+    # mismatch. The 2009-y-siguientes revision has no
     # iva.autoconsumo.promotor.* casillas, so only the five non-autoconsumo
     # primitives are extracted here.
     {casilla_id = "iva.repercutido.general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+general\s+21\s+por\s+ciento'},

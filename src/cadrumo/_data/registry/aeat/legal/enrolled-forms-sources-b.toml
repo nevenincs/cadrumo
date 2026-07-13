@@ -1,4 +1,4 @@
-# Second dedicated source file for campaign-enrolled forms not yet migrated into
+# Second dedicated source file for enrolled forms not yet migrated into
 # their own modelo-specific source catalogues.
 
 [sources."aeat-modelo-117-procedure"]

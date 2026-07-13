@@ -15,7 +15,7 @@
 #     la cantidad a ingresar (clave 03 o clave 34)").
 #
 # No real M202 declaracion-copy PDF specimen is bundled (Tier-R real-corpus
-# acquisition for this modelo family is tracked separately; see issue #325).
+# acquisition for this modelo family is tracked separately).
 # The DR confirms the box numbers ("[NN]") are printed inline in the form,
 # but not their exact on-page label wording or column position, so this
 # profile uses bbox_anchored (anchor on the printed box number, read the
