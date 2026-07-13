@@ -9,39 +9,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S65 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Update Catalan product locale messages through the locales CLI and ## Scope
-
-- `Catalan locale catalogue` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Update Catalan product locale messages through the locales CLI
 
 ## Scope
@@ -71,3 +38,72 @@ related:
 - The only valid remaining lowercase `cadrumo` machine or historical residue is `cadrumo-vault/` in `cli.config.google.sync.calc.export_help`. No lowercase `cadrumo` setting, MCP executable, URI scheme, or companion namespace is present.
 - English, Spanish, and Catalan targeted residue is zero. Remaining Hungarian display/command residue is 6/24 for S66.
 - No locale YAML was hand-edited.
+
+## Regression ancestry and corrective restoration
+
+The original S65 transaction at `1f45f80020` changed 39 Catalan leaves: 26
+stale command prefixes to `aeat` and 13 product-display references to
+`CADRUMO`. Commit `38894cae07` later changed those 13 display leaves back to
+title-case `Cadrumo` under the repudiated casing ruling. The command guidance
+remained canonical and required no further command change.
+
+S95 restored the binding all-caps runtime tuple, S96 established reciprocal
+supersession for the conflicting July 13 ADR, and S97 clarified that ADR as
+historical evidence only. S62 then restored and independently passed the
+shared renderer and locale-maintenance expectations; S63 and S64 restored and
+independently passed the English and Spanish catalogues. This corrective S65
+pass therefore changes only the 13 Catalan display leaves left by
+`38894cae07` and retains the original 39-change evidence above as historical
+proof of the first catalogue migration.
+
+## Corrective semantic evidence
+
+- Before mutation, the Catalan catalogue was 434,939 bytes with SHA-256
+  `8C5814BC6AD33DB287C3A9A133A2C6671E42CE3BFDB58C8F7BC1B94E492CACCE`.
+- After the production Catalan-only canonicalizer, it is 442,017 bytes with
+  SHA-256
+  `9A4BBE39A1DCA9B4B42175D5DAF1DAECC0E0BCEBD354F52E759BFEFDE30BC5CC`.
+- Parsed comparison proves exactly 13 changed leaves, each equal to the
+  production normalizer's `Cadrumo` to `CADRUMO` result. There are zero command
+  changes, key additions, key removals, type changes, or other semantic
+  changes.
+- All four catalogues contained exactly 3,702 keys before mutation. Catalan
+  retains exactly 3,702 keys, every leaf remains a string, and its production
+  placeholder-map digest is unchanged at
+  `ECF9F59F5BF1E0228F5FD6836595940F7B9150C7824453C8B1DC771DC8CEC918`.
+- English remained byte-identical at 403,956 bytes and
+  `06C2550F40D46982ADBBBA713D3031B1BB54CEBBE1141C80340F749C6F70325B`;
+  Spanish remained byte-identical at 449,246 bytes and
+  `2D97F3174AA18D65ECFBE5856A6D4FCF015606AFB54447610DE85BAFCD8E3A72`;
+  Hungarian remained byte-identical at 451,606 bytes and
+  `F7D1A4DA52D5578A5FC0CDAF7125201169E73922E06C4B87BA614E8330AE0942`.
+- Catalan now contains zero exact title-case `Cadrumo` references and zero
+  command-leading lowercase `cadrumo` references. Its 13 exact `CADRUMO`
+  displays, 21 `CADRUMO_` environment references, 225 `aeat` command
+  references, 227 standalone `AEAT` authority references, four `AEAT_*`
+  authority settings, and one `registry/aeat/treaties/` authority path remain
+  correctly classified. The sole lowercase `cadrumo` occurrence is the valid
+  `cadrumo-vault/` storage name.
+
+## Corrective verification
+
+- The production `audit` and `scaffold --check` commands report all four
+  catalogues healthy.
+- The locale audit, S92 formatter grammar, placeholder parity, catalogue
+  parity, and translation-honesty slice passed 54 tests.
+- Isolated live `aeat --language ca --help` contains five `CADRUMO`, two
+  `AEAT`, and 27 lowercase `aeat` references. It contains neither exact
+  title-case `Cadrumo` nor a command-leading lowercase `cadrumo` token.
+- Every production command and live-help probe used a fresh isolated
+  `CADRUMO_LOCAL_STORAGE_ROOT` with valid unsecured local state.
+- No Python path changed, so Ruff, formatting, and Ty are not applicable to
+  this catalogue-only transaction. `git diff --check` passes, and the Catalan
+  YAML diff is exactly 13 insertions and 13 deletions.
+- Plan validation passes with the known `PLAN022` ordering warning. The
+  feature-tagged broad Vault check remains nonzero on 348 unrelated legacy
+  structure and feature-folder errors plus 84 pre-existing warnings;
+  references, schema, ADR status, rename integrity, and encoding are clean.
+  No global Vault repair or index regeneration was attempted.
+- No locale YAML was hand-edited; the production module CLI performed the sole
+  catalogue mutation. English, Spanish, Hungarian, S66, S67, S25, and every
+  other open descendant remain outside this Step.
