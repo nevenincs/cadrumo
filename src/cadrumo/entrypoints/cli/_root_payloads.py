@@ -31,10 +31,10 @@ from ._schemas import OutputSchema, register_schema
 
 @register_schema("root.status")
 class RootStatusResult(OutputSchema):
-    """JSON envelope for the bare ``cadrumo`` (or ``cadrumo --help``) invocation.
+    """JSON envelope for the bare ``cadrumo`` (or ``aeat --help``) invocation.
 
     The root callback validates one of three application-layer payloads:
-    :class:`HelpDocument` for ``cadrumo --help``, :class:`RootLandingReport` for the
+    :class:`HelpDocument` for ``aeat --help``, :class:`RootLandingReport` for the
     cold-start / no-session landing, or :class:`OverviewStatusReport` when an
     active session can render the full overview. These shapes vary
     significantly, so the schema accepts extra fields while still registering
@@ -53,7 +53,7 @@ class RootStatusResult(OutputSchema):
 
 @register_schema("root.app")
 class AppRootResult(OutputSchema):
-    """JSON envelope for the bare ``cadrumo app`` (or ``cadrumo app --help``) invocation.
+    """JSON envelope for the bare ``aeat app`` (or ``aeat app --help``) invocation.
 
     The app group callback wraps :class:`HelpDocument` under the stable
     ``root.app`` group-callback key. Like :class:`RootStatusResult`, the schema

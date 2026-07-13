@@ -243,7 +243,7 @@ def test_google_auth_error_constructs_with_context_and_suggestion() -> None:
     err = GoogleAuthRevokedError(
         "Refresh token revoked",
         context={"profile": "default"},
-        suggestion="cadrumo config google login --profile default",
+        suggestion="aeat config google login --profile default",
     )
     assert err.context == {"profile": "default"}
-    assert err.suggestion == "cadrumo config google login --profile default"
+    assert err.suggestion == "aeat config google login --profile default"

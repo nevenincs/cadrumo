@@ -4,7 +4,7 @@ The discipline rule (``aeat-roundtrip-discipline``) requires a dedicated
 ``model_dump_json`` → ``model_validate_json`` test for every persistence-
 shaped pydantic model that flows over the wire. ``PullResult`` is the
 Google Sheets pull adapter's wire shape — :func:`compute_from_pull`
-consumes one directly and the CLI ``cadrumo config google sync calc pull``
+consumes one directly and the CLI ``aeat config google sync calc pull``
 verb persists it as JSON. The export→pull→compute integration test
 exercises the full pipeline; this module pins the JSON boundary
 independently so a field renamed-out or save-dropped regression

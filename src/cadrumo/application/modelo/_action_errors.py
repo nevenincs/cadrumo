@@ -156,7 +156,7 @@ class ModeloWorkflowGateError(ModeloError):
         suggestion: str | None = None
         if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
             message = None
-            suggestion = "cadrumo app modelo export <work-unit-id> --output <path>"
+            suggestion = "aeat app modelo export <work-unit-id> --output <path>"
         super().__init__(
             message,
             context={

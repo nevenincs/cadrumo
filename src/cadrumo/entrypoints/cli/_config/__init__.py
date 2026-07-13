@@ -406,7 +406,7 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
 
     Refuses instructively when the natural key resolves no revision or is
     ambiguous: the refusal names the candidate revisions or points at
-    ``cadrumo app modelo describe <modelo>`` rather than emitting a bare error.
+    ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
     from ....application.modelo import ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError
     from ....application.modelo import resolve_registry_revision_for_work_target
@@ -553,7 +553,7 @@ def config_profile_preflight(
         "readiness_scope\tprofile_fields_only",
         (
             "full_modelo_readiness_command\t"
-            f"cadrumo app modelo readiness --modelo {report.modelo} "
+            f"aeat app modelo readiness --modelo {report.modelo} "
             f"--revision-id {report.revision_id} --year {report.filing_year} "
             f"--period {report.period.registry_token}"
         ),
@@ -1120,7 +1120,7 @@ def config_status(
         configured=True,
         iva_regime=values.get("iva.regime", ""),
         tax_residence_ccaa=values.get("tax_residence.ccaa", ""),
-        next_action="cadrumo app overview status",
+        next_action="aeat app overview status",
     )
     _emit_envelope(
         ctx,

@@ -16,13 +16,13 @@ def storage_state_for_session(session: AeatSession) -> dict[str, object]:
     """Return decrypted Playwright storage state for an authenticated session."""
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `cadrumo config auth status` first",
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     persisted = _session_store.load(session.storage_state_path)
     if persisted is None:
         raise SedeNavigationError(
-            "AEAT auth session is not persisted; run `cadrumo config auth status` first",
+            "AEAT auth session is not persisted; run `aeat config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     return dict(persisted.storage_state)

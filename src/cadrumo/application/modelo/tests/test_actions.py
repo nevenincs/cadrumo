@@ -1126,4 +1126,4 @@ def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> 
     assert finding is not None
     assert finding.next_action is not None
     # The pre-contract hardcoded substring that should no longer appear.
-    assert "to cadrumo app modelo work calculate to auto-inject" not in finding.next_action
+    assert "to aeat app modelo work calculate to auto-inject" not in finding.next_action

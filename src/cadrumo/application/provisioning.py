@@ -9,7 +9,7 @@ ADR, not an exception path.
 
 The vision read consults :func:`probe_ollama_vision` before expensive inference,
 so a down server or an unpulled model becomes an instructive refusal instead of
-a raw stack trace. The ``cadrumo config check`` command renders this module's
+a raw stack trace. The ``aeat config check`` command renders this module's
 statuses as
 :class:`~cadrumo.entrypoints.cli._config._check_payloads.CheckDependencyPayload`
 rows beside the active profile's capability posture from
@@ -48,7 +48,7 @@ _OLLAMA_PROBE_TIMEOUT_S = 2.0
 class DependencyStatus(BaseModel):
     """Availability result for one external dependency.
 
-    ``service`` is the stable row id shown by ``cadrumo config check``; ``detail``
+    ``service`` is the stable row id shown by ``aeat config check``; ``detail``
     explains the observed state; ``remediation`` is the command or action the
     operator can run when ``available`` is false. The model is intentionally
     generic so Ollama, subprocess CLIs, Playwright browser binaries, and
@@ -122,7 +122,7 @@ def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
     Delegates provider discovery to the ledger classification surface and adapts
     each availability row into the common :class:`DependencyStatus` shape. The
     probe resolves binaries only; it does not spawn provider processes.
-    ``cadrumo config check`` combines these rows with
+    ``aeat config check`` combines these rows with
     :class:`~cadrumo.core.ServiceCapability` decisions to flag opted-in cloud
     evidence uploads that lack a provider CLI.
     """
@@ -227,6 +227,6 @@ def probe_optional_extras() -> tuple[DependencyStatus, ...]:
 
     The result set is keyed by the same :data:`~cadrumo.core.OPTIONAL_EXTRAS`
     catalogue used by :func:`~cadrumo.core.require_optional_extra`, keeping
-    ``cadrumo config check`` and runtime feature guards aligned.
+    ``aeat config check`` and runtime feature guards aligned.
     """
     return tuple(probe_optional_extra(extra) for extra in OPTIONAL_EXTRAS)

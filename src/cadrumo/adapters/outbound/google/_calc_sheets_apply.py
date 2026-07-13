@@ -1196,7 +1196,7 @@ def apply_export_plan(
     Returns:
         A :class:`~adapters.outbound.google.CalcSheetsApplyResult` with
         the spreadsheet location and write counts surfaced by
-        ``cadrumo config google sync calc export``.
+        ``aeat config google sync calc export``.
 
     Raises:
         :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:

@@ -40,7 +40,7 @@ def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = _BUCKET_
         linked_transaction_ids=(tx_id,),
         bucket_id=bucket_id,
         captured_by="operator-A",
-        source_command="cadrumo app ledger attach",
+        source_command="aeat app ledger attach",
         notes="deductible invoice",
     )
 
@@ -61,7 +61,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
     loaded = store.load_manifest(digest)
     assert loaded == attachment
     assert loaded.captured_by == "operator-A"
-    assert loaded.source_command == "cadrumo app ledger attach"
+    assert loaded.source_command == "aeat app ledger attach"
     assert loaded.bucket_id == _BUCKET_ID
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)

@@ -425,7 +425,7 @@ the informational Modelo 184.
 _INCOMPLETE_UNDECLARED_REASON = (
     "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
     "está declarado. Declare primero el tipo de entidad y, en su caso, las "
-    "categorías de renta del IRPF con 'cadrumo config profile edit'."
+    "categorías de renta del IRPF con 'aeat config profile edit'."
 )
 """``INCOMPLETE`` rationale for an *undeclared taxpayer model*.
 

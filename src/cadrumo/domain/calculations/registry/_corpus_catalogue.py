@@ -35,7 +35,7 @@ CORPUS_SOURCES_INSTALL_HINT = "pip install 'cadrumo[corpus-sources]'"
 
 Named in every companion-absent advisory so an operator whose split install
 lacks the corpus source binaries learns exactly how to restore full
-byte-integrity verification and the ``cadrumo app registry`` verification verbs.
+byte-integrity verification and the ``aeat app registry`` verification verbs.
 """
 
 # The slim ``cadrumo`` wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
@@ -173,7 +173,7 @@ def _corpus_companion_advisory(missing_corpus_paths: list[str]) -> str:
     return (
         f"{len(unique)} corpus source binary file(s) declared by the registry are absent from both "
         f"the runtime tree and the optional cadrumo_data companion distribution; corpus byte-integrity "
-        f"verification and the cadrumo app registry verification verbs are degraded until it is "
+        f"verification and the aeat app registry verification verbs are degraded until it is "
         f"installed. Missing: {missing}. Install the companion to restore full verification: "
         f"{CORPUS_SOURCES_INSTALL_HINT}"
     )

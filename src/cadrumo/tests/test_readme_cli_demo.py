@@ -17,7 +17,7 @@ def test_demo_authorities_use_only_cadrumo_product_paths_and_commands() -> None:
     """The renderer and preparer contain no retired product bootstrap or command."""
     assert prepare_cli_demo._CLI_BOOTSTRAP == "from cadrumo.entrypoints.cli import main; main()"
     assert render_cli_demo._CLI_BOOTSTRAP == prepare_cli_demo._CLI_BOOTSTRAP
-    assert render_cli_demo.DISPLAY_COMMAND.startswith("cadrumo app quickfile ")
+    assert render_cli_demo.DISPLAY_COMMAND.startswith("aeat app quickfile ")
     assert prepare_cli_demo.DEMO_ROOT == PROJECT_ROOT / "var" / "readme-demo"
 
 

@@ -79,7 +79,7 @@ def _command_path_for_help_probe(command: str) -> list[str] | None:
 
 def test_root_help_uses_curated_two_root_shape() -> None:
     result = _invoke(["--help"])
-    retired_init = "cadrumo config " + "init"
+    retired_init = "aeat config " + "init"
 
     assert result.exit_code == 0, result.output
     assert "The CLI has exactly two roots: config and app." in result.output
@@ -87,38 +87,38 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert "Daily ledger work" in result.output
     assert "Modelo lifecycle" in result.output
     assert "Common mistypes" not in result.output
-    assert "cadrumo config profile create NAME" in result.output
+    assert "aeat config profile create NAME" in result.output
     assert retired_init not in result.output
-    assert "cadrumo app overview status" in result.output
-    assert "cadrumo app live filed list" in result.output
+    assert "aeat app overview status" in result.output
+    assert "aeat app live filed list" in result.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in result.output
     assert "CADRUMO_SECRET_STORE_DIR" in result.output
     assert "CADRUMO_SECRET_PASSPHRASE" in result.output
-    assert "cadrumo config bucket" not in result.output
+    assert "aeat config bucket" not in result.output
 
 
 def test_config_and_app_help_use_curated_subtree_shape() -> None:
     config = _invoke(["config", "--help"])
     app_result = _invoke(["app", "--help"])
-    retired_init = "cadrumo config " + "init"
+    retired_init = "aeat config " + "init"
 
     assert config.exit_code == 0, config.output
-    assert "cadrumo config - profile, auth, diagnostics" in config.output
-    assert "cadrumo config profile create NAME" in config.output
+    assert "aeat config - profile, auth, diagnostics" in config.output
+    assert "aeat config profile create NAME" in config.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
     assert "CADRUMO_SECRET_STORE_BACKEND=file" in config.output
-    assert "cadrumo config profile show [NAME]" in config.output
-    assert ("cadrumo config profile " + "view [NAME]") not in config.output
+    assert "aeat config profile show [NAME]" in config.output
+    assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
-    assert "Run cadrumo --help for the full overview." in config.output
+    assert "Run aeat --help for the full overview." in config.output
 
     assert app_result.exit_code == 0, app_result.output
-    assert "cadrumo app - operational tax work" in app_result.output
-    assert "cadrumo app ledger import" in app_result.output
-    assert "cadrumo app live filed pull" in app_result.output
-    assert "cadrumo app modelo bindings" in app_result.output
-    assert "cadrumo app invoice" not in app_result.output
-    assert "cadrumo app declaration" not in app_result.output
+    assert "aeat app - operational tax work" in app_result.output
+    assert "aeat app ledger import" in app_result.output
+    assert "aeat app live filed pull" in app_result.output
+    assert "aeat app modelo bindings" in app_result.output
+    assert "aeat app invoice" not in app_result.output
+    assert "aeat app declaration" not in app_result.output
 
 
 def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
@@ -150,11 +150,11 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined_output
-    assert "cadrumo config profile create NAME" in result.stdout
-    assert ("cadrumo config " + "init") not in result.stdout
-    assert "cadrumo app overview status" in result.stdout
-    assert "cadrumo app ledger import" in result.stdout
-    assert "cadrumo config repair" in result.stdout
+    assert "aeat config profile create NAME" in result.stdout
+    assert ("aeat config " + "init") not in result.stdout
+    assert "aeat app overview status" in result.stdout
+    assert "aeat app ledger import" in result.stdout
+    assert "aeat config repair" in result.stdout
     assert "Traceback" not in combined_output
     assert "ImportError" not in combined_output
     assert "integrity-warning" not in combined_output
@@ -178,9 +178,9 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined_output
-    assert "cadrumo config profile create NAME" in result.stdout
-    assert "cadrumo app overview status" in result.stdout
-    assert "cadrumo app ledger import" in result.stdout
+    assert "aeat config profile create NAME" in result.stdout
+    assert "aeat app overview status" in result.stdout
+    assert "aeat app ledger import" in result.stdout
     assert "Failed to spawn" not in combined_output
     assert "program not found" not in combined_output
 
@@ -345,14 +345,14 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
     # The no-console refusal names both recovery paths a first-timer can
     # act on: re-run from an interactive terminal, or supply the
     # required details as flags in one step.
-    assert "cadrumo config profile create NAME" in combined_output
+    assert "aeat config profile create NAME" in combined_output
     assert "--quiet --tax-id NIF/CIF/DNI/NIE" in combined_output
     # The refusal must not push corruption-recovery commands at an
     # operator whose only problem is the absence of an interactive
     # terminal; that wording wrongly implies the profile state is bad.
-    assert "cadrumo config repair" not in combined_output
-    assert "cadrumo config reset" not in combined_output
-    assert ("cadrumo config " + "init") not in combined_output
+    assert "aeat config repair" not in combined_output
+    assert "aeat config reset" not in combined_output
+    assert ("aeat config " + "init") not in combined_output
     assert "1/9" not in combined_output
     assert "REFUSED" not in combined_output
     assert "Traceback" not in combined_output
@@ -390,16 +390,16 @@ class TestBareInvocationWithActiveProfile:
         overview = _invoke(["app", "overview", "status"])
 
         assert missing.exit_code == 0, missing.output
-        assert "cadrumo config profile create NAME" in missing.output
-        assert ("cadrumo config " + "init") not in missing.output
-        assert "cadrumo app overview status" in missing.output
-        assert "cadrumo app ledger import" in missing.output
+        assert "aeat config profile create NAME" in missing.output
+        assert ("aeat config " + "init") not in missing.output
+        assert "aeat app overview status" in missing.output
+        assert "aeat app ledger import" in missing.output
 
         assert active.exit_code == 0, active.output
         assert overview.exit_code == 0, overview.output
         assert active.output != overview.output
-        assert "cadrumo app overview status" in active.output
-        assert "cadrumo app ledger import" in active.output
+        assert "aeat app overview status" in active.output
+        assert "aeat app ledger import" in active.output
         assert "`operator`" in overview.output
         assert "profile\t" not in overview.output.lower()
         assert "integrity-warning" not in overview.output

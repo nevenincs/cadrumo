@@ -8,7 +8,7 @@ unreachable: ``invoice add`` writes the slim
 :class:`~cadrumo.domain.invoices.InvoiceCatalogue`. Per the accepted
 ``2026-06-10-ledger-invoice-unification`` the two stores stay distinct, so
 the gap is closed by giving the operator a verb that mints a rich *linkable*
-invoice: ``cadrumo app ledger invoice catalogue create``.
+invoice: ``aeat app ledger invoice catalogue create``.
 
 These tests assert the now-working flow at the CLI boundary:
 

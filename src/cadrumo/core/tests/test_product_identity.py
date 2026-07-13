@@ -22,7 +22,7 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         display_name="Cadrumo",
         python_package="cadrumo",
         distribution="cadrumo",
-        cli_executable="cadrumo",
+        cli_executable="aeat",
         repository="cadrumo",
         mcp_server="cadrumo",
         mcp_executable="cadrumo-mcp",

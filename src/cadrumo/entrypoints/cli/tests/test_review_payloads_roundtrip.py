@@ -1,4 +1,4 @@
-"""Strict roundtrip across the ``cadrumo review`` CLI JSON envelope.
+"""Strict roundtrip across the ``aeat review`` CLI JSON envelope.
 
 ``review queue`` and ``review view`` used to emit
 ``model_dump(mode="json")`` on application-side records that were not
@@ -44,7 +44,7 @@ def _populated_row(item_id: str = "review-001") -> ReviewQueueRowPayload:
         blocking=True,
         reason="missing required casilla",
         current_owner_surface="app modelo",
-        canonical_next_command="cadrumo app modelo work calculate draft-abc",
+        canonical_next_command="aeat app modelo work calculate draft-abc",
         since="2025-04-20T12:00:00+00:00",
         summary="modelo 303 draft is missing iva.devengado",
         legal_refs=("ley-37-1992:art-21", "ley-37-1992:art-94"),

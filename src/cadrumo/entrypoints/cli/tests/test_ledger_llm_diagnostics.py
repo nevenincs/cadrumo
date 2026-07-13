@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``cadrumo app ledger llm-diagnostics``.
+"""Real-behavior CLI tests for ``aeat app ledger llm-diagnostics``.
 
 Exercises the diagnostics verb end to end against the real CLI, the real
 :func:`~cadrumo.application.ledger.build_llm_diagnostics_report` aggregator, and

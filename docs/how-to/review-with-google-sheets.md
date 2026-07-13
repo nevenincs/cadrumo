@@ -25,22 +25,22 @@ edits into Cadrumo.
 Register the Desktop OAuth client for the active profile:
 
 ```bash
-cadrumo config google register --client-json ./client_secret.json
+aeat config google register --client-json ./client_secret.json
 ```
 
 Run the Google consent flow:
 
 ```bash
-cadrumo config google login
-cadrumo config google status
+aeat config google login
+aeat config google status
 ```
 
 Set the Drive folder where Cadrumo will create spreadsheets:
 
 ```bash
-cadrumo config google folder set <drive-folder-id>
-cadrumo config google folder get
-cadrumo config google sync probe
+aeat config google folder set <drive-folder-id>
+aeat config google folder get
+aeat config google sync probe
 ```
 
 The Google integration is profile-scoped. If you switch profiles, check Google
@@ -51,12 +51,12 @@ status and folder binding again.
 Export the registry calculation surface for one modelo, year, and period:
 
 ```bash
-cadrumo config google sync calc export --modelo 303 --year 2026 --period 1T
+aeat config google sync calc export --modelo 303 --year 2026 --period 1T
 ```
 
 The export creates a Google Sheets workbook inside the configured `cadrumo-vault/`
 area in Drive. It is a calculation review surface, not a bank statement export.
-Use `cadrumo app ledger export` when you need a CSV, JSONL, or XLSX snapshot of
+Use `aeat app ledger export` when you need a CSV, JSONL, or XLSX snapshot of
 ledger rows.
 
 Use `--prefill-relations` only when you want the spreadsheet to include values
@@ -68,7 +68,7 @@ carryovers.
 After reviewing or editing the workbook, pull typed edits back from the Sheet:
 
 ```bash
-cadrumo config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
+aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 ```
 
 Add `--assemble-observations` when you want edited row-level data saved back
@@ -85,7 +85,7 @@ in the Sheet. It pulls the operator-edited cells, runs the calculation engine
 over them, and displays the result. It persists nothing.
 
 ```bash
-cadrumo config google sync calc compute --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
+aeat config google sync calc compute --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 ```
 
 The compute command checks that the spreadsheet matches the expected filing
@@ -96,7 +96,7 @@ period. If it refuses, re-export and retry from the new spreadsheet.
 Run the calc-sheets verification command for the same modelo, year, and period:
 
 ```bash
-cadrumo config google sync calc verify --modelo 303 --year 2026 --period 1T
+aeat config google sync calc verify --modelo 303 --year 2026 --period 1T
 ```
 
 If you have a scenario JSON with operator inputs and expected Agencia Estatal
@@ -104,7 +104,7 @@ de Administración Tributaria (AEAT) outputs,
 pass it explicitly:
 
 ```bash
-cadrumo config google sync calc verify --modelo 303 --year 2026 --period 1T --scenario ./scenario.json
+aeat config google sync calc verify --modelo 303 --year 2026 --period 1T --scenario ./scenario.json
 ```
 
 Verification compares the calculation surfaces implemented by the app. It does
@@ -116,8 +116,8 @@ Keep an off-machine copy of your encrypted records by mirroring them to the
 configured Drive folder:
 
 ```bash
-cadrumo config google sync push --dry-run
-cadrumo config google sync push
+aeat config google sync push --dry-run
+aeat config google sync push
 ```
 
 Preview with `--dry-run` first; it reports what would upload per storage
@@ -134,11 +134,11 @@ copy and never reads Drive back as a source of truth for your records.
 Clear the Google session for the active profile:
 
 ```bash
-cadrumo config google logout
+aeat config google logout
 ```
 
 Logout removes the saved session token and its metadata. The registered
-OAuth client is kept on purpose, so a later `cadrumo config google login` can
+OAuth client is kept on purpose, so a later `aeat config google login` can
 sign in again without re-importing the Cloud Console JSON.
 
 ## Where this fits
@@ -146,8 +146,8 @@ sign in again without re-importing the Cloud Console JSON.
 Use this after transaction review and classification:
 
 ```bash
-cadrumo app ledger preflight --year 2026 --period 1T
-cadrumo app ledger status --year 2026 --period 1T
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 1T
 ```
 
 If the ledger still has missing categories, IVA fields, currency, or

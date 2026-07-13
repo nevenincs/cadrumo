@@ -19,7 +19,7 @@ You need:
 The runtime emits help, prompts, and messages in Spanish.
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude
+aeat app ledger classify <transaction-id> --llm claude
 ```
 
 That command asks the `claude` provider for a suggestion and previews the
@@ -46,7 +46,7 @@ For the full machine-readable record - including the provider, the `provenance`
 with the global JSON flag before the subcommand:
 
 ```bash
-cadrumo --format json app ledger classify <transaction-id> --llm claude
+aeat --format json app ledger classify <transaction-id> --llm claude
 ```
 
 Classification does not contact AEAT and does not submit anything. The provider
@@ -77,14 +77,14 @@ computed from the transaction total.
 Find a row that still needs classification:
 
 ```bash
-cadrumo app ledger list --filter classification=NOT_YET_PROCESSED
-cadrumo app ledger view <transaction-id>
+aeat app ledger list --filter classification=NOT_YET_PROCESSED
+aeat app ledger view <transaction-id>
 ```
 
 Preview the LLM suggestion:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude
+aeat app ledger classify <transaction-id> --llm claude
 ```
 
 Use the row description, amount, direction, counterparty, and source documents
@@ -102,14 +102,14 @@ Review the suggested classification first:
 Then review the suggested category. Expense categories can be listed with:
 
 ```bash
-cadrumo app ledger categories
+aeat app ledger categories
 ```
 
 If the row is mixed-use, the LLM suggestion alone is not enough. Supply the
 business percentage manually with the normal classification workflow:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
 ```
 
 ## 3. Reject, apply, or override
@@ -120,16 +120,16 @@ The review loop has four terminals: review (preview), approve (`--apply`), rejec
 Reject a suggestion when the model is wrong and you want the decision on record:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude --reject --reason "this is personal"
+aeat app ledger classify <transaction-id> --llm claude --reject --reason "this is personal"
 ```
 
 Reject records what the model proposed and your reason as an audit event. The row
-is left unclassified. The next `cadrumo app ledger view <transaction-id>` flags that
+is left unclassified. The next `aeat app ledger view <transaction-id>` flags that
 the most recent LLM suggestion was rejected, and the full record stays in history:
 
 ```bash
-cadrumo app ledger view <transaction-id>
-cadrumo app ledger history <transaction-id>
+aeat app ledger view <transaction-id>
+aeat app ledger history <transaction-id>
 ```
 
 `--reject` cannot be combined with `--apply`. Simply previewing and walking away
@@ -138,7 +138,7 @@ also leaves the row unchanged, but `--reject` is what writes the audit trail.
 Apply a suggestion only after review:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude --apply
+aeat app ledger classify <transaction-id> --llm claude --apply
 ```
 
 The applied suggestion is saved to the active profile's ledger. The apply
@@ -147,22 +147,22 @@ review status; the provenance, confidence, and reason are recorded with the
 classification event. Review it afterwards:
 
 ```bash
-cadrumo app ledger view <transaction-id>
-cadrumo app ledger history <transaction-id>
+aeat app ledger view <transaction-id>
+aeat app ledger history <transaction-id>
 ```
 
 Override with a manual classification whenever the suggestion is wrong or
 incomplete:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
 Manual classification is the correction path. Re-run `ledger preflight` for the
 period after important corrections:
 
 ```bash
-cadrumo app ledger preflight --year 2026 --period 1T
+aeat app ledger preflight --year 2026 --period 1T
 ```
 
 ## Saturate the tax fields
@@ -172,7 +172,7 @@ Add `--saturate` to also select an IVA category and derive the tax substrate.
 Preview a saturated suggestion:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude --saturate
+aeat app ledger classify <transaction-id> --llm claude --saturate
 ```
 
 The preview adds the selected IVA category and, when the category has a Spanish
@@ -190,7 +190,7 @@ or pick the category yourself and let the system derive the numbers, as
 Apply a saturated suggestion after review:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude --saturate --apply
+aeat app ledger classify <transaction-id> --llm claude --saturate --apply
 ```
 
 ## Split a multi-line invoice automatically
@@ -198,7 +198,7 @@ cadrumo app ledger classify <transaction-id> --llm claude --saturate --apply
 Read the attached invoice while you classify. Add `--read-evidence`:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --saturate
+aeat app ledger classify <transaction-id> --read-evidence --saturate
 ```
 
 When the invoice carries several lines at different rates or categories, the
@@ -209,7 +209,7 @@ file independently.
 Action the split with `--auto-split`. Preview it first:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --auto-split
+aeat app ledger classify <transaction-id> --read-evidence --auto-split
 ```
 
 The model reads the invoice and decides. A multi-line invoice previews one child
@@ -219,7 +219,7 @@ IVA. A single-line invoice previews a normal in-place classification instead.
 Apply the decision:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --read-evidence --auto-split --apply
+aeat app ledger classify <transaction-id> --read-evidence --auto-split --apply
 ```
 
 A multi-line invoice is split into children that sum exactly to the original
@@ -227,7 +227,7 @@ amount. A single-line invoice is classified in place. The model never writes a
 number; the registry derives every base and IVA. Review the result:
 
 ```bash
-cadrumo app ledger view <transaction-id>
+aeat app ledger view <transaction-id>
 ```
 
 Add `--llm claude` to read a text-layer PDF through your cloud provider, or omit
@@ -242,8 +242,8 @@ as a business expense first, then run `--saturate` with `--iva-category` and no
 `--llm`:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
-cadrumo app ledger classify <transaction-id> --iva-category domestic_general_21 --saturate
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <transaction-id> --iva-category domestic_general_21 --saturate
 ```
 
 The second command derives the taxable base, IVA rate, and IVA amount from the
@@ -264,7 +264,7 @@ and supersedes a derived or model-applied value. Set the IVA category together
 with the figures yourself:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
+aeat app ledger classify <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
 ```
 
 ## Batch classification
@@ -274,7 +274,7 @@ There is no batch LLM classification command in the current CLI.
 The implemented bulk path is CSV-based manual classification:
 
 ```bash
-cadrumo app ledger classify --from-csv ./classifications.csv
+aeat app ledger classify --from-csv ./classifications.csv
 ```
 
 That CSV accepts `transaction_id`, `classification`, and optional columns such
@@ -287,9 +287,9 @@ For deterministic automatic classification of repeated descriptions, use
 stored ledger rules:
 
 ```bash
-cadrumo app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
-cadrumo app ledger rule apply --dry-run
-cadrumo app ledger rule apply
+aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
+aeat app ledger rule apply --dry-run
+aeat app ledger rule apply
 ```
 
 Run the dry run first. Rules apply to active unclassified transactions unless
@@ -312,7 +312,7 @@ your machine is off by default and barred for gestor or professional
 deployments. Enable it for the deployment, then acknowledge the upload each time:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --llm claude --saturate --read-evidence --evidence-acknowledged
+aeat app ledger classify <transaction-id> --llm claude --saturate --read-evidence --evidence-acknowledged
 ```
 
 A scanned PDF or an image invoice is read entirely on your machine by a local
@@ -320,7 +320,7 @@ vision model. Nothing leaves the host, so no acknowledgement is needed, no
 `--llm` provider is needed, and it works in gestor and professional deployments:
 
 ```bash
-cadrumo app ledger classify <transaction-id> --saturate --read-evidence
+aeat app ledger classify <transaction-id> --saturate --read-evidence
 ```
 
 Install a local Ollama vision model first. The default is `qwen2.5vl:3b`

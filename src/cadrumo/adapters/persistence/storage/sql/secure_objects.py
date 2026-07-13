@@ -220,7 +220,7 @@ class SecureObjectRepository:
         :class:`BucketSession` registered in the active-session
         ContextVar. When the session is sealed or past its deadline,
         raises :class:`SessionExpiredError` (translated by the CLI
-        error decorator into a refusal that names ``cadrumo config
+        error decorator into a refusal that names ``aeat config
         unlock`` as the next action). On a fresh session,
         calls :meth:`~adapters.persistence.storage.BucketSession.touch` to roll the deadline
         forward by the configured idle window — the operator's
@@ -251,7 +251,7 @@ class SecureObjectRepository:
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
-                "the active profile session has expired; run `cadrumo config switch NAME` to re-activate.",
+                "the active profile session has expired; run `aeat config switch NAME` to re-activate.",
             )
         if self._require_secure_active_session and session.unsecured_backend:
             raise _runtime_not_ready_error(
@@ -427,7 +427,7 @@ class SecureObjectRepository:
         ``payload`` ciphertext be unwrapped under the current master key
         -- and intentionally bypasses the classification and
         schema-version contracts that consumer reads enforce. Used by
-        ``cadrumo config repair`` to surface namespaces holding rows from a
+        ``aeat config repair`` to surface namespaces holding rows from a
         prior keychain master-key generation.
         """
         self._check_session_freshness(namespace)

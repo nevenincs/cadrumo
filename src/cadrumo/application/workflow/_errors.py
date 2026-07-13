@@ -40,11 +40,11 @@ class WorkflowAbortedError(WorkflowError):
 
 
 class BootstrapAlreadyCompleteError(WorkflowError):
-    """Raised when `cadrumo config profile create NAME` is re-invoked after a profile already exists.
+    """Raised when `aeat config profile create NAME` is re-invoked after a profile already exists.
 
     The bootstrap wizard is a one-shot first-run flow. A second invocation
     must refuse with this typed error so the operator is redirected to the
-    canonical second-or-later-profile creation path (the ``cadrumo config
+    canonical second-or-later-profile creation path (the ``aeat config
     profile create NAME`` verb) rather than silently overwriting the
     existing default profile.
     """

@@ -3,7 +3,7 @@
 The tests pin the report shape and the projection from
 ``WorkflowState`` into :class:`WizardStatusReport`. No arithmetic is
 exercised: the report is the structural contract that doctor and
-``cadrumo config status`` both read from.
+``aeat config status`` both read from.
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def test_active_natural_person_without_activity_is_profile_ready_without_iva_reg
 def test_next_action_for_empty_state_directs_to_profile_create() -> None:
     state = WorkflowState()
     report = build_wizard_status(state)
-    assert report.next_action == "cadrumo config profile create NAME"
+    assert report.next_action == "aeat config profile create NAME"
 
 
 def test_report_is_strict_frozen_pydantic_v2() -> None:

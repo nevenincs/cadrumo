@@ -35,17 +35,17 @@ Every live read works the same way. It uses your configured authentication,
 reads from the AEAT sede read-only, and saves an encrypted local copy in your
 profile. It applies nothing automatically.
 
-The `cadrumo app live` command group collects the read-only commands. Each one
+The `aeat app live` command group collects the read-only commands. Each one
 takes the arguments that scope the read. For example:
 
-- `cadrumo app live justificante pull --modelo 303 --year 2026 --period 1T` — all
+- `aeat app live justificante pull --modelo 303 --year 2026 --period 1T` — all
   three of `--modelo`, `--year`, and `--period` are required.
-- `cadrumo app live filed pull --modelo 303 --year 2026` — `--year` is required;
+- `aeat app live filed pull --modelo 303 --year 2026` — `--year` is required;
   add `--period` to narrow to one period, or use `--from-year`/`--to-year` for a
   range.
-- `cadrumo app live notifications pull` — needs no scope arguments.
+- `aeat app live notifications pull` — needs no scope arguments.
 
-Run `cadrumo app live --help` to see the full set, or follow the per-surface guides
+Run `aeat app live --help` to see the full set, or follow the per-surface guides
 for each one.
 
 ## Downloaded facts change only your local records

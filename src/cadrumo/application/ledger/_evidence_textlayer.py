@@ -34,7 +34,7 @@ def extract_evidence_text(evidence: EvidenceInput) -> str:
     if evidence.media_kind is not MediaKind.PDF:
         raise PurchaseInvoiceEvidenceInputError(
             "evidence has no text layer (not a PDF); use the on-host vision reader",
-            suggestion="cadrumo app ledger evidence list",
+            suggestion="aeat app ledger evidence list",
         )
     pages = extract_pages_text_from_bytes(
         evidence.data,

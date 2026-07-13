@@ -1,7 +1,7 @@
 """Overview explain: per-(modelo, year) applicability decomposition.
 
 :func:`build_overview_explain` is the application service backing
-``cadrumo app overview explain MODELO [--year YYYY]``. The ``applicable``
+``aeat app overview explain MODELO [--year YYYY]``. The ``applicable``
 verdict is DERIVED from the three-axis
 :class:`~domain.deadlines.TaxpayerProfile` taxpayer model through
 the registry-grounded

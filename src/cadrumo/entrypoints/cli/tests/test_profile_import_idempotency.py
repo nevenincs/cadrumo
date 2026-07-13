@@ -1,4 +1,4 @@
-"""Idempotency regression tests for `cadrumo config profile import` (contract).
+"""Idempotency regression tests for `aeat config profile import` (contract).
 
 Import idempotency contract:
   - Re-importing the same bundle twice produces exactly ONE profile; the

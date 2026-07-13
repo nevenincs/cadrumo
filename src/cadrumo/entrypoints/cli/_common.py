@@ -21,7 +21,7 @@ preserving the text line iterator unchanged.
 
 Application-layer and domain symbols are imported lazily inside each
 helper to avoid pulling the registry parse into fast-path commands such
-as ``cadrumo --version``.
+as ``aeat --version``.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ from ...core.output_rendering import render_command_output
 # inside the helpers that use them at runtime. A module-level import
 # would pull the application layer — and transitively the registry
 # parse — into every consumer of this transport module, including the
-# ``cadrumo --version`` / ``cadrumo --help`` fast paths that import ``_emit``
+# ``aeat --version`` / ``aeat --help`` fast paths that import ``_emit``
 # but never reach a registry-backed helper. ``from __future__ import
 # annotations`` keeps the type annotations valid as strings without a
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
@@ -226,7 +226,7 @@ def _active_sandbox_notice() -> Notice | None:
             ),
             label=label,
         ),
-        suggestion="cadrumo config profile sandbox discard",
+        suggestion="aeat config profile sandbox discard",
     )
 
 

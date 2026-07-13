@@ -1,4 +1,4 @@
-"""Projection helpers for the ``cadrumo app ledger list`` CLI command.
+"""Projection helpers for the ``aeat app ledger list`` CLI command.
 
 The CLI parser turns ``--filter`` clauses into
 :class:`LedgerReviewFilterSpec`, asks

@@ -6,13 +6,13 @@ named test profile (`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`).
 The tests exercise three real-world paths against the operator's own
 Google account:
 
-1. `cadrumo config google login` — runs the actual loopback IP + PKCE
+1. `aeat config google login` — runs the actual loopback IP + PKCE
    consent flow. The first run requires manual operator interaction in
    the OS-default browser to grant the `drive.file` + `spreadsheets`
    scopes.
-2. `cadrumo config google status` — reads back the persisted records and
+2. `aeat config google status` — reads back the persisted records and
    confirms the account email + scopes round-tripped.
-3. `cadrumo config google logout` — clears the token + metadata records
+3. `aeat config google logout` — clears the token + metadata records
    and confirms a subsequent status reports `session_present=False`.
 
 These tests intentionally do NOT submit to AEAT or write to Drive; the
@@ -53,7 +53,7 @@ def _require_live_and_client_registered() -> None:
     if load_client(profile) is None:
         pytest.fail(
             f"no OAuth client registered for profile {profile!r}; "
-            f"run `cadrumo config google register --client-json <path> --profile {profile}` after live opt-in",
+            f"run `aeat config google register --client-json <path> --profile {profile}` after live opt-in",
         )
 
 
@@ -90,7 +90,7 @@ def test_status_round_trips_persisted_metadata() -> None:
     if metadata is None:
         pytest.fail(
             "no persisted OAuth metadata; run the login test first or "
-            f"`cadrumo config google login --profile {profile}` manually after live opt-in",
+            f"`aeat config google login --profile {profile}` manually after live opt-in",
         )
     assert metadata.account_email
     assert metadata.reauth_required is False

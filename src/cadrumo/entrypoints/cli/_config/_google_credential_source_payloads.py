@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for ``cadrumo config google credential-source``.
+"""Typed ``--json`` payload schemas for ``aeat config google credential-source``.
 
 Each class declared here is a strict :class:`OutputSchema` subclass and is
 decorated with :func:`register_schema` so the JSON-contract test suite can
@@ -17,7 +17,7 @@ from .._schemas import OutputSchema, register_schema
 
 @register_schema("config.google.credential_source.set")
 class GoogleCredentialSourceSetResult(OutputSchema):
-    """JSON envelope for ``cadrumo config google credential-source set``.
+    """JSON envelope for ``aeat config google credential-source set``.
 
     Mirrors the persisted
     :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
@@ -41,7 +41,7 @@ class GoogleCredentialSourceSetResult(OutputSchema):
 
 @register_schema("config.google.credential_source.show")
 class GoogleCredentialSourceShowResult(OutputSchema):
-    """JSON envelope for ``cadrumo config google credential-source show``.
+    """JSON envelope for ``aeat config google credential-source show``.
 
     Projects the optional persisted
     :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` for the

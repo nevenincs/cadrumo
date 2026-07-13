@@ -1,4 +1,4 @@
-"""Profile repair command registration for ``cadrumo config repair``.
+"""Profile repair command registration for ``aeat config repair``.
 
 Reads the active :class:`UserProfileRecord` through the injected record reader
 to diagnose and repair the bucket-backed profile state.
@@ -139,15 +139,15 @@ def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, 
 def profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
     """Return the operator command for repairing a missing profile record."""
     if profile_id == _resolve_active_bucket_id():
-        return "cadrumo config repair profile --clear-active --yes"
-    return f"cadrumo config repair profile --profile {label}"
+        return "aeat config repair profile --clear-active --yes"
+    return f"aeat config repair profile --profile {label}"
 
 
 def profile_record_unreadable_next_action(profile_id: str, *, label: str) -> str:
     """Return the operator command for repairing an unreadable profile record."""
     if profile_id == _resolve_active_bucket_id():
-        return "cadrumo config repair profile --clear-active --yes"
-    return f"cadrumo config repair profile --profile {label}"
+        return "aeat config repair profile --clear-active --yes"
+    return f"aeat config repair profile --profile {label}"
 
 
 def _emit_profile_record_status(
@@ -218,7 +218,7 @@ def _emit_profile_record_status(
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
-        "next_action": f"cadrumo config switch {pointer.label}",
+        "next_action": f"aeat config switch {pointer.label}",
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(

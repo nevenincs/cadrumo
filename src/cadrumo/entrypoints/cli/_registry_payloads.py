@@ -24,7 +24,7 @@ from ._schemas import OutputSchema, register_schema
 
 @register_schema("registry.inspect")
 class RegistryInspectResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry inspect``.
+    """JSON envelope for ``aeat app registry inspect``.
 
     Mirrors the inventory half of
     :class:`RegistryTreeReport` returned by
@@ -54,7 +54,7 @@ class RegistryInspectResult(OutputSchema):
 
 @register_schema("registry.verify")
 class RegistryVerifyResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry verify``.
+    """JSON envelope for ``aeat app registry verify``.
 
     Mirrors the validated :class:`RegistryTreeReport`
     returned by :func:`verify_registry_tree`.
@@ -87,7 +87,7 @@ class RegistryVerifyResult(OutputSchema):
 
 @register_schema("registry.audit_oracles")
 class RegistryAuditOraclesResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry audit-oracles``.
+    """JSON envelope for ``aeat app registry audit-oracles``.
 
     Mirrors :class:`RegistryOracleAuditReport` from
     :func:`audit_registry_oracles`. The report
@@ -111,7 +111,7 @@ class RegistryAuditOraclesResult(OutputSchema):
 
 @register_schema("registry.verify_filed_state")
 class RegistryVerifyFiledStateResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry verify-filed-state``.
+    """JSON envelope for ``aeat app registry verify-filed-state``.
 
     Mirrors :class:`FiledStateVerificationReport`
     from :func:`verify_filed_state`. ``comparison``
@@ -132,7 +132,7 @@ class RegistryVerifyFiledStateResult(OutputSchema):
 
 @register_schema("registry.workbooks.verify")
 class RegistryWorkbooksVerifyResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry workbooks verify``.
+    """JSON envelope for ``aeat app registry workbooks verify``.
 
     Mirrors
     :class:`WorkbookBackendVerificationReport`
@@ -159,7 +159,7 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
 
 @register_schema("registry.parity.run")
 class RegistryParityRunResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry parity run``.
+    """JSON envelope for ``aeat app registry parity run``.
 
     Mirrors :class:`ParityTape` returned by
     :func:`run_registry_parity`. The payload includes
@@ -183,7 +183,7 @@ class RegistryParityRunResult(OutputSchema):
 
 @register_schema("registry.parity.replay")
 class RegistryParityReplayResult(OutputSchema):
-    """JSON envelope for ``cadrumo app registry parity replay``.
+    """JSON envelope for ``aeat app registry parity replay``.
 
     Mirrors :class:`ParityTapeReplayReport`
     returned by :func:`replay_registry_parity`.

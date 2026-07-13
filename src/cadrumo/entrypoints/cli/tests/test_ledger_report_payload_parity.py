@@ -5,7 +5,7 @@ report's ``model_dump(mode="json")`` against the registered ``OutputSchema``
 payload (``Payload.model_validate(report.model_dump(mode="json"))``). Because
 :class:`OutputSchema` is ``extra="forbid"``, a field added to the domain report
 but not mirrored onto the payload makes that validation raise at runtime — the
-exact regression that broke ``cadrumo app ledger remove`` when
+exact regression that broke ``aeat app ledger remove`` when
 ``stale_draft_revision_references`` landed on
 :class:`LedgerTransactionRemovalReport` but not on
 :class:`LedgerRemoveResult`.

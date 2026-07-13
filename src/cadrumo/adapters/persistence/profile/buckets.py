@@ -147,9 +147,9 @@ class BucketEventHistoryRepository:
                 context={
                     "namespace": _NAMESPACE,
                     "object_key": _OBJECT_KEY,
-                    "recovery": "cadrumo config repair --help",
+                    "recovery": "aeat config repair --help",
                 },
-                suggestion="cadrumo config repair --help",
+                suggestion="aeat config repair --help",
                 translated_message="errors.storage.stored_data_validation_boundary",
             ) from exc
         if envelope.classification is not SensitivityClass.FINANCIAL:

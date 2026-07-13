@@ -1,5 +1,8 @@
 # Identity and naming
 
+The Agencia Estatal de Administración Tributaria (AEAT) is the external tax
+authority. CLI means command-line interface. MCP means Model Context Protocol.
+
 ## Canonical product identity
 
 | Surface | Canonical value |
@@ -25,10 +28,9 @@ Python import alias.
 
 | Referent | Use | Examples |
 | --- | --- | --- |
-| Cadrumo product | `Cadrumo` or the canonical identifier from the table above | Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_LOCAL_STORAGE_ROOT` |
+| Cadrumo product | `Cadrumo` or the canonical identifier in the identity table | Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_LOCAL_STORAGE_ROOT` |
 | Spanish tax authority | `AEAT` | AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT taxonomy |
 
-AEAT means the *Agencia Estatal de Administración Tributaria*. It is an
-external authority and counterparty, not the application name. Authority-owned
+AEAT is an external authority and counterparty, not the application name. Authority-owned
 terms such as *modelo*, *casilla*, *justificante*, and official period or
 classification tokens keep their AEAT meaning inside Cadrumo.

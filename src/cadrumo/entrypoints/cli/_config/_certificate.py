@@ -1,6 +1,6 @@
 """Certificate-source registry CLI command surface.
 
-Mounted on ``config auth`` as ``cadrumo config auth certificate ...``.
+Mounted on ``config auth`` as ``aeat config auth certificate ...``.
 Register, enumerate, select, remove, and check the expiry/rotation
 health of named PKCS#12 certificate sources — the multi-cert slice of
 GitHub issue #591 (a gestor managing several taxpayers registers one
@@ -335,7 +335,7 @@ def certificate_check(
             severity=NoticeSeverity.WARNING,
             code=f"config.auth.certificate.check.{entry.result}",
             message=f"{entry.name}: {entry.summary}",
-            suggestion=f"cadrumo config auth certificate select --name {entry.name}",
+            suggestion=f"aeat config auth certificate select --name {entry.name}",
             context={"name": entry.name, "result": entry.result},
         )
         for entry in report.entries

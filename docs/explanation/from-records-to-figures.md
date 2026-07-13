@@ -1,16 +1,20 @@
 # How your records become tax figures
 
-This page explains where the numbers on your tax form come from. It walks through the idea, not the buttons. You'll see how a plain bank movement turns into a figure for each numbered box on an official form, and why the tool is built to let you explain every figure later.
+This page explains where tax-form values come from. It follows a bank movement
+through classification, calculation, and grounding without describing commands.
 
-This is background reading. When you're ready to actually do each step, follow the links to the how-to guides.
+The linked how-to guides provide task steps.
 
-The forms are AEAT modelos made of numbered {term}`casillas <casilla>`.
+The Agencia Estatal de Administración Tributaria (AEAT) owns modelos made of
+numbered {term}`casillas <casilla>`.
 Cadrumo prepares the figures locally; AEAT remains the authority that owns the
 official form and receives the human-uploaded export.
 
 ## A bank movement means nothing on its own
 
-A line on a bank statement is just a date and an amount. The money moved, but the statement doesn't know whether it was a customer paying you, a supplier you paid, your weekly groceries, or a transfer between your own accounts.
+A bank-statement line provides a date and amount without tax classification.
+The same movement could represent customer income, a supplier payment, a
+personal purchase, or an internal transfer.
 
 Tax meaning isn't in the bank data. You add it. Until you do, a movement can't count toward any box on any form.
 
@@ -26,14 +30,17 @@ A record that has all of this is ready to feed into a calculation. To do this fo
 
 ## Three ways to split a mixed cost
 
-Some costs serve both your business and your private life - a phone bill, home internet, the electricity in a home office. You can't deduct the whole amount, only the business share. The tool lets that split come from three places, depending on how precise you need to be.
+Some costs serve business and private uses. Examples include phone, internet,
+and home-office electricity. Cadrumo supports three sources for the business
+share.
 
 The first is a percentage on a single record. You say this one phone bill is 60 percent business, and only that one record is split that way.
 
-The second is a default for a whole category. You set a business share once for, say, all utility costs, and every record in that category inherits it unless you override it.
+The second is a category default. Records in that category inherit the declared
+business share unless a record overrides it.
 
 The third is a ratio worked out from activity facts you declare to Cadrumo. For
-example, you can record the size of a home office and the size of the home so
+example, an operator can record the size of a home office and the home so
 Cadrumo derives the business share. These are operator-declared local facts,
 not an official AEAT observation or confirmation, even when they describe facts
 also used in an AEAT registration.
@@ -50,7 +57,9 @@ Before the tool adds anything up, it can check whether your records are sound. T
 - A mixed cost with no split reference attached.
 - An amount in a currency the tool can't yet convert to euros.
 
-The check changes nothing. It just tells you which records aren't ready, so you fix the raw material before trusting any total. For how to run it, see the readiness section of [Import bank statements](../how-to/import-bank-statements.md).
+The check changes nothing. It identifies records that need correction before
+calculation. See [Import bank statements](../how-to/import-bank-statements.md)
+for the readiness task.
 
 ## Which form, and which period
 
@@ -62,19 +71,21 @@ Choosing the right form for your activity is its own decision - see [Find out wh
 
 ## From records to numbered boxes
 
-Here's where the figures appear. The tool reads two things: your tax-ready records for the period, and your profile - who you are and what you do.
+Calculation combines tax-ready period records with the active profile facts.
 
-It then applies the rules the agency publishes for that form. Those rules decide which input feeds which box, and how the boxes relate to each other. A cost you marked as office supplies lands in the box for that kind of expense. Income lands in its own box. From there, the rules add, subtract, and apply rates - total income minus deductible costs to reach a net figure, a rate applied to reach the tax due - until every box on the form holds a figure.
+It then applies the rules the agency publishes for that form. The rules map
+inputs to casillas and define their relationships. They can subtract deductible
+costs from income before applying a tax rate.
 
-You don't wire any of this by hand. You make your records tax-ready and keep your profile current; the published rules do the routing and the arithmetic.
+Current profile facts and tax-ready records supply the inputs. Published rules
+define the routing and arithmetic.
 
 ## Tracing a number back to the law
 
-Grounded figures retain the mechanism and provenance available for that value:
-the binding or formula that produced it, legal and official-source references
-declared by the resolved registry rule, and the local record, observation, or
-manual input that supplied it. A revision also identifies the registry revision
-used for the calculation.
+Grounded figures retain their mechanism and provenance. This includes the
+binding or formula, declared legal and official-source references, and the
+supplying record or observation. Manual inputs retain their source. Each
+calculation also identifies its registry revision.
 
 This is the point of the design. A reviewer can follow a casilla back through
 its source records and declared grounding instead of treating the result as an

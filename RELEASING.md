@@ -302,7 +302,7 @@ stop without pushing or dispatching.
 4. Verify the core index entry before publishing either companion:
 
    ```console
-   uvx --refresh --from cadrumo==X.Y.Z cadrumo --version
+   uvx --refresh --from cadrumo==X.Y.Z aeat --version
    ```
 
 5. Dispatch and verify each companion as a separate manual job:
@@ -320,7 +320,7 @@ stop without pushing or dispatching.
    Then verify dependency resolution and corpus integrity from the public index:
 
    ```console
-   uvx --refresh --from "cadrumo[corpus-sources]==X.Y.Z" cadrumo app registry verify
+   uvx --refresh --from "cadrumo[corpus-sources]==X.Y.Z" aeat app registry verify
    ```
 
    If resolution uses a local path, either companion is missing, versions

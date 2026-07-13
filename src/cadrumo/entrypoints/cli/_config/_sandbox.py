@@ -1,4 +1,4 @@
-"""Sandboxed experiment workspace commands for ``cadrumo config profile sandbox``.
+"""Sandboxed experiment workspace commands for ``aeat config profile sandbox``.
 
 An operator (or an LLM agent driving the CLI) needs to run experiments
 (imports, classifications, calculations) without polluting the main profile's
@@ -144,7 +144,7 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
                     "it until you switch away or discard it."
                 ),
             ),
-            suggestion="cadrumo config profile sandbox discard",
+            suggestion="aeat config profile sandbox discard",
         )
         _emit_envelope(
             ctx,
@@ -498,11 +498,11 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
                     "cli.config.profile.sandbox.prune_skipped_active_info",
                     default=(
                         "Skipped the active sandbox %{names}; switch to another profile and re-run "
-                        "'cadrumo config profile sandbox prune --yes' to discard it."
+                        "'aeat config profile sandbox prune --yes' to discard it."
                     ),
                     names=", ".join(skipped_active),
                 ),
-                suggestion="cadrumo config switch",
+                suggestion="aeat config switch",
             )
             notices = (skipped_notice,)
             lines.append(f"INFO\t{skipped_notice.message}")
@@ -606,11 +606,11 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
             message=tr(
                 "cli.config.profile.sandbox.archive_restorable_info",
                 default=(
-                    "The sandbox is now dormant; run 'cadrumo config profile sandbox restore %{name}' to bring it back."
+                    "The sandbox is now dormant; run 'aeat config profile sandbox restore %{name}' to bring it back."
                 ),
                 name=name,
             ),
-            suggestion=f"cadrumo config profile sandbox restore {name}",
+            suggestion=f"aeat config profile sandbox restore {name}",
         )
         _emit_envelope(
             ctx,
@@ -877,7 +877,7 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
             raise _CliRefusedBoundaryError(
                 message=(
                     f"promoting sandbox {name!r} into {into!r} is a state-mutating operation. "
-                    f"Re-run 'cadrumo config profile sandbox merge {name} --into {into} "
+                    f"Re-run 'aeat config profile sandbox merge {name} --into {into} "
                     f"--scope {scope.value} --yes' to confirm."
                 ),
                 context={"name": name, "into": into, "scope": scope.value},

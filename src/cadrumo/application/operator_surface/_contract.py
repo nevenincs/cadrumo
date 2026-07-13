@@ -545,7 +545,7 @@ def require_accepted_root(name: str) -> RootSurface:
             "cli.operator_surface.errors.accepted_roots_only",
             default="accepted operator roots are config and app",
         ),
-        suggestion="cadrumo --help",
+        suggestion="aeat --help",
     )
 
 

@@ -1,4 +1,4 @@
-"""CLI surface tests for `cadrumo config profile preflight` revision defaulting.
+"""CLI surface tests for `aeat config profile preflight` revision defaulting.
 
 These tests prove the operator-surface decision: ``--revision-id`` is no longer
 required. When omitted, the active registry revision for the natural key
@@ -240,7 +240,7 @@ def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer() -> 
 
     assert result.exit_code != 0
     # The refusal must point at the discovery command, never a bare error.
-    assert "cadrumo app modelo describe 303" in result.output
+    assert "aeat app modelo describe 303" in result.output
 
 
 def test_preflight_refuses_invalid_explicit_override_with_registered_revisions() -> None:
@@ -264,7 +264,7 @@ def test_preflight_refuses_invalid_explicit_override_with_registered_revisions()
     )
 
     assert result.exit_code != 0
-    assert "cadrumo app modelo describe 303" in result.output
+    assert "aeat app modelo describe 303" in result.output
 
 
 def test_preflight_refuses_ambiguous_natural_key_with_candidates() -> None:

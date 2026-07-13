@@ -9,7 +9,7 @@ A profile that carries no descendiente facts at all resolves 0513/0514 to the
 legally-correct zero for a genuinely childless filer — but the SAME zero also results
 when a filer with real descendants simply never declared them (no live production
 surface wrote ``renta_family.descendiente.*`` before
-``cadrumo config profile descendiente add`` was introduced). The two cases are
+``aeat config profile descendiente add`` was introduced). The two cases are
 indistinguishable from the computed value alone, so this collector raises a
 non-blocking advisory whenever 0513 resolves to zero AND the profile has NOT
 explicitly declared its descendientes situation, pointing the operator at the
@@ -129,7 +129,7 @@ def collect_minimo_descendientes_undeclared_diagnostics(
             message=(
                 f"casilla {estatal_id!r} (mínimo por descendientes, parte estatal) resolved to zero and "
                 "the active profile declares no renta_family.descendiente facts -- if you have children "
-                "or other eligible descendants, declare them with `cadrumo config profile descendiente add "
+                "or other eligible descendants, declare them with `aeat config profile descendiente add "
                 "--descendiente NACIMIENTO=YYYY-MM-DD[,...]` before filing, or the Art. 58 LIRPF allowance "
                 "is silently omitted"
             ),

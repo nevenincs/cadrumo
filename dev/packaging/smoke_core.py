@@ -600,7 +600,7 @@ def _venv_python(venv: Path) -> Path:
 
 def _venv_cadrumo(venv: Path) -> Path:
     """Return the virtualenv Cadrumo console-script path."""
-    executable = "cadrumo.exe" if os.name == "nt" else "cadrumo"
+    executable = "aeat.exe" if os.name == "nt" else "aeat"
     return _venv_bin(venv) / executable
 
 
@@ -787,7 +787,7 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
         env=_isolated_product_env(work_dir / "version-state"),
     )
     if "cadrumo " not in version.stdout:
-        raise SystemExit(f"unexpected cadrumo --version output: {version.stdout!r}")
+        raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
     default_root = work_dir / "default-check-state"
     default_env = _isolated_product_env(default_root)

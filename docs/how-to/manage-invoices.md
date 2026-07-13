@@ -28,11 +28,11 @@ describes what each step does.
 
 Cadrumo keeps invoices in two separate places, for two different jobs.
 
-- **The invoice record** (`cadrumo app ledger invoice ...`) is your bookkeeping
+- **The invoice record** (`aeat app ledger invoice ...`) is your bookkeeping
   ledger of who owes you and whom you owe. Use it to record, list, and edit
   invoices. These records are for tracking; on their own they do **not** feed a
   modelo calculation.
-- **The reconciliation catalogue** (`cadrumo app ledger invoice catalogue ...`) is
+- **The reconciliation catalogue** (`aeat app ledger invoice catalogue ...`) is
   the linkable copy. A catalogue invoice can be matched to a bank transaction
   and is the copy a calculation reads — for example, the Modelo 349
   recapitulative declaration of intra-community operations.
@@ -50,7 +50,7 @@ customer owes you (a collectible invoice); *received* means you owe a supplier
 Record an invoice you sent to a customer:
 
 ```bash
-cadrumo app ledger invoice add --kind issued \
+aeat app ledger invoice add --kind issued \
   --counterparty-nif B12345678 --counterparty-name "Cliente SL" \
   --invoice-number FAC-2026-001 --invoice-date 2026-02-15 \
   --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --total-amount 1210
@@ -65,7 +65,7 @@ The command returns the new `invoice_id`, the resolved `source_kind`
 Record an invoice a supplier sent you:
 
 ```bash
-cadrumo app ledger invoice add --kind received \
+aeat app ledger invoice add --kind received \
   --counterparty-nif A87654321 --counterparty-name "Proveedor SA" \
   --invoice-number PROV-99 --invoice-date 2026-02-20 \
   --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --total-amount 605
@@ -78,26 +78,26 @@ The `source_kind` resolves to `payable_invoice`.
 List both kinds, or filter to one:
 
 ```bash
-cadrumo app ledger invoice list
-cadrumo app ledger invoice list --kind issued
+aeat app ledger invoice list
+aeat app ledger invoice list --kind issued
 ```
 
 View one invoice by id or unambiguous prefix (the kind is required):
 
 ```bash
-cadrumo app ledger invoice view 521e --kind issued
+aeat app ledger invoice view 521e --kind issued
 ```
 
 Update editable fields — for example, add a note:
 
 ```bash
-cadrumo app ledger invoice update 521e --kind issued --notes "paid late"
+aeat app ledger invoice update 521e --kind issued --notes "paid late"
 ```
 
 Remove an invoice. The command asks for `--yes` to confirm:
 
 ```bash
-cadrumo app ledger invoice remove 521e --kind issued --yes
+aeat app ledger invoice remove 521e --kind issued --yes
 ```
 
 ## Record an intra-community invoice
@@ -108,7 +108,7 @@ invoice with the counterparty's country and EU VAT id, plus the Modelo 349
 operation type:
 
 ```bash
-cadrumo app ledger invoice add --kind issued \
+aeat app ledger invoice add --kind issued \
   --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" \
   --invoice-number EU-001 --invoice-date 2026-02-10 \
   --taxable-base 2000 --iva-rate 0 --iva-amount 0 --total-amount 2000 \
@@ -126,7 +126,7 @@ catalogue copy is the one a calculation reads and the one you can link to a bank
 transaction:
 
 ```bash
-cadrumo app ledger invoice catalogue create --kind issued \
+aeat app ledger invoice catalogue create --kind issued \
   --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" \
   --invoice-number EU-CAT-001 --invoice-date 2026-02-10 \
   --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
@@ -141,26 +141,26 @@ transfer key; rectification rows use separate rectified-period and base fields.
 List the catalogue copies:
 
 ```bash
-cadrumo app ledger invoice catalogue list
+aeat app ledger invoice catalogue list
 ```
 
 Inspect one catalogue invoice to confirm its id and its linked transactions.
 Pass the full id or an unambiguous prefix:
 
 ```bash
-cadrumo app ledger invoice catalogue view <catalogue-invoice-id>
+aeat app ledger invoice catalogue view <catalogue-invoice-id>
 ```
 
 Link a catalogue invoice to the bank transaction that paid or collected it:
 
 ```bash
-cadrumo app ledger link <transaction-id> --invoice-id <catalogue-invoice-id>
+aeat app ledger link <transaction-id> --invoice-id <catalogue-invoice-id>
 ```
 
 Remove a catalogue invoice you created by mistake. Confirm with `--yes`:
 
 ```bash
-cadrumo app ledger invoice catalogue remove <catalogue-invoice-id> --yes
+aeat app ledger invoice catalogue remove <catalogue-invoice-id> --yes
 ```
 
 Unlink the invoice first if it is still linked to a transaction. A removal of a
@@ -174,8 +174,8 @@ the recapitulative declaration. Use the month or quarter the invoices were
 issued in:
 
 ```bash
-cadrumo app modelo work create --modelo 349 --year 2026 --period 02
-cadrumo app modelo work calculate --modelo 349 --year 2026 --period 02
+aeat app modelo work create --modelo 349 --year 2026 --period 02
+aeat app modelo work calculate --modelo 349 --year 2026 --period 02
 ```
 
 The declaration totals report one operator and the summed base for the period.

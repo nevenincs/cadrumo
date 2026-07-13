@@ -1,4 +1,4 @@
-"""CLI surface tests for cadrumo app modelo iva-wallet balance."""
+"""CLI surface tests for aeat app modelo iva-wallet balance."""
 
 from __future__ import annotations
 

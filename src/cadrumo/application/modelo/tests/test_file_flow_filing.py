@@ -335,7 +335,7 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
 
     assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
     assert "opens on" in gate_error.value.result.summary
-    assert "cadrumo app modelo export" in gate_error.value.result.summary
+    assert "aeat app modelo export" in gate_error.value.result.summary
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,

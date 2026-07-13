@@ -9,7 +9,7 @@ of them file anything or change your AEAT records.
 
 You need:
 - an [active profile](profile-setup.md#what-the-active-profile-means). Create one
-  non-interactively with `cadrumo config profile create me --quiet --tax-id
+  non-interactively with `aeat config profile create me --quiet --tax-id
   <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`.
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
 - the master-key passphrase that protects your local store. The tool prompts for
@@ -23,21 +23,21 @@ You need:
 DEHu is the official AEAT electronic inbox for notifications (comunicaciones
 and notificaciones). Download your notifications and save them locally:
 ```bash
-cadrumo app live notifications pull
+aeat app live notifications pull
 ```
 Download your current DEHu notifications:
 ```bash
-cadrumo app live notifications list
+aeat app live notifications list
 ```
 
 View a specific saved download by its reference number:
 ```bash
-cadrumo app live notifications view <snapshot-id>
+aeat app live notifications view <snapshot-id>
 ```
 
 Show the most recent snapshot in the active profile:
 ```bash
-cadrumo app live notifications latest
+aeat app live notifications latest
 ```
 
 ---
@@ -49,30 +49,30 @@ filed return for each modelo and year, with its status and filing date.
 
 Download the declaration history for a specific form and year:
 ```bash
-cadrumo app live expedientes pull --modelo 100 --year 2026
+aeat app live expedientes pull --modelo 100 --year 2026
 ```
 
 Download history for a range of years:
 
 ```bash
-cadrumo app live expedientes pull --from-year 2020 --to-year 2026 --modelo 303
+aeat app live expedientes pull --from-year 2020 --to-year 2026 --modelo 303
 ```
 
 Leave out `--modelo` to download history for all your registered forms.
 
 List saved downloads:
 ```bash
-cadrumo app live expedientes list
+aeat app live expedientes list
 ```
 
 View a specific download's details (individual declarations, status, dates, and links to justificantes):
 ```bash
-cadrumo app live expedientes view <snapshot-id>
+aeat app live expedientes view <snapshot-id>
 ```
 
 Show the most recent expedientes snapshot:
 ```bash
-cadrumo app live expedientes latest
+aeat app live expedientes latest
 ```
 
 ---
@@ -85,23 +85,23 @@ List the filed returns AEAT holds, without saving their full box values. This
 still reads from AEAT live, so it needs configured authentication like any other
 live command:
 ```bash
-cadrumo app live filed list --modelo 303 --from-year 2020 --to-year 2026
+aeat app live filed list --modelo 303 --from-year 2020 --to-year 2026
 ```
 
 Download and save the full box values from a specific filed return:
 ```bash
-cadrumo app live filed pull --modelo 303 --year 2026 --period 1T
+aeat app live filed pull --modelo 303 --year 2026 --period 1T
 ```
 
 Download all filed returns across a year range:
 ```bash
-cadrumo app live filed pull --from-year 2020 --to-year 2026
+aeat app live filed pull --from-year 2020 --to-year 2026
 ```
 
 Download the source declarations that a target filing depends on (for example,
 download the Modelo 303 returns that a Modelo 390 annual summary needs):
 ```bash
-cadrumo app live filed pull-sources --modelo 303 --year 2026 --period 1T
+aeat app live filed pull-sources --modelo 303 --year 2026 --period 1T
 ```
 
 ---
@@ -113,28 +113,28 @@ register), or check a Spanish NIF in the Spanish ROI register.
 
 Check whether a foreign EU VAT number is valid:
 ```bash
-cadrumo app live verify nif-iva ESB12345678
+aeat app live verify nif-iva ESB12345678
 ```
 
 Check whether a Spanish NIF or NIE appears in the Spanish ROI register:
 ```bash
-cadrumo app live verify tgvi 12345678A
+aeat app live verify tgvi 12345678A
 ```
 Use `--expected valid|invalid|unknown` to compare against an expected result.
 
 List past verifications you have run:
 ```bash
-cadrumo app live verify list --surface tgvi
+aeat app live verify list --surface tgvi
 ```
 
 View details of a specific verification:
 ```bash
-cadrumo app live verify view <observation-id>
+aeat app live verify view <observation-id>
 ```
 
 Show the latest verification observation for a NIF:
 ```bash
-cadrumo app live verify latest --surface nif_iva --nif ESB12345678
+aeat app live verify latest --surface nif_iva --nif ESB12345678
 ```
 
 ---
@@ -144,26 +144,26 @@ cadrumo app live verify latest --surface nif_iva --nif ESB12345678
 View the list of official AEAT online portals the tool knows about and their
 authentication requirements:
 ```bash
-cadrumo app live portals list
+aeat app live portals list
 ```
 
 Narrow the list to the portals for one form with `--modelo`:
 ```bash
-cadrumo app live portals list --modelo 303
+aeat app live portals list --modelo 303
 ```
 
 Or narrow it to one category with `--category`. The accepted categories are
 `auth`, `filing`, `censo`, `consultation`, `borrador`, `payment`, and
 `calendar_reference`:
 ```bash
-cadrumo app live portals list --category filing
+aeat app live portals list --category filing
 ```
 
 Use `--modelo` or `--category`, not both — they are mutually exclusive.
 
 ### View portal details
 ```bash
-cadrumo app live portals view <portal-id>
+aeat app live portals view <portal-id>
 ```
 
 ---
@@ -174,17 +174,17 @@ The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes
 available to wage earners. Download and view borrador snapshots:
 
 ```bash
-cadrumo app live borrador 100 list --state active
+aeat app live borrador 100 list --state active
 ```
 
 View a specific borrador's box values:
 ```bash
-cadrumo app live borrador 100 view <snapshot-id>
+aeat app live borrador 100 view <snapshot-id>
 ```
 
 Show the latest active draft for a filing year:
 ```bash
-cadrumo app live borrador 100 latest --filing-year 2026
+aeat app live borrador 100 latest --filing-year 2026
 ```
 
 ---
@@ -196,24 +196,24 @@ IVA from prior quarters that can be deducted from future Modelo 303 filings.
 Download and track your current balance:
 
 ```bash
-cadrumo app live iva-wallet pull --year 2026 --period 4T
+aeat app live iva-wallet pull --year 2026 --period 4T
 ```
 
 Reconstruct the history of past IVA compensation decisions from prior Modelo
 303 filings:
 ```bash
-cadrumo app live iva-wallet pull-history --from-year 2020 --to-year 2026
+aeat app live iva-wallet pull-history --from-year 2020 --to-year 2026
 ```
 
 Capture past returns and pull the current IVA evidence in a single read-only run:
 ```bash
-cadrumo app live iva-wallet pull-evidence --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
+aeat app live iva-wallet pull-evidence --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
 ```
 
 ### View local history
 List persisted compensation balances and decisions:
 ```bash
-cadrumo app live iva-wallet history --as-of-year 2026
+aeat app live iva-wallet history --as-of-year 2026
 ```
 
 ---

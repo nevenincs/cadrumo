@@ -10,7 +10,7 @@ You need:
 - An active profile with a name and surnames. The `--quiet` form skips the wizard:
 
   ```bash
-  cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
     --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
   ```
 
@@ -18,10 +18,10 @@ You need:
 - A calculated draft for the filing you want to check. For a first-period Modelo 303, record some business activity in the ledger, create the work unit, then calculate:
 
   ```bash
-  cadrumo app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+  aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
     --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-  cadrumo app modelo work create --modelo 303 --year 2026 --period 1T
-  cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T
+  aeat app modelo work create --modelo 303 --year 2026 --period 1T
+  aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
   ```
 
 If you want to understand how filings and saved calculations fit together, read [the filing spine](filing-spine.md) first.
@@ -31,7 +31,7 @@ If you want to understand how filings and saved calculations fit together, read 
 Run verification against the filing you want to check. Name the modelo, the year, and the period:
 
 ```bash
-cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
 ```
 
 Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to `12` for months.
@@ -49,7 +49,7 @@ By default the command checks the current saved calculation, and it checks only 
 Every verification run leaves a report. List them:
 
 ```bash
-cadrumo app modelo verification-report list
+aeat app modelo verification-report list
 ```
 
 To narrow the list to the reports for one saved calculation, add `--calculation-revision-id` with that calculation's ID.
@@ -59,7 +59,7 @@ To narrow the list to the reports for one saved calculation, add `--calculation-
 Open one report by its ID:
 
 ```bash
-cadrumo app modelo verification-report view <verification-report-id>
+aeat app modelo verification-report view <verification-report-id>
 ```
 
 The report shows:
@@ -82,7 +82,7 @@ Each finding carries:
 For the legal references in machine-readable form, render the report as JSON. `--format json` is a global flag, so it goes before the command:
 
 ```bash
-cadrumo --format json app modelo verification-report view <verification-report-id>
+aeat --format json app modelo verification-report view <verification-report-id>
 ```
 
 Each finding in the JSON output carries `legal_refs` and `source_refs`. Most findings name a legal reference - a cross-period dependency, for example, cites the law behind the prior-filing carry. A few purely structural checks, such as an unresolved registry snapshot, have none, so those fields are empty for them.
@@ -94,7 +94,7 @@ Blocking findings prevent the draft from becoming verified, and export needs a v
 After you change anything, run verification again:
 
 ```bash
-cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
 ```
 
 Confirm the finding you addressed is gone from the new report. Repeat until the result shows `granted_verificado_completo` `true`. Each symptom section in this guide finishes with this re-run step.
@@ -106,10 +106,10 @@ Incomplete means required casillas have no value yet. The report lists which one
 For a casilla you enter by hand, supply its value and recalculate:
 
 ```bash
-cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
 ```
 
-`--casilla` works only on boxes whose input kind is `manual`. A box filled from your ledger or another source is `bound`, and `--casilla` refuses it with `cannot override bucket-derived source-bound casillas`. Fix the source for those — see [Review your calculation values](review-calculation-values.md). Check which kind a box is with `cadrumo app modelo casillas 303 --period 1T`.
+`--casilla` works only on boxes whose input kind is `manual`. A box filled from your ledger or another source is `bound`, and `--casilla` refuses it with `cannot override bucket-derived source-bound casillas`. Fix the source for those — see [Review your calculation values](review-calculation-values.md). Check which kind a box is with `aeat app modelo casillas 303 --period 1T`.
 
 Then [re-run verification](#after-any-fix-re-run-verification). For the full input workflow, including where values come from and how to check them, see [Review your calculation values](review-calculation-values.md).
 
@@ -124,7 +124,7 @@ Read each finding's suggested next action first; it tells you what the tool expe
 - **A prior-period record is missing.** This filing depends on a filing from an earlier period that is missing or unconfirmed. Record or confirm that earlier filing first. If you had no obligation in that earlier period because you had not started your activity yet, set your activity-start date on the profile so the dependency is scoped out:
 
   ```bash
-  cadrumo config profile edit me --quiet --activity-start-date 2026-01-01
+  aeat config profile edit me --quiet --activity-start-date 2026-01-01
   ```
 
   Replace `me` with your profile name.
@@ -136,19 +136,19 @@ After each fix, [re-run verification](#after-any-fix-re-run-verification).
 Export needs a verified (or locally-filed) saved calculation. It refuses a plain draft with a message such as "current revision is still draft; verify it before exporting" or "no exportable verified or filed revision exists". Check where your filing stands:
 
 ```bash
-cadrumo app modelo work status --modelo 303 --year 2026 --period 1T
+aeat app modelo work status --modelo 303 --year 2026 --period 1T
 ```
 
 If the saved calculation is still a draft, verify it:
 
 ```bash
-cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
 ```
 
 Once verification grants verified-complete, retry the export:
 
 ```bash
-cadrumo app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 ## More than one filing matches
@@ -158,20 +158,20 @@ When more than one filing or saved calculation matches the modelo, year, and per
 List your filings with their work-unit IDs:
 
 ```bash
-cadrumo app modelo work list
+aeat app modelo work list
 ```
 
 Then target the one you mean by passing its work-unit ID directly:
 
 ```bash
-cadrumo app modelo work verify --work-unit-id <work-unit-id>
+aeat app modelo work verify --work-unit-id <work-unit-id>
 ```
 
 To confirm which filing a command touched, check its state and the actions taken on it:
 
 ```bash
-cadrumo app modelo work status --modelo 303 --year 2026 --period 1T
-cadrumo app modelo work history --modelo 303 --year 2026 --period 1T
+aeat app modelo work status --modelo 303 --year 2026 --period 1T
+aeat app modelo work history --modelo 303 --year 2026 --period 1T
 ```
 
 ## The filing deadline has passed

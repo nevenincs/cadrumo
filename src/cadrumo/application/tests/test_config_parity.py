@@ -1,7 +1,7 @@
-"""Parity tests: cadrumo config profile create/show/status read one profile bucket.
+"""Parity tests: aeat config profile create/show/status read one profile bucket.
 
-Pins the contract that ``cadrumo config profile create``, ``cadrumo config
-profile show`` and ``cadrumo config profile status`` share the active
+Pins the contract that ``aeat config profile create``, ``aeat config
+profile show`` and ``aeat config profile status`` share the active
 profile bucket selected by ``WorkflowState``.
 """
 

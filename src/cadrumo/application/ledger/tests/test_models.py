@@ -60,7 +60,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
         purchase_invoice_evidence_id=" evidence-1 ",
         attachment_ids=(" attachment-1 ",),
         actor=" operator ",
-        source_command=" cadrumo app ledger add ",
+        source_command=" aeat app ledger add ",
     )
 
     assert command.bucket_id == _BUCKET_ID
@@ -70,7 +70,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     assert command.purchase_invoice_evidence_id == "evidence-1"
     assert command.attachment_ids == ("attachment-1",)
     assert command.actor == "operator"
-    assert command.source_command == "cadrumo app ledger add"
+    assert command.source_command == "aeat app ledger add"
 
 
 def test_manual_ledger_transaction_command_rejects_invalid_payloads() -> None:

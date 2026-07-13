@@ -27,7 +27,9 @@ you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
 
 ## The journey at a glance
 
-Your data moves one way through the tool. Bank movements come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into a file you can upload, and finally get recorded once you've filed it yourself.
+Records gain tax meaning before calculation. You review and verify each saved
+revision before export. After human upload, local recording and reconciliation
+preserve the filing history.
 
 ```mermaid
 graph TD
@@ -42,29 +44,34 @@ graph TD
 ```
 
 The stages are related but not interchangeable. Calculation derives a saved
-revision; review inspects its values and provenance; verification applies
-completeness and consistency gates; export produces a local artifact; a human
-uploads it; local recording and reconciliation preserve what happened. Exact
-command definitions belong to the [generated CLI
-reference](../cli/index.rst), not this explanation.
+revision. Review inspects values and provenance. Verification applies local
+gates, and export produces an artifact. Human upload precedes local recording
+and reconciliation. Live command-line interface (CLI) help defines commands;
+the [CLI map](../cli/index.rst) organizes them.
 
 ---
 
 ## From your records to the figures on the form
 
-Your bank movements start as plain amounts and dates with no tax meaning. Before the tool can fill in a form, each movement is sorted into a tax category and, where a cost is partly personal, adjusted to the business share. A readiness check then confirms the records are complete for the period. From there the tool fills in each numbered box of the form, following the rules the agency publishes, and saves the result as a draft. See [How your records become tax figures](from-records-to-figures.md).
+Records need classifications, evidence, and applicable business shares before
+calculation. Registry rules then derive the modelo values. See [How your records
+become tax figures](from-records-to-figures.md).
 
 ---
 
 ## Editing and double-checking a calculation
 
-A first draft is rarely the last word. You can adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and verifying a calculation](editing-and-verifying.md).
+Corrections create another saved calculation revision. Verification checks the
+selected revision for completeness and consistency. See [Editing and verifying
+a calculation](editing-and-verifying.md).
 
 ---
 
 ## When a form builds on earlier ones
 
-Some forms depend on figures you already filed - an annual summary that draws on the quarters, for example. The tool carries those earlier numbers forward so a later form stays consistent with what came before, and it tells you when an earlier filing isn't ready yet. See [How filings build on earlier ones](building-on-earlier-filings.md).
+Some forms depend on earlier filed periods. Cadrumo carries recorded figures
+with their evidence and exposes missing dependencies. See [How filings build on
+earlier ones](building-on-earlier-filings.md).
 
 ---
 
@@ -107,18 +114,16 @@ lookup](../reference/commands-and-configuration.md).
 
 ---
 
-## How to use this cluster
+## Related documentation
 
-Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the {doc}`glossary </_generated/glossary>` for any word you're unsure of.
+Use the {doc}`glossary </_generated/glossary>` for terms and the [Cadrumo
+reference](../reference/index.md) for identity and scope. The generated Python
+application programming interface ([API](../api/cadrumo.rst)) lists public
+facades. [Troubleshooting](../how-to/troubleshooting.md) covers failures.
 
-When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md).
-Use the {doc}`glossary </_generated/glossary>` for terms, the [generated CLI
-reference](../cli/index.rst) for commands, the [generated Python
-API](../api/cadrumo.rst) for public facades, and the [Cadrumo
-reference](../reference/index.md) for identity and scope. Ordinary problems go
-to the [public issue tracker](https://github.com/cadrumo/cadrumo/issues) with
-redacted output. Vulnerabilities and credentials must follow the
-[security policy](../../SECURITY.md), never a public issue.
+Report ordinary problems through the [public issue
+tracker](https://github.com/cadrumo/cadrumo/issues) with redacted output. Follow
+the [security policy](../../SECURITY.md) for credentials or vulnerabilities.
 
 ```{toctree}
 :hidden:

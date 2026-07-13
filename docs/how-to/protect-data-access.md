@@ -27,7 +27,7 @@ The runtime emits help, prompts, and messages in Spanish.
 Do this once, right after setup, while your passphrase still works:
 
 ```bash
-cadrumo config show-recovery
+aeat config show-recovery
 ```
 
 If no recovery key exists yet, the command creates one and prints a
@@ -43,7 +43,7 @@ exists, the command reports its status and does not print the words again.
 Verify the words you wrote down without changing anything:
 
 ```bash
-cadrumo config verify-recovery --recovery-key "word1 word2 word3 ..."
+aeat config verify-recovery --recovery-key "word1 word2 word3 ..."
 ```
 
 The command reports `verified yes` or `verified no` and exits with a failure
@@ -56,7 +56,7 @@ If the written words may have been seen by someone else, mint a fresh
 recovery key:
 
 ```bash
-cadrumo config show-recovery --rotate
+aeat config show-recovery --rotate
 ```
 
 New words are printed exactly once. The previous recovery words stop working
@@ -67,7 +67,7 @@ immediately. Store the new words as before.
 To change the passphrase while you still know the current one:
 
 ```bash
-cadrumo config rekey
+aeat config rekey
 ```
 
 The command asks for the current passphrase if the store is not already
@@ -81,7 +81,7 @@ together with `--confirm-new-passphrase`.
 If you forgot the passphrase but have your recovery words:
 
 ```bash
-cadrumo config recover --recovery-key "word1 word2 word3 ..."
+aeat config recover --recovery-key "word1 word2 word3 ..."
 ```
 
 The command prompts twice (hidden) for a new passphrase, unlocks the master
@@ -100,11 +100,11 @@ Clear the active-profile selection so commands stop operating on your data
 until a profile is selected again:
 
 ```bash
-cadrumo config lock
+aeat config lock
 ```
 
 Nothing is deleted — locking only clears the active-profile pointer. Select
-a profile again with `cadrumo config switch <name>` when you return.
+a profile again with `aeat config switch <name>` when you return.
 
 ## Reset local state — last resort
 
@@ -112,7 +112,7 @@ Reset deletes operator-local state. It is not recoverable. The command
 refuses to run without `--yes`:
 
 ```bash
-cadrumo config reset --scope profile --yes
+aeat config reset --scope profile --yes
 ```
 
 Pick the scope deliberately:
@@ -127,7 +127,7 @@ Pick the scope deliberately:
   scope; the command refuses to run without an explicit `--scope`.
 
 Before any reset, export profiles you want to keep with
-`cadrumo config profile export` — see
+`aeat config profile export` — see
 [Set up your taxpayer profile](profile-setup.md).
 
 ## Next steps

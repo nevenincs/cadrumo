@@ -25,7 +25,7 @@ You need:
 Confirm the active profile before you write transaction data:
 
 ```bash
-cadrumo config profile status
+aeat config profile status
 ```
 
 ## Statement file format
@@ -49,13 +49,13 @@ Run a dry run first. A dry run shows what Cadrumo would import and saves no
 rows:
 
 ```bash
-cadrumo app ledger import ./statement.csv --provider auto --dry-run
+aeat app ledger import ./statement.csv --provider auto --dry-run
 ```
 
 `--provider auto` asks Cadrumo to detect the statement format. The recognized
 providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`, `excel`, `n26`, `pdf`, and
 `pdf-n26`. If detection picks the wrong format, replace `auto` with the exact
-provider - run `cadrumo app ledger import --help` or see the
+provider - run `aeat app ledger import --help` or see the
 [CLI reference](../cli/index.rst) for the current provider list.
 
 If the path does not exist, the command refuses cleanly and names the missing
@@ -66,20 +66,20 @@ file (`El archivo de origen no existe: ...`); fix the path and run it again.
 When the dry run looks right, repeat the command without `--dry-run`:
 
 ```bash
-cadrumo app ledger import ./statement.csv --provider auto
+aeat app ledger import ./statement.csv --provider auto
 ```
 
 Add `--verify` when you want import diagnostics:
 
 ```bash
-cadrumo app ledger import ./statement.csv --provider auto --verify
+aeat app ledger import ./statement.csv --provider auto --verify
 ```
 
 If the diagnostic source should point at a different original file, pass it
 with `--file`:
 
 ```bash
-cadrumo app ledger import ./processed.csv --provider csv --verify --file ./statement.csv
+aeat app ledger import ./processed.csv --provider csv --verify --file ./statement.csv
 ```
 
 Use `--period` only when you intentionally want to label the import with a
@@ -91,7 +91,7 @@ date automatically.
 Use `ledger add` when a transaction is missing from imported statements:
 
 ```bash
-cadrumo app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --description "Software subscription"
+aeat app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --description "Software subscription"
 ```
 
 Required fields are date, amount, direction, and description. Write the amount
@@ -102,13 +102,13 @@ paid out. `INCOMING` is for income, money you received.
 For a received payment or issued invoice, use `INCOMING`:
 
 ```bash
-cadrumo app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment"
+aeat app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment"
 ```
 
 For an expense or supplier invoice, use `OUTGOING`:
 
 ```bash
-cadrumo app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies"
+aeat app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies"
 ```
 
 The third direction, `INTERNAL_TRANSFER`, records money moved between your own
@@ -120,7 +120,7 @@ accounts.
 record a complete transaction in one step:
 
 ```bash
-cadrumo app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING \
+aeat app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING \
   --description "Office supplies" --counterparty "Papeleria SL" \
   --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00 \
   --notes "Receipt filed"
@@ -131,7 +131,7 @@ Useful optional fields:
 - `--currency` records a non-euro amount; it defaults to `EUR`.
 - `--counterparty` records who you paid or were paid by.
 - `--category-id` assigns the income or expense category. Run
-  `cadrumo app ledger categories` to list the ids.
+  `aeat app ledger categories` to list the ids.
 - `--taxable-base`, `--iva-rate`, and `--iva-amount` record the IVA breakdown.
 - `--irpf-category` records the IRPF (personal income tax) category.
 - `--source-jurisdiction` records the country a movement belongs to, as an
@@ -142,7 +142,7 @@ For a part-business, part-personal movement, set `--classification MIXED` and th
 business share with `--business-pct`, a value from `0` to `1`:
 
 ```bash
-cadrumo app ledger add --date 2026-03-22 --amount 80.00 --direction OUTGOING \
+aeat app ledger add --date 2026-03-22 --amount 80.00 --direction OUTGOING \
   --description "Mobile phone" --classification MIXED --business-pct 0.5 --category-id <category-id>
 ```
 
@@ -153,8 +153,8 @@ Use the invoice commands when you also need to track whether an invoice exists
 separately from the bank movement:
 
 ```bash
-cadrumo app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21
-cadrumo app ledger invoice list --kind issued
+aeat app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21
+aeat app ledger invoice list --kind issued
 ```
 
 Received invoices are supplier invoices you owe. Issued invoices are customer
@@ -166,35 +166,35 @@ invoices owed to you. For the full invoice-record workflow, see
 List rows:
 
 ```bash
-cadrumo app ledger list
+aeat app ledger list
 ```
 
 Narrow the list with filters:
 
 ```bash
-cadrumo app ledger list --filter period=03 --filter year=2026
-cadrumo app ledger list --filter classification=NOT_YET_PROCESSED
-cadrumo app ledger list --limit 20 --offset 20
+aeat app ledger list --filter period=03 --filter year=2026
+aeat app ledger list --filter classification=NOT_YET_PROCESSED
+aeat app ledger list --limit 20 --offset 20
 ```
 
 Inspect one row before changing it:
 
 ```bash
-cadrumo app ledger view <transaction-id>
+aeat app ledger view <transaction-id>
 ```
 
 See the event history for one row:
 
 ```bash
-cadrumo app ledger history <transaction-id>
-cadrumo app ledger track <transaction-id>
+aeat app ledger history <transaction-id>
+aeat app ledger track <transaction-id>
 ```
 
 For a broader review queue, use:
 
 ```bash
-cadrumo app ledger review --filter period=1T --filter year=2026
-cadrumo app ledger check
+aeat app ledger review --filter period=1T --filter year=2026
+aeat app ledger check
 ```
 
 `review` helps inspect selected ledger rows. `check` reports aggregate ledger
@@ -205,7 +205,7 @@ anomalies across periods and is local-only.
 Export the active ledger to a file:
 
 ```bash
-cadrumo app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
+aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 ```
 
 The `--year` and `--period` filter keeps the export aligned with the tutorial
@@ -214,7 +214,7 @@ transaction dates. A transaction dated `2026-03-15` belongs in `--year 2026
 when a whole year is the review scope:
 
 ```bash
-cadrumo app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
+aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
 ```
 
 Exports are review snapshots. They are not a general edit-and-reimport
@@ -227,8 +227,8 @@ merge`.
 Use `ledger update` for editable transaction fields:
 
 ```bash
-cadrumo app ledger update <transaction-id> --description "Corrected description"
-cadrumo app ledger update <transaction-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+aeat app ledger update <transaction-id> --description "Corrected description"
+aeat app ledger update <transaction-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
 ```
 
 Use this for corrections such as date, value date, amount, direction, currency,
@@ -238,37 +238,37 @@ notes, or group label.
 Add or modify notes when you need a short operator explanation:
 
 ```bash
-cadrumo app ledger update <transaction-id> --notes "Receipt checked against supplier PDF"
+aeat app ledger update <transaction-id> --notes "Receipt checked against supplier PDF"
 ```
 
 Attach secure purchase evidence to a transaction. The evidence id comes from
-`cadrumo app ledger evidence add` (it prints `evidence_id`):
+`aeat app ledger evidence add` (it prints `evidence_id`):
 
 ```bash
 # Attach purchase evidence to a transaction
-cadrumo app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
+aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
 
 # Same purchase-evidence link through the link command
-cadrumo app ledger link <transaction-id> --evidence-id <evidence-id>
+aeat app ledger link <transaction-id> --evidence-id <evidence-id>
 ```
 
 `link --invoice-id` expects an id from the reconciliation invoice catalogue
 (populated by the import and reconcile flows), not an id from
-`cadrumo app ledger invoice add`. See [Attach invoices and receipts](ledger-evidence.md)
+`aeat app ledger invoice add`. See [Attach invoices and receipts](ledger-evidence.md)
 for the full evidence and invoice-record workflow, including the
 `--attachment-id` option and its current limitation.
 
 Pull a document straight from Google Drive into encrypted evidence storage:
 
 ```bash
-cadrumo app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the
 transaction, and keeps the original link as provenance. Gmail links, arbitrary
 URLs, and Drive files outside the granted scope are refused — evidence always
 carries the document itself, never a bare link. For a refused source, download
-the document yourself and attach it with `cadrumo app ledger attach
+the document yourself and attach it with `aeat app ledger attach
 --attachment-id`.
 
 ## Split and re-join a transaction
@@ -278,7 +278,7 @@ categories or business percentages. For example, split a `121.00` outgoing
 movement into software and personal parts:
 
 ```bash
-cadrumo app ledger split <transaction-id> --child-amount 100.00 --child-description "Software business part" --child-amount 21.00 --child-description "Personal part" --reason "mixed receipt" --yes
+aeat app ledger split <transaction-id> --child-amount 100.00 --child-description "Software business part" --child-amount 21.00 --child-description "Personal part" --reason "mixed receipt" --yes
 ```
 
 Cadrumo replaces the original transaction with two separate entries, one for
@@ -287,15 +287,15 @@ each carrying the short id and the full id; copy them. Classify each one
 separately:
 
 ```bash
-cadrumo app ledger classify <business-child-id> --classification BUSINESS --category-id <category-id>
-cadrumo app ledger classify <personal-child-id> --classification PERSONAL
+aeat app ledger classify <business-child-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <personal-child-id> --classification PERSONAL
 ```
 
 If the split was wrong, merge the complete child cohort. Use the child ids the
 split printed:
 
 ```bash
-cadrumo app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes
+aeat app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes
 ```
 
 You must include all the parts you split — Cadrumo will not let you re-merge only
@@ -325,11 +325,11 @@ Use the least destructive action that matches the problem:
 Examples:
 
 ```bash
-cadrumo app ledger archive <transaction-id> --reason "duplicate imported row" --yes
-cadrumo app ledger stash <transaction-id> --reason "waiting for invoice" --yes
-cadrumo app ledger restore <transaction-id> --reason "stashed by mistake" --yes
-cadrumo app ledger remove <transaction-id> --reason "wrong file imported" --yes
-cadrumo app ledger reset --reason "re-importing all statements" --yes
+aeat app ledger archive <transaction-id> --reason "duplicate imported row" --yes
+aeat app ledger stash <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger restore <transaction-id> --reason "stashed by mistake" --yes
+aeat app ledger remove <transaction-id> --reason "wrong file imported" --yes
+aeat app ledger reset --reason "re-importing all statements" --yes
 ```
 
 `remove --dry-run` and `reset --dry-run` report the effects without modifying the storage. These commands are entirely local ledger changes and never contact the AEAT.
@@ -343,8 +343,8 @@ category.
 Start with:
 
 ```bash
-cadrumo app ledger categories
-cadrumo app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger categories
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
 Use [Classify transactions](classify-transactions.md) for the full
@@ -355,9 +355,9 @@ For repeated descriptions, stored rules can classify matching unclassified
 transactions automatically:
 
 ```bash
-cadrumo app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
-cadrumo app ledger rule apply --dry-run
-cadrumo app ledger rule apply
+aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
+aeat app ledger rule apply --dry-run
+aeat app ledger rule apply
 ```
 
 For model-assisted suggestions, use
@@ -375,8 +375,8 @@ classification update. The implemented batch path is `ledger classify
 1. Filter and export the rows you want to review:
 
    ```bash
-   cadrumo app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
-   cadrumo app ledger export --output ./ledger-2026-q1-review.csv --year 2026 --period 1T
+   aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
+   aeat app ledger export --output ./ledger-2026-q1-review.csv --year 2026 --period 1T
    ```
 
 2. Build a small classification CSV from the reviewed transaction ids:
@@ -390,14 +390,14 @@ classification update. The implemented batch path is `ledger classify
 3. Apply it:
 
    ```bash
-   cadrumo app ledger classify --from-csv ./classifications.csv
+   aeat app ledger classify --from-csv ./classifications.csv
    ```
 
 4. Review afterwards:
 
    ```bash
-   cadrumo app ledger list --filter period=1T --filter year=2026
-   cadrumo app ledger preflight --year 2026 --period 1T
+   aeat app ledger list --filter period=1T --filter year=2026
+   aeat app ledger preflight --year 2026 --period 1T
    ```
 
 This batch path does not bulk edit descriptions, amounts, IVA fields, notes, or
@@ -409,7 +409,7 @@ or `ledger doclink`.
 Run preflight before calculating a modelo:
 
 ```bash
-cadrumo app ledger preflight --year 2026 --period 1T
+aeat app ledger preflight --year 2026 --period 1T
 ```
 
 Preflight reports missing facts such as category, taxable base, IVA amount, IVA
@@ -419,7 +419,7 @@ preflight again.
 Check the overall ledger state:
 
 ```bash
-cadrumo app ledger status --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 1T
 ```
 
 Continue to calculation only when the active profile and target period are

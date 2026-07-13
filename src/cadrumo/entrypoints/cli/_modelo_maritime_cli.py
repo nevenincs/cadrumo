@@ -1,7 +1,7 @@
 """Typer registration for modelo maritime preview commands.
 
 This module is the transport boundary for
-``cadrumo app modelo work preview-maritime-exemption``. The command body keeps CLI
+``aeat app modelo work preview-maritime-exemption``. The command body keeps CLI
 responsibilities narrow: parse Decimal options, require an active profile,
 delegate profile fact reading and RETMAR retry policy to
 :func:`preview_maritime_exemption_for_active_profile`,

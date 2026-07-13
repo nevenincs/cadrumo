@@ -320,7 +320,7 @@ class ClavePermanenteAuthProvider:
         if not raw:
             raise _configuration_error(
                 f"{_CLAVE_PERMANENTE_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
-                "before running `cadrumo config auth configure --provider clave_permanente`.",
+                "before running `aeat config auth configure --provider clave_permanente`.",
                 failure_mode=ClavePermanenteFailureMode.INVALID_CREDENTIALS,
             )
         _classify_identity(raw)
@@ -332,7 +332,7 @@ class ClavePermanenteAuthProvider:
             raise _configuration_error(
                 f"{_CLAVE_PERMANENTE_PASSWORD_ENV} is not set; set it to your Cl@ve "
                 "Permanente password before running "
-                "`cadrumo config auth configure --provider clave_permanente`.",
+                "`aeat config auth configure --provider clave_permanente`.",
                 failure_mode=ClavePermanenteFailureMode.INVALID_CREDENTIALS,
             )
         return raw
@@ -489,7 +489,7 @@ class ClavePermanenteAuthProvider:
         persisted = _session_store.load(storage_state_path)
         if persisted is None:
             raise AeatLoginAssertionError(
-                "no persisted Cl@ve Permanente session; run `cadrumo config auth status` first",
+                "no persisted Cl@ve Permanente session; run `aeat config auth status` first",
             )
         return persisted
 

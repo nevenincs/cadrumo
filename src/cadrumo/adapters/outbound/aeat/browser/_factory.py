@@ -168,7 +168,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     from .....core import resolve_active_bucket_id
 
     # This factory is reachable from the diagnostic browser-connectivity
-    # probe under `cadrumo config status`, so a missing active profile MUST
+    # probe under `aeat config status`, so a missing active profile MUST
     # NOT raise here: the probe is exactly what an operator runs to
     # diagnose a missing-profile condition. The sentinel label keeps
     # the Profile model satisfied without pretending to be a real

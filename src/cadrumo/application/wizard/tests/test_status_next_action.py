@@ -32,7 +32,7 @@ def test_next_wizard_action_returns_setup_command_when_no_profile() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "cadrumo config profile create NAME"
+        == "aeat config profile create NAME"
     )
 
 
@@ -47,7 +47,7 @@ def test_next_wizard_action_returns_profile_edit_command_when_missing_required()
             auth_provider="certificate",
             login_ready=True,
         )
-        == "cadrumo config profile edit NAME"
+        == "aeat config profile edit NAME"
     )
 
 
@@ -61,7 +61,7 @@ def test_next_wizard_action_collapses_multiple_missing_required_fields_to_profil
             auth_provider="certificate",
             login_ready=True,
         )
-        == "cadrumo config profile edit NAME"
+        == "aeat config profile edit NAME"
     )
 
 
@@ -77,7 +77,7 @@ def test_next_wizard_action_returns_profile_edit_command_when_missing_enrolment(
             auth_provider="certificate",
             login_ready=True,
         )
-        == "cadrumo config profile edit NAME"
+        == "aeat config profile edit NAME"
     )
 
 
@@ -92,7 +92,7 @@ def test_next_wizard_action_returns_auth_setup_command_when_no_auth_provider() -
             auth_provider="",
             login_ready=False,
         )
-        == "cadrumo config auth configure --provider certificate --file PATH"
+        == "aeat config auth configure --provider certificate --file PATH"
     )
 
 
@@ -108,7 +108,7 @@ def test_next_wizard_action_returns_auth_login_command_when_not_login_ready() ->
             auth_provider="certificate",
             login_ready=False,
         )
-        == "cadrumo config auth test --provider certificate"
+        == "aeat config auth test --provider certificate"
     )
 
 
@@ -121,7 +121,7 @@ def test_next_wizard_action_uses_configured_auth_provider() -> None:
             auth_provider="clave_movil",
             login_ready=False,
         )
-        == "cadrumo config auth test --provider clave_movil"
+        == "aeat config auth test --provider clave_movil"
     )
 
 
@@ -135,7 +135,7 @@ def test_next_wizard_action_returns_app_overview_status_in_happy_path() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "cadrumo app overview status"
+        == "aeat app overview status"
     )
 
 
@@ -151,7 +151,7 @@ def test_next_wizard_action_missing_required_wins_precedence_over_missing_enrolm
         login_ready=True,
     )
 
-    assert suggestion == "cadrumo config profile edit NAME"
+    assert suggestion == "aeat config profile edit NAME"
     assert "auth" not in suggestion
 
 
@@ -167,5 +167,5 @@ def test_next_wizard_action_missing_enrolment_wins_precedence_over_auth() -> Non
         login_ready=False,
     )
 
-    assert suggestion == "cadrumo config profile edit NAME"
+    assert suggestion == "aeat config profile edit NAME"
     assert "auth" not in suggestion

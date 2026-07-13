@@ -99,7 +99,7 @@ def assemble_work_unit_history(
     and :class:`ModeloRecord` id that belongs to its lifecycle.
 
     The returned :class:`WorkUnitHistoryEvent` rows copy event payloads into a
-    read model for ``cadrumo app modelo work history``. The function never writes to
+    read model for ``aeat app modelo work history``. The function never writes to
     repositories and never contacts AEAT; mutation and event emission stay with
     the lifecycle services that produce the underlying records.
 

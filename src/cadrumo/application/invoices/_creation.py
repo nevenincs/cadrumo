@@ -1,6 +1,6 @@
 """Application service for creating one rich catalogue :class:`Invoice`.
 
-The operator-facing ``cadrumo app ledger invoice catalogue create`` verb needs
+The operator-facing ``aeat app ledger invoice catalogue create`` verb needs
 a path to mint a **linkable** invoice. The slim
 :class:`~application.ledger.BusinessOperationInvoice` written by
 ``invoice add`` is an operator-edit record with no ``linked_transaction_ids``

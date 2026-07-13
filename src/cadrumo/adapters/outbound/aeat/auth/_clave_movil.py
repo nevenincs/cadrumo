@@ -212,7 +212,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             storage_state_path = self._storage_state_path()
             if not _session_store.exists(storage_state_path):
                 raise AeatLoginAssertionError(
-                    "no persisted Cl@ve Móvil session; run `cadrumo config auth status` first",
+                    "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
                     translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
                 )
 
@@ -468,7 +468,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         if not raw:
             raise ClaveMovilConfigurationError(
                 f"{_CLAVE_MOVIL_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
-                "before running `cadrumo config auth configure --provider clave_movil`.",
+                "before running `aeat config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
         _classify_identity(raw)
@@ -748,7 +748,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         persisted = _session_store.load(storage_state_path)
         if persisted is None:
             raise AeatLoginAssertionError(
-                "no persisted Cl@ve Móvil session; run `cadrumo config auth status` first",
+                "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
                 translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
             )
         return persisted
@@ -896,7 +896,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                         "verification_code_present": bool(verification_code),
                     },
                     suggestion=(
-                        "`cadrumo config auth diagnostics report "
+                        "`aeat config auth diagnostics report "
                         f"{diagnostic_id} --phone-state app_did_not_prompt` if no Cl@ve app prompt appeared, "
                         "or use app_prompted_and_accepted / app_prompted_not_accepted / operator_did_not_check "
                         "for the observed phone state."

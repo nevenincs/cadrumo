@@ -117,7 +117,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     cause = raised.value.__cause__
     assert isinstance(cause, OSError)
     message = resolve_error_message(raised.value)
-    assert "cadrumo config profile create NAME" in message
+    assert "aeat config profile create NAME" in message
     assert str(cause) not in message
 
 

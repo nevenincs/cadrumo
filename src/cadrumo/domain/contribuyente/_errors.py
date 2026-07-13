@@ -36,7 +36,7 @@ class ProfileNotConfiguredError(TaxResidenceProfileError):
         super().__init__(
             "No tax-residence profile is configured for RENTA.",
             translated_message="profile.errors.not_configured",
-            suggestion="cadrumo config profile edit NAME --tax-residence-ccaa <ccaa>",
+            suggestion="aeat config profile edit NAME --tax-residence-ccaa <ccaa>",
         )
 
 

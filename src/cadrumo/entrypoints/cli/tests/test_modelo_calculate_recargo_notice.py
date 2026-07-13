@@ -1,6 +1,6 @@
 """Real-behavior CLI coverage: overdue deadline posture and rate preview.
 
-``cadrumo app modelo work calculate`` on an overdue period must surface the
+``aeat app modelo work calculate`` on an overdue period must surface the
 voluntary filing deadline and an explicitly unassessed Article 27 rate preview
 in text mode and JSON. The preview carries a rate-reference date, never a
 presentation date, and the notice makes no surcharge or interest liability

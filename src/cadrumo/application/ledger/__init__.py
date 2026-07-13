@@ -36,7 +36,7 @@ Major declarations:
   :func:`set_usage_ratio`,
   :func:`unset_usage_ratio`, and
   :func:`validate_ratios_for_bucket` - the
-  operator-facing ``cadrumo app ledger ratios`` backend that bridges category
+  operator-facing ``aeat app ledger ratios`` backend that bridges category
   proportionality rules to persisted usage-ratio overrides.
 * :class:`PurchaseInvoiceEvidenceService` - the
   evidence lifecycle for receipts or supplier invoice artefacts attached to
@@ -50,7 +50,7 @@ Major declarations:
 * :class:`PayableInvoiceService`,
   :class:`CollectibleInvoiceService`, and
   :class:`BusinessOperationInvoiceRepository` - the
-  encrypted CRUD surface behind ``cadrumo app ledger invoice --kind issued|received``.
+  encrypted CRUD surface behind ``aeat app ledger invoice --kind issued|received``.
 * :func:`resolve_transaction_id` - the
   unambiguous-prefix id resolver, and
   :func:`resolve_lineage_transaction_id` - its

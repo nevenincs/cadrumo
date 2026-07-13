@@ -64,7 +64,7 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
     assert health.profile_record_present is False
     assert health.status == "missing_profile_record"
     assert health.repairable_by_clearing_pointer is True
-    assert health.next_action == "cadrumo config repair profile --clear-active --yes"
+    assert health.next_action == "aeat config repair profile --clear-active --yes"
 
 
 def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:

@@ -64,7 +64,7 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(tmp_pa
         )
         assert before.ready is False
         assert [issue.reason for issue in before.issues] == [LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH]
-        assert "cadrumo config profile edit" in before.issues[0].detail
+        assert "aeat config profile edit" in before.issues[0].detail
 
         _declare_home_office_m2(profile.bucket_id)
 
@@ -109,7 +109,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path)
     assert report.checked_transaction_count == 1
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH]
     assert "persisted HOME_OFFICE overrides require an applied censo" in report.issues[0].detail
-    assert "cadrumo config profile edit" in report.issues[0].detail
+    assert "aeat config profile edit" in report.issues[0].detail
 
 
 def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path: Path) -> None:

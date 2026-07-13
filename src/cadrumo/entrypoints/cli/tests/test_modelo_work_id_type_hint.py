@@ -1,4 +1,4 @@
-"""Instructive id-type hint for ``cadrumo app modelo work verify`` / ``file``.
+"""Instructive id-type hint for ``aeat app modelo work verify`` / ``file``.
 
 ``work calculate`` consumes a ``work_unit_id``; ``work verify`` and ``work
 file`` consume a ``calculation_revision_id``. Both are 64-character SHA-256

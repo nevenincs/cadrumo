@@ -330,7 +330,7 @@ def _detail_fingerprints_from_payload(payload: _DiagnosticPayload) -> dict[str, 
 
 def _operator_report_commands(diagnostic_id: str) -> tuple[str, ...]:
     return tuple(
-        f"cadrumo config auth diagnostics report {diagnostic_id} --phone-state {phone_state}"
+        f"aeat config auth diagnostics report {diagnostic_id} --phone-state {phone_state}"
         for phone_state in AUTH_DIAGNOSTIC_PHONE_STATES
     )
 

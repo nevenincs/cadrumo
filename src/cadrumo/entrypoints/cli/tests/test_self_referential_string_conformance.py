@@ -1,6 +1,6 @@
 """D5 conformance gate for the CLI's own self-referential strings.
 
-The sibling :mod:`test_documented_command_conformance` gate pins the ``cadrumo ...``
+The sibling :mod:`test_documented_command_conformance` gate pins the ``aeat ...``
 invocations cited in *user-facing docs* against the live command tree. This gate
 closes the same class of drift one layer in: the CLI's *own* internally-authored
 strings that name a command path or advertise an enum-choice set, which a
@@ -10,15 +10,15 @@ Two classes of self-referential string are pinned, each against the live
 Typer/click tree walked **in process** (no shell-out):
 
 **Class 1 - command-naming hint strings.** Next-action and failure-hint strings
-that name an ``cadrumo ...`` command path MUST resolve to a live command, and every
+that name an ``aeat ...`` command path MUST resolve to a live command, and every
 long/short option they cite MUST be a real parameter of that command (or a root
 global). The authoritative sources walked here are:
 
 - the error registry's ``ErrorCode.default_suggestion`` rows
   (``cadrumo.core.errors.ERROR_REGISTRY``) - the copy-paste recovery commands the
   CLI error boundary prints;
-- the locale catalogue's ``cli.*`` leaf strings that embed an ``cadrumo app`` /
-  ``cadrumo config`` invocation - help text, refusal messages, and next-action
+- the locale catalogue's ``cli.*`` leaf strings that embed an ``aeat app`` /
+  ``aeat config`` invocation - help text, refusal messages, and next-action
   hints rendered to the operator;
 - the workflow engine's ``next_action`` detail strings and the modelo verify
   renderer's ``next_action`` line, which name a recovery command on a failed
@@ -105,14 +105,14 @@ def _has_params(value: object) -> TypeGuard[_CommandWithParams]:
 # is exactly the protection the rename safety net depends on.
 _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     # cadrumo.application.workflow._engine: draft-build-refused next_action.
-    "cadrumo app modelo work calculate",
+    "aeat app modelo work calculate",
     # cadrumo.application.workflow._engine: draft-has-errors next_action.
-    "cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
+    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
     # cadrumo.entrypoints.cli._modelo_rendering: verify report next_action line.
-    "cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
+    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
     # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
-    "cadrumo app modelo export",
-    "cadrumo app modelo work file",
+    "aeat app modelo export",
+    "aeat app modelo work file",
 )
 
 
@@ -132,7 +132,7 @@ def _registry_suggestion_strings() -> Iterator[tuple[str, str]]:
 
 
 def _locale_command_strings() -> Iterator[tuple[str, str]]:
-    """Yield ``(dotted_key, value)`` for ``cli.*`` strings embedding ``cadrumo ...``."""
+    """Yield ``(dotted_key, value)`` for ``cli.*`` strings embedding ``aeat ...``."""
     catalogue = _locale_map("en")
     seen: set[tuple[str, str]] = set()
     for key, value in catalogue.items():
@@ -160,16 +160,16 @@ _COMMAND_TOKEN_RE = re.compile(
 _SENTENCE_END_RE = re.compile(r"[.;:]$")
 
 # Terminal top-level flags: nothing after them on the line is part of the
-# command. ``cadrumo --help for the full overview`` cites ``cadrumo --help``; the
+# command. ``aeat --help for the full overview`` cites ``aeat --help``; the
 # trailing ``for the full overview`` is prose. Without this stop, the prose
 # words are mis-read as a verb path and the citation fails to resolve.
 _TERMINAL_GLOBAL_FLAGS = frozenset({"--help", "-h", "--version"})
 
 
 def _command_span(after_cadrumo: str) -> str:
-    """Trim trailing natural-prose from an ``cadrumo ...`` span.
+    """Trim trailing natural-prose from an ``aeat ...`` span.
 
-    A hint string commonly embeds a command inside a sentence ("Run cadrumo config
+    A hint string commonly embeds a command inside a sentence ("Run aeat config
     unlock NAME or pass --profile."). The command is the maximal leading token
     run that looks like a CLI invocation; the trailing prose ("or pass ...") is
     dropped. Each kept token also has a sentence terminator (``.``/``;``/``:``)
@@ -191,7 +191,7 @@ def _command_span(after_cadrumo: str) -> str:
 
 
 def _cited_from_text(text: str) -> list[_CitedCommand]:
-    """Decompose every ``cadrumo ...`` command embedded in a free-text string.
+    """Decompose every ``aeat ...`` command embedded in a free-text string.
 
     Reuses the documented-command gate's :func:`_parse_command_line` for the
     final decomposition, after trimming sentence prose around the command span so
@@ -233,7 +233,7 @@ def test_registry_suggestions_resolve() -> None:
 
 
 def test_locale_command_strings_resolve() -> None:
-    """Every ``cli.*`` locale string embedding ``cadrumo ...`` resolves."""
+    """Every ``cli.*`` locale string embedding ``aeat ...`` resolves."""
     violations: list[str] = []
     for key, value in _locale_command_strings():
         for cited in _cited_from_text(value):
@@ -350,12 +350,12 @@ def _verify_select_advertised() -> frozenset[str]:
 def _enum_choice_surfaces() -> tuple[_EnumChoiceSurface, ...]:
     return (
         _EnumChoiceSurface(
-            label="cadrumo app ledger doclink --source",
+            label="aeat app ledger doclink --source",
             advertised=_doclink_source_advertised(),
             accepted=_DOCLINK_ACCEPTED_SOURCES,
         ),
         _EnumChoiceSurface(
-            label="cadrumo app modelo work verify --select",
+            label="aeat app modelo work verify --select",
             advertised=_verify_select_advertised(),
             accepted=_VERIFY_SELECT_ACCEPTED,
         ),

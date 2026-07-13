@@ -7,15 +7,19 @@ the [source setup](../workstation-setup.md) and
 [how-to guide](../how-to/index.md). For the relationships between stages, read
 [how Cadrumo turns records into a filing-ready tax file](../explanation/index.md).
 
+The Agencia Estatal de Administración Tributaria (AEAT) is the external tax
+authority. The command-line interface (CLI), Model Context Protocol (MCP), and
+application programming interface (API) are Cadrumo product surfaces.
+
 ## Lookup map
 
-- [Identity and naming](identity-and-naming.md) — canonical product identifiers
+- [Identity and naming](identity-and-naming.md) - canonical product identifiers
   and the Cadrumo-versus-AEAT vocabulary.
-- [Commands and configuration](commands-and-configuration.md) — generated CLI,
+- [Commands and configuration](commands-and-configuration.md) - CLI,
   workflow-stage, schema, and configuration lookups.
-- [Filesystem, state, and safety](filesystem-state-and-safety.md) — storage
+- [Filesystem, state, and safety](filesystem-state-and-safety.md) - storage
   layout, former-state refusal, local export, live-read, and filing boundaries.
-- [Registry, legal sources, and Python API](registry-legal-api.md) — grounding
+- [Registry, legal sources, and Python API](registry-legal-api.md) - grounding
   sources and generated public API pages.
 
 Terms are defined in the {doc}`glossary </_generated/glossary>`. For ordinary

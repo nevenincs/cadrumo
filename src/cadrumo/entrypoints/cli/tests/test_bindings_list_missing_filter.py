@@ -1,4 +1,4 @@
-"""Strict-subset behaviour proof for ``cadrumo app modelo bindings list --missing``.
+"""Strict-subset behaviour proof for ``aeat app modelo bindings list --missing``.
 
 ``bindings list --missing`` narrows the binding list to the bindings the
 operator still owes: it drops ``constant_value`` bindings (always

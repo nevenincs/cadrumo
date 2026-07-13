@@ -1,4 +1,4 @@
-"""Ledger import command registration for ``cadrumo app ledger``."""
+"""Ledger import command registration for ``aeat app ledger``."""
 
 from __future__ import annotations
 
@@ -110,7 +110,7 @@ def register_import_commands(app: typer.Typer) -> None:
                     source=file,
                     period=canonical_period,
                     actor=actor,
-                    source_command="cadrumo app ledger import",
+                    source_command="aeat app ledger import",
                 ),
                 transaction_repository=transaction_repository,
                 currency_normalizer=currency_normalizer,

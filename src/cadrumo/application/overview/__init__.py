@@ -1,4 +1,4 @@
-"""Application read models for ``cadrumo app overview``.
+"""Application read models for ``aeat app overview``.
 
 The package owns the typed DTOs and pure builders behind the overview
 ``status``, ``calendar``, ``agenda``, ``backlog``, and ``explain``

@@ -1,11 +1,11 @@
-"""Real-behavior CLI tests for ``cadrumo config collab recipient add/list/remove``.
+"""Real-behavior CLI tests for ``aeat config collab recipient add/list/remove``.
 
 Exercises the recipient-fingerprint registry CLI against a genuine encrypted
 profile bucket (no mocks): register a recipient's X25519 public key, confirm
 it lists with its derived fingerprint, confirm a duplicate id refuses, and
 confirm removal drops it from the register. The registered public key is then
 proven to be the exact key
-``cadrumo app modelo review-package encrypt-for-recipient`` seals against in
+``aeat app modelo review-package encrypt-for-recipient`` seals against in
 :mod:`~entrypoints.cli.tests.test_modelo_review_package_recipient_encryption_verb`.
 
 See Also:

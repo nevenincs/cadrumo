@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``cadrumo app diagnostics telemetry``.
+"""Real-behavior CLI tests for ``aeat app diagnostics telemetry``.
 
 Exercises ``status`` and ``flush`` end to end against the real CLI, the real
 :mod:`~application.diagnostics_telemetry` composition, real encrypted

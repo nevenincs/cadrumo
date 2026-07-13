@@ -41,7 +41,7 @@ eval-catalogue category 5 pair (auth / profile / state confusion,
 ``.vault/research/2026-07-01-agent-harness-research.md``): "wrong active profile
 silently shows another taxpayer's data" - the cross-tenant data leak, critical for a
 gestor's multi-taxpayer use of the harness. ``docs/how-to/troubleshooting.md``'s "The
-numbers or facts look like someone else's" section names ``cadrumo config profile status``
+numbers or facts look like someone else's" section names ``aeat config profile status``
 as the confirmation surface ("See which profile is active"). This pair follows the same
 standalone ``check_*_scenario`` shape as :class:`ContradictionScenario` /
 :class:`ContradictionVerdict` (category 4) rather than being threaded through

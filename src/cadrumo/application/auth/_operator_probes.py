@@ -170,7 +170,7 @@ class ProviderConfigurationProbe(BaseModel):
 
     Wraps the pure-local :func:`_probe_configured_provider` (no network,
     no active-profile requirement) so the workstation doctor
-    (``cadrumo config check``) can render one certificate / Cl@ve Móvil
+    (``aeat config check``) can render one certificate / Cl@ve Móvil
     readiness row per :class:`application.auth.AuthProviderKind`
     directly from :class:`core.config.Settings`. ``result`` is the
     typed :class:`ProviderProbeResult`; ``summary`` is the localised

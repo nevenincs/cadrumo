@@ -85,7 +85,7 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     assert init.exit_code == 0, init.output
     assert show.exit_code == 0, show.output
     payload = json.loads(show.output)
-    # the exact shape of payload depends on `cadrumo config profile list --format json`
+    # the exact shape of payload depends on `aeat config profile list --format json`
     # Let's just ensure it parsed as json
     assert isinstance(payload, dict)
 

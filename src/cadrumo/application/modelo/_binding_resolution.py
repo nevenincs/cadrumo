@@ -242,7 +242,7 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             f"bindings {misrouted_to_enum!r} are consumed by the registry as Decimal "
             f"operands and must be supplied as Decimal binding values, not through the "
-            f"enum-binding channel. `cadrumo app modelo bindings list` reports each "
+            f"enum-binding channel. `aeat app modelo bindings list` reports each "
             f"binding's input_channel; a binding shown as input_channel=decimal "
             f"takes a numeric --binding KEY=VALUE even when typed_enum is set",
         )

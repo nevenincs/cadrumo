@@ -1,4 +1,4 @@
-"""Source-jurisdiction validation paths for ``cadrumo app ledger add``."""
+"""Source-jurisdiction validation paths for ``aeat app ledger add``."""
 
 from __future__ import annotations
 

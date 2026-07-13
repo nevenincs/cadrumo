@@ -6,7 +6,7 @@ drift and the locale-parity gates know where their remit stops:
 
 - The **model-facing** surface is deliberately English. Tool NAMES and tool
   DESCRIPTIONS built by :func:`build_tool_descriptors` are assembled from
-  ASCII English (an ``cadrumo app ...`` command form plus the family's English
+  ASCII English (an ``aeat app ...`` command form plus the family's English
   ``operator_question`` intent); they never flow through :func:`tr`, so they do
   not change with the operator's configured output language.
 - The **operator-facing** surface is localized. Elicitation prompts and refusal

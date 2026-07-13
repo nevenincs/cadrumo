@@ -125,7 +125,7 @@ def test_require_accepted_root_uses_registered_application_error() -> None:
 
     error = exc_info.value
     assert error.reason == "The CLI accepts only the config and app roots."
-    assert error.suggestion == "cadrumo --help"
+    assert error.suggestion == "aeat --help"
     assert get_registered_error_code(error).code == "REFUSED_OPERATOR_SURFACE_CONTRACT"
 
 
@@ -255,19 +255,19 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     app_text = render_help_text(app)
 
     assert "The CLI has exactly two roots: config and app." in root.paragraphs
-    assert "cadrumo config profile create NAME" in root_text
+    assert "aeat config profile create NAME" in root_text
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in root_text
     assert "CADRUMO_SECRET_STORE_DIR" in root_text
     assert "CADRUMO_SECRET_PASSPHRASE" in config_text
-    assert ("cadrumo config " + "init") not in root_text
-    assert "cadrumo app ledger import" in root_text
-    assert "cadrumo app live filed list" in root_text
-    assert "cadrumo app live filed pull" in app_text
-    assert "cadrumo config bucket" not in root_text
-    assert "cadrumo config bucket" not in config_text
-    assert "cadrumo config profile history" in config_text
-    assert "cadrumo app invoice" not in app_text
-    assert "cadrumo app declaration" not in app_text
+    assert ("aeat config " + "init") not in root_text
+    assert "aeat app ledger import" in root_text
+    assert "aeat app live filed list" in root_text
+    assert "aeat app live filed pull" in app_text
+    assert "aeat config bucket" not in root_text
+    assert "aeat config bucket" not in config_text
+    assert "aeat config profile history" in config_text
+    assert "aeat app invoice" not in app_text
+    assert "aeat app declaration" not in app_text
     assert "aeat app" not in root_text + config_text + app_text
     assert "aeat config" not in root_text + config_text + app_text
 
@@ -291,9 +291,9 @@ def test_root_landing_report_reads_profile_state_input_only() -> None:
     missing = build_root_landing_report(None)
     active = build_root_landing_report("operator")
 
-    assert missing.command == "cadrumo config profile create NAME"
+    assert missing.command == "aeat config profile create NAME"
     assert missing.active_profile is None
-    assert active.command == "cadrumo app overview status"
+    assert active.command == "aeat app overview status"
     assert active.active_profile == "operator"
 
 

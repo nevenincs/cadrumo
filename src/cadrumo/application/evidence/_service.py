@@ -110,7 +110,7 @@ def _hash_payload(payload: bytes) -> str:
 class EvidenceBundleService:
     """Application service for the audit verb tree.
 
-    Each method maps to one of the verbs in ``cadrumo app modelo audit``:
+    Each method maps to one of the verbs in ``aeat app modelo audit``:
     ``build`` is the constructor side of ``add``-equivalent (audit bundles
     are produced by the file/verify path, not the operator). ``show``,
     ``check``, ``export``, ``replay`` are operator-facing.
@@ -213,7 +213,7 @@ class EvidenceBundleService:
         raise EvidenceBundleNotFoundError(
             translated_message="errors.refused.refused_evidence_bundle_not_found",
             context={"bundle_id": bundle_id, "bucket_id": bucket_id},
-            suggestion="cadrumo app modelo audit check",
+            suggestion="aeat app modelo audit check",
         )
 
     def check(
@@ -349,7 +349,7 @@ class EvidenceBundleService:
             raise EvidenceBundleVerificationError(
                 translated_message="errors.refused.refused_evidence_bundle_verification",
                 context={"bundle_id": bundle.bundle_id, "verification_state": report.verification_state.value},
-                suggestion="cadrumo app modelo audit check",
+                suggestion="aeat app modelo audit check",
             )
         if report.verification_state is BundleVerificationState.INCOMPLETE and not force_incomplete:
             raise EvidenceBundleVerificationError(
@@ -359,7 +359,7 @@ class EvidenceBundleService:
                     "verification_state": report.verification_state.value,
                     "force_incomplete": force_incomplete,
                 },
-                suggestion="cadrumo app modelo audit export --force-incomplete",
+                suggestion="aeat app modelo audit export --force-incomplete",
             )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,4 @@
-"""CLI tests for ``cadrumo config repair reset-progress``."""
+"""CLI tests for ``aeat config repair reset-progress``."""
 
 from __future__ import annotations
 

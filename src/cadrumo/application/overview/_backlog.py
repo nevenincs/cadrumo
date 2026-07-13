@@ -1,7 +1,7 @@
 """Overview backlog: past-due / triage cohort listing.
 
 :func:`build_overview_backlog` is the application service backing
-``cadrumo app overview backlog``. It accepts a
+``aeat app overview backlog``. It accepts a
 :class:`~domain.deadlines.TaxpayerProfile`, composes
 :func:`application.overview.build_overview_calendar` over an
 operator-supplied date window (defaulting to the last 365 days through today),
@@ -11,7 +11,7 @@ not yet been filed.
 
 The verb is a read model only: it never mutates state and never
 contacts AEAT. Lifecycle continuation is owned by
-``cadrumo app modelo work resume`` per the workflow-resumption-semantics ADR.
+``aeat app modelo work resume`` per the workflow-resumption-semantics ADR.
 """
 
 from __future__ import annotations

@@ -1281,7 +1281,7 @@ def _reject_caller_overrides_of_source_bindings(
         # For the IVA compensation binding the operator should use the seed verb, not
         # a manual override, to set the prior carry-forward balance.
         seed_suggestion = (
-            "cadrumo app modelo iva-wallet seed"
+            "aeat app modelo iva-wallet seed"
             if any("compensacion-pendiente-anteriores" in b for b in rejected_bindings)
             else None
         )
@@ -1435,5 +1435,5 @@ def _refuse_direct_cross_period_verification(
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period.registry_token,
             },
-            suggestion="cadrumo app modelo work verify",
+            suggestion="aeat app modelo work verify",
         )

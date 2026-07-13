@@ -84,7 +84,7 @@ def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice
         default=(
             "%{count} filing obligation(s) could not be positively scoped for "
             "this profile and may be under-reported: %{modelos}. Investigate "
-            "each with 'cadrumo app overview explain <modelo>'."
+            "each with 'aeat app overview explain <modelo>'."
         ),
         count=len(advised),
         modelos=modelos,
@@ -94,7 +94,7 @@ def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice
             severity=severity,
             code=_COVERAGE_NOTICE_CODE,
             message=message,
-            suggestion=f"cadrumo app overview explain {advised[0].modelo}",
+            suggestion=f"aeat app overview explain {advised[0].modelo}",
             context={item.modelo: item.reason.value for item in advised},
         ),
     ]
@@ -125,7 +125,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
         "cli.overview.post_filing.pending",
         default=(
             "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
-            "Review them with 'cadrumo app live notifications list'."
+            "Review them with 'aeat app live notifications list'."
         ),
         count=len(actionable),
         kinds=", ".join(kinds),
@@ -135,7 +135,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
             severity=NoticeSeverity.WARNING,
             code=_POST_FILING_NOTICE_CODE,
             message=message,
-            suggestion="cadrumo app live notifications list",
+            suggestion="aeat app live notifications list",
             context={
                 event.reference_id: event.post_filing_kind.value
                 for event in actionable
@@ -477,7 +477,7 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
         return (
             tr(
                 "cli.overview.status.next_work_calculate_command",
-                default="  cadrumo app modelo work list - resume an in-progress modelo work unit.",
+                default="  aeat app modelo work list - resume an in-progress modelo work unit.",
             ),
             _modelo_work_create_guidance_line(report),
             tr("cli.overview.status.next_landing_command"),
@@ -502,7 +502,7 @@ def _modelo_210_unsupported_guidance_line(report: OverviewStatusReport) -> str |
         return tr(
             "cli.overview.status.next_modelo_210_unsupported_command",
             default=(
-                "  cadrumo app modelo describe 210 - Modelo 210 is visible for IRNR discovery, "
+                "  aeat app modelo describe 210 - Modelo 210 is visible for IRNR discovery, "
                 "but local work-unit creation is not supported yet; file through AEAT Sede G320."
             ),
         )
@@ -512,14 +512,14 @@ def _modelo_210_unsupported_guidance_line(report: OverviewStatusReport) -> str |
 def _modelo_work_create_guidance_line(report: OverviewStatusReport) -> str:
     return _modelo_210_unsupported_guidance_line(report) or tr(
         "cli.overview.status.next_work_create_command",
-        default="  cadrumo app modelo work create - start a work unit for another modelo.",
+        default="  aeat app modelo work create - start a work unit for another modelo.",
     )
 
 
 def _modelo_work_from_ledger_guidance_line(report: OverviewStatusReport) -> str:
     return _modelo_210_unsupported_guidance_line(report) or tr(
         "cli.overview.status.next_modelo_work_command",
-        default="  cadrumo app modelo work create - start a modelo declaration from your ledger data.",
+        default="  aeat app modelo work create - start a modelo declaration from your ledger data.",
     )
 
 
@@ -538,7 +538,7 @@ def _work_units_line(report: OverviewStatusReport) -> str:
             default=(
                 "%{count} active modelo work unit(s) (%{discarded} discarded) "
                 "in this local storage - your active modelo work is saved; "
-                "resume it with `cadrumo app modelo work list`."
+                "resume it with `aeat app modelo work list`."
             ),
             count=report.work_units,
             discarded=report.discarded_work_units,
@@ -547,7 +547,7 @@ def _work_units_line(report: OverviewStatusReport) -> str:
         "cli.overview.status.work_units_present",
         default=(
             "%{count} modelo work unit(s) are in progress in this local storage "
-            "- your modelo work is saved; resume it with `cadrumo app modelo work list`."
+            "- your modelo work is saved; resume it with `aeat app modelo work list`."
         ),
         count=report.work_units,
     )

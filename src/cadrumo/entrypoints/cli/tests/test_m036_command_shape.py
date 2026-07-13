@@ -1,4 +1,4 @@
-"""Shape tests for the ``cadrumo app modelo m036`` declarative-recording verbs.
+"""Shape tests for the ``aeat app modelo m036`` declarative-recording verbs.
 
 Drives the CLI surface introduced by M036 commit 3 of 3: the
 ``m036_app`` Typer subgroup with ``alta`` / ``modificacion`` / ``baja``
@@ -37,7 +37,7 @@ def test_m036_verb_advertises_flag_set() -> None:
 
 
 def test_m036_group_lists_three_verbs() -> None:
-    """``cadrumo app modelo m036 --help`` lists the three declarative verbs."""
+    """``aeat app modelo m036 --help`` lists the three declarative verbs."""
     result = _invoke(["app", "modelo", "m036", "--help"])
     assert result.exit_code == 0, result.output
     assert "alta" in result.output

@@ -1,4 +1,4 @@
-"""Tests for the ``cadrumo app registry`` companion-absent verification guard.
+"""Tests for the ``aeat app registry`` companion-absent verification guard.
 
 The four registry verification verbs refuse instructively when the corpus source
 binaries shipped in the optional ``cadrumo_data`` companion are absent. These tests

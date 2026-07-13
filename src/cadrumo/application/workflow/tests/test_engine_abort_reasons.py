@@ -75,7 +75,7 @@ class TestAbortReasons:
         assert deadline_step.details is not None
         assert deadline_step.details["filing_window"] == "future"
         assert deadline_step.details["opens_on"] == "2026-09-20"
-        assert "cadrumo app modelo export" in deadline_step.summary
+        assert "aeat app modelo export" in deadline_step.summary
         stages = [step.stage for step in result.steps]
         assert WorkflowStage.BUILDING_DRAFT not in stages
         assert WorkflowStage.RUNNING_PREFLIGHT not in stages
@@ -257,7 +257,7 @@ class TestAbortReasons:
         assert last.details is not None
         assert last.details["error_count"] == "1"
         assert last.details["next_action"] == (
-            "Run: cadrumo app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
+            "Run: aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
         )
 
     @pytest.mark.parametrize(
@@ -281,7 +281,7 @@ class TestAbortReasons:
         assert last.details["error_type"] == "ModeloBuilderError"
         assert last.details["error_message"] == "unresolved registry input"
         assert (
-            last.details["next_action"] == "Repair the cited draft input and rerun cadrumo app modelo work calculate."
+            last.details["next_action"] == "Repair the cited draft input and rerun aeat app modelo work calculate."
         )
 
     def test_preflight_failed(self) -> None:

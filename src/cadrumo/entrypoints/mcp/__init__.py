@@ -2,7 +2,7 @@
 
 Exposes the deterministic ``aeat`` CLI to an LLM operator as Model Context
 Protocol tools, sourcing the tool list, output schemas, and mutability
-annotations from the Layer 0 capability manifest (``cadrumo app contract``). The
+annotations from the Layer 0 capability manifest (``aeat app contract``). The
 human-in-the-loop confirmation tiers and the faithfulness check live here too.
 
 The protocol runtime (the MCP SDK) is an optional dependency gated behind the

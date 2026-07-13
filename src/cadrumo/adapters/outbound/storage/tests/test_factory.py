@@ -143,7 +143,7 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.drive_root_missing"
     assert exc.context == {"profile": "factory-drive-missing-root"}
-    assert exc.suggestion == "cadrumo config google folder set <id>"
+    assert exc.suggestion == "aeat config google folder set <id>"
 
 
 def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) -> None:
@@ -160,7 +160,7 @@ def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
     assert exc.context == {"profile": "factory-drive-missing-client"}
-    assert exc.suggestion == "cadrumo config google register --client-json <path>"
+    assert exc.suggestion == "aeat config google register --client-json <path>"
 
 
 def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) -> None:
@@ -189,7 +189,7 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_token_missing"
     assert exc.context == {"profile": "factory-drive-missing-token"}
-    assert exc.suggestion == "cadrumo config google login"
+    assert exc.suggestion == "aeat config google login"
 
 
 # ---------------------------------------------------------------------------

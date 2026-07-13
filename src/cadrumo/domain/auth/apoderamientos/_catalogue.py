@@ -132,12 +132,12 @@ def _validate_scope_token_shape(token: str) -> None:
     if "," in token:
         raise UnknownScopeError(
             f"scope token {token!r} contains a comma; pass --scope repeatedly instead",
-            suggestion="cadrumo config auth apoderado configure --scope SCOPE1 --scope SCOPE2",
+            suggestion="aeat config auth apoderado configure --scope SCOPE1 --scope SCOPE2",
         )
     if token != token.upper():
         raise UnknownScopeError(
             f"scope token {token!r} must be uppercase",
-            suggestion="cadrumo config auth apoderado configure",
+            suggestion="aeat config auth apoderado configure",
         )
 
 
@@ -160,7 +160,7 @@ def _resolve_scope_token(
     if token not in known:
         raise UnknownScopeError(
             f"scope code {token!r} is not in catalogue version {catalogue.catalogue_version!r}",
-            suggestion="cadrumo config auth apoderado configure --scope ALL",
+            suggestion="aeat config auth apoderado configure --scope ALL",
         )
     return (token,)
 

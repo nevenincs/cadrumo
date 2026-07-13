@@ -3,7 +3,7 @@
 The CLI's instructive surface is wider than ``--help`` and the how-to docs:
 error-registry ``default_suggestion`` fields, the curated operator help
 documents, ``next_action`` builder strings, the runtime write-policy, and the
-four locale catalogues all cite ``cadrumo app ...`` / ``cadrumo config ...``
+four locale catalogues all cite ``aeat app ...`` / ``aeat config ...``
 invocations that an operator is told to run next. The pull/--file standard
 rule (``cadrumo-pull-and-file-standard``) records that NONE of these strings
 were covered by a conformance gate: ``test_documented_command_conformance``
@@ -68,7 +68,7 @@ _AST_SCAN_ROOTS = (
 
 # ``cadrumo`` + a root family + a run of kebab-case tokens. A token is lowercase
 # kebab-case OR a bare modelo code (three digits, e.g. ``100``/``303``), the
-# only digit-leading command segments in the live tree (``cadrumo app live
+# only digit-leading command segments in the live tree (``aeat app live
 # borrador 100 list``). Uppercase placeholders, ``--option`` forms, and
 # ``<value>`` forms end the run, so only verb-path candidates (plus possibly
 # lowercase argument VALUES, which the resolver tolerates past a leaf) are
@@ -210,7 +210,7 @@ def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool, tup
 
     ``has_trailing_help`` records whether ``--help`` immediately follows the
     cited verb path in the source text. The citation regex stops at the first
-    ``--option`` form, so a runnable ``cadrumo config repair integrity --help``
+    ``--option`` form, so a runnable ``aeat config repair integrity --help``
     citation parses as the bare-group token run; this flag recovers the
     operator-runnable distinction the regex drops.
 
@@ -245,7 +245,7 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
     ``--help`` is ALSO a failure: a group is not executable verbatim
     (``Missing command``), so the operator is sent to a non-runnable line.
     ``<group> --help`` IS runnable and is accepted. The flag is OFF for the
-    broad production-string-literal scan, where a bare ``cadrumo config google``
+    broad production-string-literal scan, where a bare ``aeat config google``
     is overwhelmingly a prose/docstring reference to a command *family*, not a
     runnable suggestion, and group-termination is legitimate there.
 
@@ -374,7 +374,7 @@ def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
 
 
 def test_production_string_literals_cite_live_commands() -> None:
-    """Every ``cadrumo app/config`` literal in production modules stays live.
+    """Every ``aeat app/config`` literal in production modules stays live.
 
     AST extraction covers exactly the surfaces the pull/--file rule names as
     ungated: write-policy allowlists, ``next_action`` builders, envelope
@@ -420,20 +420,20 @@ def test_scanner_flags_a_dead_citation() -> None:
     resolver would be accepting everything (or seeing nothing).
     """
     dead = _dead_citations_in(
-        "Run cadrumo app modelo capture to refresh the state.",
+        "Run aeat app modelo capture to refresh the state.",
         origin="synthetic",
     )
     assert len(dead) == 1
     assert "'capture'" in dead[0]
 
     # A retired multiplex-flag era verb on a live group is also caught.
-    dead_leaf = _dead_citations_in("Use cadrumo app ledger refresh next.", origin="synthetic")
+    dead_leaf = _dead_citations_in("Use aeat app ledger refresh next.", origin="synthetic")
     assert len(dead_leaf) == 1
     assert "'refresh'" in dead_leaf[0]
 
     # The live canonical forms pass, and argument values past a leaf are tolerated.
-    assert not _dead_citations_in("Run cadrumo app ledger import --file STATEMENT.csv.", origin="synthetic")
-    assert not _dead_citations_in("Run cadrumo app modelo work calculate yourworkunit.", origin="synthetic")
+    assert not _dead_citations_in("Run aeat app ledger import --file STATEMENT.csv.", origin="synthetic")
+    assert not _dead_citations_in("Run aeat app modelo work calculate yourworkunit.", origin="synthetic")
 
 
 def test_scanner_flags_a_group_citation() -> None:
@@ -446,30 +446,30 @@ def test_scanner_flags_a_group_citation() -> None:
     ``objects``, ``registry``). A trailing ``.`` terminates the token run so
     the citation resolves exactly to the group.
     """
-    group_cited = _dead_citations_in("cadrumo config repair integrity.", origin="synthetic", require_runnable_leaf=True)
+    group_cited = _dead_citations_in("aeat config repair integrity.", origin="synthetic", require_runnable_leaf=True)
     assert len(group_cited) == 1
     assert "GROUP" in group_cited[0]
 
     # The runnable help form on the same group is accepted even when strict.
     assert not _dead_citations_in(
-        "cadrumo config repair integrity --help.", origin="synthetic", require_runnable_leaf=True
+        "aeat config repair integrity --help.", origin="synthetic", require_runnable_leaf=True
     )
 
     # A real runnable leaf under that group is accepted.
     assert not _dead_citations_in(
-        "cadrumo config repair integrity objects.", origin="synthetic", require_runnable_leaf=True
+        "aeat config repair integrity objects.", origin="synthetic", require_runnable_leaf=True
     )
 
     # Without the strict flag, a bare group citation is tolerated (prose-family
     # references in docstrings legitimately terminate on a group).
-    assert not _dead_citations_in("cadrumo config repair integrity.", origin="synthetic")
+    assert not _dead_citations_in("aeat config repair integrity.", origin="synthetic")
 
 
 def test_scanner_flags_a_dead_option_citation() -> None:
     """Anti-tautology proof for the option-validity rule.
 
     A runnable suggestion that cites an ``--option`` the resolved leaf does NOT
-    declare is flagged; the same leaf's REAL option passes. ``cadrumo app ledger
+    declare is flagged; the same leaf's REAL option passes. ``aeat app ledger
     split`` is a real leaf carrying ``--yes`` (the destructive-confirm flag) but
     NOT ``--dry-run`` (only ``remove`` / ``reset`` have a dry-run preview), so a
     suggestion steering the operator to ``... split <id> --dry-run`` sends them
@@ -477,23 +477,23 @@ def test_scanner_flags_a_dead_option_citation() -> None:
     verb-only check could never see.
     """
     dead_option = _option_validity_failures(
-        "Re-run cadrumo app ledger split TX123 --dry-run to preview.", origin="synthetic"
+        "Re-run aeat app ledger split TX123 --dry-run to preview.", origin="synthetic"
     )
     assert len(dead_option) == 1, dead_option
     assert "--dry-run" in dead_option[0]
     assert "split" in dead_option[0]
 
     # The real ``--yes`` flag on the same leaf passes.
-    assert not _option_validity_failures("Re-run cadrumo app ledger split TX123 --yes to confirm.", origin="synthetic")
+    assert not _option_validity_failures("Re-run aeat app ledger split TX123 --yes to confirm.", origin="synthetic")
 
     # A leaf that genuinely has ``--dry-run`` (``remove``) accepts it.
     assert not _option_validity_failures(
-        "Re-run cadrumo app ledger remove TX123 --dry-run to preview.", origin="synthetic"
+        "Re-run aeat app ledger remove TX123 --dry-run to preview.", origin="synthetic"
     )
 
     # Root-global options (``--format`` / ``--language``) are valid on any leaf.
-    assert not _option_validity_failures("Run cadrumo app ledger split TX123 --format json --yes.", origin="synthetic")
+    assert not _option_validity_failures("Run aeat app ledger split TX123 --format json --yes.", origin="synthetic")
 
     # Option validity is OFF for reference prose (no strict flag), so an abstract
     # mention of an option does not false-positive.
-    assert not _dead_citations_in("The cadrumo app ledger split verb has no --dry-run preview.", origin="synthetic")
+    assert not _dead_citations_in("The aeat app ledger split verb has no --dry-run preview.", origin="synthetic")

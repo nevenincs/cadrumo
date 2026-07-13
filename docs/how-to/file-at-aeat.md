@@ -15,7 +15,7 @@ You need:
   interactive wizard instead):
 
   ```bash
-  cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
   ```
 
   The profile must carry `--name` and `--surnames`, or the export refuses
@@ -23,8 +23,8 @@ You need:
   [Set up your taxpayer profile](profile-setup.md).
 - A verified saved calculation (work unit) for the modelo and period you want
   to file. Create and calculate it first with
-  `cadrumo app modelo work create --modelo 303 --year 2026 --period 1T` and
-  `cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T`. If your
+  `aeat app modelo work create --modelo 303 --year 2026 --period 1T` and
+  `aeat app modelo work calculate --modelo 303 --year 2026 --period 1T`. If your
   draft isn't verified yet, see [verification reports](verification-reports.md).
 - Your own AEAT portal credentials - a digital certificate or Cl@ve. These are
   your credentials for AEAT's website, separate from anything configured inside
@@ -43,7 +43,7 @@ If you're new to the workflow as a whole, start with the
 Ask for the verified saved calculation before exporting anything:
 
 ```bash
-cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
 ```
 
 If a verified calculation exists, the command shows it. If none exists, the
@@ -56,7 +56,7 @@ refuses an unverified draft. See
 Export the verified calculation to a file the AEAT portal accepts:
 
 ```bash
-cadrumo app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 The exported `.boe` file is a fixed-width text file in the official BOE
@@ -94,7 +94,7 @@ record against your local one.
 Only after the portal submission succeeds, record the filing in Cadrumo:
 
 ```bash
-cadrumo app modelo work file --modelo 303 --year 2026 --period 1T
+aeat app modelo work file --modelo 303 --year 2026 --period 1T
 ```
 
 This command records a local "filed" marker and nothing more - it does not and
@@ -117,7 +117,7 @@ Read the cause shown in the error message before retrying.
 Compare AEAT's receipt against the figures you recorded locally:
 
 ```bash
-cadrumo app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
+aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 ```
 
 Run reconciliation after step 5 so the comparison is against your filed
@@ -126,7 +126,7 @@ PDF it cannot read as invalid evidence. For reading verdicts and handling
 mismatches, see [reconcile a filing](reconcile.md).
 
 With AEAT authentication configured, skip the manual download and let the
-tool fetch the receipt itself: `cadrumo app modelo reconcile pull` pulls the
+tool fetch the receipt itself: `aeat app modelo reconcile pull` pulls the
 justificante from AEAT and reconciles in one step, and
 [Pull and keep your filing receipts](justificante-receipts.md) stores it as
 encrypted evidence in your profile.

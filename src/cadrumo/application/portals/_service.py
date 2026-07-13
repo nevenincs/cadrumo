@@ -34,7 +34,7 @@ class PortalNotFoundError(AeatError):
 
 
 class PortalRow(BaseModel):
-    """Operator-facing row in ``cadrumo app live portals list`` output.
+    """Operator-facing row in ``aeat app live portals list`` output.
 
     Slimmer than the underlying :class:`PortalMetadata`: we elide the
     translation-key indirection for notes and surface only the
@@ -124,7 +124,7 @@ class PortalsService:
         if metadata is None:
             raise PortalNotFoundError(
                 f"portal {portal!r} is not registered in PORTAL_REGISTRY",
-                suggestion="cadrumo app live portals list",
+                suggestion="aeat app live portals list",
                 translated_message=tr("application.portals.errors.portal_not_found"),
             )
         return _portal_to_row(metadata)

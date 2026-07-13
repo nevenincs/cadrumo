@@ -8,7 +8,7 @@ window and you are not sure which period token to use.
 Calendar commands use real dates:
 
 ```bash
-cadrumo app overview calendar --from 2026-01-01 --to 2026-12-31
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
 Both dates are inclusive and use `YYYY-MM-DD`. The calendar needs an active
@@ -21,7 +21,7 @@ and the `--allow-incomplete` option.
 Modelo work commands usually separate the filing year from the registry period:
 
 ```bash
-cadrumo app modelo work status --modelo 303 --year 2026 --period 1T
+aeat app modelo work status --modelo 303 --year 2026 --period 1T
 ```
 
 The period tokens are:
@@ -38,7 +38,7 @@ modelo such as 130 accepts only `1T` through `4T`; an annual modelo such as 390
 accepts only `0A`; Modelo 303 accepts `1T` through `4T` and `01` through `12`,
 but not `0A`. A token the modelo does not accept is refused (for example, 303
 with `0A` reports "no revision for ... period='0A'"). To see the tokens one
-modelo accepts, run `cadrumo app modelo describe 303` and read its `Períodos` line.
+modelo accepts, run `aeat app modelo describe 303` and read its `Períodos` line.
 
 Every command takes the year separately with `--year` and the period as one of
 these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
@@ -52,7 +52,7 @@ The `ledger list` and `ledger review` commands filter by period through
 clauses, using the same AEAT tokens:
 
 ```bash
-cadrumo app ledger list --filter period=1T --filter year=2026
+aeat app ledger list --filter period=1T --filter year=2026
 ```
 
 Pass the bare token to `period=` and the year to `year=`. The two clauses go

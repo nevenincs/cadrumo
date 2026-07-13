@@ -335,8 +335,8 @@ class KeyringMasterKeyProvider:
             return self._decode_stored_master_key(stored)
         raise MasterKeyMaterialMissingError(
             "OS keychain master key is not provisioned; run "
-            "`cadrumo config profile create NAME` to create and unlock a profile, "
-            "or `cadrumo config switch NAME` for an existing profile.",
+            "`aeat config profile create NAME` to create and unlock a profile, "
+            "or `aeat config switch NAME` for an existing profile.",
         )
 
     def provision_master_key(self) -> bytes:
@@ -355,8 +355,8 @@ class KeyringMasterKeyProvider:
             stored = self._read_stored_master_key(KeyringError)
             if stored is not None:
                 raise SecretAlreadyExistsError(
-                    "OS keychain master key is already provisioned; use `cadrumo config recover` "
-                    "or `cadrumo config rekey` for custody changes.",
+                    "OS keychain master key is already provisioned; use `aeat config recover` "
+                    "or `aeat config rekey` for custody changes.",
                 )
             new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
@@ -551,7 +551,7 @@ class FileFallbackMasterKeyProvider:
                 # silently re-mint (which would overwrite the
                 # half-written ``master.key`` and destroy any record
                 # encrypted under the recovered key). The operator
-                # must finish recovery with `cadrumo config recover`,
+                # must finish recovery with `aeat config recover`,
                 # or, if the substrate was never used and no records
                 # exist yet, move the torn directory aside and create a
                 # new profile.
@@ -560,15 +560,15 @@ class FileFallbackMasterKeyProvider:
                     f"file-fallback at {self._store_dir} is in a torn state — "
                     f"present={[p.name for p in present]} missing={missing}. "
                     "A previous mint or recovery crashed between writes. Run "
-                    "`cadrumo config recover --recovery-key <WORDS>` with the 24-word recovery key "
+                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key "
                     "to finish recovery, or move the torn secret-store directory "
-                    "aside and run `cadrumo config profile create NAME` "
+                    "aside and run `aeat config profile create NAME` "
                     "only if no records were ever written under the prior key.",
                 )
             else:
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is not provisioned; run "
-                    "`cadrumo config profile create NAME` to create and unlock a profile "
+                    "`aeat config profile create NAME` to create and unlock a profile "
                     "before invoking commands that decrypt or persist stored records.",
                 )
         return key
@@ -596,14 +596,14 @@ class FileFallbackMasterKeyProvider:
             if present and not force:
                 raise SecretAlreadyExistsError(
                     f"file-fallback at {self._store_dir} is already provisioned; use "
-                    "`cadrumo config recover` or `cadrumo config rekey` for custody changes.",
+                    "`aeat config recover` or `aeat config rekey` for custody changes.",
                 )
             if present and len(present) != len(artefacts):
                 missing = [p.name for p in artefacts if not p.exists()]
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state - "
                     f"present={[p.name for p in present]} missing={missing}. Run "
-                    "`cadrumo config recover --recovery-key <WORDS>` with the 24-word recovery key to "
+                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key to "
                     "finish recovery, or move the torn secret-store directory aside "
                     "only if no records were ever written under the prior key.",
                 )
@@ -643,12 +643,12 @@ class FileFallbackMasterKeyProvider:
         except (DecryptionError, EncryptionError) as exc:
             # Distinguish passphrase-mismatch from material-missing so
             # the CLI can render an actionable hint
-            # (`cadrumo config recover` for forgotten
-            # passphrase vs `cadrumo config profile create NAME` for absent
+            # (`aeat config recover` for forgotten
+            # passphrase vs `aeat config profile create NAME` for absent
             # material).
             raise _master_key_passphrase_mismatch_error(
                 "passphrase did not unlock the master key; verify the passphrase or run "
-                "`cadrumo config recover --recovery-key <WORDS>`.",
+                "`aeat config recover --recovery-key <WORDS>`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:
@@ -741,7 +741,7 @@ class FileFallbackMasterKeyProvider:
             # the OLD ``master.key`` content has already been
             # overwritten — but the recovery-key wrapping at
             # ``master.recovery.key`` is untouched, so the operator
-            # can re-run `cadrumo config recover` to complete the
+            # can re-run `aeat config recover` to complete the
             # recovery.
             atomic_write_secure_bytes(
                 self._master_key_path,
@@ -888,8 +888,8 @@ def _provider_enter(
     bucket_id = resolve_active_bucket_id() or fallback_bucket_id
     if not bucket_id:
         raise NoActiveBucketError(
-            "no active profile resolves; run `cadrumo config profile create NAME` "
-            "or `cadrumo config switch NAME` before invoking commands that "
+            "no active profile resolves; run `aeat config profile create NAME` "
+            "or `aeat config switch NAME` before invoking commands that "
             "decrypt stored records.",
         )
 
@@ -1194,7 +1194,7 @@ def get_master_key_provider(
             "any record encrypted under either key unreadable when the other backend is "
             "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
             "or set CADRUMO_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
-            "and provision a file-fallback master key with `cadrumo config profile create NAME`.",
+            "and provision a file-fallback master key with `aeat config profile create NAME`.",
         ) from exc
     except MasterKeyMaterialMissingError:
         file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()

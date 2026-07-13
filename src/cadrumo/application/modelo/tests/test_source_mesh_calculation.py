@@ -229,7 +229,7 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     sample_transaction_ids = exc_info.value.context["sample_transaction_ids"]
     assert isinstance(sample_transaction_ids, tuple)
     assert intracom_sale.transaction_id in sample_transaction_ids
-    assert exc_info.value.suggestion == "cadrumo app ledger invoice add --help"
+    assert exc_info.value.suggestion == "aeat app ledger invoice add --help"
     assert cr_repo.load().revisions == {}
 
 
