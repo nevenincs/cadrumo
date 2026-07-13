@@ -113,8 +113,6 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     # Durable generated outputs.
     "cadrumo_storage_backup_dir": "backups",
     "cadrumo_submissions_dir": "submissions",
-    "cadrumo_submission_browser_trace_dir": "browser-traces",
-    "cadrumo_status_browser_trace_dir": "browser-traces",
     "cadrumo_inbox_dir": "inbox",
     "cadrumo_inbox_pdf_dir": "inbox/pdfs",
     "cadrumo_workflow_runs_dir": "workflow-runs",
@@ -860,10 +858,6 @@ class Settings(AeatIntegrationSettings):
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where ModeloPresentado JSON audit records are persisted",
     )
-    cadrumo_submission_browser_trace_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "browser-traces",
-        description="Directory where submission-engine Playwright traces and screenshots are written",
-    )
 
     # ── Notifications inbox ─────────────────────────────────────────────────
     cadrumo_inbox_dir: Path = Field(
@@ -917,10 +911,6 @@ class Settings(AeatIntegrationSettings):
     cadrumo_status_cache_ttl_s: int = Field(
         default=900,
         description="TTL in seconds for status cache entries (default 15 min)",
-    )
-    cadrumo_status_browser_trace_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "browser-traces",
-        description="Directory where the status reader drops Playwright trace files",
     )
     aeat_status_detail_url_template: str = Field(
         default_factory=_default_status_detail_url_template,
@@ -1205,14 +1195,12 @@ class Settings(AeatIntegrationSettings):
         "cadrumo_llm_usage_dir",
         "cadrumo_llm_run_telemetry_dir",
         "cadrumo_submissions_dir",
-        "cadrumo_submission_browser_trace_dir",
         "cadrumo_inbox_dir",
         "cadrumo_inbox_pdf_dir",
         "cadrumo_workflow_runs_dir",
         "cadrumo_drafts_dir",
         "cadrumo_runs_dir",
         "cadrumo_status_cache_dir",
-        "cadrumo_status_browser_trace_dir",
         "cadrumo_justificantes_dir",
         "cadrumo_filing_history_dir",
         "cadrumo_wallet_diagnostic_dump_dir",

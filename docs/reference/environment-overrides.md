@@ -141,13 +141,11 @@ the process environment wins over the `.env` file.
 | `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. Default None — the master-key loader refuses operation on None or empty value to preserve fail-closed behaviour. Operator-facing env var is CADRUMO_SECRET_PASSPHRASE. |
 | `CADRUMO_SECRET_STORE_BACKEND` | SecretStoreBackend | `auto` | Master-key backend for the secret store. auto = OS keychain when available, encrypted file fallback otherwise. keyring = OS keychain only (refuses to fall back). file = encrypted file only (required for CI / headless). unsecured = testing-only mode with a published deterministic key; requires cadrumo_allow_unencrypted=true and refuses real NIFs. |
 | `CADRUMO_SECRET_STORE_DIR` | Path | (derived) | Directory for the encrypted secret-store master-key file and ciphertext records |
-| `CADRUMO_STATUS_BROWSER_TRACE_DIR` | Path | (derived) | Directory where the status reader drops Playwright trace files |
 | `CADRUMO_STATUS_CACHE_DIR` | Path | (derived) | Directory for the short-lived AEAT status-page cache |
 | `CADRUMO_STATUS_CACHE_TTL_S` | int | `900` | TTL in seconds for status cache entries (default 15 min) |
 | `CADRUMO_STORAGE_BACKUP_DIR` | Path | (derived) | Directory where the storage layer writes database backups |
 | `CADRUMO_STORAGE_PROVIDER_KIND` | str | `local_filesystem` | Backend for `cadrumo.adapters.outbound.storage`. Accepted values: local_filesystem (default), google_drive, in_memory. google_drive additionally requires cadrumo_google_drive_root_folder_id and a per-profile registered OAuth client + token via `aeat config google`. |
 | `CADRUMO_STRICT_SECURITY` | bool | `false` | Raise instead of warn when AEAT credential artifact permission hardening fails |
-| `CADRUMO_SUBMISSION_BROWSER_TRACE_DIR` | Path | (derived) | Directory where submission-engine Playwright traces and screenshots are written |
 | `CADRUMO_SUBMISSIONS_DIR` | Path | (derived) | Directory where ModeloPresentado JSON audit records are persisted |
 | `CADRUMO_TELEMETRY_ENDPOINT` | str | unset | Remote telemetry collector URL, consumed by HttpTelemetrySink when a call site opts into real transmission. Unset means no dial target. |
 | `CADRUMO_TELEMETRY_GESTOR_MODE` | bool | `false` | Gestor/professional deployment flag. When True, remote telemetry emission is categorically refused regardless of cadrumo_telemetry_opt_in, cadrumo_telemetry_tier, or per-invocation consent. |
