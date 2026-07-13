@@ -129,3 +129,27 @@ def test_prune_enforces_max_records_cap_evicting_oldest_first(tmp_path: Path) ->
     assert cache.read(newest, _PROVIDER, _MODEL) is not None
     assert cache.read(middle, _PROVIDER, _MODEL) is None
     assert cache.read(oldest, _PROVIDER, _MODEL) is None
+
+
+def test_client_construction_sweeps_the_cache_store(tmp_path: Path) -> None:
+    """Building an LLMClient fires the retention sweep over its response cache.
+
+    A stale entry (written via the real save path with a past created_at) is
+    pruned by the once-per-client retention sweep when an ``LLMClient`` is
+    constructed around the cache, while a fresh entry survives - proving
+    retention fires in production rather than depending on a manual prune()
+    call.
+    """
+    from .._client import LLMClient
+
+    anchor = datetime.now(UTC)
+    cache = LLMCache(root_dir=tmp_path / "llm-cache")
+    fresh = LLMRequest(prompt="fresh", temperature=0.0, language="es")
+    stale = LLMRequest(prompt="stale", temperature=0.0, language="es")
+    _write_at(cache, fresh, "fresh", anchor - timedelta(days=1))
+    _write_at(cache, stale, "stale", anchor - timedelta(days=45))
+
+    LLMClient(cache=cache)
+
+    assert cache.read(fresh, _PROVIDER, _MODEL) is not None
+    assert cache.read(stale, _PROVIDER, _MODEL) is None

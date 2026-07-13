@@ -153,6 +153,14 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
         trace.outcome.value,
         target,
     )
+    # Enforce the run-trace retention lifecycle here: a trace save happens once
+    # at run finalisation, so pruning on this path bounds the runs directory
+    # without a separate scheduler. Best-effort - a prune failure must never
+    # fail the save that just succeeded.
+    try:
+        prune_run_traces(settings=settings)
+    except OSError:
+        _logger.debug("save_trace: post-save run-trace retention prune failed", exc_info=True)
     return target
 
 
