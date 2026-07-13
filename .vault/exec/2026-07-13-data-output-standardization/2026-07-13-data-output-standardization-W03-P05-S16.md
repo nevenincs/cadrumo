@@ -58,6 +58,41 @@ Convention alignment only; no production code changed. Targeted suite run
 `pytest --collect-only -q` over `application/modelo` and `entrypoints/cli`
 collects cleanly (1249 collected, exit 0). Committed at `456a80468a`.
 
+### Follow-up: period-combined-string gate cross-stream signal
+
+A parallel W01.P01 executor flagged `test_period_combined_string_gate.py`
+red at HEAD, citing docs sites plus one of this Step's own test edits.
+Re-ran `pytest src/cadrumo/core -q -k period_combined_string` and confirmed:
+only `test_app_quickfile.py:360` (this Step's `modelo-303-2026-1T.boe`
+literal) was newly attributable to S16 -- the gate's regex flags any
+literal `<year>-<quarter>T` substring regardless of context, and the
+canonical export-filename schema mandated by ADR ruling R4 always produces
+that substring for quarterly periods. The other seven flagged sites
+(`filing-calendar.md`, `irpf-lifecycle.md`, `iva-lifecycle.md`, the
+`modelo-130-first-quarter.json` sequence fixture) pre-dated this Step
+entirely (unrelated commit history) but are the same abbreviated `m<id>-`
+defect class or the same false-positive-on-legitimate-schema shape, so
+fixed them in the same follow-up commit:
+- Renamed the abbreviated `m130-`/`m303-`/`m100-`/`m390-` export filename
+  examples in `irpf-lifecycle.md` and `iva-lifecycle.md` (5 sites) to the
+  canonical `modelo-<id>-<year>-<period>` schema.
+- Extended the gate's allowlist: folded `filing-calendar.md` into the
+  existing `filing-periods|troubleshooting` rule (it explicitly documents
+  the killed combined form, same as those two docs); extended the
+  `quickstart|modelo-390` export-filename-example rule to cover
+  `irpf-lifecycle.md`/`iva-lifecycle.md`; added a new rule for the
+  `modelo-130-first-quarter.json` sequence fixture (its `"name"` field is
+  the `WorkUnit.name` display label, `<modelo>-<year>-<period>` with no
+  `modelo-` stem -- a distinct, already-established convention, not an
+  export filename); added a new rule for `test_app_quickfile.py`'s
+  `tmp_path / ...` export-path literal.
+- Re-ran the gate: green. Re-ran `ruff check` on the gate file: clean.
+  Re-ran `pytest --collect-only -q` on `src/cadrumo/core`: 699 collected,
+  clean. Re-ran the documented-command-conformance suite
+  (`-m integration`) since two how-to docs changed: 66 passed.
+
+Committed at `376bce60d4`.
+
 ## Notes
 
 No incidents. The scope decision to exclude the ~60-site `modelo-<id>.txt`
@@ -65,3 +100,11 @@ convention in `test_export.py` and the local-observation-spreadsheet import
 filenames is a deliberate boundary, not an oversight -- both are separate,
 pre-existing conventions outside the plan Step's named target files and the
 `m<id>-`/year-period-omitting defect class this Step addresses.
+
+The period-combined-string gate's regex is context-blind: it cannot
+distinguish a killed CLI input grammar occurrence from a legitimate
+filename or display-name field that happens to contain the same digit
+substring. Every future site using the canonical export-filename schema
+for a quarterly period will need an allowlist entry unless the gate is
+later made context-aware; flagging this as a standing friction point for
+whoever next touches that gate, not a defect in this Step's fix.
