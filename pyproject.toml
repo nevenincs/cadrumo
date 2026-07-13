@@ -181,8 +181,8 @@ search = [
 # source verification is byte-identical to a full checkout. Reviewed data ships
 # as an artifact — never fetched at install or run time (product-packaging ADR).
 corpus-sources = [
-  "aeat-data-manuals==0.1.1",
-  "aeat-data-official==0.1.1",
+  "aeat-data-manuals==0.2.0",
+  "aeat-data-official==0.2.0",
 ]
 # Convenience aggregate: every optional integration at once. `corpus-sources`
 # is deliberately excluded until the two data companions are published on PyPI

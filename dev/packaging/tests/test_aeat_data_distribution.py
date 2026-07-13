@@ -263,6 +263,26 @@ def test_companion_version_matches_root_distribution() -> None:
         )
 
 
+def test_corpus_sources_extra_pins_the_root_version() -> None:
+    """The root `corpus-sources` extra pins each companion at exactly the root version.
+
+    The companions are exact-version-locked to the runtime wheel, so a root
+    version bump that updates the companion pyprojects but forgets these
+    `==` pins would leave `aeat-cli[corpus-sources]` resolving a stale (or
+    unpublished) companion release. This closes the drift gap that let the
+    root reach 0.2.0 while the pins and companions sat at 0.1.1.
+    """
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        root_project = tomllib.load(handle)["project"]
+    root_version = str(root_project["version"])
+    pins = root_project["optional-dependencies"]["corpus-sources"]
+    expected = {f"{companion.dist_name}=={root_version}" for companion in _COMPANIONS}
+    assert set(pins) == expected, (
+        f"corpus-sources must pin exactly {sorted(expected)!r} (the root version), got {sorted(pins)!r}; "
+        "bump the pins together with the root and companion versions"
+    )
+
+
 def test_companion_wheel_is_under_the_pypi_file_cap(built_wheels: dict[str, _BuiltWheel]) -> None:
     """Each companion wheel stays under PyPI's 100 MB per-file cap — the reason for the split."""
     for companion in _COMPANIONS:
