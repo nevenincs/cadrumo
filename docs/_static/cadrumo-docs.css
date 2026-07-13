@@ -891,6 +891,21 @@ body .docutils.literal span.pre {
   overflow: hidden;
 }
 
+/* The generated pygments dark stylesheet ships its own
+ * `body[data-theme="dark"] .highlight { background: #0d1117 }` rule, which
+ * out-specifies the warm surface above and turns dark-mode code blocks a
+ * cold navy. Re-assert the brand surface at matching specificity for the
+ * explicit dark state and the auto state's dark branch. */
+body[data-theme="dark"] .content .highlight {
+  background: var(--color-inline-code-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  body[data-theme="auto"] .content .highlight {
+    background: var(--color-inline-code-background);
+  }
+}
+
 .content .highlight pre {
   background: transparent;
   color: var(--color-code-foreground);
