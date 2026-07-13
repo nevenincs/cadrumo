@@ -22,7 +22,7 @@ bootstrap:
 # opted-in capability has a missing dependency. This is the product-side
 # "is my workstation ready" check (the dev-toolchain probe is `just env-doctor`).
 doctor:
-    uv run --no-sync cadrumo config check
+    uv run --no-sync aeat config check
 
 # Provision the optional external dependencies a fresh workstation needs for the
 # capability surfaces: the Playwright browser binary now; Ollama + the vision model
