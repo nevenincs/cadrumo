@@ -97,13 +97,13 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
 
 
 def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
-    """The deployment override can serialize sitemap generation safely."""
+    """The deployment override pins serial or parallel Sphinx workers."""
     from dev.docs.build import docs_build_jobs
 
     assert docs_build_jobs({}) == "auto"
-    assert docs_build_jobs({"AEAT_DOCS_JOBS": "1"}) == "1"
+    assert docs_build_jobs({"CADRUMO_DOCS_JOBS": "1"}) == "1"
     with pytest.raises(SystemExit, match="positive integer"):
-        docs_build_jobs({"AEAT_DOCS_JOBS": "0"})
+        docs_build_jobs({"CADRUMO_DOCS_JOBS": "0"})
 
 
 def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
@@ -111,16 +111,16 @@ def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
     from dev.docs.build import pagefind_index_mode
 
     assert pagefind_index_mode({}) == "full"
-    assert pagefind_index_mode({"AEAT_DOCS_PAGEFIND_MODE": "full"}) == "full"
-    assert pagefind_index_mode({"AEAT_DOCS_PAGEFIND_MODE": "pages"}) == "pages"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) == "full"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) == "pages"
 
 
 def test_pagefind_index_mode_rejects_unknown_values() -> None:
     """The deployment cannot silently select an unsupported search contract."""
     from dev.docs.build import pagefind_index_mode
 
-    with pytest.raises(SystemExit, match="AEAT_DOCS_PAGEFIND_MODE"):
-        pagefind_index_mode({"AEAT_DOCS_PAGEFIND_MODE": "records-only"})
+    with pytest.raises(SystemExit, match="CADRUMO_DOCS_PAGEFIND_MODE"):
+        pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "records-only"})
 
 
 def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> None:
@@ -431,7 +431,9 @@ def test_sequence_widget_assets_make_no_external_requests() -> None:
         assert "http://" not in text, f"{asset.name} carries an http:// URL"
         assert "https://" not in text, f"{asset.name} carries an https:// URL"
         match = _EXTERNAL_URL_RE.search(text)
-        assert match is None, f"{asset.name} carries a non-relative URL near: {text[match.start() : match.start() + 40]!r}"
+        assert match is None, (
+            f"{asset.name} carries a non-relative URL near: {text[match.start() : match.start() + 40]!r}"
+        )
 
 
 def test_sequence_widget_is_wired_and_implemented() -> None:

@@ -77,8 +77,6 @@ extensions = [
 # additional term lines on the same entry, so every declared surface resolves.
 hoverxref_roles = ["term"]
 hoverxref_role_types = {"term": "tooltip"}
-if _DOCS_BASE_URL:
-    extensions.append("sphinx_sitemap")
 
 # Source file types — both reStructuredText (autodoc stubs, index) and MyST
 # Markdown (narrative pages, generated API surface) are first-class.
@@ -255,7 +253,6 @@ html_theme = "furo"
 html_title = "Cadrumo - local Spanish tax preparation"
 html_short_title = "Cadrumo"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
-sitemap_url_scheme = "{link}"
 html_meta = {
     "description": (
         "Local tax engine with CLI, MCP, rules, skills, and scoped agents. "
