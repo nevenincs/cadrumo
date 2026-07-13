@@ -50,10 +50,18 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add `test_hook_units_are_parity_with_committed_sidecars`, parametrised per
+  source kind, asserting hook unit texts equal committed sidecar unit texts
+  for the smallest representative of each kind.
+- Run the real upstream runner end to end per kind.
 
 ## Outcome
 
+7/7 hook gates green (`485ac85614`). Live `preprocess run-one` evidence:
+HTML representative preprocessed with 2 sections, PDF (calendario
+contribuyente 2025) with 82, Diseños workbook (modelo 036) with 13.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The atomic cutover (S07) stays open: resolver retarget, sidecar deletion,
+docstring correction, and the equal-or-superset sweep proof land together.

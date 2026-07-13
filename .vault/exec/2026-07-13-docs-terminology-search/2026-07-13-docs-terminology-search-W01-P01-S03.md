@@ -52,9 +52,15 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Read `src/cadrumo/_data/terminology/ratification/synonym-candidates.json`.
+- Run `python -m dev.docs.terminology.synonyms validate`.
 
 ## Outcome
+
+Queue is healthy: three candidates, each with an explicit status and
+review reason (e.g. `prorateo` ratified as a hidden search form for
+`prorrata`); validate reports clean. No unratified backlog; no action this
+wave.
 
 ## Notes
 
