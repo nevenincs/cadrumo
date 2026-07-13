@@ -786,7 +786,7 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
         cwd=work_dir,
         env=_isolated_product_env(work_dir / "version-state"),
     )
-    if "cadrumo " not in version.stdout:
+    if "CADRUMO " not in version.stdout:
         raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
     default_root = work_dir / "default-check-state"
