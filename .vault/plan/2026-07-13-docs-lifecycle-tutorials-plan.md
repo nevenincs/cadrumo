@@ -127,7 +127,7 @@ Fill the operator-named per-modelo gaps (130, 100, 349) on the modelo-303 templa
 
 Author the one sanctioned deep-mechanism explanation page covering the Renta filing and its bindings
 
-- [ ] `P03.S11` - Author explanation/renta-and-bindings.md: the labelled deep-dive on how the Renta filing builds from the ledger, the Modelo 130 fold-in, profile facts, registry bindings, cross-period carry, and visible-gaps-not-guessed-zeros; `ground every command against the live bindings/dependencies/observations surface; `docs/explanation/renta-and-bindings.md`.
+- [x] `P03.S11` - Author explanation/renta-and-bindings.md: the labelled deep-dive on how the Renta filing builds from the ledger, the Modelo 130 fold-in, profile facts, registry bindings, cross-period carry, and visible-gaps-not-guessed-zeros; `ground every command against the live bindings/dependencies/observations surface; `docs/explanation/renta-and-bindings.md`.
 
 ### Phase `P04` - Author the two lifecycle tutorials
 
