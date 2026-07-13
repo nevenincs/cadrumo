@@ -15,12 +15,13 @@ Both walk the live materialised CLI tree via a subprocess, so they are honest
 about the actual command surface rather than any curated contract tuple.
 Each test carries the active ``unit`` and ``hex_entrypoint`` markers.
 
-Language pinning: a fresh subprocess with ``AEAT_OUTPUT_LANGUAGE=en`` ensures
+Language pinning: a fresh subprocess with ``CADRUMO_OUTPUT_LANGUAGE=en`` ensures
 ``tr()`` help strings resolve to English before any CLI module is imported.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -31,12 +32,23 @@ _DOCS_CLI_DIR = Path(__file__).parent.parent.parent.parent.parent / "docs" / "cl
 
 #: Group-callback emit sites that register a schema but are not CLI leaf
 #: commands — they appear as group callbacks, not reachable leaves.
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app", "ledger.participation"})
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
+    {"root.status", "root.app", "ledger.participation", "contract", "agent", "quickfile"}
+)
 
 #: Generated pages that carry navigation or root-level behaviour rather than
 #: per-command sections.  Only the family pages emit ``**Registry key:**``
 #: lines, so these are excluded from the per-command parsing helpers.
 _NON_FAMILY_PAGES: frozenset[str] = frozenset({"cli/index.rst", "cli/automation.rst", "cli/schemas.rst"})
+
+
+@pytest.fixture(autouse=True)
+def _isolated_cadrumo_storage_root(tmp_path: Path) -> Iterator[None]:
+    """Give direct Cadrumo imports an isolated, per-test local-storage root."""
+    from cadrumo.tests.env_scope import isolated_aeat_env
+
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "cadrumo-state")):
+        yield
 
 
 def _project_root() -> Path:
@@ -49,7 +61,7 @@ def _rendered_reference() -> dict[str, str]:
 
     The CLI reference is generated at build time, not committed, so the
     conformance gates render it in a fresh subprocess (which pins
-    ``AEAT_OUTPUT_LANGUAGE=en`` before any CLI import) to a temporary directory
+    ``CADRUMO_OUTPUT_LANGUAGE=en`` before any CLI import) to a temporary directory
     and inspect the returned content, rather than reading committed pages.
 
     Returns:
@@ -143,12 +155,11 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     registered schema key is an orphan — pointing to a command that no longer
     exists in the live tree.
 
-    The two group-callback emit sites (``root.status``, ``root.app``) are
-    explicitly exempted because they register under a group callback rather than
-    a leaf command.
+    Group-callback emit sites are explicitly exempted because they register
+    under a group callback rather than a leaf command.
     """
-    from aeat.core.json_contract import SCHEMA_REGISTRY
-    from aeat.entrypoints.cli import (
+    from cadrumo.core.json_contract import SCHEMA_REGISTRY
+    from cadrumo.entrypoints.cli import (
         _app_live_payloads,
         _bienes_inversion_payloads,
         _config_payloads,
@@ -170,10 +181,7 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
         _review_payloads,
         _root_payloads,
     )
-    from aeat.entrypoints.cli._config import (
-        _google_payloads,
-        _profile_censo_payloads,
-    )
+    from cadrumo.entrypoints.cli._config import _google_payloads
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
@@ -200,8 +208,8 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     generated reference docs are not consulted here so the gate is independent
     of the drift check.
     """
-    from aeat.core.json_contract import SCHEMA_REGISTRY
-    from aeat.entrypoints.cli import (
+    from cadrumo.core.json_contract import SCHEMA_REGISTRY
+    from cadrumo.entrypoints.cli import (
         _app_live_payloads,
         _bienes_inversion_payloads,
         _config_payloads,
@@ -223,10 +231,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
         _review_payloads,
         _root_payloads,
     )
-    from aeat.entrypoints.cli._config import (
-        _google_payloads,
-        _profile_censo_payloads,
-    )
+    from cadrumo.entrypoints.cli._config import _google_payloads
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
@@ -248,8 +253,8 @@ def test_documented_schema_classes_match_registry() -> None:
     class name matches the actual registered schema class — catching renames
     or migrations that updated the registry without regenerating the reference.
     """
-    from aeat.core.json_contract import SCHEMA_REGISTRY
-    from aeat.entrypoints.cli import (
+    from cadrumo.core.json_contract import SCHEMA_REGISTRY
+    from cadrumo.entrypoints.cli import (
         _app_live_payloads,
         _bienes_inversion_payloads,
         _config_payloads,
@@ -271,10 +276,7 @@ def test_documented_schema_classes_match_registry() -> None:
         _review_payloads,
         _root_payloads,
     )
-    from aeat.entrypoints.cli._config import (
-        _google_payloads,
-        _profile_censo_payloads,
-    )
+    from cadrumo.entrypoints.cli._config import _google_payloads
 
     # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
     documented: dict[str, str] = {}

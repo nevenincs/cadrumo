@@ -1,7 +1,7 @@
 """Real-behaviour conformance for the concept-card search-record emitter (ADR D4).
 
 The emitter loads the REAL bundled Terminology Handbook (the committed
-authoring tree under ``src/aeat/_data/terminology/concepts/``, run through
+authoring tree under ``src/cadrumo/_data/terminology/concepts/``, run through
 the loader's full ADR-D8 gate inventory) and projects one
 :class:`~dev.docs.terminology._concept_cards.ConceptCardRecord` per concept.
 These gates assert one card per concept, that an approved concept carries its
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.terminology._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 from ...terminology_handbook import (

@@ -2,11 +2,19 @@
 orphan: true
 ---
 
-# Cowork install proof — aeat plugin
+# Cowork install proof — historical plugin identifier
 
 Verification record for the claude-ecosystem-packaging campaign
 (plan step W05.P12.S45). Status: COMPLETE — runtime-level delivery proven
 AND the step's defining question answered by live measurement (below).
+
+**Historical naming note.** This record preserves evidence from before the
+Cadrumo product rename. It is not current installation guidance. Current
+release material names the plugin `cadrumo` and its Model Context Protocol
+(MCP) server `cadrumo-mcp`. The human-facing `aeat` command-line interface
+(CLI) is unchanged. This record does not establish current public marketplace or
+package availability. Legacy plugin and marketplace identifiers below are quoted
+evidence only.
 
 ## What was proven (2026-07-03)
 
@@ -28,8 +36,8 @@ official support material asserting cloud execution for Cowork connectors
 
 - The publish blocker was removed for local delivery by pointing the
   installed plugin's `.mcp.json` at the locally built slim wheel
-  (`uvx --from "cadrumo[agent] @ file:///…/aeat-0.1.0-py3-none-any.whl"
-  aeat-mcp` — the same command shape the published flow uses; the PyPI form
+  (`uvx --from "cadrumo[agent] @ file:///…/cadrumo-0.1.0-py3-none-any.whl"
+  cadrumo-mcp` — the same command shape the published flow uses; the PyPI form
   returns after the first publish).
 - A live headless session of the Desktop app's OWN embedded runtime
   (`%APPDATA%\Claude\claude-code\2.1.187\claude.exe -p …`) loaded the

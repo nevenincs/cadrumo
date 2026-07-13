@@ -26,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 
 from ._enums import ConceptDomain
 
@@ -121,7 +121,7 @@ def _kebab(value: str) -> str:
 
 
 def _walk_modelos() -> Iterator[EnrolmentCandidate]:
-    from aeat.core import Modelo
+    from cadrumo.core import Modelo
 
     for modelo in sorted(Modelo, key=lambda member: member.value):
         yield EnrolmentCandidate(
@@ -132,7 +132,7 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_iva_categories() -> Iterator[EnrolmentCandidate]:
-    from aeat.domain.iva import IvaCategory
+    from cadrumo.domain.iva import IvaCategory
 
     for category in sorted(IvaCategory, key=lambda member: member.value):
         yield EnrolmentCandidate(
@@ -143,7 +143,7 @@ def _walk_iva_categories() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_periods() -> Iterator[EnrolmentCandidate]:
-    from aeat.core import StandardPeriodCode
+    from cadrumo.core import StandardPeriodCode
 
     for period in sorted(StandardPeriodCode, key=lambda member: member.value):
         yield EnrolmentCandidate(
@@ -154,7 +154,7 @@ def _walk_periods() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_topics() -> Iterator[EnrolmentCandidate]:
-    from aeat.core.topics import load_topic_catalogue
+    from cadrumo.core.topics import load_topic_catalogue
 
     catalogue = load_topic_catalogue()
     for topic in sorted(catalogue.topics, key=lambda item: item.slug):
@@ -194,7 +194,7 @@ def _cli_leaf_command_paths() -> tuple[tuple[str, ...], ...]:
     import click
     from typer.main import get_command
 
-    from aeat.entrypoints.cli import app
+    from cadrumo.entrypoints.cli import app
 
     root = get_command(app)
     leaves: list[tuple[str, ...]] = []

@@ -13,8 +13,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from aeat.core.external_constants import UTF_8_ENCODING
-from aeat.core.resources import bundled_path
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.resources import bundled_path
 
 from ._curation import AuditReport, audit_handbook
 from ._errors import TerminologyLoadError

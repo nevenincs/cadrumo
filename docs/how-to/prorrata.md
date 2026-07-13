@@ -6,11 +6,11 @@ that do not (exempt operations without the right to deduct). Spanish IVA calls
 this *prorrata*. Record the taxpayer's prorrata choice once and the tool applies
 it to Modelo 303 and Modelo 390 automatically.
 
-`aeat` does not submit anything to AEAT. The prorrata register is local,
+Cadrumo does not submit anything to AEAT. The prorrata register is local,
 profile-scoped taxpayer state, not an AEAT filing surface.
 
 The tool needs a master-key passphrase. It prompts for it interactively, or
-reads it from `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+reads it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 ## Which prorrata applies
 

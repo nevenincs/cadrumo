@@ -22,7 +22,7 @@ bootstrap:
 # opted-in capability has a missing dependency. This is the product-side
 # "is my workstation ready" check (the dev-toolchain probe is `just env-doctor`).
 doctor:
-    uv run --no-sync aeat config check
+    uv run --no-sync cadrumo config check
 
 # Provision the optional external dependencies a fresh workstation needs for the
 # capability surfaces: the Playwright browser binary now; Ollama + the vision model
@@ -111,7 +111,7 @@ env-setup:
 
 # Verify the local venv and workstation provide the full audit toolchain and RAG status.
 env-doctor: env-playwright
-    uv run --no-sync python -c "import aeat; print(aeat.__file__)"
+    uv run --no-sync python -c "import cadrumo; print(cadrumo.__file__)"
     uv run --no-sync ruff --version
     uv run --no-sync ty --version
     uv run --no-sync pyright --version
@@ -171,7 +171,7 @@ check-relative-imports:
 
 # Verify dependency declarations for drift or unused packages. Silent on success.
 check-dependencies:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/aeat --known-first-party aeat --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo --known-first-party cadrumo --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
@@ -202,7 +202,7 @@ packaging-smoke-pip-core: packaging-smoke-source
 packaging-smoke-sdist-core: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_sdist_core
 
-# Build the wheel, install aeat[all] with plain pip in a stdlib venv, and
+# Build the wheel, install cadrumo[all] with plain pip in a stdlib venv, and
 # verify every capability-gated optional Python package imports.
 packaging-smoke-extras: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_extras
@@ -235,7 +235,7 @@ packaging-smoke-linux: packaging-smoke-dependencies packaging-smoke-preflight-te
 packaging-smoke-docker-core: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_docker
 
-# Build the wheel, install aeat[browser] in python:3.13-slim, provision
+# Build the wheel, install cadrumo[browser] in python:3.13-slim, provision
 # Chromium with Linux system dependencies, and run browser health.
 packaging-smoke-docker-browser: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_docker --browser
@@ -250,26 +250,26 @@ packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests pa
 
 # Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile).
 devcontainer-build:
-    docker build -t aeat-devcontainer -f Dockerfile .
+    docker build -t cadrumo-devcontainer -f Dockerfile .
 
 # Verify the dev image installs cleanly and its pre-baked toolchain works:
 # the editable install imports, the unit suite collects, and Playwright
 # Chromium launches headless with no further provisioning.
 devcontainer-test: devcontainer-build
-    docker run --rm aeat-devcontainer bash -lc "python -c 'import aeat; print(aeat.__file__)' && python -m pytest --collect-only -q -m unit && python -m playwright install --dry-run chromium"
+    docker run --rm cadrumo-devcontainer bash -lc "python -c 'import cadrumo; print(cadrumo.__file__)' && python -m pytest --collect-only -q -m unit && python -m playwright install --dry-run chromium"
 
 # Verify codebase security posture using semgrep scans.
 [unix]
 check-security:
     #!/usr/bin/env bash
     set -euo pipefail
-    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/aeat
+    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/cadrumo
 
 [windows]
 check-security:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/aeat
+    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/cadrumo
 
 # Check if the RAG service daemon is running.
 check-rag:
@@ -311,19 +311,19 @@ fix-rag:
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
-pytest_workers := env_var_or_default("AEAT_PYTEST_WORKERS", "auto")
+pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rs src/aeat/tests/test_test_inventory.py src/aeat/tests/test_marker_integrity.py src/aeat/tests/test_relative_imports_only.py src/aeat/tests/test_no_skip_xfail.py src/aeat/tests/test_mock_inventory.py src/aeat/tests/test_monkeypatch_inventory.py src/aeat/tests/test_no_broad_exception_raises.py src/aeat/tests/test_no_bare_except.py src/aeat/tests/test_no_tautology.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rs src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
-    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run --no-sync pytest -q -rs -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -344,22 +344,22 @@ test-live:
 
 # Run the produce, verify, and export end-to-end smoke tests.
 test-smoke:
-    uv run --no-sync pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
+    uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py -v
 
 # Run the LibreOffice workbook parity tests.
 test-workbook-parity:
-    uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
+    uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
 
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [unix]
 test-coverage:
-    @uv run --no-sync pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    @uv run --no-sync pytest -q --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
 
 [windows]
 test-coverage:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uv run --no-sync pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    uv run --no-sync pytest -q --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # ── Advisory audits ──────────────────────────────────────────────────────────
@@ -374,14 +374,14 @@ audit-complexity:
 
 # Scan for dead code. The whitelist clears individually-justified
 # false positives (contract-fixed signature params); see its docstring.
-# src/aeat is named explicitly because a positional whitelist path
+# src/cadrumo is named explicitly because a positional whitelist path
 # overrides (not merges with) the config `paths`.
 audit-dead-code:
-    @uv run --no-sync vulture --config pyproject.toml src/aeat dev/vulture_whitelist.py
+    @uv run --no-sync vulture --config pyproject.toml src/cadrumo dev/vulture_whitelist.py
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 audit-duplication:
-    @npx --yes jscpd@4.2.0 src/aeat --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python -m dev.audit.duplication
+    @npx --yes jscpd@4.2.0 src/cadrumo --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python -m dev.audit.duplication
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:
@@ -420,7 +420,7 @@ docs:
 docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
-# Serve documentation with live reload on docs/ and src/aeat/ edits. Binds every
+# Serve documentation with live reload on docs/ and src/cadrumo/ edits. Binds every
 # interface on the docs' canonical port 8788, claimed strictly: attaches to a
 # healthy running server, evicts an invalid squatter, and errors rather than
 # drifting to another port. The first serve builds before opening the browser.
@@ -441,9 +441,9 @@ docs-changed-rag BASE="HEAD":
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 docs-check:
-    @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
+    @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
     @uv run --no-sync doc8 docs
-    @uv run --no-sync interrogate -c pyproject.toml src/aeat
+    @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
 # Create or update the private Cadrumo docs stack.
 docs-stack-deploy:
@@ -561,7 +561,7 @@ release:
     echo "▶ release-please release-pr --dry-run --debug (output → $LOG)"
     npx --yes release-please@16 release-pr \
         --token "$TOKEN" \
-        --repo-url nevenincs/aeat \
+        --repo-url nevenincs/cadrumo \
         --target-branch main \
         --config-file release-please-config.json \
         --manifest-file .release-please-manifest.json \
@@ -592,7 +592,7 @@ release:
     Write-Host "▶ release-please release-pr --dry-run --debug (output → $log)"
     & npx --yes release-please@16 release-pr `
         --token $token `
-        --repo-url nevenincs/aeat `
+        --repo-url nevenincs/cadrumo `
         --target-branch main `
         --config-file release-please-config.json `
         --manifest-file .release-please-manifest.json `
@@ -627,14 +627,14 @@ release-apply:
     echo "Then, in this order:"
     echo "  1. Update .release-please-manifest.json to the new version."
     echo "  2. Update pyproject.toml [project].version to the new version."
-    echo "  3. Update src/aeat/__init__.py __version__ to the new version."
+    echo "  3. Update src/cadrumo/__init__.py __version__ to the new version."
     echo "  4. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
     echo "  5. Stage the four files:"
-    echo "       git add .release-please-manifest.json pyproject.toml src/aeat/__init__.py CHANGELOG.md"
+    echo "       git add .release-please-manifest.json pyproject.toml src/cadrumo/__init__.py CHANGELOG.md"
     echo "  6. Commit:"
     echo '       git commit -m "chore(release): vX.Y.Z"'
     echo "  7. Tag:"
-    echo '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
+    echo '       git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"'
     echo "When ready (human decision only), push with:"
     echo "  git push origin main --tags"
 
@@ -665,14 +665,14 @@ release-apply:
     Write-Host "Then, in this order:"
     Write-Host "  1. Update .release-please-manifest.json to the new version."
     Write-Host "  2. Update pyproject.toml [project].version to the new version."
-    Write-Host "  3. Update src/aeat/__init__.py __version__ to the new version."
+    Write-Host "  3. Update src/cadrumo/__init__.py __version__ to the new version."
     Write-Host "  4. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
     Write-Host "  5. Stage the four files:"
-    Write-Host "       git add .release-please-manifest.json pyproject.toml src/aeat/__init__.py CHANGELOG.md"
+    Write-Host "       git add .release-please-manifest.json pyproject.toml src/cadrumo/__init__.py CHANGELOG.md"
     Write-Host "  6. Commit:"
     Write-Host '       git commit -m "chore(release): vX.Y.Z"'
     Write-Host "  7. Tag:"
-    Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
+    Write-Host '       git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
 
@@ -707,9 +707,9 @@ publish confirm="":
     fi
     rm -rf var/release/dist
     uv build --out-dir var/release/dist
-    echo "▶ uv publish (aeat v$VERSION)"
+    echo "▶ uv publish (cadrumo v$VERSION)"
     uv publish var/release/dist/*
-    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/cadrumo/$VERSION/"
+    echo "✔ published Cadrumo v$VERSION — verify at https://pypi.org/project/cadrumo/$VERSION/"
 
 [windows]
 publish confirm="":
@@ -741,14 +741,14 @@ publish confirm="":
     if (Test-Path var/release/dist) { Remove-Item -Recurse -Force var/release/dist }
     & uv build --out-dir var/release/dist
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ uv publish (aeat v$version)"
+    Write-Host "▶ uv publish (cadrumo v$version)"
     & uv publish (Get-ChildItem var/release/dist/*)
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/cadrumo/$version/"
+    Write-Host "✔ published Cadrumo v$version - verify at https://pypi.org/project/cadrumo/$version/"
 
 # Publish BOTH cadrumo-data-* corpus companions to PyPI in one gated run (same
 # gates as publish). Both are sub-cap and need no per-file size grant
-# (RELEASING.md); they are version-locked to aeat, so bump all three together.
+# (RELEASING.md); they are version-locked to cadrumo, so bump all three together.
 [unix]
 publish-data confirm="":
     #!/usr/bin/env bash
@@ -770,8 +770,8 @@ publish-data confirm="":
         exit 1
     fi
     rm -rf var/release/dist-data
-    uv build --project packaging/aeat_data_manuals --out-dir var/release/dist-data
-    uv build --project packaging/aeat_data_official --out-dir var/release/dist-data
+    uv build --project packaging/cadrumo_data_manuals --out-dir var/release/dist-data
+    uv build --project packaging/cadrumo_data_official --out-dir var/release/dist-data
     echo "▶ uv publish (cadrumo-data-manuals + cadrumo-data-official)"
     uv publish var/release/dist-data/*
     echo "✔ published cadrumo-data-manuals + cadrumo-data-official — verify at https://pypi.org/project/cadrumo-data-manuals/ and https://pypi.org/project/cadrumo-data-official/"
@@ -798,9 +798,9 @@ publish-data confirm="":
         exit 1
     }
     if (Test-Path var/release/dist-data) { Remove-Item -Recurse -Force var/release/dist-data }
-    & uv build --project packaging/aeat_data_manuals --out-dir var/release/dist-data
+    & uv build --project packaging/cadrumo_data_manuals --out-dir var/release/dist-data
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    & uv build --project packaging/aeat_data_official --out-dir var/release/dist-data
+    & uv build --project packaging/cadrumo_data_official --out-dir var/release/dist-data
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host "▶ uv publish (cadrumo-data-manuals + cadrumo-data-official)"
     & uv publish (Get-ChildItem var/release/dist-data/*)

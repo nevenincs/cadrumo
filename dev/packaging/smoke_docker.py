@@ -1,4 +1,4 @@
-"""Run AEAT packaging smoke checks inside a fresh Linux Docker image."""
+"""Run Cadrumo packaging smoke checks inside a fresh Linux Docker image."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from typing import Final
 from .smoke_core import _build_wheel, _executable, _manifest_path, _write_smoke_manifest
 
 _UTF_8: Final[str] = "utf-8"
+_DOCKER_COMMAND_TIMEOUT_SECONDS: Final[int] = 30
 
 
 @dataclass(frozen=True)
@@ -85,30 +86,33 @@ def _docker_version_command(docker: DockerCli) -> list[str]:
     return [*docker.argv_prefix, "version", "--format", "{{.Server.Version}}"]
 
 
-def _docker_responds(docker: DockerCli) -> bool:
-    """Return whether one Docker backend answers the daemon version probe."""
+def _command_succeeds(command: list[str], *, timeout: int = _DOCKER_COMMAND_TIMEOUT_SECONDS) -> bool:
+    """Return whether a real command exits successfully within ``timeout``."""
     try:
         result = subprocess.run(
-            _docker_version_command(docker),
+            command,
             capture_output=True,
             text=True,
             check=False,
-            timeout=15,
+            timeout=timeout,
         )
     except subprocess.TimeoutExpired:
         return False
     return result.returncode == 0
 
 
+def _wsl_docker_cli_available(wsl: str, distro: str) -> bool:
+    """Return whether ``distro`` exposes a Docker CLI, without probing its daemon."""
+    return _command_succeeds([wsl, "-d", distro, "--", "docker", "--version"])
+
+
 def _docker_cli() -> DockerCli:
     """Resolve the Docker CLI backend, preferring native WSL Docker on Windows."""
     if os.name == "nt":
         wsl = shutil.which("wsl")
-        distro = os.environ.get("AEAT_WSL_DOCKER_DISTRO", "Ubuntu")
-        if wsl is not None:
-            candidate = DockerCli((wsl, "-d", distro, "--", "docker"), f"wsl:{distro}", distro)
-            if _docker_responds(candidate):
-                return candidate
+        distro = os.environ.get("CADRUMO_WSL_DOCKER_DISTRO", "Ubuntu")
+        if wsl is not None and _wsl_docker_cli_available(wsl, distro):
+            return DockerCli((wsl, "-d", distro, "--", "docker"), f"wsl:{distro}", distro)
         docker = _executable("docker")
         return DockerCli((docker,), "windows")
     return DockerCli((_executable("docker"),), "native")
@@ -118,13 +122,21 @@ def _preflight_docker(docker: DockerCli) -> None:
     """Fail quickly when Docker is installed but the daemon is not answering."""
     command = _docker_version_command(docker)
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=False, timeout=15)
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=_DOCKER_COMMAND_TIMEOUT_SECONDS,
+        )
     except subprocess.TimeoutExpired as exc:
         stdout = exc.stdout or ""
         stderr = exc.stderr or ""
         sys.stdout.write(stdout)
         sys.stderr.write(stderr)
-        raise SystemExit(f"docker daemon did not answer within 15 seconds via {docker.label}") from exc
+        raise SystemExit(
+            f"docker daemon did not answer within {_DOCKER_COMMAND_TIMEOUT_SECONDS} seconds via {docker.label}"
+        ) from exc
     if result.returncode != 0:
         sys.stdout.write(result.stdout)
         sys.stderr.write(result.stderr)
@@ -189,15 +201,19 @@ def json_payload(output: str) -> dict[str, object]:
     return payload
 
 
+def clean_product_env() -> dict[str, str]:
+    return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+
+
 wheel = Path(sys.argv[1])
 run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", str(wheel)])
 run([sys.executable, "-m", "pip", "check"])
 
-version = run(["aeat", "--version"])
-if "aeat " not in version.stdout:
+version = run(["cadrumo", "--version"], env=clean_product_env())
+if "cadrumo " not in version.stdout:
     raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
-root = files("aeat").joinpath("_data")
+root = files("cadrumo").joinpath("_data")
 missing = []
 for rel in REPRESENTATIVE_DATA_LEAVES:
     if not root.joinpath(*rel.split("/")).is_file():
@@ -205,7 +221,13 @@ for rel in REPRESENTATIVE_DATA_LEAVES:
 if missing:
     raise SystemExit(f"missing installed bundled data leaves: {missing!r}")
 
-default_check = run(["aeat", "--format", "json", "config", "check"], expected=(1, 2))
+default_root = Path("/work/default-check-state")
+default_env = {
+    **clean_product_env(),
+    "CADRUMO_LOCAL_STORAGE_ROOT": str(default_root),
+    "CADRUMO_DATABASE_URL": f"sqlite:///{(default_root / 'cadrumo.db').as_posix()}",
+}
+default_check = run(["cadrumo", "--format", "json", "config", "check"], expected=(1, 2), env=default_env)
 default_payload = json_payload(default_check.stdout)
 if default_payload.get("status") != "success" or default_payload.get("result", {}).get("ok") is not False:
     raise SystemExit(f"default config check did not report typed dependency diagnostics: {default_payload!r}")
@@ -213,14 +235,14 @@ if default_payload.get("status") != "success" or default_payload.get("result", {
 storage_root = Path("/work/profile-root")
 storage_root.mkdir(parents=True, exist_ok=True)
 env = {
-    **os.environ,
-    "AEAT_LOCAL_STORAGE_ROOT": str(storage_root),
-    "AEAT_OUTPUT_LANGUAGE": "en",
-    "AEAT_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
+    **clean_product_env(),
+    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+    "CADRUMO_OUTPUT_LANGUAGE": "en",
+    "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
 }
 create = run(
     [
-        "aeat",
+        "cadrumo",
         "--format",
         "json",
         "config",
@@ -235,6 +257,8 @@ create = run(
         "Packaging",
         "--surnames",
         "Smoke",
+        "--tax-residence-ccaa",
+        "madrid",
         "--irpf-income-categories",
         "actividad_economica",
         "--quiet",
@@ -248,7 +272,7 @@ create_payload = json_payload(create.stdout)
 if create_payload.get("status") != "success":
     raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-ready = run(["aeat", "--format", "json", "config", "check"], env=env)
+ready = run(["cadrumo", "--format", "json", "config", "check"], env=env)
 ready_payload = json_payload(ready.stdout)
 result = ready_payload.get("result", {})
 if ready_payload.get("status") != "success" or result.get("ok") is not True or result.get("issues") != []:
@@ -262,15 +286,15 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aeat.adapters.outbound.llm._client import LLMClient
-from aeat.adapters.outbound.llm._errors import LLMConfigError
-from aeat.adapters.outbound.llm._models import LLMProvider
-from aeat.adapters.persistence.storage.attachment import AttachmentStore
-from aeat.adapters.persistence.storage.master_key import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
-from aeat.core.config import Settings
-from aeat.domain.attachments import (
+from cadrumo.adapters.outbound.llm._client import LLMClient
+from cadrumo.adapters.outbound.llm._errors import LLMConfigError
+from cadrumo.adapters.outbound.llm._models import LLMProvider
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
+from cadrumo.adapters.persistence.storage.master_key import activate_session
+from cadrumo.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
+from cadrumo.core.config import Settings
+from cadrumo.domain.attachments import (
     AttachmentKind,
     AttachmentSource,
     add_attachment_bytes,
@@ -281,8 +305,8 @@ from aeat.domain.attachments import (
 root = Path("/work/runtime-surfaces")
 root.mkdir(parents=True, exist_ok=True)
 settings = Settings(
-    aeat_database_url=f"sqlite:///{(root / 'attachments.db').as_posix()}",
-    aeat_local_storage_root=root / "state",
+    cadrumo_database_url=f"sqlite:///{(root / 'attachments.db').as_posix()}",
+    cadrumo_local_storage_root=root / "state",
 )
 session = BucketSession.open(
     bucket_id="packaging-smoke",
@@ -292,7 +316,7 @@ session = BucketSession.open(
     opened_at=datetime.now(UTC).replace(microsecond=0),
     unsecured_backend=True,
 )
-payload = b"%PDF-1.4\n%aeat-packaging-attachment-smoke\n"
+payload = b"%PDF-1.4\n%cadrumo-packaging-attachment-smoke\n"
 try:
     engine = get_engine(settings)
     with activate_session(session):
@@ -324,14 +348,14 @@ finally:
     dispose_engine(settings)
 
 try:
-    LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
+    LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
     if exc.suggestion != "pip install cadrumo[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {exc.suggestion!r}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
 '''
-run([sys.executable, "-c", attachment_probe])
+run([sys.executable, "-c", attachment_probe], env=env)
 
 print("docker-core-ok")
 """
@@ -361,17 +385,23 @@ def run(argv: list[str], *, env: dict[str, str] | None = None):
     return result
 
 
+def clean_product_env() -> dict[str, str]:
+    return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+
+
 wheel = Path(sys.argv[1])
 env = {
-    **os.environ,
+    **clean_product_env(),
     "AEAT_BROWSER_CHANNEL": "chromium",
     "AEAT_BROWSER_HEADLESS": "true",
-    "AEAT_LOCAL_STORAGE_ROOT": "/work/profile-root",
-    "AEAT_OUTPUT_LANGUAGE": "en",
+    "CADRUMO_LOCAL_STORAGE_ROOT": "/work/profile-root",
+    "CADRUMO_DATABASE_URL": "sqlite:////work/profile-root/cadrumo.db",
+    "CADRUMO_OUTPUT_LANGUAGE": "en",
     "PLAYWRIGHT_BROWSERS_PATH": "/work/playwright-browsers",
 }
+os.environ.clear()
 os.environ.update(env)
-Path(env["AEAT_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
+Path(env["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
 Path(env["PLAYWRIGHT_BROWSERS_PATH"]).mkdir(parents=True, exist_ok=True)
 
 target = f"cadrumo[browser] @ {wheel.as_uri()}"
@@ -380,8 +410,8 @@ run([sys.executable, "-m", "pip", "check"], env=env)
 run([sys.executable, "-c", "import playwright.async_api, playwright_stealth"], env=env)
 run([sys.executable, "-m", "playwright", "install", "--with-deps", "chromium"], env=env)
 
-from aeat.adapters.outbound.aeat.browser import default_browser_session_factory
-from aeat.core.config import load_settings
+from cadrumo.adapters.outbound.aeat.browser import default_browser_session_factory
+from cadrumo.core.config import load_settings
 
 
 class Handler(BaseHTTPRequestHandler):

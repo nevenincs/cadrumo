@@ -2,7 +2,7 @@
 
 This is the terminology-scale sibling of the registry authoring-compiler
 pipeline (``TOML authoring tree -> loader/compiler -> strict schema
-objects``). Each fragment under ``src/aeat/_data/terminology/concepts/``
+objects``). Each fragment under ``src/cadrumo/_data/terminology/concepts/``
 is one concept; the loader parses every fragment, reshapes the nested
 ``[language.<code>]`` / ``[[language.<code>.term]]`` authoring layout into
 the :class:`~dev.docs.terminology_handbook._schema.ConceptRecord` shape, compiles each
@@ -30,9 +30,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from aeat.core import freeze_toml, read_toml, to_str_keyed_dict
-from aeat.core.resources import bundled_path
+from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core import freeze_toml, read_toml, to_str_keyed_dict
+from cadrumo.core.resources import bundled_path
 
 from ._errors import TerminologyLoadError, TerminologyValidationError
 from ._schema import ConceptRecord

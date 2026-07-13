@@ -23,7 +23,7 @@ from .smoke_pip_core import _create_pip_venv, _install_artifact_with_pip
 
 
 def _build_sdist(repo_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the AEAT source distribution into the smoke work directory."""
+    """Build the Cadrumo source distribution into the smoke work directory."""
     sdist_dir = work_dir / "sdist"
     sdist_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=repo_root)

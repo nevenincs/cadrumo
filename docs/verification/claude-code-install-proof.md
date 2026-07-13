@@ -2,12 +2,20 @@
 orphan: true
 ---
 
-# Claude Code install proof — aeat plugin
+# Claude Code install proof — historical plugin identifier
 
 Live verification record for the claude-ecosystem-packaging campaign
 (plan step W05.P12.S43). Client: Claude Code CLI 2.1.199 on Windows 11,
 2026-07-03. Every command below ran for real; outputs are quoted from the
 live run.
+
+**Historical naming note.** This record preserves evidence from before the
+Cadrumo product rename. It is not current installation guidance. Current
+release material names the plugin `cadrumo` and its Model Context Protocol
+(MCP) server `cadrumo-mcp`. The human-facing `aeat` command-line interface
+(CLI) is unchanged. This record does not establish current public marketplace or
+package availability. Legacy plugin and marketplace identifiers below are quoted
+evidence only.
 
 ## What was proven
 
@@ -25,20 +33,20 @@ live run.
      disabled and named the enable command;
    - the persona `userConfig` option was detected — "1 userConfig option not
      yet set", configurable via `/plugin configure` or `--config KEY=VALUE`.
-5. **Server starts (dev-env proof).** The stdio `aeat-mcp` server passes the
+5. **Server starts (dev-env proof).** The stdio `cadrumo-mcp` server passes the
    real-client handshake conformance tests (initialize / tools-list / call
    round-trip): 2 passed.
 
 ## What remains blocked, and on what
 
 The installed plugin's `.mcp.json` launches the server as
-`uvx --from aeat==0.1.0 aeat-mcp`. Until the first `aeat` wheel is published
+`uvx --from cadrumo==0.1.0 cadrumo-mcp`. Until the first `cadrumo` wheel is published
 to PyPI (RELEASING.md, name-claim sequencing — an operator-gated step
 needing a PyPI account and scoped token), `uvx` cannot resolve that
 requirement on any machine, so the end-to-end
 installed-plugin-starts-the-server link is unverifiable by design. The
 moment the wheel is on PyPI, re-run: enable the plugin, start Claude Code,
-and confirm the `aeat` MCP server's tools list loads; then update this
+and confirm the historical `aeat` plugin's `cadrumo-mcp` tools load; then update this
 record.
 
 ## Verified support matrix contribution

@@ -4,7 +4,7 @@ Every check on this page runs locally and the tool never submits anything to AEA
 
 For a step-by-step recovery procedure for one common scenario - a certificate to renew, a refused live read, an export that verification blocks, unreadable records, or a modelo that is not ready - use the [recovery runbooks](../runbooks/index.md).
 
-Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `AEAT_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `CADRUMO_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
 
 ## "This operation requires an active profile"
 
@@ -124,18 +124,18 @@ Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`.
 aeat --language en config profile create --help
 ```
 
-To set the language for a whole shell session, set the environment variable `AEAT_OUTPUT_LANGUAGE` before running commands.
+To set the language for a whole shell session, set the environment variable `CADRUMO_OUTPUT_LANGUAGE` before running commands.
 
 In PowerShell:
 
 ```powershell
-$env:AEAT_OUTPUT_LANGUAGE = 'en'
+$env:CADRUMO_OUTPUT_LANGUAGE = 'en'
 ```
 
 In bash:
 
 ```bash
-export AEAT_OUTPUT_LANGUAGE=en
+export CADRUMO_OUTPUT_LANGUAGE=en
 ```
 
 The `--language` flag wins over the environment variable for that command. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).

@@ -8,7 +8,7 @@ model:
 
 * **Shadowing** (D1) -- reuses ``dev.import_hygiene_scan.find_multi_sourced_symbols``
   against the checked-in ``dev/import_hygiene_baseline.json`` Family-3 pinned
-  set (the same authority ``src/aeat/tests/test_import_hygiene_gate.py``
+  set (the same authority ``src/cadrumo/tests/test_import_hygiene_gate.py``
   enforces). A genuine multi-facade duplicate symbol not in the pinned set is
   RED; the pinned/tolerated set is AMBER debt; zero unpinned hits is GREEN.
 * **Duplication** (D2) -- shells out to the same ``jscpd`` invocation
@@ -97,6 +97,11 @@ from dev.import_hygiene_scan import (
 
 _UTF_8: Final[str] = "utf-8"
 _IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = Path(__file__).resolve().parents[1] / "import_hygiene_baseline.json"
+_PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
+_PRODUCTION_EXCLUDE: Final[str] = (
+    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,"
+    "src/cadrumo/tests/*,src/cadrumo/_data/*"
+)
 
 
 class Status(StrEnum):
@@ -187,7 +192,7 @@ def _jscpd_command() -> list[str] | None:
         npx,
         "--yes",
         "jscpd@4.2.0",
-        "src/aeat",
+        str(_PRODUCT_SOURCE_ROOT),
         "--format",
         "python",
         "--min-lines",
@@ -338,10 +343,9 @@ def audit_complexity() -> DimensionReport:
     baseline carries grandfathered debt this run stays within. GREEN: no
     findings and an empty baseline.
     """
-    exclude = "src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*"
-    cc = collect_cc(exclude)
-    mi = collect_mi(exclude)
-    cog = collect_cog(Path("src/aeat"), is_test_run=False, threshold=20)
+    cc = collect_cc(_PRODUCTION_EXCLUDE)
+    mi = collect_mi(_PRODUCTION_EXCLUDE)
+    cog = collect_cog(_PRODUCT_SOURCE_ROOT, is_test_run=False, threshold=20)
 
     baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False, path=_COMPLEXITY_BASELINE_PATH)
     cc_verdict = _classify_cc(cc, baseline.cyclomatic)

@@ -22,8 +22,12 @@ You need:
 - a modelo and period ready enough to calculate
 - a Google API credentials file (a Desktop OAuth client JSON from the
   [Google Cloud Console](https://console.cloud.google.com/))
-- the ID of a Google Drive folder where `aeat` should create spreadsheets
+- the ID of a Google Drive folder where Cadrumo should create spreadsheets
   (copy the ID from the folder's URL in Google Drive)
+
+Cadrumo creates its `cadrumo-vault/` folder inside that Drive folder. It does
+not use an older `aeat-vault/` folder; export a new workbook before pulling
+edits into Cadrumo.
 
 ## Configure Google access
 
@@ -40,7 +44,7 @@ aeat config google login
 aeat config google status
 ```
 
-Set the Drive folder where `aeat` will create spreadsheets:
+Set the Drive folder where Cadrumo will create spreadsheets:
 
 ```bash
 aeat config google folder set <drive-folder-id>
@@ -59,7 +63,7 @@ Export the registry calculation surface for one modelo, year, and period:
 aeat config google sync calc export --modelo 303 --year 2026 --period 1T
 ```
 
-The export creates a Google Sheets workbook inside the configured `aeat-vault/`
+The export creates a Google Sheets workbook inside the configured `cadrumo-vault/`
 area in Drive. It is a calculation review surface, not a bank statement export.
 Use `aeat app ledger export` when you need a CSV, JSONL, or XLSX snapshot of
 ledger rows.
@@ -85,7 +89,7 @@ new spreadsheet.
 
 ## Compute casilla values from the Sheet
 
-Run `compute` when you want `aeat` to calculate casilla values from the edits
+Run `compute` when you want Cadrumo to calculate casilla values from the edits
 in the Sheet. It pulls the operator-edited cells, runs the calculation engine
 over them, and displays the result. It persists nothing.
 
@@ -104,7 +108,8 @@ Run the calc-sheets verification command for the same modelo, year, and period:
 aeat config google sync calc verify --modelo 303 --year 2026 --period 1T
 ```
 
-If you have a scenario JSON with operator inputs and expected AEAT outputs,
+If you have a scenario JSON with operator inputs and expected Agencia Estatal
+de Administración Tributaria (AEAT) outputs,
 pass it explicitly:
 
 ```bash
@@ -130,7 +135,7 @@ area without changing anything. Narrow a large push with `--namespace` or
 
 Only ciphertext is uploaded — your records leave the machine exactly as they
 sit encrypted on disk, and the master key never leaves your computer, so the
-Drive copy is unreadable without it. The mirror is one-way: aeat writes the
+Drive copy is unreadable without it. The mirror is one-way: Cadrumo writes the
 copy and never reads Drive back as a source of truth for your records.
 
 ## Sign out of Google

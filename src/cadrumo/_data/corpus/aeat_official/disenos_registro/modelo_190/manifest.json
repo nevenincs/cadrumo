@@ -1,0 +1,68 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "190",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 4,
+  "artefacts": [
+    {
+      "modelo": "190",
+      "title": "190 - Orden EHA/3127/2009, de 10 de noviembre (actualizada por Orden HAC/1431/2025, de 3 de diciembre) (1.085 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DISENOS_LOGICOS_190_2025.pdf",
+      "stored_path": "files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf",
+      "original_filename": "DISENOS_LOGICOS_190_2025.pdf",
+      "content_type": "application/pdf",
+      "bytes": 1110488,
+      "sha256": "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "190",
+      "title": "190 - Orden EHA/3127/2009 (actualizada por Orden HAC/1285/2020) (814 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/Dr_190_2020.pdf",
+      "stored_path": "files/02-190-orden-eha-3127-2009-actualizada-por-orden-hac-1285-2020-814-kb-pdf.pdf",
+      "original_filename": "Dr_190_2020.pdf",
+      "content_type": "application/pdf",
+      "bytes": 834371,
+      "sha256": "4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "190",
+      "title": "190 - Orden EHA/3127/2009, de 10 de noviembre (actualizada por Orden HAC/1432/2024, de 11 de diciembre) (1,49 MB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DISENOS_LOGICOS_190-2024.pdf",
+      "stored_path": "files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf",
+      "original_filename": "DISENOS_LOGICOS_190-2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 1176058,
+      "sha256": "20bc8086525ce850063b9ae8644b8514483e5c34f90c8e47cfadc6c52cf7390e",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "190",
+      "title": "190 - Orden EHA/3127/2009, de 10 de noviembre (actualizada por Orden HFP/1286/2023, de 28 de noviembre) (377 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_190_2023.pdf",
+      "stored_path": "files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf",
+      "original_filename": "DR_190_2023.pdf",
+      "content_type": "application/pdf",
+      "bytes": 386645,
+      "sha256": "430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

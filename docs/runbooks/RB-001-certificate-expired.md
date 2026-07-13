@@ -14,7 +14,7 @@ AEAT are blocked or about to be. Renew the certificate and register the new one.
 - The profile whose certificate is expiring, active.
 - A renewed certificate file from your certificate authority.
 - Your master-key passphrase (the tool prompts for it, or set
-  `AEAT_SECRET_PASSPHRASE` first).
+  `CADRUMO_SECRET_PASSPHRASE` first).
 
 ## Fix it
 

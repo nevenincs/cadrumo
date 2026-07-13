@@ -9,13 +9,13 @@ Spanish tax form.
 These commands are local unless a command is under `aeat app live`. Local
 calendar commands read the [active profile](profile-setup.md#what-the-active-profile-means)
 and local registry data. They do not file, submit, or contact the Agencia
-Estatal de Administracion Tributaria (AEAT).
+Estatal de Administración Tributaria (AEAT).
 
 ## Before you start
 
 You need an [active taxpayer profile](profile-setup.md#what-the-active-profile-means),
-and the tool needs your master-key passphrase (it prompts for it, or set
-`AEAT_SECRET_PASSPHRASE` for non-interactive runs). If you do not have a
+and Cadrumo needs your master-key passphrase (it prompts for it, or set
+`CADRUMO_SECRET_PASSPHRASE` for non-interactive runs). If you do not have a
 profile, create it with [Set up your taxpayer profile](profile-setup.md).
 
 The profile must declare at least one obligation, or these commands refuse with
@@ -26,10 +26,8 @@ nothing. Declare those facts first with
 
 Calendar results depend on profile facts: taxpayer type, activity start date,
 IVA regime, IRPF/Renta facts, withholding obligations, and other enrollment
-details. You can maintain those facts manually in the profile. You can also
-compare or apply AEAT Modelo 036 censo facts with
-[Link Modelo 036 census information](censo-update.md), but censo linking is
-not universally required.
+details. You maintain those facts manually in the profile - see
+[Maintain Modelo 036 census facts in your profile](censo-update.md).
 
 If a profile is still incomplete, a command may stop and name the missing facts.
 Fix the profile first. To see partial results before the profile is complete,
@@ -117,12 +115,13 @@ Both dates are required in `YYYY-MM-DD` format. The calendar applies national
 public holidays and business-day shifts before printing deadlines.
 
 The calendar is stricter than `agenda` and `backlog`: it also refuses while a
-profile check is unresolved, such as `censo.enrolment_unverified`. When it does,
-either resolve the check (run `aeat config profile censo pull` then
-`aeat config profile censo apply`; see
-[Link Modelo 036 census information](censo-update.md)) or add `--allow-incomplete`
-to print a provisional calendar. Provisional entries are marked
-`censo_enrolment=unverified`:
+profile check is unresolved, such as `censo.enrolment_unverified`. That check
+reports that your census-backed enrollment facts are operator-declared, not
+AEAT-verified; AEAT publishes no read-only census view the tool could confirm
+them against. Review the profile facts (see
+[Maintain Modelo 036 census facts in your profile](censo-update.md)) and add
+`--allow-incomplete` to print a provisional calendar. Provisional entries are
+marked `censo_enrolment=unverified`:
 
 ```bash
 aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
@@ -136,7 +135,7 @@ To see every registered profile instead of only the
 aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles
 ```
 
-When you want to inspect obligations that `aeat` normally filters out, add
+When you want to inspect obligations that Cadrumo normally filters out, add
 `--show-suppressed`:
 
 ```bash
@@ -221,9 +220,9 @@ Then follow the filing workflow for the target modelo, year, and period:
 ## If results look wrong
 
 If a command reports missing profile facts, update the profile with
-[Set up your taxpayer profile](profile-setup.md). If censo-derived facts may
-be stale or missing, compare them with
-[Link Modelo 036 census information](censo-update.md).
+[Set up your taxpayer profile](profile-setup.md). If census facts may be stale
+or missing, re-check them against your Modelo 036 copy with
+[Maintain Modelo 036 census facts in your profile](censo-update.md).
 
 If a command reports an invalid date, inactive profile, or readiness problem,
 use [Diagnose and repair your local setup](troubleshooting.md).

@@ -1,0 +1,299 @@
+"""Result thinning: bulk result arrays ride as ``resource_link`` URIs (ADR H4).
+
+Structured output double-emits (text ``content`` plus ``structuredContent`` -
+roughly 2x tokens by construction), so a verb whose result inlines a large bulk
+array - the calculation observation provenance, the evidence-record rows -
+inflates every call. ADR ``mcp-protocol-hardening`` H4 rules that
+``structuredContent`` stays the typed SUMMARY a client acts on, while the bulk
+collections move to ``resource_link`` URIs a resources-capable client fetches on
+demand, resolved from persisted state by the resource read handlers.
+
+This module is the SINGLE declared authority for that split, keyed by command
+key, so the three consumers cannot drift:
+
+* the server thins the runtime envelope (:func:`thin_envelope`) - it pops the
+  declared bulk arrays from ``envelope["result"]`` and returns the
+  :class:`ResourceLinkRef` set to emit as ``resource_link`` content items;
+* the tool descriptor thins its declared output schema in lock-step
+  (:func:`thin_output_schema`) - the same properties leave the schema, so the
+  thinned ``structuredContent`` still validates and the static size-budget gate
+  (``test_result_size_budget.py``) measures the thinned shape;
+* the resource read handler resolves a link back to the real persisted rows via
+  the declared resolver verb (:data:`BULK_RESOLUTION`), re-run as a supervised
+  subprocess so it carries the active bucket session the server process lacks.
+
+Like ``_resources`` / ``_tools`` this is SDK-independent pure functions over typed
+models; ``_server`` adapts :class:`ResourceLinkRef` onto the SDK ``ResourceLink``.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Mapping
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ._resources import HarnessResourceKind, resource_uri
+
+_STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+#: The MIME type a thinned bulk resource resolves to - a JSON array of the
+#: persisted rows (the same typed payload the inline array carried).
+_BULK_MIME = "application/json"
+
+
+class ThinnedArray(BaseModel):
+    """One declared bulk array a verb moves out of ``structuredContent``.
+
+    ``result_key`` is the array's key under ``envelope["result"]``;
+    ``resource_kind`` selects the canonical Cadrumo resource URI kind; ``uri_id_key``
+    is the sibling ``result`` field whose value identifies the persisted record the
+    read handler resolves (a calculation-revision id, a bucket id). Thinning pops
+    ``result_key`` and replaces it with a ``{result_key}_resource`` URI plus a
+    ``{result_key}_count`` marker, so a client acting on the summary alone still
+    sees how many rows are one fetch away.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    result_key: str = Field(min_length=1)
+    resource_kind: HarnessResourceKind
+    uri_id_key: str = Field(min_length=1)
+
+    @property
+    def ref_key(self) -> str:
+        """The summary marker key carrying the resource URI (``<result_key>_resource``)."""
+        return f"{self.result_key}_resource"
+
+    @property
+    def count_key(self) -> str:
+        """The summary marker key carrying the moved-row count (``<result_key>_count``)."""
+        return f"{self.result_key}_count"
+
+
+class BulkResolution(BaseModel):
+    """How a bulk resource kind resolves back to its persisted rows.
+
+    ``resolver_command_key`` is the read verb whose result field
+    (``result_field``) IS the bulk array; the resource read handler re-runs that
+    verb as a supervised subprocess (carrying the active bucket session) and
+    returns its rows. ``id_arg`` names the positional argument that scopes the
+    read to the URI's record (``None`` when the verb reads the active bucket and
+    the URI id is only cross-checked against the result).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    resolver_command_key: str = Field(min_length=1)
+    result_field: str = Field(min_length=1)
+    id_arg: str | None = None
+
+
+class ResourceLinkRef(BaseModel):
+    """An SDK-independent ``resource_link`` to emit for one thinned bulk array."""
+
+    model_config = _STRICT_FROZEN
+
+    uri: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    count: int = Field(ge=0)
+    mime_type: str = _BULK_MIME
+
+
+#: The declared thinning map: command key -> the bulk arrays it moves to links.
+#: One canonical mechanism per bulk class (ADR H4): calculation observations ride
+#: on the ``observations`` array of both the calculate result and the dedicated
+#: observations read verb; evidence rows ride on the evidence-list ``rows`` array.
+THINNED_VERBS: dict[str, tuple[ThinnedArray, ...]] = {
+    "modelo.work.calculate": (
+        ThinnedArray(
+            result_key="observations",
+            resource_kind=HarnessResourceKind.OBSERVATIONS,
+            uri_id_key="calculation_revision_id",
+        ),
+    ),
+    "modelo.work.observations": (
+        ThinnedArray(
+            result_key="observations",
+            resource_kind=HarnessResourceKind.OBSERVATIONS,
+            uri_id_key="calculation_revision_id",
+        ),
+    ),
+    "modelo.work.revision": (
+        ThinnedArray(
+            result_key="observations",
+            resource_kind=HarnessResourceKind.OBSERVATIONS,
+            uri_id_key="calculation_revision_id",
+        ),
+    ),
+    "ledger.evidence.list": (
+        ThinnedArray(
+            result_key="rows",
+            resource_kind=HarnessResourceKind.EVIDENCE,
+            uri_id_key="bucket_id",
+        ),
+    ),
+}
+
+#: The declared resolution map: bucket resource kind -> the read verb that
+#: reconstitutes its rows from persisted state. The resource read handler re-runs
+#: the verb as a subprocess so the resolution carries the active bucket session.
+BULK_RESOLUTION: dict[HarnessResourceKind, BulkResolution] = {
+    HarnessResourceKind.OBSERVATIONS: BulkResolution(
+        resolver_command_key="modelo.work.observations",
+        result_field="observations",
+        id_arg="calculation_revision_id",
+    ),
+    HarnessResourceKind.EVIDENCE: BulkResolution(
+        resolver_command_key="ledger.evidence.list",
+        result_field="rows",
+        id_arg=None,
+    ),
+}
+
+
+def thinned_arrays_for(command_key: str) -> tuple[ThinnedArray, ...]:
+    """Return the declared bulk arrays a command thins, or an empty tuple."""
+    return THINNED_VERBS.get(command_key, ())
+
+
+def thin_envelope(
+    command_key: str,
+    envelope: Mapping[str, object],
+) -> tuple[dict[str, object], tuple[ResourceLinkRef, ...]]:
+    """Thin one command's runtime envelope: pop bulk arrays, return summary + links.
+
+    For each declared bulk array present as a non-empty list under
+    ``envelope["result"]`` whose ``uri_id_key`` resolves to a non-empty string,
+    the array is removed and replaced by a ``<key>_resource`` URI and a
+    ``<key>_count`` marker; a :class:`ResourceLinkRef` is returned for the server
+    to emit as a ``resource_link`` content item. An array that is absent, empty,
+    or whose id is unresolvable is left inline (nothing to thin), so an error
+    envelope or a zero-row result is untouched.
+
+    Returns:
+        The (possibly unchanged) envelope and the tuple of links to emit.
+    """
+    specs = thinned_arrays_for(command_key)
+    if not specs:
+        return dict(envelope), ()
+    result = envelope.get("result")
+    if not isinstance(result, Mapping):
+        return dict(envelope), ()
+    new_result = dict(result)
+    links: list[ResourceLinkRef] = []
+    for spec in specs:
+        array = new_result.get(spec.result_key)
+        identity = new_result.get(spec.uri_id_key)
+        if not isinstance(array, list) or not array or not isinstance(identity, str) or not identity:
+            continue
+        uri = resource_uri(spec.resource_kind, identity)
+        del new_result[spec.result_key]
+        new_result[spec.ref_key] = uri
+        new_result[spec.count_key] = len(array)
+        links.append(
+            ResourceLinkRef(
+                uri=uri,
+                name=f"{spec.resource_kind.value}:{identity}",
+                description=f"{len(array)} {spec.result_key} rows for {spec.resource_kind.value} {identity}",
+                count=len(array),
+            ),
+        )
+    if not links:
+        return dict(envelope), ()
+    new_envelope = dict(envelope)
+    new_envelope["result"] = new_result
+    return new_envelope, tuple(links)
+
+
+def thin_output_schema(command_key: str, schema: dict[str, object]) -> dict[str, object]:
+    """Thin a command's declared output schema in lock-step with :func:`thin_envelope`.
+
+    The output schema is the command's result-model JSON Schema; for a thinned
+    verb the bulk-array property is removed and the two summary markers
+    (``<key>_resource`` string, ``<key>_count`` integer) are declared instead, so
+    the thinned ``structuredContent`` still validates against the advertised schema
+    and the static size-budget gate measures the thinned shape.
+
+    Returns:
+        A thinned copy of the schema, or the input unchanged for a non-thinned verb.
+    """
+    specs = thinned_arrays_for(command_key)
+    if not specs:
+        return schema
+    properties = schema.get("properties")
+    if not isinstance(properties, Mapping):
+        return schema
+    new_properties = dict(properties)
+    thinned_keys = {spec.result_key for spec in specs}
+    for spec in specs:
+        new_properties.pop(spec.result_key, None)
+        new_properties[spec.ref_key] = {
+            "type": "string",
+            "description": f"Resource URI resolving the full {spec.result_key} rows (ADR H4 result thinning).",
+        }
+        new_properties[spec.count_key] = {
+            "type": "integer",
+            "description": f"Number of {spec.result_key} rows available at the resource URI.",
+        }
+    new_schema = dict(schema)
+    new_schema["properties"] = new_properties
+    required = schema.get("required")
+    if isinstance(required, list):
+        new_schema["required"] = [name for name in required if name not in thinned_keys]
+    return _prune_orphan_defs(new_schema)
+
+
+def _prune_orphan_defs(schema: dict[str, object]) -> dict[str, object]:
+    """Drop ``$defs`` entries no longer referenced after a property was thinned.
+
+    Removing a bulk-array property can orphan the ``$defs`` model it referenced
+    (e.g. ``ObservationPayload``); an orphaned definition is dead weight the
+    static size-budget gate would still count. This iterates to a fixpoint - a
+    def may reference another def - removing only definitions whose
+    ``#/$defs/<name>`` anchor appears nowhere else in the schema, so a shared
+    definition is always kept.
+
+    Returns:
+        The schema with orphaned definitions removed (or unchanged when it has none).
+    """
+    defs = schema.get("$defs")
+    if not isinstance(defs, Mapping) or not defs:
+        return schema
+    remaining = dict(defs)
+    while True:
+        body = dict(schema)
+        body["$defs"] = remaining
+        serialized = json.dumps({key: value for key, value in body.items() if key != "$defs"})
+        referenced = {name for name in remaining if f'"#/$defs/{name}"' in serialized}
+        # A kept def may reference another def; keep transitively-reachable ones.
+        frontier = set(referenced)
+        while frontier:
+            name = frontier.pop()
+            payload = json.dumps(remaining.get(name, {}))
+            for candidate in remaining:
+                if candidate not in referenced and f'"#/$defs/{candidate}"' in payload:
+                    referenced.add(candidate)
+                    frontier.add(candidate)
+        if referenced == set(remaining):
+            break
+        remaining = {name: value for name, value in remaining.items() if name in referenced}
+    pruned = dict(schema)
+    if remaining:
+        pruned["$defs"] = remaining
+    else:
+        pruned.pop("$defs", None)
+    return pruned
+
+
+__all__ = [
+    "BULK_RESOLUTION",
+    "THINNED_VERBS",
+    "BulkResolution",
+    "ResourceLinkRef",
+    "ThinnedArray",
+    "thin_envelope",
+    "thin_output_schema",
+    "thinned_arrays_for",
+]

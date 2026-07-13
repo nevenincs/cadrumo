@@ -18,19 +18,34 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests.env_scope import scoped_env_var
+from cadrumo.tests.env_scope import scoped_env_var
 
 from .. import readiness
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _write_pyproject(root: Path, version: str) -> None:
-    (root / "pyproject.toml").write_text(f'[project]\nname = "cadrumo"\nversion = "{version}"\n', encoding="utf-8")
+def _write_project(project_file: Path, *, name: str, version: str) -> None:
+    project_file.parent.mkdir(parents=True, exist_ok=True)
+    project_file.write_text(f'[project]\nname = "{name}"\nversion = "{version}"\n', encoding="utf-8")
+
+
+def _write_pyprojects(root: Path, version: str) -> None:
+    _write_project(root / "pyproject.toml", name="cadrumo", version=version)
+    _write_project(
+        root / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
+        name="cadrumo-data-manuals",
+        version=version,
+    )
+    _write_project(
+        root / "packaging" / "cadrumo_data_official" / "pyproject.toml",
+        name="cadrumo-data-official",
+        version=version,
+    )
 
 
 def _write_init(root: Path, version: str) -> None:
-    init_dir = root / "src" / "aeat"
+    init_dir = root / "src" / "cadrumo"
     init_dir.mkdir(parents=True, exist_ok=True)
     (init_dir / "__init__.py").write_text(f'__version__ = "{version}"\n', encoding="utf-8")
 
@@ -42,7 +57,7 @@ def _write_manifest(root: Path, version: str) -> None:
 def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     root = tmp_path / "repo"
     root.mkdir()
-    _write_pyproject(root, version)
+    _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
     (root / "CHANGELOG.md").write_text(
@@ -60,6 +75,42 @@ def test_version_surfaces_agree_passes_when_all_three_match(tmp_path: Path) -> N
     assert check.severity == "blocking"
     assert check.passed is True
     assert "2.0.0" in check.detail
+
+
+def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path) -> None:
+    """The real project files expose the complete accepted Cadrumo distribution tuple."""
+    root = _make_repo_root(tmp_path)
+
+    check = readiness.check_project_names_are_canonical(root)
+
+    assert check.passed is True
+    assert check.severity == "blocking"
+    assert "cadrumo, cadrumo-data-manuals, cadrumo-data-official" in check.detail
+
+
+@pytest.mark.parametrize(
+    ("relative", "former_name"),
+    (
+        ("pyproject.toml", "aeat-cli"),
+        ("packaging/cadrumo_data_manuals/pyproject.toml", "aeat-data-manuals"),
+        ("packaging/cadrumo_data_official/pyproject.toml", "aeat-data-official"),
+    ),
+)
+def test_project_names_reject_each_former_product_distribution(
+    tmp_path: Path,
+    relative: str,
+    former_name: str,
+) -> None:
+    """Any former root or companion distribution name is a blocking release defect."""
+    root = _make_repo_root(tmp_path)
+    _write_project(root / relative, name=former_name, version="1.2.3")
+
+    check = readiness.check_project_names_are_canonical(root)
+
+    assert check.passed is False
+    assert check.severity == "blocking"
+    assert former_name in check.detail
+    assert "expected 'cadrumo" in check.detail
 
 
 def test_version_surfaces_agree_fails_on_drift(tmp_path: Path) -> None:
@@ -285,3 +336,5 @@ def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:
     check = readiness.check_version_surfaces_agree(root)
 
     assert check.passed is True, check.detail
+    project_names = readiness.check_project_names_are_canonical(root)
+    assert project_names.passed is True, project_names.detail

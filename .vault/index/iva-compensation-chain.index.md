@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#iva-compensation-chain'
-date: '2026-07-05'
+date: '2026-07-10'
 modified: '2026-07-10'
 related:
   - '[[2026-05-19-iva-compensation-chain-P01-S01]]'
@@ -13,12 +13,14 @@ related:
   - '[[2026-05-19-iva-compensation-chain-P02-S02]]'
   - '[[2026-05-19-iva-compensation-chain-P02-S03]]'
   - '[[2026-05-19-iva-compensation-chain-P02-S04]]'
+  - '[[2026-05-19-iva-compensation-chain-P03-S01]]'
   - '[[2026-05-19-iva-compensation-chain-P03-S02]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
   - '[[2026-05-19-iva-compensation-chain-plan]]'
   - '[[2026-05-19-iva-compensation-chain-summary-exec]]'
   - '[[2026-07-05-iva-compensation-chain-audit]]'
+  - '[[2026-07-10-iva-compensation-chain-audit]]'
 ---
 
 # `iva-compensation-chain` feature index
@@ -34,6 +36,7 @@ Auto-generated index of all documents tagged with `#iva-compensation-chain`.
 ### audit
 
 - `2026-07-05-iva-compensation-chain-audit` - `iva-compensation-chain` audit: `Dependency and exec reconciliation audit`
+- `2026-07-10-iva-compensation-chain-audit` - `iva-compensation-chain` audit: `Live closure honesty review`
 
 ### exec
 
@@ -46,6 +49,7 @@ Auto-generated index of all documents tagged with `#iva-compensation-chain`.
 - `2026-05-19-iva-compensation-chain-P02-S03` - add Modelo 390 annual compensation-chain registry tests
 - `2026-05-19-iva-compensation-chain-P02-S04` - run targeted unit tests and registry validation for 303 and 390
 - `2026-05-19-iva-compensation-chain-P03-S02` - execute the linked Modelo 130 relation-regression wave for the IRPF same-year negative-result carry-forward
+- `2026-05-19-iva-compensation-chain-P03-S01` - live wallet authority verification
 
 ### plan
 

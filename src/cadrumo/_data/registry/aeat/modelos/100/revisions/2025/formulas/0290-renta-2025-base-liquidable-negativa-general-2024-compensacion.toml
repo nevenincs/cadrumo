@@ -1,0 +1,64 @@
+# Ley 35/2006 art. 50.3 — ejercicio-2024-origin negative base liquidable
+# general compensation, this period.
+#
+# Cap (internal ceiling): the maximum compensable this period =
+#   min(1388 opening pending, max(0, 0435 − 0461 − 0468)).
+# Art. 50.3 compensates the negative base liquidable general against positive
+# base liquidable general; Art. 48's 25% base-imponible mechanism is distinct.
+[[revisions."2025".formulas]]
+id = "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima"
+target_casilla_id = "base-liq-neg-general-2024-aplicada-maxima"
+expression = { op = "min", args = [
+    { casilla_id = "1388" },
+    { op = "max", args = [
+        { literal = "0" },
+        { op = "subtract", args = [
+            { op = "subtract", args = [
+                { casilla_id = "0435" },
+                { casilla_id = "0461" },
+            ] },
+            { casilla_id = "0468" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
+
+# Casilla 0501 is the base-liquidable compensation used by the main
+# liquidable-base formula. The Anexo C applied amount (1389) is its source;
+# the carry never alters the separate Art. 48 base-imponible calculation.
+[[revisions."2025".formulas]]
+id = "renta-2025-base-liquidable-negativa-general-compensacion-total"
+target_casilla_id = "0501"
+expression = { op = "sum", args = [{ casilla_id = "1389" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
+
+# Remainder rolled forward (casilla 1390) = opening pending (1388) minus the
+# amount applied this period (1389). Clamped non-negative: the declared
+# applied amount cannot exceed the stock (BLOCKING predicate), so the
+# subtraction is non-negative, and the clamp is defence-in-depth.
+[[revisions."2025".formulas]]
+id = "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin"
+target_casilla_id = "1390"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla_id = "1388" }, { casilla_id = "1389" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]

@@ -1,13 +1,13 @@
 # Protect access to your data
 
-Everything aeat stores — profiles, transactions, evidence, filings — is
-encrypted under one master key. Your passphrase opens that key. If you lose
-the passphrase and have no recovery key, the data cannot be decrypted by
-anyone, including you.
+Cadrumo encrypts every profile, transaction, piece of evidence, and filing
+under one master key. Your passphrase opens that key. If you lose the
+passphrase and have no recovery key, the data cannot be decrypted by anyone,
+including you.
 
 Use this guide to set up a recovery key before you need it, change your
-passphrase, recover access after a lost passphrase, lock the session, and —
-as a last resort — wipe local state and start over.
+passphrase, recover access after a lost passphrase, lock the session, and, as a
+last resort, wipe local state and start over.
 
 ## Before you start
 
@@ -17,7 +17,7 @@ You need:
   first command below refuses without one (`No se pudo determinar ningún bucket
   activo. Selecciona un perfil y vuelve a intentarlo.`).
 - Your master-key passphrase. These commands open the encrypted store, so they
-  prompt for the passphrase (or read `AEAT_SECRET_PASSPHRASE` when set). The
+  prompt for the passphrase (or read `CADRUMO_SECRET_PASSPHRASE` when set). The
   recovery and rekey commands below replace which passphrase opens the key.
 
 The runtime emits help, prompts, and messages in Spanish.

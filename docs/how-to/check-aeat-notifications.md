@@ -26,7 +26,7 @@ no provider is configured, the read refuses at that preflight; the refusal
 text mentions a Cl@ve identity check (`La identidad de Cl@ve Móvil no
 coincide...`), but the underlying cause is that authentication is not
 configured. Configure a provider first — see
-[Authenticate with AEAT](authenticate-with-aeat.md). `AEAT_LIVE_TESTS_ENABLED`
+[Authenticate with AEAT](authenticate-with-aeat.md). `CADRUMO_LIVE_TESTS_ENABLED`
 is a developer setting that gates the project's own test suite; do not set
 it to use live reads.
 
@@ -38,7 +38,7 @@ You need:
   <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`.
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
 - the master-key passphrase that protects your local store. The tool prompts for
-  it, or set `AEAT_SECRET_PASSPHRASE` to run without a prompt.
+  it, or set `CADRUMO_SECRET_PASSPHRASE` to run without a prompt.
 - AEAT live-read authentication configured; see [Authenticate with AEAT](authenticate-with-aeat.md)
 
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-pull-verification-sweep'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S01]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S02]]'
@@ -16,10 +16,23 @@ related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P02-S07]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P02-summary]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P03-S09]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S13]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S14]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S15]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S16]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S17]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S20]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S21]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S22]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S23]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S24]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P06-S25]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P06-S27]]'
   - '[[2026-06-12-live-pull-verification-sweep-W04-P07-S29]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W04-P07-S30]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W04-P08-S31]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W04-P08-S32]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W04-P08-S33]]'
   - '[[2026-06-12-live-pull-verification-sweep-adr]]'
   - '[[2026-06-12-live-pull-verification-sweep-code-review-audit]]'
   - '[[2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit]]'
@@ -61,6 +74,7 @@ related:
   - '[[2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-calendar-modelo-record-event-presented-at-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-cross-period-aeat-register-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-expedientes-event-submitted-at-exec]]'
+  - '[[2026-07-10-live-pull-verification-sweep-audit]]'
 ---
 
 # `live-pull-verification-sweep` feature index
@@ -77,6 +91,7 @@ Auto-generated index of all documents tagged with `#live-pull-verification-sweep
 
 - `2026-06-12-live-pull-verification-sweep-code-review-audit` - `live-pull-verification-sweep` Code Review
 - `2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit` - `live-pull-verification-sweep` audit: W02.P03 live auth blocker
+- `2026-07-10-live-pull-verification-sweep-audit` - `live-pull-verification-sweep` audit: `closeout reconciliation`
 
 ### exec
 
@@ -130,6 +145,19 @@ Auto-generated index of all documents tagged with `#live-pull-verification-sweep
 - `2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-calendar-modelo-record-event-presented-at-exec` - W03.P06.S27 / W04.P07.S29 calendar Modelo-record event presented-at
 - `2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-cross-period-aeat-register-exec` - W03.P06.S27 / W04.P07.S29 cross-period AEAT register reference
 - `2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-expedientes-event-submitted-at-exec` - W03.P06.S27 / W04.P07.S29 expedientes event submitted-at
+- `2026-06-12-live-pull-verification-sweep-W02-P04-S13` - Prove notifications pull fetches authenticated notification rows with read-only parsing and no acknowledgement or mutation path
+- `2026-06-12-live-pull-verification-sweep-W02-P04-S15` - Prove IVA wallet and IVA remote acquisition are pull-only captures over filed history and wallet evidence, with no remote-state return or push semantics
+- `2026-06-12-live-pull-verification-sweep-W02-P04-S16` - Prove Borrador/Renta Web and portal-open live surfaces are safe read or navigation probes, never submission or form mutation flows
+- `2026-06-12-live-pull-verification-sweep-W03-P05-S20` - Exercise expedientes CLI commands with authenticated results, typed empty-state output, and no local-only success masquerading as AEAT evidence
+- `2026-06-12-live-pull-verification-sweep-W03-P05-S21` - Exercise notifications CLI commands with authenticated results and prove no acknowledgement, dismissal, or remote mutation is reachable
+- `2026-06-12-live-pull-verification-sweep-W03-P05-S22` - Exercise justificante CLI commands for pull, list, view, and reconcile-from-persisted evidence
+- `2026-06-12-live-pull-verification-sweep-W03-P05-S23` - Exercise IVA wallet CLI commands after any remote-state wording correction and prove the outputs report pull-only capture status
+- `2026-06-12-live-pull-verification-sweep-W03-P05-S24` - Exercise verify and portal CLI commands as safe read/navigation probes with explicit refusal for anything write-shaped
+- `2026-06-12-live-pull-verification-sweep-W03-P06-S25` - Author the authenticated live exercise runbook as an exec template covering operator auth prompts, redaction, command order, expected evidence, and blocker recording
+- `2026-06-12-live-pull-verification-sweep-W04-P07-S30` - Run lint, typing, locale parity, command conformance, and docs/API scaffold checks for every touched live surface
+- `2026-06-12-live-pull-verification-sweep-W04-P08-S31` - Run code review over the live pull sweep changes and persist findings or no-findings audit before any plan row is checked
+- `2026-06-12-live-pull-verification-sweep-W04-P08-S32` - Run feature-scoped vault checks and rebuild the live-pull-verification-sweep feature index
+- `2026-06-12-live-pull-verification-sweep-W04-P08-S33` - Write the closeout audit listing satisfied rows, real remaining work, touched files, tests and live manual exercises run, and whether the plan can close
 
 ### plan
 

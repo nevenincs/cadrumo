@@ -2,29 +2,32 @@
 tags:
   - '#exec'
   - '#m210-irnr-phase-2-engine'
-date: '2026-07-09'
+date: '2026-07-10'
 modified: '2026-07-10'
 step_id: 'S06'
 related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
-  - "[[2026-07-09-m210-irnr-phase-2-engine-adr]]"
+  - "[[2026-07-10-m210-irnr-phase-2-engine-adr]]"
 ---
 
-# author the grouping-validity verification predicates (same code, same pagador save codigo 35, same tipo de gravamen, same bien, no offsetting between grouped rentas) grounded in the bundled Articulo cuarto text
+# Author the strict Modelo 210 annual grouped-renta contract grounded in the bundled Article 2 text
 
 ## Scope
 
-- `src/aeat/application/modelo/_verification_predicates.py`
+- `src/aeat/domain/modelos/_row_models.py`
+- `src/aeat/application/modelo/_m210_agrupacion_renta.py`
+- `src/aeat/_data/registry/aeat/modelos/210`
 
 ## Description
 
-- DEFERRED to Slice C, no code authored. The grouping-validity rules were not implemented because doing so now would fabricate a data structure the fetched diseno de registro must define.
+- Add a persisted `Modelo210AgrupacionRentaRow` for annual 0A work.
+- Enforce lease/sublease code eligibility, a shared raw official code, rate, property/right, payer identity, non-negative values, and the code-35 multiple-payer exception.
+- Ground the 0A registry gate in the official Article 2 source and reject manual annual rows when the ledger source owns them.
 
 ## Outcome
 
-- The Articulo cuarto grouping text IS bundled (`orden-hac-56-2024.html`: same codigo de tipo de renta / mismo pagador salvo codigo 35 / mismo tipo de gravamen / mismo bien / "En ningun caso las rentas agrupadas pueden compensarse entre si"), so grounding is available.
-- But every grouping rule validates a relationship ACROSS multiple grouped rentas, and (a) the current M210 casilla model is single-renta (13 casillas, one `tipo_renta` text casilla; no per-renta codigo/pagador/gravamen/bien detail rows) and (b) the verification-predicate DSL in `_verification_predicates.py` is single-filing casilla-scoped (a `Mapping[CasillaId, Decimal]` plus text values), with no operator that reasons over a set of grouped rentas. The grouped-rentas detail rows are the diseno de registro Type-2 detail = NEEDS-FETCH 1 (Slice C, fetch-gated).
+The persisted row contract supplies the formerly absent data shape without fabricating a predicate DSL. It is limited to the official annual rental grouping rules and is covered by domain and end-to-end behavioral tests. Landed in `8f5f690ed0`.
 
 ## Notes
 
-- Authoring grouping predicates now would require inventing a grouped-rentas structure that the fetched Slice-C diseno must define. Deferred to Slice C (may also want a grouped-rentas modelling ADR addendum). No code, no fabrication.
+The original predicate-only approach is superseded by the approved row-model design; no ungrounded general grouping facility was added.

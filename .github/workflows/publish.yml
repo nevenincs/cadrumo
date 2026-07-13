@@ -2,7 +2,9 @@
 #
 # Operator-approved exception (2026-07-03) to the local-token publish lane in
 # RELEASING.md: the operator registered this exact workflow (publish.yml) and
-# the `pypi` environment as the project's pending Trusted Publisher on PyPI.
+# the `pypi` environment as a pending Trusted Publisher on PyPI. Each of the
+# three Cadrumo distributions must register this exact workflow/environment
+# independently; the release gate blocks dispatch until all three are confirmed.
 # There is NO automatic trigger — no tag push, no schedule — a human presses
 # the button, matching the LOCAL-ONLY HUMAN-GATED release discipline's intent.
 #
@@ -49,21 +51,30 @@ jobs:
 
       - name: Build cadrumo-data-manuals companion
         if: ${{ inputs.distribution == 'cadrumo-data-manuals' }}
-        run: uv build --wheel --project packaging/aeat_data_manuals --out-dir dist
+        run: uv build --wheel --project packaging/cadrumo_data_manuals --out-dir dist
 
       - name: Build cadrumo-data-official companion
         if: ${{ inputs.distribution == 'cadrumo-data-official' }}
-        run: uv build --wheel --project packaging/aeat_data_official --out-dir dist
+        run: uv build --wheel --project packaging/cadrumo_data_official --out-dir dist
 
       - name: Guard the artifact (size cap, slim-wheel split)
+        env:
+          SELECTED_DISTRIBUTION: ${{ inputs.distribution }}
         run: |
           python - <<'EOF'
-          import pathlib, sys, zipfile
+          import os, pathlib, sys, zipfile
 
           wheels = sorted(pathlib.Path("dist").glob("*.whl"))
           if len(wheels) != 1:
               sys.exit(f"expected exactly one wheel in dist/, found {[w.name for w in wheels]}")
           wheel = wheels[0]
+          expected_prefix = {
+              "cadrumo": "cadrumo-",
+              "cadrumo-data-manuals": "cadrumo_data_manuals-",
+              "cadrumo-data-official": "cadrumo_data_official-",
+          }[os.environ["SELECTED_DISTRIBUTION"]]
+          if not wheel.name.startswith(expected_prefix):
+              sys.exit(f"expected {expected_prefix}*.whl, found {wheel.name}")
           size_mb = wheel.stat().st_size / 1e6
           print(f"{wheel.name}: {size_mb:.1f} MB")
           # Every artifact must clear PyPI's 100 MB per-file cap now: the slim cadrumo
@@ -76,7 +87,7 @@ jobs:
                        "from a branch without the wheel-split build config, or has a companion grown over cap?")
           if wheel.name.startswith("cadrumo-"):
               leaked = [n for n in zipfile.ZipFile(wheel).namelist()
-                        if n.startswith("aeat/_data/corpus/")
+                        if n.startswith("cadrumo/_data/corpus/")
                         and n.lower().endswith((".pdf", ".xls", ".xlsx"))]
               if leaked:
                   sys.exit(f"slim cadrumo wheel leaked {len(leaked)} corpus source binaries")

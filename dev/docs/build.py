@@ -259,6 +259,68 @@ def _copy_docs_source(docs_root: Path, target: Path) -> None:
     shutil.copytree(docs_root, target, ignore=shutil.ignore_patterns("_build"))
 
 
+def ensure_isolated_storage_root() -> None:
+    """Point product storage at a build-scoped scratch root unless already pinned.
+
+    The documentation build imports the application (autodoc, the deferred
+    diagnostics-model rebuild, CLI-reference generation, and the search-index
+    terminology projections), and importing the application resolves the
+    product storage root. A documentation build must never depend on the
+    workstation's product state — in particular, the former-product custody
+    refusal must not red a docs build on a machine that carries retired
+    ``aeat`` state. Callers that deliberately pin a storage root keep it.
+    """
+    scratch = Path(tempfile.gettempdir()) / "cadrumo-docs-build-storage"
+    os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
+    Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
+
+
+#: Builder-owned pages with no corresponding source document.
+_ORPHAN_SPECIAL_PAGES = {"genindex.html", "search.html", "404.html", "py-modindex.html"}
+
+#: Asset and infrastructure directories that carry no docname-addressed pages.
+_ORPHAN_SKIP_DIRS = {"_static", "_sources", "_images", "_downloads", "_sphinx_design_static", "pagefind"}
+
+
+def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> int:
+    """Delete built pages whose source document no longer exists.
+
+    Furo bakes the theme's variables and templates into every page at build
+    time, so a page whose source was removed or renamed keeps rendering its
+    build-era design indefinitely and leaks stale results into the search
+    index (the docs-brand audit found 2208 such orphans rendering a retired
+    theme). Every docname maps to a ``.md``/``.rst`` source under ``docs/`` —
+    including the generated ``api/``, ``cli/``, and ``_generated/`` sources,
+    which are written to disk before Sphinx reads the tree — and ``_modules``
+    viewcode pages map back to ``src/`` modules.
+
+    Returns:
+        The number of orphaned pages removed.
+    """
+    if not html_root.exists():
+        return 0
+    removed = 0
+    for page in html_root.rglob("*.html"):
+        rel = page.relative_to(html_root)
+        if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
+            continue
+        docname = rel.with_suffix("")
+        if rel.parts[0] == "_modules":
+            if rel.as_posix() == "_modules/index.html":
+                continue
+            module_path = Path(*docname.parts[1:])
+            candidates = [repo_root / "src" / Path(f"{module_path}.py")]
+        else:
+            candidates = [docs_root / Path(f"{docname}{suffix}") for suffix in (".md", ".rst")]
+        if any(candidate.is_file() for candidate in candidates):
+            continue
+        page.unlink()
+        removed += 1
+    if removed:
+        print(f"Removed {removed} orphaned page(s) whose source no longer exists.", flush=True)
+    return removed
+
+
 def remove_noncanonical_build_entries(docs_root: Path) -> None:
     """Remove stale noncanonical entries directly under ``docs/_build``."""
     build_root = docs_root / "_build"
@@ -303,25 +365,26 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
+    ensure_isolated_storage_root()
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", "auto"]
-    env = {**os.environ, "AEAT_DOCS_PROJECT_ROOT": str(repo_root)}
+    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
     if strict:
         command.extend(["-n", "-W"])
-        env["AEAT_DOCS_OFFLINE"] = "1"
+        env["CADRUMO_DOCS_OFFLINE"] = "1"
         if (docs_root / "_build" / "html" / "objects.inv").is_file():
-            env["AEAT_DOCS_SELF_INVENTORY"] = "1"
+            env["CADRUMO_DOCS_SELF_INVENTORY"] = "1"
     if not plan.full_build_required:
-        env["AEAT_DOCS_OFFLINE"] = "1"
+        env["CADRUMO_DOCS_OFFLINE"] = "1"
         if single_page:
             relative_sources = _single_page_source_set(docs_root, targets)
             master_source = "index.md"
         else:
             relative_sources = [target.relative_to(docs_root).as_posix() for target in targets]
             master_source = relative_sources[0]
-        env["AEAT_DOCS_ONLY"] = os.pathsep.join(relative_sources)
-        env["AEAT_DOCS_MASTER_DOC"] = Path(master_source).with_suffix("").as_posix()
+        env["CADRUMO_DOCS_ONLY"] = os.pathsep.join(relative_sources)
+        env["CADRUMO_DOCS_MASTER_DOC"] = Path(master_source).with_suffix("").as_posix()
         if single_page:
-            env["AEAT_DOCS_SINGLE_PAGE"] = "1"
+            env["CADRUMO_DOCS_SINGLE_PAGE"] = "1"
 
     if plan.full_build_required:
         remove_noncanonical_build_entries(docs_root)
@@ -335,7 +398,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
         result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     elif single_page:
         remove_noncanonical_build_entries(docs_root)
-        with tempfile.TemporaryDirectory(prefix="aeat-docs-doctrees-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-docs-doctrees-") as tmp:
             out_dir = docs_root / "_build" / "html"
             command.extend(
                 [
@@ -348,12 +411,12 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             )
             result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     else:
-        with tempfile.TemporaryDirectory(prefix="aeat-docs-changed-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-") as tmp:
             temp_root = Path(tmp)
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)
             if plan.api_scaffold_required:
-                ApiStubManager(src_aeat=repo_root / "src" / "aeat", docs_api=temp_docs_root / "api").scaffold()
+                ApiStubManager(src_cadrumo=repo_root / "src" / "cadrumo", docs_api=temp_docs_root / "api").scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
             temp_targets = _targets_for_docs_root(docs_root, temp_docs_root, targets)
@@ -369,6 +432,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
+        remove_orphan_pages(docs_root, docs_root / "_build" / "html", repo_root)
         compile_search_index(docs_root / "_build" / "html", repo_root)
 
 
@@ -397,6 +461,7 @@ def compile_search_index(
             can drive a small real injector without paying the full
             materialisation cost; production always uses the default.
     """
+    ensure_isolated_storage_root()
     from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
     from dev.docs.pagefind_inject import InjectionStats, build_record_injector
 

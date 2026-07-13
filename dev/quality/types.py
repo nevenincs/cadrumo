@@ -27,7 +27,7 @@ from dataclasses import dataclass
 _CWD = os.getcwd().replace("\\", "/")
 
 TY_TARGET = "src"
-PYRIGHT_TARGETS = ("src/aeat/domain", "src/aeat/application")
+PYRIGHT_TARGETS = ("src/cadrumo/domain", "src/cadrumo/application")
 _TOP_RULES = 12
 _TOP_FILES = 12
 

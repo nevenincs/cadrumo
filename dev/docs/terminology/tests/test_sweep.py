@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.terminology._resolution import ChunkHit
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (

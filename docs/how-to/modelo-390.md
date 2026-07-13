@@ -5,7 +5,7 @@ Impuesto sobre el Valor Anadido (IVA) summary. Modelo 390 is an annual return,
 but part of its review depends on the same year's periodic Modelo 303 IVA
 self-assessments.
 
-`aeat` does not submit Modelo 390 to the Agencia Estatal de Administracion
+Cadrumo does not submit Modelo 390 to the Agencia Estatal de Administración
 Tributaria (AEAT). Export creates a local fichero-BOE file that you upload
 through the official AEAT channel yourself.
 
@@ -32,8 +32,8 @@ after this guide.
 Start with the local filing context:
 
 - [Set up your taxpayer profile](profile-setup.md) and check the active profile.
-- If you use AEAT census data, update the local profile first with
-  [Link Modelo 036 census information](censo-update.md).
+- Check the census facts in your profile first with
+  [Maintain Modelo 036 census facts in your profile](censo-update.md).
 - Use [Plan your filing calendar](filing-calendar.md) to confirm the annual
   filing window.
 - Confirm the annual period token with
@@ -156,7 +156,7 @@ Modelo 390 reconciles from Modelo 303:
 - `iva.resultado-regimen-general`
 - `iva.compensacion-generada-periodo`
 
-If a 303 return was filed outside `aeat`, capture or reconcile the official
+If a 303 return was filed outside Cadrumo, capture or reconcile the official
 evidence before you rely on local values:
 
 ```bash

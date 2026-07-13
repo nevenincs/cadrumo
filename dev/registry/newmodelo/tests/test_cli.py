@@ -7,12 +7,22 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ..cli import app
+from ..cli import _default_manager, app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _THROWAWAY_MODELO_ID = "986"
 _THROWAWAY_REVISION_ID = "2026-y-siguientes"
+
+
+def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
+    """The no-override CLI path resolves the bundled Cadrumo registry."""
+    manager = _default_manager()
+
+    assert manager.registry_modelos_root.is_dir()
+    assert manager.registry_modelos_root == (
+        Path(__file__).resolve().parents[4] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+    )
 
 
 def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:

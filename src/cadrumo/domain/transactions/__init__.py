@@ -1,0 +1,301 @@
+"""Public facade for immutable ledger transactions.
+
+This package re-exports the transaction domain boundary used by
+:mod:`~application.ledger`: :class:`~domain.transactions.Transaction` wraps an upstream
+:class:`~domain.transactions.RawTransaction` and its :class:`~domain.transactions.RawProvenance`, while
+:class:`~domain.transactions.TransactionCatalogue` keeps the immutable mapping keyed by the
+content-derived transaction id. Import helpers such as
+:func:`~domain.transactions.derive_transaction_id`,
+:func:`~domain.transactions.derive_import_fingerprint`, and
+:func:`~domain.transactions.normalise_movement_reference` are the public identity helpers.
+
+The row model separates amount magnitude from
+:class:`~domain.transactions.TransactionDirection`; downstream tax calculations route by direction
+rather than by signed amounts. It carries classification, tax substrate,
+evidence, split, edit, lifecycle, FX, jurisdiction, and timestamp provenance
+through typed records such as :class:`~domain.transactions.ClassificationHistoryEntry`,
+:class:`~domain.transactions.TransactionEvidenceProvenanceEntry`,
+:class:`~domain.transactions.TransactionEditLineageEntry`, and
+:class:`~domain.transactions.TransactionLifecycleLineageEntry`. Classification helpers
+:func:`~domain.transactions.set_classification`,
+:func:`~domain.transactions.snapshot_classification_state`, and
+:func:`~domain.transactions.link_invoice` return fresh catalogues instead of mutating callers'
+instances.
+
+Persistence is served by the read-side
+:class:`~domain.transactions.TransactionCatalogueRepositoryProtocol` port; the concrete encrypted
+implementation lives in the persistence adapter
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+It stores each transaction under the bucket-scoped transaction namespace as
+``FINANCIAL`` :class:`~core.classification.SensitivityClass` rows wrapped in
+:class:`~adapters.persistence.storage.Envelope` through
+:class:`~adapters.persistence.storage.SecureObjectRepository`; callers should
+not write plaintext catalogues or reach into private modules. The pure port
+surface (:class:`~domain.transactions.ImportSummary`, the key-derivation helpers, and the namespace
+constant) remains exposed lazily here.
+
+LLM-facing :class:`~domain.transactions.LLMClassifier`,
+:class:`~domain.transactions.LLMSplitProposer`,
+:class:`~domain.transactions.PromptSpec`,
+:class:`~domain.transactions.LedgerClassificationRule`, and
+:func:`~domain.transactions.ledger_irpf_category_catalogue` also live behind
+this facade. They constrain model choices to typed
+:class:`~domain.transactions.BusinessClassification`,
+:class:`~domain.transactions.CategoryChoice`, and
+:class:`~domain.transactions.IvaCategoryChoice` allow-lists; regulated tax
+numbers are derived by application services, not originated by this package.
+
+Downstream modelo calculation records keep only forward transaction ids on
+:class:`~domain.modelos.CalculationRevision`. Aggregation services consume
+this catalogue to produce registry binding values and ledger filing snapshots,
+while :class:`~domain.modelos.TransactionRevisionParticipationIndex`
+provides the rebuildable inverse audit lookup from one ledger transaction to
+finalized revisions and filing records.
+
+See Also:
+    :mod:`~application.ledger`
+        Operator-facing lifecycle that creates, edits, classifies, splits,
+        attaches evidence, and preflights bucket-scoped transactions.
+    :mod:`~application.aggregation`
+        Source resolvers that turn transaction catalogues into
+        :class:`~application.aggregation.CalculationSourceResolution`
+        payloads for modelo calculation.
+    :func:`~application.aggregation._ledger_filing_snapshot.compute_ledger_filing_snapshot`
+        Captures tax-relevant transaction fields for finalized calculation
+        revisions.
+    :mod:`~domain.invoices`
+        Invoice catalogue and reconciliation records referenced by
+        ``invoice_id`` and ``purchase_invoice_evidence_id``.
+    :mod:`~domain.usage_ratios`
+        Proportionality profiles referenced by ledger rows before aggregation.
+    ``2026-06-10-ledger-amount-direction-adr``
+        Decision making amount magnitude absolute and direction authoritative.
+    ``2026-06-10-ledger-modelo-crossref-adr``
+        Decision for the rebuildable transaction participation index.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from ._classification_rule import LedgerClassificationRule
+from ._enums import (
+    CLASSIFIED_STATES,
+    BusinessClassification,
+    SplitRole,
+    TransactionDirection,
+    TransactionLifecycleState,
+    is_classified,
+)
+from ._errors import (
+    LedgerNoActiveBucketError,
+    LedgerStorageError,
+    StoredTransactionDriftError,
+    TransactionCatalogueError,
+    TransactionError,
+    TransactionIdPrefixError,
+    TransactionNotFoundError,
+    TransactionPersistenceError,
+    TransactionValidationError,
+)
+from ._irpf_categories import (
+    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+    IRPF_CATEGORY_TRABAJO,
+    PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING,
+    LedgerIrpfCategoryDescriptor,
+    ledger_irpf_category_catalogue,
+)
+from ._llm import (
+    MINIMUM_CLASSIFICATION_TIER,
+    PIPELINE_ONLY_CLASSIFICATIONS,
+    CategoryChoice,
+    ClassificationChoice,
+    IvaCategoryChoice,
+    LLMClassificationResponse,
+    LLMClassifier,
+    LLMClassifierError,
+    LLMSplitChild,
+    LLMSplitProposer,
+    LLMSplitResponse,
+    ModelProfile,
+    ModelTier,
+    PromptSpec,
+    SubprocessLLMClassifier,
+    build_antigravity_classifier,
+    build_claude_classifier,
+    build_codex_classifier,
+    build_split_prompt,
+    default_classification_choices,
+    default_iva_category_choices,
+    default_prompt_spec,
+    parse_response,
+    parse_split_response,
+    prompt_spec_with_every_spending_category,
+    prompt_spec_with_saturation_fields,
+    register_classifier,
+    resolve_classifier,
+    resolve_split_proposer,
+    unregister_classifier,
+)
+from ._m210_income_classification import M210IncomeClassification
+from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
+from ._models import (
+    BucketTransactionRef,
+    ClassificationHistoryEntry,
+    DecisionProvenance,
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
+    LedgerDatePartition,
+    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionSummary,
+    SplitLineage,
+    Transaction,
+    TransactionCatalogue,
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+    derive_import_fingerprint,
+    derive_movement_day_key,
+    derive_split_group_id,
+    derive_transaction_id,
+    normalise_movement_reference,
+)
+from ._protocols import (
+    TransactionCatalogueRepositoryProtocol,
+)
+from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ._service import (
+    find_transaction,
+    link_invoice,
+    set_classification,
+    snapshot_classification_state,
+)
+
+if TYPE_CHECKING:
+    from ._repository import (
+        TX_BUCKET_NAMESPACE,
+        ImportSummary,
+        transaction_index_object_key,
+        transaction_object_key,
+    )
+
+
+_LAZY_REPOSITORY_NAMES = frozenset(
+    {
+        "ImportSummary",
+        "TX_BUCKET_NAMESPACE",
+        "transaction_index_object_key",
+        "transaction_object_key",
+    },
+)
+
+
+def __getattr__(name: str):
+    """Lazy-import the pure persistence surface to defer the ``_repository`` module load.
+
+    The concrete :class:`TransactionCatalogueRepository` now lives in the
+    persistence adapter
+    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`;
+    only the pure port surface (``ImportSummary``, the key-derivation helpers,
+    and the namespace constant) is resolved here.
+    """
+    if name in _LAZY_REPOSITORY_NAMES:
+        from . import _repository
+
+        return getattr(_repository, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = [
+    "CLASSIFIED_STATES",
+    "IRPF_CATEGORY_ACTIVIDAD_ECONOMICA",
+    "IRPF_CATEGORY_TRABAJO",
+    "MINIMUM_CLASSIFICATION_TIER",
+    "PIPELINE_ONLY_CLASSIFICATIONS",
+    "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "TX_BUCKET_NAMESPACE",
+    "BucketTransactionRef",
+    "BusinessClassification",
+    "CategoryChoice",
+    "ClassificationChoice",
+    "ClassificationHistoryEntry",
+    "DecisionProvenance",
+    "ImportSummary",
+    "IvaCashAccountingPaymentEvidence",
+    "IvaCashAccountingTreatment",
+    "IvaCategoryChoice",
+    "LLMClassificationResponse",
+    "LLMClassifier",
+    "LLMClassifierError",
+    "LLMSplitChild",
+    "LLMSplitProposer",
+    "LLMSplitResponse",
+    "LedgerClassificationRule",
+    "LedgerDatePartition",
+    "LedgerIrpfCategoryDescriptor",
+    "LedgerNoActiveBucketError",
+    "LedgerStorageError",
+    "M210IncomeClassification",
+    "ModelCapability",
+    "ModelProfile",
+    "ModelTier",
+    "OutOfWindowTransactionIndexEntry",
+    "OutOfWindowTransactionSummary",
+    "PromptSpec",
+    "RawProvenance",
+    "RawTransaction",
+    "SourceFormat",
+    "SplitLineage",
+    "SplitRole",
+    "StoredTransactionDriftError",
+    "SubprocessLLMClassifier",
+    "Transaction",
+    "TransactionCatalogue",
+    "TransactionCatalogueError",
+    "TransactionCatalogueRepositoryProtocol",
+    "TransactionDirection",
+    "TransactionEditLineageEntry",
+    "TransactionError",
+    "TransactionEvidenceProvenanceEntry",
+    "TransactionIdPrefixError",
+    "TransactionLifecycleLineageEntry",
+    "TransactionLifecycleState",
+    "TransactionNotFoundError",
+    "TransactionPersistenceError",
+    "TransactionValidationError",
+    "build_antigravity_classifier",
+    "build_claude_classifier",
+    "build_codex_classifier",
+    "build_split_prompt",
+    "catalogue",
+    "default_classification_choices",
+    "default_iva_category_choices",
+    "default_prompt_spec",
+    "derive_import_fingerprint",
+    "derive_movement_day_key",
+    "derive_split_group_id",
+    "derive_transaction_id",
+    "find_transaction",
+    "is_classified",
+    "ledger_irpf_category_catalogue",
+    "link_invoice",
+    "normalise_movement_reference",
+    "parse_response",
+    "parse_split_response",
+    "profiles_for_provider",
+    "prompt_spec_with_every_spending_category",
+    "prompt_spec_with_saturation_fields",
+    "register_classifier",
+    "resolve_classifier",
+    "resolve_profile",
+    "resolve_split_proposer",
+    "set_classification",
+    "snapshot_classification_state",
+    "transaction_index_object_key",
+    "transaction_object_key",
+    "unregister_classifier",
+]

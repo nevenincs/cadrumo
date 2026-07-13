@@ -1,11 +1,11 @@
-# CI Workflow for AEAT
+# CI workflow for Cadrumo.
 # This workflow runs lint, typecheck, tests, and hooks on every PR and push to main.
 # It enforces cross-platform parity by running on both Ubuntu and Windows.
 #
 # No secrets are required for the unit suite; live tests are explicitly skipped.
-# AEAT_LIVE_TESTS_ENABLED is NEVER set on CI.
+# CADRUMO_LIVE_TESTS_ENABLED is NEVER set on CI.
 
-name: CI
+name: Cadrumo CI
 
 on:
   workflow_dispatch:
@@ -22,8 +22,8 @@ permissions:
   contents: read
 
 jobs:
-  lint-and-test:
-    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+  cadrumo-lint-and-test:
+    name: Cadrumo / ${{ matrix.os }} / Python ${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
@@ -74,21 +74,21 @@ jobs:
         # Windows. Rules in `.semgrep/rules/` enforce the type-uniformity
         # discipline; see `.semgrep/README.md` for the rule inventory and policy.
         if: matrix.os == 'ubuntu-latest'
-        run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/aeat/
+        run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
 
       - name: Registry verify
-        run: uv run --no-sync aeat app registry verify --json
+        run: uv run --no-sync cadrumo app registry verify --json
 
       - name: Audit oracle bindings
         # Fails the workflow if any cross-reference declares an
         # oracle_id that doesn't match the registered oracle's
         # surface_kind. To fix locally, run:
-        #   uv run --no-sync aeat app registry audit-oracles
-        run: uv run --no-sync aeat app registry audit-oracles --json
+        #   uv run --no-sync cadrumo app registry audit-oracles
+        run: uv run --no-sync cadrumo app registry audit-oracles --json
 
       - name: Test (unit)
         run: uv run pytest --junitxml=junit.xml
-        # AEAT_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
+        # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
