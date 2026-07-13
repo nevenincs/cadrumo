@@ -71,3 +71,13 @@ The real smoke completed in 312 seconds. Existing authority-owned `AEAT` and
 `registry/aeat` names were not changed. Sentence prose casing was outside this
 Step; the uppercase assertion is intentional because version output is an
 identity context under the binding ADR.
+
+## Plan chronology correction from S94
+
+The S37 checkbox was first cross-carried as closed by parent S87 commit
+`03cd792be3`, before this Step's owning implementation commit `a4e56dcf83`.
+That early plan hunk was not implementation evidence. Commit `a4e56dcf83`
+delivered the probe and this refreshed record, and independent audit
+`46363217dd` passed the installed-wheel contract. The current checked state is
+supported by those later S37-owned artifacts even though the earlier checkbox
+attribution was defective.

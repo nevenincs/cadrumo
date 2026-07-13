@@ -38,3 +38,34 @@ related:
 - The S76 bookkeeping record still requires three later provenance corrections: S49 maps to `798ed78991`, S51 maps to `29797cc8c9`, and S54 maps to `9197c379c3`.
 - This Step intentionally does not edit S76 evidence or claim those LOW findings resolved.
 - Plan checking retains the known non-monotonic `PLAN022` warning, and feature annotation checking reports only pre-existing scaffold comments outside S94.
+
+## Remediation continuation: S87 bookkeeping review
+
+### Description
+
+- Reopen S94 through the plan CLI and ground the S87 cross-step closure finding
+  in the S87 and S37 commit chronology.
+- Disclose the premature S37 checkbox hunk in both owning records while
+  preserving the later independently passing S37 evidence and audit.
+- Correct the checked S96 and S97 plan rows and records so they describe their
+  supersession work as historical transactions later corrected by S87.
+- Preserve the accepted July 13 Stage-A role and the CLI ADR's single binding
+  naming authority without editing either ADR or any implementation.
+
+### Outcome
+
+The execution corpus now attributes the S37 checkbox change to S87 commit
+`03cd792be3` and the actual S37 implementation and evidence to child commit
+`a4e56dcf83`, with PASS audit `46363217dd` supporting the current checked state.
+S96 and S97 remain checked as completed historical remediation transactions,
+but neither their plan rows nor their correction notes claim that the July 13
+ADR remains wholly superseded or historical-only. The live graph remains the
+S87-restored contract: the July 13 ADR is accepted for Stage A, while the CLI
+ADR is the sole naming authority.
+
+### Notes
+
+The original S94 sections above remain historical evidence of its earlier
+descendant-closure repair. This continuation changes bookkeeping only. Runtime
+identity, packaging implementation, locale catalogues, and the staged
+marketplace README are outside scope and unchanged.

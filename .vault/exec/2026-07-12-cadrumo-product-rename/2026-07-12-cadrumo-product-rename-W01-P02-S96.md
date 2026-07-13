@@ -9,7 +9,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-# Supersede the conflicting July 13 rename ADR in the binding authority graph
+# Document the whole-ADR supersession attempt later corrected to preserve the accepted Stage-A role
 
 ## Scope
 
@@ -21,15 +21,15 @@ related:
 ## Description
 
 - Ground the graph defect in audit commit `bb97babbd5dfec1d17dd68269107d21ff06633c7` and the live ADR corpus.
-- Use the authoritative Vaultspec supersession command to connect the binding CLI ADR to the July 13 rename ADR reciprocally.
-- Preserve the July 13 ADR's stale title-case and Stage-B body as historical evidence under an explicit superseded status.
+- Record the Vaultspec supersession transaction that connected the binding CLI ADR to the July 13 rename ADR reciprocally.
+- Preserve the then-current superseded-state evidence while identifying it as a graph state later corrected by S87.
 - Keep the binding CLI ADR body unchanged, including the absence of the false status note removed by S95.
 - Preserve every existing plan checkbox while adding and closing only S96 through the Vaultspec plan CLI.
 
 ## Outcome
 
-- The accepted CLI ADR explicitly supersedes both `2026-07-12-cadrumo-product-rename-adr` and `2026-07-13-product-rename-adr`.
-- The July 13 ADR is `superseded`, points back through `superseded_by`, and retains its historical body without presenting it as active authority.
+- At the S96 commit, the accepted CLI ADR temporarily superseded both `2026-07-12-cadrumo-product-rename-adr` and `2026-07-13-product-rename-adr`.
+- S87 later removed the July 13 edge and restored that ADR to accepted Stage-A scope; this record preserves the supersession attempt rather than asserting the live graph.
 - Both ADR modified stamps are maintained by the supersession command at `2026-07-13`.
 - S95 remains checked, all previously open authority and casing lanes remain open, and S96 is the only newly completed Step.
 
@@ -39,3 +39,13 @@ related:
 - Independent re-review of the combined S95/S96 authority graph follows this remediation.
 - Focused ADR frontmatter, modified-stamp, and Markdown checks pass. Repository-wide ADR status retains only two unrelated pre-existing quoting warnings.
 - Plan validation retains the known non-monotonic `PLAN022` warning; graph inspection confirms both reciprocal supersession pairs.
+
+## Graph correction from S94
+
+The Description and Outcome above record the S96 graph transaction as it was
+executed; they are not the current authority state. S87 later corrected that
+whole-ADR supersession: `2026-07-13-product-rename-adr` is accepted for its
+Stage-A release-surface scope, and the CLI ADR is the single binding authority
+for casing, imports, executables, and machine identities. S96 remains checked
+as completed historical remediation, not as a live instruction to supersede
+the accepted Stage-A role.
