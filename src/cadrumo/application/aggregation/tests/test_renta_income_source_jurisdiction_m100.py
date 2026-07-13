@@ -46,7 +46,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 # ALL source jurisdictions into the same base, with foreign-source rows
 # carrying their declared jurisdiction through for audit. The IRNR /
 # Beckham per-row gating concerns (Art. 25 TRLIRNR, Art. 93.5 LIRPF)
-# belong on those engines (#256 IRNR pending; M151 pending); on the
+# belong on the IRNR / M151 engines, not this one; on the
 # resident-IRPF surface the source_jurisdiction is provenance only.
 # ---------------------------------------------------------------------------
 
@@ -146,7 +146,7 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
         (jan_amount, dec_amount),
         Decimal("0"),
     )
-    # Regression (issue #408): the excluded prior-year row must surface as a
+    # Regression: the excluded prior-year row must surface as a
     # visible OUTSIDE_PERIOD issue, not silently vanish.
     assert len(result.issues) == 1
     assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
@@ -158,7 +158,7 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
 ) -> None:
     """A catalogue transaction outside the requested ejercicio must surface as a summary.
 
-    Regression test (issue #408): the repository-backed M100 entry point must
+    Regression test: the repository-backed M100 entry point must
     not silently drop out-of-window rows. The compact summary keeps the
     visibility signal without allocating one issue per plaintext index entry.
     """

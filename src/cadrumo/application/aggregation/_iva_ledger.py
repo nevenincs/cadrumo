@@ -1173,7 +1173,7 @@ def _classify_iva_transaction(
     recargo_amount = (transaction.recargo_amount or Decimal("0")) * proportionality
 
     # Resolve the effective IVA category: explicit override takes priority over
-    # the rate-kind-derived domestic category (D5 decision from ADR).
+    # the rate-kind-derived domestic category.
     explicit_category = transaction.iva_category
     if explicit_category is not None:
         d5_issue = _validate_intracom_export_counterparty(
@@ -1441,9 +1441,9 @@ def _validate_intracom_export_counterparty(
     category: IvaCategory,
     eu_member_state: EUMemberState | None,
 ) -> IvaLedgerAggregationIssue | None:
-    """Return a gate issue when the D5 counterparty/category coupling is violated.
+    """Return a gate issue when the counterparty/category coupling is violated.
 
-    Rules (ADR D5):
+    Rules:
     - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``EUMemberState``.
     - Export and export-assimilated categories must carry no ``EUMemberState``.
     """

@@ -36,7 +36,7 @@ _PROFILE_FINGERPRINT = "sha256:e43c88edad4d98897cc610aad74834a0ef1711f53a6352698
 # Derived-fact profile bindings that unconditionally resolve a grounded value
 # (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
 # the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61
-# LIRPF, #593 wires the autonomico half's CCAA-conditional Madrid override),
+# LIRPF, with the autonomico half carrying a CCAA-conditional Madrid override),
 # Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades sin
 # minimo separate-escala eligibility flag (Art. 64/75 LIRPF).
 _DERIVED_FACT_PROFILE_BINDINGS = frozenset(

@@ -1,15 +1,15 @@
-"""RET-3: the Modelo 347 declaration floor merges a counterparty's cohorts before testing.
+"""The Modelo 347 declaration floor merges a counterparty's cohorts before testing.
 
-The #11 fix made ``declarable_counterparty_nifs_347`` accumulate
-``total_invoice_total`` per ``counterparty_nif`` across ALL rollups (each rollup is
-one ``(source_kind, counterparty_nif, operation_kind)`` cohort) and test the MERGED
-total against the AEAT ``M347_THRESHOLD_EUR`` (3.005,06 EUR) - not per cohort. The
-audit found the cross-cohort merge path untested: existing coverage proves
-per-cohort rollup grouping and the single-cohort threshold boundary, but never the
-case the fix exists for - a single NIF whose two operation-kind cohorts are EACH
-below the floor yet sum ABOVE it.
+``declarable_counterparty_nifs_347`` accumulates ``total_invoice_total`` per
+``counterparty_nif`` across ALL rollups (each rollup is
+one ``(source_kind, counterparty_nif, operation_kind)`` cohort) and tests the MERGED
+total against the AEAT ``M347_THRESHOLD_EUR`` (3.005,06 EUR) - not per cohort.
+Existing coverage proves per-cohort rollup grouping and the single-cohort
+threshold boundary, but not the cross-cohort merge case this module pins - a
+single NIF whose two operation-kind cohorts are EACH below the floor yet sum
+ABOVE it.
 
-This module pins exactly that. The AEAT rule (Orden EHA/3012/2008 art. 1) declares
+The AEAT rule (Orden EHA/3012/2008 art. 1) declares
 a counterparty when operations with them "en su conjunto" exceed 3.005,06 EUR, so
 the combined per-NIF total - not any single clave - is what the floor gates.
 

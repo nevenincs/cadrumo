@@ -45,6 +45,141 @@
         "concept:recargo-equivalencia"
       ],
       "source": "Operator-facing IVA regime term from the Handbook."
+    },
+    {
+      "query": "declaracion censal",
+      "concept_id": "modelo-036",
+      "expected_record_ids": [
+        "concept:modelo-036",
+        "legal:rd-1065-2007:art-9"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "retenciones del trabajo",
+      "concept_id": "modelo-111",
+      "expected_record_ids": [
+        "concept:modelo-111",
+        "legal:ley-35-2006:art-99"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "modelo 115",
+      "concept_id": "modelo-115",
+      "expected_record_ids": [
+        "concept:modelo-115",
+        "legal:rd-439-2007:art-100"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "modelo 123",
+      "concept_id": "modelo-123",
+      "expected_record_ids": [
+        "concept:modelo-123",
+        "legal:ley-35-2006:art-25"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "pago fraccionado por modulos",
+      "concept_id": "modelo-131",
+      "expected_record_ids": [
+        "concept:modelo-131",
+        "legal:rd-439-2007:art-110"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "atribucion de rentas",
+      "concept_id": "modelo-184",
+      "expected_record_ids": [
+        "concept:modelo-184",
+        "legal:orden-hap-2250-2015:art-1"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "resumen anual de retenciones",
+      "concept_id": "modelo-190",
+      "expected_record_ids": [
+        "concept:modelo-190",
+        "legal:orden-eha-3127-2009:art-1"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "impuesto sobre sociedades",
+      "concept_id": "modelo-200",
+      "expected_record_ids": [
+        "concept:modelo-200",
+        "legal:ley-27-2014:art-40"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "pago fraccionado de sociedades",
+      "concept_id": "modelo-202",
+      "expected_record_ids": [
+        "concept:modelo-202",
+        "legal:ley-27-2014:art-40"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "impuesto de no residentes",
+      "concept_id": "modelo-210",
+      "expected_record_ids": [
+        "concept:modelo-210",
+        "legal:trlirnr-rdleg-5-2004:art-2"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "IVA no periodico",
+      "concept_id": "modelo-309",
+      "expected_record_ids": [
+        "concept:modelo-309",
+        "legal:orden-hac-3625-2003:apartado-1"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "modelo 322",
+      "concept_id": "modelo-322",
+      "expected_record_ids": [
+        "concept:modelo-322",
+        "legal:orden-eha-3434-2007:art-1"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "operaciones intracomunitarias",
+      "concept_id": "modelo-349",
+      "expected_record_ids": [
+        "concept:modelo-349",
+        "legal:orden-eha-769-2010:art-1"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "ventanilla unica",
+      "concept_id": "modelo-369",
+      "expected_record_ids": [
+        "concept:modelo-369",
+        "legal:orden-hac-610-2021:art-1"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
+    },
+    {
+      "query": "bienes en el extranjero",
+      "concept_id": "modelo-720",
+      "expected_record_ids": [
+        "concept:modelo-720",
+        "legal:ley-58-2003:da-18"
+      ],
+      "source": "curated 2026-07-13 with the modelo-concept promotion; expectations set from the concept's own card and its registry-grounded primary legal ref, independent of sweep output"
     }
   ]
 }

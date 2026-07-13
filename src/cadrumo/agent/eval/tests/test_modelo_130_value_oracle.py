@@ -20,7 +20,7 @@ registry rate or formula drifts from AEAT, the engine output diverges from
 
 No new bundled registry corpus is required: the AEAT worked example is declared
 here as the eval's own fixture and computed through the live engine, so the
-figure-level oracle ships now rather than awaiting a separate corpus campaign.
+figure-level oracle ships now rather than awaiting separate corpus sourcing.
 """
 
 from __future__ import annotations

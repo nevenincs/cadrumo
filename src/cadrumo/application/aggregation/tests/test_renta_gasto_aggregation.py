@@ -411,7 +411,7 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
         Decimal("0"),
     )
     assert {o.transaction_id for o in result_q1.observations} == {q1_a.transaction_id, q1_b.transaction_id}
-    # Regression (issue #408): the excluded May row must surface as a visible
+    # Regression: the excluded May row must surface as a visible
     # compact summary, not silently vanish.
     assert result_q1.issues == ()
     assert result_q1.out_of_window_summary is not None
