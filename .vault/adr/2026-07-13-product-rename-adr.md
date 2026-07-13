@@ -4,11 +4,8 @@ tags:
   - '#product-rename'
 date: '2026-07-13'
 modified: '2026-07-13'
-related:
-  - "[[2026-07-10-public-product-name-clearance-research]]"
+related: []
 ---
-
-
 
 # `product-rename` adr: `product rename to Cadrumo across distributions, repository, and release surfaces` | (**status:** `accepted`)
 
@@ -112,3 +109,23 @@ verification-heavy, so it rides its own campaign.
   `nevenincs/neve-marketplace` listing are operator-owned follow-ups.
 - All version history and provenance is preserved; the repository rename
   redirects old clones and links.
+
+## Status note: Stage B narrowed by operator decision (2026-07-13)
+
+This ADR remains accepted for its executed Stage-A scope: distribution names,
+the `nevenincs/cadrumo` repository, install hints, publish workflow,
+marketplace/marketing/legal references. Two elements are corrected by the
+binding `2026-07-12-cadrumo-cli-executable-adr` (see its status note):
+
+- The Stage-B console-script rename (`aeat`/`aeat-mcp` to
+  `cadrumo`/`cadrumo-mcp`) is STRUCK: the operator ruled the sole human
+  executable is exactly `aeat`. The related Consequences bullet ("Until
+  Stage B, `pip install cadrumo` still installs console scripts named
+  `aeat`...") is not a seam awaiting removal; it is the permanent contract.
+- The constraint "the Python import package stays `aeat`" was overtaken by
+  the executed hard cut to the `cadrumo` import root, which the binding ADR
+  sanctions; no `aeat` import surface exists.
+
+Any remaining Stage-B work (MCP tool prefix, envelope identifiers, locale
+citations) is governed by the binding cli-executable ADR's identity boundary,
+not by this document.
