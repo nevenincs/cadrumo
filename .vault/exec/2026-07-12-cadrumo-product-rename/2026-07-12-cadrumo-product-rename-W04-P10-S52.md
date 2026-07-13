@@ -67,3 +67,10 @@ and executable contract, with no former command, tool alias, or fallback.
 - The real project manifest checker reported `manifest.json valid: cadrumo 0.2.0`.
 - Two manifest-focused MCPB build tests passed; later bundle-build and signing
   behavior remains assigned to S54.
+- Completion audit found the root release had advanced to `0.2.1` while the MCPB
+  manifest remained `0.2.0`. S52 was reopened and the manifest version was
+  realigned to the root `pyproject.toml` authority without changing identity or
+  prose fields.
+- The existing live version-parity test required no duplication: the real
+  manifest checker reported `manifest.json valid: cadrumo 0.2.1`; Ruff format,
+  Ruff lint, Ty, and all six MCPB tests passed.
