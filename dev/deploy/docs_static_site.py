@@ -97,9 +97,9 @@ def _site_build_environment() -> dict[str, str]:
     """Return the deployment-specific strict docs build environment."""
     return {
         **os.environ,
-        "AEAT_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
-        "AEAT_DOCS_JOBS": "1",
-        "AEAT_DOCS_PAGEFIND_MODE": "pages",
+        "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
+        "CADRUMO_DOCS_JOBS": "1",
+        "CADRUMO_DOCS_PAGEFIND_MODE": "pages",
     }
 
 
@@ -127,6 +127,11 @@ def _validate_site_artifacts(html_root: Path) -> None:
         raise SystemExit(f"Docs build is not deployable; required artifacts are missing: {joined}")
     try:
         sitemap = ElementTree.parse(html_root / "sitemap.xml")
+    except OSError as exc:
+        raise SystemExit(
+            f"Docs build did not produce a sitemap at {html_root / 'sitemap.xml'}; "
+            "set CADRUMO_DOCS_BASE_URL so the build writes one.",
+        ) from exc
     except ElementTree.ParseError as exc:
         raise SystemExit("Docs build sitemap is not valid XML.") from exc
     locations = [(element.text or "").strip() for element in sitemap.iter() if element.tag.endswith("loc")]
