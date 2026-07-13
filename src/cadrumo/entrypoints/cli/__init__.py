@@ -1,4 +1,4 @@
-"""Cadrumo's command-line interface (CLI), provided by the ``cadrumo`` executable.
+"""CADRUMO's command-line interface (CLI), provided by the ``aeat`` executable.
 
 The command tree exposes two top-level namespaces:
 
@@ -46,6 +46,7 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 _configure_stdio_for_utf8()
 
+from ...core import PRODUCT_IDENTITY
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
@@ -66,7 +67,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
-# Importing every module just to build the Cadrumo app object made
+# Importing every module just to build the CADRUMO app object made
 # ``aeat --version`` and ``aeat --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
@@ -80,7 +81,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 
 app = typer.Typer(
-    name="cadrumo",
+    name=PRODUCT_IDENTITY.cli_executable,
     help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
@@ -156,10 +157,10 @@ def _root(
             typer.echo(render_cli_version_text(report))
         else:
             # The short `aeat --version` line is machine-format semver
-            # (e.g. "cadrumo 1.2.3") consumed by CI tooling and package
-            # managers. Cadrumo policy treats semver output as machine-format,
+            # (e.g. "CADRUMO 1.2.3") consumed by CI tooling and package
+            # managers. CADRUMO policy treats semver output as machine-format,
             # not operator text, so tr() wrapping is intentionally omitted.
-            typer.echo(f"{report.package_name} {report.package_version}")
+            typer.echo(f"{PRODUCT_IDENTITY.display_name} {report.package_version}")
         raise typer.Exit()
     if help_:
         # The operator-surface import is deferred so the help-document
@@ -656,7 +657,8 @@ def _full_invocation_tokens() -> tuple[str, ...]:
     from pathlib import Path
 
     executable = Path(sys.argv[0]).name.lower()
-    if executable not in {"cadrumo", "cadrumo.exe", "__main__.py"}:
+    canonical_executable = PRODUCT_IDENTITY.cli_executable.lower()
+    if executable not in {canonical_executable, f"{canonical_executable}.exe"}:
         return ()
     return tuple(sys.argv[1:])
 
@@ -777,7 +779,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 
 # ---------------------------------------------------------------------
 # Wiring — every heavy subcommand module is registered lazily so the
-# Cadrumo app object can be constructed without importing the command
+# CADRUMO app object can be constructed without importing the command
 # tree (and therefore without the registry parse).
 # ---------------------------------------------------------------------
 
@@ -793,7 +795,7 @@ _lazy("app", "quickfile", "._app_quickfile")
 _lazy("app", "registry", ".registry")
 _lazy("app", "review", "._review")
 
-_lazy("cadrumo", "config", "._config")
+_lazy(PRODUCT_IDENTITY.cli_executable, "config", "._config")
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
@@ -802,7 +804,7 @@ def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
     ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
-    kept off the eager import path precisely so constructing the Cadrumo CLI
+    kept off the eager import path precisely so constructing the CADRUMO CLI
     app object never pulls the registry-dependent command tree; a
     top-level ``from ._app_contract import command_schema_refs`` (and
     siblings) would defeat that and reintroduce the startup cost
@@ -925,8 +927,8 @@ def _localise_typer_parse_error_messages() -> None:
 def main() -> None:
     """Console-script entry point.
 
-    Pins ``prog_name`` so Typer's usage lines say ``cadrumo`` even when the
-    launcher is ``cadrumo.EXE`` on Windows.
+    Pins ``prog_name`` so Typer's usage lines say ``aeat`` even when the
+    launcher is ``aeat.EXE`` on Windows.
 
     An explicit ``--language`` / ``--lang`` flag is promoted to
     ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
@@ -957,7 +959,7 @@ def main() -> None:
 
         progress_sink = operator_progress_sink(_emit_operator_progress)
     with _metadata_state_isolation(arguments), _ensure_help_render_width(), progress_sink:
-        app(prog_name="cadrumo")
+        app(prog_name=PRODUCT_IDENTITY.cli_executable)
 
 
 def _is_metadata_invocation(arguments: list[str]) -> bool:
@@ -987,7 +989,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
     """Keep help and version imports off an operator's retired ``aeat`` state root.
 
     Lazy subgroup construction can import modules that instantiate Settings.
-    Metadata invocations therefore run against a temporary Cadrumo root and
+    Metadata invocations therefore run against a temporary CADRUMO root and
     database before those imports occur. Normal commands never enter this
     scope and continue to refuse a retired ``aeat`` state root in normal operation.
     """
