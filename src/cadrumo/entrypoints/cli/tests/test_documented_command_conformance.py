@@ -1,4 +1,15 @@
-"""Argument-level conformance gate for documented ``cadrumo`` commands.
+"""Argument-level conformance gate for documented ``aeat`` commands.
+
+``aeat`` is the sole human CLI executable (the ``cadrumo`` package ships it as
+its one console entry point per ``cadrumo-product-authority-names``); every
+documented CLI invocation therefore begins with the ``aeat`` token, and this
+gate anchors on it. The package name ``cadrumo``, the ``cadrumo-mcp`` server
+executable, ``cadrumo-vault/`` storage, and ``src/cadrumo/`` paths are product
+and package references, never ``aeat``-CLI invocations, so they are outside
+this gate's scope — treating them as CLI lines would only manufacture false
+positives from prose. (This anchor was previously swept to the bare
+``cadrumo`` token by the package rename, which made the gate near-vacuous: the
+docs cite ``aeat`` and almost nothing matched.)
 
 The sibling :mod:`test_educational_docs_conformance` gate binds only the
 *leading verb path* of a cited ``aeat ...`` invocation: it checks that the
@@ -90,9 +101,10 @@ _TREE_DOC_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to", "docs/run
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 
-# A line is an ``cadrumo`` invocation when ``cadrumo`` appears as a bare token
-# (start of line or after shell punctuation), not as a substring (``cadrumo.exe``).
-_CADRUMO_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])cadrumo(?=\s|$)")
+# A line is an ``aeat`` invocation when the ``aeat`` executable token appears as
+# a bare token (start of line or after shell punctuation), not as a substring
+# (``aeat-config``) — ``aeat`` is the one human CLI executable the docs cite.
+_AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
 
 # Global options declared on the root callback. Accepted at any position before
 # the subcommand path and validated against the root command's own params, so
@@ -153,7 +165,7 @@ def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
     subcommand of the current group (that token and the rest are arguments).
     """
     cmd: click.Command = _root_command()
-    ctx = click.Context(cmd, info_name="cadrumo")
+    ctx = click.Context(cmd, info_name="aeat")
     resolved: list[str] = []
     for tok in tokens:
         if not hasattr(cmd, "list_commands"):
@@ -202,7 +214,7 @@ _PLACEHOLDER_RE = re.compile(r"^(<[^>]+>|[A-Z][A-Z0-9_-]*)$")
 
 @dataclass(frozen=True)
 class _CitedCommand:
-    """A single cited ``cadrumo`` invocation, decomposed for validation."""
+    """A single cited ``aeat`` invocation, decomposed for validation."""
 
     raw: str
     verb_tokens: tuple[str, ...]
@@ -239,19 +251,19 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     """Decompose one ``aeat ...`` line into verb path + cited options.
 
     Returns ``None`` for lines that are not concretely-resolvable invocations:
-    the bare ``cadrumo`` token, an ``aeat ...`` ellipsis reference, the machine-format
-    ``cadrumo 1.2.3`` version echo, or a line whose only verb is a top-level flag
+    the bare ``aeat`` token, an ``aeat ...`` ellipsis reference, the machine-format
+    ``aeat 1.2.3`` version echo, or a line whose only verb is a top-level flag
     (``aeat --version``).
     """
     cleaned = _strip_inline_comment(line).strip()
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
     # Some doc lines prefix the command with a shell sigil or a tab-led label.
-    m = _CADRUMO_TOKEN_RE.search(cleaned)
+    m = _AEAT_TOKEN_RE.search(cleaned)
     if m is None:
         return None
     after = cleaned[m.end() :].strip()
     if not after:
-        return None  # bare ``cadrumo``
+        return None  # bare ``aeat``
     try:
         tokens = _shlex_split(after)
     except ValueError:
@@ -262,7 +274,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     # concrete invocation; the trailing ``...`` is the tell.
     if any(t == "..." for t in tokens):
         return None
-    # The machine-format version echo ``cadrumo 1.2.3`` / ``cadrumo 0.1.0`` is output,
+    # The machine-format version echo ``aeat 1.2.3`` / ``aeat 0.1.0`` is output,
     # not an invocation: a single token that is a dotted version literal.
     if len(tokens) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", tokens[0]):
         return None
@@ -348,7 +360,7 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
         # Join shell line continuations within a fenced block before splitting.
         joined = span.replace("\\\n", " ")
         for line in joined.splitlines():
-            if _CADRUMO_TOKEN_RE.search(line) is None:
+            if _AEAT_TOKEN_RE.search(line) is None:
                 continue
             parsed = _parse_command_line(line)
             if parsed is None:
@@ -389,7 +401,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
         if opt not in valid_options:
             violations.append(
                 f"`{cited.raw}` cites option `{opt}`, which is not a parameter of "
-                f"`cadrumo {' '.join(resolved.resolved_path)}` (nor a global option)",
+                f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)",
             )
 
     # (c) Dead subcommand of a live group: longest-prefix resolution stops at
@@ -401,7 +413,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
     if hasattr(cmd, "list_commands") and leftover:
         violations.append(
             f"`{cited.raw}` cites `{leftover[0]}`, which is not a subcommand of "
-            f"the group `cadrumo {' '.join(resolved.resolved_path)}`",
+            f"the group `aeat {' '.join(resolved.resolved_path)}`",
         )
         return violations
 
@@ -425,6 +437,34 @@ def test_doc_surface_present() -> None:
     names = {d.name for d in docs}
     assert "README.md" in names, "root README.md must be in the gate's scope"
     assert "index.md" in names, "docs/index.md must be in the gate's scope"
+
+
+# The floor below which the gate is presumed vacuous. The live doc surface
+# cites ``aeat`` roughly 591 times (post per-doc dedup); a count that collapses
+# toward zero means the invocation-token anchor was swept off the real
+# executable again (the rename-vacuity defect this phase repaired), so the gate
+# would be silently scanning nothing. The floor is set well below the observed
+# count and well above zero: it is a vacuity tripwire, not a brittle exact
+# assertion, so ordinary doc churn never trips it while a re-broken anchor does.
+_VACUITY_FLOOR = 200
+
+
+def test_gate_scans_a_realistic_invocation_count() -> None:
+    """The repaired gate parses hundreds of real ``aeat`` invocations, not ~zero.
+
+    Anti-vacuity tripwire: the token anchor was once swept by the package rename
+    onto the ``cadrumo`` token while every documented invocation uses ``aeat``,
+    which left the gate parsing almost nothing and passing vacuously. This test
+    fails loudly if the parsed-invocation count ever collapses back toward zero,
+    so the vacuity regression cannot recur silently behind a green suite.
+    """
+    total = sum(len(_cited_commands(doc.read_text(encoding="utf-8"))) for doc in _flat_docs())
+    assert total >= _VACUITY_FLOOR, (
+        f"documented-command gate parsed only {total} aeat invocations across the "
+        f"doc surface (floor {_VACUITY_FLOOR}); the invocation-token anchor "
+        f"(`_AEAT_TOKEN_RE`) has likely been swept off the `aeat` executable, "
+        f"making the gate vacuous — re-anchor it on the real CLI executable token"
+    )
 
 
 def test_live_introspection_matches_reality() -> None:
@@ -476,12 +516,12 @@ def test_live_introspection_matches_reality() -> None:
 
 @pytest.mark.parametrize("doc", _flat_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
 def test_documented_commands_conform(doc) -> None:
-    """Every cited ``cadrumo`` command resolves with valid options and arguments."""
+    """Every cited ``aeat`` command resolves with valid options and arguments."""
     text = doc.read_text(encoding="utf-8")
     violations: list[str] = []
     for cited in _cited_commands(text):
         violations.extend(_validate_command(cited))
     assert not violations, (
-        f"{doc.relative_to(PROJECT_ROOT)} cites cadrumo commands that do not conform "
+        f"{doc.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
     )
