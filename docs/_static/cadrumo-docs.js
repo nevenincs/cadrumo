@@ -641,6 +641,40 @@
     var total = frames.length;
     var current = 0;
 
+    /* Output disclosure: every frame's result/output block is individually
+     * toggleable by the reader; the command line itself is never hideable.
+     * Stepping resets the disclosure (active frame open, others closed) so the
+     * playhead stays predictable; a manual toggle then overrides until the
+     * next step. The toggle is JS-created, so a no-JS reader sees everything. */
+    var OUTPUT_SELECTOR =
+      ".cadrumo-frame-output, .cadrumo-frame-stderr, .cadrumo-verify, .cadrumo-expects";
+
+    function setOutputOpen(frame, open) {
+      frame.classList.toggle("is-output-open", open);
+      var toggle = frame.querySelector(".cadrumo-output-toggle");
+      if (toggle) {
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        toggle.textContent = open ? "▾" : "▸";
+      }
+    }
+
+    frames.forEach(function (frame) {
+      if (!frame.querySelector(OUTPUT_SELECTOR)) return;
+      var toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "cadrumo-output-toggle";
+      toggle.setAttribute("aria-label", "Show or hide this command's output");
+      var command = frame.querySelector(".cadrumo-frame-command");
+      if (command && command.parentNode === frame) {
+        frame.insertBefore(toggle, command.nextSibling);
+      } else {
+        frame.appendChild(toggle);
+      }
+      toggle.addEventListener("click", function () {
+        setOutputOpen(frame, !frame.classList.contains("is-output-open"));
+      });
+    });
+
     var controls = document.createElement("div");
     controls.className = "cadrumo-sequence-controls";
     controls.setAttribute("role", "group");
@@ -671,10 +705,11 @@
       frames.forEach(function (frame, index) {
         // Commands are always visible; only the playhead state changes. The CSS
         // keys on these classes to dim future commands (and drop their
-        // highlighting) and to show output for the active command alone.
+        // highlighting); the output disclosure resets to the active command.
         frame.classList.toggle("is-active", index === current);
         frame.classList.toggle("is-past", index < current);
         frame.classList.toggle("is-future", index > current);
+        setOutputOpen(frame, index === current);
       });
       indicator.textContent = current + 1 + " / " + total;
       prevBtn.disabled = current === 0;
