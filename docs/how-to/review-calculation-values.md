@@ -1,6 +1,6 @@
 # Review and supply calculation inputs
 
-Use this guide when `aeat` says a field is missing after a calculation. Also
+Use this guide when Cadrumo says a field is missing after a calculation. Also
 use it when your form needs a value you enter by hand, such as a prior-year
 income figure or a compensation amount from an earlier period.
 
@@ -8,12 +8,12 @@ income figure or a compensation amount from an earlier period.
 
 You need:
 
-- A master-key passphrase. `aeat` prompts for it, or you set
+- A master-key passphrase. Cadrumo prompts for it, or you set
   `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
 - An active profile. Create one (the `--quiet` form skips the wizard):
 
   ```bash
-  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" \
     --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
   ```
 
@@ -22,7 +22,7 @@ You need:
   calculate command:
 
   ```bash
-  aeat app modelo work create --modelo 130 --year 2026 --period 1T
+  cadrumo app modelo work create --modelo 130 --year 2026 --period 1T
   ```
 
 ## Inspect the modelo before entering values
@@ -30,19 +30,19 @@ You need:
 Describe the modelo and available revisions:
 
 ```bash
-aeat app modelo describe 130 --period 1T
+cadrumo app modelo describe 130 --period 1T
 ```
 
 List casillas:
 
 ```bash
-aeat app modelo casillas 130 --period 1T
+cadrumo app modelo casillas 130 --period 1T
 ```
 
 Show only required manual casillas:
 
 ```bash
-aeat app modelo casillas 130 --period 1T --input-kind manual --required
+cadrumo app modelo casillas 130 --period 1T --input-kind manual --required
 ```
 
 The `casillas` command shows the registry casilla id, printed form number,
@@ -52,33 +52,33 @@ input kind, required flag, and label. Use this before providing any
 Inspect formulas and their legal/source references:
 
 ```bash
-aeat app modelo formulas 130 --period 1T --explain
+cadrumo app modelo formulas 130 --period 1T --explain
 ```
 
 ## Review a saved calculation
 
 These commands read a saved calculation, so run a calculation first. On a fresh
 work unit with no calculation yet, they refuse with `work unit has no selectable
-current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
+current_calculation_revision_id`. Run `cadrumo app modelo work calculate` (see
 [Supply manual casilla values](#supply-manual-casilla-values) below) to produce a
 saved draft, then come back here.
 
 List calculation revisions for one filing:
 
 ```bash
-aeat app modelo work revisions --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work revisions --modelo 130 --year 2026 --period 1T
 ```
 
 Show the selected or current revision's persisted casilla values:
 
 ```bash
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work revision --modelo 130 --year 2026 --period 1T
 ```
 
 Verify the current draft:
 
 ```bash
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work verify --modelo 130 --year 2026 --period 1T
 ```
 
 Verification output reports whether completeness was granted, how many casillas
@@ -89,8 +89,8 @@ export.
 ## Supply manual casilla values
 
 Use `--casilla` only for a box whose input kind is `manual`. Use the box number
-printed on the official AEAT form — the same number you see on the paper or PDF
-version of the modelo. Run `aeat app modelo casillas 130 --period 1T` to see the
+printed on the official Agencia Estatal de Administración Tributaria (AEAT) form — the same number you see on the paper or PDF
+version of the modelo. Run `cadrumo app modelo casillas 130 --period 1T` to see the
 list, and check the `input` column first.
 
 `--casilla` works only on manual boxes. A `bound` box is filled from your ledger
@@ -104,7 +104,7 @@ the same calculate call. This example sets box `06` (Retenciones e ingresos a
 cuenta, a manual box) and seeds the three first-period bindings:
 
 ```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 \
+cadrumo app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 \
   --binding modelo-130-resultados-negativos-anteriores=0 \
   --binding modelo-130-pagos-fraccionados-anteriores=0 \
   --binding irpf.previous_year_economic_activity_net_income=0
@@ -122,26 +122,26 @@ the value during calculation.
 List every field the modelo binds, with its `source` and a `readiness` label:
 
 ```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
+cadrumo app modelo bindings list --modelo 130 --year 2026 --period 1T
 ```
 
 Add `--missing` to focus on fields that have no value yet:
 
 ```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
+cadrumo app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
 ```
 
 Preview what a value would produce — without saving anything:
 
 ```bash
-aeat app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
+cadrumo app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 ```
 
 Supply the value during calculation when the list shows the field cannot be
 resolved automatically:
 
 ```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
+cadrumo app modelo work calculate --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 ```
 
 
@@ -153,13 +153,13 @@ restates that source in plain language (for example, `ledger source` or `prior
 filed revision`). Use the `source` to decide how to supply the value. The
 `source` is one of:
 
-- **Profile fact** - `aeat` fills it from your taxpayer profile, such as
+- **Profile fact** - Cadrumo fills it from your taxpayer profile, such as
   residence, declaration type, or family composition. Update your profile instead
   of entering the value manually.
-- **Ledger source** - `aeat` computes it by summing your classified transactions
+- **Ledger source** - Cadrumo computes it by summing your classified transactions
   and invoices. You cannot override these; fix the ledger instead.
 - **Prior filed revision** - carried forward from an earlier period you already
-  filed in `aeat`.
+  filed in Cadrumo.
 - **Relation** - folded in from another modelo's earlier figures. Supply it with
   `--relation KEY=VALUE` only when the modelo's help names the relation.
 - **Manual** - this kind always needs you to type a value, with `--binding
@@ -172,20 +172,20 @@ filled for you; correct those at their source rather than typing the value.
 
 If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
-real prior figure only when you have one prepared outside `aeat`.
+real prior figure only when you have one prepared outside Cadrumo.
 
 ### Régimen de atribución de rentas (socios)
 
 If you are a socio, comunero, or partícipe of an entity in the régimen de
 atribución de rentas — a sociedad civil, comunidad de bienes, or herencia
-yacente — the entity files its own Modelo 184 in its own `aeat` workspace. Your
+yacente — the entity files its own Modelo 184 in its own Cadrumo workspace. Your
 personal Modelo 100 does not read across workspaces, so enter the attributed base
 by hand.
 
 Record the received share on your profile as `attribution_received` facts (entity
 NIF, entity name, share percentage, attributed base, and filing year), then fold
 the attributed base into your Modelo 100 régimen-de-atribución box with `--binding
-<box>=<attributed-base>` when you run `aeat app modelo work calculate`. `aeat`
+<box>=<attributed-base>` when you run `cadrumo app modelo work calculate`. Cadrumo
 warns you at verify time when the two halves disagree — facts recorded but the box
 left empty, or a box value with no facts behind it — so a forgotten transcription
 never files silently.
@@ -199,8 +199,8 @@ For Modelo 303 IVA compensation, inspect or seed the local IVA compensation
 wallet:
 
 ```bash
-aeat app modelo iva-wallet balance --as-of-year 2026
-aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+cadrumo app modelo iva-wallet balance --as-of-year 2026
+cadrumo app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 ```
 
 Use `--amount 0` only for a true first Modelo 303 period with no previous IVA
@@ -212,7 +212,7 @@ Seeding refuses if a record already exists for the period. To fix a wrong
 opening amount you seeded earlier, correct it:
 
 ```bash
-aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+cadrumo app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
 ```
 
 The correction overwrites the seeded amount and records your `--reason` in an
@@ -226,7 +226,7 @@ For registry relation values, calculation accepts repeatable
 registry/help text identifies the relation you need:
 
 ```bash
-aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
+cadrumo app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
 ```
 
 ## Supply rows for multi-record informativa modelos
@@ -239,8 +239,8 @@ Supply each record with a repeatable `--row` input.
 Each `--row` starts with the record type, followed by its fields:
 
 ```bash
-aeat app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
-aeat app modelo work calculate <work-unit-id> \
+cadrumo app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
+cadrumo app modelo work calculate <work-unit-id> \
   --row 'miembro nif=45678912S porcentaje=60 importe=10000' \
   --row 'miembro nif=00000001R porcentaje=40 importe=5000'
 ```
@@ -256,7 +256,7 @@ Use one of these record types:
 - `contraparte` - a declared counterparty (Modelo 347).
 - `operador` - an intra-community operator (Modelo 349).
 
-`aeat` validates each row against the modelo's rules and refuses an incomplete
+Cadrumo validates each row against the modelo's rules and refuses an incomplete
 set:
 
 - Modelo 184 - the members' `porcentaje` values must sum to 100.
@@ -272,12 +272,12 @@ For specialized calculations, the CLI provides evaluation and comparison command
 
 - **Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare filing
   jointly as a family unit against filing individually for an active Modelo 100.
-  Create the Modelo 100 draft first (`aeat app modelo work create --modelo 100
+  Create the Modelo 100 draft first (`cadrumo app modelo work create --modelo 100
   --year 2026 --period 0A`), or the command refuses with `Ninguna unidad de
   trabajo activa`:
   
   ```bash
-  aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
+  cadrumo app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
   ```
   
   This check does not save a draft. It shows the tax difference and a
@@ -287,7 +287,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
   the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
   
   ```bash
-  aeat app modelo work preview-maritime-exemption
+  cadrumo app modelo work preview-maritime-exemption
   ```
   
   The command shows which tax boxes are affected by the exemption and the
@@ -301,7 +301,7 @@ command. Do not simply recalculate the same period — that would not create the
 correct complementaria (supplementary return) record:
 
 ```bash
-aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
+cadrumo app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
 ```
 
 Before using this command, you must have imported the {term}`justificante` for the filing you are correcting. The amendment command does not

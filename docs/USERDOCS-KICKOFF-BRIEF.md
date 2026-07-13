@@ -1,23 +1,24 @@
 # Userdocs initiative — kickoff brief
 
 **Audience of this brief:** the agent (or session) that will drive the
-user-facing documentation initiative for `aeat`.
+user-facing documentation initiative for Cadrumo and its `aeat` command-line interface.
 **Status:** kickoff. Read fully, then **hold for the operator's instruction**
 (see the final section) before authoring anything.
 
 ---
 
-## 1. What `aeat` is
+## 1. What Cadrumo is
 
-`aeat` is a local-first Python CLI that helps Spanish *autónomos* (self-employed
-filers) and small businesses prepare tax filings for the Agencia Estatal de
-Administración Tributaria (AEAT). It models the regulatory registry, ingests and
+Cadrumo is a local-first Python product whose human command-line interface is
+`aeat`. It helps Spanish *autónomos* (self-employed filers) and small businesses
+prepare tax filings for the Agencia Estatal de Administración Tributaria (AEAT).
+It models the regulatory registry, ingests and
 classifies financial transactions, computes the numbered boxes (*casillas*) of
 each tax form (*modelo*), validates and verifies a draft, and exports a filing
 artifact the operator submits themselves.
 
 **It never files live.** The pipeline is build → validate → verify → export;
-remote submission is a human step outside the app. Any userdoc must reflect this
+remote submission is a human step outside Cadrumo. Any userdoc must reflect this
 — never imply the tool submits to AEAT.
 
 The CLI has exactly two root command families:

@@ -19,13 +19,13 @@ here verbatim; this brief adds the harness-specific corpus, reader, and scope.
 
 ## 1. What the harness is (and why it needs docs)
 
-The `aeat` CLI is a deterministic black box that computes Spanish tax forms and
-exports filing artifacts (it **never files live** — a human submits to AEAT). The
-**harness** is a separate product surface: a **Model Context Protocol (MCP)
-server** (`cadrumo-mcp`) that lets *any* LLM client (Claude Desktop, an IDE agent, a
-custom client) operate that CLI as an AI tax-advisor — grounding requests in the
-bundled legal corpus, understanding the CLI, running the on-host search, and
-driving the commands on the user's behalf under safety gates.
+Through its `aeat` command-line interface (CLI), Cadrumo deterministically
+calculates Spanish tax-form figures and exports filing artifacts. It never files
+live; a human submits them to the Agencia Estatal de Administración Tributaria
+(AEAT). The **harness** is a Cadrumo product surface: a Model Context Protocol (MCP) server (`cadrumo-mcp`)
+that lets a large language model (LLM) client help a user operate the `aeat` CLI
+under safety gates. It grounds requests in the bundled legal corpus, understands
+the CLI, runs on-host search, and drives commands on the user's behalf.
 
 Today the harness has **zero user-facing documentation**. It is unusable by a
 real person without it: they cannot discover that `cadrumo-mcp` exists, how to
@@ -34,9 +34,9 @@ or why they still have to file themselves. The agent-facing operating corpus
 (§3) is written *for the LLM*, not the human — it must be **distilled** into a
 simple, followable, human-facing section, not copied.
 
-**The one-line framing for every page:** *"`aeat` computes your tax; the
-assistant helps you operate it; you still file with AEAT yourself and remain
-responsible for every declaration."*
+**The one-line framing for every page:** *"Cadrumo calculates tax-form figures
+from your records; the assistant helps you operate it; you still file with AEAT
+yourself and remain responsible for every declaration."*
 
 ## 2. Who the reader is
 
@@ -108,16 +108,15 @@ surface; **distil, never transcribe** — they are agent instructions, not prose
   itself (every CLI leaf as an MCP tool, mutability-annotated).
 
 **Distribution (updated 2026-07-03, `claude-ecosystem-packaging` ADR):** the
-consumer path is the **Claude plugin** — generated from the harness source by
-`aeat app agent --output=<dir> --layout=plugin`, served from the marketplace tree under
-`packaging/marketplace/`, installable one-click across Claude Cowork / Claude
-Code / Claude Desktop. Its `.mcp.json` launches the server via
-`uvx --from "cadrumo[agent]==<version>" cadrumo-mcp` from the published PyPI package (slim
-~39 MB wheel; corpus source binaries ride the two optional `cadrumo-data-*`
-companions via `cadrumo[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
-a DEMOTED secondary — do not document it as the install path. See RELEASING.md
-for the publish sequencing and `docs/verification/claude-code-install-proof.md`
-for the live install proof and verified support matrix.
+consumer delivery target is the **Cadrumo Claude plugin**, generated from the
+harness source by `aeat app agent --output=<dir> --layout=plugin` and served from
+the marketplace tree under `packaging/marketplace/`. Its `.mcp.json` is configured
+to launch `uvx --from "cadrumo[agent]==<version>" cadrumo-mcp` after the Cadrumo
+package is published. Public package publication and marketplace availability are
+release gates, not current user-installation claims. The old `.mcpb` bundle under
+`packaging/mcpb/` is a DEMOTED secondary — do not document it as the install path.
+See RELEASING.md for publish sequencing and
+`docs/verification/claude-code-install-proof.md` for historical evidence.
 
 **The capability catalogue** the assistant reads first is
 `aeat app contract --format json` — useful for the docs author to see the whole
@@ -187,8 +186,8 @@ document are real, though it governs the corpus, not your prose.
   the human uploads to AEAT and stays responsible. Every harness page must carry
   the same boundary the CLI docs do. The `verifier` persona produces the export;
   filing is still the human's step.
-- **Off-host privacy is a first-class user concern (R9).** When a person points a
-  cloud LLM at `aeat`, *their words and the figures the assistant works with go to
+- **Off-host privacy is a first-class user concern (R9).** When a person connects a
+  cloud LLM client to Cadrumo, *their words and the figures the assistant works with go to
   that LLM provider; their source documents (invoices, statements, evidence bytes)
   never leave their machine* (encrypted local storage). The harness surfaces this
   as a consent disclosure on first load (`off_host_consent_text()` in
@@ -211,7 +210,8 @@ tree in `docs/index.md`. Illustrative, not authorised:
 - **Explanation** — "What the AI assistant is (and isn't)": the operating-layer
   model (CLI computes, assistant operates, you file), the safety gates, the
   off-host privacy boundary, why it never files live. One page, understanding-only.
-- **How-to: connect a client** — install the aeat plugin from the marketplace
+- **How-to: connect a client** — after public package publication and marketplace
+  availability are verified, document how to install the Cadrumo plugin
   (Cowork/Desktop plugin browser or `claude plugin install`), choose a persona
   in the plugin's configure step (the `persona` option feeds
   `CADRUMO_MCP_PERSONA`); power users wire `uvx --from "cadrumo[agent]==<version>" cadrumo-mcp`

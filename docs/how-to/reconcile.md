@@ -18,7 +18,7 @@ There are two ways to supply the justificante:
 You need:
 
 - an active profile
-- a locally filed work unit (you have run `aeat app modelo work file` for this
+- a locally filed work unit (you have run `cadrumo app modelo work file` for this
   filing)
 - for `reconcile pull`: working AEAT authentication — see
   [Authenticate with AEAT](authenticate-with-aeat.md)
@@ -32,7 +32,7 @@ the filing workflow, see the [quickstart](quickstart.md).
 Fetch the receipt for the filing and reconcile in one command:
 
 ```bash
-aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
+cadrumo app modelo reconcile pull --modelo 303 --year 2026 --period 1T
 ```
 
 Replace `303`, `2026`, and `1T` with the modelo, year, and period of your
@@ -50,7 +50,7 @@ If you already downloaded the justificante from the portal, compare your local
 filing record against that file:
 
 ```bash
-aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
+cadrumo app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 ```
 
 This check is local. It reads the PDF you supply and never contacts AEAT.
@@ -112,7 +112,7 @@ Each reconciliation is recorded in the profile's event history. List the past
 reconciliations recorded for the active profile:
 
 ```bash
-aeat app modelo reconcile history
+cadrumo app modelo reconcile history
 ```
 
 Add `--work-unit-id <id>` to narrow the list to a single work unit. Each row

@@ -335,7 +335,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
         result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     elif single_page:
         remove_noncanonical_build_entries(docs_root)
-        with tempfile.TemporaryDirectory(prefix="aeat-docs-doctrees-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-docs-doctrees-") as tmp:
             out_dir = docs_root / "_build" / "html"
             command.extend(
                 [
@@ -348,7 +348,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             )
             result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     else:
-        with tempfile.TemporaryDirectory(prefix="aeat-docs-changed-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-") as tmp:
             temp_root = Path(tmp)
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)

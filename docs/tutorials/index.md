@@ -38,7 +38,7 @@ aeat config profile create tutorial --quiet --tax-id 12345678Z --name "Ana" --su
 
 The `--name` and `--surnames` are required: the export step refuses without an
 operator name. The `--activity-start-date` marks when the activity began, so
-`aeat` does not look for a prior-period filing before your first period.
+Cadrumo does not look for a prior-period filing before your first period.
 
 The sample `--tax-id` has the same shape as a Spanish citizen's NIF (their DNI
 number). Use your own NIF, CIF, DNI, or NIE when you create a real profile.
@@ -120,7 +120,7 @@ revision_id	2019-y-siguientes
 state	borrador
 ```
 
-`aeat` chooses the rule set for that modelo, year, and period, so you do not
+Cadrumo chooses the rule set for that modelo, year, and period, so you do not
 need to choose one.
 
 ## Step 4: Calculate your tax figures
@@ -208,7 +208,7 @@ The detailed handoff checklist is in
 
 ## Step 8: (Optional) Record the filing locally
 
-`aeat` can mark a verified draft as filed in your local store. This step is
+Cadrumo can mark a verified draft as filed in your local store. This step is
 optional and only works while the AEAT filing-obligation window for the period
 is open. It saves a local marker; it does not submit anything to AEAT.
 

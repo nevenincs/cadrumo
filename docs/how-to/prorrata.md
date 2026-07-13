@@ -6,7 +6,7 @@ that do not (exempt operations without the right to deduct). Spanish IVA calls
 this *prorrata*. Record the taxpayer's prorrata choice once and the tool applies
 it to Modelo 303 and Modelo 390 automatically.
 
-`aeat` does not submit anything to AEAT. The prorrata register is local,
+Cadrumo does not submit anything to AEAT. The prorrata register is local,
 profile-scoped taxpayer state, not an AEAT filing surface.
 
 The tool needs a master-key passphrase. It prompts for it interactively, or
@@ -31,7 +31,7 @@ percentage or splits the business into differentiated sectors.
 Elect the year's general percentage:
 
 ```bash
-aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
+cadrumo app ledger prorrata elect-general --ejercicio 2026 --percentage 80
 ```
 
 - `--ejercicio` is the filing year the election covers.
@@ -47,7 +47,7 @@ aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
 Elect especial for the year:
 
 ```bash
-aeat app ledger prorrata elect-especial --ejercicio 2026 --percentage 80
+cadrumo app ledger prorrata elect-especial --ejercicio 2026 --percentage 80
 ```
 
 Here `--percentage` is the common-use percentage — the rate applied to shared
@@ -57,7 +57,7 @@ inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same `--provenance` an
 Then tag each input row with its use when you add it:
 
 ```bash
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
+cadrumo app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
   --description "compra" --classification BUSINESS --category-id material_oficina \
   --taxable-base 500 --iva-rate 0.21 --iva-amount 105 \
   --input-classification common
@@ -81,7 +81,7 @@ Declare a differentiated sector when part of the activity has its own deduction
 regime (LIVA arts. 9.1.c / 101):
 
 ```bash
-aeat app ledger prorrata declare-sector --sector-id arrendamiento \
+cadrumo app ledger prorrata declare-sector --sector-id arrendamiento \
   --letra c --activity-code 6820
 ```
 
@@ -95,9 +95,9 @@ Scope an election to a sector with `--sector`, and tag a row's sector with
 `--sector` on `ledger add`:
 
 ```bash
-aeat app ledger prorrata elect-especial --ejercicio 2026 --percentage 80 \
+cadrumo app ledger prorrata elect-especial --ejercicio 2026 --percentage 80 \
   --sector arrendamiento
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
+cadrumo app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
   --description "compra" --classification BUSINESS --category-id material_oficina \
   --taxable-base 500 --iva-rate 0.21 --iva-amount 105 \
   --sector arrendamiento --input-classification common
@@ -129,7 +129,7 @@ These are advisories, not refusals. Read them alongside the
 List every election and declared sector on the active profile:
 
 ```bash
-aeat app ledger prorrata list
+cadrumo app ledger prorrata list
 ```
 
 ## Next steps

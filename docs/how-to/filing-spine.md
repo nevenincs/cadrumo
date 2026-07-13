@@ -13,7 +13,7 @@ A profile that will reach `export` must carry a name and surnames, or `export`
 refuses with "requires the operator name":
 
 ```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" \
   --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
 ```
 
@@ -28,10 +28,10 @@ The command-line interface is the same one used in the quickstart. Run the four
 commands in order, from the profile above:
 
 ```bash
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+cadrumo app modelo work create --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
+cadrumo app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 The `--activity-start-date` in the profile above scopes out the prior-period
@@ -60,15 +60,15 @@ quarter of 2026, for the active profile."
 That same visible target works across the normal workflow:
 
 ```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
-aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work status --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work revisions --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T
 ```
 
 If no saved work exists yet, create it first:
 
 ```bash
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work create --modelo 303 --year 2026 --period 1T
 ```
 
 Running the same create command again does not create a duplicate. It returns
@@ -87,20 +87,20 @@ support or an error message asks you to target a specific ruleset version.
 To see the reference number for a saved filing:
 
 ```bash
-aeat app modelo work list
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work list
+cadrumo app modelo work status --modelo 303 --year 2026 --period 1T
 ```
 
 After you have the `work_unit_id`, address the same saved work by ID:
 
 ```bash
-aeat app modelo work status <work-unit-id>
-aeat app modelo work calculate <work-unit-id>
-aeat app modelo work revisions <work-unit-id>
+cadrumo app modelo work status <work-unit-id>
+cadrumo app modelo work calculate <work-unit-id>
+cadrumo app modelo work revisions <work-unit-id>
 ```
 
 Prefer the visible target for hand-run commands. Use the reference number when
-aeat reports that more than one filing matches the same modelo, year, and period.
+Cadrumo reports that more than one filing matches the same modelo, year, and period.
 
 ## What a work unit is
 
@@ -111,7 +111,7 @@ For example, this command creates or reuses the work unit for Modelo 303 Q1
 2026:
 
 ```bash
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work create --modelo 303 --year 2026 --period 1T
 ```
 
 The tool keeps a record of your filing work. That record links to:
@@ -125,8 +125,8 @@ global, but the filing work is selected on each command. To work on a different
 filing, pass a different visible target or pass a different `work_unit_id`:
 
 ```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 2T
-aeat app modelo work status <another-work-unit-id>
+cadrumo app modelo work status --modelo 303 --year 2026 --period 2T
+cadrumo app modelo work status <another-work-unit-id>
 ```
 
 ## What a calculation revision is
@@ -135,10 +135,10 @@ A calculation revision is one saved calculation result inside a work unit. It
 has its own reference number, the calculation-revision-id, which `calculate`
 creates and which is separate from the work-unit-id.
 
-When you run calculate, `aeat` saves a draft calculation revision:
+When you run calculate, Cadrumo saves a draft calculation revision:
 
 ```bash
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
 Running calculation again does not overwrite the old result. If your
@@ -149,26 +149,26 @@ record to reflect the latest calculated draft.
 List the saved calculation revisions for a filing:
 
 ```bash
-aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work revisions --modelo 303 --year 2026 --period 1T
 ```
 
 Show the current revision's persisted values:
 
 ```bash
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T
 ```
 
 If you need to view one specific saved calculation, type its reference number
 after the command:
 
 ```bash
-aeat app modelo work revision <calculation-revision-id>
+cadrumo app modelo work revision <calculation-revision-id>
 ```
 
 Reference numbers to know:
 
-- the filing workspace reference — from `aeat app modelo work list`
-- the saved calculation reference — from `aeat app modelo work revisions`
+- the filing workspace reference — from `cadrumo app modelo work list`
+- the saved calculation reference — from `cadrumo app modelo work revisions`
 - the rules version reference — shown in status output; you rarely need this
 - a run reference — only appears when a command was interrupted mid-way
 
@@ -180,13 +180,13 @@ calculation revision under that work unit.
 Verification defaults to the current draft revision:
 
 ```bash
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
 ```
 
 Local filing defaults to the current verified revision:
 
 ```bash
-aeat app modelo work file --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work file --modelo 303 --year 2026 --period 1T
 ```
 
 `work file` records a local filed marker. It does not submit anything to AEAT.
@@ -195,7 +195,7 @@ Export defaults to the filed revision if one exists. Otherwise, it uses the
 current verified revision:
 
 ```bash
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+cadrumo app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 The `.boe` extension is a naming convention. The tool writes the file to the
@@ -213,17 +213,17 @@ If you need a different saved calculation, use `--select` with the visible
 target:
 
 ```bash
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
+cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
 ```
 
 You can also pass exact IDs on commands that accept them:
 
 ```bash
-aeat app modelo work verify <calculation-revision-id>
-aeat app modelo work file <calculation-revision-id>
-aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
+cadrumo app modelo work verify <calculation-revision-id>
+cadrumo app modelo work file <calculation-revision-id>
+cadrumo app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
 ```
 
 For the complete option list, see the [CLI reference](../cli/index.rst).
@@ -235,13 +235,13 @@ Manage or review the lifecycle of a work unit as it progresses:
 - `rename`: Add or update a friendly display name for the work unit:
   
   ```bash
-  aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
+  cadrumo app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
   ```
 
 - `history`: Review all actions the tool has taken on this filing, in order:
   
   ```bash
-  aeat app modelo work history --modelo 303 --year 2026 --period 1T
+  cadrumo app modelo work history --modelo 303 --year 2026 --period 1T
   ```
 
 - `discard`: Mark the filing workspace as discarded. The tool records this
@@ -249,7 +249,7 @@ Manage or review the lifecycle of a work unit as it progresses:
   or want to replace it with a fresh one:
   
   ```bash
-  aeat app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
+  cadrumo app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
   ```
   
   The `--reason` text is for your own records only. It is not sent to AEAT.
@@ -263,15 +263,15 @@ and restart it:
 - `runs`: List recent flow runs, from most recent to oldest:
   
   ```bash
-  aeat app modelo work runs
+  cadrumo app modelo work runs
   ```
 
 - `resume`: Restart an interrupted command using the filing details or the
   reference number shown in the error message:
   
   ```bash
-  aeat app modelo work resume --modelo 303 --year 2026 --period 1T
-  aeat app modelo work resume <run-id-or-work-unit-id>
+  cadrumo app modelo work resume --modelo 303 --year 2026 --period 1T
+  cadrumo app modelo work resume <run-id-or-work-unit-id>
   ```
 
 ## When to use exact IDs
@@ -280,8 +280,8 @@ Use modelo, year, and period for all normal work.
 
 Use the exact reference number when:
 
-- aeat tells you that more than one filing matches the same modelo, year,
-  and period (aeat refuses to guess; it prints candidates for you to choose)
+- Cadrumo tells you that more than one filing matches the same modelo, year,
+  and period (Cadrumo refuses to guess; it prints candidates for you to choose)
 - you are replaying or inspecting one specific saved calculation
 - support asks you to share the exact reference number from the command output
 

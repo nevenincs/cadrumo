@@ -1,9 +1,9 @@
 # Get started: from bank records to a filed modelo
 
-New to `aeat`? This guide maps the whole journey - from your bank records to a
+New to Cadrumo? This guide maps the whole journey - from your bank records to a
 tax form you file yourself - and points you to the right guide at each stage.
 
-`aeat` prepares, checks, and exports Spanish tax forms as local files on your own
+Cadrumo prepares, checks, and exports Spanish tax forms as local files on your own
 machine. It never submits anything to the Agencia Estatal de Administración
 Tributaria (AEAT). You review each result, and you upload the final file yourself
 through the official AEAT portal, signed with your own credentials. Everything the
@@ -30,7 +30,7 @@ walks the commands.
 
 ## Before you begin
 
-Install `aeat` and confirm it runs. See
+Install `cadrumo` and confirm it runs. See
 [Set up your workstation](../workstation-setup.md) for installation.
 
 Every command that touches your data needs your master-key passphrase, which

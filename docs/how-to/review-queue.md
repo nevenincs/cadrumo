@@ -14,7 +14,7 @@ the underlying record with the command the row names.
 Show every pending item for the active profile:
 
 ```bash
-aeat app review queue
+cadrumo app review queue
 ```
 
 Each row shows the item id, its kind, the affected record, the period, a
@@ -26,9 +26,9 @@ the command to run next for that item.
 Filter by kind, modelo, or state:
 
 ```bash
-aeat app review queue --kind ledger_transaction
-aeat app review queue --kind modelo_finding --modelo 303
-aeat app review queue --state all
+cadrumo app review queue --kind ledger_transaction
+cadrumo app review queue --kind modelo_finding --modelo 303
+cadrumo app review queue --state all
 ```
 
 Accepted `--kind` tokens are `ledger_transaction`, `purchase_invoice_evidence`,
@@ -41,7 +41,7 @@ refused with the accepted set named.
 Show one item in full, including the suggested next command:
 
 ```bash
-aeat app review view <item-id>
+cadrumo app review view <item-id>
 ```
 
 ## See the legal grounding
@@ -50,15 +50,15 @@ Modelo findings are grounded in registry rules. Add `--explain` to show the
 legal references behind each finding in the text output:
 
 ```bash
-aeat app review queue --kind modelo_finding --explain
-aeat app review view <item-id> --explain
+cadrumo app review queue --kind modelo_finding --explain
+cadrumo app review view <item-id> --explain
 ```
 
 Ask for JSON with the global `--format json` flag, placed before the command:
 
 ```bash
-aeat --format json app review queue
-aeat --format json app review view <item-id>
+cadrumo --format json app review queue
+cadrumo --format json app review view <item-id>
 ```
 
 The JSON output always carries a `legal_refs` field on every row; `--explain`
@@ -79,8 +79,8 @@ registry rule.
   not ready. Fix the reported values and verify again — see
   [Verify a filing](verification-reports.md).
 
-`aeat app review queue` is profile-wide. For inspecting individual ledger
-rows in detail, use `aeat app ledger review` instead — see
+`cadrumo app review queue` is profile-wide. For inspecting individual ledger
+rows in detail, use `cadrumo app ledger review` instead — see
 [Work with transactions](import-bank-statements.md).
 
 ## Next steps

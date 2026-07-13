@@ -31,13 +31,13 @@ If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):
 
 ```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
 ```
 
 Check the active profile first:
 
 ```bash
-aeat config profile status
+cadrumo config profile status
 ```
 
 ## Why census facts matter
@@ -61,27 +61,27 @@ warning and refuses strict projection until you accept that basis; see
 Edit the active profile with the wizard:
 
 ```bash
-aeat config profile edit <profile-name>
+cadrumo config profile edit <profile-name>
 ```
 
 The wizard walks the profile fields, including the census-backed ones. For a
 scripted update, pass the field flags with `--quiet`:
 
 ```bash
-aeat config profile edit <profile-name> --quiet --activity "consultoria"
+cadrumo config profile edit <profile-name> --quiet --activity "consultoria"
 ```
 
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
 guess a regime or a start date.
 
-## Record a Modelo 036 filing done outside aeat
+## Record a Modelo 036 filing done outside Cadrumo
 
 If you file Modelo 036 in AEAT's sede, record that local fact separately:
 
 ```bash
-aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
-aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
-aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
+cadrumo app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
+cadrumo app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
+cadrumo app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
 ```
 
 These commands record that you filed the Modelo 036 alta, modificacion, or baja
@@ -95,20 +95,20 @@ output, and what the record does and does not change, see
 Validate the active profile after editing census facts:
 
 ```bash
-aeat config profile status
-aeat config profile validate
+cadrumo config profile status
+cadrumo config profile validate
 ```
 
 If the profile still reports missing facts, edit those fields directly:
 
 ```bash
-aeat config profile edit <profile-name> --quiet --activity <value>
+cadrumo config profile edit <profile-name> --quiet --activity <value>
 ```
 
 For modelo-specific readiness, use profile preflight:
 
 ```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+cadrumo config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
 ## Keep the facts current

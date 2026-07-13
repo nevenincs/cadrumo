@@ -12,7 +12,7 @@ You need:
 Check the profile first:
 
 ```bash
-aeat config profile status
+cadrumo config profile status
 ```
 
 The status confirms the profile exists and carries the basics. The explain output lists the facts that drive each applicability answer. If a fact is missing, the verdict says so. The CLI emits the rationale, legal references, and refusals in Spanish.
@@ -22,7 +22,7 @@ The status confirms the profile exists and carries the basics. The explain outpu
 Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`.
 
 ```bash
-aeat app overview explain 303 --year 2026
+cadrumo app overview explain 303 --year 2026
 ```
 
 The answer has four parts:
@@ -58,7 +58,7 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md). 
 When you already know which modelo, year, and period you're aiming at, ask for a preflight check instead:
 
 ```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+cadrumo config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
 The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
@@ -72,8 +72,8 @@ The preflight picks the active revision for that modelo, year, and period automa
 To see every form the tool knows, list the catalogue. Add `--year` to narrow it to one fiscal year:
 
 ```bash
-aeat app modelo list
-aeat app modelo list --year 2026
+cadrumo app modelo list
+cadrumo app modelo list --year 2026
 ```
 
 The list shows each modelo's code, official Spanish title, cadence, tax domain, and revision count. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
@@ -81,7 +81,7 @@ The list shows each modelo's code, official Spanish title, cadence, tax domain, 
 To look one form up in detail:
 
 ```bash
-aeat app modelo describe 303
+cadrumo app modelo describe 303
 ```
 
 The description shows the form's official name (Spanish), domain, cadence, active revision ID, the full list of revision IDs, the valid period tokens, and three structure counts - casillas (boxes), vinculaciones (data bindings), and fórmulas (formulas) - that describe how complex the form is. Keep both commands as lookup aids. Applicability always comes from `overview explain`.

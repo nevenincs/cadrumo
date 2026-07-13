@@ -21,9 +21,9 @@ identified by its exact contents. Two calculations with identical inputs are
 the same version; change a single number and you get a new one, sitting
 alongside the old.
 
-The practical upshot: you can compare versions, and you can go back. A saved
-version is a record of one attempt, not a verdict. The numbers are real, but
-they're not committed to anything until you decide they are.
+The practical upshot is that review, verification, and export can name one
+exact revision. A saved revision is a record of one calculation, not an AEAT
+verdict and not a submission.
 
 ## Editing and recalculating
 
@@ -100,27 +100,30 @@ In particular, verifying is **not**:
   check long after the deadline has passed, or well before it - the check
   neither knows nor cares.
 
-Treat a passed check as "my draft is complete and consistent," never as "I have
-filed" or "I am on time."
+Treat a passed check as "this saved revision passed Cadrumo's local checks,"
+never as "AEAT accepted it," "I have filed," or "I am on time." Exact verify,
+report, and export commands are defined in the [command and stage
+lookup](../reference/commands-and-configuration.md).
 
-## Why the tool wants a verified version before it builds the upload file
+## Why verification is necessary but not sufficient for export
 
-When you ask the tool to produce the file you'll upload to AEAT, it works only
-from a version that has passed the completeness check (or one already recorded
-as filed). It refuses a plain draft.
+When you ask Cadrumo to produce the file you may upload to AEAT, it requires an
+eligible verified revision (or the applicable already-filed state). It refuses
+a plain draft.
 
-The reason is protective. The upload file is the thing that leaves the tool and
-goes to the agency. Building it only from a checked, complete version stops an
-incomplete or inconsistent draft from being turned into a filing by accident.
-The check is the gate the version has to clear before it can become an upload
-file.
+Verification is one gate, not the whole export decision. The export boundary
+also checks required evidence and other filing-specific preconditions. A
+revision can therefore pass verification and still be refused at export with
+the missing evidence or failed gate identified. This separation prevents a
+locally consistent revision from becoming an upload artifact before its
+required provenance is present.
 
 ## Where this sits in the journey
 
 This page is part of the
-[Understanding the AEAT pipeline](index.md) cluster. Earlier filings feed into
+[Understanding Cadrumo's tax-preparation workflow](index.md) cluster. Earlier filings feed into
 later ones; for how a verified prior period carries forward, see
-[How filings build on earlier ones](building-on-earlier-filings.md). Once a
-version has passed the check, the next outputs - reviewing the result and
-producing the upload file - are covered in
+[How filings build on earlier ones](building-on-earlier-filings.md). Review
+precedes verification; after verification and the remaining export gates pass,
+the upload artifact is covered in
 [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).

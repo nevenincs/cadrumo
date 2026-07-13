@@ -21,7 +21,10 @@ In both shapes, the later form can't stand on its own. It reaches back to figure
 
 A carried-forward figure is only as trustworthy as the filing it came from. So the carry-forward rests on a clear principle. A figure carried in from an earlier filing should come from a filing you actually completed and marked as filed. Where possible, it should come from one backed by the agency's receipt.
 
-The tool carries forward the figures it *has on record* for the matching modelo, year, and period. It does not invent a prior period that isn't there. If you ask a yearly form to gather four quarters and only two are on record, the tool brings in the two it has - it doesn't fabricate the missing pair to fill the gap. That's deliberate. A guessed figure in a filing is worse than a visible blank you can act on.
+For carry-forward, Cadrumo uses only figures it has on record for the matching
+modelo, year, and period. It does not invent a missing prior filing or silently
+substitute zero. If a yearly form requires four filed quarters and only two are
+available, the absent carry-forward evidence remains visible.
 
 Because of this, the figures it carries forward are a starting point you review, not a verdict you accept blindly. You confirm that each earlier figure came from a filing you completed and that it still reflects what you filed before you rely on it.
 
@@ -47,14 +50,28 @@ The same idea governs the figures: RENTA settles on the instalments and withhold
 
 It helps to be precise about the boundary here, because this is where a filing's accuracy is won or lost.
 
-The tool finds and carries forward the earlier figures it has on record, matched by modelo, year, and period. That's the limit of what it does on its own. It does not silently treat unconfirmed or out-of-date agency data as final, it does not invent a prior period that isn't on record, and it does not quietly sweep up every figure it can find and assume each one is correct.
+Cadrumo finds and carries forward the earlier figures it has on record, matched
+by modelo, year, and period. Within that carry-forward mechanism, it does not
+silently treat unconfirmed or out-of-date authority data as final, invent a
+prior filing, or sweep unrelated observations into the result.
 
 What it leaves to you is the judgement: that each carried-forward figure came from a filing you completed and marked as filed; that it matches the agency's receipt for that filing where one exists; and that a missing prior period is a real gap to resolve, not a zero the tool filled for you.
 
 This division is the point. The tool removes the re-typing and the arithmetic; you keep the confirmation. A figure that flows from a quarter into a yearly summary, or from this period's credit into the next, is only as sound as your review of where it came from.
 
+Separately invoked read-only AEAT retrieval can preserve the authority's filed
+record or justificante as another evidence source. That evidence may confirm
+which filing and revision later work should rely on, but it does not submit a
+return, alter the authority's record, or ask AEAT to recompute Cadrumo's
+calculation.
+
+Projection is a separate, explicitly invoked planning surface. A projection
+may extrapolate from the quarters available and labels that result as an
+estimate. Extrapolated values are not fabricated carry-forward evidence and do
+not turn a missing filed period into a recorded filing.
+
 ## Where this sits in the journey
 
-This page covered the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [Understanding the AEAT pipeline](index.md) overview maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
+This page covers the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [Understanding Cadrumo's tax-preparation workflow](index.md) overview maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
 
 Once your figures are settled - including the ones carried in from earlier filings - the next concept is checking and sharing them. Continue with [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).
