@@ -148,12 +148,26 @@ def registry_disk_cache_dir() -> Path:
        the disk pickle exists to deliver. The bundled tree is immutable during
        a run, so one host-shared compiled pickle is safe to share.
     """
-    override = load_settings().cadrumo_registry_disk_cache_dir
+    settings = load_settings()
+    return _resolve_registry_disk_cache_dir(
+        override=settings.cadrumo_registry_disk_cache_dir,
+        under_pytest=_running_under_pytest(),
+        storage_root=settings.cadrumo_local_storage_root,
+    )
+
+
+def _resolve_registry_disk_cache_dir(*, override: Path | None, under_pytest: bool, storage_root: Path) -> Path:
+    """Pure resolution of the registry disk-cache directory.
+
+    Split from :func:`registry_disk_cache_dir` so the three branches (explicit
+    override, pytest host-shared temp, production storage-root derivation) are
+    exercised with real inputs rather than by manipulating the ambient process.
+    """
     if override is not None:
         return override
-    if _running_under_pytest():
+    if under_pytest:
         return Path(tempfile.gettempdir())
-    return load_settings().cadrumo_local_storage_root / "cache" / "registry"
+    return storage_root / "cache" / "registry"
 
 
 def registry_disk_cache_max_entries() -> int:
