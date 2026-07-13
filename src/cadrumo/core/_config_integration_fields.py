@@ -83,11 +83,22 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
     cadrumo_registry_disk_cache_dir: Path | None = Field(
         default=None,
         description=(
-            "Override for the cross-process registry disk-pickle directory "
-            "(default: the platform temp directory). Set only by test isolation "
-            "to redirect the shared bundled-root cache onto a test-owned "
-            "directory, so a test asserting exclusive pickle state never races "
-            "sibling pytest-xdist workers sharing the real OS temp directory."
+            "Override for the cross-process registry disk-pickle directory. "
+            "When unset, production derives <cadrumo_local_storage_root>/cache/registry "
+            "and pytest runs share the host temp directory for the immutable "
+            "bundled-root pickle. Set only by test isolation to redirect the "
+            "cache onto a test-owned directory, so a test asserting exclusive "
+            "pickle state never races sibling pytest-xdist workers."
+        ),
+    )
+    cadrumo_registry_disk_cache_max_entries: int = Field(
+        default=8,
+        ge=1,
+        description=(
+            "Maximum number of registry disk-cache pickles retained per cache "
+            "directory; after each write the oldest excess pickles are pruned "
+            "(best-effort) so accumulated per-fingerprint pickles cannot grow "
+            "without bound."
         ),
     )
     cadrumo_calc_sheets_recalc_delay_s: float = Field(
