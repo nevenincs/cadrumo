@@ -249,7 +249,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
-    namespace = "aeat-test.repair.rotation"
+    namespace = "cadrumo-test.repair.rotation"
 
     # Seed three rows under the OLD master key.
     with key_old, _explicit_database(db_path):
@@ -309,9 +309,9 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
-            ("aeat-test.agg.alpha", "alpha-1", b"alpha-1"),
-            ("aeat-test.agg.alpha", "alpha-2", b"alpha-2"),
-            ("aeat-test.agg.beta", "beta-1", b"beta-1"),
+            ("cadrumo-test.agg.alpha", "alpha-1", b"alpha-1"),
+            ("cadrumo-test.agg.alpha", "alpha-2", b"alpha-2"),
+            ("cadrumo-test.agg.beta", "beta-1", b"beta-1"),
         ):
             _save_probe_row(namespace, key, payload)
 
@@ -446,13 +446,13 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
-            ("aeat-test.quar.alpha", "row-old-1", b"old-1"),
-            ("aeat-test.quar.beta", "row-old-2", b"old-2"),
+            ("cadrumo-test.quar.alpha", "row-old-1", b"old-1"),
+            ("cadrumo-test.quar.beta", "row-old-2", b"old-2"),
         ):
             _save_probe_row(namespace, key, payload)
 
     with key_new, _explicit_database(db_path):
-        _save_probe_row("aeat-test.quar.alpha", "row-new-1", b"new-1")
+        _save_probe_row("cadrumo-test.quar.alpha", "row-new-1", b"new-1")
 
         report = quarantine_unreadable_secure_objects()
         assert report.unreadable_total == 2
@@ -488,13 +488,13 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
-            ("aeat-test.preview.alpha", "row-old-1", b"old-1"),
-            ("aeat-test.preview.beta", "row-old-2", b"old-2"),
+            ("cadrumo-test.preview.alpha", "row-old-1", b"old-1"),
+            ("cadrumo-test.preview.beta", "row-old-2", b"old-2"),
         ):
             _save_probe_row(namespace, key, payload)
 
     with key_new, _explicit_database(db_path):
-        _save_probe_row("aeat-test.preview.alpha", "row-new-1", b"new-1")
+        _save_probe_row("cadrumo-test.preview.alpha", "row-new-1", b"new-1")
 
         preview = preview_quarantine_unreadable_secure_objects()
         assert preview.unreadable_total == 2

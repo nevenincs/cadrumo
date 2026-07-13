@@ -46,7 +46,7 @@ class _RoundtripPayload(BaseModel):
 class _RoundtripRepository(SecureBoundRepository[_RoundtripPayload]):
     """Concrete subclass wiring the four class-level descriptors."""
 
-    namespace: ClassVar[str] = "aeat-test.envelope.secure_bound_roundtrip"
+    namespace: ClassVar[str] = "cadrumo-test.envelope.secure_bound_roundtrip"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
     payload_type: ClassVar[type[BaseModel]] = _RoundtripPayload
@@ -59,7 +59,7 @@ class _RoundtripRepository(SecureBoundRepository[_RoundtripPayload]):
 class _RoundtripV2Repository(_RoundtripRepository):
     """Concrete subclass used to prove older embedded envelopes are refused."""
 
-    namespace: ClassVar[str] = "aeat-test.envelope.secure_bound_roundtrip_v2"
+    namespace: ClassVar[str] = "cadrumo-test.envelope.secure_bound_roundtrip_v2"
     schema_version: ClassVar[int] = 2
 
 

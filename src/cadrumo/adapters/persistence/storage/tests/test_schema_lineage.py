@@ -26,7 +26,7 @@ from ..errors import EnvelopeVersionError, StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NAMESPACE = "aeat-test.lineage.policy"
+_NAMESPACE = "cadrumo-test.lineage.policy"
 
 
 def test_floor_matches_the_regime_expected_floor() -> None:
