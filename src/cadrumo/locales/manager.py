@@ -16,7 +16,7 @@ from typing import Any, override
 import yaml
 
 from ..core.errors import AeatError
-from ..core.external_constants import UTF_8_ENCODING
+from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.logging import get_logger
 from ..core.product_identity import PRODUCT_IDENTITY
 
@@ -190,12 +190,29 @@ class LocaleManager:
             with open(f, "w", encoding=UTF_8_ENCODING) as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
-    def canonicalize_product_identity_references(self) -> tuple[Path, ...]:
-        """Normalize product display and command prefixes in every catalogue."""
+    def canonicalize_product_identity_references(
+        self,
+        *,
+        locale: OutputLanguage | None = None,
+    ) -> tuple[Path, ...]:
+        """Normalize product identity in one selected or every catalogue.
+
+        Args:
+            locale: One supported output language to update. When omitted, update
+                every catalogue as the pre-selector command did.
+
+        Returns:
+            Paths whose parsed locale content changed.
+        """
+        locale_paths = (
+            (self._locale_path(locale.value),)
+            if locale is not None
+            else tuple(sorted(self.locales_dir.glob("*.yml")))
+        )
         updated_paths: list[Path] = []
-        for locale_path in sorted(self.locales_dir.glob("*.yml")):
+        for locale_path in locale_paths:
             data = self.load_locale(locale_path)
-            normalized = _normalise_product_identity_node(data)
+            normalized = _normalise_product_identity_mapping(data)
             if normalized == data:
                 continue
             _rewrite_locale_mapping(locale_path, normalized)
@@ -349,10 +366,15 @@ def _normalise_product_identity_references(value: str) -> str:
 def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
     """Recursively normalize product display and command references."""
     if isinstance(value, dict):
-        return {key: _normalise_product_identity_node(child) for key, child in value.items()}
+        return _normalise_product_identity_mapping(value)
     if isinstance(value, str):
         return _normalise_product_identity_references(value)
     return value
+
+
+def _normalise_product_identity_mapping(value: dict[str, LocaleNode]) -> dict[str, LocaleNode]:
+    """Normalize a locale mapping while preserving its mapping type."""
+    return {key: _normalise_product_identity_node(child) for key, child in value.items()}
 
 
 def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
