@@ -17,6 +17,7 @@ committed docs (the golden/seed roots redirect through the directive's
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -28,20 +29,62 @@ if TYPE_CHECKING:
 __all__ = [
     "check_sequence_goldens",
     "emit_cli_tree",
+    "should_emit_cli_tree",
 ]
 
+#: Force a fresh ``cli-tree.json`` regardless of build mode (mirrors the CLI
+#: reference hook's ``CADRUMO_DOCS_FORCE_CLI_REFERENCE`` seam).
+_FORCE_EMIT_ENV = "CADRUMO_DOCS_FORCE_CLI_TREE"
+#: Skip the ``cli-tree.json`` projection unconditionally.
+_SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
 
-def emit_cli_tree(app: Sphinx) -> None:
-    """Write a fresh ``_static/cli-tree.json`` projection into the build source tree.
 
-    Runs at ``builder-inited`` (before the read phase) so every build — full or
-    changed-page — ships the current live help catalogue the frontend widget
-    fetches. The file is gitignored and regenerated on every build, never
-    committed.
+def should_emit_cli_tree(output_path: Path, *, specific_sources: list[Path] | None) -> bool:
+    """Return whether this build must (re)build the ``cli-tree.json`` projection.
+
+    The projection is a walk of the live ``aeat`` command tree — it derives from
+    the CLI surface, never from a docs page — so an incremental docs-only
+    changed-page build cannot change it and must not pay the projection's
+    subprocess cost. Mirrors the sibling ``_should_generate_cli_reference`` guard
+    in ``docs/conf.py``: regenerate on a full/update build, when the output is
+    absent, or when forced; skip on an incremental changed-page build whose
+    artifact already exists. Two env seams force or skip unconditionally.
+
+    Args:
+        output_path: The projection destination (:func:`default_cli_tree_path`).
+        specific_sources: The changed-page specific-source set of an incremental
+            build, or ``None`` for a normal full/update build.
+    """
+    if os.environ.get(_FORCE_EMIT_ENV):
+        return True
+    if os.environ.get(_SKIP_EMIT_ENV):
+        return False
+    if specific_sources is None:
+        return True
+    return not output_path.is_file()
+
+
+def emit_cli_tree(app: Sphinx, *, specific_sources: list[Path] | None = None) -> None:
+    """Write a fresh ``_static/cli-tree.json`` projection when the build needs it.
+
+    Runs at ``builder-inited`` (before the read phase) so a build that needs the
+    projection ships the current live help catalogue the frontend widget fetches.
+    The file is gitignored and regenerated, never committed. An incremental
+    changed-page build whose artifact already exists is skipped so it does not
+    pay the projection's subprocess cost for a value that cannot have changed
+    (see :func:`should_emit_cli_tree`).
+
+    Args:
+        app: The Sphinx application; ``app.srcdir`` is the build source tree.
+        specific_sources: The changed-page specific-source set, or ``None`` for a
+            full/update build.
     """
     from dev.docs.cli_tree import default_cli_tree_path, write_cli_tree
 
-    write_cli_tree(default_cli_tree_path(Path(app.srcdir)))
+    output_path = default_cli_tree_path(Path(app.srcdir))
+    if not should_emit_cli_tree(output_path, specific_sources=specific_sources):
+        return
+    write_cli_tree(output_path)
 
 
 def _config_root(app: Sphinx, name: str) -> Path | None:
