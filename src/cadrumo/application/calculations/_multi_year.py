@@ -48,10 +48,10 @@ _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVer
 # ---------------------------------------------------------------------------
 # Multi-year-renta authorization enrollment recorder
 #
-# The ``modelo-multiyear-renta`` ADR makes every modelo's calculation backend
-# NON-FUNCTIONAL until an enrolling end-to-end persona test proves it across at
-# least two distinct renta (annual) years. The manifest entry is a *claim*; the
-# recorder below is the independent *verifier* the enrolling test drives.
+# Every modelo's calculation backend is NON-FUNCTIONAL until an enrolling
+# end-to-end persona test proves it across at least two distinct renta
+# (annual) years. The manifest entry is a *claim*; the recorder below is
+# the independent *verifier* the enrolling test drives.
 #
 # An enrolling test runs the REAL backend for two or more distinct
 # ``filing_year`` values and records each year it exercised through the
@@ -180,8 +180,8 @@ class EnrollmentRecorder:
     The enrolling test constructs one recorder per modelo, records each year it
     drives through the real backend, then calls :meth:`evidence` to obtain the
     verified :class:`EnrollmentEvidence` and assert it against the modelo's
-    manifest claim. The recorder is the natural home named by the
-    ``modelo-multiyear-renta`` ADR for the un-fakeable enrollment contract.
+    manifest claim. The recorder is the un-fakeable home for the enrollment
+    contract.
     """
 
     def __init__(self, modelo: str) -> None:

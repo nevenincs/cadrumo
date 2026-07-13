@@ -24,8 +24,7 @@ Non-goal (grupo ``per_grupo_member`` fan-in): this helper persists the
 single-filer ``(modelo, filing_year, period)`` row only. It does not stamp a
 ``member_nif`` and therefore does not feed the cross-member fan-in the 353<-322
 aggregation enumerates; member-row persistence for the local filing flow is out
-of scope (ADR ``2026-06-09-modelo-iva-routing-carry`` ruling D4) and remains a
-live-capture concern.
+of scope and remains a live-capture concern.
 
 The projection reads :class:`~cadrumo.domain.modelos.CalculationRevision`
 observations, rewrites the affected
@@ -75,8 +74,7 @@ APP_FILING_SOURCE_KIND: Final = "app_filing"
 Deliberately NOT a member of
 ``cadrumo.application.calculations._cross_period_clean_state._OFFICIAL_SOURCE_KINDS``:
 a locally-filed value is not external AEAT evidence and must never satisfy the
-cross-period clean-state filing gate. See ADR
-``2026-06-09-modelo-iva-routing-carry`` ruling D1.
+cross-period clean-state filing gate.
 """
 
 

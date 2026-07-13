@@ -126,9 +126,8 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
 
     Thin adapter over the single shared
     :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
-    gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it
-    extracts the source context off the payload's observation and delegates the
-    refusal decision so the binding-prefill, cross-period
+    gate: it extracts the source context off the payload's observation and
+    delegates the refusal decision so the binding-prefill, cross-period
     clean-state, and relation-prefill carry reads share one law-determined
     re-confirmation rather than three parallel copies.
     """

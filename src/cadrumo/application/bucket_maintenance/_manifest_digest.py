@@ -16,8 +16,6 @@ manifest on the import host. The manifest carries host-specific lifecycle
 timestamps (``created_at``, ``last_unlocked_at``) that legitimately differ
 between the exporting and importing hosts, so a literal recompute could never
 match; the AEAD binding is the authoritative integrity mechanism.
-
-Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 """
 
 from __future__ import annotations

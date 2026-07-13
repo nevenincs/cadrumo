@@ -73,9 +73,9 @@ class _ObservationEnvelopePayload(BaseModel):
     The ``stamped_revision_id`` field is the registry revision id the
     source filing resolved to at capture time. Current writes always stamp it
     so every carry-read can re-confirm the source value against the
-    law-determined registry revision before trusting it. Legacy envelopes that
-    predate the field load it as ``None`` so ADR-specific readers can surface
-    an explicit missing-stamp advisory instead of fabricating a stamp.
+    law-determined registry revision before trusting it. Envelopes that
+    predate the field load it as ``None`` so readers can surface an explicit
+    missing-stamp advisory instead of fabricating a stamp.
     """
 
     model_config = STRICT_FROZEN_CONFIG

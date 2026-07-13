@@ -477,7 +477,7 @@ def _resolve_health_severity(
     (``OK`` / ``EXPIRED`` / ``EXPIRING`` ...); those are authoritative
     and pass through unchanged. The Cl@ve Móvil backend reports a
     ``health_summary`` but no severity, so the field would otherwise
-    always be empty (persona-fleet finding G4). When a provider is
+    always be empty. When a provider is
     selected and the backend left the severity blank, derive a token
     that agrees with the readiness signals: ``ok`` for a configured,
     available, authenticated provider; ``warning`` for one that is
@@ -816,9 +816,9 @@ def _build_modelo_readiness(
     return tuple(reports)
 
 
-# W09.P44.S167: the ledger-preflight binding source set is single-sourced
-# in cadrumo.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS; the
-# import is at the top of the module (no more frozenset literal here).
+# The ledger-preflight binding source set is single-sourced in
+# cadrumo.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS; the
+# import is at the top of the module (no frozenset literal here).
 
 
 def modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:

@@ -640,7 +640,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     ``configure --provider clave_movil``, the projection's
     ``certificate_path`` must be empty — the certificate path is a
     certificate-provider field and must not leak beside a different
-    active provider (persona-fleet finding G1).
+    active provider.
     """
 
     from ..auth import configure_operator_auth
@@ -667,8 +667,7 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
 
     The Cl@ve backend reports a ``health_summary`` but no severity; the
     projection must derive a coherent token so ``health_severity`` is
-    never silently empty for a configured provider (persona-fleet
-    finding G4).
+    never silently empty for a configured provider.
     """
 
     from ..auth import configure_operator_auth
