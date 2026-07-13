@@ -210,7 +210,7 @@ run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--n
 run([sys.executable, "-m", "pip", "check"])
 
 version = run(["aeat", "--version"], env=clean_product_env())
-if "cadrumo " not in version.stdout:
+if "CADRUMO " not in version.stdout:
     raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
 root = files("cadrumo").joinpath("_data")
