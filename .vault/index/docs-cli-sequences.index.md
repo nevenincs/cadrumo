@@ -25,6 +25,12 @@ related:
   - '[[2026-07-13-docs-cli-sequences-W02-P05-S17]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P05-S18]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P05-S19]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P06-S20]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P06-S21]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P07-S22]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P07-S23]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P07-S24]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P07-S25]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-07-13-docs-cli-sequences-plan]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
@@ -61,6 +67,12 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-W02-P05-S17` - Implement the check CLI mode that fails with the page, sequence id, frame index, argv, differing_paths or unified diff, and the exact refresh invocation
 - `2026-07-13-docs-cli-sequences-W02-P05-S18` - Implement the executor-level anti-tautology proof that executes one representative sequence twice and asserts the pre-mask differing paths equal the central mask set exactly
 - `2026-07-13-docs-cli-sequences-W02-P05-S19` - Verify the whole engine test suite (parser, runner, comparison, CLI, anti-tautology) passes green with no mocks or skips
+- `2026-07-13-docs-cli-sequences-W03-P06-S20` - Implement the cli-tree.json projection generator reusing the English-pinned reference environment, lazy-import forcing, and per-option param extraction
+- `2026-07-13-docs-cli-sequences-W03-P06-S21` - Write projection tests and make a documented command path absent from the projection a hard build failure
+- `2026-07-13-docs-cli-sequences-W03-P07-S22` - Implement the Python tokeniser against the materialised Click tree, classifying executable, verb path, option, option value, positional value, and interpolated placeholder tokens with a command-path key on each verb token
+- `2026-07-13-docs-cli-sequences-W03-P07-S23` - Register the backtick-fenced cli-sequence MyST directive rendering server-side static frames in document order plus one inline application/json payload per sequence
+- `2026-07-13-docs-cli-sequences-W03-P07-S24` - Teach the conformance gate the sequence grammar (strip @setup and @result sigils, treat {name} as a positional placeholder) and add the enrolled-page no-plain-executable-fence tier
+- `2026-07-13-docs-cli-sequences-W03-P07-S25` - Write directive and tokeniser tests asserting the payload shape, token classification, and no-JS static frame HTML
 
 ### plan
 
