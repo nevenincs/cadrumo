@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Never
 
@@ -27,6 +29,7 @@ from pydantic import ValidationError
 
 from ..config import Settings, load_settings
 from ..logging import get_logger
+from ..time import now
 from ._errors import RunTracePersistenceError, RunTraceValidationError
 from ._models import RunEvent, RunTrace
 from ._redaction_rules import diagnostic_rules
@@ -448,12 +451,59 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     yield from pairs
 
 
+def prune_run_traces(*, retention_days: int | None = None, settings: Settings | None = None) -> int:
+    """Delete per-run trace directories older than the retention window.
+
+    Gives the run-trace store a declared retention lifecycle instead of one
+    subdirectory accumulating per run forever. Age is measured from each run
+    directory's modification time (its last write), so crashed runs that never
+    produced a valid ``trace.json`` are pruned too rather than accumulating
+    unreadable. ``retention_days`` defaults to the centralized
+    :attr:`~core.config.Settings.cadrumo_runs_retention_days`. Entirely
+    best-effort: a directory that cannot be enumerated, stat'd, or removed is
+    logged and skipped, never raised -- pruning must not crash the caller.
+
+    Args:
+        retention_days: Age cutoff in days; run directories whose mtime is
+            strictly older are removed. Defaults to the centralized setting.
+        settings: Optional :class:`core.config.Settings` override.
+
+    Returns:
+        Number of run directories removed.
+    """
+    cfg = settings or load_settings()
+    effective_retention_days = (
+        retention_days if retention_days is not None else cfg.cadrumo_runs_retention_days
+    )
+    cutoff = now() - timedelta(days=effective_retention_days)
+    base = runs_dir(cfg)
+    removed = 0
+    try:
+        entries = tuple(base.iterdir())
+    except OSError:
+        _logger.debug("prune_run_traces: runs directory not enumerable at %s", base, exc_info=True)
+        return 0
+    for entry in entries:
+        try:
+            if not entry.is_dir() or not _RUN_ID_PATTERN.fullmatch(entry.name):
+                continue
+            modified = datetime.fromtimestamp(entry.stat().st_mtime, tz=UTC)
+            if modified >= cutoff:
+                continue
+            shutil.rmtree(entry)
+            removed += 1
+        except OSError:
+            _logger.debug("prune_run_traces: could not prune run directory %s", entry, exc_info=True)
+    return removed
+
+
 __all__ = [
     "iter_events",
     "iter_runs",
     "load_envelope_document",
     "load_events",
     "load_trace",
+    "prune_run_traces",
     "runs_dir",
     "save_envelope",
     "save_events_append",
