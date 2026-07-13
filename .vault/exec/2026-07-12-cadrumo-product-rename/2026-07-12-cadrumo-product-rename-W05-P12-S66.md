@@ -97,8 +97,14 @@ above as historical proof of the first catalogue migration.
 - Isolated live `aeat --language hu --help` contains exact `CADRUMO`, `AEAT`,
   and 27 lowercase `aeat` command references. It contains neither exact
   title-case `Cadrumo` nor a command-leading lowercase `cadrumo` token.
-- Every production command and live-help probe used a fresh isolated
-  `CADRUMO_LOCAL_STORAGE_ROOT` with valid unsecured local state.
+- The catalogue mutation and every successful semantic, audit, scaffold, test,
+  and live-help run used a fresh isolated `CADRUMO_LOCAL_STORAGE_ROOT` with
+  valid unsecured local state. An initial read-only semantic comparison omitted
+  that isolation, inherited a retired `aeat.db`, and correctly refused before
+  catalogue loading; the comparison was rerun successfully in isolated state.
+  The first parallel help assertion wrapper also used two PowerShell map keys
+  that differed only by case and failed before running its commands; distinct
+  diagnostic keys fixed the wrapper, after which the unchanged gates passed.
 - No Python path changed, so Ruff, formatting, and Ty are not applicable to
   this catalogue-only transaction. `git diff --check` passes, and the
   Hungarian YAML diff is exactly six insertions and six deletions.
