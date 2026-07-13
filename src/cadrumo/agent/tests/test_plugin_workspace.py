@@ -55,14 +55,15 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:
 
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     assert document["name"] == "cadrumo"
+    assert document["displayName"] == "CADRUMO Spanish tax assistant"
     assert document["version"] == manifest.version
     assert document["defaultEnabled"] is False
     assert document["license"] == "Apache-2.0"
-    assert isinstance(document["author"], dict) and document["author"]["name"]
+    assert document["author"] == {"name": "CADRUMO tax assistant project"}
     assert isinstance(document["keywords"], list) and document["keywords"]
     # The one-liner distilled from the mcpb manifest states the never-files boundary.
     assert "never files" in document["description"].lower()
-    assert "Cadrumo Spanish-tax CLI" in document["description"]
+    assert document["description"].startswith("Operate Cadrumo through the Cadrumo Spanish-tax CLI:")
     assert "aeat Spanish-tax CLI" not in document["description"]
 
 
