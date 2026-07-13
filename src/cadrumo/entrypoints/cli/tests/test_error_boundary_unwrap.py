@@ -102,7 +102,7 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
     # unexpected-error code.
     assert exit_info.value.exit_code != 0
     # No "unexpected exception" traceback was logged: that log line is
-    # what lands in aeat.log and is later echoed by `repair logs`.
+    # what lands in cadrumo.log and is later echoed by `repair logs`.
     assert not any("unexpected exception" in record.message for record in caplog.records), [
         record.message for record in caplog.records
     ]

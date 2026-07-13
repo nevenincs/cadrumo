@@ -113,14 +113,14 @@ _DIAGNOSTIC_CHECK_INVALID_CASES: tuple[tuple[str, dict[str, object], str], ...] 
             "name": "x",
             "status": "fail",
             "summary": "y",
-            "next_action": "aeat config repair",
+            "next_action": "cadrumo config repair",
             "dead_end": "terminal",
         },
         "at most one of",
     ),
     (
         "ok-with-next-action",
-        {"name": "x", "status": "ok", "summary": "y", "next_action": "aeat config repair"},
+        {"name": "x", "status": "ok", "summary": "y", "next_action": "cadrumo config repair"},
         "must not carry",
     ),
     (
@@ -162,12 +162,12 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
         name="x",
         status="fail",
         summary="y",
-        next_action="aeat config repair reset-progress --yes",
+        next_action="cadrumo config repair reset-progress --yes",
     )
     dumped = populated.model_dump(mode="json")
     assert "next_action" in dumped
     assert "dead_end" in dumped
-    assert dumped["next_action"] == "aeat config repair reset-progress --yes"
+    assert dumped["next_action"] == "cadrumo config repair reset-progress --yes"
     assert dumped["dead_end"] is None
 
 
@@ -270,7 +270,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
         assert integrity_check.status == "warn"
         assert str(report.secure_objects.unreadable_total) in integrity_check.summary
         assert str(report.secure_objects.readable_total) in integrity_check.summary
-        assert integrity_check.next_action == "aeat config repair quarantine --yes"
+        assert integrity_check.next_action == "cadrumo config repair quarantine --yes"
 
         ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
         # Three rows sealed under the OLD ephemeral key should be
@@ -298,8 +298,8 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
 
     Seeds rows under master key K1, rotates to K2, and asserts the
     aggregate matches the per-namespace probe. Used by
-    ``aeat app overview status`` to render an inline warning footer
-    pointing the operator at ``aeat config repair``.
+    ``cadrumo app overview status`` to render an inline warning footer
+    pointing the operator at ``cadrumo config repair``.
     """
     db_path = tmp_path / "agg.db"
     dispose_engine()
@@ -373,7 +373,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
 
 
 def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path) -> None:
-    """``aeat config repair`` and ``aeat config status`` must read auth readiness from one source.
+    """``cadrumo config repair`` and ``cadrumo config status`` must read auth readiness from one source.
 
     Repair and the wizard status surface share one projection: both
     build a :class:`WizardStatusReport` and read its ``login_ready`` /
@@ -552,7 +552,7 @@ def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) ->
 def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -> None:
     """Importing ``diagnostics`` stays off the heavy adapter import graph.
 
-    The ``aeat --version`` fast path imports ``cadrumo.application.
+    The ``cadrumo --version`` fast path imports ``cadrumo.application.
     diagnostics`` solely for ``build_cli_version_report`` /
     ``render_cli_version_text``. Disaster rollback contract mandates that
     surface return fast on cold start. The browser adapter and the
@@ -622,14 +622,14 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
             status="fail",
             summary="Registry integrity failed",
             detail="casilla 9999 missing from revision 100-2025",
-            next_action="aeat config repair integrity registry",
+            next_action="cadrumo config repair integrity registry",
             audience="internal",
         ),
         DiagnosticCheck(
             name="auth.readiness",
             status="warn",
             summary="Authentication is not configured",
-            next_action="aeat config auth configure --provider certificate --file PATH",
+            next_action="cadrumo config auth configure --provider certificate --file PATH",
             audience="operator",
         ),
     )
@@ -638,7 +638,7 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
         package_name="cadrumo",
         package_version="0.1.0",
         python_version="3.13.11",
-        log_file="aeat.log",
+        log_file="cadrumo.log",
         registry=registry,
         setup=None,
         secure_objects=SecureObjectIntegrityReport(),
@@ -652,10 +652,10 @@ def test_diagnostic_finding_carries_typed_per_cause_detail() -> None:
     finding = DiagnosticFinding(
         summary="identity.tax_id — Tax identification number",
         requirement="required",
-        next_action="aeat config profile edit NAME",
+        next_action="cadrumo config profile edit NAME",
     )
     assert finding.requirement == "required"
-    assert finding.next_action == "aeat config profile edit NAME"
+    assert finding.next_action == "cadrumo config profile edit NAME"
     dumped = finding.model_dump(mode="json")
     assert dumped["summary"].startswith("identity.tax_id")
     assert dumped["requirement"] == "required"
@@ -675,7 +675,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     Reproduces cluster F / M14: a bare ``N/M`` counter or a one-word
     ``warn`` verdict told the operator nothing actionable. The fixed row
     carries one :class:`DiagnosticFinding` per unset required key, each
-    with the exact ``aeat config profile edit NAME`` command.
+    with the exact ``cadrumo config profile edit NAME`` command.
     """
 
     from ..wizard import WizardStatusReport
@@ -691,7 +691,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         profile_total_keys=40,
         auth_provider="",
         login_ready=False,
-        next_action="aeat config profile edit NAME",
+        next_action="cadrumo config profile edit NAME",
     )
     check = profile_check(report)
 
@@ -701,7 +701,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     assert all(finding.requirement == "required" for finding in check.findings)
     # The check-level next_action routes the operator to the guided
     # editor; the per-finding summaries name exactly which keys to fill.
-    assert check.next_action == "aeat config profile edit NAME"
+    assert check.next_action == "cadrumo config profile edit NAME"
     # The bare counter must no longer be the only signal: the row carries
     # one finding per cause.
     assert len(check.findings) == 3
@@ -725,7 +725,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         profile_total_keys=40,
         auth_provider="",
         login_ready=False,
-        next_action="aeat config profile edit NAME",
+        next_action="cadrumo config profile edit NAME",
     )
     check = profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
@@ -734,7 +734,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         package_name="cadrumo",
         package_version="0.1.0",
         python_version="3.13.11",
-        log_file="aeat.log",
+        log_file="cadrumo.log",
         registry=registry,
         setup=None,
         secure_objects=SecureObjectIntegrityReport(),
@@ -746,7 +746,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
     # The specific missing key is named, and the guided-editor command
     # that fills it is on the row — not a bare counter.
     assert "identity.tax_id" in rendered
-    assert "aeat config profile edit NAME" in rendered
+    assert "cadrumo config profile edit NAME" in rendered
 
 
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:

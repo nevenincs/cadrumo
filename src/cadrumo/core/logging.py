@@ -70,8 +70,8 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
 )
 
 
-def _is_cli_metadata_invocation() -> bool:
-    """Return whether the current ``aeat`` CLI process renders metadata only.
+def _is_cadrumo_metadata_invocation() -> bool:
+    """Return whether the current ``cadrumo`` process renders metadata only.
 
     Help and version rendering must not initialise settings-derived diagnostic
     logging: an operator may need those state-free surfaces precisely because
@@ -80,7 +80,7 @@ def _is_cli_metadata_invocation() -> bool:
     """
     program = Path(sys.argv[0])
     executable_names = {program.name.lower(), program.parent.name.lower()}
-    if not executable_names.intersection({"aeat", "aeat.exe"}):
+    if not executable_names.intersection({"cadrumo", "cadrumo.exe"}):
         return False
     arguments = sys.argv[1:]
     return any(argument in {"--help", "-h", "--version", "-V"} for argument in arguments)
@@ -101,7 +101,7 @@ _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
 _PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
-_DEFAULT_LOG_FILE_NAME = "aeat.log"
+_DEFAULT_LOG_FILE_NAME = "cadrumo.log"
 
 
 def _normalise_log_key(key: str) -> str:
@@ -381,7 +381,7 @@ def configure_logging() -> None:
     :func:`get_logger` without duplicating handlers.
     """
     global _CONFIGURED
-    if _CONFIGURED or _is_cli_metadata_invocation():
+    if _CONFIGURED or _is_cadrumo_metadata_invocation():
         return
 
     from ._config_state_root import FormerProductStateError
