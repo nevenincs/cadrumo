@@ -31,7 +31,7 @@ Generalise the state-root derivation table so all output-dir defaults derive fro
 
 - [x] `W01.P01.S01` - Extend the state-root derivation so every output-dir Settings field default derives from cadrumo_local_storage_root under the category taxonomy, eliminating PROJECT_ROOT/var defaults; `src/cadrumo/core/config.py`.
 - [x] `W01.P01.S02` - Derive the integration-fields output dirs (financial, parity store, registry cache) from the state root and delete fields verified vestigial; `src/cadrumo/core/_config_integration_fields.py`.
-- [ ] `W01.P01.S03` - Delete the dormant consumer-less browser-trace dir field pair and sweep references; `src/cadrumo/core/config.py`.
+- [x] `W01.P01.S03` - Delete the dormant consumer-less browser-trace dir field pair and sweep references; `src/cadrumo/core/config.py`.
 - [x] `W01.P01.S04` - Verify per-dir live-vs-vestigial write status of the var/financial catalogue dirs and record the verdicts; `.vault/audit`.
 
 ### Phase `W01.P02` - Cache relocation
@@ -102,7 +102,7 @@ Converge the four atomic-write dialects onto one shared helper and the divergent
 
 One shared two-tier atomic-write helper; migrate all four dialects onto it.
 
-- [ ] `W05.P08.S23` - Author the shared two-tier atomic-write helper with the hardened master-key pattern as the strong tier; `src/cadrumo/core`.
+- [x] `W05.P08.S23` - Author the shared two-tier atomic-write helper with the hardened master-key pattern as the strong tier; `src/cadrumo/core`.
 - [ ] `W05.P08.S24` - Migrate the weak no-fsync atomic-write variants onto the helper; `bucket pointer, outbound local store, bucket manifest, corpus bundle`.
 - [ ] `W05.P08.S25` - Migrate the remaining stem-sibling atomic-write sites onto the helper; `envelope, blob store, secret store, rotation, env_io, corpus manifest, locales`.
 
