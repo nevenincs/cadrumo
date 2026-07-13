@@ -370,7 +370,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.persistence.storage.runtime", "core.i18n"),
             ImportEdge("adapters.persistence.storage.runtime_repository", "adapters.persistence.storage.sql.engine"),
             ImportEdge("adapters.persistence.storage.runtime_repository", "core"),
-            ImportEdge("adapters.persistence.storage.secret_store._secret_store", "core.locks"),
+            ImportEdge("adapters.persistence.storage.secret_store._secret_store", "core.atomic_write"),
             ImportEdge("adapters.persistence.storage.sql.engine", "adapters.persistence.storage.sql._orm"),
             ImportEdge("adapters.persistence.storage.sql.secure_objects", "adapters.persistence.storage.errors"),
             ImportEdge("adapters.persistence.storage.sql.secure_objects", "adapters.persistence.storage.master_key"),
@@ -387,12 +387,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("core.config", "core.external_constants"),
             ImportEdge("core.config", "core.i18n"),
             ImportEdge("core.corpus_manifest", "core.atomic_write"),
-            ImportEdge("core.corpus_manifest", "core.locks"),
             # Cycle-backed package/facade deferrals retained after the D9 follow-up lift:
             # `_bundle_signing` needs functions defined in `core.corpus_manifest.__init__`,
             # and `_http_sink` logging would cycle through logging -> config -> telemetry.
             ImportEdge("core.corpus_manifest._bundle_signing", "core.corpus_manifest"),
-            ImportEdge("core.env_io", "core.locks"),
+            ImportEdge("core.env_io", "core.atomic_write"),
             ImportEdge("core.json_contract", "core.observability"),
             ImportEdge("core.json_contract", "core.output_rendering"),
             ImportEdge("core.logging", "core.config"),
@@ -788,7 +787,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
-    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 39,  # +2 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest)
+    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (S24: _bucket_pointer_io, corpus_manifest; S25: env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
     UnsanctionedClass.APPLICATION_DEFERRAL: 520,  # +3 censo vivienda-ratio profile deferrals (was 517: +14 readiness relation-prefill)
 }
 
@@ -799,7 +798,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 473  # +2 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest); was 471.
+_ALLOWLIST_EDGE_CEILING: int = 472  # net +1 from S24/S25 atomic_write deferral migrations; was 471.
 
 
 def _cadrumo_relative(dotted: str) -> str:
