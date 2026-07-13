@@ -10,8 +10,8 @@
 # on TaxpayerProfile, not a closed enum class — typed_enum is omitted.
 # The cross-cutting ConvenioAuthority (registry/aeat/treaties/) resolves the
 # BOE treaty reference from this same field; the retired TaxpayerProfile
-# convenio_aplicable static-lookup property has been deleted per ADR
-# 2026-06-30-convenio-doble-imposicion-adr (decision D3).
+# convenio_aplicable static-lookup property has been deleted in favour of
+# this resolution path.
 
 [[revisions."2025".bindings]]
 id = "m210-2025-profile-country-of-fiscal-residence"
