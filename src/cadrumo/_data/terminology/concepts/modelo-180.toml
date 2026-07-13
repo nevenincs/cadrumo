@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-180"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:180"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100"]
+related = ["irpf", "modelo-115", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Resumen anual de retenciones sobre alquileres urbanos."
+definition = "Declaracion informativa anual que resume las retenciones sobre arrendamientos de inmuebles urbanos declaradas en los modelos 115 del ejercicio, con el detalle por arrendador."
+
+[language.es.source]
+citation = "Articulo 99 de la Ley 35/2006 del IRPF; articulo 100 del RD 439/2007."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 180"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "resumen anual de alquileres"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual summary of the year's rent-withholding returns (Modelo 115)."
+
+[language.ca]
+short_description = "Resum anual de retencions sobre lloguers urbans."
+
+[language.hu]
+short_description = "Eves osszesito a berleti forrasado-bevallasokrol (115-os)."

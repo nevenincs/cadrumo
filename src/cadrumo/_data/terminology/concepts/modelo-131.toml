@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-131"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:131"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
+related = ["irpf", "modelo-130", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Pago fraccionado del IRPF en estimacion objetiva."
+definition = "Pago fraccionado trimestral del IRPF para actividades economicas en estimacion objetiva (modulos)."
+
+[language.es.source]
+citation = "Articulo 110 del RD 439/2007; Orden EHA/672/2007."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 131"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "pago fraccionado por modulos"
+term_status = "admitted"
+
+[language.en]
+short_description = "Quarterly IRPF instalment under the objective-estimation (modulos) regime."
+
+[language.ca]
+short_description = "Pagament fraccionat de l'IRPF en estimacio objectiva."
+
+[language.hu]
+short_description = "Negyedeves szja-eloleg az atalanybecsles (modulos) szerint."

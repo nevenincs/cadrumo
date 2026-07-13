@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-115"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:115"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100"]
+related = ["irpf", "modelo-180", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Retenciones sobre alquileres de inmuebles urbanos."
+definition = "Autoliquidacion periodica de las retenciones practicadas sobre las rentas pagadas por el arrendamiento de inmuebles urbanos, como el local del negocio."
+
+[language.es.source]
+citation = "Articulo 99 de la Ley 35/2006 del IRPF; articulo 100 del RD 439/2007."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 115"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "retenciones de alquiler"
+term_status = "admitted"
+
+[language.en]
+short_description = "Periodic return of withholdings on urban-property rent."
+
+[language.ca]
+short_description = "Retencions sobre lloguers d'immobles urbans."
+
+[language.hu]
+short_description = "Uzleti berleti dijak forrasadojanak bevallasa."
