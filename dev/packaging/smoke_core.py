@@ -599,8 +599,8 @@ def _venv_python(venv: Path) -> Path:
 
 
 def _venv_cadrumo(venv: Path) -> Path:
-    """Return the virtualenv Cadrumo console-script path."""
-    executable = "cadrumo.exe" if os.name == "nt" else "cadrumo"
+    """Return the virtualenv path of the Cadrumo ``aeat`` console script."""
+    executable = "aeat.exe" if os.name == "nt" else "aeat"
     return _venv_bin(venv) / executable
 
 
