@@ -95,7 +95,12 @@ EU suppliers, or recargo de equivalencia. Run
 
 A mixed-use transaction is one you use partly for business and partly
 personally, such as a phone bill, a car cost, or a home-office expense. Record
-the business share so the calculation counts only the deductible part.
+the business share so the calculation counts only the deductible part. The
+split can come from three places, in rising order of grounding: a percentage
+on a single record, a saved default ratio for a whole category, or a ratio
+worked out from your registered facts (for example, the registered home-office
+area against the size of your home). All three keep only the part of a cost
+that genuinely belongs to the business.
 
 A `MIXED` row needs a proportionality reference before a modelo can calculate
 from it. The reference is a saved category ratio applied through
