@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app modelo export``."""
+"""CLI surface tests for ``cadrumo app modelo export``."""
 
 from __future__ import annotations
 
@@ -468,7 +468,7 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     assert "justificante" in result.output
     assert "consulta de declaraciones presentadas" in result.output
     assert "CSV cotejo" in result.output
-    assert "aeat app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in result.output
+    assert "cadrumo app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in result.output
     assert out.exists()
     assert out.stat().st_size > 0
 
@@ -591,7 +591,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert "not official AEAT filing evidence" in notice["message"]
     assert "consulta de declaraciones presentadas" in notice["message"]
     assert "CSV cotejo" in notice["message"]
-    assert "aeat app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in notice["suggestion"]
+    assert "cadrumo app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in notice["suggestion"]
     assert out.exists()
 
 
@@ -710,7 +710,7 @@ def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert payload["error"]["category"] == "REFUSED"
     assert payload["error"]["context"]["modelo"] == "121"
     assert "export_layouts" in payload["error"]["message"]
-    assert payload["error"]["suggestion"] == "aeat app modelo describe 121"
+    assert payload["error"]["suggestion"] == "cadrumo app modelo describe 121"
     assert not out.exists()
     assert "Traceback" not in result.output
 

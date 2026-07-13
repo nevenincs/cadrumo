@@ -8,14 +8,14 @@ profile without seeding fixture state.
 
 Pinned verbs:
 
-- ``aeat app ledger archive <noop>`` — required ``--yes`` guard.
-- ``aeat app ledger remove <noop>`` — required ``--yes`` guard
+- ``cadrumo app ledger archive <noop>`` — required ``--yes`` guard.
+- ``cadrumo app ledger remove <noop>`` — required ``--yes`` guard
   (also covered by ``test_app_ledger_lifecycle_remove_requires_yes_flag``
   in test_cli_surface.py via the round-trip harness; this gate is the
   fast unit-style companion).
-- ``aeat app ledger reset`` — required ``--yes`` guard (also covered
+- ``cadrumo app ledger reset`` — required ``--yes`` guard (also covered
   by ``test_app_ledger_lifecycle_reset_requires_yes_flag``).
-- ``aeat config profile delete <name>`` — required ``--yes`` guard
+- ``cadrumo config profile delete <name>`` — required ``--yes`` guard
   (also covered by ``test_config_profile_delete_requires_yes``).
 
 Together with the existing tests, the four destructive verbs now have
@@ -51,7 +51,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def test_ledger_archive_refuses_without_yes() -> None:
-    """``aeat app ledger archive <any>`` without ``--yes`` is refused
+    """``cadrumo app ledger archive <any>`` without ``--yes`` is refused
     with a non-zero exit code; the confirm_required guard fires before
     any backend read."""
 
@@ -60,7 +60,7 @@ def test_ledger_archive_refuses_without_yes() -> None:
 
 
 def test_ledger_remove_refuses_without_yes() -> None:
-    """``aeat app ledger remove <any>`` without ``--yes`` (and
+    """``cadrumo app ledger remove <any>`` without ``--yes`` (and
     without ``--dry-run``) is refused with a non-zero exit code."""
 
     result = invoke_cached_cli(["app", "ledger", "remove", "any-transaction-id"])
@@ -68,7 +68,7 @@ def test_ledger_remove_refuses_without_yes() -> None:
 
 
 def test_ledger_reset_refuses_without_yes() -> None:
-    """``aeat app ledger reset`` without ``--yes`` (and without
+    """``cadrumo app ledger reset`` without ``--yes`` (and without
     ``--dry-run``) is refused with a non-zero exit code."""
 
     result = invoke_cached_cli(["app", "ledger", "reset"])
@@ -76,7 +76,7 @@ def test_ledger_reset_refuses_without_yes() -> None:
 
 
 def test_ledger_remove_with_dry_run_does_not_require_yes() -> None:
-    """``aeat app ledger remove --dry-run <missing>`` proceeds past
+    """``cadrumo app ledger remove --dry-run <missing>`` proceeds past
     the confirm_required guard without ``--yes`` (the dry-run path is
     explicitly allowed to skip the safeguard since it has no side
     effect). The verb subsequently fails on the missing-id lookup but
@@ -96,7 +96,7 @@ def test_ledger_remove_with_dry_run_does_not_require_yes() -> None:
 
 
 def test_config_reset_refuses_without_explicit_scope() -> None:
-    """``aeat config reset --yes`` with no ``--scope`` is refused.
+    """``cadrumo config reset --yes`` with no ``--scope`` is refused.
 
     The most destructive scope (``all``, a full wipe) must never be an
     implied default: one forgotten flag next to ``--yes`` would erase every
@@ -111,7 +111,7 @@ def test_config_reset_refuses_without_explicit_scope() -> None:
 
 
 def test_config_reset_scope_refusal_fires_before_yes_guard() -> None:
-    """Bare ``aeat config reset`` names the scope contract first."""
+    """Bare ``cadrumo config reset`` names the scope contract first."""
     result = invoke_cached_cli(["config", "reset"])
     assert result.exit_code != 0, result.output
     combined = (result.output or "") + (result.stderr or "")

@@ -1,6 +1,6 @@
 """CLI discovery tests for the single-casilla describe verb.
 
-Exercises ``aeat app modelo casilla <modelo> <casilla>`` end to end through
+Exercises ``cadrumo app modelo casilla <modelo> <casilla>`` end to end through
 the cached Click runner against the real bundled registry: a known casilla
 surfaces its label, legal / source grounding, and input kind sourced from the
 authoritative ``CasillaDefinition`` on the resolved snapshot; a computed

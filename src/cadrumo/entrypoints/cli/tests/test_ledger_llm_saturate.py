@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app ledger classify --llm --saturate``.
+"""Real-behavior CLI tests for ``cadrumo app ledger classify --llm --saturate``.
 
 Exercises the stage-2 saturation surface end to end against the real CLI, real
 application + domain derivation, and real SQLite persistence in an isolated

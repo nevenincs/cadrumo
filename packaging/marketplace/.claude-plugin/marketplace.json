@@ -1,13 +1,13 @@
 {
   "name": "neve",
-  "description": "Neve plugin marketplace — Claude plugins including the aeat Spanish-tax assistant.",
+  "description": "Neve plugin marketplace \u2014 Claude plugins including the Cadrumo Spanish-tax assistant.",
   "owner": {
-    "name": "AEAT tax assistant project"
+    "name": "Cadrumo tax assistant project"
   },
   "plugins": [
     {
-      "name": "aeat",
-      "source": "./plugins/aeat"
+      "name": "cadrumo",
+      "source": "./plugins/cadrumo"
     }
   ]
 }

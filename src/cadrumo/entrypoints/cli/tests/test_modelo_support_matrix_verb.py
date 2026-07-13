@@ -1,4 +1,4 @@
-"""``aeat app modelo support-matrix`` verb tests.
+"""``cadrumo app modelo support-matrix`` verb tests.
 
 See Also:
     :func:`~entrypoints.cli._modelo_discovery_cli._register_support_matrix_command`

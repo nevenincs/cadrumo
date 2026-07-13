@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app modelo history``.
+"""CLI surface tests for ``cadrumo app modelo history``.
 
 Closes the contract history-test gap: every verb in the
 link/check/preflight/reconcile/history five-verb backend-wired set now
@@ -60,7 +60,7 @@ def _seed_event(
     catalogue = repo.load()
     occurred_at = _EVENT_OCCURRED_AT + timedelta(seconds=offset_seconds)
     object_id = "wu" + "0" * (64 - 2)
-    actor = "cli/aeat"
+    actor = "cli/cadrumo"
     payload = {"modelo": modelo, year_payload_key: year, "period": period}
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
@@ -95,7 +95,7 @@ def _active_bucket_id() -> str:
 
 
 def test_history_returns_empty_envelope_for_modelo_with_no_events() -> None:
-    """`aeat app modelo history --modelo 303` against an empty bucket
+    """`cadrumo app modelo history --modelo 303` against an empty bucket
     surfaces a typed envelope with ``count=0`` and no events."""
 
     result = invoke_cached_cli(["app", "modelo", "history", "--modelo", "303"])

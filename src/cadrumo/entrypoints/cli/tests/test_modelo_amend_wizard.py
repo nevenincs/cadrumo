@@ -1,4 +1,4 @@
-"""Real-behavior coverage for the guided ``aeat app modelo work amend-wizard`` command.
+"""Real-behavior coverage for the guided ``cadrumo app modelo work amend-wizard`` command.
 
 Seeds a real AEAT-attested baseline (via ``filing-record import``, the same
 production path an operator uses before amending) and drives the wizard's

@@ -1,6 +1,6 @@
 """Year-end Renta (M100) reviewer persona over the ledger-corpus fixture.
 
-Drives the real ``aeat app ledger`` CLI as a **year-end reviewer assembling the
+Drives the real ``cadrumo app ledger`` CLI as a **year-end reviewer assembling the
 annual Renta picture**: import every account, bulk-classify the full 2025
 business income + expenses against the ground-truth oracle, review the whole
 year, observe the annual income-vs-expense totals (summed from

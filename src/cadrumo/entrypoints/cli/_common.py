@@ -198,8 +198,7 @@ def _active_sandbox_notice() -> Notice | None:
     """
     from ...adapters.persistence.storage import StorageValidationError
     from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
-    from ...core import resolve_active_bucket_id
-    from ...core._config_state_root import FormerProductStateError
+    from ...core import FormerProductStateError, resolve_active_bucket_id
     from ...core.config import load_settings
     from ...core.external_constants import SANDBOX_LABEL_PREFIX
     from ...core.json_contract import Notice, NoticeSeverity
@@ -251,8 +250,7 @@ def _active_profile_label() -> str | None:
     """
     from ...adapters.persistence.storage import StorageValidationError
     from ...application.workflow import read_profile_bucket_by_id
-    from ...core import resolve_active_bucket_id
-    from ...core._config_state_root import FormerProductStateError
+    from ...core import FormerProductStateError, resolve_active_bucket_id
 
     try:
         bucket_id = resolve_active_bucket_id()

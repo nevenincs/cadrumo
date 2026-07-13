@@ -148,7 +148,7 @@ def test_classify_help_points_irpf_category_to_categories_catalogue(
     result = _invoke(["app", "ledger", "classify", "--help"], env={"COLUMNS": "160"})
     assert result.exit_code == 0, result.output
     flat = " ".join(result.output.split())
-    assert "aeat app ledger categories" in flat
+    assert "cadrumo app ledger categories" in flat
     assert "actividad_economica" in flat
     assert "arrendamiento_local" in flat
     assert "Royalties" in flat

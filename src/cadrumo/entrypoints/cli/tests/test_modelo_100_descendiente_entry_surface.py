@@ -4,7 +4,7 @@ Commit ``092a4f263`` rebound Modelo 100 casillas 0513/0514 (mínimo por
 descendientes) from manual to ``input_kind = computed`` across every 2020-2025
 revision, deriving the Art. 58/61 LIRPF aggregate from the active profile's
 ``renta_family.descendiente.{n}.*`` facts. No live production surface wrote those
-facts before this module: ``aeat config profile descendiente add`` closes that gap.
+facts before this module: ``cadrumo config profile descendiente add`` closes that gap.
 
 This module drives the real ``cadrumo`` CLI end to end against an isolated real-session
 backend (``isolated_cli_runtime_profile``) — no mocks, no monkeypatched backend:

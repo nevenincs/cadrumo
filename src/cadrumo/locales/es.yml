@@ -129,8 +129,8 @@ adapters:
           el perfil activo antes de reintentar el comando de Google.
         run_from_interactive_terminal: Ejecuta 'aeat config google login' desde un
           terminal interactivo con un navegador web disponible.
-        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia
-          el perfil activo a un identificador fiscal sintético de prueba.
+        use_keyring_or_synthetic: Configura cadrumo_secret_store_backend=keyring o
+          cambia el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
@@ -204,6 +204,9 @@ adapters:
           folder_not_owned: La carpeta de Drive {folder_name} no esta marcada como
             propiedad de esta app; se rechaza la escritura para proteger datos del
             operador.
+          former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
+            pertenece al producto anterior y no se puede usar; usa la carpeta vault
+            de Cadrumo.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             se puede importar; ejecuta `uv sync` y reintentalo.
           media_non_bytes: La descarga de medios de Google Drive devolvio {payload_type}
@@ -999,7 +1002,9 @@ application:
         Modelo 210 solo puede usarse en unidades de trabajo del Modelo 210.
       m210_ledger_source_selection_required: El modo de fuente de libro mayor del
         Modelo 210 requiere una selección de código oficial de tipo de renta sin proyectar.
-      m210_official_tipo_renta_selection_mismatch: 'El código oficial de tipo de renta %{official_tipo_renta_code} del Modelo 210 requiere el valor de fórmula %{expected_tipo_renta}; se recibió %{tipo_renta}.'
+      m210_official_tipo_renta_selection_mismatch: El código oficial de tipo de renta
+        %{official_tipo_renta_code} del Modelo 210 requiere el valor de fórmula %{expected_tipo_renta};
+        se recibió %{tipo_renta}.
       novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
         en la revisión %{revision_id}: el registro declara un origen de vinculación
         que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
@@ -1121,6 +1126,12 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_dependency_unclean: 'la dependencia entre períodos no está limpia:
+        modelo=%{modelo} ejercicio=%{year} período=%{period} origen=%{origin} ids_origen=%{origin_ids}
+        bloqueos=%{blockers}'
+      cross_period_dependency_unclean_evidence_next_action: Capture o importe evidencia
+        de la AEAT para la dependencia de origen. Ejecute `%{target_capture}`, `%{source_justificante_capture}`,
+        `%{import_official_record}` o `%{reconcile_file}`; vuelva a ejecutar la verificación.
       cross_period_modelo_not_applicable:
         message: 'Las dependencias entre periodos de modelos origen que el contribuyente
           no presenta se excluyeron como no aplicables: {modelos}. Para retenciones
@@ -1148,6 +1159,14 @@ application:
           import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
           --file PATH` para evidencia que ya tenga.
+      cross_period_operator_declared_suppression: 'dependencia entre períodos excluida
+        por no existir obligación previa (antes del inicio de actividad): modelo=%{modelo}
+        ejercicio=%{year} período=%{period} origen=%{origin}. El período es estrictamente
+        anterior a la fecha de inicio de actividad declarada por el operador, %{activity_start_date},
+        que todavía no se ha contrastado con una instantánea del censo de la AEAT.'
+      cross_period_operator_declared_suppression_next_action: Confirme que la fecha
+        de inicio de actividad registrada es correcta. Cuando esté disponible la lectura
+        en vivo del censo de la AEAT, la fecha se contrastará y este aviso se eliminará.
       dt12a_reduccion_antiquity_next_action: Confirme que han transcurrido mas de
         dos anos desde la primera aportacion al plan de pensiones, salvo que la prestacion
         sea por invalidez (ley-35-2006:dt-12).
@@ -2397,6 +2416,7 @@ cli:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
           revisión de cálculo
+        next_action: 'Revise el informe de verificación: %{command}'
         verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de un informe de verificación
         view_help: Mostrar un informe de verificación por id
@@ -2556,6 +2576,20 @@ cli:
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
           %{calculation_revision_id} ya está presentada; se devolvió el registro de
           presentación existente sin cambios.'
+        formula_operation_calculation: cálculo
+        formula_operation_clamp: límite
+        formula_operation_conditional: condicional
+        formula_operation_copy: copia
+        formula_operation_divide: división
+        formula_operation_lookup: búsqueda
+        formula_operation_maximum: máximo
+        formula_operation_minimum: mínimo
+        formula_operation_multiply: multiplicación
+        formula_operation_negate: negación
+        formula_operation_percent: porcentaje
+        formula_operation_previous_period: período anterior
+        formula_operation_subtract: resta
+        formula_operation_sum: suma
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Debe llevar evidencia externa importada (justificante / CSV / captura en
           vivo)
@@ -2658,9 +2692,11 @@ cli:
           para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
           trimestre o MM para un mes) en --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
-        plazo_vencido_warning: 'AVISO: plazo voluntario vencido (Art. 27 LGT). El tipo mostrado es una previsualización no evaluada; esta aplicación no determina una deuda por recargo o intereses.'
-        plazo_vencido_sin_previsualizacion_warning: 'AVISO: plazo voluntario vencido (Art. 27
-          LGT). Esta aplicación no determina una deuda por recargo o intereses.'
+        plazo_vencido_sin_previsualizacion_warning: 'AVISO: plazo voluntario vencido
+          (Art. 27 LGT). Esta aplicación no determina una deuda por recargo o intereses.'
+        plazo_vencido_warning: 'AVISO: plazo voluntario vencido (Art. 27 LGT). El
+          tipo mostrado es una previsualización no evaluada; esta aplicación no determina
+          una deuda por recargo o intereses.'
         prestacion_inss_exenta_help: Importe íntegro de prestaciones INSS maternidad/paternidad
           exentas (Art. 7.h LIRPF). Se registra en la casilla de exención correspondiente
           a la revisión y se descuenta del total de ingresos computables. Introduce
@@ -2796,6 +2832,9 @@ cli:
         status_help: Mostrar los metadatos de una unidad de trabajo
         status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
           calculate` y luego verifica el borrador con `aeat app modelo work verify`.
+        verify_already_verified_refused: La revisión de cálculo %{calculation_revision_id}
+          ya está en estado %{state} y no se puede volver a verificar. La verificación
+          solo acepta una revisión en borrador.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_next_action_granted: La verificación se superó. Exporta el artefacto
           de presentación con `aeat app modelo export`.
@@ -2820,6 +2859,12 @@ cli:
           work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
+        workflow_draft_build_refused_next_action: Corrija la entrada de borrador indicada
+          y vuelva a ejecutar %{command}.
+        workflow_draft_build_refused_summary: 'Se rechazó la generación del borrador:
+          %{error_message}. Corrija la entrada de borrador indicada y vuelva a calcular.'
+        workflow_review_verification_report_next_action: 'Revise el informe de verificación:
+          %{command}'
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
@@ -3118,7 +3163,7 @@ cli:
               son {available}
             year_help: Año de declaración (p. ej. 2025)
           export_help: Exporta la superficie de cálculo del registro para un modelo
-            y período a una hoja de Google Sheets dentro de `aeat-vault/`
+            y período a una hoja de Google Sheets dentro de `cadrumo-vault/`
           help: Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)
           pull:
             assemble_observations_help: Tras recuperar, reensambla las celdas de filas
@@ -3725,16 +3770,16 @@ cli:
           la envía.
         no_endpoint_notice: 'No se envió nada: no hay ningún CADRUMO_TELEMETRY_ENDPOINT
           configurado.'
-      opt_in_help: Previsualiza/envía como si CADRUMO_TELEMETRY_OPT_IN tuviera este valor
-        solo para esta ejecución; omítelo para usar el ajuste configurado realmente
+      opt_in_help: Previsualiza/envía como si CADRUMO_TELEMETRY_OPT_IN tuviera este
+        valor solo para esta ejecución; omítelo para usar el ajuste configurado realmente
         en el despliegue.
       status:
         header: 'Postura de telemetría remota:'
         help: Informa de la postura de consentimiento de telemetría remota. Nunca
           emite nada.
         off_hint: La telemetría permanece totalmente local por defecto. Para activarla,
-          define CADRUMO_TELEMETRY_OPT_IN=true y CADRUMO_TELEMETRY_TIER a crash_only o full
-          en env/.env.
+          define CADRUMO_TELEMETRY_OPT_IN=true y CADRUMO_TELEMETRY_TIER a crash_only
+          o full en env/.env.
       tier_help: Previsualiza/envía como si CADRUMO_TELEMETRY_TIER tuviera este valor
         (off / crash_only / full) solo para esta ejecución; omítelo para usar el nivel
         configurado realmente.
@@ -3744,12 +3789,19 @@ cli:
         %{formulas} fórmulas, %{revisions} revisiones.'
       registry_unavailable: '%{package} %{version}: registro no disponible (%{error}).'
   help:
+    invalid_value: Valor no válido
+    invalid_value_for: Valor no válido para %{parameter}
+    missing_argument: Falta el argumento
+    missing_option: Falta la opción
+    missing_parameter: Falta el parámetro
+    not_valid_integer: no es un entero válido.
     panel:
       arguments: Argumentos
       commands: Comandos
       error: Error
       options: Opciones
     try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
+    usage_prefix: 'Uso: '
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -3817,9 +3869,9 @@ cli:
         --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10).
         Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
         en la base del IRNR.
-      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna aeat automáticamente
-        y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL, MIXED, u
-        omite --classification para dejar la fila sin clasificar.'
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
+        automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
+        MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
       usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
         proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
@@ -4000,8 +4052,9 @@ cli:
       split_recommended_message: La factura adjunta parece contener varias líneas
         de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
         hijos de base e IVA declarables de forma independiente.
-      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna aeat automáticamente
-        y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL, MIXED.'
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
+        automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
+        MIXED.'
       taxable_base_help: Importe de base imponible
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
@@ -4482,7 +4535,7 @@ cli:
         diagnostics_review_queue: Mostrar la cola de revision pendiente.
         footer: Ejecute 'aeat <comando> --help' para obtener mas informacion sobre
           cada comando.
-        heading: Herramienta de declaraciones fiscales AEAT.
+        heading: Cadrumo, herramienta de declaraciones fiscales con la AEAT.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
         ledger_archive: Archivar entradas del libro de transacciones.
         ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
@@ -4733,7 +4786,7 @@ cli:
         desconocida %{target}
       verify_failed: 'la verificación falló para %{manual_id}/%{year}/%{part}: %{messages}'
       verify_help: Verificar la integridad del manual contra su contrato
-      verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual
+      verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''cadrumo manual
         fetch'' para materializarlo'
       verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción
         de %{field_name}'
@@ -4854,7 +4907,7 @@ cli:
     format_help: 'Formato de salida: text, json, table, csv.'
     help_help: Mostrar la ayuda.
     landing:
-      headline: Asistente fiscal AEAT
+      headline: Asistente fiscal Cadrumo
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
         --help`. Los modificadores globales (`--format json`, `--language es`, `--profile
         NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del subcomando,
@@ -6159,7 +6212,7 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
-      y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente
+      y se cancelo. Reintentalo o ejecuta el comando Cadrumo equivalente directamente
       en un terminal.'
   elicitation:
     confirm:
@@ -6177,8 +6230,8 @@ mcp:
         presenta por sí mismo.'
       no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
         la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando Cadrumo CLI equivalente directamente en un
-        terminal.'
+        hacerte preguntas, o ejecuta el comando Cadrumo CLI equivalente directamente
+        en un terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
       que ningún resultado de herramienta de esta sesión ha producido. Verifica la

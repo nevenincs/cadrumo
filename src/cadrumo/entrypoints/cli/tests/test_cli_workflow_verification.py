@@ -44,7 +44,7 @@ def _as_group(command: object) -> TyperGroup:
     """Narrow a resolved command to the vendored ``TyperGroup``.
 
     The Cadrumo tree is the vendored Typer hierarchy
-    (``AeatTyperGroup -> typer.core.TyperGroup``), which does not descend from
+    (``CadrumoTyperGroup -> typer.core.TyperGroup``), which does not descend from
     upstream ``click.Group``; ``TyperGroup`` is the correct narrow target and
     carries the typed ``get_command`` / ``list_commands`` surface.
     """
@@ -346,7 +346,7 @@ def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
     outcome = _drive_workflow_round_trip(_isolated_cli_backend)
     canonical_next_command = _review_rows(outcome)[0]["canonical_next_command"]
     assert isinstance(canonical_next_command, str)
-    assert canonical_next_command.startswith("aeat app ledger review ")
+    assert canonical_next_command.startswith("cadrumo app ledger review ")
     assert " edit " not in canonical_next_command
     assert "--set" not in canonical_next_command
 

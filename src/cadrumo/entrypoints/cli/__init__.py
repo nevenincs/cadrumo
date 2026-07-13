@@ -1,4 +1,4 @@
-"""User-facing ``cadrumo`` CLI.
+"""Cadrumo's command-line interface (CLI), provided by the ``cadrumo`` executable.
 
 The command tree exposes two top-level namespaces:
 
@@ -6,7 +6,8 @@ The command tree exposes two top-level namespaces:
 - ``cadrumo app`` — operational tax work: overview, ledger, modelo,
   registry, and review.
 
-Every command in this package is a thin transport over the backend API.
+Every command in this package is a thin transport over the backend application
+programming interface (API).
 The handler bodies parse argv, call into
 ``cadrumo.application`` / ``cadrumo.domain``, and render the typed result.
 No business logic lives in the CLI layer: validation, mutation,
@@ -48,9 +49,7 @@ _configure_stdio_for_utf8()
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
-from ._command_suggestions import (
-    AeatTyperGroup as _AeatTyperGroup,
-)
+from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
 )
@@ -67,7 +66,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
-# Importing every module just to build the ``cadrumo`` app object made
+# Importing every module just to build the Cadrumo app object made
 # ``cadrumo --version`` and ``cadrumo --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
@@ -87,7 +86,7 @@ app = typer.Typer(
     invoke_without_command=True,
     add_help_option=False,
     add_completion=True,
-    cls=_AeatTyperGroup,
+    cls=_CadrumoTyperGroup,
 )
 
 
@@ -192,7 +191,7 @@ def _root(
         verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
         explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
         if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
-            from ...core._config_state_root import FormerProductStateError
+            from ...core import FormerProductStateError
             from ._errors import CliRefusedBoundaryError
 
             try:
@@ -383,11 +382,11 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     may not proceed when settings route the primary SQL store to the
     root fallback database.
     ``_full_invocation_verb_path`` returns ``None`` for in-process test
-    runner invocations (``sys.argv[0]`` is not the ``cadrumo`` console
+    runner invocations (``sys.argv[0]`` is not the ``aeat`` console
     script). In that case we fall back to
     :func:`_verb_path_from_context`, which reconstructs the verb chain
     from the typer/click context so the bootstrap-exemption gate sees
-    the same verb path it would on a real ``cadrumo`` invocation — without
+    the same verb path it would on a real ``aeat`` invocation — without
     this fallback an in-process invocation would be misclassified as
     bare and the session would never open.
     """
@@ -532,7 +531,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
 
     Click empties ``ctx.args`` / the protected list before the group
     callback runs, so the token stream is read from the ``ctx.meta``
-    capture staged by :class:`AeatTyperGroup.invoke` (which works for both
+    capture staged by :class:`CadrumoTyperGroup.invoke` (which works for both
     real-process and in-process invocations).
     """
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
@@ -576,7 +575,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     """Recover the verb path from the typer/click context.
 
     Fallback for in-process invocations (e.g. ``CliRunner`` in tests)
-    where ``sys.argv[0]`` is not the ``cadrumo`` entry-point and the
+    where ``sys.argv[0]`` is not the ``aeat`` entry-point and the
     argv-based :func:`_full_invocation_verb_path` returns ``None``.
     The bootstrap-exemption gate treats a ``None`` verb path as
     "bare invocation" (per the bare-invocation ADR), but the caller
@@ -652,7 +651,7 @@ def _full_invocation_verb_path() -> str | None:
 
 
 def _full_invocation_tokens() -> tuple[str, ...]:
-    """Return raw operator argv tokens for real ``cadrumo`` entrypoint runs."""
+    """Return raw operator argv tokens for real ``aeat`` entrypoint runs."""
     import sys
     from pathlib import Path
 
@@ -707,7 +706,7 @@ app_app = typer.Typer(
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
-    cls=_AeatTyperGroup,
+    cls=_CadrumoTyperGroup,
 )
 
 
@@ -778,7 +777,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 
 # ---------------------------------------------------------------------
 # Wiring — every heavy subcommand module is registered lazily so the
-# `cadrumo` app object can be constructed without importing the command
+# Cadrumo app object can be constructed without importing the command
 # tree (and therefore without the registry parse).
 # ---------------------------------------------------------------------
 
@@ -803,7 +802,7 @@ def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
     ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
-    kept off the eager import path precisely so constructing the ``cadrumo``
+    kept off the eager import path precisely so constructing the Cadrumo CLI
     app object never pulls the registry-dependent command tree; a
     top-level ``from ._app_contract import command_schema_refs`` (and
     siblings) would defeat that and reintroduce the startup cost
@@ -840,7 +839,7 @@ def _localise_help_section_headers() -> None:
     process from :func:`main` after the language flag has been promoted, always
     sets every header to *this* invocation's locale (never a partial/stale set),
     and is never reached by the in-process test runner (which does not call
-    :func:`main`). Real ``cadrumo`` runs are one process per invocation, so the
+    :func:`main`). Real ``aeat`` runs are one process per invocation, so the
     module-global rebind reflects only the current process's locale.
     """
     import typer.rich_utils as _rich_utils
@@ -954,7 +953,7 @@ def main() -> None:
             _refuse_former_product_state_at_startup()
         except typer.Exit as exit_request:
             raise SystemExit(exit_request.exit_code) from None
-        from ...adapters.outbound.aeat._operator_progress import operator_progress_sink
+        from ...adapters.outbound.aeat import operator_progress_sink
 
         progress_sink = operator_progress_sink(_emit_operator_progress)
     with _metadata_state_isolation(arguments), _ensure_help_render_width(), progress_sink:
@@ -967,8 +966,8 @@ def _is_metadata_invocation(arguments: list[str]) -> bool:
 
 
 def _refuse_former_product_state_at_startup() -> None:
-    """Route a refused legacy product-state root through the typed CLI error boundary."""
-    from ...core._config_state_root import FormerProductStateError
+    """Route a refused retired ``aeat`` state root through the typed CLI error boundary."""
+    from ...core import FormerProductStateError
     from ...core.config import Settings
     from ._errors import CliRefusedBoundaryError, _emit_error_and_exit
 
@@ -985,12 +984,12 @@ def _refuse_former_product_state_at_startup() -> None:
 
 @contextmanager
 def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
-    """Keep help and version imports off an operator's legacy product-state root.
+    """Keep help and version imports off an operator's retired ``aeat`` state root.
 
     Lazy subgroup construction can import modules that instantiate Settings.
     Metadata invocations therefore run against a temporary Cadrumo root and
     database before those imports occur. Normal commands never enter this
-    scope and continue to refuse a legacy product-state root in normal operation.
+    scope and continue to refuse a retired ``aeat`` state root in normal operation.
     """
     if not _is_metadata_invocation(arguments):
         yield

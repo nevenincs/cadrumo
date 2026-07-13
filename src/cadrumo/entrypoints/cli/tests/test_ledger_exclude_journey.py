@@ -1,6 +1,6 @@
 """CLI acceptance for the reviewed-excluded verb (issue #224).
 
-Drives the real ``aeat app ledger exclude`` CLI end-to-end: add a row, exclude
+Drives the real ``cadrumo app ledger exclude`` CLI end-to-end: add a row, exclude
 it, and assert the uniform mutation quintet comes back with ``review_status``
 ``excluded`` and a ``ledger.transaction.reviewed_excluded`` event id, and that
 the excluded row then reads as ``excluded`` in the review queue.

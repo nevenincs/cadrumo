@@ -1,8 +1,8 @@
-# Packaging smoke workflow for AEAT release artifacts.
+# Packaging smoke workflow for Cadrumo release artifacts.
 # Proves wheel installation, bundled data, optional browser provisioning, and
 # clean Linux image behavior independently from the shared developer worktree.
 
-name: Packaging Smoke
+name: Cadrumo Packaging Smoke
 
 on:
   workflow_dispatch:
@@ -19,8 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  packaging-smoke:
-    name: Ubuntu / Python 3.13 / wheel artifact
+  cadrumo-packaging-smoke:
+    name: Cadrumo / Ubuntu / Python 3.13 / wheel artifacts
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -46,23 +46,26 @@ jobs:
       - name: Sync frozen development environment
         run: uv sync --frozen
 
-      - name: Packaging preflight command tests
+      - name: Cadrumo packaging preflight command tests
         run: just packaging-smoke-preflight-tests
 
-      - name: Fresh development dependency smoke
+      - name: Cadrumo fresh development dependency smoke
         run: just packaging-smoke-dev
 
-      - name: Host Linux packaging smoke
+      - name: Cadrumo host Linux core packaging smoke
         run: just packaging-smoke-linux
 
-      - name: Clean Docker image packaging smoke
+      - name: Cadrumo split-distribution packaging smoke
+        run: just packaging-smoke-split
+
+      - name: Cadrumo clean Docker image packaging smoke
         run: just packaging-smoke-docker
 
-      - name: Upload packaging smoke evidence
+      - name: Upload Cadrumo packaging smoke evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: packaging-smoke-manifests
+          name: cadrumo-packaging-smoke-evidence
           path: var/packaging-smoke/**/packaging-smoke-manifest.json
           if-no-files-found: warn
           retention-days: 14

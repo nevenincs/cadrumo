@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _profile_storage_env(tmp_path: Path) -> dict[str, str | None]:
     return {
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "aeat-storage"),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
         "CADRUMO_SECRET_STORE_BACKEND": "file",
         "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
@@ -64,6 +64,6 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
     assert result.exit_code == 4, result.output
     assert tr("errors.integrity.integrity_active_profile_pointer", locale="es") in result.output
     assert tr("errors.integrity.integrity_active_profile_pointer", locale="ca") not in result.output
-    assert "aeat config repair profile" in result.output
+    assert "cadrumo config repair profile" in result.output
     assert "language fallback=es until the active-profile pointer is readable" in result.output
     assert "Traceback" not in result.output

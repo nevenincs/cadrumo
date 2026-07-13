@@ -1,4 +1,4 @@
-"""Real-behavior coverage for the guided ``aeat app modelo work wizard`` command.
+"""Real-behavior coverage for the guided ``cadrumo app modelo work wizard`` command.
 
 Drives the full simulated prompt sequence for a Modelo 130 draft against real
 ledger-seeded income/expense rows and asserts the wizard composes the exact

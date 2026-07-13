@@ -64,7 +64,7 @@ def _env() -> dict[str, str]:
     return env
 
 
-def _run_aeat(
+def _run_cadrumo(
     storage_root: Path,
     args: tuple[str, ...],
     *,
@@ -94,7 +94,7 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
 def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: Path) -> None:
     """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced."""
 
-    created = _run_aeat(
+    created = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -132,20 +132,20 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert manifest["key_schedule"] == "bucket-dek-v1"
     assert (tmp_path / "keystore" / bucket_id / "bucket.dek.json").is_file()
 
-    logged_out = _run_aeat(tmp_path, ("config", "profile", "logout"))
+    logged_out = _run_cadrumo(tmp_path, ("config", "profile", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile" in logged_out.stdout
 
-    switched = _run_aeat(tmp_path, ("config", "switch", "custody"))
+    switched = _run_cadrumo(tmp_path, ("config", "switch", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 
-    deleted = _run_aeat(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
+    deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
     assert deleted.returncode == 0, _combined_output(deleted)
     assert "status\ttombstoned" in deleted.stdout
     assert "active_profile\t<none>" in deleted.stdout
 
-    retired = _run_aeat(tmp_path, ("config", "init", "--help"))
+    retired = _run_cadrumo(tmp_path, ("config", "init", "--help"))
     assert retired.returncode != 0
     assert "config.init" not in _combined_output(retired)
 
@@ -153,7 +153,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
 def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
     """Root custody verbs use the profile lifecycle session path."""
 
-    created = _run_aeat(
+    created = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -177,21 +177,21 @@ def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
     )
     assert created.returncode == 0, _combined_output(created)
 
-    locked = _run_aeat(tmp_path, ("config", "lock"))
+    locked = _run_cadrumo(tmp_path, ("config", "lock"))
     assert locked.returncode == 0, _combined_output(locked)
     assert "locked_profile\t" in locked.stdout
 
-    missing_default = _run_aeat(tmp_path, ("config", "switch"))
+    missing_default = _run_cadrumo(tmp_path, ("config", "switch"))
     assert missing_default.returncode != 0
     assert "No active profile" in _combined_output(missing_default) or "active profile" in _combined_output(
         missing_default,
     )
 
-    switched_by_name = _run_aeat(tmp_path, ("config", "switch", "custody"))
+    switched_by_name = _run_cadrumo(tmp_path, ("config", "switch", "custody"))
     assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
     assert "active_profile\tcustody" in switched_by_name.stdout
 
-    switched_default = _run_aeat(tmp_path, ("config", "switch"))
+    switched_default = _run_cadrumo(tmp_path, ("config", "switch"))
     assert switched_default.returncode == 0, _combined_output(switched_default)
     assert "active_profile\tcustody" in switched_default.stdout
 
@@ -199,7 +199,7 @@ def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
 def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path) -> None:
     """First-class custody verbs recover the same encrypted profile under rotated passphrases."""
 
-    created = _run_aeat(
+    created = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -223,7 +223,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     )
     assert created.returncode == 0, _combined_output(created)
 
-    enrolled = _run_aeat(tmp_path, ("config", "show-recovery"))
+    enrolled = _run_cadrumo(tmp_path, ("config", "show-recovery"))
     assert enrolled.returncode == 0, _combined_output(enrolled)
     recovery_line = next(line for line in enrolled.stdout.splitlines() if line.startswith("recovery_key\t"))
     recovery_key = recovery_line.split("\t", 1)[1]
@@ -239,16 +239,16 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     manifest = tomllib.loads((bucket_dir / "manifest.toml").read_text(encoding="utf-8"))
     assert manifest["recovery_enrolled"] is True
 
-    verified = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
+    verified = _run_cadrumo(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
     assert verified.returncode == 0, _combined_output(verified)
     assert "verified\tyes" in verified.stdout
 
-    rejected = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", "not a valid recovery key"))
+    rejected = _run_cadrumo(tmp_path, ("config", "verify-recovery", "--recovery-key", "not a valid recovery key"))
     assert rejected.returncode == 2, _combined_output(rejected)
     assert "verified\tno" in rejected.stdout
 
     rotated_value = "correct horse battery staple"
-    rekeyed = _run_aeat(
+    rekeyed = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -262,11 +262,11 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     assert rekeyed.returncode == 0, _combined_output(rekeyed)
     assert "rekeyed\tyes" in rekeyed.stdout
 
-    verified_after_rekey = _run_aeat(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
+    verified_after_rekey = _run_cadrumo(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
     assert verified_after_rekey.returncode == 0, _combined_output(verified_after_rekey)
     assert "verified\tyes" in verified_after_rekey.stdout
 
-    shown_after_rekey = _run_aeat(
+    shown_after_rekey = _run_cadrumo(
         tmp_path,
         ("config", "profile", "show"),
         passphrase=rotated_value,
@@ -275,7 +275,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     assert "display_name\tcustody" in shown_after_rekey.stdout
 
     recovered_value = "fresh recovery passphrase"
-    recovered = _run_aeat(
+    recovered = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -292,7 +292,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     assert recovered.returncode == 0, _combined_output(recovered)
     assert "recovered\tyes" in recovered.stdout
 
-    shown_after_recover = _run_aeat(
+    shown_after_recover = _run_cadrumo(
         tmp_path,
         ("config", "profile", "show"),
         passphrase=recovered_value,
@@ -305,7 +305,7 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     """The accepted custody verbs are mounted under the config root."""
 
     for verb in ("lock", "switch", "rekey", "recover", "show-recovery", "verify-recovery"):
-        help_result = _run_aeat(tmp_path, ("config", verb, "--help"))
+        help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)
 
@@ -313,7 +313,7 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
 def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: Path) -> None:
     """CLI profile reads resolve explicit name, env override, then pointer default."""
 
-    first = _run_aeat(
+    first = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -336,7 +336,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
         ),
     )
     assert first.returncode == 0, _combined_output(first)
-    second = _run_aeat(
+    second = _run_cadrumo(
         tmp_path,
         (
             "config",
@@ -368,11 +368,11 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     alpha_id = next(bucket_id for bucket_id, label in labels_by_id.items() if label == "alpha")
     beta_id = next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta")
 
-    pointer_default = _run_aeat(tmp_path, ("config", "profile", "show"))
+    pointer_default = _run_cadrumo(tmp_path, ("config", "profile", "show"))
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
     assert "display_name\tbeta" in pointer_default.stdout
 
-    env_default = _run_aeat(
+    env_default = _run_cadrumo(
         tmp_path,
         ("config", "profile", "show"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
@@ -380,7 +380,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     assert env_default.returncode == 0, _combined_output(env_default)
     assert "display_name\talpha" in env_default.stdout
 
-    explicit_name = _run_aeat(
+    explicit_name = _run_cadrumo(
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show", "beta"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
@@ -388,7 +388,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     assert explicit_name.returncode == 0, _combined_output(explicit_name)
     assert "display_name\tbeta" in explicit_name.stdout
 
-    explicit_root = _run_aeat(
+    explicit_root = _run_cadrumo(
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show"),
         extra_env={
@@ -398,7 +398,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     assert explicit_root.returncode == 0, _combined_output(explicit_root)
     assert "display_name\talpha" in explicit_root.stdout
 
-    explicit_root_by_id = _run_aeat(
+    explicit_root_by_id = _run_cadrumo(
         tmp_path,
         ("--profile", alpha_id, "config", "profile", "show"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
@@ -420,7 +420,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
         counts: dict[str, int] = {}
         for bucket_id in (alpha_id, beta_id):
             profile_name = labels_by_id[bucket_id]
-            result = _run_aeat(
+            result = _run_cadrumo(
                 tmp_path,
                 (
                     "--profile",
@@ -442,7 +442,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     before = _auth_event_counts()
 
     # Pointer-default precedence: pointer points at beta (last create wins).
-    pointer_write = _run_aeat(tmp_path, ("config", "auth", "configure", "--provider", "clave_movil"))
+    pointer_write = _run_cadrumo(tmp_path, ("config", "auth", "configure", "--provider", "clave_movil"))
     assert pointer_write.returncode == 0, _combined_output(pointer_write)
     assert "No active profile" not in _combined_output(pointer_write)
     after_pointer = _auth_event_counts()
@@ -454,7 +454,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     )
 
     # Env-override precedence: CADRUMO_ACTIVE_PROFILE wins over the pointer.
-    env_write = _run_aeat(
+    env_write = _run_cadrumo(
         tmp_path,
         ("config", "auth", "configure", "--provider", "clave_movil"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
@@ -470,7 +470,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     )
 
     # Explicit-flag precedence: --profile wins over env override.
-    explicit_write = _run_aeat(
+    explicit_write = _run_cadrumo(
         tmp_path,
         ("--profile", "beta", "config", "auth", "configure", "--provider", "clave_movil"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},

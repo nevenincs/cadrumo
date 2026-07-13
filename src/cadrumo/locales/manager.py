@@ -6,7 +6,9 @@ rejection, while :data:`LocaleNode` documents the recursive locale-tree shape
 shared by the manager and parity tests.
 """
 
+import os
 import re
+import tempfile
 from collections.abc import Hashable, Iterator
 from pathlib import Path
 from typing import Any, override
@@ -16,6 +18,7 @@ import yaml
 from ..core.errors import AeatError
 from ..core.external_constants import UTF_8_ENCODING
 from ..core.logging import get_logger
+from ..core.product_identity import PRODUCT_IDENTITY
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"]
@@ -187,6 +190,22 @@ class LocaleManager:
             with open(f, "w", encoding=UTF_8_ENCODING) as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
+    def canonicalize_cli_executable_references(self) -> tuple[Path, ...]:
+        """Replace stale product-name command prefixes in every locale catalogue.
+
+        Cadrumo remains ordinary product prose. Only unambiguous command
+        prefixes are normalized to the canonical human CLI executable.
+        """
+        updated_paths: list[Path] = []
+        for locale_path in sorted(self.locales_dir.glob("*.yml")):
+            data = self.load_locale(locale_path)
+            normalized = _normalise_locale_node(data)
+            if normalized == data:
+                continue
+            _rewrite_locale_mapping(locale_path, normalized)
+            updated_paths.append(locale_path)
+        return tuple(updated_paths)
+
     def _locale_path(self, locale: str) -> Path:
         """Resolve a locale code to a contained locale file path."""
         if locale != Path(locale).name or Path(locale).suffix:
@@ -208,11 +227,13 @@ class LocaleManager:
     def set_locale_value(self, locale: str, dotted_key: str, value: str) -> Path:
         """Set one locale leaf while preserving the YAML layout."""
         locale_path = self._locale_path(locale)
+        value = _normalise_cli_executable_references(value)
         parts = dotted_key.split(".")
         if not dotted_key or any(not part for part in parts):
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
 
-        cursor: LocaleNode = self.load_locale(locale_path)
+        data = self.load_locale(locale_path)
+        cursor: LocaleNode = data
         for part in parts[:-1]:
             if not isinstance(cursor, dict) or part not in cursor:
                 raise LocaleError(f"Locale key not found: {dotted_key!r}; run locale scaffold first")
@@ -225,7 +246,12 @@ class LocaleManager:
             raise LocaleError(f"Cannot set {dotted_key!r}: it resolves to a namespace")
 
         if leaf_exists:
-            _replace_existing_yaml_leaf(locale_path, parts, value)
+            # The mapping was strictly parsed and the leaf resolved above.
+            # Rewriting that mapping is safe across multiline scalars; a
+            # line-oriented replacement can mistake a scalar continuation for
+            # a nested YAML key and corrupt the catalogue.
+            cursor[parts[-1]] = value
+            _rewrite_locale_mapping(locale_path, data)
         else:
             _append_yaml_leaf(locale_path, parts, value)
         return locale_path
@@ -314,6 +340,23 @@ def _yaml_quoted_scalar(value: str) -> str:
     return "'" + escaped + "'"
 
 
+_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?= (?:app|config|--|<))")
+
+
+def _normalise_cli_executable_references(value: str) -> str:
+    """Keep locale command examples aligned with the canonical CLI executable."""
+    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
+
+
+def _normalise_locale_node(value: LocaleNode) -> LocaleNode:
+    """Recursively normalize command references without changing product prose."""
+    if isinstance(value, dict):
+        return {key: _normalise_locale_node(child) for key, child in value.items()}
+    if isinstance(value, str):
+        return _normalise_cli_executable_references(value)
+    return value
+
+
 def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
     """Return the slice end for a scalar leaf and its indented continuation."""
     end = start + 1
@@ -385,6 +428,36 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
             return
 
     raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
+
+
+def _rewrite_locale_mapping(path: Path, data: dict[str, LocaleNode]) -> None:
+    """Atomically replace a locale mapping after strict parsing.
+
+    The locale CLI may be interrupted by an operator or orchestration timeout.
+    Writing directly to the catalogue would expose a truncated YAML file between
+    ``open(..., "w")`` and the final flush, so serialize beside the target and
+    replace it only after the bytes are durable.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding=UTF_8_ENCODING,
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as file_obj:
+            temporary_path = Path(file_obj.name)
+            yaml.dump(data, file_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
+            file_obj.flush()
+            os.fsync(file_obj.fileno())
+        os.replace(temporary_path, path)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf: bool = False) -> None:

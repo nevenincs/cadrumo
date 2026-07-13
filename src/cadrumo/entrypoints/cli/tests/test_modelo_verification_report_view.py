@@ -119,7 +119,7 @@ def test_refused_verification_report_next_action_line_uses_selected_language(
     assert expected_phrase in next_action_line
     assert "Review the verification report" not in next_action_line
     assert calculation_revision_id in next_action_line
-    assert "aeat app modelo verification-report list" in next_action_line
+    assert "cadrumo app modelo verification-report list" in next_action_line
 
 
 def test_verification_report_lines_omits_next_action_when_granted() -> None:

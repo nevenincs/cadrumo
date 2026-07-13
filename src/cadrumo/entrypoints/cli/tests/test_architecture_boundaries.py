@@ -107,7 +107,7 @@ def _import_from_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) ->
 def _normalized_module(level: int, module: str) -> str:
     if level >= 3:
         return module
-    return module.removeprefix("aeat.")
+    return module.removeprefix("cadrumo.")
 
 
 def _private_backend_import_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[str, ...]:

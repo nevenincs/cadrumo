@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app ledger link`` and ``aeat app ledger check``."""
+"""CLI surface tests for ``cadrumo app ledger link`` and ``cadrumo app ledger check``."""
 
 from __future__ import annotations
 
@@ -70,8 +70,8 @@ def test_link_help_names_catalogue_create_for_invoice_id() -> None:
     result = invoke_cached_cli(["app", "ledger", "link", "--help"], env={"COLUMNS": "240"})
 
     assert result.exit_code == 0, result.output
-    assert "aeat app ledger invoice catalogue create" in result.output
-    assert "aeat app ledger invoice add" in result.output
+    assert "cadrumo app ledger invoice catalogue create" in result.output
+    assert "cadrumo app ledger invoice add" in result.output
 
 
 def test_check_empty_catalogue_is_ready() -> None:

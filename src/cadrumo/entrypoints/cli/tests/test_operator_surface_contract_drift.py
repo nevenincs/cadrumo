@@ -3,7 +3,7 @@
 The companion of :func:`test_every_cli_leaf_has_a_registered_schema`. That gate
 proves every CLI leaf has a registered JSON schema; this one proves the
 :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` — the source
-the ``aeat app contract`` capability manifest (and, later, the MCP ``tools/list``)
+the ``cadrumo app contract`` capability manifest (and, later, the MCP ``tools/list``)
 is built from — declares *exactly* the mounted command families and their
 sub-verbs.
 
@@ -106,7 +106,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
 
     _force_load_lazy_subcommands(live_app)
     root = _typer_get_command(live_app)
-    root.name = live_app.info.name or "aeat"
+    root.name = live_app.info.name or "cadrumo"
 
     surface: dict[str, dict[str, frozenset[str]]] = {}
     for root_name, root_cmd in _direct_children(cast(click.Command, root)).items():

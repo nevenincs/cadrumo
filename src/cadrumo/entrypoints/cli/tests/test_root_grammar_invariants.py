@@ -27,14 +27,14 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
 
 def test_root_does_not_register_bare_reconcile_alias() -> None:
     """`cadrumo reconcile` is not a root verb; reconcile only lives
-    under `aeat app modelo`."""
+    under `cadrumo app modelo`."""
 
     result = invoke_cached_cli(["reconcile", "--help"])
     assert result.exit_code != 0, result.output
 
 
 def test_app_does_not_register_deadlines_subgroup() -> None:
-    """`aeat app deadlines` is not a verb tree. Deadline data is
+    """`cadrumo app deadlines` is not a verb tree. Deadline data is
     surfaced through the overview verb group."""
 
     result = invoke_cached_cli(["app", "deadlines", "--help"])
@@ -42,8 +42,8 @@ def test_app_does_not_register_deadlines_subgroup() -> None:
 
 
 def test_modelo_audit_export_remains_distinct_from_modelo_export() -> None:
-    """`aeat app modelo export` (fichero-BOE exporter) and
-    `aeat app modelo audit export` (evidence-bundle exporter) are
+    """`cadrumo app modelo export` (fichero-BOE exporter) and
+    `cadrumo app modelo audit export` (evidence-bundle exporter) are
     distinct sibling verbs. Both must resolve, and each must carry
     its own purpose-specific help so operators are not confused."""
 
@@ -60,7 +60,7 @@ def test_modelo_audit_export_remains_distinct_from_modelo_export() -> None:
 def test_root_does_not_register_bare_audit_alias() -> None:
     """`cadrumo audit` is not a root verb. The evidence-bundle contract
     explicitly forbids root `cadrumo audit` or `cadrumo run` commands; the
-    audit surface only lives under `aeat app modelo audit`."""
+    audit surface only lives under `cadrumo app modelo audit`."""
 
     result = invoke_cached_cli(["audit", "--help"])
     assert result.exit_code != 0, result.output
@@ -68,7 +68,7 @@ def test_root_does_not_register_bare_audit_alias() -> None:
 
 def test_root_does_not_register_bare_run_alias() -> None:
     """`cadrumo run` is not a root verb per the evidence-bundle contract.
-    Replay belongs under `aeat app modelo audit replay`, never at
+    Replay belongs under `cadrumo app modelo audit replay`, never at
     the root."""
 
     result = invoke_cached_cli(["run", "--help"])
@@ -76,9 +76,9 @@ def test_root_does_not_register_bare_run_alias() -> None:
 
 
 def test_app_does_not_register_audit_subgroup_outside_modelo() -> None:
-    """`aeat app audit` would split the audit verb tree away from the
+    """`cadrumo app audit` would split the audit verb tree away from the
     work-unit-bound modelo verb tree. The evidence-bundle contract scopes
-    the surface to `aeat app modelo audit`; any sibling `aeat app
+    the surface to `cadrumo app modelo audit`; any sibling `cadrumo app
     audit` mount would be a redirection target that splits ownership."""
 
     result = invoke_cached_cli(["app", "audit", "--help"])
@@ -87,7 +87,7 @@ def test_app_does_not_register_audit_subgroup_outside_modelo() -> None:
 
 def test_modelo_audit_verbs_only_register_canonical_four() -> None:
     """Only the four canonical audit verbs (show / check / export /
-    replay) are mounted under `aeat app modelo audit`. Any other leaf
+    replay) are mounted under `cadrumo app modelo audit`. Any other leaf
     (verify, status, list, browse, run, etc.) violates the ratified
     grammar from the evidence-bundle contract."""
 

@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app ledger classify --auto-split``.
+"""Real-behavior CLI tests for ``cadrumo app ledger classify --auto-split``.
 
 Exercises the evidence-driven auto-split router end to end against the real CLI,
 real application use cases, and real SQLite persistence in an isolated storage

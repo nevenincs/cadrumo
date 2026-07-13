@@ -475,7 +475,7 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
     flat = " ".join(classified.output.split())
     assert "arrendamiento_local" in flat
     assert "arrendamiento_vivienda_afecto" in flat
-    assert "aeat app ledger categories" in flat
+    assert "cadrumo app ledger categories" in flat
 
 
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
@@ -682,9 +682,9 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
         assert result.exit_code == 0, result.output
         flat = _flatten_box(result.output or "")
         assert "--usage-ratio-id" in flat, result.output
-        assert "aeat app ledger ratios list" in flat, result.output
-        assert "aeat app ledger ratios eligible" in flat, result.output
-        assert "aeat app ledger ratios set" in flat, result.output
+        assert "cadrumo app ledger ratios list" in flat, result.output
+        assert "cadrumo app ledger ratios eligible" in flat, result.output
+        assert "cadrumo app ledger ratios set" in flat, result.output
         assert "category-id" in flat, result.output
         assert "Not arbitrary prose" in flat, result.output
 
@@ -740,9 +740,9 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     assert preflight.exit_code == 0, preflight.output
     assert "ready\tfalse" in preflight.output, preflight.output
     assert "missing_proportionality_reference" in preflight.output, preflight.output
-    assert "aeat app ledger ratios list" in preflight.output, preflight.output
-    assert "aeat app ledger ratios eligible" in preflight.output, preflight.output
-    assert "aeat app ledger ratios set" in preflight.output, preflight.output
+    assert "cadrumo app ledger ratios list" in preflight.output, preflight.output
+    assert "cadrumo app ledger ratios eligible" in preflight.output, preflight.output
+    assert "cadrumo app ledger ratios set" in preflight.output, preflight.output
     assert "--usage-ratio-id <category-id>" in preflight.output, preflight.output
 
 

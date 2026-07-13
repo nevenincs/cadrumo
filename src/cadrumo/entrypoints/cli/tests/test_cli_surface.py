@@ -57,7 +57,7 @@ def test_app_help_lists_singular_domains() -> None:
     assert result.exit_code == 0
     for token in ("overview", "ledger", "live", "modelo", "registry", "review"):
         assert token in result.output
-    for retired_command in ("aeat app invoice", "aeat app declaration", "aeat app archive"):
+    for retired_command in ("cadrumo app invoice", "cadrumo app declaration", "cadrumo app archive"):
         assert retired_command not in result.output
     for plural_namespace in ("workspaces", "audits"):
         assert plural_namespace not in result.output

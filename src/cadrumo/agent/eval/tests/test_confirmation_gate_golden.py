@@ -123,7 +123,7 @@ async def _call_tool(name: str, arguments: Mapping[str, object]) -> mcp_types.Ca
         # Clear the block-first-mutation identity gate through the public identity read.
         # I2) with a real whoami identity read, so this confirmation-gate proof reaches
         # the CONFIRM tier under test rather than the identity gate in front of it.
-        await session.call_tool("aeat_whoami", {})
+        await session.call_tool("cadrumo_whoami", {})
         return await session.call_tool(name, dict(arguments))
 
 

@@ -8,7 +8,7 @@ session), SQLAlchemy catches it and re-raises it wrapped in a
 The CLI error boundary must unwrap that and emit the typed refusal
 verbatim. Otherwise the no-session refusal is mis-classified as an
 unexpected internal error and a full traceback is written to the log
-file, where ``aeat config repair logs`` later echoes it back at the
+file, where ``cadrumo config repair logs`` later echoes it back at the
 operator as if it were a live crash.
 """
 
@@ -75,7 +75,7 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
     """The boundary emits the wrapped refusal and logs no exc_info traceback.
 
     A traceback in the log is exactly what feeds the
-    ``aeat config repair logs`` mis-render. The boundary must classify
+    ``cadrumo config repair logs`` mis-render. The boundary must classify
     the wrapped refusal as the typed AeatError, not as
     CliUnexpectedBoundaryError.
     """
@@ -152,9 +152,9 @@ def test_unexpected_boundary_suggests_log_inspection_not_integrity_repair() -> N
     boundary = CliUnexpectedBoundaryError(RuntimeError("an import error, say"))
 
     rendered = render_error_text(boundary)
-    assert "aeat config repair logs" in rendered, rendered
+    assert "cadrumo config repair logs" in rendered, rendered
     assert "repair integrity" not in rendered, rendered
 
     envelope = build_error_envelope(boundary)
-    assert envelope.suggestion == "aeat config repair logs"
+    assert envelope.suggestion == "cadrumo config repair logs"
     assert "integrity" not in (envelope.suggestion or "")

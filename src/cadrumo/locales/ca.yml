@@ -78,7 +78,7 @@ adapters:
         conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
           i contradictòries.
         foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
-          d'aquest perfil AEAT.
+          d'aquest perfil Cadrumo.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
         spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
@@ -112,7 +112,7 @@ adapters:
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
-          AEAT seleccionat.
+          Cadrumo seleccionat.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
@@ -127,11 +127,12 @@ adapters:
           el perfil actiu abans de tornar a provar l'ordre de Google.
         run_from_interactive_terminal: Executa 'aeat config google login' des d'un
           terminal interactiu amb un navegador web disponible.
-        use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia
-          el perfil actiu a un identificador fiscal sintètic de prova.
+        use_keyring_or_synthetic: Configura CADRUMO_SECRET_STORE_BACKEND=keyring o
+          canvia el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:
       errors:
-        no_active_profile: No hi ha cap perfil AEAT actiu enllaçat per a Google OAuth.
+        no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google
+          OAuth.
       suggestions:
         create_profile: Executeu `aeat config profile create NAME --tax-id <NIF>`
           i torneu a provar l'ordre de Google.
@@ -201,6 +202,9 @@ adapters:
           folder_not_owned: La carpeta de Drive {folder_name} no esta marcada com
             a propietat d aquesta app; es rebutja l escriptura per protegir dades
             de l operador.
+          former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
+            pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
+            de Cadrumo.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             es pot importar; executa `uv sync` i torna-ho a provar.
           media_non_bytes: La descarrega de mitjans de Google Drive ha retornat {payload_type}
@@ -233,8 +237,8 @@ adapters:
           namespace_blank: L espai de noms d emmagatzematge local no pot estar buit.
           namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
             l''espai de noms {namespace}: el camí supera el límit de longitud de camí
-            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o activa
-            LongPathsEnabled (vegeu `aeat config check`).'
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            activa LongPathsEnabled (vegeu `aeat config check`).'
           namespace_create_permission: L emmagatzematge local no ha pogut crear l
             espai de noms {namespace}.
           namespace_forbidden_characters: L espai de noms local {namespace} conte
@@ -253,8 +257,8 @@ adapters:
             de l objecte.
           payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             la càrrega de l''objecte: el camí supera el límit de longitud de camí
-            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o activa
-            LongPathsEnabled (vegeu `aeat config check`).'
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            activa LongPathsEnabled (vegeu `aeat config check`).'
           payload_write_permission: L emmagatzematge local no ha pogut escriure el
             payload de l objecte.
           sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o esta
@@ -265,8 +269,8 @@ adapters:
             de l objecte.
           sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
-            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o activa
-            LongPathsEnabled (vegeu `aeat config check`).'
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            activa LongPathsEnabled (vegeu `aeat config check`).'
   persistence:
     profile:
       assets:
@@ -987,7 +991,9 @@ application:
         Model 210 només es pot utilitzar en unitats de treball del Model 210.
       m210_ledger_source_selection_required: El mode de font de llibre major del Model
         210 requereix una selecció de codi oficial de tipus de renda sense projectar.
-      m210_official_tipo_renta_selection_mismatch: 'El codi oficial de tipus de renda %{official_tipo_renta_code} del Model 210 requereix el valor de fórmula %{expected_tipo_renta}; s''ha rebut %{tipo_renta}.'
+      m210_official_tipo_renta_selection_mismatch: El codi oficial de tipus de renda
+        %{official_tipo_renta_code} del Model 210 requereix el valor de fórmula %{expected_tipo_renta};
+        s'ha rebut %{tipo_renta}.
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la revisió %{revision_id}: el registre declara un origen de vinculació que
         cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
@@ -1106,6 +1112,12 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_dependency_unclean: 'la dependència entre períodes no està neta:
+        model=%{modelo} exercici=%{year} període=%{period} origen=%{origin} ids_origen=%{origin_ids}
+        bloquejos=%{blockers}'
+      cross_period_dependency_unclean_evidence_next_action: Captureu o importeu evidència
+        de l’AEAT per a la dependència d’origen. Executeu `%{target_capture}`, `%{source_justificante_capture}`,
+        `%{import_official_record}` o `%{reconcile_file}`; torneu a executar la verificació.
       cross_period_modelo_not_applicable:
         message: 'Les dependencies entre periodes de models origen que el contribuent
           no presenta s han exclos com a no aplicables: {modelos}. Per a retencions
@@ -1132,6 +1144,14 @@ application:
           import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
           --file PATH` per a evidencia que ja tingueu.
+      cross_period_operator_declared_suppression: 'dependència entre períodes exclosa
+        perquè no hi ha obligació prèvia (abans de l’inici de l’activitat): model=%{modelo}
+        exercici=%{year} període=%{period} origen=%{origin}. El període és estrictament
+        anterior a la data d’inici de l’activitat declarada per l’operador, %{activity_start_date},
+        que encara no s’ha contrastat amb una instantània del cens de l’AEAT.'
+      cross_period_operator_declared_suppression_next_action: Confirmeu que la data
+        d’inici de l’activitat registrada és correcta. Quan estigui disponible la
+        lectura en viu del cens de l’AEAT, la data es contrastarà i aquest avís s’eliminarà.
       dt12a_reduccion_antiquity_next_action: Confirmeu que han transcorregut mes de
         dos anys des de la primera aportacio al pla de pensions, llevat que la prestacio
         sigui per invalidesa (ley-35-2006:dt-12).
@@ -2365,6 +2385,7 @@ cli:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
           revisió de càlcul
+        next_action: 'Reviseu l''informe de verificació: %{command}'
         verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'un informe de verificació
         view_help: Mostrar un informe de verificació per id
@@ -2524,6 +2545,20 @@ cli:
         file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està presentada; s''ha retornat el registre
           de presentació existent sense canvis.'
+        formula_operation_calculation: càlcul
+        formula_operation_clamp: límit
+        formula_operation_conditional: condicional
+        formula_operation_copy: còpia
+        formula_operation_divide: divisió
+        formula_operation_lookup: cerca
+        formula_operation_maximum: màxim
+        formula_operation_minimum: mínim
+        formula_operation_multiply: multiplicació
+        formula_operation_negate: negació
+        formula_operation_percent: percentatge
+        formula_operation_previous_period: període anterior
+        formula_operation_subtract: resta
+        formula_operation_sum: suma
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Ha de portar evidència externa importada (justificant / CSV / captura en
           viu)
@@ -2626,9 +2661,12 @@ cli:
           per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
           trimestre o MM per a un mes) a --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
-        plazo_vencido_warning: 'AVÍS: termini voluntari vençut (Art. 27 LGT). El tipus mostrat és una previsualització no avaluada; aquesta aplicació no determina cap deute per recàrrec ni interessos.'
-        plazo_vencido_sin_previsualizacion_warning: 'AVÍS: termini voluntari vençut (Art. 27
-          LGT). Aquesta aplicació no determina cap deute per recàrrec ni interessos.'
+        plazo_vencido_sin_previsualizacion_warning: 'AVÍS: termini voluntari vençut
+          (Art. 27 LGT). Aquesta aplicació no determina cap deute per recàrrec ni
+          interessos.'
+        plazo_vencido_warning: 'AVÍS: termini voluntari vençut (Art. 27 LGT). El tipus
+          mostrat és una previsualització no avaluada; aquesta aplicació no determina
+          cap deute per recàrrec ni interessos.'
         prestacion_inss_exenta_help: Import íntegre de les prestacions de la Seguretat
           Social per maternitat/paternitat exemptes d''IRPF (Art. 7.h LIRPF). Es registra
           a la casella d''exempció corresponent a la revisió i es resta del total
@@ -2765,6 +2803,9 @@ cli:
         status_help: Mostrar les metadades d'una unitat de treball
         status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
           calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
+        verify_already_verified_refused: La revisió de càlcul %{calculation_revision_id}
+          ja està en estat %{state} i no es pot tornar a verificar. La verificació
+          només accepta una revisió en esborrany.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
           de presentació amb `aeat app modelo export`.
@@ -2788,6 +2829,13 @@ cli:
           %{period}` i torna a consultar-la amb `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
+        workflow_draft_build_refused_next_action: Repareu l'entrada de l'esborrany
+          indicada i torneu a executar %{command}.
+        workflow_draft_build_refused_summary: 'S''ha rebutjat la generació de l''esborrany:
+          %{error_message}. Repareu l''entrada de l''esborrany indicada i torneu a
+          calcular.'
+        workflow_review_verification_report_next_action: 'Reviseu l''informe de verificació:
+          %{command}'
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
@@ -2937,7 +2985,7 @@ cli:
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        AEAT: '
+        Cadrumo: '
       data_loss_warning: Anota ara aquesta clau de recuperacio. AEAT no desa la clau
         de recuperacio en clar i no la pot tornar a mostrar.
       errors:
@@ -2945,7 +2993,7 @@ cli:
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret AEAT: '
+      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
@@ -3046,7 +3094,8 @@ cli:
         existent)
       logout_help: Esborrar el token de refresc i les metadades; conservar el client
         registrat
-      profile_help: Perfil AEAT a usar (per defecte = perfil actiu de l'estat de flux)
+      profile_help: Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de
+        flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
       register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
         al perfil actiu
@@ -3081,7 +3130,7 @@ cli:
               {available}
             year_help: Any de declaració (p. ex. 2025)
           export_help: Exporta la superfície de càlcul del registre per a un model
-            i període a un full de Google Sheets dins de `aeat-vault/`
+            i període a un full de Google Sheets dins de `cadrumo-vault/`
           help: Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)
           pull:
             assemble_observations_help: Després de recuperar, reensambla les cel·les
@@ -3689,23 +3738,30 @@ cli:
         help: Informa de la postura de consentiment de telemetria remota. Mai emet
           res.
         off_hint: La telemetria roman totalment local per defecte. Per activar-la,
-          defineix CADRUMO_TELEMETRY_OPT_IN=true i CADRUMO_TELEMETRY_TIER a crash_only o
-          full a env/.env.
-      tier_help: Previsualitza/envia com si CADRUMO_TELEMETRY_TIER tingués aquest valor
-        (off / crash_only / full) només per aquesta execució; omet-ho per usar el
-        nivell configurat realment.
+          defineix CADRUMO_TELEMETRY_OPT_IN=true i CADRUMO_TELEMETRY_TIER a crash_only
+          o full a env/.env.
+      tier_help: Previsualitza/envia com si CADRUMO_TELEMETRY_TIER tingués aquest
+        valor (off / crash_only / full) només per aquesta execució; omet-ho per usar
+        el nivell configurat realment.
     version:
       no_revisions: No hi ha revisions del registre disponibles.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles,
         %{formulas} fórmules, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registre no disponible (%{error}).'
   help:
+    invalid_value: Valor no vàlid
+    invalid_value_for: Valor no vàlid per a %{parameter}
+    missing_argument: Falta l’argument
+    missing_option: Falta l’opció
+    missing_parameter: Falta el paràmetre
+    not_valid_integer: no és un enter vàlid.
     panel:
       arguments: Arguments
       commands: Ordres
       error: Error
       options: Opcions
     try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
+    usage_prefix: 'Ús: '
   ledger:
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -3771,7 +3827,7 @@ cli:
         de l'IRPF (art. 93.5 segregació).
       source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
         perfils de no resident IRNR.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna aeat
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
@@ -3953,7 +4009,7 @@ cli:
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria. Torna a executar amb --auto-split per separar-les en
         fills de base i IVA declarables de manera independent.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna aeat
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
@@ -4434,7 +4490,7 @@ cli:
         diagnostics_review_queue: Mostrar la cua de revisio pendent.
         footer: Executeu 'aeat <ordre> --help' per obtenir mes informacio sobre cada
           ordre.
-        heading: Eina de declaracions fiscals de l'AEAT.
+        heading: Cadrumo, eina de declaracions fiscals amb l'AEAT.
         ledger_allocate: Assignar transaccions a un periode fiscal.
         ledger_archive: Arxivar entrades del llibre de transaccions.
         ledger_attach: Adjuntar un fitxer d'origen a una entrada del llibre.
@@ -4682,7 +4738,7 @@ cli:
       verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}:
         %{messages}'
       verify_help: Verificar la integritat del manual contra el seu contracte
-      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual
+      verify_missing_manifest: '%{manifest_path} no existeix; executa ''cadrumo manual
         fetch'' per materialitzar-lo'
       verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció
         de %{field_name}'
@@ -4801,7 +4857,7 @@ cli:
     format_help: 'Format de sortida: text, json, table, csv.'
     help_help: Mostra l'ajuda.
     landing:
-      headline: Assistent fiscal AEAT
+      headline: Assistent fiscal Cadrumo
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
         app --help`. Els modificadors globals (`--format json`, `--language ca`, `--profile
         NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS del subcomandament,
@@ -5332,8 +5388,8 @@ errors:
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
-      límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt
-      o activa LongPathsEnabled (vegeu `aeat config check`).
+      límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més
+      curt o activa LongPathsEnabled (vegeu `aeat config check`).
     error_submission_validation: Un model d'enviament no ha superat la validació.
     error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
       l'esquema tancat de mètriques de la seva ordre.
@@ -6103,8 +6159,8 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en
-      un terminal.'
+      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre Cadrumo equivalent
+      en un terminal.'
   elicitation:
     confirm:
       consequence_handoff: Això genera el document de presentació que el contribuent
@@ -6121,7 +6177,8 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
         la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre Cadrumo CLI equivalent directament en un terminal.'
+        fer-te preguntes, o executa l''ordre Cadrumo CLI equivalent directament en
+        un terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
       que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb

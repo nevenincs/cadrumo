@@ -1,9 +1,9 @@
-"""CLI tests for the ``aeat config profile sandbox`` experiment-workspace lifecycle.
+"""CLI tests for the ``cadrumo config profile sandbox`` experiment-workspace lifecycle.
 
 Resolves #422: an operator (or an LLM agent driving the CLI) needs to run
 experiments in an isolated bucket without polluting the main profile's
 records, then discard the experiment cleanly. These tests drive the real
-``aeat config profile sandbox`` verbs against real per-bucket encrypted
+``cadrumo config profile sandbox`` verbs against real per-bucket encrypted
 storage (no mocks, per the roundtrip-discipline rule) and prove:
 
 - ``create --from-profile`` forks an isolated bucket seeded with the

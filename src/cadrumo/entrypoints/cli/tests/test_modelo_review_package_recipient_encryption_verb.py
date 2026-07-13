@@ -1,7 +1,7 @@
-"""CLI surface tests for ``aeat app modelo review-package encrypt-for-recipient/decrypt``.
+"""CLI surface tests for ``cadrumo app modelo review-package encrypt-for-recipient/decrypt``.
 
 Exercises the full operator-reachable chain against a genuine encrypted profile
-bucket (no mocks): ``aeat config collab recipient add`` registers a recipient's
+bucket (no mocks): ``cadrumo config collab recipient add`` registers a recipient's
 public key, ``review-package encrypt-for-recipient`` seals a built review
 package against it, and ``review-package decrypt`` (run on the SAME bucket, the
 common single-operator "I sealed it for my own accountant identity to test

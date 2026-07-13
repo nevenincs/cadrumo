@@ -76,7 +76,7 @@ adapters:
         conflicting_duplicate_metadata: The Google Sheet carries conflicting duplicate
           AEAT metadata.
         foreign_spreadsheet_not_owned: The Google Sheet is not marked as owned by
-          this AEAT profile.
+          this Cadrumo profile.
         googleapiclient_not_importable: googleapiclient is not importable; the Google
           adapter cannot reach the API.
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
@@ -106,8 +106,8 @@ adapters:
           needs a controlling terminal, but this command was run non-interactively.'
         oauthlib_not_importable: google-auth-oauthlib is not importable; the OAuth
           flow cannot start.
-        profile_state_unresolved: Google OAuth cannot resolve the selected AEAT profile
-          state.
+        profile_state_unresolved: Google OAuth cannot resolve the selected Cadrumo
+          profile state.
         scope_missing: The Google consent screen returned without granting every required
           scope.
         unsecured_mode_refused: Google OAuth refused because the secret store is running
@@ -120,11 +120,11 @@ adapters:
           the active profile before retrying the Google command.
         run_from_interactive_terminal: Run 'aeat config google login' from an interactive
           terminal with a web browser available.
-        use_keyring_or_synthetic: Set aeat_secret_store_backend=keyring or switch
+        use_keyring_or_synthetic: Set CADRUMO_SECRET_STORE_BACKEND=keyring or switch
           the active profile to a synthetic test tax identifier.
     profile_binding:
       errors:
-        no_active_profile: No active AEAT profile is bound for Google OAuth.
+        no_active_profile: No active Cadrumo profile is bound for Google OAuth.
       suggestions:
         create_profile: Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
           and then retry the Google command.
@@ -186,6 +186,8 @@ adapters:
             the vault folder.
           folder_not_owned: Drive folder {folder_name} is not marked as owned by this
             app; refusing to write to protect operator data.
+          former_vault_folder: Google Drive vault folder {vault_folder_name} belongs
+            to the former product and cannot be used; use the Cadrumo vault instead.
           googleapiclient_import_failed: The google-api-python-client dependency is
             not importable; run `uv sync` and retry.
           media_non_bytes: Google Drive media download returned {payload_type} instead
@@ -909,7 +911,9 @@ application:
         used only for Modelo 210 work units.
       m210_ledger_source_selection_required: Modelo 210 ledger source mode requires
         a raw official tipo-renta code selection.
-      m210_official_tipo_renta_selection_mismatch: 'Modelo 210 official tipo-renta code %{official_tipo_renta_code} requires formula token %{expected_tipo_renta}; received %{tipo_renta}.'
+      m210_official_tipo_renta_selection_mismatch: Modelo 210 official tipo-renta
+        code %{official_tipo_renta_code} requires formula token %{expected_tipo_renta};
+        received %{tipo_renta}.
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on revision %{revision_id}: the registry declares a binding source no enrolled
         calculation resolver handles. Enroll a resolver or register it as deferred
@@ -1018,6 +1022,11 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_dependency_unclean: 'cross-period dependency is not clean: modelo=%{modelo}
+        year=%{year} period=%{period} origin=%{origin} origin_ids=%{origin_ids} blockers=%{blockers}'
+      cross_period_dependency_unclean_evidence_next_action: Capture/import AEAT evidence
+        for the source dependency. Run `%{target_capture}`, `%{source_justificante_capture}`,
+        `%{import_official_record}`, or `%{reconcile_file}`; rerun verification.
       cross_period_modelo_not_applicable:
         message: 'Cross-period dependencies on source modelos the taxpayer does not
           file were scoped out as not applicable: {modelos}. For suffered retenciones,
@@ -1042,6 +1051,14 @@ application:
           WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set
           CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
           for evidence you already hold.
+      cross_period_operator_declared_suppression: 'cross-period dependency scoped
+        out as no-prior-obligation (pre-activity): modelo=%{modelo} year=%{year} period=%{period}
+        origin=%{origin}. The period falls strictly before the operator-declared activity-start
+        date %{activity_start_date}, which has not yet been corroborated against an
+        AEAT censo snapshot.'
+      cross_period_operator_declared_suppression_next_action: Confirm the recorded
+        activity-start date is correct. Once the live AEAT censo read is available,
+        the date will be corroborated and this advisory cleared.
       dt12a_reduccion_antiquity_next_action: Confirm more than two years have passed
         since the first aportacion to the plan de pensiones, unless the prestacion
         is by invalidez (ley-35-2006:dt-12).
@@ -2216,6 +2233,7 @@ cli:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
           revision
+        next_action: 'Review the verification report: %{command}'
         verification_report_id_help: Stable 64-character SHA-256 identifier of a verification
           report
         view_help: Show one verification report by id
@@ -2360,6 +2378,20 @@ cli:
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
           is already filed; returned the existing filing record without changes.'
+        formula_operation_calculation: calculation
+        formula_operation_clamp: limit
+        formula_operation_conditional: conditional
+        formula_operation_copy: copy
+        formula_operation_divide: divide
+        formula_operation_lookup: lookup
+        formula_operation_maximum: maximum
+        formula_operation_minimum: minimum
+        formula_operation_multiply: multiply
+        formula_operation_negate: negation
+        formula_operation_percent: percentage
+        formula_operation_previous_period: previous period
+        formula_operation_subtract: subtract
+        formula_operation_sum: sum
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
@@ -2454,10 +2486,12 @@ cli:
           for the filing year and a period token (0A for annual, Qn for a quarter,
           or MM for a month) for --period.'
         plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_sin_previsualizacion_warning: 'WARNING: voluntary filing period
+          expired (Art. 27 LGT). This application does not determine surcharge or
+          interest liability.'
         plazo_vencido_warning: 'WARNING: voluntary filing period expired (Art. 27
-          LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.'
-        plazo_vencido_sin_previsualizacion_warning: 'WARNING: voluntary filing period expired (Art. 27
-          LGT). This application does not determine surcharge or interest liability.'
+          LGT). The displayed rate is an unassessed preview; this application does
+          not determine surcharge or interest liability.'
         prestacion_inss_exenta_help: Gross amount of INSS maternity/paternity benefit
           exempt from IRPF (Art. 7.h LIRPF). Recorded in the revision-specific exempt
           casilla and subtracted from total computable income. Enter the gross amount
@@ -2588,6 +2622,9 @@ cli:
         status_help: Show the metadata of one work unit
         status_next_action: Draft or recalculate this unit with `aeat app modelo work
           calculate`, then verify the draft with `aeat app modelo work verify`.
+        verify_already_verified_refused: Calculation revision %{calculation_revision_id}
+          is already %{state} and cannot be verified again. Verification accepts only
+          a draft revision.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_next_action_granted: Verification passed. Export the filing artefact
@@ -2609,6 +2646,12 @@ cli:
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
           %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
+        workflow_draft_build_refused_next_action: Repair the cited draft input and
+          rerun %{command}.
+        workflow_draft_build_refused_summary: 'Draft build refused: %{error_message}.
+          Repair the cited draft input and recalculate.'
+        workflow_review_verification_report_next_action: 'Review the verification
+          report: %{command}'
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
@@ -2749,14 +2792,14 @@ cli:
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
-      confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
+      confirm_new_passphrase_prompt: 'Confirm new Cadrumo secret-store passphrase: '
       data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
         recovery key and cannot show it again.
       errors:
         missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
-      new_passphrase_prompt: 'New AEAT secret-store passphrase: '
+      new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
@@ -2843,7 +2886,7 @@ cli:
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
-      profile_help: AEAT profile name override (default = active profile on workflow
+      profile_help: Cadrumo profile name override (default = active profile on workflow
         state)
       refresh_only_help: Skip the consent screen and refresh an existing credential
         only
@@ -2876,7 +2919,7 @@ cli:
             unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
             year_help: Filing year (e.g. 2025)
           export_help: Export the registry calculation surface for a modelo+period
-            to a Google Sheets workbook in the operator's `aeat-vault/`
+            to a Google Sheets workbook in the operator's `cadrumo-vault/`
           help: Schema-to-sheet calc surface (export, pull, and compute)
           pull:
             assemble_observations_help: After pulling, reassemble Detalle-tab row-set
@@ -3433,28 +3476,35 @@ cli:
         help: Build the aggregate local telemetry payload and, unless --dry-run, send
           it.
         no_endpoint_notice: 'Nothing was sent: no CADRUMO_TELEMETRY_ENDPOINT is configured.'
-      opt_in_help: Preview/send as if CADRUMO_TELEMETRY_OPT_IN were this value for this
-        invocation only; omit to use the deployment's actual configured setting.
+      opt_in_help: Preview/send as if CADRUMO_TELEMETRY_OPT_IN were this value for
+        this invocation only; omit to use the deployment's actual configured setting.
       status:
         header: 'Remote telemetry posture:'
         help: Report the current remote-telemetry consent posture. Never emits anything.
         off_hint: Telemetry stays fully local by default. To opt in, set CADRUMO_TELEMETRY_OPT_IN=true
           and CADRUMO_TELEMETRY_TIER to crash_only or full in env/.env.
-      tier_help: Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off / crash_only
-        / full) for this invocation only; omit to use the deployment's actual configured
-        tier.
+      tier_help: Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off /
+        crash_only / full) for this invocation only; omit to use the deployment's
+        actual configured tier.
     version:
       no_revisions: No registry revisions available.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
         %{formulas} formulas, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registry unavailable (%{error}).'
   help:
+    invalid_value: Invalid value
+    invalid_value_for: Invalid value for %{parameter}
+    missing_argument: Missing argument
+    missing_option: Missing option
+    missing_parameter: Missing parameter
+    not_valid_integer: is not a valid integer.
     panel:
       arguments: Arguments
       commands: Commands
       error: Error
       options: Options
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
+    usage_prefix: 'Usage: '
   ledger:
     add:
       actor_help: Operator name recorded on the bucket event
@@ -4153,7 +4203,7 @@ cli:
         diagnostics_repair: Diagnose local configuration and storage health.
         diagnostics_review_queue: List pending review work.
         footer: Run aeat config --help or aeat app --help for subtree commands.
-        heading: aeat - local-first Spanish tax workflow
+        heading: Cadrumo - local-first workflow for Spanish tax work with AEAT
         ledger_allocate: Assign business-use or tax allocation metadata.
         ledger_archive: Archive a ledger transaction without deleting history.
         ledger_attach: Attach evidence to a ledger transaction.
@@ -4387,7 +4437,7 @@ cli:
         %{target}
       verify_failed: 'verification failed for %{manual_id}/%{year}/%{part}: %{messages}'
       verify_help: Verify the manual integrity against its contract
-      verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch''
+      verify_missing_manifest: '%{manifest_path} is absent; run ''cadrumo manual fetch''
         to materialise it'
       verify_missing_translation: 'section %{section_id}: %{field_name} missing translation
         key'
@@ -4506,7 +4556,7 @@ cli:
     format_help: 'Output format: text, json, table, csv.'
     help_help: Show help.
     landing:
-      headline: AEAT Tax Assistant
+      headline: Cadrumo Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`. Global flags (`--format json`, `--language en`, `--profile NAME`,
         `--quiet`, `--verbose`, `--debug`) must be placed BEFORE the subcommand, e.g.
@@ -5003,8 +5053,8 @@ errors:
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
     error_storage_bucket_path_too_long: The bucket directory path exceeds the Windows
-      MAX_PATH limit. Move CADRUMO_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
-      (see `aeat config check`).
+      MAX_PATH limit. Move CADRUMO_LOCAL_STORAGE_ROOT to a shorter path or enable
+      LongPathsEnabled (see `aeat config check`).
     error_submission_validation: A submission model failed validation.
     error_telemetry_schema: A telemetry metric key was not registered in the closed
       metric schema for its command.

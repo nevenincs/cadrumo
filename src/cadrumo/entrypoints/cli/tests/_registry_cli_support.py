@@ -38,7 +38,7 @@ def invoke_cached_cli(args: Sequence[str], *, env: Mapping[str, str] | None = No
 
 
 def _child(group: object, name: str):
-    """Resolve a subcommand from the AEAT command tree."""
+    """Resolve a subcommand from the Cadrumo command tree."""
 
     assert isinstance(group, TyperGroup)
     return group.get_command(typer.Context(group), name)

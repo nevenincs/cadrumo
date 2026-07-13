@@ -416,7 +416,9 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
 
     from ....core.paths import PROJECT_ROOT
 
-    canonical_text = (PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
+    canonical_text = (PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(
+        encoding="utf-8"
+    )
     forbidden_emitters = (
         "emit_bucket_event",
         "append_bucket_event",

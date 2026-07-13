@@ -45,7 +45,7 @@ def test_actionable_events_emit_single_warning_notice() -> None:
     notice = notices[0]
     assert notice.code == "overview.post_filing.pending"
     assert notice.severity is NoticeSeverity.WARNING
-    assert notice.suggestion == "aeat app live notifications list"
+    assert notice.suggestion == "cadrumo app live notifications list"
     # The structured per-event reference->kind map rides on context; the
     # informational comunicación is excluded.
     assert notice.context == {

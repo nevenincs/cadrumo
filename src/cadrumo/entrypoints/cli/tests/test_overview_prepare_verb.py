@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app overview prepare``.
+"""Real-behavior CLI tests for ``cadrumo app overview prepare``.
 
 Drives the real ``cadrumo`` CLI against an isolated encrypted backend to pin the
 data-prep walkthrough's operator contract from #260:
@@ -44,13 +44,13 @@ def test_prepare_shows_import_step_pending_on_fresh_profile(_isolated_cli_backen
     steps = {step["step_id"]: step for step in payload["steps"]}
     import_step = steps["import_transactions"]
     assert import_step["state"] == "pending"
-    assert "aeat app ledger import" in import_step["next_command"]
+    assert "cadrumo app ledger import" in import_step["next_command"]
 
     # Every later step is not-done either; none can be satisfied before data exists.
     assert steps["start_modelo_work"]["state"] == "pending"
     assert (
         (steps["start_modelo_work"]["next_command"])
-        == "aeat app modelo work create --modelo 130 --year 2026 --period 1T"
+        == "cadrumo app modelo work create --modelo 130 --year 2026 --period 1T"
     )
 
 
@@ -83,7 +83,7 @@ def test_prepare_advances_import_step_after_manual_ledger_entry(_isolated_cli_ba
     # points the operator at the classify command, not the import command.
     classify_step = steps["classify_transactions"]
     assert classify_step["state"] != "done"
-    assert "aeat app ledger classify" in classify_step["next_command"]
+    assert "cadrumo app ledger classify" in classify_step["next_command"]
 
 
 def test_prepare_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:

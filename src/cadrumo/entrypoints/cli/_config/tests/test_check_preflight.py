@@ -1,4 +1,4 @@
-"""End-to-end CLI tests for the ``aeat config check`` preflight health rows.
+"""End-to-end CLI tests for the ``cadrumo config check`` preflight health rows.
 
 Verifies that the workstation doctor surfaces the per-auth-provider certificate /
 Cl@ve Móvil health (#286), the secure-storage / bundled-corpus / configuration

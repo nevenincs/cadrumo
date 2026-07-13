@@ -7,10 +7,10 @@ cite a real command with a *wrong option name* or the *wrong argument shape*
 and the verb-only gate stayed green. Two such defects shipped and were caught
 only because a human ran the commands by hand:
 
-- ``aeat app modelo describe --modelo 130`` — ``--modelo`` is not an option of
+- ``cadrumo app modelo describe --modelo 130`` — ``--modelo`` is not an option of
   ``describe`` (the modelo is a positional argument); the real form is
-  ``aeat app modelo describe 130``; and
-- ``aeat config profile create`` — missing the required ``PROFILE_NAME``
+  ``cadrumo app modelo describe 130``; and
+- ``cadrumo config profile create`` — missing the required ``PROFILE_NAME``
   positional.
 
 This gate closes that blind spot. It walks the *live* Typer/click command tree
@@ -39,8 +39,8 @@ shown with no placeholder) is one shape of error, but reliable detection of it
 across this doc surface produces systematic false positives and is therefore
 out of scope. The dominant doc idiom is to cite a leaf command *by its bare
 verb* for narrative reference: a heading or sentence naming
-``aeat app modelo export`` to introduce the command, with the full
-placeholder-bearing form (``aeat app modelo export <work_unit_id> --output
+``cadrumo app modelo export`` to introduce the command, with the full
+placeholder-bearing form (``cadrumo app modelo export <work_unit_id> --output
 <path>``) shown separately in an adjacent example. A naive
 "required-positional-with-no-token" rule cannot tell a legitimate bare-verb
 *reference* apart from an invocation that genuinely *omits* a required argument:
@@ -51,14 +51,14 @@ zero-false-positive check is option validity (b): a cited ``--foo`` that is not
 a real parameter is unambiguously wrong regardless of narrative context, which
 is exactly the ``--modelo`` class the verb-only sibling gate missed. The
 ``profile create`` defect is independently covered because the corrected doc now
-shows the placeholder (``aeat config profile create <name>``), and the
+shows the placeholder (``cadrumo config profile create <name>``), and the
 verb-resolution check (a) here plus the sibling verb-only gate keep the verb
 path honest. The live ``required``/``nargs`` parameter shape is still
 introspected and asserted in
 :func:`test_live_introspection_matches_reality` so the introspection machinery
 cannot silently rot.
 
-Real-behavior only: the gate imports the real ``cadrumo`` app object and walks the
+Real-behavior only: the gate imports the real Cadrumo app object and walks the
 materialized click command tree (which triggers the lazy-subcommand loaders).
 No test doubles. It fails loudly on an invalid documented command and passes
 when the docs are correct.
@@ -241,7 +241,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     Returns ``None`` for lines that are not concretely-resolvable invocations:
     the bare ``cadrumo`` token, an ``cadrumo ...`` ellipsis reference, the machine-format
     ``cadrumo 1.2.3`` version echo, or a line whose only verb is a top-level flag
-    (``aeat --version``).
+    (``cadrumo --version``).
     """
     cleaned = _strip_inline_comment(line).strip()
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
@@ -258,7 +258,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
         return None
     if not tokens:
         return None
-    # An ellipsis placeholder (``aeat app ...``) is a narrative reference, not a
+    # An ellipsis placeholder (``cadrumo app ...``) is a narrative reference, not a
     # concrete invocation; the trailing ``...`` is the tell.
     if any(t == "..." for t in tokens):
         return None
@@ -301,7 +301,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
             else:
                 has_positional = True
     if not verb_tokens:
-        return None  # only top-level flags (``aeat --version``)
+        return None  # only top-level flags (``cadrumo --version``)
     return _CitedCommand(
         raw=line.strip(),
         verb_tokens=tuple(verb_tokens),
@@ -396,7 +396,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
     # the deepest reachable command and treats the rest as "arguments", but a
     # GROUP takes no positional arguments — a leftover verb token under a
     # group can only be a subcommand name that does not exist (the shape that
-    # let `aeat app ledger payable-invoice` pass while uninvokable after the
+    # let `cadrumo app ledger payable-invoice` pass while uninvokable after the
     # invoice unification rename).
     if hasattr(cmd, "list_commands") and leftover:
         violations.append(
@@ -446,7 +446,7 @@ def test_live_introspection_matches_reality() -> None:
     assert {"--language", "--format", "--profile"} <= _root_option_names()
     # A genuinely-wrong option must be rejected by the validator.
     bad = _CitedCommand(
-        raw="aeat app modelo describe --modelo 130",
+        raw="cadrumo app modelo describe --modelo 130",
         verb_tokens=("app", "modelo", "describe"),
         cited_options=("--modelo",),
         has_positional_token=True,
@@ -456,7 +456,7 @@ def test_live_introspection_matches_reality() -> None:
     # "argument" by longest-prefix resolution (the `ledger payable-invoice`
     # regression shape).
     dead_subcommand = _CitedCommand(
-        raw="aeat app ledger payable-invoice",
+        raw="cadrumo app ledger payable-invoice",
         verb_tokens=("app", "ledger", "payable-invoice"),
         cited_options=(),
         has_positional_token=False,
@@ -466,7 +466,7 @@ def test_live_introspection_matches_reality() -> None:
     assert "payable-invoice" in flagged[0]
     # ...while a live leaf with a genuine positional argument stays accepted.
     live_with_positional = _CitedCommand(
-        raw="aeat config switch myprofile",
+        raw="cadrumo config switch myprofile",
         verb_tokens=("config", "switch", "myprofile"),
         cited_options=(),
         has_positional_token=True,

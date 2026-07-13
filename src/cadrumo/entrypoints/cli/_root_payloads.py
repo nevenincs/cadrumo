@@ -1,10 +1,10 @@
 """Typed ``--json`` payload schemas for root CLI group callbacks.
 
 The root callbacks are not ordinary leaf commands, but they still emit
-:class:`SchemaEnvelope` documents through :func:`_emit_envelope`. Each class
-declared here is a strict :class:`OutputSchema` subclass and is decorated with
-:func:`register_schema` so the JSON-contract and CLI-reference conformance gates
-can enumerate these group-callback surfaces alongside normal command leaves.
+:class:`SchemaEnvelope` documents through :func:`_emit_envelope`. Each class is
+a strict :class:`OutputSchema` subclass. :func:`register_schema` registers it
+so the JSON-contract and CLI-reference conformance gates can enumerate these
+group-callback surfaces alongside normal command leaves.
 
 Field sets match the production payload dicts constructed in
 the root callback at the ``root.status`` and ``root.app`` emit sites. The

@@ -10,15 +10,15 @@ command via :func:`~difflib.get_close_matches`. That covers typos
 * **Cross-path commands** — a command that exists, but under a
   different group, e.g. ``app status`` for ``app overview status``.
 
-:class:`AeatTyperGroup` keeps
+:class:`CadrumoTyperGroup` keeps
 Typer's typo suggestions and layers a per-group synonym table on top so both
 cases produce a translated "did you mean" hint instead of a bare "No such
 command".
 
-The same group class also owns **lazy subcommand loading**. The AEAT
-command tree is wide: every leaf command module pulls the application
+The same group class also owns **lazy subcommand loading**. The Cadrumo
+CLI command tree is wide: every leaf command module pulls the application
 layer and, transitively, the ~0.6 s registry parse. Importing the
-whole tree just to construct the ``cadrumo`` app object made
+whole tree just to construct the ``cadrumo`` command app made
 ``cadrumo --version`` and ``cadrumo --help`` pay that cost even though they
 never dispatch into a subcommand.
 
@@ -26,7 +26,7 @@ Heavy subcommand groups therefore register a
 :class:`LazySubcommand` loader
 instead of an eagerly-imported Typer instance. The loader's module is imported
 only when
-:meth:`AeatTyperGroup.get_command`
+:meth:`CadrumoTyperGroup.get_command`
 resolves that subcommand, which happens only when an operator invokes something
 in that subtree. ``--version`` / ``--help`` / the bare landing surface
 short-circuit in their callbacks before any subcommand is resolved, so they
@@ -80,7 +80,7 @@ class LazySubcommand:
     paid only when
     :meth:`LazySubcommand.load`
     runs, which
-    :class:`AeatTyperGroup`
+    :class:`CadrumoTyperGroup`
     triggers on the first ``get_command`` / ``list_commands`` access.
 
     ``decorate`` is applied to the Typer instance before it is
@@ -124,15 +124,15 @@ class LazySubcommand:
 
 #: Lazy-subcommand registry keyed by the owning group's command
 #: ``name``. Typer materializes the Click
-#: :class:`AeatTyperGroup`
+#: :class:`CadrumoTyperGroup`
 #: instance lazily, inside ``get_command(app)``; the instance therefore
 #: cannot carry its lazy table at app-construction time. Keying by
 #: group name lets
 #: :func:`register_lazy_subcommand`
 #: populate the table
 #: at module-import time and lets every materialized group instance of
-#: that name read it back. Cadrumo group names (``cadrumo``, ``app``,
-#: ``config``) are unique, so the keying is unambiguous.
+#: that name read it back. CLI group names (``cadrumo``, ``app``, ``config``)
+#: are unique, so the keying is unambiguous.
 _LAZY_REGISTRY: dict[str, dict[str, LazySubcommand]] = {}
 
 
@@ -140,7 +140,7 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
     """Register ``lazy`` under ``group_name`` for deferred resolution.
 
     The owning
-    :class:`AeatTyperGroup` imports
+    :class:`CadrumoTyperGroup` imports
     the command module only when the subcommand is first resolved through
     ``get_command``.
     """
@@ -155,7 +155,7 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
 INVOCATION_REMAINDER_META_KEY = "cadrumo.invocation_remainder"
 
 
-class AeatTyperGroup(TyperGroup):
+class CadrumoTyperGroup(TyperGroup):
     """:class:`~typer.core.TyperGroup` with synonym hints and lazy loading.
 
     Three behaviours layer on top of the base Typer group:
@@ -166,11 +166,11 @@ class AeatTyperGroup(TyperGroup):
     * **Lazy subcommands.** Subcommands registered through
       :func:`register_lazy_subcommand`
       import their command module only when first resolved, keeping the
-      construction of the ``cadrumo`` app object free of the registry parse.
+      construction of the ``cadrumo`` command app free of the registry parse.
     * **Remainder capture.** Click empties ``ctx.args`` and the
       protected list before running the group callback, so the callback
       cannot see the tokens that follow the group name.
-      :meth:`AeatTyperGroup.invoke`
+      :meth:`CadrumoTyperGroup.invoke`
       stashes them in ``ctx.meta`` first (``setdefault`` — the outermost group's
       full remainder wins) so the root callback can recognise help-only and
       unknown-command invocations without re-reading ``sys.argv`` (which is
@@ -203,7 +203,7 @@ class AeatTyperGroup(TyperGroup):
         from ._terminal_errors import run_standalone_with_error_contract
 
         return run_standalone_with_error_contract(
-            lambda: super(AeatTyperGroup, self).main(*args, standalone_mode=False, **kwargs),
+            lambda: super(CadrumoTyperGroup, self).main(*args, standalone_mode=False, **kwargs),
         )
 
     @override
@@ -227,7 +227,7 @@ class AeatTyperGroup(TyperGroup):
         through this method; returning the lazy names from the registry
         keeps the listing complete without paying any import cost. The
         per-command import happens later, in
-        :meth:`AeatTyperGroup.get_command`,
+        :meth:`CadrumoTyperGroup.get_command`,
         and only for the command actually selected.
         """
         eager = super().list_commands(ctx)
@@ -288,7 +288,7 @@ def _synonym_hint(group_name: str | None, token: str) -> str | None:
 
 __all__ = [
     "INVOCATION_REMAINDER_META_KEY",
-    "AeatTyperGroup",
+    "CadrumoTyperGroup",
     "LazySubcommand",
     "register_lazy_subcommand",
 ]

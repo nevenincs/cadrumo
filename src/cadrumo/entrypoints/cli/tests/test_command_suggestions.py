@@ -1,7 +1,7 @@
 """Tests for the Cadrumo CLI command-suggestion group.
 
 The base Typer group only suggests typo-distance near misses. These
-tests cover the two operator-facing gaps :class:`AeatTyperGroup`
+tests cover the two operator-facing gaps :class:`CadrumoTyperGroup`
 closes: a semantic synonym (``modify`` -> ``edit``) and a cross-path
 command (``app status`` -> ``app overview status``).
 """

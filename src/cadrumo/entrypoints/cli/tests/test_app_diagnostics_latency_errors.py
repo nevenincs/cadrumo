@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app diagnostics latency`` and ``errors``.
+"""Real-behavior CLI tests for ``cadrumo app diagnostics latency`` and ``errors``.
 
 Exercises both verbs end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.build_latency_report` and

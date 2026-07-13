@@ -1,6 +1,6 @@
 """CLI tests for per-bucket profile lifecycle navigation.
 
-These tests drive ``aeat config profile`` from a cold per-bucket storage
+These tests drive ``cadrumo config profile`` from a cold per-bucket storage
 backend: ``rename`` is a label-only edit, ``import --label`` re-lands an
 exported bundle, and ``delete`` / ``switch`` / ``list`` / ``status`` / ``show``
 all resolve correctly from a no-active-session state. They are the
@@ -49,7 +49,7 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     use create_profile_via_cli.
     """
     # _isolated_backend's isolated_profile_storage_root already set
-    # cadrumo_local_storage_root to tmp_path / "aeat-storage".
+    # cadrumo_local_storage_root to tmp_path / "cadrumo-storage".
     yield load_settings().cadrumo_local_storage_root
 
 

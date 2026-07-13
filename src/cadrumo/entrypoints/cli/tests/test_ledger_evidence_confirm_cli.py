@@ -1,4 +1,4 @@
-"""Real-CLI regression for ``aeat app ledger evidence confirm`` (#254 slice).
+"""Real-CLI regression for ``cadrumo app ledger evidence confirm`` (#254 slice).
 
 Closes the non-interactive review loop the extraction primitive
 (``25ed55fd29``) and the ``evidence extract`` CLI verb (``58064ca45f``) opened:

@@ -134,7 +134,7 @@ def test_drifted_stored_profile_surfaces_stored_data_boundary_message(
     whose registered locale key is ``errors.storage.stored_data_validation_boundary``.
     The English text reads:
       "A stored profile or workflow record no longer matches the expected
-       schema ... Run `aeat config repair` to diagnose and recover."
+       schema ... Run `cadrumo config repair` to diagnose and recover."
 
     This test verifies:
     - exit code is non-zero (an error was emitted)
@@ -238,7 +238,7 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
     # fix an invalid CLI argument or an application schema mismatch; pointing
     # the operator at it is a no-op-recovery path.  The fix is in
     # CliValidationBoundaryError.suggestion and the refused_cli_validation_boundary
-    # locale string — both now say "aeat --help" instead of "aeat config repair".
+    # locale string — both now say "cadrumo --help" instead of "cadrumo config repair".
     assert "config repair" not in combined, (
         f"input-time validation boundary must not suggest 'config repair' (no-op "
         f"recovery for a CLI argument error); got: {combined!r}"

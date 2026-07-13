@@ -1,6 +1,6 @@
 """CLI regression for the guided manual-entry invoice wizard.
 
-``aeat app ledger invoice catalogue wizard`` (#254 slice 4b) is the guided,
+``cadrumo app ledger invoice catalogue wizard`` (#254 slice 4b) is the guided,
 non-interactive fallback for when extraction (evidence extract / vision OCR)
 is unavailable or insufficient: every invoice field is supplied up front as a
 CLI option, each field is validated independently (a malformed NIF and a

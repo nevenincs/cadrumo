@@ -1,4 +1,4 @@
-"""Boundary regression: lock the `aeat app ledger` verb roster + vocabulary.
+"""Boundary regression: lock the `cadrumo app ledger` verb roster + vocabulary.
 
 The 2026-05-15 amendment to app-modelo-shape locks ``link``, ``check``,
 and ``preflight`` onto the ledger noun-group root. This test pins the
@@ -80,7 +80,7 @@ def test_ledger_verb_roster_matches_canonical_spine() -> None:
 
 def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
     """The link/check/preflight trio is mounted directly under
-    `aeat app ledger`, not under a sub-noun-group. The orthogonal-axis
+    `cadrumo app ledger`, not under a sub-noun-group. The orthogonal-axis
     verbs must sit alongside the CRUD spine."""
 
     top_level = frozenset(n for n in (cmd.name for cmd in ledger_app.registered_commands) if n)
@@ -90,7 +90,7 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 
 
 # Count-side companion to the set-equality roster gate above.
-# The canonical spine for `aeat app ledger` is the CRUD spine (add / view /
+# The canonical spine for `cadrumo app ledger` is the CRUD spine (add / view /
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
 # / categories / classify / doclink / export / history / import / merge /
@@ -108,7 +108,7 @@ _EXPECTED_LEDGER_VERB_COUNT: int = _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS
 
 
 def test_ledger_verb_count_matches_canonical_spine() -> None:
-    """The mounted `aeat app ledger` verb count matches the canonical
+    """The mounted `cadrumo app ledger` verb count matches the canonical
     spine (CRUD + ratified orthogonal axes + ratified workflow axes).
 
     Count-side companion to :func:`test_ledger_verb_roster_matches_canonical_spine`.
@@ -144,21 +144,21 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     )
 
 
-# Help-text enumeration gate. The `aeat app ledger --help`
-# and `aeat app modelo --help` surfaces are the operator's first encounter
+# Help-text enumeration gate. The `cadrumo app ledger --help`
+# and `cadrumo app modelo --help` surfaces are the operator's first encounter
 # with the noun-group's verb tree; if a canonical verb is mounted but
 # omitted from help (e.g. by a missing tr() entry), the operator cannot
 # discover it. This gate fails when help text omits any registered verb,
 # catching that drift without depending on locale-string content.
 def test_ledger_help_enumerates_every_registered_verb() -> None:
-    """`aeat app ledger --help` lists every mounted verb so the operator
+    """`cadrumo app ledger --help` lists every mounted verb so the operator
     can discover the noun-group's full surface from the help output alone."""
 
     result = _invoke(["app", "ledger", "--help"])
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, (
-        f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
+        f"`cadrumo app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
     )
 
 
@@ -167,12 +167,12 @@ def test_ledger_attach_help_names_purchase_evidence_creation_path() -> None:
 
     result = _invoke(["app", "ledger", "attach", "--help"])
     assert result.exit_code == 0, result.output
-    assert "aeat app ledger evidence add" in result.output
+    assert "cadrumo app ledger evidence add" in result.output
     assert "--purchase-invoice-evidence-id" in result.output
 
 
 def test_modelo_help_enumerates_every_registered_verb() -> None:
-    """`aeat app modelo --help` lists every mounted verb so the operator
+    """`cadrumo app modelo --help` lists every mounted verb so the operator
     can discover the noun-group's full surface from the help output alone."""
 
     from .._modelo import app as modelo_app
@@ -181,7 +181,7 @@ def test_modelo_help_enumerates_every_registered_verb() -> None:
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in modelo_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, (
-        f"`aeat app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
+        f"`cadrumo app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
     )
 
 
@@ -216,7 +216,7 @@ EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
 
 
 def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
-    """The set of top-level `aeat app modelo` verbs equals the canonical roster.
+    """The set of top-level `cadrumo app modelo` verbs equals the canonical roster.
 
     Missing or extra entries are contract drift that requires an explicit
     update to :data:`EXPECTED_MODELO_TOP_LEVEL_VERBS`.

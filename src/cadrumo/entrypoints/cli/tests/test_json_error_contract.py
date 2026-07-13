@@ -155,7 +155,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     """An unexpected exception emits the INTERNAL document (exit 6), not a traceback.
 
     Runs a real subprocess over a minimal app mounted on the production
-    :class:`AeatTyperGroup` so the terminal funnel is observed exactly as
+    :class:`CadrumoTyperGroup` so the terminal funnel is observed exactly as
     an operator would: stderr payload, no traceback, registered exit code.
     """
     script = tmp_path / "crash_probe.py"
@@ -163,14 +163,14 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         textwrap.dedent(
             """
             import typer
-            from cadrumo.entrypoints.cli._command_suggestions import AeatTyperGroup
+            from cadrumo.entrypoints.cli._command_suggestions import CadrumoTyperGroup
 
-            app = typer.Typer(cls=AeatTyperGroup)
+            app = typer.Typer(cls=CadrumoTyperGroup)
 
 
             @app.callback()
             def root() -> None:
-                "Force group materialisation so AeatTyperGroup.main runs."
+                "Force group materialisation so CadrumoTyperGroup.main runs."
 
 
             @app.command()

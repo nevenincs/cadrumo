@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app quickfile``.
+"""Real-behavior CLI tests for ``cadrumo app quickfile``.
 
 Drives the one-command filing chain through the real ``cadrumo`` CLI against an
 isolated real-session backend (real KEK/DEK, real encrypted SQLite) — no mocks,
@@ -298,7 +298,7 @@ def _stage_status(payload: dict[str, object]) -> dict[str, str]:
 
 
 def test_quickfile_runs_full_chain_to_exported_fichero(tmp_path: Path) -> None:
-    """``aeat app quickfile`` for a calculable modelo writes a fichero-BOE file.
+    """``cadrumo app quickfile`` for a calculable modelo writes a fichero-BOE file.
 
     Modelo 115 1T 2026 with one seeded retención observation is calculable, so
     the whole chain — readiness, create, calculate, verify, export — completes in

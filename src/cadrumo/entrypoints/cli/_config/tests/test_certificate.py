@@ -1,4 +1,4 @@
-"""CLI integration tests for ``aeat config auth certificate ...``.
+"""CLI integration tests for ``cadrumo config auth certificate ...``.
 
 Exercises the real Typer command tree against a real profile bucket and
 real encrypted secure-object storage — no mocks. See GitHub issue #591

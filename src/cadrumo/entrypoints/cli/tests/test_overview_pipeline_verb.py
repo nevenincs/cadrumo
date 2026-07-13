@@ -1,4 +1,4 @@
-"""Real-behavior CLI tests for ``aeat app overview pipeline``.
+"""Real-behavior CLI tests for ``cadrumo app overview pipeline``.
 
 Drives the real ``cadrumo`` CLI against an isolated encrypted backend to pin the
 cross-domain pipeline-health dashboard's operator contract from #238:

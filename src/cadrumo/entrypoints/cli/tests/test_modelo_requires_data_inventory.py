@@ -1,4 +1,4 @@
-"""Data-inventory checklist proof for ``aeat app modelo requires``.
+"""Data-inventory checklist proof for ``cadrumo app modelo requires``.
 
 ``requires`` composes the registry snapshot for one
 ``(modelo, filing_year, period)`` into an operator-facing checklist: which
@@ -262,7 +262,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     notices = unwrap_envelope_notices(invocation.output)
     warning = next(notice for notice in notices if notice["code"] == "modelo.requires.missing_profile_coefficient")
     assert warning["severity"] == "warning"
-    assert warning["suggestion"] == "aeat config profile ratios"
+    assert warning["suggestion"] == "cadrumo config profile ratios"
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 
