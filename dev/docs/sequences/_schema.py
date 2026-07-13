@@ -9,8 +9,8 @@ result. The parser (``_parser.py``) is the sole producer of these records; every
 model is strict, frozen, and forbids extra fields
 (:data:`~cadrumo.core.STRICT_FROZEN_CONFIG`).
 
-The grammar these records model is ADR ruling D1: a body of plain frame lines
-where a bare ``aeat ...`` line is a visible command frame, ``@setup aeat ...`` an
+The grammar these records model is a body of plain frame lines where a bare
+``aeat ...`` line is a visible command frame, ``@setup aeat ...`` an
 executed-but-collapsed setup frame, ``@result aeat ...`` the single terminal
 verification frame, ``@capture <name> <json-path>`` binds a value from the
 preceding frame's parsed envelope, and ``@expect <json-path> == <literal>``
@@ -59,7 +59,7 @@ JsonPath = Annotated[
     ),
 ]
 #: One singular imperative verification sentence carried by the ``:verify:``
-#: directive option, rendered as the result frame's caption (ADR D4).
+#: directive option, rendered as the result frame's caption.
 VerifySentence = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=240),
@@ -71,7 +71,7 @@ ExpectLiteral = str | int | float | bool | None
 
 
 class FrameKind(StrEnum):
-    """Closed set of frame kinds in a ``cli-sequence`` body (ADR D1)."""
+    """Closed set of frame kinds in a ``cli-sequence`` body."""
 
     #: A visible ``aeat ...`` command frame, rendered in document order.
     COMMAND = "command"
@@ -79,7 +79,7 @@ class FrameKind(StrEnum):
     #: "Preparation" disclosure — executed truth, never invisible magic.
     SETUP = "setup"
     #: The mandatory terminal ``@result aeat ...`` verification frame; exactly
-    #: one per sequence, and it must be last (ADR D4).
+    #: one per sequence, and it must be last.
     RESULT = "result"
 
 
@@ -101,8 +101,8 @@ class ExpectAssertion(BaseModel):
 
     ``expected`` is the JSON literal parsed from the authored right-hand side.
     The parser records it verbatim; the runner evaluates ``json_path == expected``
-    against the frame's live output (ADR D4). The pseudo-path ``exit_code``
-    asserts the frame's process exit code (ADR D3).
+    against the frame's live output. The pseudo-path ``exit_code`` asserts the
+    frame's process exit code.
     """
 
     model_config = _STRICT_FROZEN

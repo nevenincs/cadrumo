@@ -2,7 +2,7 @@
 
 The sequence-level analogue of the substrate's own anti-tautology proof
 (``cadrumo.core.observability.tests.test_golden``), enforced through the REAL
-executor and comparison path (W02.P05.S18; ADR D3). Three interlocking claims:
+executor and comparison path. Three interlocking claims:
 
 1. **Residual determinism, pinned exactly.** A representative sequence executed
    twice in fresh hermetic sandboxes yields pre-mask differing JSON paths equal
@@ -13,7 +13,7 @@ executor and comparison path (W02.P05.S18; ADR D3). Three interlocking claims:
 2. **The masked-field canary.** No hermetic-reachable enrollable envelope
    surfaces a centrally-masked surrogate key (``snapshot_id``, ``run_id``) in
    a fresh sandbox today: every ``snapshot_id`` emitter is a live-AEAT surface
-   (unenrollable by design, ADR D6), and the one enrollable non-live ``run_id``
+   (unenrollable by design), and the one enrollable non-live ``run_id``
    carrier — the ``app diagnostics runs`` payload — lists per-run rows that are
    empty in a fresh sandbox, so the key never materialises. The representative
    sequence deliberately includes that diagnostics read so the canary scans the
@@ -196,7 +196,7 @@ class TestExecutorMaskHonesty:
 
 
 class TestCommittedGoldensCleanGate:
-    """The pytest half of the two-surfaces-one-engine gate (W03.P08.S27; ADR D6).
+    """The pytest half of the two-surfaces-one-engine gate.
 
     Calls the same ``check_sequences`` the ``builder-inited`` Sphinx hook wires,
     unscoped over the committed ``docs/`` tree, so CI catches golden drift
@@ -212,7 +212,7 @@ class TestCommittedGoldensCleanGate:
 
 
 # ---------------------------------------------------------------------------
-# W03.P08.S28 — both gate surfaces red on an injected divergence, green on clean
+# Both gate surfaces red on an injected divergence, green on clean
 # ---------------------------------------------------------------------------
 
 _FIXTURE_SEQUENCE_ID = "fixture-divergence"
@@ -318,9 +318,9 @@ def _build_fixture_site(root: Path, docs_root: Path, goldens_root: Path) -> str:
 
 
 class TestBothSurfacesRedOnDivergence:
-    """W03.P08.S28: an injected golden divergence reds BOTH gate surfaces, and
+    """An injected golden divergence reds BOTH gate surfaces, and
     clean goldens pass BOTH green — proving the Sphinx build hook and the pytest
-    gate share one execution path (ADR D6). The fixture tree is fully isolated;
+    gate share one execution path. The fixture tree is fully isolated;
     the committed ``docs/`` tree is never mutated."""
 
     def test_divergent_golden_reds_the_sphinx_build(

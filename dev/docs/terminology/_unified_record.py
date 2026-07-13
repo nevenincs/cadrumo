@@ -1,4 +1,4 @@
-"""The unified search record -- one homogeneous index payload (ADR D4/D6).
+"""The unified search record -- one homogeneous index payload.
 
 The four projected record kinds -- concept cards, casilla projections, CLI
 surface records, doc pages -- are heterogeneous (each carries kind-specific
@@ -12,9 +12,9 @@ URL/anchor a palette card jumps to, a normalised ``ranking_weight``, and typed
 :func:`to_search_record` is the uniform serialisation funnel: it projects any
 of the four kind records into a :class:`SearchRecord`, deriving the per-kind
 ``id`` / ``title`` / ``target`` and the base ranking weight. The weight
-normalisation (ADR D5: "term cards first, nav second, full text third") lives
-in :data:`_KIND_BASE_WEIGHT` so a casilla hit, a concept hit, a BOE-article
-hit, and a code hit rank comparably in the unified index.
+normalisation ("term cards first, nav second, full text third") lives in
+:data:`_KIND_BASE_WEIGHT` so a casilla hit, a concept hit, a BOE-article hit,
+and a code hit rank comparably in the unified index.
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ GLOSSARY_PAGE = "_generated/glossary.html"
 
 
 class RankingTier(StrEnum):
-    """The three palette ranking tiers (ADR D5).
+    """The three palette ranking tiers.
 
     The palette surfaces term cards first, navigation (CLI / casilla
     namespaces) second, and full-text pages third. The tier is the coarse
@@ -66,7 +66,7 @@ class RankingTier(StrEnum):
     FULLTEXT = "fulltext"
 
 
-#: Per-kind base ranking weight (ADR D5 ordering: term cards first, navigation
+#: Per-kind base ranking weight (ordering: term cards first, navigation
 #: second, full text third). A concept card outranks a CLI/casilla namespace
 #: entry, which outranks a full-text page, for the same textual relevance. The
 #: sweep score (when present) modulates within this base via
@@ -80,14 +80,14 @@ _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
 
 
 def kind_base_weight(kind: SearchRecordKind) -> float:
-    """Return the base ranking weight for a record kind (ADR D5 ordering)."""
+    """Return the base ranking weight for a record kind."""
     return _KIND_BASE_WEIGHT[kind]
 
 
 def normalise_ranking_weight(kind: SearchRecordKind, sweep_score: float | None = None) -> float:
     """Normalise a record's ranking weight onto a comparable cross-kind scale.
 
-    The base weight encodes the ADR-D5 tier ordering (concept > nav > page).
+    The base weight encodes the tier ordering (concept > nav > page).
     When a build-time RAG sweep produced a relevance ``sweep_score`` for the
     record (in ``[0, 1]``), it modulates the base multiplicatively but never
     lets a lower tier overtake a higher one: the modulated weight stays within
@@ -146,7 +146,7 @@ class SearchRecordMetadata(BaseModel):
 
 
 class SearchRecord(BaseModel):
-    """One homogeneous compiled-index entry over the four record kinds (ADR D4).
+    """One homogeneous compiled-index entry over the four record kinds.
 
     This is the shape the Pagefind ``addCustomRecord`` injection consumes:
     every projected kind funnels into it via :func:`to_search_record`, so the

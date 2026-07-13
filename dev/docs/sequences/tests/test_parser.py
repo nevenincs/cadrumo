@@ -1,8 +1,8 @@
 """Real-behaviour tests for the ``cli-sequence`` frame-grammar parser.
 
 There is no external numeric oracle for a parser, so these tests prove the
-GRAMMAR and the STRUCTURAL CONTRACT (ADR rulings D1 / D4): the worked example
-from the ADR parses into the expected typed frames with every capture, expect,
+GRAMMAR and the STRUCTURAL CONTRACT: the worked example
+parses into the expected typed frames with every capture, expect,
 and placeholder preserved; every refusal mode raises an accumulating
 :class:`SequenceParseError` whose problems name the offending line; and multiple
 independent faults surface together rather than one-at-a-time.
@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 _VERIFY = "Verify the calculation before exporting."
-# The ADR D1 worked example, minus its ``:seed:`` (seed inlining is exercised in
+# The worked example, minus its ``:seed:`` (seed inlining is exercised in
 # ``test_seeds.py``).
 _WORKED_EXAMPLE = """\
 aeat app modelo create 303 --year 2026 --period 1T
@@ -328,7 +328,7 @@ def test_over_long_verify_is_refused() -> None:
 
 
 def test_non_int_exit_code_expect_is_refused() -> None:
-    # M3: exit_code is an integer exit status (ADR D3).
+    # M3: exit_code is an integer exit status.
     body = '@result aeat app modelo verify\n@expect exit_code == "nope"\n'
     problems = _problems(body)
     assert any("exit_code" in problem and "integer literal" in problem for problem in problems)

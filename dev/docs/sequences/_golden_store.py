@@ -1,4 +1,4 @@
-"""Committed light per-sequence golden store for ``cli-sequence`` runs (ADR D2).
+"""Committed light per-sequence golden store for ``cli-sequence`` runs.
 
 One golden file per sequence at ``docs/_sequences/<page-path>/<sequence-id>.json``,
 carrying per frame: the argv as executed, the exit code, the verbatim pre-mask
@@ -7,15 +7,15 @@ the normalised verbatim text for text frames, and the capture bindings. These
 are light, review-diffable data — the Pagefind commit boundary: commit the light
 expectation, regenerate every heavy rendered surface.
 
-Goldens are CLI-owned and never hand-edited: the ``refresh`` mode (plan
-``W02.P05``) re-executes the sequence in its sandbox and rewrites the file
+Goldens are CLI-owned and never hand-edited: the ``refresh`` mode
+re-executes the sequence in its sandbox and rewrites the file
 through :func:`write_golden`; the author reviews the git diff — which IS the
 behaviour-change review — and commits the golden with the CLI change that
 legitimately moved it. A missing or hand-corrupted golden reads as an
 instructive :class:`~dev.docs.sequences._errors.SequenceGoldenError` naming the
 exact refresh invocation.
 
-Storage policy per frame kind (ADR D2/D3):
+Storage policy per frame kind:
 
 - **JSON frames** store the parsed envelope document verbatim, PRE-mask —
   capture raw, mask at compare — so the committed artifact never bakes the mask
@@ -172,7 +172,7 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     Walks every JSON frame's envelope and gathers the string values stored under
     the :data:`GOLDEN_MASK_FIELDS` keys at any depth. Text normalisation replaces
     these values where they appear inline in text output — the "central masked
-    ids where they appear inline" half of the ADR D3 text policy.
+    ids where they appear inline" half of the text-normalisation policy.
     """
     values: set[str] = set()
 
@@ -201,7 +201,7 @@ def normalise_text_output(
     workdir: str,
     masked_values: Iterable[str] = (),
 ) -> str:
-    """Apply the declared narrow text normalisation (ADR D3).
+    """Apply the declared narrow text normalisation.
 
     Exactly two token families are normalised — nothing else: the per-run
     sandbox paths (storage root and workdir, in both native and POSIX slash

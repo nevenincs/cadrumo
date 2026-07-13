@@ -1,6 +1,6 @@
-"""Query-vocabulary RAG sweep runner -- the build-time compilation oracle (ADR D6).
+"""Query-vocabulary RAG sweep runner -- the build-time compilation oracle.
 
-ADR D6's load-bearing insight: a CLOSED query vocabulary makes runtime RAG
+The load-bearing insight: a CLOSED query vocabulary makes runtime RAG
 unnecessary. Every query a term card can answer is enumerable at build time --
 each enrolled concept's preferred/admitted terms, its four-language
 translations, and its hidden search forms -- so the expensive half of RAG
@@ -15,18 +15,18 @@ The runner composes the pipeline already built:
     -> per query term: RAG retrieval -> resolve_chunk_hits -> wrangle
     -> a laundered term-to-target relevance mapping.
 
-Laundering rule (ADR D6 / the shipped-search licence-clean discipline): the
-shipped mapping carries ONLY identifiers, targets, and normalised ranking
-weights -- never stored vectors, never sparse / SPLADE term-weight maps, never
-the raw retrieval score. The wrangled targets already carry only ids, targets,
-and weights; this module projects them into the laundered
-:class:`TermTargetRef` and never serialises the raw hit path or score.
+Laundering rule: the shipped mapping carries ONLY identifiers, targets, and
+normalised ranking weights -- never stored vectors, never sparse / SPLADE
+term-weight maps, never the raw retrieval score. The wrangled targets already
+carry only ids, targets, and weights; this module projects them into the
+laundered :class:`TermTargetRef` and never serialises the raw hit path or
+score.
 
 Scope: this module is the RUNNER plus the typed mapping plus the cadence verb.
-Serialising the mapping to committed data files and its drift / laundering /
-licence gates is the sibling landing step; this module leaves a clean seam --
-:class:`SweepResult` is strict, frozen, and JSON-serialisable, so the sibling
-step serialises it with one ``model_dump_json`` call.
+Serialising the mapping to committed data files, and its drift / laundering /
+licence gates, happen elsewhere; this module leaves a clean seam --
+:class:`SweepResult` is strict, frozen, and JSON-serialisable, so that later
+serialisation is one ``model_dump_json`` call.
 """
 
 from __future__ import annotations
@@ -59,16 +59,15 @@ __all__ = [
 
 _SHIPPED_TERM_STATUSES: frozenset[TermStatus] = frozenset({TermStatus.PREFERRED, TermStatus.ADMITTED})
 
-#: Per-query result ceiling. Raised to 20 per the locale-crowding guidance: the
-#: parallel es/en/ca/hu source files return four near-identical hits per
-#: concept, so a low ceiling starves the real targets; the wrangling layer
-#: collapses the quadruplets afterwards.
+#: Per-query result ceiling, raised to 20: the parallel es/en/ca/hu source
+#: files return four near-identical hits per concept, so a low ceiling starves
+#: the real targets; the wrangling layer collapses the quadruplets afterwards.
 DEFAULT_MAX_RESULTS = 20
 
-#: Default per-query RAG timeout (seconds). The RAG-discipline mandate requires
-#: an explicit timeout on every search to avoid the model-warmup/first-query
-#: abort; the resident service can be busy behind a peer index-rebuild, so the
-#: default is generous.
+#: Default per-query RAG timeout (seconds). An explicit timeout is required on
+#: every search to avoid the model-warmup/first-query abort; the resident
+#: service can be busy behind a concurrent index rebuild, so the default is
+#: generous.
 DEFAULT_SEARCH_TIMEOUT_S = 60.0
 
 
@@ -99,7 +98,7 @@ class TermTargetRef(BaseModel):
     The shipped relevance unit: no vectors, no sparse / SPLADE term weights, no
     raw retrieval score, no source path. Just the resolved record's id, its deep
     link target, its kind, and the normalised ranking weight a consumer sorts
-    on. This is the laundering boundary the licence-clean shipping rule mandates.
+    on. This is the laundering boundary for what ships.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -248,10 +247,10 @@ class RagSearchClient(Protocol):
 class ServiceRagSearchClient:
     """Routes every query through the resident vaultspec-rag service (port 8766).
 
-    Per the RAG-discovery mandate: route through the running service, pass an
-    explicit timeout on every search, raise max-results for locale crowding. The
-    single-writer Qdrant store means a competing in-process index would strand
-    on the lock, so retrieval always delegates to the service.
+    Routes through the running service, passes an explicit timeout on every
+    search, and raises max-results for locale crowding. The single-writer
+    Qdrant store means a competing in-process index would strand on the lock,
+    so retrieval always delegates to the service.
     """
 
     def __init__(
@@ -510,8 +509,8 @@ def _seed_concept_card(
 ) -> tuple[TermTargetRef, ...]:
     """Guarantee the query's originating concept card heads the target list.
 
-    A swept query string is, by construction, a declared label of its concept
-    (ADR D4: concepts are first-class palette results). RAG retrieval over a
+    A swept query string is, by construction, a declared label of its concept,
+    and concepts are first-class palette results. RAG retrieval over a
     generic or ambiguous surface form (the English "box", the bare "modelo
     303") may score the concept's own authoring fragment below the strong-
     signal floor or miss it entirely, but the concept card is still the

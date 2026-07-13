@@ -593,9 +593,9 @@ def compile_search_index(
 ) -> None:
     """Compile the bundled Ctrl-K search corpus over the freshly built HTML.
 
-    Runs the post-build Pagefind index pass (ADR D5) and injects the unified
+    Runs the post-build Pagefind index pass and injects the unified
     search records -- concept cards, casilla and CLI navigation surfaces --
-    boosted by the committed build-time RAG sweep (ADR D4/D6). The resulting
+    boosted by the committed build-time RAG sweep. The resulting
     per-language index is an uncommitted build artifact, regenerated on every
     full build exactly like the generated CLI/API surfaces. A missing vendored
     Pagefind wheel is reported and skipped rather than failing the

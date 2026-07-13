@@ -1,4 +1,4 @@
-"""``python -m dev.docs.sequences`` — the golden refresh and check CLI (ADR D2).
+"""``python -m dev.docs.sequences`` — the golden refresh and check CLI.
 
 Two modes over one engine:
 
@@ -14,14 +14,15 @@ Two modes over one engine:
   invocation that updates the golden.
 
 Both the Sphinx ``builder-inited`` hook and the ``dev/docs/tests`` pytest gate
-(plan ``W03.P08``) call the same :func:`check_sequences` engine function this
-module's ``check`` mode wraps, so neither surface re-implements execution or
+call the same :func:`check_sequences` engine function this module's
+``check`` mode wraps, so neither surface re-implements execution or
 comparison (the pull==calculate discipline).
 
 Sequence discovery reads the enrolled docs pages directly: a page enrolls by
-carrying at least one *backtick*-fenced ``cli-sequence`` MyST directive
-(ADR D1); this module extracts each directive's id, options, and frame body
-and parses it through the shared grammar parser. A sequence whose author binds
+carrying at least one *backtick*-fenced ``cli-sequence`` MyST directive (the
+backtick fence form, never the colon form); this module extracts each
+directive's id, options, and frame body and parses it through the shared
+grammar parser. A sequence whose author binds
 a ``@capture`` no later frame consumes is reported as a named advisory (never
 a failure): the capture still records into the transcript and golden, so it is
 review-visible, but the advisory keeps dead bindings from accumulating.
@@ -61,7 +62,7 @@ __all__ = [
     "unused_capture_advisories",
 ]
 
-#: Opening line of a backtick-fenced ``cli-sequence`` directive (ADR D1: the
+#: Opening line of a backtick-fenced ``cli-sequence`` directive (the
 #: backtick fence form, never the colon form).
 _FENCE_OPEN_RE = re.compile(r"^(?P<fence>`{3,})\{cli-sequence\}\s+(?P<id>\S+)\s*$")
 
@@ -331,7 +332,7 @@ def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> SequenceTranscript:
 def _build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m dev.docs.sequences",
-        description="Refresh or check the committed cli-sequence goldens (ADR D2).",
+        description="Refresh or check the committed cli-sequence goldens.",
     )
     subparsers = parser.add_subparsers(dest="mode", required=True)
     for mode, help_text in (
