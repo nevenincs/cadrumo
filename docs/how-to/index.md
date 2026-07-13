@@ -250,6 +250,7 @@ ledger-evidence
 manage-invoices
 correct-ledger-entries
 modelo-036
+modelo-130
 classify-with-llm
 connect-an-agent
 review-calculation-values
