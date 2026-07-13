@@ -138,7 +138,8 @@ review stage:
 - Verification findings name the legal references behind each rule — see
   [Verify a filing](verification-reports.md).
 - `aeat app review queue --explain` — pending findings with their legal
-  references. See [Work through the review queue](review-queue.md).
+  references. See
+  [the review queue](classify-transactions.md#see-everything-that-still-needs-a-decision).
 
 ## Next steps
 

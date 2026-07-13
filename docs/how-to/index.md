@@ -114,13 +114,6 @@ Store invoices and receipts and link them to the transactions they support.
 Update, remove, split, merge, stash, or archive transactions safely.
 :::
 
-:::{grid-item-card} Review Queue
-:link: review-queue
-:link-type: doc
-
-Work through everything that still wants attention before a filing.
-:::
-
 :::{grid-item-card} Record Modelo 036
 :link: modelo-036
 :link-type: doc
@@ -283,7 +276,6 @@ classify-transactions
 ledger-evidence
 manage-invoices
 correct-ledger-entries
-review-queue
 modelo-036
 classify-with-llm
 classify-with-llm-evidence
