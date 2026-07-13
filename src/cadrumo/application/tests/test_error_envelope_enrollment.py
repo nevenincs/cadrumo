@@ -1,15 +1,14 @@
 """Real-behavior enrollment test for application-layer regression error classes.
 
-Asserts that every error class promoted by the codebase-solidification
-campaign is enrolled in :data:`cadrumo.core.errors.ERROR_REGISTRY` and
-produces a valid :class:`cadrumo.core.errors.ErrorEnvelope` through
+Asserts that every application-layer regression error class is enrolled in
+:data:`cadrumo.core.errors.ERROR_REGISTRY` and produces a valid
+:class:`cadrumo.core.errors.ErrorEnvelope` through
 :func:`cadrumo.core.errors.build_error_envelope`.
 
 No mocks, no skips. The test imports the real error classes, raises them,
 and calls the real registry machinery. A missing registration causes a
-hard failure in :func:`~cadrumo.core.errors.get_registered_error_code`
-(which the campaign guards against) — the test will surface it rather
-than silently return a placeholder.
+hard failure in :func:`~cadrumo.core.errors.get_registered_error_code` — the
+test will surface it rather than silently return a placeholder.
 """
 
 from __future__ import annotations

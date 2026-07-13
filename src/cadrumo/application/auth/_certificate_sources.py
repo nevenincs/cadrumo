@@ -26,7 +26,7 @@ a registered source.
 Rotation hooks (invalidating cached state when the active certificate
 changes on disk), a filesystem-fallback loader, external keyring/1Password
 backends, and service-account impersonation UX are explicitly out of scope
-for this module; see GitHub issue #591.
+for this module.
 
 See Also:
     :class:`~application.auth.AuthState`

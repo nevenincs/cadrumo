@@ -4,16 +4,14 @@ Modelo 303 casilla ``43`` (Regularización bienes de inversión - Cuota) is
 ``input_kind = manual``: LIVA arts. 107-110 require a governed feed from the
 profile-scoped capital-goods register, the current-year definitive prorrata
 percentage, and art-110 disposal cap facts before the source can become a hard
-binding. Per ``2026-07-01-iva-bienes-inversion-regularizacion-adr`` (Decision
-2), the bounded first slice does not force-fit casilla 43 as a hard binding;
-instead it reads the profile-scoped
+binding. Casilla 43 is deliberately not force-fit as a hard binding; instead
+this reads the profile-scoped
 :class:`~domain.bienes_inversion.BienesInversionIvaRegister` and, when it holds
 capital goods in their LIVA art. 107 regularisation window for the filing year,
 surfaces a non-blocking
 :class:`~application.aggregation.CalculationSourceDiagnostic` naming the
 proposed casilla-43 value (or, absent the deferred definitive-percentage input,
-which goods are pending it) — never a silent blank
-(``no-silent-under-declaration``). Per ADR Decision 3, a good the register records
+which goods are pending it) — never a silent blank. A good the register records
 as disposed of (art. 110 entrega) during the filing year is routed instead
 through the single ("única") disposal regularización, which carries no pending
 state: every fact art. 110 needs is already on the record, so the advisory always

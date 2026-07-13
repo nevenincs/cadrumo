@@ -1,8 +1,7 @@
 """Regression: the unassessed Article 27 preview fires for late M303 quarters.
 
-Issue #576 reported that the Art. 27 LGT extemporaneidad recargo warning was
-absent for the R9 (quarterly IVA / Modelo 303) deadline cluster. The
-deadline-generic advisory landed under issue #533
+The Art. 27 LGT extemporaneidad recargo warning covers the R9 (quarterly
+IVA / Modelo 303) deadline cluster. The deadline-generic advisory
 (:func:`cadrumo.application.modelo.modelo_work_deadline_posture` +
 :func:`cadrumo.domain.deadlines._recargo.build_recovery_for_overdue`), and the
 Modelo 303 registry carries quarterly deadline windows (``1T``/``2T``/``3T``/
@@ -155,8 +154,8 @@ def test_m303_quarterly_resolver_returns_dates_for_full_cluster() -> None:
     This is the resolver-level guard: the deadline-generic advisory can only
     fire for M303 quarters if :func:`resolve_filing_closes_on` returns a date
     for each ``(303, filing_year, NT)`` axis. A registry drift that dropped an
-    M303 quarterly window would silence the recargo advisory for that quarter,
-    reopening issue #576; this test fails loudly if that happens.
+    M303 quarterly window would silence the recargo advisory for that
+    quarter; this test fails loudly if that happens.
     """
     for filing_year in _FILING_YEARS:
         for quarter in _QUARTERS:

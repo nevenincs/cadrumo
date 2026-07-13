@@ -120,7 +120,7 @@ class PreflightCheck(BaseModel):
     remediation: str = ""
 
 
-# ── #286 — per-auth-provider certificate / Cl@ve Móvil health ────────────────
+# ── Per-auth-provider certificate / Cl@ve Móvil health ────────────────
 
 # ProviderProbeResult values that mean the provider is simply not configured on
 # this workstation — a legitimate, non-fault state for an optional provider.
@@ -200,7 +200,7 @@ def _auth_error_remediation(provider: str, result: str) -> str:
     return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth configure --provider clave_movil`"
 
 
-# ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────
+# ── Secure-storage, bundled-corpus, and configuration preflight ───────
 
 
 def probe_storage_corpus_env(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
@@ -327,7 +327,7 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
     )
 
 
-# ── WIN-003 — Windows MAX_PATH (long-path) headroom ───────────────────────────
+# ── Windows MAX_PATH (long-path) headroom ───────────────────────────
 
 _LONG_PATH_REGISTRY_REMEDIATION = (
     "run `New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' "
@@ -349,7 +349,7 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
     (``<root>\buckets\<uuid>\blobs\<hmac>--<label>.meta.json``) would
     meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. Zero or
     negative margin is an ``ERROR`` (a real object write can fail
-    mid-campaign); a thin positive margin is a ``WARN`` advisory so the
+    partway through); a thin positive margin is a ``WARN`` advisory so the
     operator can relocate the root before it runs out. This probe never
     writes to disk and never raises — a registry read failure degrades to
     the conservative "not enabled" assumption inside
@@ -507,7 +507,7 @@ def _representative_filing_context(revision: object) -> tuple[int | None, str | 
     return filing_year, period
 
 
-# ── #413 — portal-registry health / recorded portal drift ────────────────────
+# ── Portal-registry health / recorded portal drift ────────────────────
 
 # UrlStability tiers whose drift is a real integrity concern (the URL was
 # promised to change only via explicit Orden / campaign-boundary publication).
@@ -589,9 +589,9 @@ def run_preflight_checks(*, settings: Settings | None = None) -> tuple[Preflight
     """Run every workstation-preflight probe and return the typed :class:`PreflightCheck` rows.
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
-    rows (#286), the secure-storage / bundled-corpus / configuration rows
-    (#102), the registry referential-integrity row (#98), and the
-    portal-registry health / recorded-drift row (#413). Every probe catches
+    rows, the secure-storage / bundled-corpus / configuration rows,
+    the registry referential-integrity row, and the
+    portal-registry health / recorded-drift row. Every probe catches
     its own failures and reports them as ``error`` rows, so the aggregate
     never raises. The portal-drift row runs with the offline default (no
     recorded drift), reporting registered state rather than a live probe.

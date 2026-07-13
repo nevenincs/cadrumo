@@ -1,9 +1,8 @@
 """Remote-telemetry posture reporting and the dry-run-safe flush composition.
 
-Wires the CLI surface promised by ``2026-07-04-remote-telemetry-adr`` (GitHub
-issue #407) over the core telemetry package
+Wires the CLI surface over the core telemetry package
 (:mod:`~core.telemetry`) without re-implementing any of its gate, schema,
-or sink logic (``composition-service-no-parallel-write-path``):
+or sink logic:
 
 * :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
   projects the current
