@@ -28,10 +28,15 @@ import pytest
 from sphinx.application import Sphinx
 
 from dev.docs.sequence_directive import build_sequence_payload, render_sequence_html
-from dev.docs.sequences import parse_sequence
-from dev.docs.sequences._golden_store import GoldenFrame, SequenceGolden
-from dev.docs.sequences._schema import FrameKind, ParsedSequence
-from dev.docs.sequences._tokeniser import TokenKind, tokenise_command
+from dev.docs.sequences import (
+    FrameKind,
+    GoldenFrame,
+    ParsedSequence,
+    SequenceGolden,
+    TokenKind,
+    parse_sequence,
+    tokenise_command,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -304,4 +309,32 @@ def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _is
     assert "no committed golden" in warnings
     assert "python -m dev.docs.sequences refresh" in warnings
     # The failed directive rendered no sequence container.
+    assert "cadrumo-sequence" not in html
+
+
+_INDEX_LIVE_AEAT = (
+    "# Pull\n\n```{cli-sequence} live-pull-demo\n"
+    ":verify: Confirm the justificante downloaded.\n"
+    "@result aeat app live justificante pull\n"
+    "@expect exit_code == 0\n"
+    "```\n"
+)
+
+
+def test_directive_refuses_live_aeat_frame_statically(tmp_path: Path, _isolated_storage: None) -> None:
+    """A directive whose frame reads live AEAT is refused at build time (ADR D6/D7).
+
+    The refusal fires statically — before any golden is read — so a ``pull`` verb
+    or an ``app live`` frame cannot be enrolled even if a golden were fabricated.
+    """
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    goldens_root.mkdir()
+    _write_site(site, index_body=_INDEX_LIVE_AEAT, goldens_root=goldens_root)
+
+    html, warnings = _build(site, warningiserror=False)
+
+    assert "unenrollable" in warnings
+    assert "no committed golden" not in warnings  # refused before the golden lookup
     assert "cadrumo-sequence" not in html
