@@ -56,3 +56,10 @@ required verification rather than modification.
 Historical quoted commit text remains byte-faithful where it records the former
 title-case spelling. Downstream surfaces remain intentionally open for separate
 path-owned Steps and review.
+
+## Evidence correction from S87
+
+The earlier claim that the runtime authority proved the complete contextual
+casing tuple was too broad: `display_name="CADRUMO"` proved the identity-context
+value only. S87 adds the distinct consumable `prose_name="Cadrumo"` contract and
+a direct test of both values without changing the display identity.

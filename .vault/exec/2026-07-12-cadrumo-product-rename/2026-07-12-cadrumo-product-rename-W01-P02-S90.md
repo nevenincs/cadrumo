@@ -43,3 +43,11 @@ related:
 - The reopened steps intentionally remain open after S90 closure so later dedicated execution can provide fresh evidence.
 - The full parity module passed 31 tests and failed only `test_inter_locale_parity`: concurrent S89 catalogue work leaves two keys absent from English and Spanish relative to Catalan.
 - Ruff format check reports pre-existing formatting drift in `test_parity.py`; the same check fails against the committed HEAD version, and this Step intentionally changes only four contract expectations in that file.
+
+## Status note: retired by S87 contextual-casing remediation
+
+The Description and Outcome above are preserved as historical execution
+evidence, not active instructions. S87 retires this reopened lane without
+re-executing it: directives to remove `Cadrumo` prose or restore an exact
+all-caps prose display are superseded by the binding contract of `Cadrumo` in
+sentence prose and `CADRUMO` in identity contexts.

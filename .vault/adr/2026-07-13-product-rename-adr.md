@@ -3,10 +3,12 @@ tags:
   - "#adr"
   - "#product-rename"
 date: '2026-07-13'
-superseded_by: '2026-07-12-cadrumo-cli-executable-adr'
+related:
+  - "[[2026-07-12-cadrumo-cli-executable-adr]]"
+  - "[[2026-07-12-cadrumo-product-rename-research]]"
 modified: '2026-07-13'
 ---
-# `product-rename` adr: `product rename to Cadrumo across distributions, repository, and release surfaces` | (**status:** `superseded`)
+# `product-rename` adr: `product rename to Cadrumo across distributions, repository, and release surfaces` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -109,16 +111,19 @@ verification-heavy, so it rides its own campaign.
 - All version history and provenance is preserved; the repository rename
   redirects old clones and links.
 
-## Status note: superseded historical decision (2026-07-13)
+## Status note: accepted Stage-A decision with binding overrides (2026-07-13)
 
-This ADR is superseded and retained only as a historical record. Its prior
-Stage-A decision and the distribution, repository, install, publication,
-marketplace, marketing, and legal work executed from it remain evidence of
-what occurred; they do not make this document an active naming authority.
+This ADR remains accepted only for its Stage-A distribution, repository,
+install, publication, marketplace, marketing, and legal scope. That accepted
+role records and continues to authorize the public release-surface rename; it
+does not make this document a parallel authority for product casing,
+executables, imports, or machine identifiers.
 
-The accepted `2026-07-12-cadrumo-cli-executable-adr` is the active authority
-for the product display, Python import root, human CLI executable, and related
-machine identities. It supersedes this document directly. Accordingly, the
-Stage-B console-script proposal and the `aeat` import-package constraint in
-the historical decision above are not active requirements. Any remaining work
-must follow the binding CLI ADR rather than this superseded document.
+The accepted `2026-07-12-cadrumo-cli-executable-adr` is the single binding
+naming authority for the product display, Python import root, human CLI
+executable, and related machine identities. Accordingly, this ADR's Stage-B
+console-script proposal and `aeat` import-package constraint are struck and
+are not active requirements. Remaining Stage-B work follows the binding CLI
+ADR's identity boundary, including `Cadrumo` in sentence prose, `CADRUMO` in
+identity contexts, human executable `aeat`, MCP executable `cadrumo-mcp`, and
+Python import root `cadrumo`.
