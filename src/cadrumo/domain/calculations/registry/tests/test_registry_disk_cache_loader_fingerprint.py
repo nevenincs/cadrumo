@@ -21,6 +21,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._loader import (
+    _EMBEDDED_SCHEMA_CORE_MODULES,
     _LOADER_CODE_FINGERPRINT,
     _collect_registry_tree_fingerprints,
     _load_registry_tree_cached,
@@ -63,6 +64,45 @@ def test_loader_code_fingerprint_is_a_stable_nonempty_sha256() -> None:
     assert isinstance(_LOADER_CODE_FINGERPRINT, str)
     assert len(_LOADER_CODE_FINGERPRINT) == 64
     assert all(character in "0123456789abcdef" for character in _LOADER_CODE_FINGERPRINT)
+
+
+def test_embedded_schema_core_modules_all_resolve() -> None:
+    """Every declared embedded-schema core module resolves to a real source file.
+
+    Guards the explicit ``_EMBEDDED_SCHEMA_CORE_MODULES`` list against drift to a
+    typo'd or removed module: a name that no longer resolves would silently fold
+    an ``unresolved:`` marker into the fingerprint instead of the module's real
+    source, defeating the invalidation this list exists to provide.
+    """
+    import importlib
+
+    assert _EMBEDDED_SCHEMA_CORE_MODULES, "the embedded-schema core-module list must not be empty"
+    for module_name in _EMBEDDED_SCHEMA_CORE_MODULES:
+        module = importlib.import_module(module_name)
+        module_file = getattr(module, "__file__", None)
+        assert module_file is not None, module_name
+        assert Path(module_file).is_file(), module_name
+
+
+def test_loader_fingerprint_incorporates_embedded_core_module_source() -> None:
+    """The fingerprint hashes the embedded core modules' bytes, not just the registry package.
+
+    Recompute the fingerprint's registry-only half and confirm it differs from
+    the full fingerprint, proving the core-module bytes genuinely contribute
+    (so a change to core.aggregation / classification / Period / TaxDomain
+    invalidates the disk cache).
+    """
+    import hashlib
+
+    registry_only = hashlib.sha256()
+    package_dir = Path(__file__).resolve().parents[1]  # the registry package dir
+    for path in sorted(p for p in package_dir.rglob("*.py") if "tests" not in p.relative_to(package_dir).parts):
+        registry_only.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
+        registry_only.update(path.read_bytes())
+
+    assert registry_only.hexdigest() != _LOADER_CODE_FINGERPRINT, (
+        "the loader fingerprint must fold in the embedded core-module source, not the registry package alone"
+    )
 
 
 def test_stale_loader_pickle_is_not_served_while_current_key_pickle_is(tmp_path: Path) -> None:
