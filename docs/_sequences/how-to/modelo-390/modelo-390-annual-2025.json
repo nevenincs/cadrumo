@@ -166,6 +166,182 @@
         "--format",
         "json",
         "app",
+        "ledger",
+        "add",
+        "--date",
+        "2025-03-05",
+        "--amount",
+        "605",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Compra de material de oficina",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--iva-category",
+        "domestic_general_21",
+        "--idempotency-key",
+        "compra-1t-2025"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "gasto_txn",
+          "value": "4c30c84f9a271d858bb399e42e190c73f6328ee9ab363db44fc6d61d25369327"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "660954549d4654560c146d476efc49f78f1cb22042bde2c35eba58357beb23cc"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "605",
+            "attachment_ids": [],
+            "booked_date": "2025-03-05",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": "material_oficina",
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2025-03-05",
+            "description": "Compra de material de oficina",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "105",
+            "iva_category": "domestic_general_21",
+            "iva_rate": "0.21",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": "500",
+            "transaction_id": "4c30c84f9a271d858bb399e42e190c73f6328ee9ab363db44fc6d61d25369327",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "4c30c84f9a271d858bb399e42e190c73f6328ee9ab363db44fc6d61d25369327"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2025-0087",
+        "--invoice-date",
+        "2025-03-05",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "5c15a2fb5cc808d5"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.evidence.add",
+        "notices": [],
+        "result": {
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "4865ad6a5696847cb31b6484d0f7f75c8f1f752e72f20df133979ec894737d96"
+          ],
+          "bucket_id": "<bucket-id>",
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "5c15a2fb5cc808d5",
+          "invoice_date": "2025-03-05",
+          "invoice_number": "C-2025-0087",
+          "iva_amount": "105",
+          "iva_rate": "0.21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures\\factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "500",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "attach",
+        "4c30c84f9a271d858bb399e42e190c73f6328ee9ab363db44fc6d61d25369327",
+        "--purchase-invoice-evidence-id",
+        "5c15a2fb5cc808d5"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t4c30c84f9a271d858bb399e42e190c73f6328ee9ab363db44fc6d61d25369327\nDate\t2025-03-05\nAmount\t605\nDescription\tCompra de material de oficina\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
         "modelo",
         "work",
         "create",
@@ -241,7 +417,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr1",
-          "value": "a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d"
+          "value": "7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc"
         }
       ],
       "envelope": {
@@ -299,15 +475,15 @@
             "modelo-303-iva-repercutido-super-reducido-base": "0",
             "modelo-303-iva-repercutido-super-reducido-cuota": "0",
             "modelo-303-iva-soportado-importaciones-cuota": "0",
-            "modelo-303-iva-soportado-interiores-base": "0",
-            "modelo-303-iva-soportado-interiores-cuota": "0",
+            "modelo-303-iva-soportado-interiores-base": "500",
+            "modelo-303-iva-soportado-interiores-cuota": "105",
             "modelo-303-profile-state-attribution-ratio": "100",
             "modelo-303-prorrata-regularizacion-casilla-44": "0",
             "modelo-303-recargo-equivalencia-general-cuota": "0",
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d",
+          "calculation_revision_id": "7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -358,8 +534,8 @@
             "25": "0",
             "26": "0",
             "27": "420.00",
-            "28": "0",
-            "29": "0.00",
+            "28": "500",
+            "29": "105.00",
             "30": "0",
             "31": "0",
             "32": "0",
@@ -375,7 +551,7 @@
             "42": "0",
             "43": "0.00",
             "44": "0.00",
-            "45": "0.00",
+            "45": "105.00",
             "47": "0",
             "48": "0",
             "49": "0",
@@ -392,12 +568,12 @@
             "60": "0",
             "62": "0",
             "63": "0",
-            "64": "420.00",
+            "64": "315.00",
             "65": "100",
-            "66": "420.00",
+            "66": "315.00",
             "68": "0",
             "70": "0",
-            "71": "420.00",
+            "71": "315.00",
             "74": "0",
             "75": "0",
             "76": "0",
@@ -416,7 +592,7 @@
             "iva.compensacion-generada-periodo": "0.00",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.compensacion-pendiente-periodos-posteriores": "0.00",
-            "iva.cuota-deducible-total": "0.00",
+            "iva.cuota-deducible-total": "105.00",
             "iva.cuota-devengada-total": "420.00",
             "iva.prorrata-porcentaje": "100",
             "iva.prorrata-volumen-con-derecho": "0",
@@ -425,10 +601,10 @@
             "iva.repercutido.general": "420",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.super-reducido": "0",
-            "iva.resultado": "420.00",
-            "iva.resultado-regimen-general": "420.00",
+            "iva.resultado": "315.00",
+            "iva.resultado-regimen-general": "315.00",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "0",
+            "iva.soportado.interiores": "105",
             "modulos-iva-1-unidades": "0",
             "modulos-iva-2-unidades": "0",
             "modulos-iva-3-unidades": "0",
@@ -460,7 +636,7 @@
             "158": "0",
             "21": "0",
             "24": "0",
-            "28": "0",
+            "28": "500",
             "43": "0",
             "44": "0",
             "59": "0",
@@ -482,7 +658,7 @@
             "iva.repercutido.reducido": "0",
             "iva.repercutido.super-reducido": "0",
             "iva.soportado.importaciones": "0",
-            "iva.soportado.interiores": "0"
+            "iva.soportado.interiores": "105"
           },
           "modality": null,
           "modality_reason": null,
@@ -1482,7 +1658,7 @@
               "source_refs": [
                 "aeat-dr-303-2025"
               ],
-              "value": "0"
+              "value": "500"
             },
             {
               "casilla_id": "29",
@@ -1502,14 +1678,14 @@
                 "iva.soportado.interiores"
               ],
               "operand_values": [
-                "0"
+                "105"
               ],
               "source_refs": [
                 "aeat-dr-303-2025",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "30",
@@ -1833,14 +2009,14 @@
                 "iva.cuota-deducible-total"
               ],
               "operand_values": [
-                "0.00"
+                "105.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2025",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "47",
@@ -2171,7 +2347,7 @@
                 "76"
               ],
               "operand_values": [
-                "420.00",
+                "315.00",
                 "0",
                 "0"
               ],
@@ -2180,7 +2356,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "65",
@@ -2218,7 +2394,7 @@
                 "65"
               ],
               "operand_values": [
-                "420.00",
+                "315.00",
                 "100"
               ],
               "source_refs": [
@@ -2226,7 +2402,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "68",
@@ -2290,7 +2466,7 @@
                 "109"
               ],
               "operand_values": [
-                "420.00",
+                "315.00",
                 "0",
                 "0"
               ],
@@ -2299,7 +2475,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "74",
@@ -2573,7 +2749,7 @@
               ],
               "operand_values": [
                 "0",
-                "420.00"
+                "315.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2025",
@@ -2634,7 +2810,7 @@
                 "iva.resultado"
               ],
               "operand_values": [
-                "420.00"
+                "315.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2025",
@@ -2724,7 +2900,7 @@
                 "44"
               ],
               "operand_values": [
-                "0",
+                "105",
                 "0",
                 "0",
                 "0",
@@ -2736,7 +2912,7 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.cuota-devengada-total",
@@ -2952,7 +3128,7 @@
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_values": [
-                "420.00",
+                "315.00",
                 "0",
                 "0",
                 "0.00"
@@ -2962,7 +3138,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "iva.resultado-regimen-general",
@@ -2984,14 +3160,14 @@
               ],
               "operand_values": [
                 "420.00",
-                "0.00"
+                "105.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2025",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "iva.soportado.importaciones",
@@ -3026,7 +3202,7 @@
               "source_refs": [
                 "aeat-dr-303-2025"
               ],
-              "value": "0"
+              "value": "105"
             },
             {
               "casilla_id": "modulos-iva-1-unidades",
@@ -3174,7 +3350,7 @@
                 "hu": "Összes levonható ÁFA összeg"
               },
               "role": "key_figure",
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.resultado-regimen-general",
@@ -3185,7 +3361,7 @@
                 "hu": "Általános rendszer eredménye"
               },
               "role": "key_figure",
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "64",
@@ -3196,7 +3372,7 @@
                 "hu": "Eredmény - eredmények összege ([46] + [58] + [76])"
               },
               "role": "key_figure",
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "66",
@@ -3207,7 +3383,7 @@
                 "hu": "Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64] x [65] / 100)"
               },
               "role": "key_figure",
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
@@ -3240,7 +3416,7 @@
                 "hu": "Önbevallás eredménye"
               },
               "role": "key_figure",
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "71",
@@ -3251,7 +3427,7 @@
                 "hu": "Végső eredmény ([69] - [70] + [109])"
               },
               "role": "key_figure",
-              "value": "420.00"
+              "value": "315.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
@@ -3295,11 +3471,11 @@
                 "hu": "Összes levonható összeg"
               },
               "role": "key_figure",
-              "value": "0.00"
+              "value": "105.00"
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2025 --period 1T` and re-inspect this one with `aeat app modelo work revision a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d`.",
+          "saved_confirmation": "Saved as draft calculation revision 7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2025 --period 1T` and re-inspect this one with `aeat app modelo work revision 7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3325,7 +3501,7 @@
         "modelo",
         "work",
         "verify",
-        "a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d"
+        "7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc"
       ],
       "captures": [],
       "envelope": {
@@ -3377,7 +3553,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d",
+          "calculation_revision_id": "7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3436,7 +3612,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "61cd4a1ab07cfd5d048d8a73163c8269786f3d3db9ec6d6acfdcc4ea8b392c75",
+          "verification_report_id": "e1d2d56418a4d9ed6d992e0715570f7012942ae3b628c1c546424303ad5bb0de",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -3457,7 +3633,7 @@
         "modelo",
         "work",
         "file",
-        "a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d"
+        "7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc"
       ],
       "captures": [],
       "envelope": {
@@ -3468,11 +3644,11 @@
           "aeat_accepted": false,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "a64ff610e8da2e5e3153c6f627bd0d0f94a9d78c1a1d604119e798b4d2ab308d",
+          "calculation_revision_id": "7b57be72151307a4ce6eeb4bf87e295f651fa2e3fdae17bdb21e5c61c45cc5cc",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "133821e5dd53691ceef822739eafd710b344c19f09d35a4aaec75f38f12ec5de",
+          "filing_record_id": "88588d8806ad106610d512545325af16224da77e47954a7378d2eb67318a8605",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -3592,7 +3768,7 @@
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"
             },
-            "message": "3 ledger transaction(s) have filing dates outside the requested period (2025-02-10..2025-11-20); excluded by period before classification",
+            "message": "4 ledger transaction(s) have filing dates outside the requested period (2025-02-10..2025-11-20); excluded by period before classification",
             "severity": "warning",
             "suggestion": null
           },
@@ -6944,7 +7120,7 @@
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"
             },
-            "message": "3 ledger transaction(s) have filing dates outside the requested period (2025-02-10..2025-11-20); excluded by period before classification",
+            "message": "4 ledger transaction(s) have filing dates outside the requested period (2025-02-10..2025-11-20); excluded by period before classification",
             "severity": "warning",
             "suggestion": null
           },
@@ -10296,7 +10472,7 @@
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"
             },
-            "message": "3 ledger transaction(s) have filing dates outside the requested period (2025-02-10..2025-08-15); excluded by period before classification",
+            "message": "4 ledger transaction(s) have filing dates outside the requested period (2025-02-10..2025-08-15); excluded by period before classification",
             "severity": "warning",
             "suggestion": null
           },
@@ -13634,7 +13810,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "c239c70f4eb91f65b5fa67dbd389be83db0f2f87fdae62af299c7b6c6edc46cd"
+          "value": "336b533f0af9d0377c5b712ad1e77e01015de9481bdf01ba1451d959c82ebf31"
         }
       ],
       "envelope": {
@@ -13670,28 +13846,28 @@
             "modelo-390-iva-repercutido-reducido-cuota": "0",
             "modelo-390-iva-repercutido-super-reducido-cuota": "0",
             "modelo-390-iva-soportado-importaciones-cuota": "0",
-            "modelo-390-iva-soportado-interiores-cuota": "0",
+            "modelo-390-iva-soportado-interiores-cuota": "105",
             "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": "0",
             "modelo-390-prev-303-compensacion-ultimo-periodo": "0",
-            "modelo-390-prev-303-cuota-deducible-total": "0",
+            "modelo-390-prev-303-cuota-deducible-total": "105",
             "modelo-390-prev-303-cuota-devengada-simplificado": "0",
             "modelo-390-prev-303-cuota-devengada-total": "1470",
-            "modelo-390-prev-303-resultado-regimen-general": "1470",
+            "modelo-390-prev-303-resultado-regimen-general": "1365",
             "modelo-390-prorrata-regularizacion-anual": "0"
           },
-          "calculation_revision_id": "c239c70f4eb91f65b5fa67dbd389be83db0f2f87fdae62af299c7b6c6edc46cd",
+          "calculation_revision_id": "336b533f0af9d0377c5b712ad1e77e01015de9481bdf01ba1451d959c82ebf31",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "decl.tipo-declaracion": "0",
             "iva.anual.autorepercutido.intracomunitaria": "0",
             "iva.anual.compensacion-generada-ejercicio-no-97": "0.00",
             "iva.anual.compensacion-ultimo-periodo-97": "0.00",
-            "iva.anual.cuota-deducible-total": "0.00",
+            "iva.anual.cuota-deducible-total": "105.00",
             "iva.anual.cuota-devengada-total": "1470.00",
-            "iva.anual.reconciliacion.deducible-303": "0.00",
+            "iva.anual.reconciliacion.deducible-303": "105.00",
             "iva.anual.reconciliacion.devengada-303": "1470.00",
             "iva.anual.reconciliacion.devengada-simplificado-303": "0",
-            "iva.anual.reconciliacion.resultado-303": "1470.00",
+            "iva.anual.reconciliacion.resultado-303": "1365.00",
             "iva.anual.regularizacion-bienes-inversion": "0.00",
             "iva.anual.regularizacion-prorrata-definitiva": "0",
             "iva.anual.repercutido.general": "1470",
@@ -13700,9 +13876,9 @@
             "iva.anual.repercutido.recargo.super-reducido": "0",
             "iva.anual.repercutido.reducido": "0",
             "iva.anual.repercutido.super-reducido": "0",
-            "iva.anual.resultado-regimen-general": "1470.00",
+            "iva.anual.resultado-regimen-general": "1365.00",
             "iva.anual.soportado.importaciones": "0",
-            "iva.anual.soportado.interiores": "0"
+            "iva.anual.soportado.interiores": "105"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -13726,10 +13902,10 @@
             "iva.anual.autorepercutido.intracomunitaria": "0",
             "iva.anual.compensacion-generada-ejercicio-no-97": "0",
             "iva.anual.compensacion-ultimo-periodo-97": "0",
-            "iva.anual.reconciliacion.deducible-303": "0",
+            "iva.anual.reconciliacion.deducible-303": "105",
             "iva.anual.reconciliacion.devengada-303": "1470",
             "iva.anual.reconciliacion.devengada-simplificado-303": "0",
-            "iva.anual.reconciliacion.resultado-303": "1470",
+            "iva.anual.reconciliacion.resultado-303": "1365",
             "iva.anual.regularizacion-bienes-inversion": "0",
             "iva.anual.repercutido.general": "1470",
             "iva.anual.repercutido.recargo.general": "0",
@@ -13738,7 +13914,7 @@
             "iva.anual.repercutido.reducido": "0",
             "iva.anual.repercutido.super-reducido": "0",
             "iva.anual.soportado.importaciones": "0",
-            "iva.anual.soportado.interiores": "0"
+            "iva.anual.soportado.interiores": "105"
           },
           "modality": null,
           "modality_reason": null,
@@ -13872,7 +14048,7 @@
                 "iva.anual.autorepercutido.intracomunitaria"
               ],
               "operand_values": [
-                "0",
+                "105",
                 "0",
                 "0.00",
                 "0",
@@ -13883,7 +14059,7 @@
                 "aeat-modelo-390-procedure",
                 "boe-modelo-390-2009-form"
               ],
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.anual.cuota-devengada-total",
@@ -13946,7 +14122,7 @@
               "source_refs": [
                 "aeat-dr-390-2025"
               ],
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.anual.reconciliacion.devengada-303",
@@ -13999,7 +14175,7 @@
               "source_refs": [
                 "aeat-dr-390-2025"
               ],
-              "value": "1470.00"
+              "value": "1365.00"
             },
             {
               "casilla_id": "iva.anual.regularizacion-bienes-inversion",
@@ -14168,14 +14344,14 @@
               ],
               "operand_values": [
                 "1470.00",
-                "0.00"
+                "105.00"
               ],
               "source_refs": [
                 "aeat-dr-390-2025",
                 "aeat-modelo-390-procedure",
                 "boe-modelo-390-2009-form"
               ],
-              "value": "1470.00"
+              "value": "1365.00"
             },
             {
               "casilla_id": "iva.anual.soportado.importaciones",
@@ -14210,15 +14386,15 @@
               "source_refs": [
                 "aeat-dr-390-2025"
               ],
-              "value": "0"
+              "value": "105"
             }
           ],
           "operation": "modelo.work.calculate",
           "relation_overrides": {
-            "modelo-390-rel-303-cuota-deducible-total": "0",
+            "modelo-390-rel-303-cuota-deducible-total": "105",
             "modelo-390-rel-303-cuota-devengada-simplificado": "0",
             "modelo-390-rel-303-cuota-devengada-total": "1470",
-            "modelo-390-rel-303-resultado-regimen-general": "1470"
+            "modelo-390-rel-303-resultado-regimen-general": "1365"
           },
           "result_summary": [
             {
@@ -14233,18 +14409,18 @@
               "label": "Total cuota IVA deducible anual (soportado + autorepercutido)",
               "localized_labels": {},
               "role": "key_figure",
-              "value": "0.00"
+              "value": "105.00"
             },
             {
               "casilla_id": "iva.anual.resultado-regimen-general",
               "label": "Resultado anual del regimen general (cuota devengada - cuota deducible)",
               "localized_labels": {},
               "role": "key_figure",
-              "value": "1470.00"
+              "value": "1365.00"
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c239c70f4eb91f65b5fa67dbd389be83db0f2f87fdae62af299c7b6c6edc46cd (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 390 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision c239c70f4eb91f65b5fa67dbd389be83db0f2f87fdae62af299c7b6c6edc46cd`.",
+          "saved_confirmation": "Saved as draft calculation revision 336b533f0af9d0377c5b712ad1e77e01015de9481bdf01ba1451d959c82ebf31 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 390 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 336b533f0af9d0377c5b712ad1e77e01015de9481bdf01ba1451d959c82ebf31`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -14270,7 +14446,7 @@
         "modelo",
         "work",
         "verify",
-        "c239c70f4eb91f65b5fa67dbd389be83db0f2f87fdae62af299c7b6c6edc46cd"
+        "336b533f0af9d0377c5b712ad1e77e01015de9481bdf01ba1451d959c82ebf31"
       ],
       "captures": [],
       "envelope": {
@@ -14490,7 +14666,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "c239c70f4eb91f65b5fa67dbd389be83db0f2f87fdae62af299c7b6c6edc46cd",
+          "calculation_revision_id": "336b533f0af9d0377c5b712ad1e77e01015de9481bdf01ba1451d959c82ebf31",
           "completeness_status": "complete",
           "findings": [
             {
@@ -14832,7 +15008,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "a6f6fed18ed2f5176549dbefc492ff6b49ef0731a1a2c95000a053d52751a9ce",
+          "verification_report_id": "ec68156728e73233cb2d7af13bd742a1b0355a3b26ca4e7a8c951b6289dcb86a",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
