@@ -48,8 +48,11 @@ audit records `Gate result: fail`:
   admission because there is no gap to close, not because of any missing
   precondition.
 - Authority-gated candidates (Modelo 308/309/322/353 declaration-PDF
-  historical windows, Modelo 100 exercise-2026 outbound) fail on
+  historical windows) fail on
   `exact_authority_met`.
+- The Modelo 100 exercise-2026 outbound candidate is mandate-gated because
+  no accepted current local-fichero mandate exists; it also lacks registered
+  exact-window authority and real golden evidence.
 - Evidence-gated candidates (Modelo 200/308/309/322/353/360
   declaration-PDF current windows) fail on `eligible_met` because a real
   sanitized filed specimen is unavailable, with mandate and authority
