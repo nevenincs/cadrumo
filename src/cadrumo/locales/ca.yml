@@ -2843,6 +2843,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul %{calculation_revision_id} ja està verificada; s''ha retornat l''informe de verificació existent sense canvis.'
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
