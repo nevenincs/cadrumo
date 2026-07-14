@@ -60,8 +60,9 @@ The `attach` command also has an `--attachment-id` option (repeatable) for a gen
 
 When the document lives in Google Drive, pull it straight into encrypted evidence storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
 
-```bash
-aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+```{cli-sequence} ledger-evidence-doclink
+@step Pull the Drive document straight into encrypted evidence storage.
+@static aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
@@ -70,8 +71,9 @@ The command downloads the Drive file, stores its bytes encrypted with the transa
 
 Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time. Like `doclink`, this command reaches Google Drive and runs against your own authorized account:
 
-```bash
-aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
+```{cli-sequence} ledger-evidence-pull-folder
+@step Fetch every PDF and image invoice in one Drive folder at once.
+@static aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
 ```
 
 The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>` or `aeat app ledger link`.
