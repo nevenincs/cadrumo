@@ -787,7 +787,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
-    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (S24: _bucket_pointer_io, corpus_manifest; S25: env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
+    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
     UnsanctionedClass.APPLICATION_DEFERRAL: 520,  # +3 censo vivienda-ratio profile deferrals (was 517: +14 readiness relation-prefill)
 }
 
@@ -798,7 +798,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 472  # net +1 from S24/S25 atomic_write deferral migrations; was 471.
+_ALLOWLIST_EDGE_CEILING: int = 472  # net +1 from atomic_write deferral migrations; was 471.
 
 
 def _cadrumo_relative(dotted: str) -> str:

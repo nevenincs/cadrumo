@@ -34,7 +34,7 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
 
@@ -59,6 +59,8 @@ __all__ = [
     "refresh_invocation",
     "write_golden",
 ]
+
+_UTF_8: Final[str] = "utf-8"
 
 #: Stable token replacing the per-run isolated storage root in text frames.
 SANDBOX_STORAGE_ROOT_TOKEN: str = "<sandbox-storage-root>"  # noqa: S105 - a display placeholder, not a secret
@@ -284,7 +286,7 @@ def write_golden(
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8",
+        encoding=_UTF_8,
     )
     return target
 
@@ -310,7 +312,7 @@ def read_golden(
             f"{refresh_invocation(sequence_id=sequence_id)}",
         )
     try:
-        raw = target.read_text(encoding="utf-8")
+        raw = target.read_text(encoding=_UTF_8)
     except OSError as exc:
         raise SequenceGoldenError(f"cannot read golden {target}: {exc}") from exc
     try:

@@ -454,8 +454,9 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
 # golden-backed sequence. Enrollment is NOT exclusionary: an enrolled page may
 # ALSO carry ordinary executable ``aeat`` fences, and those fences receive the
 # same base verb-path and option-name checks every fence gets (the executed vs.
-# static distinction is visual and golden-backed, not a refusal — ADR D7 as
-# amended). ``_FENCE_WITH_INFO_RE`` captures the info string alongside the body.
+# static distinction is visual and golden-backed, not a refusal (the amended
+# documented-command decision). ``_FENCE_WITH_INFO_RE`` captures the info string
+# alongside the body.
 _CLI_SEQUENCE_INFO_RE = re.compile(r"^\{cli-sequence\}")
 _FENCE_WITH_INFO_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.DOTALL)
 
@@ -542,7 +543,7 @@ def test_doc_surface_present() -> None:
 # The floor below which the gate is presumed vacuous. The live doc surface
 # cites ``aeat`` roughly 591 times (post per-doc dedup); a count that collapses
 # toward zero means the invocation-token anchor was swept off the real
-# executable again (the rename-vacuity defect this phase repaired), so the gate
+# executable again (the rename-vacuity defect repaired here), so the gate
 # would be silently scanning nothing. The floor is set well below the observed
 # count and well above zero: it is a vacuity tripwire, not a brittle exact
 # assertion, so ordinary doc churn never trips it while a re-broken anchor does.
@@ -756,7 +757,7 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
     """Enrolled and non-enrolled pages alike get the base verb-path/option checks.
 
     The enrolled/executed distinction is visual and golden-backed, not
-    exclusionary (ADR D7 as amended): an enrolled page MAY carry ordinary
+    exclusionary (per the amended documented-command decision): an enrolled page MAY carry ordinary
     executable ``aeat`` fences, and those fences receive exactly the same base
     verb-path and option-name validation every fence gets — enrollment neither
     refuses nor exempts them, and never displaces the base checks. This pins the

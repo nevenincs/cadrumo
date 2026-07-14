@@ -25,10 +25,12 @@ import argparse
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
+
+_UTF_8: Final[str] = "utf-8"
 
 if TYPE_CHECKING:
     from pydantic.fields import FieldInfo
@@ -128,13 +130,13 @@ def main(argv: list[str] | None = None) -> int:
     path = target_path()
     fresh = render_environment_reference()
     if args.check:
-        on_disk = path.read_text(encoding="utf-8") if path.is_file() else ""
+        on_disk = path.read_text(encoding=_UTF_8) if path.is_file() else ""
         if on_disk != fresh:
             print(f"DRIFT: {path} is stale; regenerate with python -m dev.docs.env_reference", file=sys.stderr)
             return 1
         print(f"OK: {path} is fresh.")
         return 0
-    path.write_text(fresh, encoding="utf-8")
+    path.write_text(fresh, encoding=_UTF_8)
     print(f"Wrote {path}")
     return 0
 
