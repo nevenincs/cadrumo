@@ -24,7 +24,9 @@ related:
 Confirm the three separate Modelo 369 registry revisions each apply from
 `2021-07-01`: `esquema-union` (quarterly `1T`-`4T`), `esquema-importacion`
 (monthly), and `esquema-exterior` (quarterly `EXT-1T`-`EXT-4T`), each with its
-own `orden_aplicabilidad` tying it to Orden HAC/610/2021 art. 2(a)/(b)/(c)/(d).
+own `orden_aplicabilidad = "orden-hac-610-2021:art-1"`. Each revision also
+shares an article-2 legal reference, but that reference is not the
+applicability selector.
 Confirm the single reviewed `aeat-dr-369-2021` XLSX record design in
 `src/cadrumo/_data/registry/aeat/legal/iva.toml` applies from `2021-07-01`
 with an open end and treat it as one authority shared across the three
@@ -110,6 +112,9 @@ exists for any of the three regimes.
 
 ## Notes
 
+- Independent Terra high review corrected the description's applicability
+  citation: all three revisions select article 1; article 2 is a shared legal
+  reference and does not define `orden_aplicabilidad`.
 - Grounding used the accepted adjudication contract, all three Modelo 369
   revision.toml files, the single shared legal source entry, generic
   exporter boundaries, and the existing reference register entry for Modelo

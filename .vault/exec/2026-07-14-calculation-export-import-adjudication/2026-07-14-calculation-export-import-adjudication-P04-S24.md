@@ -23,7 +23,8 @@ related:
 
 Append every candidate finding for the Steps closed after the audit's last
 prior update: Modelo 322 outbound (2026-open, 2008-2025), Modelo 347
-outbound (2025-open, 2011-2024, uncatalogued 2008-2011 span), Modelo 353
+outbound (2025-open, 2011-2024, separately bundled but unregistered
+2008-2009 and 2010 windows), Modelo 353
 outbound (2026-open, 2008-2025), Modelo 360 outbound (2010-open), Modelo 369
 outbound (Union, Importacion, Exterior regime variants), Modelo 840 outbound
 (2003-open), and Modelo 100 exercise-2026 outbound authority. Each finding

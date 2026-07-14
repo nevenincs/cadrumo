@@ -598,15 +598,16 @@ and real-behavior coverage through the canonical engines.
   windows; each then needs its own registry layout data because the record
   designs differ.
 
-### modelo-347-outbound-2008-2011-gap | low | Uncatalogued span has neither mandate nor authority
+### modelo-347-outbound-2008-2009 | low | Bundled design still lacks reviewed registry authority
 
-- **Candidate:** Modelo 347 outbound generation for the uncatalogued span
-  from `2008-10-23` through `2011-12-12`.
+- **Candidate:** Modelo 347 outbound generation for exercises 2008 and 2009.
 - **Mandate:** `unproven`, same reasoning as the other two windows.
-- **Exact authority window:** `missing`; neither registered PDF record design
-  covers this span.
+- **Exact authority window:** `missing` from the legal-source registry. The
+  corpus bundles a separate official 2008-2009 design, but its applicability
+  has not been reviewed and registered.
 - **Canonical implementation state:** `gap` for optional layout data.
-- **Real evidence or specimen:** no exact-window design or golden payload.
+- **Real evidence or specimen:** official design available; golden payload
+  and real round trip missing.
 - **Retirement:** `false`.
 - **Evidence block:** `true`.
 - **Four-condition gate:** `mandate_met = false`,
@@ -614,8 +615,28 @@ and real-behavior coverage through the canonical engines.
   `eligible_met = false`.
 - **Gate result:** `fail`.
 - **Disposition:** `mandate-gated`.
-- **Next action:** establish a mandate first; never derive 2008-2011 record
-  design authority from either bundled PDF.
+- **Next action:** establish a mandate first; if confirmed, review exact
+  applicability and register the bundled 2008-2009 design before layout work.
+
+### modelo-347-outbound-2010 | low | Separate bundled design still lacks reviewed registry authority
+
+- **Candidate:** Modelo 347 outbound generation for exercise 2010.
+- **Mandate:** `unproven`, same reasoning as the other windows.
+- **Exact authority window:** `missing` from the legal-source registry. The
+  corpus bundles a separate official 2010 design, but its applicability has
+  not been reviewed and registered.
+- **Canonical implementation state:** `gap` for optional layout data.
+- **Real evidence or specimen:** official design available; golden payload
+  and real round trip missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** establish a mandate first; if confirmed, review exact
+  applicability and register the bundled 2010 design before layout work.
 
 ### modelo-353-outbound-2026-open | low | Registered 2026 authority remains mandate-gated
 
@@ -762,30 +783,33 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain an accepted machine-file-generation mandate before
   transcribing any registry field or layout-binding row.
 
-### modelo-100-outbound-exercise-2026 | low | No exercise-2026 authority is published or bundled
+### modelo-100-outbound-exercise-2026 | low | Exercise-2026 local fichero scope is not mandated
 
-- **Candidate:** Modelo 100 outbound fichero generation for exercise 2026.
-- **Mandate:** not the controlling gate; authority absence fails the gate
-  regardless of mandate status.
-- **Exact authority window:** `missing`; the most recent bundled artefacts
-  (dictionary, XSD) are dated for exercise 2025 and no exercise-2026 AEAT or
-  BOE record design exists to acquire, verify, or bundle. The registry has
-  revisions `2020` through `2025` only; no `2026` revision exists.
-- **Canonical implementation state:** not separable from the authority gap;
-  there is no exercise-2026 revision to hold layout data.
-- **Real evidence or specimen:** `missing`; no exercise-2026 artefact can
-  exist before AEAT publishes one.
+- **Candidate:** Modelo 100 outbound fichero generation for annual period
+  `0A`, exercise 2026 (`2026-01-01` through `2026-12-31`), filed in the 2027
+  Renta campaign; exercise 2027+ is outside this finding.
+- **Mandate:** `unproven`; the general Modelo 100 surface and legacy
+  discovery do not establish accepted current local-fichero scope for this
+  exercise.
+- **Exact authority window:** `missing`; the repository has only exercise
+  2020-2025 registry revisions and no bundled or registered exercise-2026
+  design. Live AEAT/BOE publication status was not verified.
+- **Canonical implementation state:** `gap` only in optional per-revision
+  data. The generic engine is delivered, but there is no exact-window 2026
+  revision that can establish an admissible gap.
+- **Real evidence or specimen:** `missing`; no exercise-2026 golden payload
+  or mutation-sensitive round trip is bundled. The existing 2025 CLI export
+  test proves the canonical path, not exercise-2026 evidence.
 - **Retirement:** `false`.
-- **Evidence block:** `true`; the missing artefact is the unpublished
-  official exercise-2026 record design.
+- **Evidence block:** `true`; real exercise-2026 golden evidence is missing.
 - **Four-condition gate:** `mandate_met = false`,
   `exact_authority_met = false`, `canonical_gap_met = false`, and
   `eligible_met = false`.
 - **Gate result:** `fail`.
-- **Disposition:** `authority-gated`.
-- **Next action:** wait for AEAT/BOE publication; then acquire, verify, and
-  bundle the artefact, register a `2026` revision from it, and re-run this
-  adjudication. Never roll the 2025 revision forward by assumption.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted exercise-2026 local-fichero mandate and
+  re-run adjudication. Do not roll 2025 forward or begin registration/layout
+  work before that mandate exists.
 
 ## Duplicate-code guards confirmed
 
@@ -819,11 +843,12 @@ and real-behavior coverage through the canonical engines.
   322 2008-2025, Modelo 353 2008-2025. No production work may proceed without
   first registering exact historical record-design or filed-copy authority;
   the later windows' designs must not be extrapolated backward.
-- **Modelo 100 exercise-2026 official record design**: unpublished by AEAT
-  or BOE as of this adjudication. The 2025 revision must not be rolled
-  forward by assumption.
+- **Modelo 100 exercise-2026 official record design**: not bundled or
+  registered in this repository; live AEAT/BOE publication was not verified.
+  If the mandate gate later clears, exact authority must be acquired and
+  reviewed before the 2025 revision can be changed or extended.
 - **Product mandate decisions** (blocking every `mandate-gated` finding
-  across Modelos 036, 184, 190, 193, 308, 322, 347, 353, 369, and 840): no
+  across Modelos 036, 100, 184, 190, 193, 308, 322, 347, 353, 369, and 840): no
   outbound work may proceed on any of these Modelos until an accepted
   decision or explicit current product goal establishes the exact-window
   requirement named in the corresponding finding.
