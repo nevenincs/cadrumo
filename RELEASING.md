@@ -468,6 +468,31 @@ doesn't show S61 as reviewed and closed, don't push or dispatch a workflow.
    create it from the verified template. If filing behavior changed, update
    `docs/updates.md`.
 
+10. Build the Claude Desktop extension bundle and attach it to the GitHub
+    Release. The bundle self-installs `cadrumo[agent]` from PyPI via
+    `uvx --from cadrumo[agent]==X.Y.Z cadrumo-mcp`, so build it only AFTER the
+    core PyPI distribution is live (steps 1–7); its version and uvx pin are
+    stamped from `pyproject.toml` at build time and held to the release by the
+    `version-surfaces-agree` readiness gate.
+
+    ```console
+    python packaging/mcpb/build.py
+    gh release upload vX.Y.Z dist/cadrumo.mcpb --repo nevenincs/cadrumo
+    ```
+
+    The build prints whether the bundle is `signed` or `UNSIGNED`. Cadrumo has no
+    bundle signing identity configured, so it is UNSIGNED — attach it labeled as
+    such; the builder never fabricates a signature. Confirm the attached bundle's
+    pin resolves the just-published release from PyPI:
+
+    ```console
+    uvx --refresh --from "cadrumo[agent]==X.Y.Z" cadrumo-mcp --help
+    ```
+
+    The end-user story: download `cadrumo.mcpb` from the GitHub Release, open it
+    with Claude Desktop, and `uv` bootstraps `cadrumo[agent]` from PyPI on first
+    run — the host needs only `uv` on `PATH`, no prior `pip install`.
+
 PyPI distributions are immutable. If a distribution job succeeded, never rerun
 it for the same version. If a job's outcome is unclear, inspect its PyPI project
 and release files before deciding whether a retry is safe.
