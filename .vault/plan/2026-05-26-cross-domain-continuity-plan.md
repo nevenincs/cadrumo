@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-domain-continuity'
 date: '2026-05-26'
-modified: '2026-07-12'
+modified: '2026-07-14'
 tier: L4
 related:
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -17,6 +17,16 @@ related:
   - '[[2026-07-11-article-20-uno-26-correction-adr]]'
   - '[[2026-07-10-cross-domain-continuity-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: P02, P64, S01, S324, S417 -->
 
@@ -404,7 +414,7 @@ Code-reviewer and Pere Marc re-run confirming IRPF tarifa applied, 130 to 100 pr
 
 Provide a legally grounded Modelo 100 2026 registry revision so a valid 2026 Modelo 130 annual projection can be discovered and calculated instead of failing before the calculation path.
 
-- [ ] `W07.P71.S422` - Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated; campaign-2026 tax-year-2025 material is not a substitute; `src/cadrumo/_data/registry/aeat/modelos/100/, src/cadrumo/_data/corpus/, src/cadrumo/application/modelo/, src/cadrumo/**/tests/`.
+- [ ] `W07.P71.S422` - Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated; `campaign-2026 tax-year-2025 material is not a substitute; `src/cadrumo/_data/registry/aeat/modelos/100/, src/cadrumo/_data/corpus/, src/cadrumo/application/modelo/, src/cadrumo/**/tests/`.
 
 ## Wave `W08` - localisation parity and hygiene
 
@@ -469,6 +479,7 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 ### Phase `W09.P39` - _missing_refs utility duplication consolidation
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
+
 
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 
@@ -802,14 +813,14 @@ At every Wave terminus coordinator dispatches code-reviewer fresh persona fleet 
 - [x] `W11.P59.S195` - vault plan check must remain green after every plan expansion and after every Step close; `red blocks next Wave dispatch; green = no broken wiki-links no malformed frontmatter no identifier gaps no orphaned Steps; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 - [x] `W11.P59.S335` - durable maintenance gate one  -  vault check all CI-equivalent runs on every commit to chore branch; `blocks merge if structural drift surfaces; `.github/workflows/`.
 - [x] `W11.P59.S336` - durable maintenance gate two  -  ledger and storage roundtrip test suite remains in CI; `the S108-S109 S254 S273 work built it; never deprecate without explicit replacement; `.github/workflows/`.
-- [ ] `W11.P59.S337` - durable maintenance gate three  -  scheduled quarterly persona re-run of 3+ shapes (not ad-hoc); `catches UX drift tests cannot; produces a checkpoint-review audit document each quarter; `.vault/audit/`.
+- [x] `W11.P59.S337` - durable maintenance gate three  -  scheduled quarterly persona re-run of 3+ shapes (not ad-hoc); `catches UX drift tests cannot; produces a checkpoint-review audit document each quarter; `.vault/audit/`.
 
 ### Phase `W11.P60` - termination criteria
 
 Campaign terminates only when full persona-fleet pass returns zero BLOCKER zero MAJOR AND full Haiku drift sweep returns zero in-scope drift AND vault check all returns clean of new campaign-introduced findings.
 
 - [x] `W11.P60.S196` - rolling checkpoint declared when ALL five conditions hold: C1 all BLOCKER findings from most-recent persona round closed or have accepted remediation Step; `C2 no new BLOCKER without accepted Step; C3 in-progress coder tasks committed and architect-reviewed; C4 vault plan check green; C5 vault check all reports no new structural drift; checkpoint is NOT termination  -  cadence pause only; loop resumes on next BLOCKER or scheduled persona round; `.vault/audit/`.
-- [ ] `W11.P60.S197` - until a valid checkpoint declaration is on record any claim of campaign complete or done is premature; `after a checkpoint at-rest is valid but finished is not; checkpoint declaration itself is a vault audit document authored by architecture-specialist after verifying C1-C5 in sequence; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W11.P60.S197` - until a valid checkpoint declaration is on record any claim of campaign complete or done is premature; `after a checkpoint at-rest is valid but finished is not; checkpoint declaration itself is a vault audit document authored by architecture-specialist after verifying C1-C5 in sequence; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W12` - structural debt cleanup
 
