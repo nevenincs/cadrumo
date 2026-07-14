@@ -1,4 +1,4 @@
-@step Record an intra-community goods supply to a German customer as an issued invoice.
-@setup aeat app ledger invoice add --kind issued --counterparty-nif DE811569869 --counterparty-name "Muenchner Handels GmbH" --invoice-number F-2026-IC-01 --invoice-date 2026-02-10 --taxable-base 5000 --iva-rate 0 --iva-amount 0 --total-amount 5000 --country-code DE --eu-iva-id DE811569869 --operation-type E
-@step Record an intra-community service supplied to a French customer as an issued invoice.
-@setup aeat app ledger invoice add --kind issued --counterparty-nif FR40123456824 --counterparty-name "Lyon Services SARL" --invoice-number F-2026-IC-02 --invoice-date 2026-03-05 --taxable-base 3000 --iva-rate 0 --iva-amount 0 --total-amount 3000 --country-code FR --eu-iva-id FR40123456824 --operation-type S
+@step Record an intra-community goods supply to a German customer as a catalogued issued invoice.
+@setup aeat app ledger invoice catalogue wizard --kind issued --counterparty-nif DE811569869 --counterparty-name "Muenchner Handels GmbH" --invoice-number F-2026-IC-01 --invoice-date 2026-02-10 --taxable-base 5000 --iva-rate 0 --country-code DE --operation-type E
+@step Record an intra-community service supplied to a French customer as a catalogued issued invoice.
+@setup aeat app ledger invoice catalogue wizard --kind issued --counterparty-nif FR40123456824 --counterparty-name "Lyon Services SARL" --invoice-number F-2026-IC-02 --invoice-date 2026-03-05 --taxable-base 3000 --iva-rate 0 --country-code FR --operation-type S
