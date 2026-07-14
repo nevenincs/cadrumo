@@ -22,17 +22,43 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "app",
         "ledger",
         "status"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.status",
+        "notices": [],
+        "result": {
+          "active_count": 0,
+          "archived_count": 0,
+          "bucket_id": "<bucket-id>",
+          "business_expense_total": "0",
+          "business_income_total": "0",
+          "business_net_total": "0",
+          "checked_transaction_count": 0,
+          "pending_review_count": 0,
+          "period": null,
+          "readiness_issue_count": 0,
+          "ready": null,
+          "reviewed_count": 0,
+          "skipped_count": 0,
+          "split_count": 0,
+          "stashed_count": 0,
+          "total_count": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nbusiness_income_total\t0\nbusiness_expense_total\t0\nbusiness_net_total\t0\nRows\t0\nActive\t0\nArchived\t0\nStashed\t0\nPending review\t0\nReviewed\t0\nSkipped\t0\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,
