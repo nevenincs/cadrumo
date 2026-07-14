@@ -1,7 +1,7 @@
 # Install Cadrumo
 
 This page covers installation only: get the package, install the `aeat`
-command, add the optional extras you want, and — if you use an AI assistant —
+command, add the optional extras you want, and (if you use an AI assistant)
 install the agent surface. Configuration and first use start in the
 [quickstart](how-to/quickstart.md) once the install checks pass.
 
@@ -24,7 +24,7 @@ release lists its downloadable files and release notes; record the version you
 install, as [Updates and downloads](updates.md) recommends.
 
 Install the downloaded wheel file. The filename carries the version you
-downloaded — the current release is `0.2.1`:
+downloaded. The current release is `0.2.1`:
 
 ```bash
 pip install ./cadrumo-0.2.1-py3-none-any.whl
@@ -89,7 +89,7 @@ Two extras need a further provisioning step after the pip install:
   ```
 
 For cloud LLM classification, put the provider's own CLI on `PATH` and sign in
-with that provider's flow — see
+with that provider's flow. See
 [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider).
 
 Run `aeat config check` again after each change to confirm the gap is closed.
@@ -98,7 +98,7 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 
 Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, so an AI
 assistant can operate the same local, gated commands the CLI exposes. There
-are three ways to install it — pick the one that matches your client.
+are three ways to install it. Pick the one that matches your client.
 [Connect an agent](how-to/connect-an-agent.md) walks through each in full and
 explains what the agent can and cannot do.
 
@@ -107,7 +107,7 @@ explains what the agent can and cannot do.
 The plugin bundles the server configuration together with the rules, skills,
 and scoped agent personas that keep the assistant inside the safety boundary.
 It launches the server itself through `uvx`, so it needs
-[uv](https://docs.astral.sh/uv/) on your `PATH` — and nothing else installed
+[uv](https://docs.astral.sh/uv/) on your `PATH`, and nothing else installed
 beforehand. Add the marketplace once, then install the plugin:
 
 ```text
@@ -143,14 +143,14 @@ cadrumo-mcp --help
 ```
 
 then register `cadrumo-mcp` as a stdio server in your client's MCP
-configuration — the exact JSON is in
+configuration. The exact JSON is in
 [Connect an agent](how-to/connect-an-agent.md#connect-any-other-mcp-client).
 
 ## Next steps
 
-- [Quickstart](how-to/quickstart.md) — from an empty profile to an exported
+- [Quickstart](how-to/quickstart.md) - from an empty profile to an exported
   modelo file.
-- [Set up a profile](how-to/profile-setup.md) — including the per-profile
+- [Set up a profile](how-to/profile-setup.md) - including the per-profile
   service capabilities (Google export, LLM vision, cloud evidence upload).
 - [Connect an agent](how-to/connect-an-agent.md)
 - [Troubleshooting](how-to/troubleshooting.md)
