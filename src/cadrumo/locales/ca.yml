@@ -2991,6 +2991,7 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repeteix la nova contrasenya amb --confirm-new-passphrase.
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
+        non_interactive_passphrase_required: 'Aquesta ordre necessita un terminal interactiu per demanar la nova contrasenya. Proporciona-la de manera no interactiva amb --new-passphrase i --confirm-new-passphrase.'
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
       new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '

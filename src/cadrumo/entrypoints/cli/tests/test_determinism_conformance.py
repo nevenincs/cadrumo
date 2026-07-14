@@ -235,6 +235,55 @@ class TestEnrolledCommandDeterminism:
         assert differing_field_names(first, second) == frozenset()
         assert canonicalise(first) == canonicalise(second)
 
+    def test_ledger_evidence_add_identity_is_cwd_independent(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Regression: identical bytes added from DIFFERENT working dirs share one identity.
+
+        The golden case above reused one absolute pdf path, so ``source_path`` was
+        only incidentally identical. This drives the real defect: the same bytes
+        added via the same relative path from two different working directories.
+        The content-addressed ``evidence_id`` and the bucket-event id must match
+        (identity derives from the source digest and stable metadata, never the
+        machine-absolutized path), and the persisted ``source_path`` echoes the
+        argv-faithful relative path in both runs, not the resolved absolute form.
+        """
+        pdf_bytes = b"%PDF-1.4 cwd-independent"
+        cwd_a = tmp_path / "cwd-a"
+        cwd_b = tmp_path / "cwd-b"
+        for cwd in (cwd_a, cwd_b):
+            cwd.mkdir()
+            (cwd / "receipt.pdf").write_bytes(pdf_bytes)
+
+        def _add_from(cwd: Path, storage_root: Path) -> tuple[str, tuple[str, ...], str]:
+            monkeypatch.chdir(cwd)
+            with isolated_runtime_profile(tmp_path=storage_root, bucket_id=_BUCKET) as profile, frozen_clock(_INSTANT):
+                service = PurchaseInvoiceEvidenceService(
+                    settings=profile.settings,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                )
+                result = service.add(
+                    bucket_id=profile.bucket_id,
+                    source_path=Path("receipt.pdf"),
+                    supplier="Acme S.L.",
+                    invoice_number="INV-001",
+                )
+            return result.record.evidence_id, result.bucket_event_ids, result.record.source_path
+
+        first_id, first_events, first_path = _add_from(cwd_a, tmp_path / "run-a")
+        second_id, second_events, second_path = _add_from(cwd_b, tmp_path / "run-b")
+
+        # Identity is content-derived, independent of cwd / absolute path.
+        assert first_id == second_id
+        assert first_events == second_events
+        assert first_events != ()
+        # The persisted breadcrumb echoes the argv-faithful path, not the resolved form.
+        assert first_path == "receipt.pdf"
+        assert second_path == "receipt.pdf"
+        assert not Path(first_path).is_absolute()
+
 
 class TestCoverageDiscipline:
     def test_enrolled_commands_are_all_registered(self) -> None:

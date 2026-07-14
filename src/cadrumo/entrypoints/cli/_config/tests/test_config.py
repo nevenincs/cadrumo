@@ -344,3 +344,72 @@ def test_config_boundary_error_is_registered_aeat_error_subclass() -> None:
     assert code.code == "ERROR_CONFIG_BOUNDARY"
     assert err.original_exception is not None
     assert isinstance(err.original_exception, RuntimeError)
+
+
+# ---------------------------------------------------------------------------
+# G4: rekey / recover refuse instructively without interactive stdin
+# ---------------------------------------------------------------------------
+
+
+def test_rekey_without_interactive_stdin_refuses_instructively() -> None:
+    """`config rekey` with no --new-passphrase and no TTY refuses cleanly (exit 2).
+
+    Non-interactively, ``getpass`` would raise a bare EOFError that escapes to
+    the generic INTERNAL boundary (exit 6, logged traceback). The isatty
+    pre-check turns it into a REFUSED exit naming the non-interactive path. Real
+    boundary, no mocks: the in-process runner's stdin is not a TTY.
+    """
+    result = invoke_cached_cli(["config", "rekey"])
+
+    assert result.exit_code == 2, result.output
+    assert "--new-passphrase" in result.output
+    assert "--confirm-new-passphrase" in result.output
+    # The crash class is gone: no traceback, and the escaped exception is not the
+    # bare EOFError getpass would have raised.
+    assert "Traceback" not in result.output
+    assert not isinstance(result.exception, EOFError)
+
+
+def test_recover_without_new_passphrase_and_no_stdin_refuses_instructively() -> None:
+    """`config recover --recovery-key K` with no --new-passphrase refuses (exit 2).
+
+    The passphrase resolution runs before any recovery-store access, so the
+    recovery key value is immaterial: the refusal fires the same way as rekey.
+    """
+    result = invoke_cached_cli(
+        ["config", "recover", "--recovery-key", "correct horse battery staple placeholder key"],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "--new-passphrase" in result.output
+    assert "--confirm-new-passphrase" in result.output
+    assert "Traceback" not in result.output
+    assert not isinstance(result.exception, EOFError)
+
+
+def test_rekey_refusal_json_stream_parses_cleanly_without_traceback_leak() -> None:
+    """`aeat --format json config rekey` refusal is a pure-JSON error document.
+
+    Symptom 2 of the same root cause: the INTERNAL-boundary crash logged a
+    traceback that leaked before the envelope, breaking any JSON consumer of the
+    error stream. The REFUSED path emits only the typed error document (on
+    stderr, per the ``write_stderr`` error contract; stdout stays empty), so it
+    parses cleanly.
+
+    Note (separate finding, out of this commit's scope): the error envelope's
+    ``command`` field is ``null`` here — but that is NOT a refusal-routing gap.
+    ``render_error_json`` hardcodes ``command: None`` for EVERY CLI error, so the
+    generic boundary drops the command name for all unexpected errors alike;
+    threading it needs a per-command context var, tracked separately.
+    """
+    result = invoke_cached_cli(["--format", "json", "config", "rekey"])
+
+    assert result.exit_code == 2
+    assert "Traceback" not in result.stderr
+    assert "Traceback" not in result.output
+    # stdout carries no leaked JSON/traceback; the typed error document is the
+    # sole content of the JSON error stream and parses cleanly.
+    document = json.loads(result.stderr)
+    assert document["status"] == "error"
+    assert document["error"]["category"] == "REFUSED"
+    assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"

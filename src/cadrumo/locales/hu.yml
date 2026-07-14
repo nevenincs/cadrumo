@@ -2934,6 +2934,7 @@ cli:
         missing_new_passphrase_confirmation: Ismetelje meg az uj passphrase erteket
           a --confirm-new-passphrase kapcsoloval.
         new_passphrase_mismatch: Az uj passphrase es a megerosites nem egyezik.
+        non_interactive_passphrase_required: 'Ez a parancs interaktív terminált igényel az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase és --confirm-new-passphrase kapcsolókkal.'
       new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
     errors:
