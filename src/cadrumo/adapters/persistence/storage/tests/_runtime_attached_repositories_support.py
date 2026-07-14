@@ -251,16 +251,6 @@ _CALCULATION_INPUT_CASILLA: CasillaId = _casilla_id("base")
 _CALCULATION_OUTPUT_CASILLA: CasillaId = _casilla_id("casilla-01")
 
 
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    with override_settings(cadrumo_local_storage_root=tmp_path) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
-
-
 @contextmanager
 def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[None]:
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=bucket_id) as settings:
