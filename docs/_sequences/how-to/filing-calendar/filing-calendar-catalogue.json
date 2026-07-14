@@ -1,0 +1,1566 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.list",
+        "notices": [],
+        "result": {
+          "domain_filter": null,
+          "modelo_count": 73,
+          "modelos": [
+            {
+              "cadence": "ad_hoc",
+              "code": "036",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "censo",
+              "title": "Censo de empresarios, profesionales y retenedores"
+            },
+            {
+              "cadence": "monthly",
+              "code": "038",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Operaciones de entidades inscritas en registros públicos (informativa mensual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "100",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 6,
+              "tax_domain": "irpf",
+              "title": "IRPF declaración anual"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "111",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF retenciones e ingresos a cuenta"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "115",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF retenciones sobre arrendamientos urbanos"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "117",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones e ingresos a cuenta - rentas o ganancias por transmision o reembolso de acciones y participaciones de IIC"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "121",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF comunicación de la cesión de la deducción por familia numerosa / discapacidad"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "122",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF regularización de la deducción por familia numerosa / discapacidad"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "123",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones sobre capital mobiliario"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "126",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones e ingresos a cuenta - rendimientos del capital mobiliario de cuentas en instituciones financieras"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "128",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones e ingresos a cuenta - rentas de capital mobiliario de operaciones de capitalizacion y contratos de seguro"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "130",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF pago fraccionado estimación directa"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "131",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 4,
+              "tax_domain": "irpf",
+              "title": "IRPF pago fraccionado estimación objetiva"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "136",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Gravamen especial sobre los premios de determinadas loterias y apuestas. Autoliquidacion"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "140",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF deducción por maternidad — solicitud de abono anticipado"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "143",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF deducciones familia numerosa/discapacidad — solicitud de abono anticipado"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "145",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF. Retenciones sobre rendimientos del trabajo. Comunicacion de datos al pagador"
+            },
+            {
+              "cadence": "annual",
+              "code": "151",
+              "local_work_guidance": "Modelo 151 (special expatriate regime, Beckham Law) is not supported for work-unit creation in this CLI. Legal basis: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008. File the return at AEAT Sede.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 2,
+              "tax_domain": "irpf",
+              "title": "IRPF régimen especial de trabajadores desplazados (impatriados, Beckham)"
+            },
+            {
+              "cadence": "annual",
+              "code": "156",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "165",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Certificaciones a socios de entidades de nueva o reciente creación (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "179",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Cesión de uso de viviendas con fines turísticos (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "180",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "irpf",
+              "title": "Resumen anual de retenciones sobre arrendamientos urbanos"
+            },
+            {
+              "cadence": "annual",
+              "code": "181",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Préstamos, créditos y operaciones financieras sobre inmuebles (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "182",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Donativos, donaciones y aportaciones recibidas y disposiciones realizadas (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "184",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Entidades en régimen de atribución de rentas (informativa anual)"
+            },
+            {
+              "cadence": "monthly",
+              "code": "185",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Declaración informativa mensual de cotizaciones de afiliados y mutualistas"
+            },
+            {
+              "cadence": "monthly",
+              "code": "186",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Nacimientos y defunciones (Registro Civil) (informativa mensual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "187",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Acciones y participaciones de IIC - resumen anual"
+            },
+            {
+              "cadence": "annual",
+              "code": "188",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones capitalización y seguros de vida - resumen anual"
+            },
+            {
+              "cadence": "annual",
+              "code": "189",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Declaracion informativa anual acerca de valores, seguros y rentas"
+            },
+            {
+              "cadence": "annual",
+              "code": "190",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "Resumen anual de retenciones del trabajo y actividades"
+            },
+            {
+              "cadence": "annual",
+              "code": "193",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Resumen anual de retenciones sobre capital mobiliario"
+            },
+            {
+              "cadence": "annual",
+              "code": "194",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones capital mobiliario y transmisión de activos - resumen anual"
+            },
+            {
+              "cadence": "annual",
+              "code": "200",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "IS autoliquidación anual"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "202",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 3,
+              "tax_domain": "is",
+              "title": "IS pago fraccionado"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "210",
+              "local_work_guidance": "Modelo 210 (IRNR, Non-Resident Income Tax) is not supported for work-unit creation in this CLI. Legal basis: RD Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 1,
+              "tax_domain": "irnr",
+              "title": "IRNR autoliquidación no residentes sin establecimiento permanente"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "216",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irnr",
+              "title": "IRNR retenciones e ingresos a cuenta"
+            },
+            {
+              "cadence": "annual",
+              "code": "220",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "IS autoliquidación anual régimen de consolidación fiscal (grupos)"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "222",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "IS pago fraccionado régimen de consolidación fiscal (grupos)"
+            },
+            {
+              "cadence": "annual",
+              "code": "231",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "Declaracion de informacion pais por pais"
+            },
+            {
+              "cadence": "annual",
+              "code": "232",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "is",
+              "title": "Operaciones vinculadas y paraísos fiscales (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "233",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Gastos en guarderías o centros de educación infantil autorizados (informativa anual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "234",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Mecanismos transfronterizos de planificación fiscal DAC6 (informativa)"
+            },
+            {
+              "cadence": "annual",
+              "code": "238",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Operadores de plataformas DAC7 (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "270",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Resumen anual de retenciones del gravamen especial sobre premios de loterías"
+            },
+            {
+              "cadence": "annual",
+              "code": "280",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "Declaracion informativa anual de Planes de Ahorro a Largo Plazo"
+            },
+            {
+              "cadence": "annual",
+              "code": "289",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Declaracion informativa anual de cuentas financieras en el ambito de la asistencia mutua"
+            },
+            {
+              "cadence": "annual",
+              "code": "296",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irnr",
+              "title": "IRNR resumen anual de retenciones e ingresos a cuenta"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "303",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "iva",
+              "title": "IVA. Autoliquidación (trimestral)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "308",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis, sujetos pasivos ocasionales)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "309",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Declaración-liquidación no periódica"
+            },
+            {
+              "cadence": "monthly",
+              "code": "322",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "341",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Reintegro de compensaciones del régimen especial de agricultura, ganadería y pesca del IVA"
+            },
+            {
+              "cadence": "annual",
+              "code": "345",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "Declaracion informativa anual de planes y fondos de pensiones, participes, aportaciones y contribuciones"
+            },
+            {
+              "cadence": "annual",
+              "code": "347",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Operaciones con terceras personas (informativa anual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "349",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Declaración recapitulativa de operaciones intracomunitarias"
+            },
+            {
+              "cadence": "monthly",
+              "code": "353",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "360",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Solicitud de devolución del IVA soportado en otros Estados miembros (8ª Directiva)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "361",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Solicitud de devolucion del IVA a determinados no establecidos en el TAI ni en la Comunidad"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "369",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 3,
+              "tax_domain": "iva",
+              "title": "IVA. Autoliquidación regímenes especiales OSS / IOSS"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "379",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Declaracion informativa sobre pagos transfronterizos"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "380",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA operaciones asimiladas a las importaciones (declaración-liquidación)"
+            },
+            {
+              "cadence": "annual",
+              "code": "390",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Declaración-resumen anual"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "490",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "idsd",
+              "title": "Impuesto sobre Determinados Servicios Digitales — autoliquidación"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "576",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iedmt",
+              "title": "IEDMT — autoliquidación por matriculación de determinados medios de transporte"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "592",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "plastico",
+              "title": "Impuesto especial sobre envases de plástico no reutilizables — autoliquidación"
+            },
+            {
+              "cadence": "monthly",
+              "code": "604",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "itf",
+              "title": "Impuesto sobre las Transacciones Financieras — autoliquidación"
+            },
+            {
+              "cadence": "annual",
+              "code": "714",
+              "local_work_guidance": "Modelo 714 (Wealth Tax) is not supported for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and Orden HAC/1023/2021. File the return at AEAT Sede.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 1,
+              "tax_domain": "patrimonio",
+              "title": "Impuesto sobre el Patrimonio (declaración anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "720",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Bienes y derechos en el extranjero (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "721",
+              "local_work_guidance": "Modelo 721 (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Monedas virtuales en el extranjero (informativa anual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "763",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "juego",
+              "title": "Impuesto sobre actividades de juego — autoliquidación (anuales/plurianuales)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "840",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iae",
+              "title": "Impuesto sobre Actividades Económicas (declaración censal)"
+            },
+            {
+              "cadence": "annual",
+              "code": "848",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Comunicación del importe neto de la cifra de negocios a efectos del IAE"
+            }
+          ],
+          "operation": "modelo.list",
+          "year_filter": null
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "list",
+        "--year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.list",
+        "notices": [],
+        "result": {
+          "domain_filter": null,
+          "modelo_count": 67,
+          "modelos": [
+            {
+              "cadence": "ad_hoc",
+              "code": "036",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "censo",
+              "title": "Censo de empresarios, profesionales y retenedores"
+            },
+            {
+              "cadence": "monthly",
+              "code": "038",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Operaciones de entidades inscritas en registros públicos (informativa mensual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "111",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF retenciones e ingresos a cuenta"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "115",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF retenciones sobre arrendamientos urbanos"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "117",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones e ingresos a cuenta - rentas o ganancias por transmision o reembolso de acciones y participaciones de IIC"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "121",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF comunicación de la cesión de la deducción por familia numerosa / discapacidad"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "122",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF regularización de la deducción por familia numerosa / discapacidad"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "123",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones sobre capital mobiliario"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "126",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones e ingresos a cuenta - rendimientos del capital mobiliario de cuentas en instituciones financieras"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "128",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones e ingresos a cuenta - rentas de capital mobiliario de operaciones de capitalizacion y contratos de seguro"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "130",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF pago fraccionado estimación directa"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "131",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 4,
+              "tax_domain": "irpf",
+              "title": "IRPF pago fraccionado estimación objetiva"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "136",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Gravamen especial sobre los premios de determinadas loterias y apuestas. Autoliquidacion"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "140",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF deducción por maternidad — solicitud de abono anticipado"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "143",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF deducciones familia numerosa/discapacidad — solicitud de abono anticipado"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "145",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "IRPF. Retenciones sobre rendimientos del trabajo. Comunicacion de datos al pagador"
+            },
+            {
+              "cadence": "annual",
+              "code": "151",
+              "local_work_guidance": "Modelo 151 (special expatriate regime, Beckham Law) is not supported for work-unit creation in this CLI. Legal basis: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008. File the return at AEAT Sede.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 2,
+              "tax_domain": "irpf",
+              "title": "IRPF régimen especial de trabajadores desplazados (impatriados, Beckham)"
+            },
+            {
+              "cadence": "annual",
+              "code": "156",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "165",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Certificaciones a socios de entidades de nueva o reciente creación (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "179",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Cesión de uso de viviendas con fines turísticos (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "180",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "irpf",
+              "title": "Resumen anual de retenciones sobre arrendamientos urbanos"
+            },
+            {
+              "cadence": "annual",
+              "code": "181",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Préstamos, créditos y operaciones financieras sobre inmuebles (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "182",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Donativos, donaciones y aportaciones recibidas y disposiciones realizadas (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "184",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Entidades en régimen de atribución de rentas (informativa anual)"
+            },
+            {
+              "cadence": "monthly",
+              "code": "185",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Declaración informativa mensual de cotizaciones de afiliados y mutualistas"
+            },
+            {
+              "cadence": "monthly",
+              "code": "186",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Nacimientos y defunciones (Registro Civil) (informativa mensual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "187",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Acciones y participaciones de IIC - resumen anual"
+            },
+            {
+              "cadence": "annual",
+              "code": "188",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones capitalización y seguros de vida - resumen anual"
+            },
+            {
+              "cadence": "annual",
+              "code": "190",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irpf",
+              "title": "Resumen anual de retenciones del trabajo y actividades"
+            },
+            {
+              "cadence": "annual",
+              "code": "193",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Resumen anual de retenciones sobre capital mobiliario"
+            },
+            {
+              "cadence": "annual",
+              "code": "194",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "cross_tax",
+              "title": "Retenciones capital mobiliario y transmisión de activos - resumen anual"
+            },
+            {
+              "cadence": "annual",
+              "code": "200",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "IS autoliquidación anual"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "202",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 3,
+              "tax_domain": "is",
+              "title": "IS pago fraccionado"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "210",
+              "local_work_guidance": "Modelo 210 (IRNR, Non-Resident Income Tax) is not supported for work-unit creation in this CLI. Legal basis: RD Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 1,
+              "tax_domain": "irnr",
+              "title": "IRNR autoliquidación no residentes sin establecimiento permanente"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "216",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irnr",
+              "title": "IRNR retenciones e ingresos a cuenta"
+            },
+            {
+              "cadence": "annual",
+              "code": "220",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "IS autoliquidación anual régimen de consolidación fiscal (grupos)"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "222",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "IS pago fraccionado régimen de consolidación fiscal (grupos)"
+            },
+            {
+              "cadence": "annual",
+              "code": "231",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "is",
+              "title": "Declaracion de informacion pais por pais"
+            },
+            {
+              "cadence": "annual",
+              "code": "232",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "is",
+              "title": "Operaciones vinculadas y paraísos fiscales (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "233",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Gastos en guarderías o centros de educación infantil autorizados (informativa anual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "234",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Mecanismos transfronterizos de planificación fiscal DAC6 (informativa)"
+            },
+            {
+              "cadence": "annual",
+              "code": "238",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Operadores de plataformas DAC7 (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "270",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Resumen anual de retenciones del gravamen especial sobre premios de loterías"
+            },
+            {
+              "cadence": "annual",
+              "code": "296",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "irnr",
+              "title": "IRNR resumen anual de retenciones e ingresos a cuenta"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "303",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 2,
+              "tax_domain": "iva",
+              "title": "IVA. Autoliquidación (trimestral)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "308",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis, sujetos pasivos ocasionales)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "309",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Declaración-liquidación no periódica"
+            },
+            {
+              "cadence": "monthly",
+              "code": "322",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "341",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Reintegro de compensaciones del régimen especial de agricultura, ganadería y pesca del IVA"
+            },
+            {
+              "cadence": "annual",
+              "code": "347",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Operaciones con terceras personas (informativa anual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "349",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Declaración recapitulativa de operaciones intracomunitarias"
+            },
+            {
+              "cadence": "monthly",
+              "code": "353",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "360",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Solicitud de devolución del IVA soportado en otros Estados miembros (8ª Directiva)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "361",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Solicitud de devolucion del IVA a determinados no establecidos en el TAI ni en la Comunidad"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "369",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 3,
+              "tax_domain": "iva",
+              "title": "IVA. Autoliquidación regímenes especiales OSS / IOSS"
+            },
+            {
+              "cadence": "quarterly",
+              "code": "379",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "Declaracion informativa sobre pagos transfronterizos"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "380",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA operaciones asimiladas a las importaciones (declaración-liquidación)"
+            },
+            {
+              "cadence": "annual",
+              "code": "390",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iva",
+              "title": "IVA. Declaración-resumen anual"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "490",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "idsd",
+              "title": "Impuesto sobre Determinados Servicios Digitales — autoliquidación"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "576",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iedmt",
+              "title": "IEDMT — autoliquidación por matriculación de determinados medios de transporte"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "592",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "plastico",
+              "title": "Impuesto especial sobre envases de plástico no reutilizables — autoliquidación"
+            },
+            {
+              "cadence": "monthly",
+              "code": "604",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "itf",
+              "title": "Impuesto sobre las Transacciones Financieras — autoliquidación"
+            },
+            {
+              "cadence": "annual",
+              "code": "720",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Bienes y derechos en el extranjero (informativa anual)"
+            },
+            {
+              "cadence": "annual",
+              "code": "721",
+              "local_work_guidance": "Modelo 721 (informative declaration of virtual currencies held abroad) is not supported for work-unit creation in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42 quater; the reporting threshold is 50,000 EUR at 31 December. File through AEAT Sede when legally required.",
+              "local_work_status": "unsupported-local-work",
+              "local_work_supported": false,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Monedas virtuales en el extranjero (informativa anual)"
+            },
+            {
+              "cadence": "profile_based",
+              "code": "763",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "juego",
+              "title": "Impuesto sobre actividades de juego — autoliquidación (anuales/plurianuales)"
+            },
+            {
+              "cadence": "ad_hoc",
+              "code": "840",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "iae",
+              "title": "Impuesto sobre Actividades Económicas (declaración censal)"
+            },
+            {
+              "cadence": "annual",
+              "code": "848",
+              "local_work_guidance": null,
+              "local_work_status": "supported-model-level",
+              "local_work_supported": true,
+              "revision_count": 1,
+              "tax_domain": "informative",
+              "title": "Comunicación del importe neto de la cifra de negocios a efectos del IAE"
+            }
+          ],
+          "operation": "modelo.list",
+          "year_filter": 2026
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "describe",
+        "130"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.describe",
+        "notices": [],
+        "result": {
+          "binding_count": 8,
+          "cadence": "quarterly",
+          "casilla_count": 20,
+          "code": "130",
+          "filing_year": null,
+          "formula_count": 12,
+          "official_name": "Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en estimación directa. Pago fraccionado.",
+          "operation": "modelo.describe",
+          "period": null,
+          "periods": [
+            "1T",
+            "2T",
+            "3T",
+            "4T"
+          ],
+          "revision": "2019-y-siguientes",
+          "revision_ids": [
+            "2019-y-siguientes"
+          ],
+          "tax_domain": "irpf",
+          "title": "IRPF pago fraccionado estimación directa"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "describe",
+        "130",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.describe",
+        "notices": [],
+        "result": {
+          "binding_count": 8,
+          "cadence": "quarterly",
+          "casilla_count": 20,
+          "code": "130",
+          "filing_year": null,
+          "formula_count": 12,
+          "official_name": "Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en estimación directa. Pago fraccionado.",
+          "operation": "modelo.describe",
+          "period": "1T",
+          "periods": [
+            "1T",
+            "2T",
+            "3T",
+            "4T"
+          ],
+          "revision": "2019-y-siguientes",
+          "revision_ids": [
+            "2019-y-siguientes"
+          ],
+          "tax_domain": "irpf",
+          "title": "IRPF pago fraccionado estimación directa"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "filing-calendar-catalogue"
+}
