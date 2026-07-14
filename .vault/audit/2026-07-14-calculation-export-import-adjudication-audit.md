@@ -235,6 +235,43 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** establish mandate, exact earlier authority, and real filed
   evidence without extrapolating 2019 sources.
 
+### modelo-190-outbound-2025-open | low | Registered 2025 authority remains mandate-gated
+
+- **Candidate:** Modelo 190 outbound generation from `2025-01-01`, open end.
+- **Mandate:** `unproven`; discovery/routing wording is not accepted scope.
+- **Exact authority window:** `aeat-dr-190-2025` covers 2025+.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic engine is delivered and no Modelo-specific engine is missing.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload and real Modelo 190 round trip missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted 2025+ outbound mandate before layout work.
+
+### modelo-190-outbound-2024 | low | Structural parity does not register 2024 authority
+
+- **Candidate:** Modelo 190 outbound generation for exercise 2024.
+- **Mandate:** `unproven`.
+- **Exact authority window:** `missing`; the official 2024 design is bundled
+  and hash-pinned but not catalogued or referenced as exact-window authority.
+- **Canonical implementation state:** `gap` for optional layout data; 2024/2025
+  structural parity supports one revision, not one evidence identity.
+- **Real evidence or specimen:** no registered 2024 source or golden payload.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** register exact 2024 authority and establish a mandate without
+  splitting the shared revision unless official structure diverges.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
