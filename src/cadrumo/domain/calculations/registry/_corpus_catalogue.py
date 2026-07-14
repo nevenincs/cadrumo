@@ -153,7 +153,7 @@ def _resolve_corpus_path(root: Path, source: SourceReference) -> Path:
     direct = (root / source.corpus_path).resolve()
     if direct.is_file():
         return direct
-    packaged = (root / "src" / "aeat" / "_data" / source.corpus_path).resolve()
+    packaged = (root / "src" / "cadrumo" / "_data" / source.corpus_path).resolve()
     if packaged.is_file():
         return packaged
     return direct
