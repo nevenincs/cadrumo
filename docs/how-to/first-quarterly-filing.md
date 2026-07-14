@@ -36,8 +36,11 @@ aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
 
 The import reads the statement and stores each movement as a ledger row. The
 listing confirms the two rows landed in the first quarter of 2026. Point
-`--provider` at the format your bank exports; run `aeat app ledger import
---help` to see the accepted providers.
+`--provider` at the format your bank exports; list the accepted providers with:
+
+```bash
+aeat app ledger import --help
+```
 
 ## Classify each transaction
 
@@ -45,10 +48,19 @@ An imported row carries a date and an amount, but it does not yet say how the
 tax calculation should treat it. Classify each row before you calculate.
 
 Mark the collected payment as business income and the purchase as a deductible
-business expense with a category. Run `aeat app ledger classify
-<transaction-id> --classification BUSINESS` for income, and add
-`--category-id <category-id>` plus the taxable base and IVA fields for an
-expense. List the accepted categories with `aeat app ledger categories`.
+business expense with a category. Take each transaction id from the listing
+above. For income:
+
+```bash
+aeat app ledger classify <transaction-id> --classification BUSINESS
+```
+
+For an expense, add `--category-id <category-id>` plus the taxable base and
+IVA fields. List the accepted categories any time:
+
+```bash
+aeat app ledger categories
+```
 
 For the full classification workflow — bulk classification, mixed-use shares,
 and the review queue — read [Classify transactions](classify-transactions.md).
@@ -96,10 +108,18 @@ Read the frames in order:
 ## Check the figures and export
 
 The verification result is the signal that the draft is ready. When
-`granted_verificado_completo` reads true, export the file with
-`aeat app modelo export --modelo 130 --year 2026 --period 1T --output
-./modelo-130.boe`, upload it at the AEAT portal yourself, then record the local
-marker with `aeat app modelo work file --modelo 130 --year 2026 --period 1T`.
+`granted_verificado_completo` reads true, export the file:
+
+```bash
+aeat app modelo export --modelo 130 --year 2026 --period 1T \
+  --output ./modelo-130.boe
+```
+
+Upload it at the AEAT portal yourself, then record the local marker:
+
+```bash
+aeat app modelo work file --modelo 130 --year 2026 --period 1T
+```
 
 A later quarter builds on this one: leave the three prior-period bindings unset
 so they resolve from your filed history. See

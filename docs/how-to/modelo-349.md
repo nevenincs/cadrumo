@@ -23,10 +23,13 @@ and the intra-community invoice records the declaration lists. Create a profile
 with `aeat config profile create <name>` — see [Set up your taxpayer
 profile](profile-setup.md).
 
-- Check applicability and cadence with `aeat app overview explain 349 --year
-  2026` - Modelo 349 is quarterly (`1T`-`4T`) or monthly (`01`-`12`) depending
-  on your profile and operation volumes; the calendar surfaces which applies to
-  you.
+- Check applicability and cadence — Modelo 349 is quarterly (`1T`-`4T`) or
+  monthly (`01`-`12`) depending on your profile and operation volumes; the
+  calendar surfaces which applies to you:
+
+  ```bash
+  aeat app overview explain 349 --year 2026
+  ```
 - Record the operations as invoice records, not bare ledger rows. The 349
   listing is built from your invoice catalogue: issued invoices to EU
   operators feed the entregas side, received invoices from EU suppliers feed
@@ -67,10 +70,13 @@ Calculation aggregates the period's invoice records into the summary casillas
 and builds the per-operator detail rows. With the two invoices above, the
 summary reports two intra-community operators (`decl.numero-operadores`) for a
 total of 8000 euros of operations (`decl.importe-operaciones`), and verify
-grants verified-complete. Inspect what was bound and what is missing with `aeat
-app modelo bindings list --modelo 349 --year 2026 --period 1T --missing`, and
-show the built rows with `aeat app modelo work revision --modelo 349 --year 2026
---period 1T`.
+grants verified-complete. Inspect what was bound and what is missing, then
+show the built rows:
+
+```bash
+aeat app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
+aeat app modelo work revision --modelo 349 --year 2026 --period 1T
+```
 
 The per-operator row fields (country code, EU VAT number, name, operation
 key, base) come from the invoice records; a missing counterparty fact on an
@@ -87,10 +93,19 @@ operation; the rectification rows aggregate from there.
 
 ## Export and file
 
-Export the verified declaration with `aeat app modelo export --modelo 349 --year
-2026 --period 1T --output ./modelo-349.boe`. After you file at the portal,
-record the local marker with `aeat app modelo work file --modelo 349 --year 2026
---period 1T` and [reconcile against the justificante](reconcile.md).
+Export the verified declaration:
+
+```bash
+aeat app modelo export --modelo 349 --year 2026 --period 1T \
+  --output ./modelo-349.boe
+```
+
+After you file at the portal, record the local marker, then
+[reconcile against the justificante](reconcile.md):
+
+```bash
+aeat app modelo work file --modelo 349 --year 2026 --period 1T
+```
 
 Modelo 349 runs alongside your periodic Modelo 303: the same intra-community
 operations that appear here also feed the 303's intra-community boxes. Keep
