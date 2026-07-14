@@ -5073,6 +5073,7 @@ errors:
       Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
+    auth_former_product_session_state: 'A Cadrumo egy megszuent termek munkamenet-allapotat eszlelte, es megtagadja annak olvasasat, athelyezeset, ujrakulcsolasat, torleset vagy atvetelet.'
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'
@@ -5944,6 +5945,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    modelo_210_agrupacion_renta_rows: 'A 210-es nyomtatvany eves csoportositott jovedelem-sorainak egyetlen jogszeru csoportot kell alkotniuk (egy kod, egy kulcs, egy azonositott ingatlan, es egy kifizeto, kiveve a tobb kifizetos kivetelt).'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

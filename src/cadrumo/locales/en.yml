@@ -4807,6 +4807,7 @@ errors:
       <WORDS>.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
+    auth_former_product_session_state: 'Cadrumo detected retired-product AEAT session state and refuses to read, move, re-key, delete, or adopt it.'
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'
@@ -5671,6 +5672,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    modelo_210_agrupacion_renta_rows: 'Modelo 210 annual grouped-renta rows must form a lawful single grouping (one code, one rate, one identified property, and one payer unless the multi-payer exception applies).'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

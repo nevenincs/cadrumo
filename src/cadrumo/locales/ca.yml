@@ -5118,6 +5118,7 @@ errors:
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
+    auth_former_product_session_state: 'Cadrumo ha detectat estat de sessió d''un producte retirat i es nega a llegir-lo, moure''l, re-xifrar-lo, eliminar-lo o adoptar-lo.'
   calc:
     age_at_year_end_no_filing_year: 'Error intern: el calcul de l''edat a final d''exercici
       no te exercici de declaracio.'
@@ -6057,6 +6058,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    modelo_210_agrupacion_renta_rows: 'Les rendes agrupades anuals del Model 210 han de formar una agrupació única i vàlida (un codi, un tipus, un bé identificat i un pagador, excepte l''excepció de múltiples pagadors).'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
