@@ -198,12 +198,12 @@ Update product copy through locale authorities while preserving AEAT counterpart
 
 Update active user-facing documentation and regenerate derived references.
 
-- [ ] `W05.P13.S68` - Rewrite product branding, badges, install commands, and authority-qualified prose; `README.md`.
-- [ ] `W05.P13.S69` - Rewrite release, publication, rollback, and old-state cutover instructions; `RELEASING.md`.
-- [ ] `W05.P13.S70` - Rewrite active user guides with `aeat` invocations, CADRUMO product prose, and preserved AEAT authority language; `docs/how-to`.
-- [ ] `W05.P13.S71` - Rewrite active explanation and reference pages with the product-authority boundary; `docs/explanation and docs/reference`.
-- [ ] `W05.P13.S72` - Update documentation site identity, titles, marks, and generated API configuration; `docs/conf.py and docs/_static product assets`.
-- [ ] `W05.P13.S73` - Update release templates, checklist, and current verification proofs; `docs release and verification surfaces`.
+- [x] `W05.P13.S68` - Rewrite product branding, badges, install commands, and authority-qualified prose; `README.md`.
+- [x] `W05.P13.S69` - Rewrite release, publication, rollback, and old-state cutover instructions; `RELEASING.md`.
+- [x] `W05.P13.S70` - Rewrite active user guides with `aeat` invocations, CADRUMO product prose, and preserved AEAT authority language; `docs/how-to`.
+- [x] `W05.P13.S71` - Rewrite active explanation and reference pages with the product-authority boundary; `docs/explanation and docs/reference`.
+- [x] `W05.P13.S72` - Update documentation site identity, titles, marks, and generated API configuration; `docs/conf.py and docs/_static product assets`.
+- [x] `W05.P13.S73` - Update release templates, checklist, and current verification proofs; `docs release and verification surfaces`.
 - [x] `W05.P13.S74` - Regenerate API references and documentation indexes from CADRUMO source authorities; `generated documentation surfaces`.
 - [ ] `W05.P13.S75` - Render and inspect the complete documentation site for stale product identity and broken references; `built documentation site`.
 

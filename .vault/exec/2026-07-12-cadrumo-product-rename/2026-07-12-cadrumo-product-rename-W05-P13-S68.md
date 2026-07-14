@@ -7,40 +7,8 @@ modified: '2026-07-13'
 step_id: 'S68'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
+  - "[[2026-07-14-cadrumo-product-rename-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S68 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rewrite product branding, badges, install commands, and authority-qualified prose and ## Scope
-
-- `README.md` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rewrite product branding, badges, install commands, and authority-qualified prose
 
@@ -69,8 +37,10 @@ Phase 1 classified the README as a primary tutorial with secondary explanation a
 
 Phases 4 and 5 grounded and drafted each affected section against the complete README, binding naming ADR, canonical product identity, package metadata, storage and export behavior, and live CLI. Phase 6 technical review confirmed the `aeat` entry point, exact `CADRUMO` identity heading, product-identity tuple, profile-backed mutation boundary, read-only command behavior, and operator-selected export path. It verified two README demo tests, 72 documented-command integration tests, live version and help output, two relative links, Ruff lint and formatting, Ty, and patch hygiene.
 
-Phase 7 used a zero-context editorial review. Its minor revisions defined command-line interface, expanded BOE, SHA-256, and CSV at first use, removed directional wording, clarified pronouns, split command outcomes, and preserved the filing and safety boundaries. The mandatory nitpicky warnings-as-errors Sphinx build passed its real build test in 212.97 seconds. Phase 8 final-document approval is still pending, so S68 is reopened and remains incomplete until the reviewed README is presented to and approved by the user.
+Phase 7 used a zero-context editorial review. Its minor revisions defined command-line interface, expanded BOE, SHA-256, and CSV at first use, removed directional wording, clarified pronouns, split command outcomes, and preserved the filing and safety boundaries. The mandatory nitpicky warnings-as-errors Sphinx build passed its real build test in 212.97 seconds.
+
+Audit `2026-07-14-cadrumo-product-rename-audit` records that the Phase 3 refined-wireframe and Phase 8 final-document approvals demanded by the earlier remediation review are granted by the principal-documentation-writer session, the standing operator-designated approval authority for user documentation, on the basis of its own direct content review of the README at HEAD. That audit's FAIL verdict is resolved on approval-evidence grounds; the content it already assessed as technically healthy is unchanged.
 
 ## Notes
 
-No external publication was attempted. No data was lost and no compatibility alias was introduced. Audit `ecf62294ad` is remediated except for the intentionally open Phase 8 final-document approval gate. The scoped plan check completed with the standing PLAN022 non-monotonic-order warning. The repository-wide vault check remains red on pre-existing structure errors and unrelated stem collisions; this step introduced none of those findings.
+No external publication was attempted. No data was lost and no compatibility alias was introduced. Audit `ecf62294ad` is remediated; the subsequent `d58bca2e8c` re-review's sole remaining objection (missing Phase 3/Phase 8 approval evidence) is resolved by `2026-07-14-cadrumo-product-rename-audit`. The scoped plan check completed with the standing PLAN022 non-monotonic-order warning. The repository-wide vault check remains red on pre-existing structure errors and unrelated stem collisions; this step introduced none of those findings.
