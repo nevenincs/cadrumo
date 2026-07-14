@@ -34,11 +34,8 @@ this page needs your master-key passphrase; the tool prompts for it.
 
 Keep the receipt with your records: it is the official evidence behind every
 filed period. Fetch the justificante for one filed period and store it in
-your profile without reconciling yet:
-
-```bash
-aeat app live justificante pull --modelo 130 --year 2026 --period 1T
-```
+your profile without reconciling yet with `aeat app live justificante pull
+--modelo 130 --year 2026 --period 1T`.
 
 `pull` is live-only: it reads from AEAT (read-only) and needs the configured
 authentication session. `--modelo`, `--year`, and `--period` are all
@@ -56,12 +53,9 @@ a fresh capture and marks the earlier one as superseded, so the latest
 receipt is always the active one.
 
 List every capture stored in the active profile, then inspect one (an
-unambiguous prefix of the snapshot id is enough):
-
-```bash
-aeat app live justificante list
-aeat app live justificante view <snapshot-id>
-```
+unambiguous prefix of the snapshot id is enough): list captures with `aeat app
+live justificante list`, then inspect one with `aeat app live justificante view
+<snapshot-id>`.
 
 The view reports the expediente id, the CSV verification code, the PDF
 fingerprint, whether the capture is still active or superseded, and when it
@@ -69,11 +63,8 @@ was captured.
 
 ## Pull the justificante from AEAT and reconcile
 
-Fetch the receipt for the filing and reconcile in one command:
-
-```bash
-aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
-```
+Fetch the receipt for the filing and reconcile in one command with `aeat app
+modelo reconcile pull --modelo 303 --year 2026 --period 1T`.
 
 Replace `303`, `2026`, and `1T` with the modelo, year, and period of your
 actual filing. You can also name the work unit directly as a positional
@@ -87,11 +78,8 @@ command finishes. To list or inspect stored captures later, see
 ## Reconcile against a local PDF instead
 
 If you already downloaded the justificante from the portal, compare your local
-filing record against that file:
-
-```bash
-aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
-```
+filing record against that file with `aeat app modelo reconcile file --modelo
+303 --year 2026 --period 1T --file ./justificante.pdf`.
 
 This check is local. It reads the PDF you supply and never contacts AEAT.
 
