@@ -223,7 +223,7 @@ Recommended workflow:
    aeat app ledger preflight --year 2026 --period 1T
    ```
 
-Keep a copy of the file — it gives you a record of how you classified that
+Keep a copy of the file. It gives you a record of how you classified that
 period if you are later asked to justify your return. This path does not batch-update amounts,
 descriptions, IVA values, notes, attachments, or split/merge state; use the
 transaction workflow for those row-level edits.
@@ -257,7 +257,7 @@ classifications you already set by hand.
 ## Use an LLM suggestion
 
 Cadrumo can use an AI assistant to suggest how to classify each transaction. The
-suggestion is a starting point — you must confirm or correct it. It does not
+suggestion is a starting point. You must confirm or correct it. It does not
 fill in tax amounts such as taxable base, IVA rate, or IRPF category.
 
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full

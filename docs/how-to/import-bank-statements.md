@@ -284,7 +284,7 @@ aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence
 ```
 
 The same purchase-evidence link is also available through `aeat app ledger link
-<transaction-id> --evidence-id <evidence-id>`. Note that `link --invoice-id`
+<transaction-id> --evidence-id <evidence-id>`. The `link --invoice-id` option
 expects an id from the reconciliation invoice catalogue (populated by the import
 and reconcile flows), not an id from `aeat app ledger invoice add`. See
 [Attach invoices and receipts](ledger-evidence.md) for the full evidence and

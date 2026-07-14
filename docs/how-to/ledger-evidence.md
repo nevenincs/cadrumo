@@ -76,7 +76,7 @@ aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplie
 
 The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>` or `aeat app ledger link`.
 
-Re-run the same command any time — a file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and attach it with `aeat app ledger attach --attachment-id`.
+Re-run the same command any time. A file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and attach it with `aeat app ledger attach --attachment-id`.
 
 Gmail bulk-fetch is not available yet.
 
