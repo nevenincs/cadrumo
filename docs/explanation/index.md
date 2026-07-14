@@ -1,6 +1,6 @@
 # How Cadrumo turns your records into a tax file
 
-This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday taxpayer in Spain — anyone with a NIF, CIF, DNI, or NIE who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
+This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday taxpayer in Spain: anyone with a NIF, CIF, DNI, or NIE who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
 Read this to understand how the pieces fit together. To actually perform a task, start from the [Getting started page](../how-to/index.md), the step-by-step [Quickstart](../how-to/quickstart.md), or the modelo run-throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the IVA year](../how-to/iva-lifecycle.md).
 
