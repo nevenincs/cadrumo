@@ -335,6 +335,27 @@ class TestPageCoherenceMode:
         golden_problems, _ = check_sequences(docs_root=docs_tree, goldens_root=refreshed_goldens)
         assert golden_problems == ()
 
+    def test_all_static_page_passes_the_coherence_tier(self, tmp_path: Path) -> None:
+        """An all-@static page runs nothing, so the coherence tier skips it cleanly.
+
+        Regression: an all-@static sequence has no executed frames, so it yields
+        no transcript; the coherence tier must skip it, never try to build an
+        empty SequenceTranscript (which raised a pydantic ``too_short`` error and
+        aborted the whole page's cumulative run)."""
+        page = (
+            "# Live reads\n\n"
+            "Set up a profile first with `aeat config profile create`.\n\n"
+            "```{cli-sequence} live-notifications-static\n"
+            "@step Pull your notifications from AEAT.\n"
+            "@static aeat app live notifications pull\n"
+            "@step View the stored snapshot.\n"
+            "@static aeat app live notifications latest\n"
+            "```\n"
+        )
+        (tmp_path / "live.md").write_text(page, encoding="utf-8")
+        problems = check_page_coherence(docs_root=tmp_path)
+        assert problems == (), problems
+
     def test_cli_coherence_flag_reds_with_the_tier_note(
         self,
         tmp_path: Path,

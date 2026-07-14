@@ -18,9 +18,13 @@ aeat config profile status
 
 If the active setting points at unreadable profile state, clear it and switch to a good profile:
 
-```bash
-aeat config repair profile --clear-active --yes
-aeat config switch <profile-name>
+```{cli-sequence} troubleshooting-clear-active
+:verify: Confirm you can clear a broken active setting, then switch to a good profile by name.
+@step Clear the active setting when it points at unreadable profile state.
+@result aeat config repair profile --clear-active --yes
+@expect exit_code == 0
+@step Switch to a good profile by name.
+@static aeat config switch <profile-name>
 ```
 
 If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
@@ -70,8 +74,11 @@ Required casilla <id> is not present in the calculation revision inputs
 
 A casilla is a numbered box on the official form. A binding is a rule that fills one. List which values are still missing for your form:
 
-```bash
-aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+```{cli-sequence} troubleshooting-missing-values
+:verify: Confirm the tool lists the values still missing for the form.
+@step List the values still missing for the modelo, year, and period.
+@result aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+@expect exit_code == 0
 ```
 
 Replace the modelo, year, and period with your own. The full workflow for supplying and reviewing values lives in [Review and supply calculation inputs](review-calculation-values.md).
@@ -82,11 +89,17 @@ Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `
 
 Modelo and ledger commands share the same shape - the AEAT token with `--year`:
 
-```bash
+```{cli-sequence} troubleshooting-period-grammar
+:verify: Confirm the AEAT token plus --year is accepted across ledger and modelo commands.
+@step Run a quarterly ledger preflight.
 aeat app ledger preflight --year 2026 --period 1T
+@step Read the ledger for the annual period.
 aeat app ledger status --year 2026 --period 0A
-aeat app ledger preflight --year 2026 --period 03
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step Run a monthly ledger preflight.
+@result aeat app ledger preflight --year 2026 --period 03
+@expect exit_code == 0
+@step The same token shape addresses a modelo calculation.
+@static aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
 The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. On `ledger status` and `overview status`, where the period is optional, a bare token with no `--year` is refused with the year fix (shown here in English; the tool prints it in Spanish):
@@ -121,8 +134,11 @@ This refusal applies to `aeat app modelo work file` only - exporting works at an
 
 Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
 
-```bash
-aeat --language en config profile create --help
+```{cli-sequence} troubleshooting-language
+:verify: Confirm the --language flag renders the command help in the chosen language.
+@step Render the create help in English for this one command.
+@result aeat --language en config profile create --help
+@expect exit_code == 0
 ```
 
 The `--language` flag applies to that one command. A profile also carries
@@ -133,32 +149,42 @@ creation, as described in [Set up your taxpayer profile](profile-setup.md).
 
 Live reads need a registered digital certificate or Cl@ve PIN (the digital identity system Spain uses for citizens to log in to government services online). Check your authentication:
 
-```bash
+```{cli-sequence} troubleshooting-auth-check
+:verify: Confirm the tool reports what authentication is configured and probes it locally.
+@step Show what authentication is configured.
 aeat config auth status
-aeat config auth test
+@step Probe the stored credentials locally, without contacting AEAT.
+@result aeat config auth test
+@expect exit_code == 0
 ```
 
 `auth test` is a local probe - it checks your stored credentials without contacting AEAT. It also reports the certificate's expiry: an expired or soon-to-expire certificate blocks live reads. If the report warns about expiry, follow [Renew your certificate before it expires](authenticate-with-aeat.md#renew-your-certificate-before-it-expires). Check that the tool can reach the AEAT website (Sede Electrónica, the official online portal):
 
-```bash
-aeat config repair connectivity
+```{cli-sequence} troubleshooting-connectivity
+@step Check that the tool can reach the AEAT website.
+@static aeat config repair connectivity
 ```
 
 If authentication was never set up, follow [Authenticate with AEAT](authenticate-with-aeat.md).
 
 When a live login fails, the tool captures an encrypted diagnostic of the failure. List and inspect them:
 
-```bash
-aeat config auth diagnostics list
-aeat config auth diagnostics show <diagnostic-id>
+```{cli-sequence} troubleshooting-auth-diagnostics
+:verify: Confirm the tool lists saved login diagnostics.
+@step List the saved login-failure diagnostics.
+@result aeat config auth diagnostics list
+@expect exit_code == 0
+@step Inspect one diagnostic by its reference.
+@static aeat config auth diagnostics show <diagnostic-id>
 ```
 
 `list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted. Configured credentials appear only as present/absent flags and fingerprints, never as values.
 
 For Cl@ve failures, the missing piece is often what happened on your phone, something the tool cannot see. Record what you observed so the diagnostic is complete:
 
-```bash
-aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
+```{cli-sequence} troubleshooting-diagnostics-report
+@step Record the phone state you observed on one diagnostic.
+@static aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
 ```
 
 Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `app_did_not_prompt`, and `operator_did_not_check`.
@@ -185,18 +211,26 @@ aeat config repair integrity objects
 
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
-```bash
-aeat config repair quarantine --dry-run
-aeat config repair quarantine --yes
+```{cli-sequence} troubleshooting-quarantine
+:verify: Confirm the quarantine preview reports what it would move without changing anything.
+@step Preview how many records would move, per storage area.
+@result aeat config repair quarantine --dry-run
+@expect exit_code == 0
+@step Apply the move for real; the real run requires --yes.
+@static aeat config repair quarantine --yes
 ```
 
 The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover (for example with the recovery key, see [Protect access to your data](protect-data-access.md)), the archived records still exist.
 
-When you need to know which finalized calculations and filings used a transaction, ask the participation index:
+When you need to know which finalized calculations and filings used a transaction, ask the participation index. The card rebuilds the index, then shows the per-transaction lookup form:
 
-```bash
-aeat app ledger participation <transaction-id>
-aeat app ledger participation rebuild
+```{cli-sequence} troubleshooting-participation
+:verify: Confirm the participation index rebuilds from the finalized records.
+@step Rebuild the participation index from the finalized calculation records.
+@result aeat app ledger participation rebuild
+@expect exit_code == 0
+@step Look up which finalized filings used one transaction.
+@static aeat app ledger participation <transaction-id>
 ```
 
 The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
@@ -205,8 +239,9 @@ Both `participation` verbs read the active profile's encrypted bucket, so they n
 
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
-```bash
-aeat config repair reset-progress --yes
+```{cli-sequence} troubleshooting-reset-progress
+@step Clear the saved progress of interrupted commands.
+@static aeat config repair reset-progress --yes
 ```
 
 It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.

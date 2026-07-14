@@ -1,0 +1,23 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "apoderado",
+        "scopes",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "GENERALNT\tGeneral tax procedures\nRENT\tIncome tax and wealth declaration (modelo 100, 714)\nIVA\tIVA periodic and annual returns (modelo 303, 390)\nPAGOSF\tQuarterly self-employed instalments (modelo 130, 131)\nRETEN\tWithholding tax declarations (modelo 111, 115, 123, 180, 190, 193)\nCENSO\tCenso declarations (registration, modification, deregistration) (modelo 036)\nINFORM\tInformative declarations (modelo 347, 349, 720)\nNOTIFIC\tNotifications and communications\nEXPED\tFiles and procedures\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-apoderado-scopes"
+}

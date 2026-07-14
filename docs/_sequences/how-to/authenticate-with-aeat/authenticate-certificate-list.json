@@ -1,0 +1,22 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "certificate",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "sources\t<none>\nnext_action\taeat config auth certificate register --name NAME --file PATH\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-certificate-list"
+}

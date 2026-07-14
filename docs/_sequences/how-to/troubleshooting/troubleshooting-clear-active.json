@@ -1,0 +1,23 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "profile",
+        "--clear-active",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "dry_run\tFalse\ncleared_pointer\tTrue\nactive_profile\t\nsource\tnone\nstatus\tnone\nregistered_bucket\tFalse\nprofile_record_present\tFalse\nrepairable_by_clearing_pointer\tFalse\nnext_action\taeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-clear-active"
+}

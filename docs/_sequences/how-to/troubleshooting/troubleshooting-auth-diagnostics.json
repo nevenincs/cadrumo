@@ -1,0 +1,22 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "diagnostics",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "row_count\t0\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-auth-diagnostics"
+}

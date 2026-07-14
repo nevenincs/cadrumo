@@ -77,7 +77,11 @@ _RATCHET_BASELINE: dict[str, frozenset[str]] = {
             "_M130_RESULTADO_FINAL_CASILLA",
         }
     ),
-    "application/modelo/_calculation_actions.py": frozenset(),
+    # Modelo.M210 gates the live M210 IRNR gross-income source-mode carve-out
+    # (`_m210_gross_source_mode`), enrolled with the live IRNR income-ledger
+    # resolver in the calculate mesh. A conscious, reviewed addition for a
+    # shipped resolver, not an accidental accretion.
+    "application/modelo/_calculation_actions.py": frozenset({"Modelo.M210"}),
     "application/modelo/_verification_cross_period.py": frozenset(
         {
             "Modelo.M202",

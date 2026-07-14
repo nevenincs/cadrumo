@@ -26,8 +26,9 @@ The runtime emits help, prompts, and messages in Spanish.
 
 Do this once, right after setup, while your passphrase still works:
 
-```bash
-aeat config show-recovery
+```{cli-sequence} protect-data-access-show-recovery
+@step Create or confirm the recovery key.
+@static aeat config show-recovery
 ```
 
 If no recovery key exists yet, the command creates one and prints a
@@ -42,8 +43,9 @@ exists, the command reports its status and does not print the words again.
 
 Verify the words you wrote down without changing anything:
 
-```bash
-aeat config verify-recovery --recovery-key "word1 word2 word3 ..."
+```{cli-sequence} protect-data-access-verify-recovery
+@step Verify the recovery words without changing anything.
+@static aeat config verify-recovery --recovery-key "word1 word2 word3 ..."
 ```
 
 The command reports `verified yes` or `verified no` and exits with a failure
@@ -55,8 +57,9 @@ either way.
 If the written words may have been seen by someone else, mint a fresh
 recovery key:
 
-```bash
-aeat config show-recovery --rotate
+```{cli-sequence} protect-data-access-rotate-recovery
+@step Mint a fresh recovery key and retire the previous words.
+@static aeat config show-recovery --rotate
 ```
 
 New words are printed exactly once. The previous recovery words stop working
@@ -66,8 +69,9 @@ immediately. Store the new words as before.
 
 To change the passphrase while you still know the current one:
 
-```bash
-aeat config rekey
+```{cli-sequence} protect-data-access-rekey
+@step Change the passphrase that opens the master key.
+@static aeat config rekey
 ```
 
 The command asks for the current passphrase if the store is not already
@@ -80,8 +84,9 @@ together with `--confirm-new-passphrase`.
 
 If you forgot the passphrase but have your recovery words:
 
-```bash
-aeat config recover --recovery-key "word1 word2 word3 ..."
+```{cli-sequence} protect-data-access-recover
+@step Unlock the master key from the recovery words and set a new passphrase.
+@static aeat config recover --recovery-key "word1 word2 word3 ..."
 ```
 
 The command prompts twice (hidden) for a new passphrase, unlocks the master
@@ -130,8 +135,9 @@ a profile again with `aeat config switch <name>` when you return.
 Reset deletes operator-local state. It is not recoverable. The command
 refuses to run without `--yes`:
 
-```bash
-aeat config reset --scope profile --yes
+```{cli-sequence} protect-data-access-reset
+@step Delete operator-local state for the chosen scope.
+@static aeat config reset --scope profile --yes
 ```
 
 Pick the scope deliberately:

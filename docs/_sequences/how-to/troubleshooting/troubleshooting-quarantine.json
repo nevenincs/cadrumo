@@ -1,0 +1,22 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "quarantine",
+        "--dry-run"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "dry_run\ttrue\nwould_quarantine\t0\nwould_retain\t3\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-quarantine"
+}

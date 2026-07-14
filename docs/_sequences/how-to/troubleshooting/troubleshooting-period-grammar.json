@@ -1,0 +1,63 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "preflight",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period. If activity occurred, add or import ledger rows before calculating; if there was genuinely no activity, the empty ledger can support a zero-activity local filing.\nnext\taeat app ledger add --help; aeat app ledger import --help\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "status",
+        "--year",
+        "2026",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nbusiness_income_total\t0\nbusiness_expense_total\t0\nbusiness_net_total\t0\nRows\t0\nActive\t0\nArchived\t0\nStashed\t0\nPending review\t0\nReviewed\t0\nSkipped\t0\nPeriod\t2026 0A\nChecked transactions\t0\nReadiness issues\t0\nReady\tTrue\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "preflight",
+        "--year",
+        "2026",
+        "--period",
+        "03"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\nperiod\t2026 03\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period. If activity occurred, add or import ledger rows before calculating; if there was genuinely no activity, the empty ledger can support a zero-activity local filing.\nnext\taeat app ledger add --help; aeat app ledger import --help\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-period-grammar"
+}
