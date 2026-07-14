@@ -102,9 +102,8 @@ anything. For unattended runs, see
 `cadrumo` prints its prompts, refusals, and error messages in Spanish. The output
 blocks quoted below are English translations of those messages.
 
-Use flags with `--quiet` when you want a repeatable, scriptable setup, such as
-`aeat config profile create my-profile --quiet --entity-type natural_person
---tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"`. The
+Use flags with `--quiet` when you want a repeatable, scriptable setup, passing
+the entity type, tax id, name, and surnames to `aeat config profile create`. The
 [worked example below](#worked-example-a-natural-person-with-an-activity) runs a
 complete scripted create.
 
@@ -369,10 +368,11 @@ The three capabilities are:
 - `llm_vision` - read invoices with the on-host vision model. On by default.
 - `google_export` - export calculations to Google Sheets. On by default.
 
-Turn any capability on or off for the active profile the same way. For
-example, `aeat config profile capabilities set cloud_evidence_upload on`. A
-capability whose package extra is not installed refuses with the exact install
-command. See [Install Cadrumo](../workstation-setup.md) for the extras.
+Turn any capability on or off for the active profile the same way with
+`aeat config profile capabilities set`. The card above turns `llm_vision` off;
+pass `cloud_evidence_upload on` to enable cloud upload. A capability whose
+package extra is not installed refuses with the exact install command. See
+[Install Cadrumo](../workstation-setup.md) for the extras.
 
 ## See what changed
 
