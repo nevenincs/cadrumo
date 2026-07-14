@@ -1,0 +1,1670 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "130",
+          "name": "130-2026-1T",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2019-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "41987b138584",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--binding",
+        "modelo-130-resultados-negativos-anteriores=0",
+        "--binding",
+        "modelo-130-pagos-fraccionados-anteriores=0",
+        "--binding",
+        "irpf.previous_year_economic_activity_net_income=0"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.calculate",
+        "notices": [],
+        "result": {
+          "authorization_state": null,
+          "binding_overrides": {
+            "irpf.previous_year_economic_activity_net_income": "0",
+            "modelo-130-actividad-economica-gastos-cumulative": "500",
+            "modelo-130-actividad-economica-ingresos-cumulative": "1000",
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
+            "modelo-130-actividad-economica-retenciones-cumulative": "0",
+            "modelo-130-pagos-fraccionados-anteriores": "0",
+            "modelo-130-resultados-negativos-anteriores": "0"
+          },
+          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
+          "casilla_values": {
+            "01": "1000",
+            "02": "500",
+            "03": "500.00",
+            "04": "100.00",
+            "05": "0",
+            "06": "0",
+            "07": "100.00",
+            "08": "0",
+            "09": "0.00",
+            "10": "0",
+            "11": "0.00",
+            "12": "100.00",
+            "13": "100.00",
+            "14": "0.00",
+            "15": "0.00",
+            "16": "0",
+            "17": "0.00",
+            "18": "0",
+            "19": "0.00",
+            "saldo-negativo-fin-periodo": "0.00"
+          },
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "deadline": {
+            "closes_on": "2026-04-20",
+            "conditional_recargo_preview": null,
+            "days_overdue": null,
+            "days_remaining": 19
+          },
+          "detail_rows": [],
+          "filed_at": null,
+          "filed_by": null,
+          "input_values_by_casilla_id": {
+            "01": "1000",
+            "02": "500",
+            "05": "0",
+            "06": "0"
+          },
+          "modality": null,
+          "modality_reason": null,
+          "observations": [
+            {
+              "casilla_id": "01",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "1000"
+            },
+            {
+              "casilla_id": "02",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "500"
+            },
+            {
+              "casilla_id": "03",
+              "formula_id": "modelo-130-rendimiento-neto",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "01",
+                "02"
+              ],
+              "operand_refs": [
+                "01",
+                "02"
+              ],
+              "operand_values": [
+                "1000",
+                "500"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "500.00"
+            },
+            {
+              "casilla_id": "04",
+              "formula_id": "modelo-130-pago-fraccionado-directa",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "03"
+              ],
+              "operand_refs": [
+                "03",
+                "irpf.direct_estimation_fractional_payment_rate"
+              ],
+              "operand_values": [
+                "500.00",
+                "20"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "05",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "06",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "07",
+              "formula_id": "modelo-130-resultado-apartado-i",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "04",
+                "05",
+                "06"
+              ],
+              "operand_refs": [
+                "04",
+                "05",
+                "06"
+              ],
+              "operand_values": [
+                "100.00",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "08",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "09",
+              "formula_id": "modelo-130-pago-fraccionado-agrario",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "percent",
+              "operand_casilla_refs": [
+                "08"
+              ],
+              "operand_refs": [
+                "08",
+                "irpf.agriculture_fractional_payment_rate"
+              ],
+              "operand_values": [
+                "0",
+                "2"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "10",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "11",
+              "formula_id": "modelo-130-resultado-apartado-ii",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "09",
+                "10"
+              ],
+              "operand_refs": [
+                "09",
+                "10"
+              ],
+              "operand_values": [
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "12",
+              "formula_id": "modelo-130-suma-parciales",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "07",
+                "11"
+              ],
+              "operand_refs": [
+                "07",
+                "11"
+              ],
+              "operand_values": [
+                "100.00",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "13",
+              "formula_id": "modelo-130-minoracion-rendimientos-netos",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "if_then_else",
+              "operand_casilla_refs": [],
+              "operand_refs": [
+                "irpf.previous_year_economic_activity_net_income"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "14",
+              "formula_id": "modelo-130-neto-tras-minoracion",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "12",
+                "13"
+              ],
+              "operand_refs": [
+                "12",
+                "13"
+              ],
+              "operand_values": [
+                "100.00",
+                "100.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "15",
+              "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "min",
+              "operand_casilla_refs": [
+                "14"
+              ],
+              "operand_refs": [
+                "modelo-130-resultados-negativos-anteriores",
+                "14"
+              ],
+              "operand_values": [
+                "0",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "16",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "17",
+              "formula_id": "modelo-130-diferencia",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "14",
+                "15",
+                "16"
+              ],
+              "operand_refs": [
+                "14",
+                "15",
+                "16"
+              ],
+              "operand_values": [
+                "0.00",
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "18",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "19",
+              "formula_id": "modelo-130-resultado-final",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "17",
+                "18"
+              ],
+              "operand_refs": [
+                "17",
+                "18"
+              ],
+              "operand_values": [
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "saldo-negativo-fin-periodo",
+              "formula_id": "modelo-130-saldo-negativo-fin-periodo",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "17"
+              ],
+              "operand_refs": [
+                "17"
+              ],
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            }
+          ],
+          "operation": "modelo.work.calculate",
+          "relation_overrides": {},
+          "result_summary": [
+            {
+              "casilla_id": "03",
+              "label": "Net yield",
+              "localized_labels": {
+                "ca": "Rendiment net",
+                "en": "Net yield",
+                "hu": "Nettó jövedelem"
+              },
+              "role": "key_figure",
+              "value": "500.00"
+            },
+            {
+              "casilla_id": "04",
+              "label": "Fractional payment amount",
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "07",
+              "label": "Partial result of Section I",
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat I",
+                "en": "Partial result of Section I",
+                "hu": "I. rész részeredménye"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "09",
+              "label": "Fractional payment amount",
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "11",
+              "label": "Partial result of Section II",
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat II",
+                "en": "Partial result of Section II",
+                "hu": "II. rész részeredménye"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "12",
+              "label": "Sum of partial results",
+              "localized_labels": {
+                "ca": "Suma dels resultats parcials",
+                "en": "Sum of partial results",
+                "hu": "Részeredmények összege"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "13",
+              "label": "Reduction for net yields",
+              "localized_labels": {
+                "ca": "Minoració per rendiments nets",
+                "en": "Reduction for net yields",
+                "hu": "Nettó jövedelem miatti csökkentés"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "14",
+              "label": "Net amount after reduction",
+              "localized_labels": {
+                "ca": "Import net després de la minoració",
+                "en": "Net amount after reduction",
+                "hu": "Csökkentés utáni nettó összeg"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "17",
+              "label": "Difference",
+              "localized_labels": {
+                "ca": "Diferència",
+                "en": "Difference",
+                "hu": "Különbözet"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "19",
+              "label": "Final result",
+              "localized_labels": {
+                "ca": "Resultat final",
+                "en": "Final result",
+                "hu": "Végső eredmény"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            }
+          ],
+          "saved": true,
+          "saved_confirmation": "Saved as draft calculation revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769`.",
+          "state": "borrador",
+          "superseded_at": null,
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "verified_at": null,
+          "verified_by": null,
+          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "bindings",
+        "list",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.bindings.list",
+        "notices": [],
+        "result": {
+          "binding_count": 8,
+          "bindings": [
+            {
+              "binding_id": "modelo-130-resultados-negativos-anteriores",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "prior filed revision",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "previous_filing",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-pagos-fraccionados-anteriores",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "prior filed revision",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "previous_filing",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "irpf.previous_year_economic_activity_net_income",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "prior filed revision",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "previous_filing",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-actividad-economica-rendimiento-neto-cumulative",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-actividad-economica-retenciones-cumulative",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "130",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2019-y-siguientes",
+              "source": "ledger_renta_gasto_aggregation",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "typed_enum": null
+            }
+          ],
+          "missing_filter": false,
+          "modelo_filter": "130",
+          "operation": "modelo.bindings.list",
+          "period_filter": "1T",
+          "year_filter": 2026
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "casillas",
+        "130",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.casillas",
+        "notices": [],
+        "result": {
+          "casilla_count": 20,
+          "modelo": "130",
+          "operation": "modelo.casillas",
+          "revision": "2019-y-siguientes",
+          "rows": [
+            {
+              "casilla_id": "01",
+              "input_kind": "bound",
+              "label": "Income",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "localized_help": {
+                "ca": "Ingressos acumulats de l'activitat econòmica.",
+                "en": "Total cumulative business income for the tax year.",
+                "hu": "Az adóévben elért összesített vállalkozási bevétel."
+              },
+              "localized_labels": {
+                "ca": "Ingressos",
+                "en": "Income",
+                "hu": "Bevételek"
+              },
+              "number": "01",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "02",
+              "input_kind": "bound",
+              "label": "Expenses",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "localized_help": {
+                "ca": "Despeses acumulades de l'activitat econòmica.",
+                "en": "Total cumulative business expenses for the tax year.",
+                "hu": "Az adóévben elért összesített vállalkozási kiadás."
+              },
+              "localized_labels": {
+                "ca": "Despeses",
+                "en": "Expenses",
+                "hu": "Kiadások"
+              },
+              "number": "02",
+              "required": true,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "03",
+              "input_kind": "computed",
+              "label": "Net yield",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "localized_help": {
+                "ca": "Rendiment net de les activitats econòmiques en estimació directa, calculat com ingressos menys despeses.",
+                "en": "Net yield from direct-estimation economic activities, calculated as income minus expenses.",
+                "hu": "A közvetlen becslésű gazdasági tevékenységek nettó jövedelme, a bevételek és kiadások különbözeteként."
+              },
+              "localized_labels": {
+                "ca": "Rendiment net",
+                "en": "Net yield",
+                "hu": "Nettó jövedelem"
+              },
+              "number": "03",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "04",
+              "input_kind": "computed",
+              "label": "Fractional payment amount",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Import del pagament fraccionat per activitats en estimació directa abans de pagaments previs i retencions.",
+                "en": "Fractional payment amount for direct-estimation activities before prior payments and withholdings.",
+                "hu": "A közvetlen becslésű tevékenységek részletfizetési összege a korábbi befizetések és levonások előtt."
+              },
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "number": "04",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "05",
+              "input_kind": "bound",
+              "label": "Prior fractional payments",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Pagaments fraccionats ja realitzats anteriorment en el mateix exercici per activitats en estimació directa.",
+                "en": "Fractional payments already made earlier in the same tax year for direct-estimation activities.",
+                "hu": "Ugyanazon adóév korábbi időszakaiban már teljesített részletfizetések közvetlen becslésű tevékenységekre."
+              },
+              "localized_labels": {
+                "ca": "Pagaments fraccionats anteriors",
+                "en": "Prior fractional payments",
+                "hu": "Korábbi részletfizetések"
+              },
+              "number": "05",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "06",
+              "input_kind": "manual",
+              "label": "Withholdings and payments on account",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Retencions i ingressos a compte suportats durant el període per activitats en estimació directa.",
+                "en": "Withholdings and payments on account borne during the period for direct-estimation activities.",
+                "hu": "Az időszakban elszenvedett levonások és előlegbefizetések közvetlen becslésű tevékenységekre."
+              },
+              "localized_labels": {
+                "ca": "Retencions i ingressos a compte",
+                "en": "Withholdings and payments on account",
+                "hu": "Levonások és előlegbefizetések"
+              },
+              "number": "06",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "07",
+              "input_kind": "computed",
+              "label": "Partial result of Section I",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Resultat parcial de l'apartat I després de restar pagaments previs i retencions al pagament fraccionat d'estimació directa.",
+                "en": "Partial Section I result after subtracting prior payments and withholdings from the direct-estimation fractional payment.",
+                "hu": "Az I. rész részeredménye a korábbi befizetések és levonások levonása után."
+              },
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat I",
+                "en": "Partial result of Section I",
+                "hu": "I. rész részeredménye"
+              },
+              "number": "07",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "08",
+              "input_kind": "manual",
+              "label": "Quarterly income volume",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Volum d'ingressos del trimestre procedent d'activitats agrícoles, ramaderes, forestals o pesqueres.",
+                "en": "Income volume for the quarter from agricultural, livestock, forestry, or fishing activities.",
+                "hu": "A negyedév bevételi volumene mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységekből."
+              },
+              "localized_labels": {
+                "ca": "Volum d'ingressos del trimestre",
+                "en": "Quarterly income volume",
+                "hu": "A negyedév bevételi volumene"
+              },
+              "number": "08",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "09",
+              "input_kind": "computed",
+              "label": "Fractional payment amount",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Import del pagament fraccionat per activitats agrícoles, ramaderes, forestals o pesqueres.",
+                "en": "Fractional payment amount for agricultural, livestock, forestry, or fishing activities.",
+                "hu": "A mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységek részletfizetési összege."
+              },
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "number": "09",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "10",
+              "input_kind": "manual",
+              "label": "Withholdings and payments on account",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Retencions i ingressos a compte suportats durant el període per activitats agrícoles, ramaderes, forestals o pesqueres.",
+                "en": "Withholdings and payments on account borne during the period for agricultural, livestock, forestry, or fishing activities.",
+                "hu": "Az időszakban elszenvedett levonások és előlegbefizetések mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységekre."
+              },
+              "localized_labels": {
+                "ca": "Retencions i ingressos a compte",
+                "en": "Withholdings and payments on account",
+                "hu": "Levonások és előlegbefizetések"
+              },
+              "number": "10",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "11",
+              "input_kind": "computed",
+              "label": "Partial result of Section II",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Resultat parcial de l'apartat II després de restar les retencions al pagament fraccionat agrari, ramader, forestal o pesquer.",
+                "en": "Partial Section II result after subtracting withholdings from the agricultural, livestock, forestry, or fishing fractional payment.",
+                "hu": "A II. rész részeredménye a levonások mezőgazdasági, állattenyésztési, erdészeti vagy halászati részletfizetésből való levonása után."
+              },
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat II",
+                "en": "Partial result of Section II",
+                "hu": "II. rész részeredménye"
+              },
+              "number": "11",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "12",
+              "input_kind": "computed",
+              "label": "Sum of partial results",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Suma dels resultats parcials dels apartats I i II.",
+                "en": "Sum of the partial results from Sections I and II.",
+                "hu": "Az I. és II. rész részeredményeinek összege."
+              },
+              "localized_labels": {
+                "ca": "Suma dels resultats parcials",
+                "en": "Sum of partial results",
+                "hu": "Részeredmények összege"
+              },
+              "number": "12",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "13",
+              "input_kind": "computed",
+              "label": "Reduction for net yields",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Minoració aplicable quan els rendiments nets entren dins el llindar regulador del Model 130.",
+                "en": "Reduction applied when net yields fall within the regulatory threshold for Modelo 130.",
+                "hu": "A Modelo 130 szabályozási küszöbe alapján alkalmazható nettó jövedelmi csökkentés."
+              },
+              "localized_labels": {
+                "ca": "Minoració per rendiments nets",
+                "en": "Reduction for net yields",
+                "hu": "Nettó jövedelem miatti csökkentés"
+              },
+              "number": "13",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "14",
+              "input_kind": "computed",
+              "label": "Net amount after reduction",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Import restant després d'aplicar la minoració per rendiments nets.",
+                "en": "Amount remaining after applying the net-yield reduction.",
+                "hu": "A nettó jövedelmi csökkentés alkalmazása után fennmaradó összeg."
+              },
+              "localized_labels": {
+                "ca": "Import net després de la minoració",
+                "en": "Net amount after reduction",
+                "hu": "Csökkentés utáni nettó összeg"
+              },
+              "number": "14",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "15",
+              "input_kind": "computed",
+              "label": "Negative results from previous quarters",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Deducció per resultats negatius de trimestres anteriors del mateix exercici.",
+                "en": "Deduction for negative results from previous quarters of the same tax year.",
+                "hu": "Ugyanazon adóév korábbi negyedéveiből származó negatív eredmények levonása."
+              },
+              "localized_labels": {
+                "ca": "Resultats negatius de trimestres anteriors",
+                "en": "Negative results from previous quarters",
+                "hu": "Korábbi negyedévek negatív eredményei"
+              },
+              "number": "15",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "16",
+              "input_kind": "manual",
+              "label": "Deduction for investment in main residence",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Deducció per inversió en l'habitatge habitual quan s'aplica el règim transitori.",
+                "en": "Deduction for investment in the taxpayer's main residence when the transitional regime applies.",
+                "hu": "A fő lakóhelybe történő beruházás kedvezménye, ha az átmeneti szabályozás alkalmazható."
+              },
+              "localized_labels": {
+                "ca": "Deducció per inversió en habitatge habitual",
+                "en": "Deduction for investment in main residence",
+                "hu": "Lakóhelyi ingatlanberuházási kedvezmény"
+              },
+              "number": "16",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "17",
+              "input_kind": "computed",
+              "label": "Difference",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Diferència després d'aplicar resultats negatius anteriors i, si escau, la deducció per habitatge habitual.",
+                "en": "Difference after applying prior-quarter negative results and any main-residence deduction.",
+                "hu": "Különbözet a korábbi negyedévek negatív eredményei és az esetleges lakóhelyi kedvezmény alkalmazása után."
+              },
+              "localized_labels": {
+                "ca": "Diferència",
+                "en": "Difference",
+                "hu": "Különbözet"
+              },
+              "number": "17",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "18",
+              "input_kind": "manual",
+              "label": "Amount payable from previous self-assessments",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Import a ingressar ja declarat en autoliquidacions anteriors del mateix període i exercici.",
+                "en": "Amount payable already reported in previous self-assessments for the same period and year.",
+                "hu": "Ugyanazon időszakra és évre vonatkozó korábbi önadózásokban már fizetendőként bevallott összeg."
+              },
+              "localized_labels": {
+                "ca": "Resultat a ingressar d'autoliquidacions anteriors",
+                "en": "Amount payable from previous self-assessments",
+                "hu": "Korábbi önadózásokban fizetendőként szereplő összeg"
+              },
+              "number": "18",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "19",
+              "input_kind": "computed",
+              "label": "Final result",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Import final a ingressar del Model 130 després de totes les deduccions i autoliquidacions anteriors.",
+                "en": "Final Modelo 130 amount payable after all deductions and prior self-assessments.",
+                "hu": "A Modelo 130 végső fizetendő összege minden levonás és korábbi önadózás után."
+              },
+              "localized_labels": {
+                "ca": "Resultat final",
+                "en": "Final result",
+                "hu": "Végső eredmény"
+              },
+              "number": "19",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": "saldo-negativo-fin-periodo",
+              "input_kind": "computed",
+              "label": "Negative balance transferable to later periods (max 0, -casilla 17)",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "localized_help": {
+                "ca": "Llavor de traspàs calculada quan la casella 17 és negativa, usada com a deducció a la casella 15 d'un trimestre posterior.",
+                "en": "Computed carry-forward seed when casilla 17 is negative, used as deductible casilla 15 in a later quarter.",
+                "hu": "Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben a 15. mező levonásaként használható."
+              },
+              "localized_labels": {
+                "ca": "Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella 17)",
+                "en": "Negative balance transferable to later periods (max 0, -casilla 17)",
+                "hu": "Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)"
+              },
+              "number": "saldo-negativo-fin-periodo",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-130-inspect-boxes"
+}
