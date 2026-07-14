@@ -102,6 +102,78 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
+
+
+def _compute_loader_code_fingerprint() -> str:
+    """Return a content hash of the registry package's own source.
+
+    The registry disk cache stores COMPILED ``(modelos, catalogues)`` objects.
+    The tree fingerprint keys only the TOML inputs, so a change to the
+    compilation logic that produces DIFFERENT compiled objects from IDENTICAL
+    TOML is invisible to the cache key -- a stale pickle from a prior session
+    (the shared OS temp dir persists across sessions and code changes) would be
+    served for the current loader. The hand-maintained
+    :data:`_REGISTRY_TREE_CACHE_SCHEMA_VERSION` only guards against this when a
+    developer remembers to bump it. Folding a content hash of the
+    loader/compiler/schema source into the cache key closes the gap
+    automatically: any change to a registry module (excluding its tests) yields
+    a new key, so pre-change pickles can never be served.
+
+    Best-effort: if the source is unreadable (e.g. a zip-imported install), the
+    fingerprint falls back to the interpreter version + bytecode cache tag so
+    the cache degrades to schema-version-only keying rather than crashing.
+    """
+    import hashlib
+    import sys
+
+    hasher = hashlib.sha256()
+    try:
+        package_dir = Path(__file__).resolve().parent
+        source_files = sorted(
+            path
+            for path in package_dir.rglob("*.py")
+            if "tests" not in path.relative_to(package_dir).parts
+        )
+        for path in source_files:
+            hasher.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
+            hasher.update(path.read_bytes())
+    except OSError:
+        hasher.update(sys.version.encode("utf-8"))
+        hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))
+    return hasher.hexdigest()
+
+
+_LOADER_CODE_FINGERPRINT = _compute_loader_code_fingerprint()
+
+
+def _registry_disk_cache_key(
+    root: str,
+    fingerprints: tuple[tuple[str, int, int], ...],
+    *,
+    loader_code_fingerprint: str = _LOADER_CODE_FINGERPRINT,
+) -> str:
+    """Compute the registry disk-cache pickle key.
+
+    The key binds the compiled snapshot to (1) the schema-version marker, (2) a
+    content hash of the loader/compiler/schema source (so a code change that
+    alters compiled semantics invalidates the pickle even without a manual
+    version bump), (3) the registry root path, and (4) the per-TOML tree
+    fingerprints (path, size, mtime_ns). ``loader_code_fingerprint`` is injected
+    for test isolation; production always uses :data:`_LOADER_CODE_FINGERPRINT`.
+    """
+    import hashlib
+
+    hasher = hashlib.sha256()
+    hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
+    hasher.update(loader_code_fingerprint.encode("utf-8"))
+    hasher.update(root.encode("utf-8"))
+    for item in fingerprints:
+        hasher.update(item[0].encode("utf-8"))
+        hasher.update(str(item[1]).encode("utf-8"))
+        hasher.update(str(item[2]).encode("utf-8"))
+    return hasher.hexdigest()
+
+
 _DISK_CACHE_READ_ATTEMPTS = 3
 """Total read attempts against the shared disk-cache pickle before falling back.
 
@@ -1196,7 +1268,6 @@ def _load_registry_tree_cached(
     root: str,
     fingerprints: tuple[tuple[str, int, int], ...],
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    import hashlib
     import logging
     import os
     import pickle
@@ -1206,14 +1277,7 @@ def _load_registry_tree_cached(
     resolved = Path(root)
     cache_path: Path | None = None
     if registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved)):
-        hasher = hashlib.sha256()
-        hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
-        hasher.update(root.encode("utf-8"))
-        for item in fingerprints:
-            hasher.update(item[0].encode("utf-8"))
-            hasher.update(str(item[1]).encode("utf-8"))
-            hasher.update(str(item[2]).encode("utf-8"))
-        key_hash = hasher.hexdigest()
+        key_hash = _registry_disk_cache_key(root, fingerprints)
 
         cache_path = registry_disk_cache_dir() / f"cadrumo_registry_{key_hash}.pkl"
         if cache_path.is_file():
