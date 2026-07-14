@@ -68,6 +68,30 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain an accepted product decision for this exact window;
   until then, create no layout, renderer, parser, test, or successor step.
 
+### modelo-037-declaration-extraction | low | Active extraction is retired in favour of Modelo 036
+
+- **Candidate:** Modelo 037 declaration-PDF extraction for current support from
+  `2025-02-03` with an open end.
+- **Mandate:** `absent`; accepted authority requires historical inactive
+  metadata and makes Modelo 036 the active successor.
+- **Exact authority window:** `BOE-A-2025-410` and the reviewed suppression
+  source apply from `2025-02-03`; they authorize suppression, not active 037
+  extraction.
+- **Canonical implementation state:** `delivered`; 037 is outside the registry,
+  rejects active work units, has no snapshot/profile, and names 036 as
+  successor while the generic parser remains registry-driven.
+- **Real evidence or specimen:** `not-required` for a retired active surface;
+  the reviewed suppression authority is available.
+- **Retirement:** `true`.
+- **Evidence block:** `false`; retirement independently closes the candidate.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `retired`.
+- **Next action:** `none`; preserve Modelo 036 and add no 037 profile, parser,
+  shim, or active entry point.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
