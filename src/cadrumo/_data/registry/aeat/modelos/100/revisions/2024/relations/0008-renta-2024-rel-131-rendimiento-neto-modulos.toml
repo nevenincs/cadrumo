@@ -1,7 +1,7 @@
 [[revisions."2024".relations]]
 id = "renta-2024-rel-131-rendimiento-neto-modulos"
 kind = "cross_model_output"
-dependency_role = "direct_calculation"
+dependency_role = "factual_evidence"
 source_modelo = "131"
 source_revision_selector = { year = 2024 }
 source_casilla_id = "01"
