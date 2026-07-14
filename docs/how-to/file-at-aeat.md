@@ -13,7 +13,7 @@ You need:
 
 - An active taxpayer profile carrying `--name` and `--surnames`, or the export
   refuses because it cannot stamp the operator name. Create one with
-  `aeat config profile create <name> --quiet`; see
+  `aeat config profile create`; see
   [Set up your taxpayer profile](profile-setup.md).
 - A verified saved calculation (work unit) for the modelo and period you want
   to file. If your draft isn't verified yet, see
