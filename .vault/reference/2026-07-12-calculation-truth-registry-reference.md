@@ -160,3 +160,37 @@ evidence-gated or unverified residual into delivered, superseded, externally
 blocked, or genuinely actionable only with current source evidence and a
 row-level execution or decision link. P02.S03 may schedule only individually
 re-grounded actionable rows.
+
+## 2026-07-14 follow-on: evidence-backed classification for the Modelo-Wave family
+
+`2026-07-14-calculation-truth-registry-audit.md` replaces the lexical
+evidence-gated/unverified-residual split above, for the bounded 306-row
+Modelo-Wave family only (source lines 315-2604, `Wave 0` through `Wave 27`),
+with four real dispositions:
+
+- **Blocked-external**: rows whose action is capturing, sanitizing, or
+  retrying a live/authenticated/read-only AEAT filed artefact. Grounded in
+  `aeat-safety-legal-gates` and `local-filed-observations-are-non-official-evidence`;
+  the app cannot manufacture this evidence.
+- **Superseded**: Modelo 037's 18 rows (Wave 20), superseded by its confirmed
+  registry-retirement (`cadrumo.core.NON_REGISTRY_MODELOS`); and the
+  "teardown" rows of the four self-declared-greenfield modelos (347, 232, 720,
+  840), superseded by their own inline "N/A — greenfield" text.
+- **Blocked-derivative**: every non-greenfield "teardown", "quality gate", and
+  "completion gate" row, which cannot be adjudicated ahead of its siblings and
+  restates the `Teardown Replacement Contract` family for the same modelo.
+  Scoped to a recommended follow-up bounded pass, not silently delivered.
+- **Genuinely actionable**: confirmed against the live registry TOML tree —
+  Modelo 131's 2024 revision is missing the `modulos-engine`
+  formula/parameter/casilla files that 2025 and 2026 carry (source lines
+  858-866), a real open coverage gap. Modelo 184/308/309/322/353/360/369/840
+  export-layout gaps overlap the concurrently running
+  `calculation-export-import-adjudication` plan (`P02`/`P03`) and are not
+  re-adjudicated here to avoid a divergent second disposition; inherit its
+  published outcome instead.
+
+`Tasks` (35 rows), `Teardown Replacement Contract` (359 rows), and the `VAT
+Centralization Roll-Out Ledger` (5 rows) — 399 of 705 rows total — remain
+outside this follow-on and carry no evidence-backed disposition yet. See the
+audit's Recommendations for the two further bounded adjudication passes
+needed before `P01.S01`/`P01.S02` can close.
