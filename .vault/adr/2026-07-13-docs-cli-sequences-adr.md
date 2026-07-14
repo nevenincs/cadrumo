@@ -327,27 +327,27 @@ into inline prose across every enrolled page, causing severe readability damage
 the operator rejected. Enrolled now means only "the page carries at least one
 executed, golden-backed `cli-sequence` directive"; an enrolled page MAY also
 carry ordinary executable `aeat` fences, and those fences receive exactly the
-same base verb-path and option-name checks every fence gets — enrollment neither
+same base verb-path and option-name checks every fence gets. Enrollment neither
 refuses nor exempts them. The executed-vs-static distinction is a *visual and
 golden-backed* one (executed frames render as a stepped, verified transcript;
 plain fences are ordinary documented commands), not an exclusionary gate. The
 sequence-grammar frame validation and the enrolled-surface non-vacuity tripwire
 remain; only the plain-fence refusal and its shipped-page scan are retired.
 
-**Amendment 2 (2026-07-14, operator-driven — mandatory display):** the plain-fence
+**Amendment 2 (2026-07-14, operator-driven, mandatory display):** the plain-fence
 *tolerance* of Amendment 1 was a remediation of inline cramming, not the end
 state. The operator's end state is that EVERY `aeat` CLI command shown in user
 docs renders through the implemented cli-sequence display (a step header, a
-tokenised command card with the shell switcher and copy control, and — for
-executed frames — its output), never a plain ` ```bash ` fence. To render a
+tokenised command card with the shell switcher and copy control, and, for
+executed frames, its output), never a plain ` ```bash ` fence. To render a
 command whose hermetic execution is impossible, a new non-executed display frame
 `@static` renders the SAME unified step card but with NO output section and NO
-golden (output is never fabricated — the honesty rules hold). `@static` is the
+golden (output is never fabricated, so the honesty rules hold). `@static` is the
 carve-out and is admissible ONLY where the hermetic sandbox genuinely cannot run
 the command: a live-AEAT read (`pull` / the `app live` group), a Google OAuth or
 other interactive-consent flow, an interactive wizard, or an operator-machine-
 specific path. Non-`aeat` commands (`pip`, `playwright`, `ollama`, `python -m`,
-`/plugin`) remain ordinary plain fences — the mandate is scoped to the `aeat`
+`/plugin`) remain ordinary plain fences. The mandate is scoped to the `aeat`
 executable. Enforcement is a ratcheting gate: a plain shell fence carrying an
 `aeat` invocation in a user-docs page is a violation, governed by a checked-in
 per-page baseline that only ratchets down (no page may exceed its baseline; an
