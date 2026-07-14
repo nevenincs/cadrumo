@@ -425,12 +425,17 @@ class SecureObjectRepository:
 
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key
-        -- and intentionally bypasses the classification and
-        schema-version contracts that consumer reads enforce. Used by
-        ``aeat config repair`` to surface namespaces holding rows from a
-        prior keychain master-key generation.
+        -- and intentionally bypasses the classification, schema-version,
+        and namespace-registration contracts that consumer reads enforce.
+        It probes over whatever namespaces are physically present in the
+        table (as surfaced by :meth:`list_namespaces`), including orphan,
+        legacy, and unregistered ones -- those are precisely the rows a
+        repair diagnostic exists to find -- so it runs the session /
+        route freshness check but not the namespace-registration check.
+        Used by ``aeat config repair`` to surface namespaces holding rows
+        from a prior keychain master-key generation.
         """
-        self._check_session_freshness(namespace)
+        self._check_session_freshness()
         return _probe_namespace_integrity(self._engine, namespace, logger=_log)
 
     def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
@@ -439,9 +444,12 @@ class SecureObjectRepository:
         This is the row-level companion to :meth:`probe_namespace_integrity`.
         It decrypts only to validate the AEAD tag, never returns plaintext, and
         exposes the HMAC lookup digest plus storage metadata needed by repair
-        diagnostics.
+        diagnostics. Like its namespace-level companion it is a crypto-layer
+        probe over whatever namespaces are physically present, so it runs the
+        session / route freshness check but not the namespace-registration
+        check.
         """
-        self._check_session_freshness(namespace)
+        self._check_session_freshness()
         yield from _iter_namespace_decryptability(self._engine, namespace)
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:

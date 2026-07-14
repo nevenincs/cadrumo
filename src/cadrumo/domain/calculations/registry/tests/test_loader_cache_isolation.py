@@ -62,7 +62,12 @@ from ._loader_directory_mode_support import _standard_manifest_text, _standard_r
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REPO_ROOT = Path(__file__).resolve().parents[6]
-_SUBPROCESS_TIMEOUT_SECONDS = 60
+# Hang guard only, not a performance assertion: each spawned REAL pytest
+# session compiles the bundled registry (~9s on an idle machine) and this
+# suite runs on a heavily loaded shared box (pytest-xdist workers plus
+# concurrent agent sessions), where a 60s budget produced false timeouts
+# unrelated to the purge regression this module guards against.
+_SUBPROCESS_TIMEOUT_SECONDS = 300
 
 
 def test_registry_disk_cache_disabled_under_pytest_for_a_mutable_root() -> None:

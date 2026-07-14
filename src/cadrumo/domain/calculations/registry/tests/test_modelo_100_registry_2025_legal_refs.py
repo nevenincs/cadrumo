@@ -12,13 +12,13 @@ from ._modelo_100_legal_refs_support import (
     _ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS,
     _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS,
     _AUTONOMIC_DEDUCTION_ART_77_REF,
+    _BASE_LIQUIDABLE_ART_50_REF,
     _BROAD_INCOME_CHAPTER_SPAN_REFS,
     _CAPITAL_GAINS_2025_SECTION_COUNTS,
     _CAPITAL_GAINS_SECTION_REFS,
     _ECONOMIC_ACTIVITY_SECTION_REFS,
     _FRACTIONAL_PAYMENT_AMOUNT_ARTICLE_REF,
     _FRACTIONAL_PAYMENT_ARTICLE_REF,
-    _GENERAL_BASE_ART_48_REF,
     _INMUEBLE_2025_CONTINUITY_REFS,
     _MODELO_100_2025_FORM_ORDER_REF,
     _NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS,
@@ -204,8 +204,12 @@ def test_modelo_100_2025_anexo_c_base_negative_general_uses_member_refs_only() -
     for binding_id in construct.bindings:
         member_refs.update(bindings[binding_id].legal_refs)
 
+    # The previous_filing carry of the base liquidable general negativa is
+    # grounded in Art. 50.3 LIRPF (4-year carry-forward of a negative base
+    # liquidable general), not Art. 48 (within-year integración/compensación,
+    # a distinct mechanism). The binding legal_refs carry art-50 accordingly.
     assert set(bindings[_ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID].legal_refs) == {
-        _GENERAL_BASE_ART_48_REF,
+        _BASE_LIQUIDABLE_ART_50_REF,
         _MODELO_100_2025_FORM_ORDER_REF,
     }
     assert member_refs == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS

@@ -23,10 +23,15 @@ You need:
   because it cannot stamp the operator name. See
   [Set up your taxpayer profile](profile-setup.md).
 - A verified saved calculation (work unit) for the modelo and period you want
-  to file. Create and calculate it first with
-  `aeat app modelo work create --modelo 303 --year 2026 --period 1T` and
-  `aeat app modelo work calculate --modelo 303 --year 2026 --period 1T`. If your
-  draft isn't verified yet, see [verification reports](verification-reports.md).
+  to file. Create and calculate it first:
+
+  ```bash
+  aeat app modelo work create --modelo 303 --year 2026 --period 1T
+  aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+  ```
+
+  If your draft isn't verified yet, see
+  [verification reports](verification-reports.md).
 - Your own AEAT portal credentials - a digital certificate or Cl@ve. These are
   your credentials for AEAT's website, separate from anything configured inside
   `aeat`. The tool's [AEAT authentication](authenticate-with-aeat.md) is for

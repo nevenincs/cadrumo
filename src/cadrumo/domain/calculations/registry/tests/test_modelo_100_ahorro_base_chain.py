@@ -256,6 +256,9 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
     Both the 2024 and 2025 formulas had the same missing-0041 defect.
     """
     _bindings_2025: dict[str, Decimal] = {
+        # The production profile resolver supplies this predicate as 1/0 from
+        # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
+        "renta-2025-profile-has-economic-activity": Decimal("1"),
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0

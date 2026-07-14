@@ -52,6 +52,9 @@ _SOURCE_REFS = (
 )
 
 _BASE_BINDINGS = {
+    # The production profile resolver supplies this predicate as 1/0 from
+    # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
+    "renta-2025-profile-has-economic-activity": Decimal("1"),
     "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     "renta-2025-profile-marriage-full-year": Decimal("0"),

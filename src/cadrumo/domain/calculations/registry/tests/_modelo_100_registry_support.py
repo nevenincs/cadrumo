@@ -659,9 +659,11 @@ _INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
 }
 _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-2025-base-liquidable-negativa-general-anterior"
+# The base liquidable general negativa carry is grounded in Art. 50.3 LIRPF
+# (4-year carry-forward of a negative base liquidable general); Art. 48
+# (within-year integración) is a distinct mechanism and does not ground it.
 _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS = frozenset(
     {
-        _GENERAL_BASE_ART_48_REF,
         _BASE_LIQUIDABLE_ART_50_REF,
         _MODELO_100_2025_FORM_ORDER_REF,
     }

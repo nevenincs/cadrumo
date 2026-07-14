@@ -125,6 +125,10 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
         inputs={},
         date_context={"filing_period": date(2025, 12, 31)},
         binding_values={
+            # Estimación directa normal filer -> declares economic activity;
+            # the production profile resolver supplies this predicate as 1/0 from
+            # taxpayer_type.irpf_income_categories, so a directa scenario is 1.
+            "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration_type = 1 (individual) -> 0461 computed = 0

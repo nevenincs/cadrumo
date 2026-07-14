@@ -34,16 +34,24 @@ profile](profile-setup.md).
 - Bring the year's ledger to clean and classified - Modelo 100 aggregates
   income and deductible expenses across the whole year. See
   [Import and manage transactions](import-bank-statements.md) and
-  [Classify transactions](classify-transactions.md); confirm with
-  `aeat app ledger preflight --year 2025 --period 0A`.
+  [Classify transactions](classify-transactions.md); confirm with:
+
+  ```bash
+  aeat app ledger preflight --year 2025 --period 0A
+  ```
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
-  declaration expects and what blocks it with `aeat app modelo requires 100
-  --year 2025 --period 0A` and `aeat app modelo work dependencies --modelo 100
-  --year 2025 --period 0A`. `dependencies` names each source filing and whether
-  its clean-state evidence is satisfied; an unfiled or unevidenced quarter
-  blocks the annual verify. Record or reconcile those filings first - see
+  declaration expects and what blocks it:
+
+  ```bash
+  aeat app modelo requires 100 --year 2025 --period 0A
+  aeat app modelo work dependencies --modelo 100 --year 2025 --period 0A
+  ```
+
+  `dependencies` names each source filing and whether its clean-state
+  evidence is satisfied; an unfiled or unevidenced quarter blocks the annual
+  verify. Record or reconcile those filings first - see
   [Reconcile a filing](reconcile.md).
 
 ## Create, calculate, and verify
@@ -85,12 +93,20 @@ on record stays a visible blank for you to resolve, not a guessed zero.
 
 Most of Modelo 100's casillas are optional manual inputs for situations the
 ledger cannot know (employment income details, capital income, deductions).
-Find what applies to you and what is still missing with `aeat app modelo
-bindings list --modelo 100 --year 2025 --period 0A --missing`, `aeat app modelo
-casillas 100 --period 0A --required`, and `aeat app modelo work observations
---modelo 100 --year 2025 --period 0A`. Supply a manual casilla and recalculate
-with `aeat app modelo work calculate --modelo 100 --year 2025 --period 0A
---casilla 0003=24000`.
+Find what applies to you and what is still missing:
+
+```bash
+aeat app modelo bindings list --modelo 100 --year 2025 --period 0A --missing
+aeat app modelo casillas 100 --period 0A --required
+aeat app modelo work observations --modelo 100 --year 2025 --period 0A
+```
+
+Supply a manual casilla and recalculate:
+
+```bash
+aeat app modelo work calculate --modelo 100 --year 2025 --period 0A \
+  --casilla 0003=24000
+```
 
 For the full input workflow - bound versus manual casillas, offsets, and
 revision selection - see
@@ -106,11 +122,19 @@ evidenced, and every carried figure must still point at the revision it was
 filed under. A blocked report names the dependency in the way - resolve it and
 re-run. See [Verify a draft filing](verification-reports.md).
 
-Export the verified declaration with `aeat app modelo export --modelo 100 --year
-2025 --period 0A --output ./modelo-100.boe`. After you file at the portal, record
-the local marker with `aeat app modelo work file --modelo 100 --year 2025
---period 0A` and reconcile with `aeat app modelo reconcile pull --modelo 100
---year 2025 --period 0A`.
+Export the verified declaration:
+
+```bash
+aeat app modelo export --modelo 100 --year 2025 --period 0A \
+  --output ./modelo-100.boe
+```
+
+After you file at the portal, record the local marker and reconcile:
+
+```bash
+aeat app modelo work file --modelo 100 --year 2025 --period 0A
+aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
+```
 
 ## Next steps
 

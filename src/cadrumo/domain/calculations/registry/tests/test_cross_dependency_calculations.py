@@ -523,6 +523,9 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values=relation_values,
         binding_values={
+            # Production profile resolver supplies this predicate as 1/0 from
+            # taxpayer_type.irpf_income_categories; scenario models a directa filer.
+            "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-2025-profile-declaration-type": Decimal("1"),
@@ -616,6 +619,9 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values=relation_values,
         binding_values={
+            # Production profile resolver supplies this predicate as 1/0 from
+            # taxpayer_type.irpf_income_categories; scenario models a directa filer.
+            "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             **materialized,
             "renta-2025-profile-declaration-type": Decimal("1"),
@@ -689,6 +695,9 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         date_context={"filing_period": date(filing_year, 12, 31)},
         relation_values=relation_values,
         binding_values={
+            # Production profile resolver supplies this predicate as 1/0 from
+            # taxpayer_type.irpf_income_categories; scenario models a directa filer.
+            "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-2025-profile-declaration-type": Decimal("1"),

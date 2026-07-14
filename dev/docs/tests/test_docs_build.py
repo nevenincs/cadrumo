@@ -300,6 +300,128 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
     )
 
 
+def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
+    """Evaluate the scope-conditional ``docs/conf.py`` config under one build scope.
+
+    Runs ``docs/conf.py`` module-level code (never ``setup()``) in a subprocess
+    with ``CADRUMO_DOCS_SCOPE`` set, and returns the switch-relevant config so the
+    scope conditionals are asserted without a full Sphinx build.
+    """
+    conf = _DOCS / "conf.py"
+    script = (
+        "import json, runpy;"
+        f"ns = runpy.run_path(r'{conf}');"
+        "print('SCOPE_CONFIG=' + json.dumps({"
+        "'user_scope': ns['_USER_SCOPE'],"
+        "'has_autodoc': 'sphinx.ext.autodoc' in ns['extensions'],"
+        "'has_viewcode': 'sphinx.ext.viewcode' in ns['extensions'],"
+        "'has_typehints': 'sphinx_autodoc_typehints' in ns['extensions'],"
+        "'has_myst': 'myst_parser' in ns['extensions'],"
+        "'excludes_api': 'api/**' in ns['exclude_patterns'],"
+        "'resolves_deferred': ns['_should_resolve_deferred_models']()}))"
+    )
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_SCOPE": scope,
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / f"cadrumo-scope-store-{scope}"),
+    }
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    line = next(row for row in result.stdout.splitlines() if row.startswith("SCOPE_CONFIG="))
+    return json.loads(line[len("SCOPE_CONFIG=") :])
+
+
+def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) -> None:
+    """User scope drops the app-importing autodoc extensions and excludes docs/api.
+
+    The whole point of the user scope is that the application is never imported to
+    render docs: autodoc / viewcode / typehints (which import the app) are absent,
+    the ``docs/api`` tree is excluded from the read set, and the deferred-model
+    rebuild (an autodoc-only import) is skipped. Every narrative extension stays.
+    Full scope keeps all of them, so the existing gates cover the API build.
+    """
+    user = _scope_config("user", tmp_path)
+    assert user["user_scope"] is True
+    assert user["has_autodoc"] is False
+    assert user["has_viewcode"] is False
+    assert user["has_typehints"] is False
+    assert user["excludes_api"] is True
+    assert user["resolves_deferred"] is False
+    assert user["has_myst"] is True  # the narrative rendering surface is untouched
+
+    full = _scope_config("full", tmp_path)
+    assert full["user_scope"] is False
+    assert full["has_autodoc"] is True
+    assert full["has_viewcode"] is True
+    assert full["has_typehints"] is True
+    assert full["excludes_api"] is False
+    assert full["resolves_deferred"] is True
+
+
+def test_user_scope_build_is_nitpicky_clean_and_excludes_api(tmp_path: Path) -> None:
+    """A real user-scope ``-n -W`` build succeeds, excludes docs/api, keeps user pages.
+
+    The operator-facing surface builds clean under nitpicky warnings-as-errors
+    with ``CADRUMO_DOCS_SCOPE=user``: the API autodoc tree is excluded from the
+    read set (so the application is never imported to render it) and the scoped
+    API-reference suppression resolves the handful of user->api links, while every
+    other reference class still reds the gate. The enrolled user pages (and their
+    executed cli-sequence directives) build. Full scope is covered by
+    :func:`test_sphinx_nitpicky_build_is_clean`.
+
+    Args:
+        tmp_path: Pytest-provided isolated output directory.
+    """
+    docs_source = tmp_path / "docs-source"
+    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_SCOPE": "user",
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "dummy",
+            "-n",
+            "-W",
+            "-j",
+            "auto",
+            str(docs_source),
+            str(tmp_path / "out"),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, (
+        "nitpicky user-scope build reported warnings or errors:\n"
+        + (result.stdout or "")[-6000:]
+        + (result.stderr or "")[-6000:]
+    )
+    combined = result.stdout + result.stderr
+    # An enrolled user page built; the excluded API tree was never read (no api
+    # docname in the read set) and no residual api reference survived the scoped
+    # suppression to reach the warning stream.
+    assert "how-to/quickstart" in combined
+    assert "api/cadrumo" not in combined
+
+
 def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
     """A real focused HTML build and shipped SVGs expose the canonical identity."""
     from bs4 import BeautifulSoup

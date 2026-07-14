@@ -25,20 +25,30 @@ deadline; see [the deadline section](#the-filing-deadline-has-passed)).
 ## Before you start
 
 **Requirement:** an active taxpayer profile with a name and surnames, and a
-calculated draft to check. Create a profile with `aeat config profile create
-me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity
-"consultoria" --activity-start-date 2026-01-01`. The `--activity-start-date`
-matters for a first filing: it scopes out the dependency on a prior period you
-never filed, so verification can pass. See [Set up your
-profile](profile-setup.md).
+calculated draft to check. Create a profile:
+
+```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  --surnames "Garcia Lopez" --activity "consultoria" \
+  --activity-start-date 2026-01-01
+```
+
+The `--activity-start-date` matters for a first filing: it scopes out the
+dependency on a prior period you never filed, so verification can pass. See
+[Set up your profile](profile-setup.md).
 
 You also need a master-key passphrase (Cadrumo prompts for it). For a
-first-period Modelo 303, record some business activity in the ledger with `aeat
-app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING
---description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate
-0.21 --iva-amount 210`, then create and calculate the draft. If you want to
-understand how filings and saved calculations fit together, read [The filing
-workflow](filing-spine.md) first.
+first-period Modelo 303, record some business activity in the ledger, then
+create and calculate the draft:
+
+```bash
+aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+  --description "venta" --classification BUSINESS \
+  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+```
+
+If you want to understand how filings and saved calculations fit together,
+read [The filing workflow](filing-spine.md) first.
 
 ## Run verification
 
@@ -83,15 +93,23 @@ calculation's revision ID directly. Use `--by` to record who ran the check.
 
 ## List your verification reports
 
-Every verification run leaves a report. List them with `aeat app modelo
-verification-report list`. To narrow the list to the reports for one saved
-calculation, add `--calculation-revision-id` with that calculation's ID.
+Every verification run leaves a report. List them:
+
+```bash
+aeat app modelo verification-report list
+```
+
+To narrow the list to the reports for one saved calculation, add
+`--calculation-revision-id` with that calculation's ID.
 
 ## View a report and read the findings
 
-Open one report by its ID with `aeat app modelo verification-report view
-<verification-report-id>` (the sequence above did exactly this on the report it
-had just produced).
+Open one report by its ID (the sequence above did exactly this on the report
+it had just produced):
+
+```bash
+aeat app modelo verification-report view <verification-report-id>
+```
 
 The report shows:
 
@@ -111,8 +129,11 @@ Each finding carries:
 - The legal references behind the rule, where the rule has them.
 
 For the legal references in machine-readable form, render the report as JSON.
-`--format json` is a global flag, so it goes before the command: `aeat --format
-json app modelo verification-report view <verification-report-id>`.
+`--format json` is a global flag, so it goes before the command:
+
+```bash
+aeat --format json app modelo verification-report view <verification-report-id>
+```
 
 Each finding in the JSON output carries `legal_refs` and `source_refs`. Most
 findings name a legal reference - a cross-period dependency, for example, cites
@@ -125,8 +146,11 @@ apply to you, and move on.
 
 ## After any fix: re-run verification
 
-After you change anything, run verification again with `aeat app modelo work
-verify --modelo 303 --year 2026 --period 1T`.
+After you change anything, run verification again:
+
+```bash
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+```
 
 Confirm the finding you addressed is gone from the new report. Repeat until the
 result shows `granted_verificado_completo` `true`. Each symptom section in this
@@ -137,8 +161,12 @@ guide finishes with this re-run step.
 Incomplete means required casillas have no value yet. The report lists which
 ones under **missing required casillas**.
 
-For a casilla you enter by hand, supply its value and recalculate with `aeat app
-modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>`.
+For a casilla you enter by hand, supply its value and recalculate:
+
+```bash
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T \
+  --casilla <ID>=<VALUE>
+```
 
 `--casilla` works only on boxes whose input kind is `manual`. A box filled from
 your ledger or another source is `bound`, and `--casilla` refuses it with
@@ -168,8 +196,11 @@ expects you to do. The common kinds of blocking finding:
   earlier period that is missing or unconfirmed. Record or confirm that earlier
   filing first. If you had no obligation in that earlier period because you had
   not started your activity yet, set your activity-start date on the profile so
-  the dependency is scoped out with `aeat config profile edit me --quiet
-  --activity-start-date 2026-01-01` (replace `me` with your profile name).
+  the dependency is scoped out (replace `me` with your profile name):
+
+  ```bash
+  aeat config profile edit me --quiet --activity-start-date 2026-01-01
+  ```
 
 After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
@@ -178,26 +209,45 @@ After each fix, [re-run verification](#after-any-fix-re-run-verification).
 Export needs a verified (or locally-filed) saved calculation. It refuses a plain
 draft with a message such as "current revision is still draft; verify it before
 exporting" or "no exportable verified or filed revision exists". Check where your
-filing stands with `aeat app modelo work status --modelo 303 --year 2026 --period
-1T`.
+filing stands:
 
-If the saved calculation is still a draft, verify it with `aeat app modelo work
-verify --modelo 303 --year 2026 --period 1T`. Once verification grants
-verified-complete, retry the export with `aeat app modelo export --modelo 303
---year 2026 --period 1T --output ./modelo-303.boe`.
+```bash
+aeat app modelo work status --modelo 303 --year 2026 --period 1T
+```
+
+If the saved calculation is still a draft, verify it:
+
+```bash
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+```
+
+Once verification grants verified-complete, retry the export:
+
+```bash
+aeat app modelo export --modelo 303 --year 2026 --period 1T \
+  --output ./modelo-303.boe
+```
 
 ## More than one filing matches
 
 When more than one filing or saved calculation matches the modelo, year, and
 period you named, the tool refuses to guess and prints the candidates instead.
 
-List your filings with their work-unit IDs using `aeat app modelo work list`.
-Then target the one you mean by passing its work-unit ID directly with `aeat app
-modelo work verify --work-unit-id <work-unit-id>`.
+List your filings with their work-unit IDs, then target the one you mean by
+passing its work-unit ID directly:
 
-To confirm which filing a command touched, check its state and the actions taken
-on it with `aeat app modelo work status --modelo 303 --year 2026 --period 1T`
-and `aeat app modelo work history --modelo 303 --year 2026 --period 1T`.
+```bash
+aeat app modelo work list
+aeat app modelo work verify --work-unit-id <work-unit-id>
+```
+
+To confirm which filing a command touched, check its state and the actions
+taken on it:
+
+```bash
+aeat app modelo work status --modelo 303 --year 2026 --period 1T
+aeat app modelo work history --modelo 303 --year 2026 --period 1T
+```
 
 ## The filing deadline has passed
 

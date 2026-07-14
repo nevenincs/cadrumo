@@ -270,10 +270,14 @@ them to confirm what was recorded.
 For specialized calculations, the CLI provides evaluation and comparison commands:
 
 - **Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare filing
-  jointly as a family unit against filing individually for an active Modelo 100.
-  Create the Modelo 100 draft first (`aeat app modelo work create --modelo 100
-  --year 2026 --period 0A`), or the command refuses with `Ninguna unidad de
-  trabajo activa`:
+  jointly as a family unit against filing individually for an active Modelo
+  100. Create the Modelo 100 draft first, or the command refuses with
+  `Ninguna unidad de trabajo activa`:
+
+  ```bash
+  aeat app modelo work create --modelo 100 --year 2026 --period 0A
+  ```
+
   
   ```bash
   aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A

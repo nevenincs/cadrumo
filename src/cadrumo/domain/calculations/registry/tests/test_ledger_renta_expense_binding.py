@@ -186,6 +186,10 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
         inputs=casilla_inputs,
         binding_values={
             **binding_values,
+            # Ledger renta expenses arise from económica activity; the production
+            # profile resolver supplies this predicate as 1/0 from
+            # taxpayer_type.irpf_income_categories.
+            "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
