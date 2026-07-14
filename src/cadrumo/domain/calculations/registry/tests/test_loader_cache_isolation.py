@@ -361,12 +361,24 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
                 "--no-header",
                 "-p",
                 "no:cacheprovider",
+                # Pin rootdir to the throwaway scratch package so collection
+                # NEVER walks the shared OS temp tree. Without this, pytest
+                # infers a rootdir across the Y:-drive cwd and the C:\Temp
+                # scratch node, and the inherited testpaths=["src/cadrumo"]
+                # drives a broad collection walk that lstat()s sibling temp
+                # dirs -- a concurrent agent deleting its own transient
+                # ``cli-sequence-*`` temp dir mid-walk then surfaces here as a
+                # spurious collection FileNotFoundError, flaking this proof.
+                "--rootdir",
+                str(scratch_pkg),
+                "--override-ini",
+                "testpaths=",
                 "-n0",
                 "-m",
                 "unit",
                 node_id,
             ],
-            cwd=_REPO_ROOT,
+            cwd=scratch_pkg,
             capture_output=True,
             text=True,
             check=False,
