@@ -11,14 +11,15 @@ between steps.
 
 You need an active profile, and the tool needs your master-key passphrase.
 
-Create a profile first if you do not have one. Pass `--quiet` for the
+Create a profile first if you do not have one (see
+[Set up your taxpayer profile](profile-setup.md)). Pass `--quiet` for the
 non-interactive form (a bare `profile create NAME` opens an interactive wizard).
 A profile that will reach `export` must carry a name and surnames, or `export`
 refuses with "requires the operator name":
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+```{cli-sequence} filing-spine-create-profile
+@step Create a taxpayer profile non-interactively.
+@static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
 ```
 
 Every profile-scoped command needs the master-key passphrase; the tool
@@ -85,14 +86,10 @@ aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1
 @expect exit_code == 0
 ```
 
-If no saved work exists yet, create it first:
-
-```bash
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-```
-
-Running the same create command again does not create a duplicate. It returns
-the existing saved work for that filing.
+If no saved work exists yet, create it first with `aeat app modelo work create`
+(the chain and visible-target sequences above run the full form). Running the
+same create command again does not create a duplicate. It returns the existing
+saved work for that filing.
 
 ## How a filing gets its ID
 
@@ -119,10 +116,13 @@ aeat --format json app modelo work list
 
 After you have the `work_unit_id`, address the same saved work by ID:
 
-```bash
-aeat app modelo work status <work-unit-id>
-aeat app modelo work calculate <work-unit-id>
-aeat app modelo work revisions <work-unit-id>
+```{cli-sequence} filing-spine-address-by-id
+@step Show the work unit status by its reference number.
+@static aeat app modelo work status <work-unit-id>
+@step Calculate by the same reference number.
+@static aeat app modelo work calculate <work-unit-id>
+@step List the saved revisions by the same reference number.
+@static aeat app modelo work revisions <work-unit-id>
 ```
 
 Prefer the visible target for hand-run commands. Use the reference number when
@@ -133,12 +133,8 @@ Cadrumo reports that more than one filing matches the same modelo, year, and per
 A work unit is the saved workspace for one filing target. It is the thing that
 connects later commands to the same local filing work.
 
-For example, this command creates or reuses the work unit for Modelo 303 Q1
-2026:
-
-```bash
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-```
+For example, `aeat app modelo work create` creates or reuses the work unit for
+Modelo 303 Q1 2026 (the chain sequence above runs the full form).
 
 The tool keeps a record of your filing work. That record links to:
 
@@ -150,9 +146,11 @@ No separate command "switches" the current work unit. The active profile is
 global, but the filing work is selected on each command. To work on a different
 filing, pass a different visible target or pass a different `work_unit_id`:
 
-```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 2T
-aeat app modelo work status <another-work-unit-id>
+```{cli-sequence} filing-spine-other-target
+@step Address a different visible target, such as another period.
+@static aeat app modelo work status --modelo 303 --year 2026 --period 2T
+@step Or address a different work unit by its reference number.
+@static aeat app modelo work status <another-work-unit-id>
 ```
 
 ## A calculation revision is one saved result
@@ -161,11 +159,8 @@ A calculation revision is one saved calculation result inside a work unit. It
 has its own reference number, the calculation-revision-id, which `calculate`
 creates and which is separate from the work-unit-id.
 
-When you run calculate, Cadrumo saves a draft calculation revision:
-
-```bash
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-```
+When you run `aeat app modelo work calculate`, Cadrumo saves a draft calculation
+revision (the chain sequence above runs it).
 
 Running calculation again does not overwrite the old result. Every saved
 calculation is immutable: earlier revisions stay on disk exactly as they
@@ -176,23 +171,16 @@ same result. The tool updates your filing record to reflect the latest
 calculated draft. A saved revision is a record of one attempt, not a verdict
 - its numbers commit to nothing until you verify and file it.
 
-List the saved calculation revisions for a filing:
-
-```bash
-aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
-```
-
-Show the current revision's persisted values:
-
-```bash
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T
-```
+List the saved calculation revisions for a filing with `aeat app modelo work
+revisions`, and show the current revision's persisted values with `aeat app
+modelo work revision` (the visible-target sequence above runs both).
 
 If you need to view one specific saved calculation, type its reference number
 after the command:
 
-```bash
-aeat app modelo work revision <calculation-revision-id>
+```{cli-sequence} filing-spine-revision-by-id
+@step View one specific saved calculation by its reference number.
+@static aeat app modelo work revision <calculation-revision-id>
 ```
 
 Reference numbers to know:
@@ -207,26 +195,21 @@ Reference numbers to know:
 Most commands start from the visible filing target and then choose the relevant
 calculation revision under that work unit.
 
-Verification defaults to the current draft revision:
-
-```bash
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-```
+Verification defaults to the current draft revision; run it with `aeat app modelo
+work verify` (the chain sequence above runs it).
 
 Local filing defaults to the current verified revision:
 
-```bash
-aeat app modelo work file --modelo 303 --year 2026 --period 1T
+```{cli-sequence} filing-spine-file
+@step File the current verified revision, recording a local marker only.
+@static aeat app modelo work file --modelo 303 --year 2026 --period 1T
 ```
 
 `work file` records a local filed marker. It does not submit anything to AEAT.
 
 Export defaults to the filed revision if one exists. Otherwise, it uses the
-current verified revision:
-
-```bash
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
-```
+current verified revision; run it with `aeat app modelo export` (the chain
+sequence above runs it).
 
 Export refuses a plain draft. The upload file is the artefact that leaves
 the tool for AEAT, so it is built only from a revision that passed the
@@ -247,18 +230,24 @@ Each command automatically picks the most appropriate saved calculation:
 If you need a different saved calculation, use `--select` with the visible
 target:
 
-```bash
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
+```{cli-sequence} filing-spine-select
+@step Select the latest draft revision explicitly.
+@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+@step Select the latest verified revision.
+@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+@step Select the filed revision.
+@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
 ```
 
 You can also pass exact IDs on commands that accept them:
 
-```bash
-aeat app modelo work verify <calculation-revision-id>
-aeat app modelo work file <calculation-revision-id>
-aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
+```{cli-sequence} filing-spine-exact-ids
+@step Verify a specific calculation by its reference number.
+@static aeat app modelo work verify <calculation-revision-id>
+@step File a specific calculation by its reference number.
+@static aeat app modelo work file <calculation-revision-id>
+@step Export a specific work unit and revision by their reference numbers.
+@static aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
 ```
 
 For the complete option list, see the [CLI reference](../cli/index.rst).
@@ -269,22 +258,25 @@ Manage or review the lifecycle of a work unit as it progresses:
 
 - `rename`: Add or update a friendly display name for the work unit:
   
-  ```bash
-  aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
+  ```{cli-sequence} filing-spine-rename
+  @step Add or update a friendly display name for the work unit.
+  @static aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
   ```
 
 - `history`: Review all actions the tool has taken on this filing, in order:
   
-  ```bash
-  aeat app modelo work history --modelo 303 --year 2026 --period 1T
+  ```{cli-sequence} filing-spine-history
+  @step Review all actions the tool has taken on this filing, in order.
+  @static aeat app modelo work history --modelo 303 --year 2026 --period 1T
   ```
 
 - `discard`: Mark the filing workspace as discarded. The tool records this
   action in the history log. Use this if you created the workspace by mistake
   or want to replace it with a fresh one:
   
-  ```bash
-  aeat app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
+  ```{cli-sequence} filing-spine-discard
+  @step Mark the filing workspace as discarded, recording the reason.
+  @static aeat app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
   ```
   
   The `--reason` text is for your own records only. It is not sent to AEAT.
@@ -297,16 +289,19 @@ and restart it:
 
 - `runs`: List recent flow runs, from most recent to oldest:
   
-  ```bash
-  aeat app modelo work runs
+  ```{cli-sequence} filing-spine-runs
+  @step List recent flow runs, from most recent to oldest.
+  @static aeat app modelo work runs
   ```
 
 - `resume`: Restart an interrupted command using the filing details or the
   reference number shown in the error message:
   
-  ```bash
-  aeat app modelo work resume --modelo 303 --year 2026 --period 1T
-  aeat app modelo work resume <run-id-or-work-unit-id>
+  ```{cli-sequence} filing-spine-resume
+  @step Restart an interrupted command using the filing details.
+  @static aeat app modelo work resume --modelo 303 --year 2026 --period 1T
+  @step Or restart using the run or work-unit reference number.
+  @static aeat app modelo work resume <run-id-or-work-unit-id>
   ```
 
 ## When to use exact IDs
