@@ -1,14 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#ledger-google-live-export'
+  - "#adr"
+  - "#ledger-google-live-export"
 date: '2026-06-04'
-modified: '2026-07-10'
 related:
   - "[[2026-06-04-ledger-google-live-export-research]]"
+superseded_by: '2026-07-14-google-optional-adapter-boundary-adr'
+modified: '2026-07-14'
 ---
-
-# `ledger-google-live-export` adr: `warning closeout authority alignment` | (**status:** `accepted`)
+# `ledger-google-live-export` adr: `warning closeout authority alignment` | (**status:** `superseded`)
 
 ## Problem Statement
 
