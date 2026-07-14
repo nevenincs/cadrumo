@@ -114,6 +114,51 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** `none`; add no 037 registry, layout, renderer, parser, shim,
   test, active entry point, or successor work.
 
+### modelo-200-submitted-file-2025 | low | Generic submitted-file parsing is delivered for the evidenced 2025 window
+
+- **Candidate:** Modelo 200 submitted-file parsing, annual period `0A`, exercise
+  2025.
+- **Mandate:** `proven`; accepted live filing-data capture prefers submitted
+  files when AEAT exposes them.
+- **Exact authority window:** `aeat-dr-200-2025` and
+  `modelo-200-fichero-boe` cover exercise 2025 only; the enclosing revision's
+  2024 start does not extend that authority backwards.
+- **Canonical implementation state:** `delivered`; the generic live route uses
+  `resolve_export_layout` and `parse_export_payload` and emits observations.
+- **Real evidence or specimen:** the reviewed, hash-pinned design, registry
+  layout, layout-resolution tests, generic round trips, and observation test are
+  available; no separate filed specimen or 2024 parity is claimed.
+- **Retirement:** `false`.
+- **Evidence block:** `false`.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = true`.
+- **Gate result:** `fail` because no canonical gap exists.
+- **Disposition:** `delivered-equivalent`.
+- **Next action:** `none`; preserve the generic path and limit the claim to 2025.
+
+### modelo-200-declaration-pdf-2025 | low | Declaration extraction awaits a real sanitized filed specimen
+
+- **Candidate:** Modelo 200 declaration-PDF extraction, annual period `0A`,
+  exercise 2025.
+- **Mandate:** `proven`; accepted live filing-data capture uses declaration PDF
+  as the fallback observation format.
+- **Exact authority window:** reviewed 2025 record-design and form authority
+  establish the exercise window but do not prove filed-PDF geometry.
+- **Canonical implementation state:** `gap`; the generic declaration parser
+  exists, but Modelo 200 has no registry-owned extraction profile.
+- **Real evidence or specimen:** `missing`; neither the record design, 2024
+  manual, nor a synthetic Modelo 130 fixture is a filed Modelo 200 PDF.
+- **Retirement:** `false`.
+- **Evidence block:** `true`; a sanitized filed 2025 specimen is unavailable.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = true`, `canonical_gap_met = true`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `evidence-gated`.
+- **Next action:** obtain and sanitize a real filed exercise-2025 PDF before
+  proposing profile data and real corpus coverage through the generic parser.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
