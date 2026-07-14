@@ -93,9 +93,12 @@ The ledger feeds the cumulative income, expense, and withholding figures
 through registry bindings; prior filings feed the carries. Casillas `06`,
 `08`, `10`, `16`, and `18` are manual inputs for the cases that apply to you
 (withholdings, second-activity volume, vivienda habitual deduction, prior
-complementary results). Inspect what is bound, missing, or manual with `aeat
-app modelo bindings list --modelo 130 --year 2026 --period 1T` and `aeat app
-modelo casillas 130 --period 1T`.
+complementary results). Inspect what is bound, missing, or manual:
+
+```bash
+aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
+aeat app modelo casillas 130 --period 1T
+```
 
 ## Supply a manual box value
 
@@ -153,12 +156,14 @@ first (see [Reconcile a filing](reconcile.md)).
 
 The chain is the standard filing workflow - see
 [The filing workflow](filing-spine.md) for how work units and calculation
-revisions behave. In short: re-run the calculation with `aeat app modelo work
-calculate --modelo 130 --year 2026 --period 1T`, inspect the saved values with
-`aeat app modelo work revision --modelo 130 --year 2026 --period 1T`, verify
-with `aeat app modelo work verify --modelo 130 --year 2026 --period 1T`, and
-export with `aeat app modelo export --modelo 130 --year 2026 --period 1T
---output ./modelo-130.boe`.
+revisions behave. In short:
+
+```bash
+aeat app modelo work calculate --modelo 130 --year 2026 --period 1T
+aeat app modelo work revision --modelo 130 --year 2026 --period 1T
+aeat app modelo work verify --modelo 130 --year 2026 --period 1T
+aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+```
 
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
