@@ -66,14 +66,23 @@ into its own pipeline (research → ADR → plan) under a new feature; the
 2026-06-10 architecture ADR's rung-2 scoping and the licence-clean shipping
 rule bound that work. ADR Update 2 records the fired gate.
 
-### NIT-1 (open, service-pending)
+### NIT-1 (open, blocked upstream)
 
 The golden-query live suite and one incremental reindex were red at close
-because the shared RAG service was down for team maintenance; the sole
-staleness miss is the S10 report itself. Re-run
-`uvx vaultspec-rag index --type code --port 8766` and then
-`uv run --no-sync pytest dev/docs/preprocess/tests -m integration` when the
-service returns.
+because the shared RAG service was down for team maintenance. Follow-up on
+2026-07-14 root-caused the blocker upstream: after the vaultspec stack
+update, the SERVICE-SIDE indexer never executes the document-preprocess
+rules at all — a full reindex with `VAULTSPEC_RAG_PREPROCESS_ENABLED=1` set
+at service start and a valid four-rule config produced zero preprocess
+invocations in `~/.vaultspec-rag/service.log`, leaving the rule-fed binary
+corpus (Diseños workbooks, PDFs) absent from the dev index, while per-file
+`preprocess run-one` still works end to end (our adapter and rules are
+proven). A reindex-throughput collapse was also observed (576/22216
+sections in 77 minutes, job eb3d40bc). Both reported to the vaultspec-rag
+team alongside the uv-tool torch regressions. Re-run
+`uvx vaultspec-rag index --type code --port 8766` and
+`uv run --no-sync pytest dev/docs/preprocess/tests -m integration` once the
+team confirms service-side rule execution.
 
 ### NIT-2 (actioned)
 
