@@ -36,17 +36,24 @@ profile](profile-setup.md).
   [Import and manage transactions](import-bank-statements.md) and
   [Classify transactions](classify-transactions.md); confirm with:
 
-  ```bash
-  aeat app ledger preflight --year 2025 --period 0A
+  ```{cli-sequence} modelo-100-preflight
+  :verify: Confirm the year's ledger reads back clean for the annual period.
+  @step Run the annual-period ledger preflight for the income year.
+  @result aeat --format json app ledger preflight --year 2025 --period 0A
+  @expect exit_code == 0
   ```
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
   declaration expects and what blocks it:
 
-  ```bash
-  aeat app modelo requires 100 --year 2025 --period 0A
-  aeat app modelo work dependencies --modelo 100 --year 2025 --period 0A
+  ```{cli-sequence} modelo-100-dependencies
+  :verify: Confirm the declaration's required source filings and dependencies read back.
+  @step List what Modelo 100 requires for the year.
+  aeat --format json app modelo requires 100 --year 2025 --period 0A
+  @step Show each source filing the declaration folds in and whether its evidence is satisfied.
+  @result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
+  @expect exit_code == 0
   ```
 
   `dependencies` names each source filing and whether its clean-state
@@ -95,18 +102,24 @@ Most of Modelo 100's casillas are optional manual inputs for situations the
 ledger cannot know (employment income details, capital income, deductions).
 Find what applies to you and what is still missing:
 
-```bash
-aeat app modelo bindings list --modelo 100 --year 2025 --period 0A --missing
-aeat app modelo casillas 100 --period 0A --required
-aeat app modelo work observations --modelo 100 --year 2025 --period 0A
+```{cli-sequence} modelo-100-inspect-inputs
+:seed: renta-2025
+:verify: Confirm the declaration's missing bindings, required casillas, and observations read back.
+@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@step List which bound casillas are still missing a value.
+aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A --missing
+@step List the casillas the declaration requires.
+aeat --format json app modelo casillas 100 --period 0A --required
+@step Show the saved observations behind the calculated figures.
+@result aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
+@expect exit_code == 0
 ```
 
-Supply a manual casilla and recalculate:
-
-```bash
-aeat app modelo work calculate --modelo 100 --year 2025 --period 0A \
-  --casilla 0003=24000
-```
+Supply a manual casilla and recalculate by passing `--casilla 0003=24000` on
+the calculate command, alongside the bindings the declaration still needs (the
+main sequence above shows the full form). Recalculating replaces the current
+draft revision.
 
 For the full input workflow - bound versus manual casillas, offsets, and
 revision selection - see
@@ -122,19 +135,14 @@ evidenced, and every carried figure must still point at the revision it was
 filed under. A blocked report names the dependency in the way - resolve it and
 re-run. See [Verify a draft filing](verification-reports.md).
 
-Export the verified declaration:
+Export the verified declaration with `aeat app modelo export --modelo 100
+--year 2025 --period 0A --output ./modelo-100.boe`. The full evidence-to-export
+chain runs end to end on [Prepare a Modelo 303 IVA filing](modelo-303.md).
 
-```bash
-aeat app modelo export --modelo 100 --year 2025 --period 0A \
-  --output ./modelo-100.boe
-```
-
-After you file at the portal, record the local marker and reconcile:
-
-```bash
-aeat app modelo work file --modelo 100 --year 2025 --period 0A
-aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
-```
+After you file at the portal, record the local marker with `aeat app modelo
+work file --modelo 100 --year 2025 --period 0A`, then pull the justificante and
+reconcile with `aeat app modelo reconcile pull --modelo 100 --year 2025 --period
+0A`. The pull is a live read from AEAT — see [Reconcile a filing](reconcile.md).
 
 ## Next steps
 

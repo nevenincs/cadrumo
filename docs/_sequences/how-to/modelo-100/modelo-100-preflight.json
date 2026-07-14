@@ -1,0 +1,54 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "preflight",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.preflight",
+        "notices": [
+          {
+            "code": "ledger.preflight.empty_period",
+            "context": {
+              "period": "0A",
+              "year": "2025"
+            },
+            "message": "No active ledger transactions were checked for this period. If activity occurred, add or import ledger rows before calculating; if there was genuinely no activity, the empty ledger can support a zero-activity local filing.",
+            "severity": "warning",
+            "suggestion": "aeat app ledger add --help; aeat app ledger import --help"
+          }
+        ],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "checked_transaction_count": 0,
+          "issues": [],
+          "period": {
+            "code": "0A",
+            "filing_year": 2025
+          },
+          "ready": true
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-100-preflight"
+}
