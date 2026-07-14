@@ -76,7 +76,7 @@ Freeze the mandate, authority, current-implementation, evidence, and non-duplica
 
 Adjudicate each legacy outbound candidate against product mandate and source applicability without creating a second renderer.
 
-- [ ] `P02.S03` - Adjudicate Modelo 036 outbound machine-file generation against the definitive current design and retire provisional-layout inferences; `src/cadrumo/_data/registry/aeat/modelos/036/, .vault/reference/`.
+- [x] `P02.S03` - Adjudicate Modelo 036 outbound machine-file generation against the definitive current design and retire provisional-layout inferences; `src/cadrumo/_data/registry/aeat/modelos/036/, .vault/reference/`.
 - [ ] `P02.S04` - Record Modelo 037 outbound support as retired and prohibit new registry or export work; `src/cadrumo/_data/registry/aeat/, .vault/reference/`.
 - [ ] `P02.S05` - Adjudicate Modelo 184 export only for the 2025-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/184/, .vault/reference/`.
 - [ ] `P02.S06` - Reconcile Modelo 190 2024 and 2025 design windows before deciding any outbound mandate; `src/cadrumo/_data/registry/aeat/modelos/190/, .vault/reference/`.
