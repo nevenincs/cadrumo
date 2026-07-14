@@ -591,23 +591,37 @@ def _inline_command_complexity(span: str) -> int | None:
     return count
 
 
+#: A markdown paragraph boundary — a blank (whitespace-only) line. An inline code
+#: span cannot cross one (CommonMark inline content is block-scoped), so soft line
+#: wraps are joined only WITHIN a paragraph, never across a paragraph break.
+_PARAGRAPH_BOUNDARY_RE = re.compile(r"\n[ \t]*\n")
+
+
 def _inline_aeat_command_spans(text: str) -> list[str]:
     """Return inline code spans in prose that are ``aeat`` commands with 2+ option/arg tokens.
 
     Fenced blocks (code, CLI output, cli-sequence directives) are stripped first,
-    so only reader-facing inline ``code`` spans are scanned. The two-token
-    threshold keeps bare verb references and single-flag/argument mentions legal
-    while flagging a full command moved inline (the fence-ratchet loophole).
+    so only reader-facing inline ``code`` spans are scanned. Because markdown joins
+    a code span wrapped across source lines into ONE rendered span — and
+    ``_INLINE_CODE_RE`` deliberately does not match across a newline — each
+    blank-line-delimited paragraph has its soft line wraps collapsed to spaces
+    before span extraction, so a command dissolved into an inline span and then
+    wrapped across two source lines is caught exactly as its single-line form is.
+    The two-token threshold keeps bare verb references and single-flag/argument
+    mentions legal while flagging a full command moved inline (the fence-ratchet
+    loophole).
     """
-    prose = _FENCE_BLOCK_RE.sub("", text)
+    prose = _FENCE_BLOCK_RE.sub("\n\n", text)
     offending: list[str] = []
-    for match in _INLINE_CODE_RE.finditer(prose):
-        span = match.group(1)
-        if _AEAT_TOKEN_RE.search(span) is None:
-            continue
-        complexity = _inline_command_complexity(span)
-        if complexity is not None and complexity >= 2:
-            offending.append(span.strip())
+    for paragraph in _PARAGRAPH_BOUNDARY_RE.split(prose):
+        joined = " ".join(line.strip() for line in paragraph.split("\n"))
+        for match in _INLINE_CODE_RE.finditer(joined):
+            span = match.group(1)
+            if _AEAT_TOKEN_RE.search(span) is None:
+                continue
+            complexity = _inline_command_complexity(span)
+            if complexity is not None and complexity >= 2:
+                offending.append(span.strip())
     return offending
 
 
@@ -1028,6 +1042,36 @@ def test_no_new_inline_aeat_command_spans_in_user_docs() -> None:
         "user docs must render aeat commands through the cli-sequence display, not inline command "
         "spans (mandatory-display doctrine, 2026-07-14):\n  " + "\n  ".join(problems)
     )
+
+
+def test_inline_span_detector_catches_line_wrapped_commands() -> None:
+    """A dissolved command wrapped across source lines is caught as its single-line form.
+
+    The extension that closes the wrapped-span loophole: markdown joins a code
+    span split across a soft line break into ONE rendered span, so the detector
+    joins each paragraph's wraps before extraction. A paragraph break (which a
+    code span cannot cross) and a stripped fenced block never bridge two spans.
+    """
+    wrapped = (
+        "Export the draft with `aeat app modelo export --modelo 130\n"
+        "--output ./x.boe`; upload it yourself.\n"
+    )
+    spans = _inline_aeat_command_spans(wrapped)
+    assert spans == ["aeat app modelo export --modelo 130 --output ./x.boe"]
+
+    # The same command on a single source line is caught identically.
+    single = "Export the draft with `aeat app modelo export --modelo 130 --output ./x.boe`.\n"
+    assert _inline_aeat_command_spans(single) == spans
+
+    # A fenced command block is stripped, and the legal inline mentions around it
+    # (a bare verb, a single-flag reference) never merge across the paragraph
+    # breaks into a spurious 2+-token span.
+    with_fence = (
+        "Bare `aeat config switch` here.\n\n"
+        "```bash\naeat app modelo export --modelo 130 --output ./x.boe\n```\n\n"
+        "A single flag `aeat config auth configure --file` there.\n"
+    )
+    assert _inline_aeat_command_spans(with_fence) == []
 
 
 def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface() -> None:
