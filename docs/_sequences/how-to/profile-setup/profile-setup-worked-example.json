@@ -55,18 +55,34 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "validate",
         "ana-2026"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "ana-2026",
+        "command": "config.profile.validate",
+        "notices": [],
+        "result": {
+          "display_name": "ana-2026",
+          "issues": [],
+          "profile_id": "<profile-id>",
+          "schema_version": 4,
+          "status": "active",
+          "valid": true
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tana-2026\nstatus\tactive\nschema_version\t4\nvalid\tTrue\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

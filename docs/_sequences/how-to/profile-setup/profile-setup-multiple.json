@@ -58,17 +58,38 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "status"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "my-other-profile",
+        "command": "config.profile.status",
+        "notices": [],
+        "result": {
+          "active_profile": "my-other-profile",
+          "activity_present": false,
+          "configured": false,
+          "iva_regime": null,
+          "next_action": null,
+          "profile_id": null,
+          "profile_record_error": null,
+          "profile_record_present": null,
+          "registered_profile": null,
+          "tax_id_present": true,
+          "tax_residence_ccaa": null
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "profile\tmy-other-profile\nreadiness\tblocked\nidentity.tax_id\tpresent\nactivities.description\tmissing\nnext_action\taeat config profile edit my-other-profile\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

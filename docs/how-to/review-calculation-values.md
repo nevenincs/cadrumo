@@ -9,20 +9,12 @@ income figure or a compensation amount from an earlier period.
 You need:
 
 - A master-key passphrase. Cadrumo prompts for it.
-- An active profile. Create one (the `--quiet` form skips the wizard):
-
-  ```bash
-  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-    --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-  ```
-
-  See [Set up your profile](profile-setup.md) for the full options.
-- A work unit for the filing you want to review. Create it before any review or
-  calculate command:
-
-  ```bash
-  aeat app modelo work create --modelo 130 --year 2026 --period 1T
-  ```
+- An active profile. Create one with `aeat config profile create` (the
+  `--quiet` form skips the wizard); see [Set up your profile](profile-setup.md)
+  for the full options.
+- A work unit for the filing you want to review. Create it with `aeat app modelo
+  work create` before any review or calculate command (the review sequences
+  below open the work unit in their setup steps).
 
 ## Inspect the modelo before entering values
 
@@ -84,8 +76,8 @@ export.
 Use `--casilla` only for a box whose input kind is `manual`. Use the box number
 printed on the official Agencia Estatal de Administración Tributaria (AEAT) form.
 It is the same number you see on the paper or PDF
-version of the modelo. Run `aeat app modelo casillas 130 --period 1T` to see the
-list, and check the `input` column first.
+version of the modelo. Run `aeat app modelo casillas 130` to see the list (the
+inspect sequence above shows this), and check the `input` column first.
 
 `--casilla` works only on manual boxes. A `bound` box is filled from your ledger
 or another source, so `--casilla` refuses it with `cannot override bucket-derived
@@ -132,6 +124,7 @@ aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
 aeat --format json app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 @step Supply the first-period bindings during calculation.
 @result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.saved == true
 @expect exit_code == 0
 ```
 
@@ -197,6 +190,7 @@ aeat --format json app modelo iva-wallet balance --as-of-year 2026
 aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 @step Correct the seeded opening amount, recording the reason.
 @result aeat --format json app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+@expect result.amount == "1200.50"
 @expect exit_code == 0
 ```
 
@@ -215,8 +209,9 @@ For registry relation values, calculation accepts repeatable
 `--relation KEY=VALUE` inputs. Use them only when the relevant modelo's
 registry/help text identifies the relation you need:
 
-```bash
-aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
+```{cli-sequence} review-values-relation
+@step Supply a registry relation value during calculation.
+@static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
 ```
 
 ## Add rows for list-based forms (184, 232, 347, 349)
@@ -228,11 +223,11 @@ Supply each record with a repeatable `--row` input.
 
 Each `--row` starts with the record type, followed by its fields:
 
-```bash
-aeat app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
-aeat app modelo work calculate <work-unit-id> \
-  --row 'miembro nif=45678912S porcentaje=60 importe=10000' \
-  --row 'miembro nif=00000001R porcentaje=40 importe=5000'
+```{cli-sequence} review-values-rows
+@step Open the list-based work unit for the informational modelo.
+@static aeat app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
+@step Calculate, supplying each record as a repeatable --row input.
+@static aeat app modelo work calculate <work-unit-id> --row 'miembro nif=45678912S porcentaje=60 importe=10000' --row 'miembro nif=00000001R porcentaje=40 importe=5000'
 ```
 
 Take `<work-unit-id>` from the `work_unit_id` field that `work create` prints.
@@ -265,13 +260,15 @@ For specialized calculations, the CLI provides evaluation and comparison command
   100. Create the Modelo 100 draft first, or the command refuses with
   `Ninguna unidad de trabajo activa`:
 
-  ```bash
-  aeat app modelo work create --modelo 100 --year 2026 --period 0A
+  ```{cli-sequence} review-values-m100-create
+  @step Create the Modelo 100 draft the comparison needs.
+  @static aeat app modelo work create --modelo 100 --year 2026 --period 0A
   ```
 
   
-  ```bash
-  aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
+  ```{cli-sequence} review-values-compare-taxation
+  @step Compare filing jointly as a family unit against filing individually.
+  @static aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
   ```
   
   This check does not save a draft. It shows the tax difference and a
@@ -280,8 +277,9 @@ For specialized calculations, the CLI provides evaluation and comparison command
 - **Maritime worker exemption preview (`preview-maritime-exemption`)**: Preview
   the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
   
-  ```bash
-  aeat app modelo work preview-maritime-exemption
+  ```{cli-sequence} review-values-maritime
+  @step Preview the IRPF exemption for maritime workers.
+  @static aeat app modelo work preview-maritime-exemption
   ```
   
   The command shows which tax boxes are affected by the exemption and the
@@ -294,8 +292,9 @@ If a filing was already uploaded and later needs correction, use the amendment
 command. Do not recalculate the same period. That would not create the
 correct complementaria (supplementary return) record:
 
-```bash
-aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
+```{cli-sequence} review-values-amend
+@step Amend an already-filed record as a complementaria.
+@static aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
 ```
 
 Before using this command, you must have imported the {term}`justificante` for the filing you are correcting. The amendment command does not

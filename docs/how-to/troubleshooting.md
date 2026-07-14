@@ -12,7 +12,8 @@ The command needs a taxpayer profile and none is active. The card checks what th
 :verify: Confirm you can read the active profile and repair the active setting.
 @step Check what the tool thinks is active.
 aeat config profile status
-@result aeat config repair profile
+@result aeat --format json config repair profile
+@expect result.dry_run == true
 @expect exit_code == 0
 ```
 
@@ -24,7 +25,8 @@ If the active setting points at unreadable profile state, clear it and switch to
 @step Clear the active setting when it points at unreadable profile state.
 aeat config repair profile --clear-active --yes
 @step Switch to a good profile by name.
-@result aeat config switch me
+@result aeat --format json config switch me
+@expect result.active_profile == "me"
 @expect exit_code == 0
 ```
 
@@ -38,7 +40,8 @@ The wrong profile is active. Each profile keeps its own ledger, calculations, an
 
 ```{cli-sequence} troubleshooting-wrong-profile
 :verify: Confirm the active profile is the one you expect to be working under.
-@result aeat config profile status
+@result aeat --format json config profile status
+@expect result.tax_id_present == true
 @expect exit_code == 0
 ```
 
@@ -58,7 +61,8 @@ The calculation reads your imported transactions, and some rows aren't ready. Ru
 :verify: Confirm the ledger preflight and status run for the period you are calculating.
 @step Run the preflight check for the period you are calculating.
 aeat app ledger preflight --year 2026 --period 1T
-@result aeat app ledger status
+@result aeat --format json app ledger status
+@expect result.total_count == 0
 @expect exit_code == 0
 ```
 
@@ -78,7 +82,8 @@ A casilla is a numbered box on the official form. A binding is a rule that fills
 ```{cli-sequence} troubleshooting-missing-values
 :verify: Confirm the tool lists the values still missing for the form.
 @step List the values still missing for the modelo, year, and period.
-@result aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+@result aeat --format json app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+@expect result.missing_filter == true
 @expect exit_code == 0
 ```
 
@@ -92,15 +97,19 @@ Modelo and ledger commands share the same shape - the AEAT token with `--year`:
 
 ```{cli-sequence} troubleshooting-period-grammar
 :verify: Confirm the AEAT token plus --year is accepted across ledger and modelo commands.
+@setup aeat config switch docs-sequence-sandbox
+@setup aeat config profile edit docs-sequence-sandbox --quiet --activity-start-date 2026-01-01
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Run a quarterly ledger preflight.
 aeat app ledger preflight --year 2026 --period 1T
 @step Read the ledger for the annual period.
 aeat app ledger status --year 2026 --period 0A
 @step Run a monthly ledger preflight.
-@result aeat app ledger preflight --year 2026 --period 03
-@expect exit_code == 0
+aeat app ledger preflight --year 2026 --period 03
 @step The same token shape addresses a modelo calculation.
-@static aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+@result aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@expect result.saved == true
+@expect exit_code == 0
 ```
 
 The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. On `ledger status` and `overview status`, where the period is optional, a bare token with no `--year` is refused with the year fix (shown here in English; the tool prints it in Spanish):
@@ -136,9 +145,10 @@ This refusal applies to `aeat app modelo work file` only - exporting works at an
 Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
 
 ```{cli-sequence} troubleshooting-language
-:verify: Confirm the --language flag renders the command help in the chosen language.
-@step Render the create help in English for this one command.
-@result aeat --language en config profile create --help
+:verify: Confirm the --language flag renders a command's output in the chosen language.
+@step Render a command's output in English for this one command.
+@result aeat --language en --format json app modelo describe 303
+@expect result.code == "303"
 @expect exit_code == 0
 ```
 
@@ -155,7 +165,8 @@ Live reads need a registered digital certificate or Cl@ve PIN (the digital ident
 @step Show what authentication is configured.
 aeat config auth status
 @step Probe the stored credentials locally, without contacting AEAT.
-@result aeat config auth test
+@result aeat --format json config auth test
+@expect result.configured == false
 @expect exit_code == 0
 ```
 
@@ -173,7 +184,8 @@ When a live login fails, the tool captures an encrypted diagnostic of the failur
 ```{cli-sequence} troubleshooting-auth-diagnostics
 :verify: Confirm the tool lists saved login diagnostics.
 @step List the saved login-failure diagnostics.
-@result aeat config auth diagnostics list
+@result aeat --format json config auth diagnostics list
+@expect result.row_count == 0
 @expect exit_code == 0
 @step Inspect one diagnostic by its reference.
 @static aeat config auth diagnostics show <diagnostic-id>
@@ -202,9 +214,11 @@ aeat app overview status
 aeat config profile status
 @step Read the most recent log lines.
 aeat config repair logs --lines 50
+@step Check the tax rule definitions.
+aeat config repair integrity registry
 @step Check the security seals on your encrypted records.
-aeat config repair integrity objects
-@result aeat config repair integrity registry
+@result aeat --format json config repair integrity objects
+@expect result.unreadable_total == 0
 @expect exit_code == 0
 ```
 
@@ -217,7 +231,8 @@ When unreadable encrypted records block other commands, move them aside. Preview
 @step Preview how many records would move, per storage area.
 aeat config repair quarantine --dry-run
 @step Apply the move for real; the real run requires --yes.
-@result aeat config repair quarantine --yes
+@result aeat --format json config repair quarantine --yes
+@expect result.unreadable_total == 0
 @expect exit_code == 0
 ```
 
@@ -228,7 +243,8 @@ When you need to know which finalized calculations and filings used a transactio
 ```{cli-sequence} troubleshooting-participation
 :verify: Confirm the participation index rebuilds from the finalized records.
 @step Rebuild the participation index from the finalized calculation records.
-@result aeat app ledger participation rebuild
+@result aeat --format json app ledger participation rebuild
+@expect result.participation_count == 0
 @expect exit_code == 0
 @step Look up which finalized filings used one transaction.
 @static aeat app ledger participation <transaction-id>

@@ -20,10 +20,10 @@ you upload through the official AEAT channel yourself.
 
 **Requirement:** a valid taxpayer profile with intra-community (ROI) activity,
 and the intra-community invoice records the declaration lists. Create a profile
-with `aeat config profile create <name>` — see [Set up your taxpayer
+with `aeat config profile create <name>`. See [Set up your taxpayer
 profile](profile-setup.md).
 
-- Check applicability and cadence — Modelo 349 is quarterly (`1T`-`4T`) or
+- Check applicability and cadence. Modelo 349 is quarterly (`1T`-`4T`) or
   monthly (`01`-`12`) depending on your profile and operation volumes; the
   calendar surfaces which applies to you:
 
@@ -85,6 +85,7 @@ show the built rows:
 aeat --format json app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
 @step Show the saved revision with its per-operator detail rows.
 @result aeat --format json app modelo work revision --modelo 349 --year 2026 --period 1T
+@expect result.casilla_values["decl.numero-operadores"] == "2"
 @expect exit_code == 0
 ```
 
@@ -113,14 +114,21 @@ Export the verified declaration:
 @setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
 @step Export the verified declaration to a local fichero-BOE file.
 @result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
+@expect result.filing_year == 2026
 @expect exit_code == 0
 ```
 
-After you file at the portal, record the local marker with `aeat app modelo
-work file --modelo 349 --year 2026 --period 1T`, then
-[reconcile against the justificante](reconcile.md). The marker is optional and
-only applies while the obligation window is open; export is the local finish
-line.
+After you file at the portal, record the local marker, then
+[reconcile against the justificante](reconcile.md). The marker records a filing
+you have already presented at the portal, so it is shown as a display frame:
+
+```{cli-sequence} modelo-349-file
+@step After you upload at the portal, record the local filed marker in the obligation window.
+@static aeat app modelo work file --modelo 349 --year 2026 --period 1T
+```
+
+The marker is optional and only applies while the obligation window is open;
+export is the local finish line.
 
 Modelo 349 runs alongside your periodic Modelo 303: the same intra-community
 operations that appear here also feed the 303's intra-community boxes. Keep

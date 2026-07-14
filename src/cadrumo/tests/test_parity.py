@@ -606,6 +606,47 @@ def test_ast_scanner_collects_translation_key_kwargs(tmp_path: Path) -> None:
     assert "cli.app.modelo.work.sal_reserva_not_decimal" in scan_source_tree(tmp_path)
 
 
+def test_ast_scanner_resolves_aliased_translator_import(tmp_path: Path) -> None:
+    """An aliased ``tr`` import (``from ... import tr as _tr``) declares live keys.
+
+    The underscore-aliased module-level import convention
+    (``from cadrumo.core.i18n import tr as _tr``) is used across the CLI surface.
+    The scanner must resolve the alias and treat ``_tr("dotted.key")`` as a live
+    translation call; otherwise the key is invisible and its genuinely-live
+    catalogue entry is wrongly reported as an orphan.
+    """
+
+    (tmp_path / "aliased_surface.py").write_text(
+        "from cadrumo.core.i18n import tr as _tr\n"
+        "\n"
+        "def render() -> str:\n"
+        "    return _tr('cli.root.verbose_help')\n",
+        encoding="utf-8",
+    )
+
+    assert "cli.root.verbose_help" in scan_source_tree(tmp_path)
+
+
+def test_ast_scanner_ignores_unaliased_unrelated_call(tmp_path: Path) -> None:
+    """A call to a same-named function that is NOT the translator alias is ignored.
+
+    Anti-vacuity for the alias resolver: a bare ``_tr`` name that was never
+    imported as an alias of ``tr`` must not have its argument harvested as a
+    locale key.
+    """
+
+    (tmp_path / "unrelated_surface.py").write_text(
+        "def _tr(value: str) -> str:\n"
+        "    return value\n"
+        "\n"
+        "def render() -> str:\n"
+        "    return _tr('cli.root.not_a_real_locale_key')\n",
+        encoding="utf-8",
+    )
+
+    assert "cli.root.not_a_real_locale_key" not in scan_source_tree(tmp_path)
+
+
 def test_ast_scanner_collects_locale_key_constant_registries(tmp_path: Path) -> None:
     """Policy registries that select locale keys for later callers must be visible."""
 

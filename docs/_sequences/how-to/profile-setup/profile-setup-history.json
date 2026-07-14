@@ -118,6 +118,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "history",
@@ -126,12 +128,28 @@
         "operator"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "carla-real",
+        "command": "config.bucket.history",
+        "notices": [],
+        "result": {
+          "actor": "operator",
+          "bucket_id": "<bucket-id>",
+          "event_types": null,
+          "events": [],
+          "object_id": null,
+          "operation": "config.bucket.history",
+          "since": null,
+          "until": null
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t0\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

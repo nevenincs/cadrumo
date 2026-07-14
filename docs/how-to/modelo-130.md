@@ -15,7 +15,7 @@ The tool needs a master-key passphrase and prompts for it.
 
 **Requirement:** a valid taxpayer profile with self-employed activity under
 estimación directa. Create one with `aeat config profile create <name>` before
-you start — [Set up your taxpayer profile](profile-setup.md) walks through it.
+you start. [Set up your taxpayer profile](profile-setup.md) walks through it.
 
 ## The complete first-quarter chain
 
@@ -69,7 +69,7 @@ Load-bearing details:
 
 - [Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a
   profile with self-employed activity under estimación directa; check
-  applicability with `aeat app overview explain 130 --year 2026`.
+  applicability with `aeat app overview explain 130`.
 - [Plan your filing calendar](filing-calendar.md). Modelo 130 uses quarterly
   periods `1T` through `4T` only.
 - [Import or add your transactions](import-bank-statements.md), then
@@ -104,6 +104,7 @@ complementary results). Inspect what is bound, missing, or manual:
 aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
 @step Show the modelo's casilla definitions for the period.
 @result aeat --format json app modelo casillas 130 --period 1T
+@expect result.casilla_count == 20
 @expect exit_code == 0
 ```
 
@@ -131,8 +132,9 @@ aeat --format json app modelo work calculate {work_unit_id} --casilla 06=100.00 
 
 `--casilla` works only on `manual` boxes; a `bound` box filled from your ledger
 (like casilla `02`) refuses the override. Check a box's kind with `aeat app
-modelo casillas 130 --period 1T`, and see [Review and supply calculation
-inputs](review-calculation-values.md) for the full input workflow.
+modelo casillas 130` (the inspect sequence above shows this), and see
+[Review and supply calculation inputs](review-calculation-values.md) for the
+full input workflow.
 
 ## Each quarter is cumulative
 
@@ -179,19 +181,25 @@ aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
 @expect exit_code == 0
 ```
 
-Once the draft verifies, export it with `aeat app modelo export --modelo 130
---year 2026 --period 1T --output ./modelo-130.boe`. Export refuses until every
-deductible-expense row carries linked purchase-invoice evidence — see
-[Attach invoices and receipts](ledger-evidence.md). The full evidence-to-export
-chain runs end to end on
-[Prepare a Modelo 303 IVA filing](modelo-303.md).
+Once the draft verifies, export it. Export refuses until every
+deductible-expense row carries linked purchase-invoice evidence (see
+[Attach invoices and receipts](ledger-evidence.md)); this simple Modelo 130
+example omits that evidence, so the export and the post-portal filed marker are
+shown as display frames. The full evidence-to-export chain runs end to end,
+executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
+
+```{cli-sequence} modelo-130-export-file
+@step Export the verified draft to a local fichero-BOE.
+@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+@step After you upload at the portal, record the local filed marker in the obligation window.
+@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
+```
 
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
-[review the calculation values](review-calculation-values.md). After you
-upload the exported file at the portal, record the local marker with
-`aeat app modelo work file --modelo 130 --year 2026 --period 1T` and
-reconcile against the justificante.
+[review the calculation values](review-calculation-values.md). After you record
+the marker, reconcile against the justificante (see
+[Reconcile a filing](reconcile.md)).
 
 Modelo 130's quarterly results feed your annual Renta declaration: the four
 instalments are folded into Modelo 100 as payments on account. See

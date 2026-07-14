@@ -18,17 +18,43 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "repair",
         "profile"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.repair.profile",
+        "notices": [],
+        "result": {
+          "after": null,
+          "before": {
+            "active_profile": "<profile-id>",
+            "missing_required": [],
+            "next_action": "aeat config repair profile --clear-active --yes",
+            "profile_present_keys": 0,
+            "profile_record_error": "StorageValidationError: storage runtime is not ready for profile-bound storage: no active bucket session; run `aeat config switch NAME` to unlock a profile before invoking profile-bound storage.",
+            "profile_record_present": false,
+            "profile_total_keys": 76,
+            "registered_bucket": true,
+            "repairable_by_clearing_pointer": true,
+            "source": "pointer",
+            "status": "profile_record_unreadable"
+          },
+          "cleared_pointer": false,
+          "dry_run": true
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "dry_run\tTrue\ncleared_pointer\tFalse\nactive_profile\t<profile-id>\nsource\tpointer\nstatus\tprofile_record_unreadable\nregistered_bucket\tTrue\nprofile_record_present\tFalse\nrepairable_by_clearing_pointer\tTrue\nprofile_record_error\tStorageValidationError: storage runtime is not ready for profile-bound storage: no active bucket session; run `aeat config switch NAME` to unlock a profile before invoking profile-bound storage.\nnext_action\taeat config repair profile --clear-active --yes\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

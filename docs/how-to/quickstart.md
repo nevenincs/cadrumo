@@ -23,9 +23,12 @@ This page assumes the `aeat` command is installed and on your path. Confirm
 with:
 
 ```{cli-sequence} quickstart-version
-:verify: Confirm the installed command reports its version.
+:verify: Confirm the command is installed and the active profile is ready.
 @step Confirm the command is installed and on your path.
-@result aeat --version
+aeat --version
+@step Confirm the active profile is configured.
+@result aeat --format json config profile status
+@expect result.configured == true
 @expect exit_code == 0
 ```
 
@@ -93,6 +96,7 @@ aeat --format json app ledger add --date 2026-02-10 --amount 1210 --direction IN
 aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key qs-compra
 @step List the ledger to confirm both rows.
 @result aeat --format json app ledger list
+@expect result.total == 2
 @expect exit_code == 0
 ```
 
@@ -102,6 +106,7 @@ List the recognised expense categories any time:
 :verify: Confirm the expense category catalogue lists.
 @step List the recognised expense categories.
 @result aeat --format json app ledger categories
+@expect result.income_requires_category == false
 @expect exit_code == 0
 ```
 
@@ -147,6 +152,7 @@ aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUT
 aeat --format json app ledger classify {transaction_id} --classification BUSINESS --category-id material_oficina
 @step Check the quarter's rows are ready to calculate.
 @result aeat --format json app ledger preflight --year 2026 --period 1T
+@expect result.ready == true
 @expect exit_code == 0
 ```
 
@@ -208,6 +214,7 @@ Review every saved box with:
 @setup aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @step Show every saved box for the filing.
 @result aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
+@expect result.casilla_values.01 == "1000"
 @expect exit_code == 0
 ```
 
@@ -249,6 +256,7 @@ is filled in:
 aeat --format json app overview agenda --allow-incomplete
 @step Explain why Modelo 130 applies this year.
 @result aeat --format json app overview explain 130 --year 2026
+@expect result.modelo == "130"
 @expect exit_code == 0
 ```
 

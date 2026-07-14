@@ -14,10 +14,42 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS_ROOT = _REPO_ROOT / "docs"
 _SHELL_FENCE_RE = re.compile(r"```(?:bash|sh|pwsh)\n(?P<body>.*?)\n```", re.DOTALL)
 
-# A whole fenced block (code, CLI output, or a cli-sequence directive body). The
-# prose-hygiene gates strip these before counting, so only reader-facing prose
-# lines are measured.
-_FENCE_BLOCK_RE = re.compile(r"```.*?```", re.DOTALL)
+# A fenced-code opening/closing line: an optionally-indented run of three or more
+# backticks or tildes. The prose-hygiene gates strip whole fenced blocks (code,
+# CLI output, cli-sequence directive bodies) before counting, so only
+# reader-facing prose is measured.
+_FENCE_LINE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})")
+
+
+def _strip_fenced_blocks(text: str) -> str:
+    """Return the text with every fenced block replaced by a blank line.
+
+    A line-based stripper (not a ``.*?`` regex): it tracks the open fence's
+    character and length, so a fenced block is excluded in FULL regardless of its
+    indentation, its fence character (``` ``` ``` or ``~~~``), or a longer fence
+    run, and an unclosed fence drops to end of input rather than mis-pairing with
+    a later fence. This is the same robust strip the CLI conformance gate applies
+    to its inline-span scan; it replaces a greedy regex that mis-paired on odd
+    fence structures.
+    """
+    out: list[str] = []
+    fence_char: str | None = None
+    fence_len = 0
+    for line in text.split("\n"):
+        match = _FENCE_LINE_RE.match(line)
+        run = match.group(1) if match else ""
+        if fence_char is None:
+            if match:
+                fence_char = run[0]
+                fence_len = len(run)
+                out.append("")
+            else:
+                out.append(line)
+            continue
+        if match and run[0] == fence_char and len(run) >= fence_len and line.strip()[len(run) :].strip() == "":
+            fence_char = None
+            out.append("")
+    return "\n".join(out)
 
 # The em-dash (U+2014). Its per-page counts ratchet DOWN from a checked-in
 # baseline; a page may only decrease, a page absent from the baseline starts at
@@ -56,7 +88,7 @@ _LLM_MARKER_RES = tuple((marker, _marker_pattern(marker)) for marker in _LLM_MAR
 
 def _prose(text: str) -> str:
     """Return the page text with fenced blocks removed, so only prose remains."""
-    return _FENCE_BLOCK_RE.sub("", text)
+    return _strip_fenced_blocks(text)
 
 
 def _em_dash_counts() -> dict[str, int]:
@@ -169,6 +201,36 @@ def test_em_dash_count_ratchets_down_in_docs_prose() -> None:
                 f"Replace a new em dash with a hyphen or a full stop, then tighten {_EM_DASH_BASELINE_PATH.name}"
             )
     assert not problems, "new em dashes in docs prose (they only ratchet down):\n  " + "\n  ".join(problems)
+
+
+def test_prose_strip_excludes_fenced_blocks_robustly() -> None:
+    """The line-based prose strip excludes a fenced block in full regardless of form.
+
+    An em dash inside a code/CLI-output/directive fence must never be counted; the
+    hardened strip handles indentation (a directive nested in a list item), the
+    tilde fence character, and a longer fence run, and drops an unclosed fence to
+    end of input instead of mis-pairing with a later fence — while a genuine em
+    dash in prose is still measured.
+    """
+    indented_in_list = (
+        "- A step — with an em dash in prose:\n"
+        "\n"
+        "  ```{cli-sequence} demo\n"
+        "  @result aeat --format json config check — fenced em dash, must not count\n"
+        "  ```\n"
+    )
+    prose = _prose(indented_in_list)
+    assert prose.count(_EM_DASH) == 1  # only the prose em dash, not the fenced one
+
+    tilde_and_unclosed = (
+        "Prose with no dash here.\n\n"
+        "~~~text\n"
+        "fenced — dash ignored\n"
+        "~~~\n\n"
+        "```bash\n"
+        "trailing unclosed fence — dash ignored to end of input\n"
+    )
+    assert _prose(tilde_and_unclosed).count(_EM_DASH) == 0
 
 
 def test_no_llm_tell_markers_in_docs_prose() -> None:

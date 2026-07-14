@@ -97,6 +97,7 @@ aeat app ledger invoice list --kind issued
 aeat app ledger invoice update {invoice_id} --kind issued --notes "paid late"
 @step Remove the invoice, confirming with --yes.
 @result aeat --format json app ledger invoice remove {invoice_id} --kind issued --yes
+@expect result.notes == "paid late"
 @expect exit_code == 0
 ```
 
@@ -148,6 +149,7 @@ aeat --format json app modelo work create --modelo 349 --year 2026 --period 02
 @capture work_unit_id result.work_unit_id
 @step Calculate the recapitulative declaration.
 @result aeat --format json app modelo work calculate {work_unit_id}
+@expect result.operation == "modelo.work.calculate"
 @expect exit_code == 0
 ```
 
@@ -194,6 +196,7 @@ invoice that no longer exists:
 @capture invoice_id result.invoice_id
 @step Remove the unlinked catalogue invoice.
 @result aeat --format json app ledger invoice catalogue remove {invoice_id} --yes
+@expect result.invoice_number == "EU-CAT-099"
 @expect exit_code == 0
 ```
 

@@ -25,6 +25,7 @@ _IDENTITY_HEADING_KEYS = {
 }
 _PROSE_KEYS = {
     "ca": {
+        "errors.auth.auth_former_product_session_state",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
@@ -36,6 +37,7 @@ _PROSE_KEYS = {
         "cli.ledger.classify.system_state_not_assignable",
     },
     "en": {
+        "errors.auth.auth_former_product_session_state",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
@@ -45,11 +47,13 @@ _PROSE_KEYS = {
         "cli.config.google.profile_help",
     },
     "es": {
+        "errors.auth.auth_former_product_session_state",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
     },
     "hu": {
+        "errors.auth.auth_former_product_session_state",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",

@@ -17,14 +17,21 @@ exact refresh invocation.
 
 Storage policy per frame kind:
 
-- **JSON frames** store the parsed envelope document verbatim, PRE-mask —
-  capture raw, mask at compare — so the committed artifact never bakes the mask
-  in and the mask set can evolve centrally.
+- **JSON frames** store the parsed envelope document PRE field-mask —
+  capture raw ids, mask at compare — so the committed artifact never bakes the
+  central ``GOLDEN_MASK_FIELDS`` set in and that set can evolve centrally. Path
+  normalisation is the one thing baked at write time (:func:`normalise_document_paths`):
+  a per-run sandbox path or the machine's checkout path can surface inside an
+  envelope STRING VALUE (``config check``'s ``preflight[...].detail``), where the
+  field-level mask never looks, and — like the text frames below — the writer
+  run's paths are unknowable to a later reader, so they must already be tokenised
+  in the stored artifact. Field masking (deferred) and path normalisation (baked)
+  are orthogonal axes.
 - **Text frames** store the verbatim text AFTER the declared narrow
-  normalisation (:func:`normalise_text_output`): the per-run sandbox paths are
-  replaced by stable tokens and the centrally-masked surrogate ids by the mask
-  sentinel. Unlike the JSON mask, this normalisation cannot be deferred to
-  compare time — the writer run's sandbox paths are unknowable to a later
+  normalisation (:func:`normalise_text_output`): the per-run sandbox paths and the
+  checkout root are replaced by stable tokens and the centrally-masked surrogate
+  ids by the mask sentinel. Like the JSON path normalisation, this cannot be
+  deferred to compare time — the writer run's paths are unknowable to a later
   reader, so the stored text must already be run-independent.
 """
 
@@ -34,7 +41,7 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
 
@@ -46,6 +53,7 @@ from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from ._schema import FrameKind, SequenceId
 
 __all__ = [
+    "REPO_ROOT_TOKEN",
     "SANDBOX_STORAGE_ROOT_TOKEN",
     "SANDBOX_WORKDIR_TOKEN",
     "GoldenFrame",
@@ -54,6 +62,7 @@ __all__ = [
     "default_goldens_root",
     "golden_path",
     "masked_envelope_values",
+    "normalise_document_paths",
     "normalise_text_output",
     "read_golden",
     "refresh_invocation",
@@ -67,6 +76,47 @@ SANDBOX_STORAGE_ROOT_TOKEN: str = "<sandbox-storage-root>"  # noqa: S105 - a dis
 
 #: Stable token replacing the per-run sandbox working directory in text frames.
 SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display placeholder, not a secret
+
+#: Stable token replacing the repository checkout root wherever it surfaces in a
+#: frame's output. Corpus and data paths carry the absolute checkout path (stable
+#: on one machine, different on CI and every other checkout), so a golden is only
+#: machine-portable once the checkout root is tokenised the same value-anchored
+#: way as the per-run sandbox paths.
+REPO_ROOT_TOKEN: str = "<repo-root>"  # noqa: S105 - a display placeholder, not a secret
+
+
+def _repo_root() -> Path:
+    """Return the repository checkout root (the golden/fixtures/data anchor).
+
+    Resolved relative to this module, the same anchoring as
+    :func:`default_goldens_root`, so it equals the prefix of the absolute corpus
+    and data paths the CLI emits from this checkout.
+    """
+    return Path(__file__).resolve().parents[3]
+
+
+def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, str]]:
+    """Return the value-anchored ``(path, token)`` pairs, longest needle first.
+
+    Three roots are tokenised — the per-run sandbox storage root and workdir
+    (run-specific) and the repository checkout root (machine-specific) — each in
+    both native and POSIX-slash form. The replacement is value-anchored on the
+    exact known root strings (never a wildcard), so it can never over-mask an
+    unrelated path; longest-first ordering collapses a nested path before its
+    parent.
+    """
+    replacements: list[tuple[str, str]] = []
+    for raw, token in (
+        (workdir, SANDBOX_WORKDIR_TOKEN),
+        (storage_root, SANDBOX_STORAGE_ROOT_TOKEN),
+        (str(_repo_root()), REPO_ROOT_TOKEN),
+    ):
+        native = str(raw)
+        posix = native.replace("\\", "/")
+        replacements.append((native, token))
+        if posix != native:
+            replacements.append((posix, token))
+    return sorted(replacements, key=lambda pair: len(pair[0]), reverse=True)
 
 #: A page identifier: the docname-style path of the enrolled docs page relative
 #: to ``docs/`` (e.g. ``how-to/irpf-lifecycle`` or ``how-to/modelo-303``),
@@ -205,20 +255,14 @@ def normalise_text_output(
 ) -> str:
     """Apply the declared narrow text normalisation.
 
-    Exactly two token families are normalised — nothing else: the per-run
-    sandbox paths (storage root and workdir, in both native and POSIX slash
-    forms, longest first so nested paths collapse correctly) become stable
-    tokens, and the centrally-masked surrogate-id values become the mask
-    sentinel. No regex wildcards, no fuzzy matching: the result is compared by
-    exact string equality.
+    Exactly two token families are normalised — nothing else: the per-run and
+    machine-specific paths (sandbox storage root, workdir, and the repository
+    checkout root, in both native and POSIX slash forms, longest first so nested
+    paths collapse correctly) become stable tokens, and the centrally-masked
+    surrogate-id values become the mask sentinel. No regex wildcards, no fuzzy
+    matching: the result is compared by exact string equality.
     """
-    replacements: list[tuple[str, str]] = []
-    for raw, token in ((workdir, SANDBOX_WORKDIR_TOKEN), (storage_root, SANDBOX_STORAGE_ROOT_TOKEN)):
-        native = str(raw)
-        posix = native.replace("\\", "/")
-        replacements.append((native, token))
-        if posix != native:
-            replacements.append((posix, token))
+    replacements = _path_replacements(storage_root=storage_root, workdir=workdir)
     for value in masked_values:
         if value:
             replacements.append((value, MASK_SENTINEL))
@@ -229,12 +273,50 @@ def normalise_text_output(
     return normalised
 
 
+def normalise_document_paths(
+    document: dict[str, JsonValue],
+    *,
+    storage_root: str,
+    workdir: str,
+) -> dict[str, JsonValue]:
+    """Tokenise the sandbox and checkout paths in every string leaf of an envelope.
+
+    The value-anchored analogue of :func:`normalise_text_output` for JSON frames.
+    A per-run sandbox path or the machine's checkout path can surface inside an
+    envelope STRING VALUE — e.g. ``config check``'s ``preflight[...].detail``
+    ("secure-storage root <path> is reachable"; corpus paths under the checkout) —
+    exactly where the field-level ``mask_document`` never looks, because that
+    primitive masks whole FIELDS by key, not path substrings inside a text value.
+    Applied to the golden at BUILD time (the writer's per-run paths are unknowable
+    to a later reader, so they must be baked out, the same necessity the text
+    frames already carry) and to the LIVE envelope at COMPARE time with this run's
+    paths, so both sides carry the stable tokens before the central field mask
+    runs. Only exact known-root strings are replaced, so it cannot over-mask.
+    """
+    replacements = _path_replacements(storage_root=storage_root, workdir=workdir)
+
+    def _norm(node: object) -> object:
+        if isinstance(node, str):
+            for needle, token in replacements:
+                node = node.replace(needle, token)
+            return node
+        if isinstance(node, Mapping):
+            return {str(key): _norm(value) for key, value in node.items()}
+        if isinstance(node, list):
+            return [_norm(item) for item in node]
+        return node
+
+    return cast("dict[str, JsonValue]", _norm(document))
+
+
 def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
     """Project an executed transcript into its committed golden expectation.
 
-    The envelope (from whichever stream carried it) is kept verbatim
-    (pre-mask); the non-envelope streams store their normalised text so the
-    artifact is run-independent, with empty streams collapsing to ``None``.
+    The envelope (from whichever stream carried it) is stored pre field-mask but
+    path-normalised (:func:`normalise_document_paths`) so a per-run sandbox or
+    checkout path leaking into a string value is baked out to a stable token; the
+    non-envelope streams store their normalised text so the artifact is
+    run-independent, with empty streams collapsing to ``None``.
     """
     masked_values = masked_envelope_values(transcript)
 
@@ -248,6 +330,15 @@ def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
             masked_values=masked_values,
         )
 
+    def _path_normalised_envelope(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
+        if envelope is None:
+            return None
+        return normalise_document_paths(
+            envelope,
+            storage_root=transcript.storage_root,
+            workdir=transcript.workdir,
+        )
+
     frames: list[GoldenFrame] = []
     for frame in transcript.frames:
         text = _normalised(frame.output) if frame.envelope_source != "stdout" else None
@@ -257,7 +348,7 @@ def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
                 kind=frame.kind,
                 argv=frame.argv,
                 exit_code=frame.exit_code,
-                envelope=frame.envelope,
+                envelope=_path_normalised_envelope(frame.envelope),
                 envelope_source=frame.envelope_source,
                 text=text,
                 stderr_text=stderr_text,

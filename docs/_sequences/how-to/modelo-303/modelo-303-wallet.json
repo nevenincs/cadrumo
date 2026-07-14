@@ -8,6 +8,48 @@
         "app",
         "modelo",
         "iva-wallet",
+        "seed",
+        "--filing-year",
+        "2024",
+        "--period",
+        "4T",
+        "--amount",
+        "0",
+        "--confirm"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.iva_wallet.seed",
+        "notices": [],
+        "result": {
+          "amount": "0",
+          "filing_year": 2024,
+          "operation": "modelo.iva_wallet.seed",
+          "period": {
+            "code": "4T",
+            "filing_year": 2024
+          },
+          "status": "seeded",
+          "taxpayer_nif": "sha256:1c9f9632"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "iva-wallet",
         "balance",
         "--as-of-year",
         "2026"

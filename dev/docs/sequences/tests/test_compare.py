@@ -26,6 +26,7 @@ from pydantic import JsonValue
 from cadrumo.core.observability import MASK_SENTINEL
 
 from .. import (
+    REPO_ROOT_TOKEN,
     SANDBOX_STORAGE_ROOT_TOKEN,
     SANDBOX_WORKDIR_TOKEN,
     FrameExecution,
@@ -43,11 +44,13 @@ from .. import (
     evaluate_expectations,
     execute_sequence,
     golden_path,
+    normalise_document_paths,
     normalise_text_output,
     parse_sequence,
     read_golden,
     write_golden,
 )
+from .._golden_store import _repo_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -284,6 +287,113 @@ class TestTextFrameComparison:
         assert f"stored under {SANDBOX_STORAGE_ROOT_TOKEN} (also {SANDBOX_STORAGE_ROOT_TOKEN})" in normalised
         assert f"workdir {SANDBOX_WORKDIR_TOKEN}" in normalised
         assert f"snapshot {MASK_SENTINEL}" in normalised
+
+
+class TestEnvelopePathNormalisation:
+    """Value-anchored sandbox/checkout-path tokenisation inside JSON envelopes.
+
+    ``config check``'s ``preflight[...].detail`` strings carry the per-run
+    storage root and the machine's absolute corpus paths; the field-level
+    ``mask_document`` never looks inside a string value, so without this
+    normalisation the golden diverges every run and on every other checkout.
+    These are synthetic unit inputs (a directly-built transcript, like the
+    bracket-quoted-key expectation test) exercising the REAL build and compare
+    path, since no simple hermetic command is guaranteed to leak both roots.
+    """
+
+    _REPO_ROOT: str = str(_repo_root())
+
+    def _run(self, *, storage_root: str, workdir: str, status: str = "success") -> SequenceTranscript:
+        detail = (
+            f"secure-storage root {storage_root} is reachable; "
+            f"corpus at {self._REPO_ROOT}/src/cadrumo/_data/corpus/x.html"
+        )
+        envelope: dict[str, JsonValue] = {
+            "schema_version": "2",
+            "status": status,
+            "result": {"preflight": [{"detail": detail}, {"detail": f"workdir {workdir}"}]},
+        }
+        execution = FrameExecution(
+            kind=FrameKind.RESULT,
+            command_line="aeat --format json config check",
+            argv=("aeat", "--format", "json", "config", "check"),
+            exit_code=0,
+            output=json.dumps(envelope),
+            envelope=envelope,
+            envelope_source="stdout",
+        )
+        return SequenceTranscript(
+            sequence_id="path-norm-case",
+            profile_id="docs-sequence-sandbox",
+            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            storage_root=storage_root,
+            workdir=workdir,
+            frames=(execution,),
+        )
+
+    @staticmethod
+    def _first_detail(golden: SequenceGolden) -> str:
+        envelope = golden.frames[0].envelope
+        assert envelope is not None
+        result = cast("dict[str, object]", envelope["result"])
+        preflight = cast("list[dict[str, object]]", result["preflight"])
+        return cast("str", preflight[0]["detail"])
+
+    def test_build_bakes_stable_tokens_for_sandbox_and_checkout_paths(self) -> None:
+        storage = r"C:\Temp\cli-sequence-AAA\cadrumo-storage"
+        workdir = r"C:\Temp\cli-sequence-AAA\workdir"
+        golden = build_golden(self._run(storage_root=storage, workdir=workdir))
+        detail = self._first_detail(golden)
+        assert storage not in detail
+        assert self._REPO_ROOT not in detail and self._REPO_ROOT.replace("\\", "/") not in detail
+        assert SANDBOX_STORAGE_ROOT_TOKEN in detail and REPO_ROOT_TOKEN in detail
+
+    def test_two_runs_with_different_sandbox_paths_compare_clean(self) -> None:
+        golden = build_golden(
+            self._run(
+                storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
+                workdir=r"C:\Temp\cli-sequence-AAA\workdir",
+            ),
+        )
+        live = self._run(
+            storage_root=r"C:\Temp\cli-sequence-BBB\cadrumo-storage",
+            workdir=r"C:\Temp\cli-sequence-BBB\workdir",
+        )
+        assert compare_transcript_to_golden(live, golden, page=_PAGE) == ()
+
+    def test_real_divergence_survives_path_normalisation(self) -> None:
+        """Anti-tautology proof: the only legitimate difference between the two
+        runs is the tokenised sandbox path, yet a real ``status`` flap is still
+        caught — path normalisation cannot void the compare (over-mask)."""
+        golden = build_golden(
+            self._run(
+                storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
+                workdir=r"C:\Temp\cli-sequence-AAA\workdir",
+                status="success",
+            ),
+        )
+        live = self._run(
+            storage_root=r"C:\Temp\cli-sequence-BBB\cadrumo-storage",
+            workdir=r"C:\Temp\cli-sequence-BBB\workdir",
+            status="warning",
+        )
+        problems = compare_transcript_to_golden(live, golden, page=_PAGE)
+        assert len(problems) == 1
+        assert "status" in problems[0]
+
+    def test_unrelated_absolute_path_is_not_over_masked(self) -> None:
+        """Value-anchored: only the known roots are replaced. An unrelated
+        absolute path the CLI might echo survives verbatim, so the normalisation
+        cannot mask a path it was never told about."""
+        unrelated = r"see C:\Users\someone\Documents\report.pdf"
+        document: dict[str, JsonValue] = {"result": {"detail": unrelated}}
+        normalised = normalise_document_paths(
+            document,
+            storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
+            workdir=r"C:\Temp\cli-sequence-AAA\workdir",
+        )
+        result = cast("dict[str, object]", normalised["result"])
+        assert result["detail"] == unrelated
 
 
 @pytest.fixture(scope="module")

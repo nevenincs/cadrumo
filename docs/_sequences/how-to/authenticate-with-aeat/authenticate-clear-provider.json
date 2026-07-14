@@ -3,6 +3,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "auth",
         "clear",
@@ -10,12 +12,23 @@
         "certificate"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.clear",
+        "notices": [],
+        "result": {
+          "cleared_locks": 0,
+          "cleared_workflow_state": false,
+          "removed_sessions": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "removed_sessions\t0\ncleared_workflow_state\tFalse\ncleared_locks\t0\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

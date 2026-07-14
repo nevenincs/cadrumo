@@ -108,12 +108,32 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     ``translated_message``/``message_key``/``translation_key`` parameters.
     """
     findings: set[str] = set()
+    tr_names = _translation_call_names(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             _collect_kwonly_default_keys(node, findings)
         elif isinstance(node, ast.Call):
-            _collect_call_site_keys(node, findings)
+            _collect_call_site_keys(node, findings, tr_names)
     return findings
+
+
+def _translation_call_names(tree: ast.AST) -> frozenset[str]:
+    """Return every local name that resolves to the ``tr`` / ``t`` translator.
+
+    Always includes the canonical ``tr`` / ``t`` names, plus any module-local
+    alias introduced by an aliased import (``from ...core.i18n import tr as
+    _tr`` - the underscore-aliased module-level import convention). Without
+    alias resolution an aliased call site like ``_tr("cli.root.verbose_help")``
+    is invisible to the scanner, so its genuinely-live locale keys are wrongly
+    reported as orphans and pruned.
+    """
+    names = {"tr", "t"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name in {"tr", "t"} and alias.asname:
+                    names.add(alias.asname)
+    return frozenset(names)
 
 
 def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
@@ -158,7 +178,7 @@ def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> N
             findings.add(value)
 
 
-def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
+def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozenset[str]) -> None:
     """Pick up translation keys from call sites across multiple call patterns.
 
     Handles ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
@@ -177,7 +197,7 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
     if name is None:
         return
     _collect_translation_key_kwargs(node, findings)
-    if name in {"tr", "t"}:
+    if name in tr_names:
         _add_first_dotted_arg(node, findings)
         return
     if name == "build_entry":
@@ -307,10 +327,11 @@ def _extract_concat_prefixes(tree: ast.AST) -> set[str]:
     where the literal carries the registered key prefix.
     """
     findings: set[str] = set()
+    tr_names = _translation_call_names(tree)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        if _callee_name(node.func) not in {"tr", "t"}:
+        if _callee_name(node.func) not in tr_names:
             continue
         for argument in node.args:
             prefix = _concat_prefix_marker(argument)

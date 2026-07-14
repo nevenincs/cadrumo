@@ -1,7 +1,7 @@
 # Reconcile a filed modelo against its justificante
 
-This page covers the {term}`justificante` — the signed PDF receipt AEAT
-issues when you file at the portal — and reconciliation: how to pull the
+This page covers the {term}`justificante`, the signed PDF receipt AEAT
+issues when you file at the portal, and reconciliation: how to pull the
 receipt from AEAT and keep it as encrypted evidence in your profile, and how
 to compare it against your local filing record so a typo at the portal, a
 wrong period, or a stale local value surfaces now instead of during a later
@@ -9,10 +9,10 @@ review.
 
 There are two ways to supply the justificante:
 
-- **Pull it from AEAT** with `reconcile pull` — the tool fetches the receipt
+- **Pull it from AEAT** with `reconcile pull` - the tool fetches the receipt
   from the AEAT sede (read-only), stores an encrypted copy in your profile,
   and reconciles in one step.
-- **Use a local PDF** with `reconcile file --file` — you downloaded the
+- **Use a local PDF** with `reconcile file --file` - you downloaded the
   justificante yourself; the check is local and never contacts AEAT.
 
 ## Before you start
@@ -22,7 +22,7 @@ You need:
 - an active profile
 - a locally filed work unit (you have run `aeat app modelo work file` for this
   filing) that was presented at the AEAT portal
-- for the pull commands: working AEAT authentication — see
+- for the pull commands: working AEAT authentication - see
   [Authenticate with AEAT](authenticate-with-aeat.md)
 - for `reconcile file`: the justificante PDF on disk
 
@@ -33,9 +33,14 @@ this page needs your master-key passphrase; the tool prompts for it.
 ## Pull and store the justificante
 
 Keep the receipt with your records: it is the official evidence behind every
-filed period. Fetch the justificante for one filed period and store it in
-your profile without reconciling yet with `aeat app live justificante pull
---modelo 130 --year 2026 --period 1T`.
+filed period. Fetch the justificante for one filed period and store it in your
+profile without reconciling yet. This reads from the AEAT sede, so it is shown
+as a display frame:
+
+```{cli-sequence} reconcile-pull-store
+@step Fetch and store the justificante for one filed period (a live AEAT read).
+@static aeat app live justificante pull --modelo 130 --year 2026 --period 1T
+```
 
 `pull` is live-only: it reads from AEAT (read-only) and needs the configured
 authentication session. `--modelo`, `--year`, and `--period` are all
@@ -53,9 +58,15 @@ a fresh capture and marks the earlier one as superseded, so the latest
 receipt is always the active one.
 
 List every capture stored in the active profile, then inspect one (an
-unambiguous prefix of the snapshot id is enough): list captures with `aeat app
-live justificante list`, then inspect one with `aeat app live justificante view
-<snapshot-id>`.
+unambiguous prefix of the snapshot id is enough). Both read the stored captures
+back through the live justificante surface, so they are shown as display frames:
+
+```{cli-sequence} reconcile-justificante-list
+@step List the justificante captures stored in the active profile.
+@static aeat app live justificante list
+@step Inspect one capture by an unambiguous prefix of its snapshot id.
+@static aeat app live justificante view <snapshot-id>
+```
 
 The view reports the expediente id, the CSV verification code, the PDF
 fingerprint, whether the capture is still active or superseded, and when it
@@ -63,8 +74,13 @@ was captured.
 
 ## Pull the justificante from AEAT and reconcile
 
-Fetch the receipt for the filing and reconcile in one command with `aeat app
-modelo reconcile pull --modelo 303 --year 2026 --period 1T`.
+Fetch the receipt for the filing and reconcile in one command. The pull reads
+from AEAT, so it is shown as a display frame:
+
+```{cli-sequence} reconcile-pull
+@step Pull the receipt and reconcile it against the local record in one step.
+@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
+```
 
 Replace `303`, `2026`, and `1T` with the modelo, year, and period of your
 actual filing. You can also name the work unit directly as a positional
@@ -78,8 +94,13 @@ command finishes. To list or inspect stored captures later, see
 ## Reconcile against a local PDF instead
 
 If you already downloaded the justificante from the portal, compare your local
-filing record against that file with `aeat app modelo reconcile file --modelo
-303 --year 2026 --period 1T --file ./justificante.pdf`.
+filing record against that file. This check is local and never contacts AEAT,
+but it needs the real receipt PDF on disk, so it is shown as a display frame:
+
+```{cli-sequence} reconcile-file
+@step Reconcile the local filing record against a downloaded justificante PDF.
+@static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
+```
 
 This check is local. It reads the PDF you supply and never contacts AEAT.
 
@@ -87,10 +108,10 @@ This check is local. It reads the PDF you supply and never contacts AEAT.
 
 Both transports report one of three verdicts:
 
-- **matches** — the justificante matches the local filing record.
-- **mismatches** — one or more fields differ. The report names each field and
+- **matches** - the justificante matches the local filing record.
+- **mismatches** - one or more fields differ. The report names each field and
   shows the local value next to the value found in the PDF.
-- **evidence_invalid** — the PDF could not be read. Check that the file is the
+- **evidence_invalid** - the PDF could not be read. Check that the file is the
   AEAT justificante and not a different document.
 
 Reconciliation compares four header fields only: the modelo code, the filing
@@ -130,7 +151,7 @@ stores:
   profile.
 - `reconcile file` reads a PDF you supply but does not store it. If you reconcile
   against a downloaded PDF, also pull the receipt so an encrypted copy is kept in
-  your profile — see [Pull and store the justificante](#pull-and-store-the-justificante).
+  your profile. See [Pull and store the justificante](#pull-and-store-the-justificante).
 - Reconciliation history is a read-back you can regenerate from the justificante,
   so it needs no separate backup.
 
@@ -158,11 +179,11 @@ stored record.
 
 ## Next steps
 
-- [Upload your exported modelo at the AEAT portal](file-at-aeat.md) — the
+- [Upload your exported modelo at the AEAT portal](file-at-aeat.md) - the
   filing handoff that produces the justificante.
-- [Quickstart](quickstart.md) — the end-to-end filing workflow.
-- [Review and supply calculation inputs](review-calculation-values.md) — amend
+- [Quickstart](quickstart.md) - the end-to-end filing workflow.
+- [Review and supply calculation inputs](review-calculation-values.md) - amend
   a filing if reconciliation finds a mismatch.
-- [CLI reference](../cli/index.rst) — full option reference.
-- [Diagnose and repair your local setup](troubleshooting.md) — fix local
+- [CLI reference](../cli/index.rst) - full option reference.
+- [Diagnose and repair your local setup](troubleshooting.md) - fix local
   readiness problems.

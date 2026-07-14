@@ -53,7 +53,7 @@
         "config",
         "repair",
         "integrity",
-        "objects"
+        "registry"
       ],
       "captures": [],
       "envelope": null,
@@ -61,23 +61,56 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "readable\t3\nunreadable\t0\ncadrumo.application.user_profile.value\treadable=1\tunreadable=0\ncadrumo.domain.buckets.event_history\treadable=1\tunreadable=0\ncadrumo.workflow\treadable=1\tunreadable=0\n"
+      "text": "ok\tTrue\nissues\t0\n"
     },
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "repair",
         "integrity",
-        "registry"
+        "objects"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.repair.integrity.objects",
+        "notices": [],
+        "result": {
+          "check": {
+            "status": "ok",
+            "summary": "0 unreadable secure-object rows"
+          },
+          "namespaces": [
+            {
+              "namespace": "cadrumo.application.user_profile.value",
+              "readable": 1,
+              "unreadable": 0
+            },
+            {
+              "namespace": "cadrumo.domain.buckets.event_history",
+              "readable": 1,
+              "unreadable": 0
+            },
+            {
+              "namespace": "cadrumo.workflow",
+              "readable": 1,
+              "unreadable": 0
+            }
+          ],
+          "readable_total": 3,
+          "unreadable_total": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "ok\tTrue\nissues\t0\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

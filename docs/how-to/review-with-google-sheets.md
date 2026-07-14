@@ -168,6 +168,7 @@ login` can sign in again without re-importing the Cloud Console JSON:
 :verify: Confirm the Google session clears for the active profile.
 @step Clear the Google session for the active profile.
 @result aeat --format json config google logout
+@expect result.client_preserved == true
 @expect exit_code == 0
 ```
 
@@ -184,6 +185,7 @@ ready before you rely on the calculation workbook:
 aeat app ledger preflight --year 2026 --period 1T
 @step Read the overall ledger state for the period.
 @result aeat --format json app ledger status --year 2026 --period 1T
+@expect result.active_count == 2
 @expect exit_code == 0
 ```
 

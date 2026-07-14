@@ -42,6 +42,7 @@ from ._errors import (
     SequenceParseError,
 )
 from ._golden_store import (
+    REPO_ROOT_TOKEN,
     SANDBOX_STORAGE_ROOT_TOKEN,
     SANDBOX_WORKDIR_TOKEN,
     GoldenFrame,
@@ -50,12 +51,13 @@ from ._golden_store import (
     default_goldens_root,
     golden_path,
     masked_envelope_values,
+    normalise_document_paths,
     normalise_text_output,
     read_golden,
     refresh_invocation,
     write_golden,
 )
-from ._parser import parse_frame_lines, parse_sequence
+from ._parser import parse_frame_lines, parse_sequence, result_frame_asserts_result_payload
 from ._runner import (
     SANDBOX_INSTANT,
     SANDBOX_PROFILE_ID,
@@ -83,6 +85,7 @@ from ._tokeniser import CommandToken, TokenKind, command_path_key, tokenise_comm
 
 __all__ = [
     "COHERENCE_TIER_PREFIX",
+    "REPO_ROOT_TOKEN",
     "SANDBOX_INSTANT",
     "SANDBOX_PROFILE_ID",
     "SANDBOX_PROFILE_LABEL",
@@ -128,6 +131,7 @@ __all__ = [
     "live_aeat_tokens",
     "load_seed_frames",
     "masked_envelope_values",
+    "normalise_document_paths",
     "normalise_text_output",
     "parse_frame_lines",
     "parse_sequence",
@@ -135,6 +139,7 @@ __all__ = [
     "refresh_invocation",
     "refresh_sequences",
     "refuse_live_frames",
+    "result_frame_asserts_result_payload",
     "sequence_sandbox",
     "tokenise_command",
     "write_golden",

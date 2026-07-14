@@ -3,6 +3,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "auth",
         "apoderado",
@@ -15,12 +17,29 @@
         "PAGOSF"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.apoderado.configure",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "catalogue_version": "2026.05.bootstrap",
+          "configured_at": "2026-04-01T09:00:00Z",
+          "granted_scopes": [
+            "IVA",
+            "PAGOSF"
+          ],
+          "notes": "",
+          "represented_nif": "sha256:33982da1"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "bucket_id\t<bucket-id>\nrepresented_nif\tsha256:33982da1\ngranted_scopes\tIVA,PAGOSF\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

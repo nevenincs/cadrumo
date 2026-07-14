@@ -3,6 +3,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "auth",
         "apoderado",
@@ -10,12 +12,100 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.apoderado.scopes.list",
+        "notices": [],
+        "result": {
+          "catalogue_version": "2026.05.bootstrap",
+          "scopes": [
+            {
+              "code": "GENERALNT",
+              "modelo_codes": [],
+              "name_en": "General tax procedures",
+              "name_es": "Trámites tributarios (general)"
+            },
+            {
+              "code": "RENT",
+              "modelo_codes": [
+                "100",
+                "714"
+              ],
+              "name_en": "Income tax and wealth declaration",
+              "name_es": "Renta y patrimonio (modelo 100, 714)"
+            },
+            {
+              "code": "IVA",
+              "modelo_codes": [
+                "303",
+                "390"
+              ],
+              "name_en": "IVA periodic and annual returns",
+              "name_es": "IVA (modelo 303, 390)"
+            },
+            {
+              "code": "PAGOSF",
+              "modelo_codes": [
+                "130",
+                "131"
+              ],
+              "name_en": "Quarterly self-employed instalments",
+              "name_es": "Pagos fraccionados (modelo 130, 131)"
+            },
+            {
+              "code": "RETEN",
+              "modelo_codes": [
+                "111",
+                "115",
+                "123",
+                "180",
+                "190",
+                "193"
+              ],
+              "name_en": "Withholding tax declarations",
+              "name_es": "Retenciones (modelo 111, 115, 123, 180, 190, 193)"
+            },
+            {
+              "code": "CENSO",
+              "modelo_codes": [
+                "036",
+                "037"
+              ],
+              "name_en": "Censo declarations (registration, modification, deregistration)",
+              "name_es": "Censo (modelo 036, 037)"
+            },
+            {
+              "code": "INFORM",
+              "modelo_codes": [
+                "347",
+                "349",
+                "720"
+              ],
+              "name_en": "Informational declarations",
+              "name_es": "Declaraciones informativas (modelo 347, 349, 720)"
+            },
+            {
+              "code": "NOTIFIC",
+              "modelo_codes": [],
+              "name_en": "Electronic notifications (DEHú)",
+              "name_es": "Notificaciones electrónicas DEHú"
+            },
+            {
+              "code": "EXPED",
+              "modelo_codes": [],
+              "name_en": "Filing records and queries",
+              "name_es": "Expedientes y consultas"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "GENERALNT\tGeneral tax procedures\nRENT\tIncome tax and wealth declaration (modelo 100, 714)\nIVA\tIVA periodic and annual returns (modelo 303, 390)\nPAGOSF\tQuarterly self-employed instalments (modelo 130, 131)\nRETEN\tWithholding tax declarations (modelo 111, 115, 123, 180, 190, 193)\nCENSO\tCenso declarations (registration, modification, deregistration) (modelo 036)\nINFORM\tInformative declarations (modelo 347, 349, 720)\nNOTIFIC\tNotifications and communications\nEXPED\tFiles and procedures\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

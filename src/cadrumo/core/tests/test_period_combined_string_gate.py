@@ -338,17 +338,41 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         path=_path(
             r"^docs/_sequences/how-to/(?:"
             r"first-quarterly-filing/modelo-130-first-quarter|"
-            r"modelo-130/modelo-130-(?:manual-casilla|quarterly)|"
-            r"modelo-303/modelo-303-first-quarter|"
-            r"modelo-349/modelo-349-first-quarter|"
+            r"modelo-130/modelo-130-(?:manual-casilla|quarterly|inspect-boxes|review-chain)|"
+            r"modelo-303/modelo-303-(?:first-quarter|inspect-boxes|revision)|"
+            r"modelo-349/modelo-349-(?:first-quarter|export|inspect)|"
             r"modelo-390/modelo-390-annual-2025|"
             r"quickstart/quickstart-modelo-130|"
-            r"verification-reports/verification-reports-modelo-303"
+            r"verification-reports/verification-reports-(?:modelo-303|work-history)|"
+            r"file-at-aeat/file-at-aeat-chain|"
+            r"filing-spine/filing-spine-(?:chain|visible-target|work-list)|"
+            r"irpf-lifecycle/irpf-lifecycle-q1|"
+            r"iva-lifecycle/iva-lifecycle-q1"
             r")\.json$"
         ),
         reason="captured CLI sequence preserves the WorkUnit.name display-name field "
-        "(<modelo>-<year>-<period>, no modelo- stem), not export filename or period input grammar",
+        "(<modelo>-<year>-<period>, no modelo- stem) as a JSON string or inside a captured "
+        "tab-separated CLI text-output blob, not export filename or period input grammar",
         pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^docs/_sequences/how-to/(?:"
+            r"quickstart/quickstart-revision|"
+            r"review-calculation-values/review-values-(?:bindings|manual-casilla|review-saved)"
+            r")\.json$"
+        ),
+        reason="captured CLI sequence's tab-separated modelo.work.create text output embeds "
+        "the WorkUnit.name display-name field, not export filename or period input grammar",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"name\\t\d+-\d{4}-[1-4]T"),
+    ),
+    AllowlistRule(
+        path=_path(r"^docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1\.json$"),
+        reason="captured CLI sequence's modelo.export --output/output_path names the canonical "
+        "modelo-<id>-<year>-<period> fichero-BOE export filename schema, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"\.boe"),
     ),
     AllowlistRule(
         path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_app_quickfile\.py$"),

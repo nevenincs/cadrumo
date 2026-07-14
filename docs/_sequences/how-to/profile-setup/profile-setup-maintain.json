@@ -122,6 +122,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "export",
@@ -131,12 +133,34 @@
         "--cleartext-local"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "bruno-real",
+        "command": "config.profile.export",
+        "notices": [
+          {
+            "code": "config.profile.export.cleartext_sensitive_bundle",
+            "context": {
+              "out": "bruno-real-profile.json"
+            },
+            "message": "This bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), names/surnames, the full ledger, calculation revisions, and filing records. It was written to bruno-real-profile.json. Use it only for local/SAR handling; do not email, sync, or transfer it. Delete it after that local/SAR handling is complete. Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted structured transfer bundle.",
+            "severity": "warning",
+            "suggestion": null
+          }
+        ],
+        "result": {
+          "display_name": "bruno-real",
+          "out": "bruno-real-profile.json",
+          "profile_id": "<profile-id>",
+          "schema_version": 3
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "profile_id\t<profile-id>\ndisplay_name\tbruno-real\nout\tbruno-real-profile.json\ntransport\tcleartext-local\nschema_version\t3\nWARNING\tThis bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), names/surnames, the full ledger, calculation revisions, and filing records. It was written to bruno-real-profile.json. Use it only for local/SAR handling; do not email, sync, or transfer it. Delete it after that local/SAR handling is complete. Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted structured transfer bundle.\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

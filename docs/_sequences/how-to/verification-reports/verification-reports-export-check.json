@@ -1,0 +1,145 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "switch",
+        "docs-sequence-sandbox"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "active_profile\tdocs-sequence-sandbox\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "303",
+          "name": "303-2026-1T",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2023-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "87619640518f",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "status",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.status",
+        "notices": [
+          {
+            "code": "modelo.work.status.next_action",
+            "context": null,
+            "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
+            "severity": "info",
+            "suggestion": "aeat app modelo work calculate 98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+          }
+        ],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "303",
+          "name": "303-2026-1T",
+          "operation": "modelo.work.status",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2023-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "87619640518f",
+          "state": "borrador",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "verification-reports-export-check"
+}

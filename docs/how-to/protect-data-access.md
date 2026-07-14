@@ -123,7 +123,8 @@ cleared:
 aeat config profile status
 @step Clear the active-profile selection.
 aeat config lock
-@result aeat config profile status
+@result aeat --format json config profile status
+@expect result.configured == false
 @expect exit_code == 0
 ```
 

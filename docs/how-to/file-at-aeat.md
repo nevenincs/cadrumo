@@ -55,6 +55,7 @@ aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
 aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 @step Record the filing locally, only after the portal submission succeeds.
 @result aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+@expect result.status == "vigente"
 @expect exit_code == 0
 @step Reconcile AEAT's justificante against your local record (run against your own receipt).
 @static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf

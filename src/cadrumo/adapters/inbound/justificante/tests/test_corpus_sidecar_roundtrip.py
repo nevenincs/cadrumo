@@ -8,7 +8,9 @@ output.
 
 The key ground-truth fields available from every manifest:
 
-* ``tax_id``          — always ``Y0000001S`` (the standard sanitised NIE).
+* ``tax_id``          — the redacted identifier the sidecar declares: a NIE/NIF
+                        for a personal filer (``Y0000001S``) or a CIF for a
+                        sociedad's IS modelo (e.g. Modelo 202 ``B00000001``).
 * ``csv``             — ``SANITIZED{modelo}{ejercicio}`` (the synthetic CSV
                         injected by the sanitiser, e.g. ``SANITIZED1302024``).
 * ``modelo``          — encoded in the ``SANITIZED…`` token and the directory.
@@ -51,9 +53,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 _JUSTIFICANTES_DIR = _FIXTURES_ROOT / "justificantes"
 _SEDE_HOST = aeat_host("sede")
 
-# Sanitiser always injects "Y0000001S" as the synthetic NIE across the entire
-# corpus.  This constant makes the assertion self-documenting.
-_SYNTHETIC_TAX_ID = "Y0000001S"
+# The sanitiser injects a redacted tax id per fixture: a NIE/NIF for a personal
+# filer (Y0000001S) but a CIF for a sociedad's Impuesto sobre Sociedades modelo
+# (e.g. Modelo 202 -> B00000001). This shape (optional leading letter, 7-8
+# digits, trailing control character) locates the tax-id replacement in the
+# sidecar, distinct from the redacted date (01-01-1900) and the
+# SANITIZED{modelo}{year} presentation id.
+_SYNTHETIC_TAX_ID_RE = re.compile(r"^[A-Z]?\d{7,8}[A-Z0-9]$")
 
 # Pattern used to verify that the CSV token in the manifest is what we expect
 # the parser to extract.  The sanitiser always uses SANITIZED{modelo}{year}.
@@ -138,6 +144,14 @@ def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGr
     sidecar_modelo = m.group(1)
     sidecar_ejercicio = m.group(2)
 
+    # Locate the redacted tax id — the sole tax-id-shaped synthetic token. It is
+    # the authoritative per-fixture expectation (a personal NIE/NIF or a
+    # sociedad's CIF); a manifest without exactly one is partial, so skip it.
+    tax_id_tokens = sorted(s for s in synthetics if _SYNTHETIC_TAX_ID_RE.match(s))
+    if len(tax_id_tokens) != 1:
+        return None
+    tax_id_token = tax_id_tokens[0]
+
     # Verify the SANITIZED token encodes the same modelo and year as the path.
     ejercicio_from_stem, period_from_stem = stem.split("-", 1)
     if sidecar_modelo != modelo or sidecar_ejercicio != ejercicio_from_stem:
@@ -147,7 +161,7 @@ def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGr
     expected_period = _derive_expected_period(modelo, stem, sidecar_ejercicio, period_from_stem)
 
     return _SidecarGroundTruth(
-        expected_tax_id=_SYNTHETIC_TAX_ID,
+        expected_tax_id=tax_id_token,
         expected_csv=csv_token,
         expected_modelo=modelo,
         expected_ejercicio=sidecar_ejercicio,

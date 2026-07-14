@@ -166,6 +166,7 @@ aeat app ledger ratios set telefonia_movil 0.5
 aeat app ledger ratios list
 @step Confirm the saved ratios are internally consistent.
 @result aeat --format json app ledger ratios validate
+@expect result.overrides_count == 1
 @expect exit_code == 0
 ```
 
@@ -235,6 +236,7 @@ aeat app ledger rule list
 aeat app ledger rule apply --dry-run
 @step Apply the rule to matching rows.
 @result aeat --format json app ledger rule apply
+@expect result.rules_evaluated == 1
 @expect exit_code == 0
 ```
 
@@ -266,6 +268,7 @@ sequence imports the quarter, then reads the queue:
 @setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
 @step Read the profile-wide review queue.
 @result aeat --format json app review queue
+@expect result.operation == "review.queue"
 @expect exit_code == 0
 ```
 
@@ -283,6 +286,7 @@ aeat app review queue --kind ledger_transaction
 aeat app review queue --kind modelo_finding --modelo 303
 @step Show every state, not only pending items.
 @result aeat --format json app review queue --state all
+@expect result.operation == "review.queue"
 @expect exit_code == 0
 ```
 
@@ -316,6 +320,7 @@ quarter, then runs preflight and reads the ledger status:
 aeat app ledger preflight --year 2026 --period 1T
 @step Read the overall ledger state for the period.
 @result aeat --format json app ledger status --year 2026 --period 1T
+@expect result.business_income_total == "1210"
 @expect exit_code == 0
 ```
 
