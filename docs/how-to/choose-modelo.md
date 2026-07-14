@@ -60,7 +60,7 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md). 
 
 ## Check readiness for one filing
 
-When you already know which modelo, year, and period you're aiming at, ask for a preflight check with `aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T`, the closing frame of the card above.
+When you already know which modelo, year, and period you're aiming at, ask for a preflight check with `aeat config profile preflight`, the closing frame of the card above.
 
 The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
 
