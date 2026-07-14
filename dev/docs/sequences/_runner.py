@@ -285,13 +285,18 @@ def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
 
 
 def _refuse_live_frames(sequence: ParsedSequence) -> None:
-    """Refuse the whole sequence when any frame would contact live AEAT."""
+    """Refuse the whole sequence when any EXECUTED frame would contact live AEAT.
+
+    A ``@static`` frame is the sanctioned way to DISPLAY a live-AEAT command
+    (it is never executed), so static frames are exempt; an executed frame
+    (command / setup / result) that reads live AEAT is still refused.
+    """
     violations = [
         f"{_frame_at(frame)}: {frame.command_line!r} is a live-AEAT invocation "
         f"(tokens {', '.join(_live_aeat_tokens(frame))}); pull verbs and the "
-        "'app live' group are unenrollable — sequences build, verify, and "
-        "export only, never contact the sede"
-        for frame in sequence.frames
+        "'app live' group cannot be executed. Run build/verify/export frames, "
+        "or show the live command as a @static frame instead"
+        for frame in sequence.executed_frames
         if _live_aeat_tokens(frame)
     ]
     if violations:
@@ -709,10 +714,18 @@ def execute_sequence(
         The typed :class:`SequenceTranscript` of the run.
 
     Raises:
-        SequenceExecutionError: When any frame is a live-AEAT invocation, exits
-            with an undeclared code, declares a capture its output cannot
-            satisfy, or the live-test opt-in is set.
+        SequenceExecutionError: When the sequence has no executed frames (it is
+            all ``@static``, so there is nothing to run and no golden to build),
+            any executed frame is a live-AEAT invocation, exits with an undeclared
+            code, declares a capture its output cannot satisfy, or the live-test
+            opt-in is set.
     """
+    if not sequence.executed_frames:
+        raise SequenceExecutionError(
+            sequence.sequence_id,
+            "an all-@static sequence has no executed frames to run and no golden to build; "
+            "the check/refresh path skips it (it is display-only)",
+        )
     _refuse_live_frames(sequence)
     if sandbox_root is not None:
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
@@ -734,7 +747,9 @@ def _execute_in_root(
         fixtures_root=fixtures_root,
     ) as sandbox:
         captures: dict[str, CapturedScalar] = {}
-        frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.frames)
+        # @static frames are display-only: they never run, so they never enter
+        # the transcript (and therefore never the golden).
+        frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
     return SequenceTranscript(
         sequence_id=sequence.sequence_id,
         profile_id=sandbox.profile_id,
@@ -806,7 +821,7 @@ def _execute_page_in_root(
     ) as sandbox:
         for sequence in sequences:
             captures: dict[str, CapturedScalar] = {}
-            frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.frames)
+            frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
             transcripts.append(
                 SequenceTranscript(
                     sequence_id=sequence.sequence_id,

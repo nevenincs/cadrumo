@@ -194,15 +194,18 @@ def evaluate_expectations(
     expectation are all named problems. An empty tuple is a clean pass.
     """
     problems: list[str] = []
-    if len(sequence.frames) != len(transcript.frames):
+    # @static frames never run, so they never enter the transcript; expectations
+    # are evaluated over the executed frames, aligned 1:1 with the transcript.
+    executed = sequence.executed_frames
+    if len(executed) != len(transcript.frames):
         problems.append(
             f"page {page!r} sequence {sequence.sequence_id!r}: transcript has "
-            f"{len(transcript.frames)} frames for a {len(sequence.frames)}-frame sequence; "
+            f"{len(transcript.frames)} frames for a {len(executed)}-executed-frame sequence; "
             "expectations cannot be evaluated",
         )
         return tuple(problems)
 
-    for index, (frame, execution) in enumerate(zip(sequence.frames, transcript.frames, strict=True)):
+    for index, (frame, execution) in enumerate(zip(executed, transcript.frames, strict=True)):
         at = _frame_locator(page, sequence.sequence_id, index, execution)
         for assertion in frame.expects:
             rendered = json.dumps(assertion.expected)

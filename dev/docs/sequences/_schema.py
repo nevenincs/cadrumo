@@ -98,8 +98,15 @@ class FrameKind(StrEnum):
     #: "Preparation" disclosure — executed truth, never invisible magic.
     SETUP = "setup"
     #: The mandatory terminal ``@result aeat ...`` verification frame; exactly
-    #: one per sequence, and it must be last.
+    #: one per sequence with executed frames, and it must be the last EXECUTED
+    #: frame (``@static`` frames may follow it).
     RESULT = "result"
+    #: A non-executed ``@static aeat ...`` display frame: rendered as the unified
+    #: step card (header plus tokenised command) but never run, so it carries no
+    #: output and no golden. Admissible only where hermetic execution is
+    #: impossible (live AEAT, Google OAuth, interactive wizards, or an
+    #: operator-machine-specific path); output is never fabricated for it.
+    STATIC = "static"
 
 
 class CaptureBinding(BaseModel):
@@ -162,25 +169,33 @@ class SequenceFrame(BaseModel):
 class ParsedSequence(BaseModel):
     """A fully parsed, structurally valid ``cli-sequence``.
 
-    ``frames`` are in execution order: any inlined ``:seed:`` setup frames first,
-    then the directive body's own frames, ending in exactly one terminal
-    :attr:`FrameKind.RESULT` frame carrying at least one
-    :class:`ExpectAssertion`. ``verify`` is the singular imperative sentence from
-    the required ``:verify:`` option; ``seed`` names the inlined recipe when one
-    was requested.
+    ``frames`` are in document order: any inlined ``:seed:`` setup frames first,
+    then the directive body's own frames. A sequence with at least one executed
+    frame ends its executed run in exactly one :attr:`FrameKind.RESULT` frame
+    carrying at least one :class:`ExpectAssertion`; a sequence of only
+    :attr:`FrameKind.STATIC` frames runs nothing and carries no result. ``verify``
+    is the singular imperative sentence from the ``:verify:`` option, mandatory
+    for a sequence with executed frames and ``None`` for an all-static sequence
+    (nothing runs to verify). ``seed`` names the inlined recipe when one was
+    requested.
     """
 
     model_config = _STRICT_FROZEN
 
     sequence_id: SequenceId
-    verify: VerifySentence
+    verify: VerifySentence | None = None
     seed: SequenceId | None = None
     frames: tuple[SequenceFrame, ...] = Field(min_length=1)
 
     @property
-    def result_frame(self) -> SequenceFrame:
-        """The terminal :attr:`FrameKind.RESULT` frame (always the last frame)."""
-        return self.frames[-1]
+    def executed_frames(self) -> tuple[SequenceFrame, ...]:
+        """The frames that actually run (every kind except :attr:`FrameKind.STATIC`)."""
+        return tuple(frame for frame in self.frames if frame.kind is not FrameKind.STATIC)
+
+    @property
+    def result_frame(self) -> SequenceFrame | None:
+        """The terminal :attr:`FrameKind.RESULT` frame, or ``None`` for an all-static sequence."""
+        return next((frame for frame in self.frames if frame.kind is FrameKind.RESULT), None)
 
     @property
     def capture_names(self) -> tuple[str, ...]:

@@ -95,6 +95,7 @@ _STRAY_BRACE_RE = re.compile(r"[{}]")
 _FRAME_SIGILS: dict[str, FrameKind] = {
     "@setup": FrameKind.SETUP,
     "@result": FrameKind.RESULT,
+    "@static": FrameKind.STATIC,
 }
 
 
@@ -378,6 +379,12 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
             if current is None:
                 problems.append(f"{_at(source, offset)}: @capture must follow a command frame")
                 continue
+            if current.kind is FrameKind.STATIC:
+                problems.append(
+                    f"{_at(source, offset)}: @capture cannot annotate a @static frame; a @static "
+                    "frame is not executed, so it produces no output to capture",
+                )
+                continue
             binding = _parse_capture(remainder, source, offset, problems)
             if binding is not None:
                 current.captures.append(binding)
@@ -388,6 +395,12 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
             if current is None:
                 problems.append(f"{_at(source, offset)}: @expect must follow a command frame")
                 continue
+            if current.kind is FrameKind.STATIC:
+                problems.append(
+                    f"{_at(source, offset)}: @expect cannot annotate a @static frame; a @static "
+                    "frame is not executed, so there is nothing to assert",
+                )
+                continue
             assertion = _parse_expect(remainder, source, offset, problems)
             if assertion is not None:
                 current.expects.append(assertion)
@@ -395,14 +408,15 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
 
         if head.startswith("@"):
             problems.append(
-                f"{_at(source, offset)}: unknown sigil {head!r}; expected @setup, @result, @capture, @expect, or @step",
+                f"{_at(source, offset)}: unknown sigil {head!r}; expected "
+                "@setup, @result, @static, @capture, @expect, or @step",
             )
             current = None
             continue
 
         problems.append(
             f"{_at(source, offset)}: unrecognised line {line!r}; "
-            f"expected an '{_EXECUTABLE} ...' command, @setup, @result, @capture, @expect, or @step",
+            f"expected an '{_EXECUTABLE} ...' command, @setup, @result, @static, @capture, @expect, or @step",
         )
         current = None
 
@@ -416,20 +430,36 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
 
 
 def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str]) -> None:
-    """Enforce the exactly-one-terminal-@result contract."""
+    """Enforce the @result contract, relaxed for ``@static`` frames.
+
+    An all-``@static`` sequence runs nothing, so it must carry NO @result. A
+    sequence with at least one executed frame must carry exactly one @result,
+    which must be the LAST EXECUTED frame (``@static`` frames may follow it) and
+    carry at least one @expect.
+    """
+    executed = [index for index, builder in enumerate(builders) if builder.kind is not FrameKind.STATIC]
     result_indices = [index for index, builder in enumerate(builders) if builder.kind is FrameKind.RESULT]
+
+    if not executed:
+        # An all-@static sequence runs nothing, so it needs no @result (and a
+        # @result is itself an executed frame, so ``executed`` would be non-empty).
+        return
+
     if not result_indices:
-        problems.append("a sequence must end in exactly one @result frame; found none")
+        problems.append(
+            "a sequence with executed frames must end its executed run in exactly one @result frame; found none",
+        )
         return
     if len(result_indices) > 1:
         located = ", ".join(_at(builders[index].source, builders[index].line_number) for index in result_indices)
         problems.append(f"a sequence must have exactly one @result frame; found {len(result_indices)} ({located})")
         return
     only = result_indices[0]
-    if only != len(builders) - 1:
+    if only != executed[-1]:
         result = builders[only]
         problems.append(
-            f"the @result frame ({_at(result.source, result.line_number)}) must be the last frame in the sequence",
+            f"the @result frame ({_at(result.source, result.line_number)}) must be the last EXECUTED "
+            "frame in the sequence; only @static frames may follow it",
         )
         return
     result = builders[only]
@@ -497,17 +527,6 @@ def parse_sequence(
 
     _validate_kebab_id(sequence_id.strip(), "sequence id", problems)
 
-    verify_raw = options.get("verify")
-    verify = (verify_raw or "").strip()
-    verify_max = _VERIFY_CONSTRAINTS.max_length
-    if not verify:
-        problems.append(
-            "the :verify: option is required: one singular imperative verification sentence "
-            '(e.g. "Verify the calculation before exporting.")',
-        )
-    elif verify_max is not None and len(verify) > verify_max:
-        problems.append(f"the :verify: sentence must be at most {verify_max} characters")
-
     builders: list[_FrameBuilder] = []
     seed_raw = options.get("seed")
     seed = (seed_raw or "").strip() or None
@@ -523,8 +542,34 @@ def parse_sequence(
     problems.extend(body_problems)
     builders.extend(body_builders)
 
+    if not builders:
+        problems.append("a cli-sequence must contain at least one frame")
+
     _enforce_result_contract(builders, problems)
     _enforce_captures_and_placeholders(builders, problems)
+
+    # The :verify: contract depends on whether the sequence runs anything: it is
+    # mandatory when at least one frame executes and refused for an all-@static
+    # sequence (nothing runs, so a "Confirm ..." sentence would overclaim).
+    verify_text = (options.get("verify") or "").strip()
+    verify_max = _VERIFY_CONSTRAINTS.max_length
+    all_static = bool(builders) and all(builder.kind is FrameKind.STATIC for builder in builders)
+    if all_static:
+        if verify_text:
+            problems.append(
+                "an all-@static sequence runs nothing, so the :verify: option is refused "
+                "(a verification sentence would overclaim); remove :verify:",
+            )
+        verify: str | None = None
+    else:
+        if not verify_text:
+            problems.append(
+                "the :verify: option is required: one singular imperative verification sentence "
+                '(e.g. "Verify the calculation before exporting.")',
+            )
+        elif verify_max is not None and len(verify_text) > verify_max:
+            problems.append(f"the :verify: sentence must be at most {verify_max} characters")
+        verify = verify_text or None
 
     if problems:
         raise SequenceParseError(sequence_id, problems)
