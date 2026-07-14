@@ -696,7 +696,7 @@ class Modelo210AgrupacionRentaRow(BaseModel):
         return self
 
 
-class Modelo210AgrupacionRentaRowsError(ValueError):
+class Modelo210AgrupacionRentaRowsError(AeatError, ValueError):
     """A Modelo 210 annual grouped-renta set violates Article 2 compatibility."""
 
     def __init__(self, *, reason: str, detail: str) -> None:

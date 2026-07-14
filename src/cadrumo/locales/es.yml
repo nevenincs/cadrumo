@@ -5168,6 +5168,7 @@ errors:
       recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
+    auth_former_product_session_state: 'Cadrumo detectó estado de sesión de un producto retirado y se niega a leerlo, moverlo, re-cifrarlo, eliminarlo o adoptarlo.'
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el calculo de edad a fin de ejercicio
       no tiene ejercicio de declaracion.'
@@ -6110,6 +6111,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    modelo_210_agrupacion_renta_rows: 'Las rentas agrupadas anuales del Modelo 210 deben formar una agrupación única y válida (un código, un tipo, un bien identificado y un pagador, salvo la excepción de múltiples pagadores).'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
