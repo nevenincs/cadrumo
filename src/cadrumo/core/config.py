@@ -1270,7 +1270,7 @@ _operator_dotenv_suppressed: contextvars.ContextVar[bool] = contextvars.ContextV
     "_operator_dotenv_suppressed",
     default=False,
 )
-"""Scope flag consulted by :meth:`Settings.settings_customise_sources`: when
+"""Scope flag consulted by ``Settings.settings_customise_sources``: when
 set, every :class:`Settings` construction skips the operator dotenv source."""
 
 
@@ -1283,7 +1283,7 @@ def suppress_operator_dotenv() -> Iterator[None]:
     scrubs the ambient environment itself; this seam closes the second
     channel — the project-root ``env/.env`` dotenv, which pydantic-settings
     loads via an ABSOLUTE path regardless of the working directory. The flag
-    is honoured inside :meth:`Settings.settings_customise_sources`, so every
+    is honoured inside ``Settings.settings_customise_sources``, so every
     construction path (:func:`load_settings` and direct ``Settings()``
     instantiation) drops the dotenv source for the scope's duration.
     Context-var scoped and DEFAULT-OFF: production behaviour is unchanged,

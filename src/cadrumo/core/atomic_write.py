@@ -12,7 +12,7 @@ master-key store. This module collapses all of that onto two named tiers
 so a new writer picks one deliberately instead of inventing a fifth dialect:
 
 - **Standard tier** (:func:`atomic_write_bytes`, :func:`atomic_write_text`):
-  a :class:`tempfile.NamedTemporaryFile` sibling in the target's own parent
+  a :func:`tempfile.NamedTemporaryFile` sibling in the target's own parent
   directory (``{stem}.`` prefix, ``.tmp`` suffix), write, flush, ``fsync``,
   :func:`os.replace`, then a best-effort parent-directory ``fsync`` via
   :func:`~cadrumo.core.locks.fsync_parent_dir`. Suitable for ordinary durable
@@ -70,7 +70,7 @@ _HARDENED_DEFAULT_MODE = 0o600
 def atomic_write_bytes(path: Path, data: bytes) -> None:
     """Atomically write ``data`` to ``path`` (standard tier).
 
-    Stages a :class:`tempfile.NamedTemporaryFile` sibling in ``path``'s
+    Stages a :func:`tempfile.NamedTemporaryFile` sibling in ``path``'s
     parent directory (created if absent), writes and fsyncs it, then
     replaces ``path`` with :func:`os.replace` and best-effort fsyncs
     the parent directory. The tempfile is unlinked on any failure, including
