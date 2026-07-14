@@ -14,5 +14,5 @@ The `2026-06-05-test-topology-refactor-adr` decision keeps Rust-style local owne
 
 ## How
 
-- Good: `src/aeat/application/modelo/tests/test_work_addressing.py` tests the `aeat.application.modelo` surface from its local test folder.
-- Bad: `src/aeat/application/modelo/test_work_addressing.py` sits beside implementation modules and pollutes the code namespace.
+- Good: `src/cadrumo/application/modelo/tests/test_work_addressing.py` tests the `cadrumo.application.modelo` surface from its local test folder.
+- Bad: `src/cadrumo/application/modelo/test_work_addressing.py` sits beside implementation modules and pollutes the code namespace.

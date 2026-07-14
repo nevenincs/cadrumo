@@ -8,7 +8,7 @@ trigger: always_on
 ## Rule
 
 The binding `source` closed set MUST be the single canonical `BindingSourceKind`
-StrEnum declared in `aeat.core`; `DataBindingDefinition.source` is typed as that
+StrEnum declared in `cadrumo.core`; `DataBindingDefinition.source` is typed as that
 enum, and every per-family source-kind collection (the invoice / ledger /
 counterpart frozensets) MUST be DERIVED from it, never hand-maintained as a
 string-literal list. A new binding source kind is added to `BindingSourceKind`

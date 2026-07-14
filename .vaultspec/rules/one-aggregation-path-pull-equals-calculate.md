@@ -25,12 +25,12 @@ disagree.
 
 - Good: `RelationPrefillSourceResolver.resolve` delegates to
   `resolve_relations_from_local_store`
-  (`src/aeat/application/calculations/_relation_prefill.py:279`), the exact same
+  (`src/cadrumo/application/calculations/_relation_prefill.py:279`), the exact same
   function the Sheets-pull path calls
   (`entrypoints/cli/_config/_google_sync_calc.py:130`), so both transports run one
   resolver.
 - Good: parity is enforced by
-  `src/aeat/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
+  `src/cadrumo/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
   — a regression that the pull path and the calculate path produce identical
   casilla values for a shared revision.
 - Bad: a pull-path `assemble_*` helper that computes a casilla one way while the
