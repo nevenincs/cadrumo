@@ -19,7 +19,7 @@ submission by construction, exactly like the CLI.
 
 There are three ways to connect, covered in order below: the Claude plugin,
 the Claude Desktop extension bundle, and a plain MCP server registration for
-any other client. Pick one — they all run the same server.
+any other client. Pick one. They all run the same server.
 
 ## Connect Claude through the plugin (recommended)
 
@@ -28,7 +28,7 @@ bundles the MCP server configuration together with the rules, skills, and
 scoped agent personas that keep the assistant inside the safety boundary.
 
 The plugin launches the server itself through `uvx`, so the only prerequisite
-is [uv](https://docs.astral.sh/uv/) on your `PATH` — you do not need to
+is [uv](https://docs.astral.sh/uv/) on your `PATH`. You do not need to
 install the `agent` extra first. Add the marketplace once, then install the
 plugin:
 
@@ -48,7 +48,7 @@ Claude Desktop also loads Cadrumo as a Desktop Extension bundle (`.mcpb`). The
 bundle points at the `cadrumo-mcp` command on your machine, so this path needs
 the `agent` extra installed first.
 
-Install the `agent` extra of the same `cadrumo` package — download the package
+Install the `agent` extra of the same `cadrumo` package. Download the package
 from the
 [releases page](https://github.com/nevenincs/cadrumo/releases/latest) and
 install it with the extra named:
