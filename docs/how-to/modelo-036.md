@@ -30,8 +30,16 @@ Pick the command that matches what you filed:
 
 Record an alta:
 
-```bash
-aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
+```{cli-sequence} modelo-036-record-alta
+:verify: Confirm the recorded alta is saved and readable by its id.
+@step Record the alta you filed at the sede, with the sede receipt number.
+aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justificante ACUSE-036-2026
+@capture declaration_id result.declaration_id
+@step Read the saved record back by its id to confirm it persisted.
+@result aeat --format json app modelo m036 view {declaration_id}
+@expect result.event_kind == "alta"
+@expect result.declared_on == "2026-01-10"
+@expect exit_code == 0
 ```
 
 Record a modificacion:
@@ -64,24 +72,26 @@ That printed output is your confirmation. Save it with your records.
 
 ## List and view recorded declarations
 
-List the declarations you have recorded in the active profile:
+List the declarations you have recorded in the active profile, then open one by
+its id (the setup step records the same alta shown above so the list has a row):
 
-```bash
-aeat app modelo m036 list
+```{cli-sequence} modelo-036-list-view
+:verify: Confirm the recorded declaration appears in the list and opens by its id.
+@setup aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justificante ACUSE-036-2026
+@capture declaration_id result.declaration_id
+@step List the declarations recorded in the active profile.
+aeat --format json app modelo m036 list
+@expect result.declaration_count == 1
+@step View one declaration in full by its id (or an unambiguous prefix of it).
+@result aeat --format json app modelo m036 view {declaration_id}
+@expect result.event_kind == "alta"
+@expect exit_code == 0
 ```
 
 The list shows each declaration's id, event kind, declared-on date, recorded-at
 timestamp, and whether you gave a justificante. An empty list means you have recorded
-no declarations yet.
-
-View one declaration in full by its id (or an unambiguous prefix of it):
-
-```bash
-aeat app modelo m036 view <declaration-id>
-```
-
-The view shows the full record, including the justificante and your note if you gave
-them. An id that matches no recorded declaration is refused.
+no declarations yet. The view shows the full record, including the justificante and
+your note if you gave them. An id that matches no recorded declaration is refused.
 
 No command edits or deletes a recorded declaration.
 
