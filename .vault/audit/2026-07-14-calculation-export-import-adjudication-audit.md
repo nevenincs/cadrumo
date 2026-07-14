@@ -197,43 +197,44 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** establish both a current mandate and exact earlier-window
   authority; do not back-project the 2025 design.
 
-### modelo-308-declaration-pdf-2019-open | low | Current authority does not cure an unproven mandate or missing specimen
+### modelo-308-declaration-pdf-2019-open | low | Accepted fallback extraction remains specimen-gated
 
 - **Candidate:** Modelo 308 declaration-PDF extraction from 2019, open end.
-- **Mandate:** `unproven`; unchecked legacy fixture wording is not accepted scope.
+- **Mandate:** `proven`; the accepted live-filing decision requires
+  declaration-PDF fallback through registry-owned extraction profiles.
 - **Exact authority window:** `aeat-dr-308-2019` covers 2019+ record design,
   but does not itself prove filed-PDF geometry.
-- **Canonical implementation state:** `gap` for optional profile data; the
+- **Canonical implementation state:** `gap` for required profile data; the
   generic parser is delivered and remains the only engine.
 - **Real evidence or specimen:** a sanitized filed Modelo 308 PDF is missing.
 - **Retirement:** `false`.
 - **Evidence block:** `true`.
-- **Four-condition gate:** `mandate_met = false`,
-  `exact_authority_met = true`, `canonical_gap_met = false`, and
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = true`, `canonical_gap_met = true`, and
   `eligible_met = false`.
 - **Gate result:** `fail`.
-- **Disposition:** `mandate-gated`.
-- **Next action:** establish an accepted mandate before acquiring a real filed
-  specimen or proposing profile data.
+- **Disposition:** `evidence-gated`.
+- **Next action:** obtain and sanitize a real filed 2019+ PDF, then consider
+  reviewed profile data and corpus coverage through the generic parser only.
 
-### modelo-308-declaration-pdf-2009-2018 | low | Neither mandate nor exact-window authority is proven
+### modelo-308-declaration-pdf-2009-2018 | low | Accepted extraction lacks exact historical authority
 
 - **Candidate:** Modelo 308 declaration-PDF extraction from 2009 through 2018.
-- **Mandate:** `unproven`.
+- **Mandate:** `proven`; the accepted live-filing fallback mandate applies.
 - **Exact authority window:** `missing`; the registered design starts in 2019.
-- **Canonical implementation state:** `gap` for optional profile data; no new
+- **Canonical implementation state:** `gap` for required profile data; no new
   parser is permitted.
 - **Real evidence or specimen:** exact-window authority and a sanitized filed
   specimen are missing.
 - **Retirement:** `false`.
 - **Evidence block:** `true`.
-- **Four-condition gate:** `mandate_met = false`,
-  `exact_authority_met = false`, `canonical_gap_met = false`, and
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = false`, `canonical_gap_met = true`, and
   `eligible_met = false`.
 - **Gate result:** `fail`.
-- **Disposition:** `mandate-gated`.
-- **Next action:** establish mandate, exact earlier authority, and real filed
-  evidence without extrapolating 2019 sources.
+- **Disposition:** `authority-gated`.
+- **Next action:** obtain exact historical declaration-copy authority and real
+  sanitized specimens without extrapolating 2019 sources.
 
 ### modelo-190-outbound-2025-open | low | Registered 2025 authority remains mandate-gated
 
