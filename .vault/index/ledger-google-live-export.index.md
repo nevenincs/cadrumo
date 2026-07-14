@@ -4,11 +4,12 @@ tags:
   - '#index'
   - '#ledger-google-live-export'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-07-14'
 related:
   - '[[2026-06-03-ledger-google-live-export-plan]]'
   - '[[2026-06-04-ledger-google-live-export-adr]]'
   - '[[2026-06-04-ledger-google-live-export-research]]'
+  - '[[2026-07-14-google-optional-adapter-boundary-adr]]'
 ---
 
 # `ledger-google-live-export` feature index
