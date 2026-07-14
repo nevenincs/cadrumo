@@ -13,28 +13,33 @@ you upload through the official AEAT channel yourself.
 
 The tool needs a master-key passphrase and prompts for it.
 
+**Requirement:** a valid taxpayer profile with self-employed activity under
+estimación directa. Create one with `aeat config profile create <name>` before
+you start — [Set up your taxpayer profile](profile-setup.md) walks through it.
+
 ## The complete first-quarter chain
 
-This is the full path from an empty store to an exported `.boe` for a
-first-period filer. Run these commands in order. Each load-bearing detail is
-explained below.
+This is the full path from an empty store to a verified draft for a
+first-period filer. The preparation below sets up a self-employed profile and a
+classified ledger, then creates the draft, calculates it, and verifies it. Each
+load-bearing detail is explained under the sequence.
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
-  --description "venta" --classification BUSINESS \
-  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
-  --description "compra" --classification BUSINESS --category-id material_oficina \
-  --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-aeat app modelo work create --modelo 130 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T \
-  --binding modelo-130-resultados-negativos-anteriores=0 \
-  --binding modelo-130-pagos-fraccionados-anteriores=0 \
-  --binding irpf.previous_year_economic_activity_net_income=0
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+```{cli-sequence} modelo-130-quarterly
+:seed: autonomo-irpf-2026
+:verify: Confirm the draft passed verification before you export it.
+@step Open a Modelo 130 draft for the first quarter.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate the quarter's instalment from the classified ledger.
+aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values.01 == "1000"
+@expect result.casilla_values.03 == "500.00"
+@expect result.casilla_values.04 == "100.00"
+@step Verify the draft before you export it.
+@result aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@expect exit_code == 0
 ```
 
 Load-bearing details:
@@ -53,10 +58,11 @@ Load-bearing details:
   instalments paid, and last year's net income (used for the minoración).
   Later quarters resolve them from your own filed history instead - see
   [the cumulative behaviour](#each-quarter-is-cumulative) below.
-- With the two rows above, calculate reports rendimiento neto (casilla `03`)
-  of `500.00` - income base minus expense base - and a pago fraccionado
-  (casilla `04`) of `100.00`, 20 percent of the net.
-- `verify` reports `completeness complete` and `granted true`. `export`
+- With the two rows above, calculate reports cumulative income (casilla `01`)
+  of `1000.00`, rendimiento neto (casilla `03`) of `500.00` - income base
+  minus expense base - and a pago fraccionado (casilla `04`) of `100.00`,
+  20 percent of the net.
+- `verify` reports `completeness complete` and `granted true`. Export then
   writes the `.boe` and reports its path, byte size, and SHA-256 checksum.
 
 ## Before you create the draft
@@ -87,12 +93,9 @@ The ledger feeds the cumulative income, expense, and withholding figures
 through registry bindings; prior filings feed the carries. Casillas `06`,
 `08`, `10`, `16`, and `18` are manual inputs for the cases that apply to you
 (withholdings, second-activity volume, vivienda habitual deduction, prior
-complementary results). Inspect what is bound, missing, or manual:
-
-```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
-aeat app modelo casillas 130 --period 1T
-```
+complementary results). Inspect what is bound, missing, or manual with `aeat
+app modelo bindings list --modelo 130 --year 2026 --period 1T` and `aeat app
+modelo casillas 130 --period 1T`.
 
 ## Each quarter is cumulative
 
@@ -123,14 +126,12 @@ first (see [Reconcile a filing](reconcile.md)).
 
 The chain is the standard filing workflow - see
 [The filing workflow](filing-spine.md) for how work units and calculation
-revisions behave. In short:
-
-```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
-```
+revisions behave. In short: re-run the calculation with `aeat app modelo work
+calculate --modelo 130 --year 2026 --period 1T`, inspect the saved values with
+`aeat app modelo work revision --modelo 130 --year 2026 --period 1T`, verify
+with `aeat app modelo work verify --modelo 130 --year 2026 --period 1T`, and
+export with `aeat app modelo export --modelo 130 --year 2026 --period 1T
+--output ./modelo-130.boe`.
 
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
