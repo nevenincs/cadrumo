@@ -361,6 +361,7 @@ def render_error_json(
     context: Mapping[str, object] | None = None,
     trace_id: str | None = None,
     active_profile: str | None = None,
+    command: str | None = None,
 ) -> str:
     """Serialize ``error`` to a deterministic single-line JSON document.
 
@@ -368,23 +369,27 @@ def render_error_json(
     ``command``, ``active_profile``, ``status``, ``notices``) so it is
     shape-compatible with the success
     :class:`core.json_contract.SchemaEnvelope`. The error detail is nested
-    under ``error``. ``command`` is ``None``: the CLI error boundary
-    terminates before the dotted command path is resolvable, so the field
-    is present-but-null for spine uniformity. ``active_profile`` is the
-    human label of the active taxpayer profile (the identity anchor),
-    ``None`` for a non-profile-bound failure or when the CLI error
-    boundary cannot resolve it; the ``core`` layer never scans profile
-    manifests, so the CLI boundary resolves the label and passes it here.
-    The :data:`core.json_contract.ENVELOPE_SCHEMA_VERSION` import is
-    function-local to avoid the ``json_contract`` <-> ``errors`` import
-    cycle (``json_contract`` imports :class:`AeatError`).
+    under ``error``. ``command`` is the dotted identifier of the command that
+    failed (byte-identical to the ``command=`` its success envelope would
+    emit), resolved by the CLI boundary from the live click context and passed
+    here; it is ``None`` only when no command has resolved yet — an argv parse
+    failure before dispatch, or a direct render without a command. The ``core``
+    layer never touches the click context, so the CLI boundary resolves the
+    identifier and passes it. ``active_profile`` is the human label of the
+    active taxpayer profile (the identity anchor), ``None`` for a
+    non-profile-bound failure or when the CLI error boundary cannot resolve it;
+    the ``core`` layer never scans profile manifests, so the CLI boundary
+    resolves the label and passes it here. The
+    :data:`core.json_contract.ENVELOPE_SCHEMA_VERSION` import is function-local
+    to avoid the ``json_contract`` <-> ``errors`` import cycle
+    (``json_contract`` imports :class:`AeatError`).
     """
     from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
 
     envelope = build_error_envelope(error, context=context, trace_id=trace_id)
     document = {
         "schema_version": ENVELOPE_SCHEMA_VERSION,
-        "command": None,
+        "command": command,
         "active_profile": active_profile,
         "status": EnvelopeStatus.ERROR.value,
         "error": envelope.model_dump(mode="json"),
