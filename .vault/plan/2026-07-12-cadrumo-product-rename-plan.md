@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-14'
+modified: '2026-07-15'
 tier: L4
 related:
   - '[[2026-07-12-cadrumo-product-rename-research]]'
@@ -11,6 +11,15 @@ related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cadrumo-product-rename` plan
 
@@ -216,11 +225,11 @@ Depends on all implementation Waves and distinguishes valid AEAT authority uses 
 Prove CADRUMO behavior and classify every retained `aeat` occurrence by
 contract and referent.
 
-- [ ] `W06.P14.S76` - Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect; `repository rename residue report`.
+- [x] `W06.P14.S76` - Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect; `repository rename residue report`.
 - [x] `W06.P14.S77` - Prove no `aeat` import root, second human CLI alias, dual environment reader, namespace fallback, or state migration remains; `compatibility absence gate`.
-- [ ] `W06.P14.S78` - Run focused runtime, persistence, CLI, MCP, agent, and packaging tests with real behavior; `CADRUMO feature test surface`.
-- [ ] `W06.P14.S79` - Run installed-wheel, split-companion, Docker, MCP handshake, locale, and documentation gates; `CADRUMO artifact acceptance surface`.
-- [ ] `W06.P14.S80` - Run the path-scoped feature-surface quality gate for every file owned by issue #476; `feature-surface gate evidence`.
+- [x] `W06.P14.S78` - Run focused runtime, persistence, CLI, MCP, agent, and packaging tests with real behavior; `CADRUMO feature test surface`.
+- [x] `W06.P14.S79` - Run installed-wheel, split-companion, Docker, MCP handshake, locale, and documentation gates; `CADRUMO artifact acceptance surface`.
+- [x] `W06.P14.S80` - Run the path-scoped feature-surface quality gate for every file owned by issue #476; `feature-surface gate evidence`.
 
 ### Phase `W06.P15` - obtain independent formal review and close
 
