@@ -81,7 +81,7 @@ Adjudicate each legacy outbound candidate against product mandate and source app
 - [x] `P02.S05` - Adjudicate Modelo 184 export only for the 2025-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/184/, .vault/reference/`.
 - [x] `P02.S06` - Reconcile Modelo 190 2024 and 2025 design windows before deciding any outbound mandate; `src/cadrumo/_data/registry/aeat/modelos/190/, .vault/reference/`.
 - [x] `P02.S07` - Reconcile Modelo 193 2024 and 2025 design windows before deciding any outbound mandate; `src/cadrumo/_data/registry/aeat/modelos/193/, .vault/reference/`.
-- [ ] `P02.S08` - Adjudicate Modelo 308 export only for the 2019-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/308/, .vault/reference/`.
+- [x] `P02.S08` - Adjudicate Modelo 308 export only for the 2019-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/308/, .vault/reference/`.
 - [ ] `P02.S09` - Record that Modelo 309 has no legacy outbound mandate and prevent source availability from manufacturing one; `src/cadrumo/_data/registry/aeat/modelos/309/, .vault/reference/`.
 - [ ] `P02.S10` - Adjudicate Modelo 322 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/322/, .vault/reference/`.
 - [ ] `P02.S11` - Adjudicate Modelo 347 export by registered authority window and gate uncatalogued 2008-to-2010 layouts; `src/cadrumo/_data/registry/aeat/modelos/347/, .vault/reference/`.
