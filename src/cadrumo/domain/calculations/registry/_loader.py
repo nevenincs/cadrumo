@@ -104,26 +104,50 @@ ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
 
+_EMBEDDED_SCHEMA_CORE_MODULES = (
+    # Cross-package core modules whose TYPES are EMBEDDED in the pickled compiled
+    # (modelos, catalogues) objects. The registry-package hash below covers the
+    # schema MODELS and the compiler/resolvers, but the compiled objects also
+    # embed core primitives defined OUTSIDE the registry package -- a change to
+    # one of these (a new BindingSourceKind member, a BindingAggregation field,
+    # a SensitivityClass value, a Period/TaxDomain shape) alters the pickled
+    # object semantics without touching any registry module, so it must be in
+    # the key too. Extend this tuple when a new core type becomes embedded in
+    # the compiled objects; `test_embedded_schema_core_modules_all_resolve`
+    # guards it against drift to a non-existent module.
+    "cadrumo.core.aggregation",  # BindingSourceKind / BindingAggregation / BindingTypedEnumKind
+    "cadrumo.core.classification",  # SensitivityClass
+    "cadrumo.core._period",  # Period
+    "cadrumo.core._tax_domain",  # TaxDomain
+)
+
+
 def _compute_loader_code_fingerprint() -> str:
-    """Return a content hash of the registry package's own source.
+    """Return a content hash of the loader/compiler/schema source.
 
     The registry disk cache stores COMPILED ``(modelos, catalogues)`` objects.
     The tree fingerprint keys only the TOML inputs, so a change to the
-    compilation logic that produces DIFFERENT compiled objects from IDENTICAL
-    TOML is invisible to the cache key -- a stale pickle from a prior session
-    (the shared OS temp dir persists across sessions and code changes) would be
-    served for the current loader. The hand-maintained
-    :data:`_REGISTRY_TREE_CACHE_SCHEMA_VERSION` only guards against this when a
-    developer remembers to bump it. Folding a content hash of the
-    loader/compiler/schema source into the cache key closes the gap
-    automatically: any change to a registry module (excluding its tests) yields
-    a new key, so pre-change pickles can never be served.
+    compilation logic (or to a core type embedded in the compiled objects) that
+    produces DIFFERENT compiled objects from IDENTICAL TOML is invisible to the
+    cache key -- a stale pickle from a prior session (the shared OS temp dir
+    persists across sessions and code changes) would be served for the current
+    loader. The hand-maintained :data:`_REGISTRY_TREE_CACHE_SCHEMA_VERSION` only
+    guards against this when a developer remembers to bump it. Folding a content
+    hash of the source into the cache key closes the gap automatically:
 
-    Best-effort: if the source is unreadable (e.g. a zip-imported install), the
-    fingerprint falls back to the interpreter version + bytecode cache tag so
-    the cache degrades to schema-version-only keying rather than crashing.
+    * every registry-package module (excluding its tests) -- the schema models,
+      the compiler, and the resolvers; and
+    * the cross-package core modules whose types are embedded in the compiled
+      objects (:data:`_EMBEDDED_SCHEMA_CORE_MODULES`).
+
+    Any change to either surface yields a new key, so pre-change pickles can
+    never be served. Best-effort per surface: an unreadable registry tree (e.g.
+    a zip-imported install) falls back to the interpreter version + bytecode
+    cache tag; an unresolvable core module folds in a stable marker so the key
+    stays deterministic and distinct rather than crashing.
     """
     import hashlib
+    import importlib
     import sys
 
     hasher = hashlib.sha256()
@@ -140,6 +164,18 @@ def _compute_loader_code_fingerprint() -> str:
     except OSError:
         hasher.update(sys.version.encode("utf-8"))
         hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))
+
+    for module_name in _EMBEDDED_SCHEMA_CORE_MODULES:
+        try:
+            module = importlib.import_module(module_name)
+            module_file = getattr(module, "__file__", None)
+            if module_file is None:
+                hasher.update(f"unresolved:{module_name}".encode())
+                continue
+            hasher.update(module_name.encode("utf-8"))
+            hasher.update(Path(module_file).read_bytes())
+        except (OSError, ImportError):
+            hasher.update(f"unresolved:{module_name}".encode())
     return hasher.hexdigest()
 
 
