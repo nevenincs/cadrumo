@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_100/files/19-100-ejercicio-2014-417-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/19-100-ejercicio-2014-417-kb-pdf.pdf",
   "source_sha256": "5872a2aa1152f9015bbbb444aa2c18614e58abd252504a2d2edc7ff7b0ae529c",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

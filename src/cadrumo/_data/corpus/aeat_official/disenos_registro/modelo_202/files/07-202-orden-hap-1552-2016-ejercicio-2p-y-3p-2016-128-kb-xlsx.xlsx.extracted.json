@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx",
   "source_sha256": "046b1a25a5038d229e3c4c5e91a49038001edc646a7ee53be8bd51fca7698b28",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

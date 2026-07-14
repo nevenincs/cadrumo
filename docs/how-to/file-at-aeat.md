@@ -136,7 +136,7 @@ mismatches, see [reconcile a filing](reconcile.md).
 With AEAT authentication configured, skip the manual download and let the
 tool fetch the receipt itself: `aeat app modelo reconcile pull` pulls the
 justificante from AEAT, stores it as encrypted evidence in your profile, and
-reconciles in one step — see
+reconciles in one step. See
 [Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).
 
 ## If something goes wrong at the portal

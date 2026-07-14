@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_111/files/04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_111/files/04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
   "source_sha256": "9d862b0552e5aa4674b483de9e7e02c67caec040205973fe693a026275e2fd37",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

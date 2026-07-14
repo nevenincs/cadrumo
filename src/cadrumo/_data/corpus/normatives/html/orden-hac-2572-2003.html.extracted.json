@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-2572-2003.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-2572-2003.html",
   "source_sha256": "1b820ea36307beb67372f1eb648d865d3dd912a1c3bf9d926b8455b551f9c722",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

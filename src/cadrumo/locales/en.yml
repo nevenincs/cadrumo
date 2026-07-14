@@ -1599,9 +1599,10 @@ cli:
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
         list_help: List business invoices (both kinds unless --kind filters)
-        operation_type_help: 'M349 operation type: E supply of goods, S services,
-          T triangular, R rectification, A acquisition of goods, I acquisition of
-          services, M miscellaneous'
+        operation_type_help: 'M349 operation key: E supplies of goods, M supplies
+          after an exempt import, H the same via a fiscal representative, A acquisitions
+          of goods, T triangular supplies, S services supplied, I services acquired,
+          R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a business invoice
         update_help: Update business invoice details
@@ -2797,7 +2798,9 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
-        non_interactive_passphrase_required: 'This command needs an interactive terminal to prompt for the new passphrase. Provide it non-interactively with --new-passphrase and --confirm-new-passphrase.'
+        non_interactive_passphrase_required: This command needs an interactive terminal
+          to prompt for the new passphrase. Provide it non-interactively with --new-passphrase
+          and --confirm-new-passphrase.
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
       new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     errors:
@@ -4804,6 +4807,7 @@ errors:
       <WORDS>.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
+    auth_former_product_session_state: 'Cadrumo detected retired-product AEAT session state and refuses to read, move, re-key, delete, or adopt it.'
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'
@@ -5668,6 +5672,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    modelo_210_agrupacion_renta_rows: 'Modelo 210 annual grouped-renta rows must form a lawful single grouping (one code, one rate, one identified property, and one payer unless the multi-payer exception applies).'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

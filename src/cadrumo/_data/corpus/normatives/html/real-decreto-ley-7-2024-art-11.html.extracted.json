@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/real-decreto-ley-7-2024-art-11.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/real-decreto-ley-7-2024-art-11.html",
   "source_sha256": "74c69a8e07ae9b77f0bcd42250e5a39408ebae63c0962de42278e1e93a2e7e03",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

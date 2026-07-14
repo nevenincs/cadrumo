@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/04-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hfp-1286-2023-de-28-de-novi.pdf",
   "source_sha256": "430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

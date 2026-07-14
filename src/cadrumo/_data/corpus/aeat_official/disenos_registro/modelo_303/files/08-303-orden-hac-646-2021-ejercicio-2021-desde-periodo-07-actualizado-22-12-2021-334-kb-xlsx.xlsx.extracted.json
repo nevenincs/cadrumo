@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx",
   "source_sha256": "185b8612c9cf4a22b4ed919db0ba45d21b03b7168da957fca3b5758f567ce249",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

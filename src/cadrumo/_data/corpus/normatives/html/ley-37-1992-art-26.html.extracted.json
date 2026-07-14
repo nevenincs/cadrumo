@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-26.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-26.html",
   "source_sha256": "97462f5f585d300fe2be29440066cc3a0e258cb0de3c630de0638a66f1ac0af4",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

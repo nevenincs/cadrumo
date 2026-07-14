@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-81-bis.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-81-bis.html",
   "source_sha256": "e733a5f35210b779775f0adc2fdd203bb5e750f5079a2df47e87d531affbcc33",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

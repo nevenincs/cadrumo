@@ -717,7 +717,7 @@ _MODELO_202_FIXTURES: tuple[_Modelo202Fixture, ...] = (
         filename="202/2025-1P.pdf",
         ejercicio="2025",
         periodo="1P",
-        tax_id="Y0000001S",
+        tax_id="B00000001",
         full_name="DEMO SOCIEDAD SL",
         printed_rows=_MODELO_202_PRINTED_ROWS,
     ),

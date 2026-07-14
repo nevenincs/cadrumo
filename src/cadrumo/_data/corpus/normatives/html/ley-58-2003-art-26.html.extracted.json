@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-26.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-26.html",
   "source_sha256": "283b15f8124337de76c44159b2264adebb3a6a776668a0073700c6201ac86ab4",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

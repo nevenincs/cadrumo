@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_200/files/17-200-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/17-200-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-pdf.pdf",
   "source_sha256": "2c845e30819b599c73ae5c55fc7e1d786e370ecf8fe722ca2c0201a59863d866",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

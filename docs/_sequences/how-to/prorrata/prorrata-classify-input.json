@@ -1,0 +1,107 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-02-11",
+        "--amount",
+        "605",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "compra",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--input-classification",
+        "common",
+        "--idempotency-key",
+        "prorrata-common-input"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [
+          {
+            "code": "ledger.add.input_classification_inert",
+            "context": {
+              "ejercicio": "2026",
+              "input_classification": "common",
+              "sector_id": ""
+            },
+            "message": "--input-classification is inert for ejercicio 2026: no prorrata especial election applies, so the input deducts under the general percentage. Classifying every input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run 'app ledger prorrata elect-especial --ejercicio 2026' to route it by LIVA art. 106.",
+            "severity": "warning",
+            "suggestion": null
+          }
+        ],
+        "result": {
+          "bucket_event_ids": [
+            "caeb65ecf05baa47a01e14e67564264feceb179baf2127ff75c9c63cade1a86b"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "605",
+            "attachment_ids": [],
+            "booked_date": "2026-02-11",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": "material_oficina",
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-02-11",
+            "description": "compra",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "105",
+            "iva_category": null,
+            "iva_rate": "0.21",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": "500",
+            "transaction_id": "dbdbdfd18bb421c017e1f8516129455f2780b9062f3c33f0c67acadfbfebca31",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "dbdbdfd18bb421c017e1f8516129455f2780b9062f3c33f0c67acadfbfebca31"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "prorrata-classify-input"
+}

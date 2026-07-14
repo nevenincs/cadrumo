@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3012-2008-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3012-2008-art-1.html",
   "source_sha256": "3451af694e953035d6e8345065a60da8716c8d82ddda1e3603d0aad29cf569c1",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

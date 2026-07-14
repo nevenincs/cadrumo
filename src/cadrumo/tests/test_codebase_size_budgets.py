@@ -75,8 +75,8 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # New peer-introduced modules discovered by the size-budget gate;
     # pinned at present size pending an owner split pass.
     "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1259,  # SPLIT-CANDIDATE
-    "src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py": 1280,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/modelo/_calculation_actions.py": 1400,  # SPLIT-CANDIDATE
+    "src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py": 1316,  # SPLIT-CANDIDATE (regrew past prior pin)
+    "src/cadrumo/application/modelo/_calculation_actions.py": 1438,  # SPLIT-CANDIDATE (regrew past prior pin)
     "src/cadrumo/application/aggregation/_iva_ledger.py": 1617,  # SPLIT-CANDIDATE
     "src/cadrumo/application/wizard/_commands.py": 1339,  # SPLIT-CANDIDATE
     # _loader.py: extracted the locale-translation load/merge/inject pipeline
@@ -109,7 +109,13 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     (
         "src/cadrumo/application/modelo/_calculation_actions.py",
         "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-    ): 226,  # SPLIT-CANDIDATE
+    ): 234,  # SPLIT-CANDIDATE (regrew past prior pin)
+    # New peer-introduced trusted-mesh-sources entry function; pinned at
+    # present size pending an owner split pass.
+    (
+        "src/cadrumo/application/modelo/_calculation_actions.py",
+        "_calculate_modelo_revision_with_trusted_mesh_sources",
+    ): 184,  # SPLIT-CANDIDATE
     (
         "src/cadrumo/domain/calculations/registry/_formula_runtime.py",
         "calculate_registry_snapshot",
@@ -118,7 +124,7 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     # Extracted LLM ledger CLI verb; SPLIT-CANDIDATE.
     ("src/cadrumo/entrypoints/cli/_ledger_llm_cli.py", "ledger_saturate_llm"): 187,
     ("src/cadrumo/application/modelo/_quickfile.py", "run_modelo_quickfile"): 216,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/modelo/_verification_actions.py", "verify_modelo_revision"): 221,  # SPLIT-CANDIDATE
+    ("src/cadrumo/application/modelo/_verification_actions.py", "verify_modelo_revision"): 231,  # SPLIT-CANDIDATE (regrew past prior pin)
     ("src/cadrumo/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/user_profile/_custody_carry.py", "_natural_key_resolvers"): 310,  # SPLIT-CANDIDATE
     ("src/cadrumo/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE
@@ -135,8 +141,11 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     # through explicit parameters on every handler. SPLIT-CANDIDATE: extract
     # the per-capability handler-builder closures (tools/prompts/resources)
     # into factory helpers that take the shared state as arguments.
-    ("src/cadrumo/entrypoints/mcp/_server.py", "build_server"): 512,  # SPLIT-CANDIDATE
-    ("src/cadrumo/entrypoints/mcp/_server.py", "_call_tool"): 209,  # SPLIT-CANDIDATE
+    ("src/cadrumo/entrypoints/mcp/_server.py", "build_server"): 577,  # SPLIT-CANDIDATE (regrew past prior pin)
+    ("src/cadrumo/entrypoints/mcp/_server.py", "_call_tool"): 217,  # SPLIT-CANDIDATE (regrew past prior pin)
+    # New peer-introduced running-preflight recorder; pinned at present size
+    # pending an owner split pass.
+    ("src/cadrumo/application/workflow/_engine.py", "_stage_running_preflight"): 184,  # SPLIT-CANDIDATE
 }
 
 

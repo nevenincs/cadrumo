@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_193/files/07-193-orden-eha-3377-2011-de-1-de-diciembre-512-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/07-193-orden-eha-3377-2011-de-1-de-diciembre-512-kb-pdf.pdf",
   "source_sha256": "8eb07b68c5942fa49ccd941442344198f0784fb4075c80f598ad6f587a11d415",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

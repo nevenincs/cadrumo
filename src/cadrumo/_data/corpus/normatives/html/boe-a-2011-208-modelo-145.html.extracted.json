@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/boe-a-2011-208-modelo-145.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2011-208-modelo-145.html",
   "source_sha256": "10b68a50615af2e1aa3eebe610983c799048ae677999276fe1ce29186278ae76",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

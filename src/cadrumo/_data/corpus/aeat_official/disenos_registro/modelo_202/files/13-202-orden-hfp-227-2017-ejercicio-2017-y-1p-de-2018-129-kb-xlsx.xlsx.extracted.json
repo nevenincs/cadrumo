@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/13-202-orden-hfp-227-2017-ejercicio-2017-y-1p-de-2018-129-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/13-202-orden-hfp-227-2017-ejercicio-2017-y-1p-de-2018-129-kb-xlsx.xlsx",
   "source_sha256": "c5bef798fc270bf6360e33a6ef1f89ea841669462cd8956c4c0edb6983cb76e1",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

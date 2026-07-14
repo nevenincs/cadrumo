@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-92.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-92.html",
   "source_sha256": "c2e7e4ea0afe1be48ceeee8c3197095c17e0ca3758e462fc7888d6d93df72334",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

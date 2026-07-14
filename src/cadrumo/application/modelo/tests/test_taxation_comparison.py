@@ -68,9 +68,11 @@ _M100_TRABAJO_INGRESO_CASILLA: CasillaId = validated_casilla_id(
 _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
     {
         # Computed casillas supplied as zero inputs so the engine can evaluate them.
+        # 0501 (base liquidable negativa general 2024 compensación) is now a
+        # formula target (registry formula 0290); the engine computes it and
+        # would refuse it as a supplied input.
         "0003": Decimal("0"),
         "0429": Decimal("0"),
-        "0501": Decimal("0"),
         "0506": Decimal("0"),
         "0507": Decimal("0"),
         # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
@@ -115,6 +117,9 @@ _ZERO_RELATIONS = {
 
 _BASE_BINDINGS = {
     "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+    # These scenarios are salaried couples (trabajo income only, per the
+    # module docstring), not economic-activity filers.
+    "renta-2025-profile-has-economic-activity": Decimal("0"),
     "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # declaration_type is intentionally absent — compare_taxation_modes injects it.
     "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),

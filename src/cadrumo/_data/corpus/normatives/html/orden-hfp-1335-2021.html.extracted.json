@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-1335-2021.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1335-2021.html",
   "source_sha256": "e905ba05b5502defcf92cf3f5bc91f9f1389c9d46ce5604bbcb906fd8252ecb5",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

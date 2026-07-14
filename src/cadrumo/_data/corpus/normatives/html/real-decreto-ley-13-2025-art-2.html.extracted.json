@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/real-decreto-ley-13-2025-art-2.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/real-decreto-ley-13-2025-art-2.html",
   "source_sha256": "068e72a67fbc6c86e18f540a2a7cfc1e2f10bb95970b94b092cbb8a8a563d617",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

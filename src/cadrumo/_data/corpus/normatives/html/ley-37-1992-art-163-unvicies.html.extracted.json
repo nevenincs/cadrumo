@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-163-unvicies.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-163-unvicies.html",
   "source_sha256": "14745406b8dfbbdfdefd04e800d0e3170cceb5efb9ef615bc169474b5fda3f5d",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

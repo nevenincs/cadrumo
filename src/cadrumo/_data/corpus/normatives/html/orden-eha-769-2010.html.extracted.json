@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-769-2010.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-769-2010.html",
   "source_sha256": "d57d707f8fe68b1d5d6ecd0f08997325e8e00a93ba57b8200e9d08b00d71fac0",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -28,7 +28,7 @@ application programming interface (API) are Cadrumo product surfaces.
 
 Terms are defined in the {doc}`glossary </_generated/glossary>`. For ordinary
 failures, use [Diagnose and repair](../how-to/troubleshooting.md) and then the
-[public issue tracker](https://github.com/cadrumo/cadrumo/issues) with redacted
+[public issue tracker](https://github.com/nevenincs/cadrumo/issues) with redacted
 output. Never publish taxpayer data, credentials, or vulnerability details.
 Use the [security policy](https://github.com/nevenincs/cadrumo/blob/main/SECURITY.md) for private security reporting and
 its fallback when private reporting is unavailable.

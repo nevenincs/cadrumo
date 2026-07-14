@@ -12,4 +12,4 @@
 modelo = "353"
 renta_years = [2025, 2026]
 evidence_class = "calculation"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py"

@@ -4,7 +4,7 @@
   "display_name": "Cadrumo tax assistant console",
   "version": "0.2.1",
   "description": "Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool surface: grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided workflows, and gated execution that never files to AEAT.",
-  "long_description": "The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client. It carries the operator rules, the taxpayer-situation skills, and guided-workflow prompts; a read-only corpus and terminology search for legal grounding; and a human-in-the-loop confirmation gate on every state-changing verb. Live submission to AEAT is permanently impossible — no such tool exists; the taxpayer files outside the app. All financial data stays on-host in encrypted storage; only the conversation and the figures the assistant sees reach the LLM client's provider.",
+  "long_description": "The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client. It carries the operator rules, the taxpayer-situation skills, and guided-workflow prompts; a read-only corpus and terminology search for legal grounding; and a human-in-the-loop confirmation gate on every state-changing verb. Live submission to AEAT is permanently impossible — no such tool exists; the taxpayer files outside the app. All financial data stays on-host in encrypted storage; only the conversation and the figures the assistant sees reach the LLM client's provider. The bundle self-installs the Cadrumo Python package from PyPI on first run via uvx, so the host needs only uv on PATH — no prior pip install.",
   "author": {
     "name": "Cadrumo project (neve.md)"
   },
@@ -12,10 +12,11 @@
     "type": "binary",
     "entry_point": "cadrumo-mcp",
     "mcp_config": {
-      "command": "cadrumo-mcp",
-      "args": [],
+      "command": "uvx",
+      "args": ["--from", "cadrumo[agent]==0.2.1", "cadrumo-mcp"],
       "env": {
-        "CADRUMO_MCP_PERSONA": "${user_config.persona}"
+        "CADRUMO_MCP_PERSONA": "${user_config.persona}",
+        "CADRUMO_MCP_SURFACE": "${user_config.surface}"
       }
     }
   },
@@ -25,6 +26,13 @@
       "title": "Operator persona",
       "description": "The harness persona scoping the tool surface (leave blank for the full surface). One of: coordinator, onboarding, ledger-groomer, classifier, modelo-preparer, verifier, reconciler.",
       "default": "",
+      "required": false
+    },
+    "surface": {
+      "type": "string",
+      "title": "Tool surface",
+      "description": "Which tools the server advertises up front: 'core' (default) advertises the orientation slice plus search/execute; 'full' advertises every verb. Either way the whole verb universe stays reachable through search and execute.",
+      "default": "core",
       "required": false
     }
   },

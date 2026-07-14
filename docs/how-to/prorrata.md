@@ -11,6 +11,10 @@ profile-scoped taxpayer state, not an AEAT filing surface.
 
 The tool needs a master-key passphrase and prompts for it.
 
+**Requirement:** a valid taxpayer profile. Create one with
+`aeat config profile create <name>` before you start — [Set up your taxpayer
+profile](profile-setup.md) walks through it.
+
 ## Which prorrata applies
 
 - **General prorrata** (LIVA art. 104): one deduction percentage applies to
@@ -29,8 +33,13 @@ percentage or splits the business into differentiated sectors.
 
 Elect the year's general percentage:
 
-```bash
-aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
+```{cli-sequence} prorrata-elect-general
+:verify: Confirm the general election is recorded on the profile.
+@step Elect the year's general deduction percentage.
+@result aeat --format json app ledger prorrata elect-general --ejercicio 2026 --percentage 80
+@expect result.entry.regime == "general"
+@expect result.entry.provisional_percentage == "80"
+@expect exit_code == 0
 ```
 
 - `--ejercicio` is the filing year the election covers.
@@ -45,8 +54,12 @@ aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
 
 Elect especial for the year:
 
-```bash
-aeat app ledger prorrata elect-especial --ejercicio 2026 --percentage 80
+```{cli-sequence} prorrata-elect-especial
+:verify: Confirm the especial election replaces the general one for the year.
+@step Elect especial prorrata for the year.
+@result aeat --format json app ledger prorrata elect-especial --ejercicio 2026 --percentage 80
+@expect result.entry.regime == "especial"
+@expect exit_code == 0
 ```
 
 Here `--percentage` is the common-use percentage — the rate applied to shared
@@ -55,11 +68,12 @@ inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same `--provenance` an
 
 Then tag each input row with its use when you add it:
 
-```bash
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
-  --description "compra" --classification BUSINESS --category-id material_oficina \
-  --taxable-base 500 --iva-rate 0.21 --iva-amount 105 \
-  --input-classification common
+```{cli-sequence} prorrata-classify-input
+:verify: Confirm the tagged common input is recorded in the ledger.
+@step Tag a shared input with its common use as you add it.
+@result aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --input-classification common --idempotency-key prorrata-common-input
+@expect result.transaction.business_classification == "BUSINESS"
+@expect exit_code == 0
 ```
 
 `--input-classification` takes one value:
@@ -79,9 +93,13 @@ the tag take effect.
 Declare a differentiated sector when part of the activity has its own deduction
 regime (LIVA arts. 9.1.c / 101):
 
-```bash
-aeat app ledger prorrata declare-sector --sector-id arrendamiento \
-  --letra c --activity-code 6820
+```{cli-sequence} prorrata-declare-sector
+:verify: Confirm the differentiated sector is registered.
+@step Declare a differentiated sector with its LIVA letra and activity code.
+@result aeat --format json app ledger prorrata declare-sector --sector-id arrendamiento --letra c --activity-code 6820
+@expect result.sector.sector_id == "arrendamiento"
+@expect result.sector.letra == "c"
+@expect exit_code == 0
 ```
 
 - `--sector-id` is a stable id the register entries and ledger rows reference.
@@ -93,13 +111,14 @@ aeat app ledger prorrata declare-sector --sector-id arrendamiento \
 Scope an election to a sector with `--sector`, and tag a row's sector with
 `--sector` on `ledger add`:
 
-```bash
-aeat app ledger prorrata elect-especial --ejercicio 2026 --percentage 80 \
-  --sector arrendamiento
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
-  --description "compra" --classification BUSINESS --category-id material_oficina \
-  --taxable-base 500 --iva-rate 0.21 --iva-amount 105 \
-  --sector arrendamiento --input-classification common
+```{cli-sequence} prorrata-sector-scoped
+:verify: Confirm the sector-scoped input is recorded against the declared sector.
+@step Scope the especial election to the differentiated sector.
+aeat --format json app ledger prorrata elect-especial --ejercicio 2026 --percentage 80 --sector arrendamiento
+@step Tag a row's sector as you add it.
+@result aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --sector arrendamiento --input-classification common --idempotency-key prorrata-sector-input
+@expect result.transaction.business_classification == "BUSINESS"
+@expect exit_code == 0
 ```
 
 Tag a row with a sector you have not declared and the tool warns the tag is
@@ -127,8 +146,14 @@ These are advisories, not refusals. Read them alongside the
 
 List every election and declared sector on the active profile:
 
-```bash
-aeat app ledger prorrata list
+```{cli-sequence} prorrata-list
+:verify: Confirm the register reads back the elections and declared sector.
+@setup aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
+@setup aeat app ledger prorrata declare-sector --sector-id arrendamiento --letra c --activity-code 6820
+@step List every prorrata election and declared sector.
+@result aeat --format json app ledger prorrata list
+@expect result.sectors[0].sector_id == "arrendamiento"
+@expect exit_code == 0
 ```
 
 ## Next steps

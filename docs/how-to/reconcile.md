@@ -151,9 +151,16 @@ stores:
 Each reconciliation is recorded in the profile's event history. List the past
 reconciliations recorded for the active profile:
 
-```bash
-aeat app modelo reconcile history
+```{cli-sequence} reconcile-history
+:verify: Confirm the reconciliation history reads back cleanly.
+@step List the reconciliations recorded for the active profile.
+@result aeat --format json app modelo reconcile history
+@expect result.reconciliation_count == 0
+@expect exit_code == 0
 ```
+
+On a fresh profile the list is empty; after you reconcile a filing a row
+appears for each run.
 
 Add `--work-unit-id <id>` to narrow the list to a single work unit. Each row
 shows when the reconciliation ran, the work unit, the evidence source, the

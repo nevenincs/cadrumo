@@ -12,7 +12,9 @@ import xml.etree.ElementTree as ET
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
+
+_UTF_8: Final[str] = "utf-8"
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -493,7 +495,7 @@ def write_deployment_sitemap(html_root: Path, base_url: str) -> Path:
     tree = ET.ElementTree(urlset)
     ET.indent(tree)
     sitemap_path = html_root / "sitemap.xml"
-    tree.write(sitemap_path, encoding="utf-8", xml_declaration=True)
+    tree.write(sitemap_path, encoding=_UTF_8, xml_declaration=True)
     return sitemap_path
 
 

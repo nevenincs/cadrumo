@@ -1649,9 +1649,11 @@ cli:
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
         list_help: Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).
-        operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T
-          háromszögügylet, R helyesbítés, A áruátvétel, I szolgáltatásvásárlás, M
-          egyéb.'
+        operation_type_help: 'M349 műveleti kód: E termékértékesítés, M adómentes
+          importot követő értékesítés, H ugyanez adóügyi képviselő útján, A termékbeszerzés,
+          T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
+          R vevői készlet áthelyezése, D vevői készlet visszaszállítása, C vevői készlet
+          címzettcseréje'
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
         remove_help: Üzleti számla törlése.
@@ -2934,7 +2936,9 @@ cli:
         missing_new_passphrase_confirmation: Ismetelje meg az uj passphrase erteket
           a --confirm-new-passphrase kapcsoloval.
         new_passphrase_mismatch: Az uj passphrase es a megerosites nem egyezik.
-        non_interactive_passphrase_required: 'Ez a parancs interaktív terminált igényel az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase és --confirm-new-passphrase kapcsolókkal.'
+        non_interactive_passphrase_required: Ez a parancs interaktív terminált igényel
+          az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase
+          és --confirm-new-passphrase kapcsolókkal.
       new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
     errors:
@@ -5069,6 +5073,7 @@ errors:
       Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
+    auth_former_product_session_state: 'A Cadrumo egy megszuent termek munkamenet-allapotat eszlelte, es megtagadja annak olvasasat, athelyezeset, ujrakulcsolasat, torleset vagy atvetelet.'
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'
@@ -5940,6 +5945,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    modelo_210_agrupacion_renta_rows: 'A 210-es nyomtatvany eves csoportositott jovedelem-sorainak egyetlen jogszeru csoportot kell alkotniuk (egy kod, egy kulcs, egy azonositott ingatlan, es egy kifizeto, kiveve a tobb kifizetos kivetelt).'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-107.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-107.html",
   "source_sha256": "923fb81d9fd7e98b5bb90ea89ae170bc7d606a6cc648412e85f19469e6ba1247",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

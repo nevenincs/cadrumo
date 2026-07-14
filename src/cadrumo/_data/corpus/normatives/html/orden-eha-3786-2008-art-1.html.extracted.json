@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3786-2008-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3786-2008-art-1.html",
   "source_sha256": "62878206d9be057e24f85b2a64a895d9bbcc332980fc1829e691d6164603bc7a",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

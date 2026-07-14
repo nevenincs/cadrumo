@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-99.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-99.html",
   "source_sha256": "e41e240e3322d44f97bcabec364648bd3f01f77a125e494a6b24ca96cc417624",
   "preprocessor_id": "normatives-html-example",
   "preprocessor_version": "0.1",

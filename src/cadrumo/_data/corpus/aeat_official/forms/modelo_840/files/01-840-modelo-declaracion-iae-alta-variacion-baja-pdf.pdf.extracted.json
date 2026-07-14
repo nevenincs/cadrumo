@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/forms/modelo_840/files/01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf",
   "source_sha256": "cf3cd1a77f92d38d2668d30b378a8eca922d6a262fe82ba86f5008074001ece0",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

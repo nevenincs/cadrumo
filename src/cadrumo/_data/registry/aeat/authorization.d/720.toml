@@ -15,4 +15,4 @@
 modelo = "720"
 renta_years = [2023, 2024]
 evidence_class = "threshold_continuity"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_720_prior_year_baseline_fidelity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_720_prior_year_baseline_fidelity.py"

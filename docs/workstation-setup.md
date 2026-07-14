@@ -1,7 +1,7 @@
 # Install Cadrumo
 
 This page covers installation only: get the package, install the `aeat`
-command, add the optional extras you want, and — if you use an AI assistant —
+command, add the optional extras you want, and (if you use an AI assistant)
 install the agent surface. Configuration and first use start in the
 [quickstart](how-to/quickstart.md) once the install checks pass.
 
@@ -18,17 +18,17 @@ You need:
 
 ## Install the CLI
 
-Download the current Cadrumo package from the
-[releases page](https://github.com/nevenincs/cadrumo/releases/latest). Each
-release lists its downloadable files and release notes; record the version you
-install, as [Updates and downloads](updates.md) recommends.
-
-Install the downloaded wheel file. The filename carries the version you
-downloaded — the current release is `0.2.1`:
+Cadrumo is published on the Python Package Index (PyPI). Install it with
+`pip`:
 
 ```bash
-pip install ./cadrumo-0.2.1-py3-none-any.whl
+pip install cadrumo
 ```
+
+Record the version you installed, as [Updates and downloads](updates.md)
+recommends. The [releases page](https://github.com/nevenincs/cadrumo/releases/latest)
+lists each release's notes and downloadable artifacts, including the Claude
+Desktop extension bundle covered below.
 
 ## Confirm the install
 
@@ -59,11 +59,10 @@ aeat --format json config check
 
 The core install is lean. Google export, the live AEAT browser, the
 Anthropic-API provider, OFX/QFX bank-statement import, and the agent surface
-are optional package extras. Name the extras you need when you install the
-wheel:
+are optional package extras. Name the extras you need when you install:
 
 ```bash
-pip install "./cadrumo-0.2.1-py3-none-any.whl[google,browser]"
+pip install "cadrumo[google,browser]"
 ```
 
 The available extras are `google`, `browser`, `anthropic`, `ofx`, `agent`, and
@@ -89,7 +88,7 @@ Two extras need a further provisioning step after the pip install:
   ```
 
 For cloud LLM classification, put the provider's own CLI on `PATH` and sign in
-with that provider's flow — see
+with that provider's flow. See
 [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider).
 
 Run `aeat config check` again after each change to confirm the gap is closed.
@@ -98,7 +97,7 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 
 Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, so an AI
 assistant can operate the same local, gated commands the CLI exposes. There
-are three ways to install it — pick the one that matches your client.
+are three ways to install it. Pick the one that matches your client.
 [Connect an agent](how-to/connect-an-agent.md) walks through each in full and
 explains what the agent can and cannot do.
 
@@ -107,7 +106,7 @@ explains what the agent can and cannot do.
 The plugin bundles the server configuration together with the rules, skills,
 and scoped agent personas that keep the assistant inside the safety boundary.
 It launches the server itself through `uvx`, so it needs
-[uv](https://docs.astral.sh/uv/) on your `PATH` — and nothing else installed
+[uv](https://docs.astral.sh/uv/) on your `PATH`, and nothing else installed
 beforehand. Add the marketplace once, then install the plugin:
 
 ```text
@@ -117,21 +116,15 @@ beforehand. Add the marketplace once, then install the plugin:
 
 ### Claude Desktop extension bundle (`.mcpb`)
 
-Classic Claude Desktop can also load Cadrumo as a Desktop Extension bundle.
-The bundle points at the `cadrumo-mcp` command on your machine, so install the
-`agent` extra first:
-
-```bash
-pip install "./cadrumo-0.2.1-py3-none-any.whl[agent]"
-```
-
-The bundle is built from the source tree:
-
-```bash
-python packaging/mcpb/build.py
-```
-
-The build writes `dist/cadrumo.mcpb`; open it with Claude Desktop to install.
+Claude Desktop can load Cadrumo as a Desktop Extension bundle. Download
+`cadrumo.mcpb` from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and open
+it with Claude Desktop. The bundle installs the Cadrumo release it was built
+for: on first launch it runs the server through `uvx`, which fetches the
+pinned `cadrumo[agent]` package from PyPI. The only prerequisite is
+[uv](https://docs.astral.sh/uv/) on your `PATH`; no separate `pip install` is
+needed. The bundle is unsigned, so Claude Desktop shows its standard
+unsigned-extension prompt when you install it.
 
 ### Any other MCP client
 
@@ -143,14 +136,14 @@ cadrumo-mcp --help
 ```
 
 then register `cadrumo-mcp` as a stdio server in your client's MCP
-configuration — the exact JSON is in
+configuration. The exact JSON is in
 [Connect an agent](how-to/connect-an-agent.md#connect-any-other-mcp-client).
 
 ## Next steps
 
-- [Quickstart](how-to/quickstart.md) — from an empty profile to an exported
+- [Quickstart](how-to/quickstart.md) - from an empty profile to an exported
   modelo file.
-- [Set up a profile](how-to/profile-setup.md) — including the per-profile
+- [Set up a profile](how-to/profile-setup.md) - including the per-profile
   service capabilities (Google export, LLM vision, cloud evidence upload).
 - [Connect an agent](how-to/connect-an-agent.md)
 - [Troubleshooting](how-to/troubleshooting.md)

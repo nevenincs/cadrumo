@@ -35,6 +35,7 @@ import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
@@ -49,6 +50,7 @@ _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
 __all__ = [
     "isolated_aeat_env",
     "ready_clave_settings",
+    "scoped_cwd",
     "scoped_env_var",
     "scoped_sys_argv",
     "settings_without_env_file",
@@ -208,3 +210,30 @@ def scoped_env_var(name: str, value: str | None) -> Iterator[None]:
             os.environ.pop(name, None)
         else:
             os.environ[name] = prior
+
+
+@contextmanager
+def scoped_cwd(path: Path) -> Iterator[None]:
+    """Change the process working directory for the with-block.
+
+    The determinism-conformance and CLI path-echo suites need to prove a
+    behaviour is genuinely cwd-independent, which means actually running
+    code from two different real working directories. The process cwd is
+    OS-process infrastructure, not AEAT configuration, so — like
+    :func:`scoped_sys_argv` — it has no Settings equivalent; this is the
+    centralized scope helper tests must call rather than rebinding
+    ``os.getcwd()``/``os.chdir`` in a test-local try/finally.
+
+    Arguments:
+        path: The directory to ``chdir`` into for the with-block.
+
+    Examples:
+        >>> with scoped_cwd(tmp_path / "cwd-a"):
+        ...     result = service.add(source_path=Path("receipt.pdf"), ...)
+    """
+    prior = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prior)

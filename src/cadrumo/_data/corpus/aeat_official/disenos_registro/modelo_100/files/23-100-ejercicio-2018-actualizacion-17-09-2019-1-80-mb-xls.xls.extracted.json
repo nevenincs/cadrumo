@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_100/files/23-100-ejercicio-2018-actualizacion-17-09-2019-1-80-mb-xls.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/23-100-ejercicio-2018-actualizacion-17-09-2019-1-80-mb-xls.xls",
   "source_sha256": "141a164008b4950be8ceb4ab35e6a3dbf8b3f0ceb1e9687595ade98dad35ef16",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

@@ -77,6 +77,7 @@ when the docs are correct.
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from functools import cache
@@ -454,8 +455,9 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
 # golden-backed sequence. Enrollment is NOT exclusionary: an enrolled page may
 # ALSO carry ordinary executable ``aeat`` fences, and those fences receive the
 # same base verb-path and option-name checks every fence gets (the executed vs.
-# static distinction is visual and golden-backed, not a refusal — ADR D7 as
-# amended). ``_FENCE_WITH_INFO_RE`` captures the info string alongside the body.
+# static distinction is visual and golden-backed, not a refusal (the amended
+# documented-command decision). ``_FENCE_WITH_INFO_RE`` captures the info string
+# alongside the body.
 _CLI_SEQUENCE_INFO_RE = re.compile(r"^\{cli-sequence\}")
 _FENCE_WITH_INFO_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.DOTALL)
 
@@ -463,6 +465,83 @@ _FENCE_WITH_INFO_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.DOTALL)
 def _page_is_enrolled(text: str) -> bool:
     """A page is enrolled when it carries at least one ``{cli-sequence}`` directive."""
     return any(_CLI_SEQUENCE_INFO_RE.match(info.strip()) for info, _ in _FENCE_WITH_INFO_RE.findall(text))
+
+
+# ---------------------------------------------------------------------------
+# Mandatory-display gate (ratcheting): no plain ``aeat`` fences in user docs
+# ---------------------------------------------------------------------------
+
+# Operator doctrine (2026-07-14): every ``aeat`` CLI command shown in user docs
+# MUST render through the implemented cli-sequence display (a step header +
+# tokenised command card + output), not a plain ```` ```bash ```` fence — a
+# plain fence carrying an ``aeat`` invocation is remediated by converting it to a
+# ``{cli-sequence}`` executed directive (or an ``@static`` frame where hermetic
+# execution is impossible: live AEAT, Google OAuth, interactive wizards,
+# operator-machine-specific paths). Non-``aeat`` commands (pip, playwright,
+# ollama, ``python -m``, ``/plugin``) stay allowed in plain fences.
+#
+# The gate ships with a checked-in per-page baseline of the current violations
+# and only ratchets DOWN: a page may never exceed its baseline count (a new plain
+# ``aeat`` fence reds the gate), and a page absent from the baseline may carry
+# none. Converter agents burn the baseline down page by page; an empty baseline
+# means the doctrine is fully applied. It does not red the tree on partial
+# progress (a page below its baseline passes), so the conversion can proceed in
+# parallel.
+_USER_DOC_TREE_DIRS = ("how-to", "explanation", "reference")
+_USER_DOC_FLAT_FILES = ("index.md", "workstation-setup.md", "updates.md", "disclaimer.md")
+
+# Fence languages that denote a shell command block (where an ``aeat`` invocation
+# is a rendered command, not sample data). A bare fence (no info string) counts.
+_PLAIN_SHELL_FENCE_LANGS = frozenset({"bash", "sh", "pwsh", "shell", "console", "powershell", ""})
+
+_AEAT_FENCE_BASELINE_PATH = PROJECT_ROOT / "src/cadrumo/entrypoints/cli/tests/aeat_plain_fence_baseline.json"
+
+
+def _user_doc_pages() -> list[Path]:
+    """Return the user-docs pages the mandatory-display gate governs."""
+    docs = PROJECT_ROOT / "docs"
+    pages: list[Path] = []
+    for tree in _USER_DOC_TREE_DIRS:
+        pages.extend(sorted((docs / tree).rglob("*.md")))
+    for flat in _USER_DOC_FLAT_FILES:
+        page = docs / flat
+        if page.is_file():
+            pages.append(page)
+    return pages
+
+
+def _aeat_plain_fences(text: str) -> list[int]:
+    """Return the 1-based line numbers of plain shell fences that carry an ``aeat`` invocation.
+
+    A ``{cli-sequence}`` directive fence is the sanctioned executed surface and is
+    exempt; a non-shell fence (python, toml, json) is data, not a command block.
+    A plain shell fence counts once when its body carries at least one concrete
+    ``aeat`` invocation line (``_parse_command_line`` resolves it — bare ``aeat``,
+    ellipsis references, and the version echo do not count).
+    """
+    offending: list[int] = []
+    for match in _FENCE_WITH_INFO_RE.finditer(text):
+        info = match.group(1).strip()
+        lang = info.split()[0] if info else ""
+        if lang.startswith("{"):
+            continue  # a directive fence — the executed surface
+        if lang and lang not in _PLAIN_SHELL_FENCE_LANGS:
+            continue  # a non-shell code/data fence
+        body = match.group(2)
+        if any(_AEAT_TOKEN_RE.search(line) and _parse_command_line(line) is not None for line in body.splitlines()):
+            offending.append(text[: match.start()].count("\n") + 1)
+    return offending
+
+
+def _current_aeat_fence_counts() -> dict[str, int]:
+    """Return the live per-page count of plain ``aeat`` fences, keyed by docs-relative path."""
+    docs = PROJECT_ROOT / "docs"
+    counts: dict[str, int] = {}
+    for page in _user_doc_pages():
+        fences = _aeat_plain_fences(page.read_text(encoding="utf-8"))
+        if fences:
+            counts[page.relative_to(docs).as_posix()] = len(fences)
+    return counts
 
 
 # ---------------------------------------------------------------------------
@@ -542,7 +621,7 @@ def test_doc_surface_present() -> None:
 # The floor below which the gate is presumed vacuous. The live doc surface
 # cites ``aeat`` roughly 591 times (post per-doc dedup); a count that collapses
 # toward zero means the invocation-token anchor was swept off the real
-# executable again (the rename-vacuity defect this phase repaired), so the gate
+# executable again (the rename-vacuity defect repaired here), so the gate
 # would be silently scanning nothing. The floor is set well below the observed
 # count and well above zero: it is a vacuity tripwire, not a brittle exact
 # assertion, so ordinary doc churn never trips it while a re-broken anchor does.
@@ -756,7 +835,7 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
     """Enrolled and non-enrolled pages alike get the base verb-path/option checks.
 
     The enrolled/executed distinction is visual and golden-backed, not
-    exclusionary (ADR D7 as amended): an enrolled page MAY carry ordinary
+    exclusionary (per the amended documented-command decision): an enrolled page MAY carry ordinary
     executable ``aeat`` fences, and those fences receive exactly the same base
     verb-path and option-name validation every fence gets — enrollment neither
     refuses nor exempts them, and never displaces the base checks. This pins the
@@ -796,3 +875,70 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
         "an enrolled page's plain executable fence must still receive the base checks — "
         "enrollment does not exempt or refuse it"
     )
+
+
+# ---------------------------------------------------------------------------
+# Mandatory-display ratchet gate tests
+# ---------------------------------------------------------------------------
+
+
+def test_no_new_aeat_plain_fences_in_user_docs() -> None:
+    """No user-docs page carries more plain ``aeat`` fences than its ratcheting baseline.
+
+    Every ``aeat`` command in user docs must render through the cli-sequence
+    display (an executed ``{cli-sequence}`` directive, or an ``@static`` frame
+    where hermetic execution is impossible). This gate ratchets DOWN from a
+    committed per-page baseline: a page may never EXCEED its baseline count (a new
+    plain ``aeat`` fence reds the gate, naming the page and remediation), and a
+    page absent from the baseline may carry none. A page below its baseline passes
+    (so the parallel conversion never reds the tree); converter agents tighten the
+    baseline down as they land, and an empty baseline means the doctrine is fully
+    applied.
+    """
+    baseline: dict[str, int] = json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
+    current = _current_aeat_fence_counts()
+    docs = PROJECT_ROOT / "docs"
+    problems: list[str] = []
+    for page in sorted(current):
+        count = current[page]
+        allowed = baseline.get(page, 0)
+        if count > allowed:
+            lines = _aeat_plain_fences((docs / page).read_text(encoding="utf-8"))
+            new_line = lines[allowed] if allowed < len(lines) else lines[-1]
+            problems.append(
+                f"docs/{page}: {count} plain aeat fence(s), baseline allows {allowed} "
+                f"(a new one at/after line {new_line}) — render every aeat command through a "
+                "{cli-sequence} executed directive, or an @static frame where hermetic "
+                f"execution is impossible; then tighten the entry in {_AEAT_FENCE_BASELINE_PATH.name}"
+            )
+    assert not problems, (
+        "user docs must render aeat commands through the cli-sequence display, not plain "
+        "fences (mandatory-display doctrine, 2026-07-14):\n  " + "\n  ".join(problems)
+    )
+
+
+def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface() -> None:
+    """The ratchet baseline is well-formed and the gate scans the real user-docs surface.
+
+    Non-vacuity tripwire for the mandatory-display gate: it must govern the actual
+    user-docs surface (not an empty set), and the baseline must be a well-formed
+    page→positive-count map. The baseline is deliberately NOT asserted equal to
+    the live counts: a page below its baseline is legitimate mid-conversion
+    progress, so requiring equality would red the tree while the converter agents
+    work. The one-directional guarantee (no page exceeds its baseline) lives in
+    :func:`test_no_new_aeat_plain_fences_in_user_docs`; tightening the baseline
+    toward empty is the converters' committed step.
+    """
+    pages = _user_doc_pages()
+    assert len(pages) >= 20, (
+        f"the mandatory-display gate scans only {len(pages)} user-docs pages; the surface "
+        "the gate governs has collapsed — its scan is vacuous"
+    )
+    baseline = json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
+    assert isinstance(baseline, dict), "the baseline must be a JSON object mapping page → count"
+    for page, allowed in baseline.items():
+        assert isinstance(page, str) and page, "baseline keys must be non-empty docs-relative page paths"
+        assert isinstance(allowed, int) and allowed > 0, (
+            f"baseline entry {page!r} must be a positive integer count, got {allowed!r}; "
+            "remove the entry instead of setting it to zero"
+        )

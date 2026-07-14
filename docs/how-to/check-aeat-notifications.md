@@ -12,7 +12,7 @@ Every live read works the same way. It uses your configured authentication,
 reads from the AEAT sede read-only, and saves an encrypted local copy in
 your profile. It applies nothing automatically: a pull saves a local copy,
 and applying a downloaded fact updates only your local profile or records,
-and only after you review it. Nothing is ever sent back to AEAT — you remain
+and only after you review it. Nothing is ever sent back to AEAT. You remain
 the only one who files. To understand that boundary, see
 [Recording a filing and the boundary](../explanation/recording-a-filing-and-the-boundary.md).
 
@@ -25,7 +25,7 @@ Before contacting AEAT, every live read runs an authentication preflight. If
 no provider is configured, the read refuses at that preflight; the refusal
 text mentions a Cl@ve identity check (`La identidad de Cl@ve Móvil no
 coincide...`), but the underlying cause is that authentication is not
-configured. Configure a provider first — see
+configured. Configure a provider first. See
 [Authenticate with AEAT](authenticate-with-aeat.md).
 
 ## Before you start
@@ -72,7 +72,7 @@ aeat app live notifications latest
 
 ## 2. Declaration history (expedientes)
 
-Expedientes are the official AEAT record of your past declarations — each
+Expedientes are the official AEAT record of your past declarations: each
 filed return for each modelo and year, with its status and filing date.
 
 Download the declaration history for a specific form and year:
@@ -187,7 +187,7 @@ Or narrow it to one category with `--category`. The accepted categories are
 aeat app live portals list --category filing
 ```
 
-Use `--modelo` or `--category`, not both — they are mutually exclusive.
+Use `--modelo` or `--category`, not both. They are mutually exclusive.
 
 ### View portal details
 ```bash

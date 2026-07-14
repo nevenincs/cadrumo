@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_200/files/04-200-ejercicio-2012-actualizado-a-28-06-2013-539-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/04-200-ejercicio-2012-actualizado-a-28-06-2013-539-kb-pdf.pdf",
   "source_sha256": "ee37e8e3777c494c064defd5fa8e1a344d034eb2cb587b3d4818c787f0ade5aa",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

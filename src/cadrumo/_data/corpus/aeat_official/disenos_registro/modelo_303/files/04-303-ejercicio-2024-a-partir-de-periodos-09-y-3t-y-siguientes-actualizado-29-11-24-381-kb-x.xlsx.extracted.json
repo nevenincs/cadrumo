@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-x.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-x.xlsx",
   "source_sha256": "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

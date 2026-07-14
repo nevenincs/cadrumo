@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-164.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-164.html",
   "source_sha256": "8fd6afbb1fcbd47e63b4bfc32e1ecfe8bb6895288beb65f3c798135bfeff06b3",
   "preprocessor_id": "normatives-html-example",
   "preprocessor_version": "0.1",

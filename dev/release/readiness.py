@@ -152,6 +152,23 @@ def _read_manifest_version(repo_root: Path) -> str:
     return str(payload.get(".", ""))
 
 
+_MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
+
+
+def _read_mcpb_manifest(repo_root: Path) -> tuple[str, tuple[str, ...]]:
+    """Return the ``.mcpb`` bundle's declared version and its ``uvx`` bootstrap args.
+
+    The Desktop-Extension bundle self-installs ``cadrumo[agent]`` from PyPI via
+    ``uvx --from cadrumo[agent]==<version> cadrumo-mcp``; both its declared
+    version and that pin move in lockstep with the package release.
+    """
+    payload = json.loads((repo_root / _MCPB_MANIFEST_PATH).read_text(encoding=_UTF_8))
+    version = str(payload.get("version", ""))
+    mcp_config = payload.get("server", {}).get("mcp_config", {})
+    args = tuple(str(arg) for arg in mcp_config.get("args", []))
+    return version, args
+
+
 def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     """Confirm every release authority and exact companion pin reports one version."""
     project_versions = tuple(
@@ -160,6 +177,7 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     pyproject_version = project_versions[0][1]
     init_version = _read_init_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
+    mcpb_version, mcpb_args = _read_mcpb_manifest(repo_root)
     root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
     observed_pins = tuple(
         str(requirement) for requirement in root_project["project"]["optional-dependencies"]["corpus-sources"]
@@ -167,12 +185,19 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     expected_pins = tuple(
         f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
     )
-    versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
-    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
+    # The .mcpb bundle's self-install pin must name the exact package release, so
+    # a bump can never ship a bundle that installs a stale cadrumo[agent].
+    expected_mcpb_pin = f"{PRODUCT_IDENTITY.distribution}[agent]=={pyproject_version}"
+    mcpb_pin_ok = expected_mcpb_pin in mcpb_args
+    versions = {version for _relative, version in project_versions} | {init_version, manifest_version, mcpb_version}
+    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins and mcpb_pin_ok
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
-    detail = f"{surfaces} init={init_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
+    detail = (
+        f"{surfaces} init={init_version!r} manifest={manifest_version!r} "
+        f"mcpb={mcpb_version!r} mcpb_pin_ok={mcpb_pin_ok} pins={observed_pins!r}"
+    )
     if passed:
-        detail = f"all release authorities and exact companion pins agree on {pyproject_version!r}"
+        detail = f"all release authorities, the .mcpb bundle, and exact companion pins agree on {pyproject_version!r}"
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
 

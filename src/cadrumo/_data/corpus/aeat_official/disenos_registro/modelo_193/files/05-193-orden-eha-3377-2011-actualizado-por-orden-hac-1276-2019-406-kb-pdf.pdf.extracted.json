@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_193/files/05-193-orden-eha-3377-2011-actualizado-por-orden-hac-1276-2019-406-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/05-193-orden-eha-3377-2011-actualizado-por-orden-hac-1276-2019-406-kb-pdf.pdf",
   "source_sha256": "bd38312bbe1583f8196f2fcf967ae8e93f10356edd71f93bf4c82d2a3059de69",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

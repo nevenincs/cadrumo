@@ -8,6 +8,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Final
+
+_UTF_8: Final[str] = "utf-8"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VAR_ROOT = REPO_ROOT / "var"
@@ -65,7 +68,7 @@ def _run_cli(stage: str, *arguments: str, environment: dict[str, str]) -> None:
         env=environment,
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding=_UTF_8,
         errors="replace",
         timeout=180,
         check=False,

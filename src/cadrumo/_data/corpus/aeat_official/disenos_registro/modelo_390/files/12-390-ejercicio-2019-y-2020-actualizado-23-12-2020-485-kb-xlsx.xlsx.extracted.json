@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_390/files/12-390-ejercicio-2019-y-2020-actualizado-23-12-2020-485-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/12-390-ejercicio-2019-y-2020-actualizado-23-12-2020-485-kb-xlsx.xlsx",
   "source_sha256": "7d4caff7bbdd668fa2ddd03f8751632394ed4010a81301b5fc787272f2371bc1",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

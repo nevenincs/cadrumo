@@ -123,12 +123,12 @@ def test_thin_output_schema_prunes_the_orphaned_observation_def() -> None:
 
 
 def test_thin_output_schema_drops_the_property_from_required() -> None:
-    fake = {
+    unthinned_schema = {
         "type": "object",
         "properties": {"observations": {"type": "array"}, "calculation_revision_id": {"type": "string"}},
         "required": ["observations", "calculation_revision_id"],
     }
-    thinned = thin_output_schema("modelo.work.calculate", fake)
+    thinned = thin_output_schema("modelo.work.calculate", unthinned_schema)
     assert "observations" not in thinned["required"]
     assert "calculation_revision_id" in thinned["required"]
 

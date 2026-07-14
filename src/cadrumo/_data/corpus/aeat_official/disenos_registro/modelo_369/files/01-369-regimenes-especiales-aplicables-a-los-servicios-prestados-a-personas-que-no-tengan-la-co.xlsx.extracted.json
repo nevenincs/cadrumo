@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx",
   "source_sha256": "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

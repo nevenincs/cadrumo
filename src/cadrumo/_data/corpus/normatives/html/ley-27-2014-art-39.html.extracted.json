@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-39.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-39.html",
   "source_sha256": "69d7de61e63565f4ed8f6520c3dae44333f059abc9fa0939dc4b11c6f3e5ee65",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

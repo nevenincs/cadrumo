@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_180/files/02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf",
   "source_sha256": "d24f733078f69cd28923ac7d9a3ccab5222634c0cd9d1fb725c1c53214e4ad1f",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

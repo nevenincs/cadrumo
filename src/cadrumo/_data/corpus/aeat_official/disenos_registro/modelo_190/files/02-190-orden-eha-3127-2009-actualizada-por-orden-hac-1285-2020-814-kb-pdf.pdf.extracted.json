@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_190/files/02-190-orden-eha-3127-2009-actualizada-por-orden-hac-1285-2020-814-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_190/files/02-190-orden-eha-3127-2009-actualizada-por-orden-hac-1285-2020-814-kb-pdf.pdf",
   "source_sha256": "4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

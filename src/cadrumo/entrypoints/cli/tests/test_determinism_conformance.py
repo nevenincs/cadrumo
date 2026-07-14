@@ -54,6 +54,7 @@ from ....core.observability import (
 )
 from ....core.time import frozen_clock
 from ....domain.transactions import TransactionDirection
+from ....tests.env_scope import scoped_cwd
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._ledger_payloads import EvidenceAddResult, LedgerAddResult
 
@@ -238,7 +239,6 @@ class TestEnrolledCommandDeterminism:
     def test_ledger_evidence_add_identity_is_cwd_independent(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Regression: identical bytes added from DIFFERENT working dirs share one identity.
 
@@ -258,8 +258,11 @@ class TestEnrolledCommandDeterminism:
             (cwd / "receipt.pdf").write_bytes(pdf_bytes)
 
         def _add_from(cwd: Path, storage_root: Path) -> tuple[str, tuple[str, ...], str]:
-            monkeypatch.chdir(cwd)
-            with isolated_runtime_profile(tmp_path=storage_root, bucket_id=_BUCKET) as profile, frozen_clock(_INSTANT):
+            with (
+                scoped_cwd(cwd),
+                isolated_runtime_profile(tmp_path=storage_root, bucket_id=_BUCKET) as profile,
+                frozen_clock(_INSTANT),
+            ):
                 service = PurchaseInvoiceEvidenceService(
                     settings=profile.settings,
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),

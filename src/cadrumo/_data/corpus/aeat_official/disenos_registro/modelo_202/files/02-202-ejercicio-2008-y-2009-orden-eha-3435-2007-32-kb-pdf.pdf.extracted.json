@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/02-202-ejercicio-2008-y-2009-orden-eha-3435-2007-32-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/02-202-ejercicio-2008-y-2009-orden-eha-3435-2007-32-kb-pdf.pdf",
   "source_sha256": "83b7f29ea2fc5eaee6f041a52c5f5c479d162f32a7d87b11126e617bb4042526",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

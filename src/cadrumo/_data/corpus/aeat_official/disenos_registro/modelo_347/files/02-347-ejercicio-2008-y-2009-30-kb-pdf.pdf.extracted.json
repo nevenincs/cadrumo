@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_347/files/02-347-ejercicio-2008-y-2009-30-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/02-347-ejercicio-2008-y-2009-30-kb-pdf.pdf",
   "source_sha256": "f670c1ac4b4c4d094a9657da278332f2f4f419447c60f95672f857778eaf69cb",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

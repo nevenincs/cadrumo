@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
   "source_sha256": "83e40d7d4d64c3b2da570d5e70a650685de036277df3ce077b0569a2235aa06f",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

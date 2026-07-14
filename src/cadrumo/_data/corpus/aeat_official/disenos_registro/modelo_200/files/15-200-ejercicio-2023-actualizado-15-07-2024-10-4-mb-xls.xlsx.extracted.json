@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_200/files/15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xlsx",
   "source_sha256": "9ec2e13fee9d74104f4009fba851e5e2216a82a29920340a0149cf998171ef3a",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

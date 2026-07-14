@@ -23,8 +23,8 @@ explanations in English and quotes real Spanish output where it shows one.
 
 ## Prerequisites
 
-You need a working `aeat` command (see the
-[Quickstart](quickstart.md) for installation) and a master-key
+You need a working `aeat` command (see
+[Install Cadrumo](../workstation-setup.md)) and a master-key
 passphrase. `aeat` encrypts your data with a passphrase and prompts for it
 the first time each command runs.
 

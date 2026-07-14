@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx",
   "source_sha256": "463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3111-2009.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3111-2009.html",
   "source_sha256": "5a36f3665039cdaab4122e3758fc0844880a5d8239eecf52954d0e6d176d2c13",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

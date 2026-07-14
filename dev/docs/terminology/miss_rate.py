@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Final
 
 import typer
 
@@ -27,6 +27,8 @@ from ._miss_rate import (
     adjudicate_rung2,
     evaluate_held_out_miss_rate,
 )
+
+_UTF_8: Final[str] = "utf-8"
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
@@ -52,7 +54,7 @@ def write_miss_rate_report(
     }
     output.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
-        encoding="utf-8",
+        encoding=_UTF_8,
     )
 
 

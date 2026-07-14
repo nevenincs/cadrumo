@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-57.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-57.html",
   "source_sha256": "36bccb9bed9af744ec1b503572691f70dc46ab82bfa93fcfc741d3262fbe93b0",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-99.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-99.html",
   "source_sha256": "08d396afe58bc099e583f4a399433597cd41dbb2fe564ba4b57be85ba2f76b1c",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -1,4 +1,4 @@
-"""Real selected-language CLI coverage for the S423 continuity repairs."""
+"""Real selected-language CLI coverage for the selected-language continuity repairs."""
 
 from __future__ import annotations
 

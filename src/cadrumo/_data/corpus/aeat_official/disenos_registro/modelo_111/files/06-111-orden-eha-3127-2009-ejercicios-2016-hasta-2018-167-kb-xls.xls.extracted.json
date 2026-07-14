@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_111/files/06-111-orden-eha-3127-2009-ejercicios-2016-hasta-2018-167-kb-xls.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_111/files/06-111-orden-eha-3127-2009-ejercicios-2016-hasta-2018-167-kb-xls.xls",
   "source_sha256": "86568ecc2250b143355f5e40bcbb4393667960ba8228862f6a2ac3cbcc90e192",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

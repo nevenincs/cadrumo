@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_123/files/04-123-orden-eha-3435-2007-ejercicios-2015-hasta-2018-164-kb-xls.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_123/files/04-123-orden-eha-3435-2007-ejercicios-2015-hasta-2018-164-kb-xls.xls",
   "source_sha256": "cc24b134697856e14a34b03b85eaeb1195e21e740cfc4d0a6f735a4dd8d6ea70",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

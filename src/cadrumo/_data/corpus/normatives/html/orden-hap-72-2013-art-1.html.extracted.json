@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hap-72-2013-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hap-72-2013-art-1.html",
   "source_sha256": "25957a8ceefbdb2f7510bc9df9ca229ffd6f1cf4ee3fa820c81c0f87b267a021",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -8,7 +8,7 @@ generated-output directory the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy
 declares — otherwise a test suite that relies on the fixture could still
 write through to a shared, non-isolated default. This test enumerates the
 taxonomy DYNAMICALLY (never a hardcoded field list) so a future dir field
-added by a sibling wave (the corpus-text cache, a retention-policy field,
+added by a sibling change (the corpus-text cache, a retention-policy field,
 ...) is covered automatically the moment it lands in ``config.py``, and the
 gate fails loudly if a new field is ever added to ``Settings`` outside the
 derivation table with no isolation coverage.

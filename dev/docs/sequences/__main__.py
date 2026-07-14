@@ -36,6 +36,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Final
 
 from pydantic import BaseModel, Field
 
@@ -51,6 +52,8 @@ from ._golden_store import (
 from ._parser import parse_sequence
 from ._runner import SequenceTranscript, execute_page_sequences, execute_sequence
 from ._schema import ParsedSequence, SequenceId
+
+_UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "COHERENCE_TIER_PREFIX",
@@ -233,7 +236,7 @@ def discover_sequences(
     for path in page_files:
         docname = path.relative_to(root).with_suffix("").as_posix()
         try:
-            text = path.read_text(encoding="utf-8")
+            text = path.read_text(encoding=_UTF_8)
         except OSError as exc:
             problems.append(f"page {docname!r}: cannot read ({exc})")
             continue

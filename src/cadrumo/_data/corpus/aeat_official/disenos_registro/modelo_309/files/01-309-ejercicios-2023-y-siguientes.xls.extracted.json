@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls",
   "source_sha256": "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

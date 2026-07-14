@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/10-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2015-y-2016-247-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/10-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2015-y-2016-247-kb-xlsx.xlsx",
   "source_sha256": "5bffa57f1630f4ade6a19b21010fd7e6aff0b440e632f17f1be53a61ecdaa15f",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

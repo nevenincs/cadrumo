@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html",
   "source_sha256": "4bfd94046f9b23e27004af8daad2d276c92dd368a6995f57d979d38ec3558db8",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

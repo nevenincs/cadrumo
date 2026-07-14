@@ -2,4 +2,4 @@
 modelo = "721"
 renta_years = [2023, 2024]
 evidence_class = "threshold_continuity"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py"

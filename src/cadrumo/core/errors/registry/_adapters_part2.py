@@ -30,6 +30,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.outbound.aeat.auth._session_store.FormerProductAuthSessionStateError",
+        ErrorCode(
+            code="AUTH_FORMER_PRODUCT_SESSION_STATE",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_former_product_session_state",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.aeat.export._errors.ExportError",
         ErrorCode(
             code="FAIL_EXPORT",

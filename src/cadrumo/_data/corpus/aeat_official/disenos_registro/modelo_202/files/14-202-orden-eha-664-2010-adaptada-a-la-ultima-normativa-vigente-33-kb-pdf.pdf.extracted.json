@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente-33-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente-33-kb-pdf.pdf",
   "source_sha256": "c58221f899a6aacc674f305f86764595dfa0c7152f2f58faffa3e341521f5534",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/05-202-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-mayo-2020-132-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/05-202-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-mayo-2020-132-kb-xlsx.xlsx",
   "source_sha256": "96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

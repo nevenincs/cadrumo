@@ -1,0 +1,101 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "prorrata",
+        "elect-general",
+        "--ejercicio",
+        "2026",
+        "--percentage",
+        "80"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\nejercicio\t2026\nregime\tgeneral\nsector_id\t\nprovisional_percentage\t80\nprovisional_provenance\tcarried_prior_definitiva\ncount\t1\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "prorrata",
+        "declare-sector",
+        "--sector-id",
+        "arrendamiento",
+        "--letra",
+        "c",
+        "--activity-code",
+        "6820"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\nsector_id\tarrendamiento\nletra\tc\nmember_activity_codes\t6820\ncount\t1\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "prorrata",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.prorrata.list",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "count": 1,
+          "entries": [
+            {
+              "authorisation_reference": null,
+              "definitive_percentage": null,
+              "definitive_volume_con_derecho": null,
+              "definitive_volume_sin_derecho": null,
+              "ejercicio": 2026,
+              "interrupted": false,
+              "provisional_percentage": "80",
+              "provisional_provenance": "carried_prior_definitiva",
+              "regime": "general",
+              "schema_version": "1",
+              "sector_id": null,
+              "source_observation_ref": null
+            }
+          ],
+          "sectors": [
+            {
+              "letra": "c",
+              "member_activity_codes": [
+                "6820"
+              ],
+              "sector_id": "arrendamiento"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "prorrata-list"
+}

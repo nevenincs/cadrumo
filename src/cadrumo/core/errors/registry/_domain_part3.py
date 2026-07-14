@@ -546,4 +546,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.domain.modelos._row_models.Modelo210AgrupacionRentaRowsError",
+        ErrorCode(
+            code="REFUSED_MODELO_210_AGRUPACION_RENTA_ROWS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_210_agrupacion_renta_rows",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_714/files/DR714_2025.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_714/files/DR714_2025.xls",
   "source_sha256": "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

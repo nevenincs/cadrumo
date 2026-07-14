@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-101.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-101.html",
   "source_sha256": "26ed2d15acdfe9896444aa7da13cf4cfe2d393ed9234fdfd4e66e3eb10e66bd5",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

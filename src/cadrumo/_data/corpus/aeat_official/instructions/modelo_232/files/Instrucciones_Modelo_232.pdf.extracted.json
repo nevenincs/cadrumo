@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/instructions/modelo_232/files/Instrucciones_Modelo_232.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/instructions/modelo_232/files/Instrucciones_Modelo_232.pdf",
   "source_sha256": "44a7606d2e5be723416c441ca8824e31fbfdf35af3554dceef2da4185e1a2a0c",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

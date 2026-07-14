@@ -10,4 +10,4 @@
 modelo = "036"
 renta_years = [2025, 2026]
 evidence_class = "threshold_continuity"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_036_censal_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_036_censal_continuity.py"

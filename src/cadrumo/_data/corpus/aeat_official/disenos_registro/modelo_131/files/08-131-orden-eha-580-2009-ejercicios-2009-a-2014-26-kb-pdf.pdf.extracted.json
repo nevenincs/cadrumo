@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_131/files/08-131-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/08-131-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-pdf.pdf",
   "source_sha256": "d55417b8efc679085b26c0f5215ea76e10072b8ef06ed29fee7ccaa0892df31c",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

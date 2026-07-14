@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-610-2021-art-2.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-610-2021-art-2.html",
   "source_sha256": "836b554c5613b0dbe9e8facc3a033dac6b5fc2bc07786537a38ce1ed4c59c8ef",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

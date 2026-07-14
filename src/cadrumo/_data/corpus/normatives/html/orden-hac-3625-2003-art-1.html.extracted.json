@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-3625-2003-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-3625-2003-art-1.html",
   "source_sha256": "f9bce8be8d185e2bcf8bdb5504512698a734f608d4008376ea4f398544e63721",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

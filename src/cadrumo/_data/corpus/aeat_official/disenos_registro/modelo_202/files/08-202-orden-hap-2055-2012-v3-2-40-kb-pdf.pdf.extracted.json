@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/08-202-orden-hap-2055-2012-v3-2-40-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/08-202-orden-hap-2055-2012-v3-2-40-kb-pdf.pdf",
   "source_sha256": "3a47f5b39926e79ca7fa2a589b6a8fabfe15472ad51d324f2d7bc0e489a35adf",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

@@ -11,4 +11,4 @@
 modelo = "151"
 renta_years = [2024, 2025]
 evidence_class = "calculation"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_151_beckham_cuota_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_151_beckham_cuota_continuity.py"

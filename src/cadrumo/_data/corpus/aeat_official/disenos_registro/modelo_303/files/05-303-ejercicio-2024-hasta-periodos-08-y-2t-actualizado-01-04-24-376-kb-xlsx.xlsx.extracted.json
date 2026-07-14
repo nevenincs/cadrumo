@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/05-303-ejercicio-2024-hasta-periodos-08-y-2t-actualizado-01-04-24-376-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/05-303-ejercicio-2024-hasta-periodos-08-y-2t-actualizado-01-04-24-376-kb-xlsx.xlsx",
   "source_sha256": "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-54-bis.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1065-2007-art-54-bis.html",
   "source_sha256": "c99bf600aac84e118916ea7c0a112746dff2838869fa9e229093a42c2d09e69d",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

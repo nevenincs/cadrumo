@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1994-art-75.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-19-1994-art-75.html",
   "source_sha256": "344657dee928cc9c7728dcd3ceab364b60252db3bf13dd2d5ee8aa8e77155dbe",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

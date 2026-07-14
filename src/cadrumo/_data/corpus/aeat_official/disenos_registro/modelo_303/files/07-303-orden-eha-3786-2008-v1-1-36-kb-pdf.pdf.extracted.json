@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf",
   "source_sha256": "6daceebcc868e5ef9ed1538374fc4159b29248a270663552f086f6a9bfd29699",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

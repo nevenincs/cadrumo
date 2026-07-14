@@ -114,9 +114,11 @@ aeat app ledger invoice add --kind issued \
   --country-code DE --eu-iva-id DE345678901 --operation-type E
 ```
 
-`--operation-type` takes one M349 code: `E` goods supply, `S` services
-supplied, `T` triangular, `R` rectification, `A` goods acquisition, `I`
-services acquired, `M` miscellaneous.
+`--operation-type` takes one M349 operation key: `E` supplies of goods, `M`
+supplies after an exempt import, `H` the same via a fiscal representative,
+`A` acquisitions of goods, `T` triangular supplies, `S` services supplied,
+`I` services acquired, and the call-off-stock keys `R` (transfers), `D`
+(returns), and `C` (substitutions).
 
 ## Feed a calculation from the catalogue
 

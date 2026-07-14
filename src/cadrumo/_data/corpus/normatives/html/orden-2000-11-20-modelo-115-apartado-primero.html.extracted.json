@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html",
   "source_sha256": "266ca0ec3650886b627dcd52337cb54feb78f9467df11ac415503f86c1677e5a",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

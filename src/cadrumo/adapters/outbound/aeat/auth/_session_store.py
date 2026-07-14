@@ -37,6 +37,7 @@ from ....persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
+from ._errors import AuthError
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]
@@ -46,8 +47,18 @@ type ProviderSessionMetadata = JsonObject
 _JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
 
 
-class FormerProductAuthSessionStateError(RuntimeError):
-    """Raised when Cadrumo detects retired product session custody."""
+class FormerProductAuthSessionStateError(AuthError):
+    """Raised when Cadrumo detects retired product session custody.
+
+    Unlike :class:`core._config_state_root.FormerProductStateError`, this
+    refusal is raised at the adapter/storage boundary, not during
+    ``Settings``/pydantic bootstrap, so no bootstrap-cycle constraint bars it
+    from the registry-bound hierarchy: it derives from the same
+    :class:`AuthError` base as every other outbound AEAT authentication
+    domain error, so a caller catching ``AuthError`` (or ``AeatError``) at an
+    adapter or CLI boundary observes this refusal too, instead of it
+    propagating as an unclassified internal error.
+    """
 
 
 class PersistedBrowserSession(BaseModel):

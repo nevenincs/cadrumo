@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-886-2023.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-886-2023.html",
   "source_sha256": "d831f143a46935e906c960d298d2fcf27049c0976189f67566c5e2fe314376a0",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

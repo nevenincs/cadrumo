@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3434-2007-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3434-2007-art-1.html",
   "source_sha256": "c144a7fa724203aa3c8400e7b31f04c9db9c3d9c8ec87e5fcf8fac2887bc2e09",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf",
   "source_sha256": "521fb8e9918b77555be781434006d560bbec28d30318ff158096ecca0e9ed56d",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",
