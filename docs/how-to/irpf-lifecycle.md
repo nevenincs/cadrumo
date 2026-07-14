@@ -30,11 +30,9 @@ the first time each command runs.
 
 ## Stage 1: set up the taxpayer
 
-Create the profile:
-
-```bash
-aeat config profile create ana --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-```
+Create the profile with `aeat config profile create ana --quiet --tax-id
+12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+--activity-start-date 2026-01-01`.
 
 The `--name` and `--surnames` are required: the export step refuses without
 an operator name. The `--activity-start-date` marks when the activity began,
@@ -44,9 +42,14 @@ NIF, CIF, DNI, or NIE for a real profile.
 
 Confirm what the year will ask of Ana:
 
-```bash
-aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
-aeat app overview explain 130 --year 2026
+```{cli-sequence} irpf-lifecycle-agenda
+:verify: Confirm the year's filing calendar and Modelo 130 applicability read back.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-income-categories actividad_economica
+@step Show the year's filing calendar.
+aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
+@step Explain why Modelo 130 applies this year.
+@result aeat --format json app overview explain 130 --year 2026
+@expect exit_code == 0
 ```
 
 The calendar lists the four Modelo 130 windows (April, July, October,
@@ -57,20 +60,35 @@ why Modelo 130 applies: an activity under estimación directa.
 
 Record the first quarter's activity - one sale, one expense. The `--amount`
 is the gross total (taxable base plus IVA), and an expense row needs a
-`--category-id` (list the valid ids with `aeat app ledger categories`):
-
-```bash
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-```
+`--category-id` (list the valid ids with `aeat app ledger categories`). The two
+`ledger add` commands appear as the collapsed setup of the sequence below.
 
 Create and calculate the first instalment. Modelo 130 is cumulative, and a
 true first period has no history, so the three prior-period carries are
-passed as zeros - this is the only quarter where you do this:
+passed as zeros - this is the only quarter where you do this. The sequence
+below records the quarter's two rows, creates and calculates the draft, and
+verifies it; the export, file, and reconcile commands that close the quarter
+are shown after the verified result (they run against your own evidenced,
+filed history, not the sandbox):
 
-```bash
-aeat app modelo work create --modelo 130 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+```{cli-sequence} irpf-lifecycle-q1
+:verify: Confirm the first instalment verifies before you export it.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key irpf-q1-venta
+@setup aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key irpf-q1-compra
+@step Create the first instalment draft.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@step Calculate it with the three first-period carries passed as zeros.
+aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.casilla_values.03 == "500.00"
+@expect result.casilla_values.04 == "100.00"
+@step Verify the instalment before exporting it.
+@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
+@expect result.granted_verificado_completo == true
+@expect exit_code == 0
+@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
+@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
+@static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T
 ```
 
 The key figures show the year so far: 1000 earned, 500 spent, and an
@@ -85,53 +103,33 @@ key_figure	19	0.00	Resultado final
 (The final result is 0.00 here because the minoración for low net income
 absorbs the whole instalment - casilla 13 in the output shows it.)
 
-Verify and export:
-
-```bash
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
-```
-
 Verify reports `completeness_status complete` and
-`granted_verificado_completo true`. Export writes the fichero-BOE file and
-prints its path, size, and SHA-256 checksum - note the checksum; it
-identifies exactly which file you upload.
+`granted_verificado_completo true` (the sequence above asserts this). Export
+writes the fichero-BOE file and prints its path, size, and SHA-256 checksum -
+note the checksum; it identifies exactly which file you upload.
 
 Upload the file at the AEAT portal (the checklist is
-[Upload your exported modelo at the AEAT portal](file-at-aeat.md)),
-then record the filing locally while the presentation window is open:
-
-```bash
-aeat app modelo work file --modelo 130 --year 2026 --period 1T
-```
-
-`work file` saves a local marker only - it does not submit anything. The
-marker is what lets the next quarter's carries resolve from this one.
-Finally, pull the justificante so the official receipt is on record:
-
-```bash
-aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T
-```
+[Upload your exported modelo at the AEAT portal](file-at-aeat.md)), then record
+the filing locally with `aeat app modelo work file` while the presentation
+window is open. `work file` saves a local marker only - it does not submit
+anything. The marker is what lets the next quarter's carries resolve from this
+one. Finally, pull the justificante with `aeat app modelo reconcile pull` so the
+official receipt is on record. All three commands (export, file, reconcile pull)
+are shown after the verified result in the sequence above.
 
 ## Stage 3: the second and third quarters
 
 The year continues; record each quarter's activity as it happens. For the
-second quarter, say Ana invoices twice and buys once:
+second quarter, say Ana invoices twice and buys once: three more `aeat app
+ledger add` rows (`proyecto abril` 2420 gross, `proyecto mayo` 1210 gross, and a
+`material` expense of 302.50 gross), each with its taxable base, rate, and IVA
+amount, exactly as in the first quarter.
 
-```bash
-aeat app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
-aeat app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50
-```
-
-Now the cumulative behaviour shows itself. Calculate the second instalment
-with NO `--binding` zeros - the carries resolve from the filed first
-quarter:
-
-```bash
-aeat app modelo work create --modelo 130 --year 2026 --period 2T
-aeat app modelo work calculate --modelo 130 --year 2026 --period 2T
-```
+Now the cumulative behaviour shows itself. Create the second-quarter draft with
+`aeat app modelo work create --modelo 130 --year 2026 --period 2T`, then
+calculate it with NO `--binding` zeros - `aeat app modelo work calculate
+--modelo 130 --year 2026 --period 2T` resolves the carries from the filed first
+quarter.
 
 Read the revision and compare it with the first quarter's:
 
@@ -147,14 +145,10 @@ is not filed and evidenced on your record - go back to stage 2's `work file`
 and `reconcile pull`. The tool never invents the missing quarter; a visible
 blank beats a guessed zero.
 
-Verify, export, upload, file, and reconcile exactly as in stage 2:
-
-```bash
-aeat app modelo work verify --modelo 130 --year 2026 --period 2T
-aeat app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
-aeat app modelo work file --modelo 130 --year 2026 --period 2T
-aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T
-```
+Verify, export, upload, file, and reconcile exactly as in stage 2, swapping the
+period token for `2T`: `aeat app modelo work verify`, `aeat app modelo export`,
+`aeat app modelo work file`, and `aeat app modelo reconcile pull`, each with
+`--modelo 130 --year 2026 --period 2T`.
 
 The third quarter is the same loop: record the activity, create and
 calculate `--period 3T` (no binding zeros), verify, export, upload, file,
@@ -169,9 +163,13 @@ account the annual declaration will set against her full-year income.
 
 Check the year's IRPF position at any point:
 
-```bash
-aeat app overview status
-aeat app modelo work list
+```{cli-sequence} irpf-lifecycle-position
+:verify: Confirm the year's IRPF position and work-unit list read back.
+@step Show the year's overall obligation status.
+aeat --format json app overview status
+@step List the modelo work units on record.
+@result aeat --format json app modelo work list
+@expect exit_code == 0
 ```
 
 ## Stage 5: the annual Renta declaration
@@ -180,48 +178,34 @@ The following spring, the annual Modelo 100 gathers the year. It is annual,
 so the period token is `0A`, and the filing year is the income year - the
 2026 declaration is prepared and filed in 2027.
 
-Before creating it, confirm the year's records and dependencies are clean:
-
-```bash
-aeat app ledger preflight --year 2026 --period 0A
-aeat app modelo work dependencies --modelo 100 --year 2026 --period 0A
-```
+Before creating it, confirm the year's records and dependencies are clean with
+`aeat app ledger preflight --year 2026 --period 0A` and `aeat app modelo work
+dependencies --modelo 100 --year 2026 --period 0A`.
 
 `dependencies` lists each filing the declaration folds in - the four Modelo
 130 instalments among them - and whether its evidence is satisfied. A
 dependency that does not apply to Ana (a retención model she never files) is
 shown as scoped out, not silently skipped.
 
-Create and calculate:
-
-```bash
-aeat app modelo work create --modelo 100 --year 2026 --period 0A
-aeat app modelo work calculate --modelo 100 --year 2026 --period 0A
-```
+Create and calculate the declaration with `aeat app modelo work create --modelo
+100 --year 2026 --period 0A`, then `aeat app modelo work calculate --modelo 100
+--year 2026 --period 0A`.
 
 The declaration assembles itself from four kinds of source: Ana's profile
 facts, the year's classified ledger, the four filed instalments (folded in
 as payments on account), and any carry from an earlier Renta. Employment or
 capital income the ledger cannot know about is supplied as manual casillas -
-find what is still missing with:
-
-```bash
-aeat app modelo bindings list --modelo 100 --year 2026 --period 0A --missing
-```
+find what is still missing with `aeat app modelo bindings list --modelo 100
+--year 2026 --period 0A --missing`.
 
 How every value arrives, and how to trace any figure to its rule and its
 article of law, is the subject of
 [Deep dive: how the Renta declaration is assembled](../explanation/how-renta-is-assembled.md).
 
-Verify, export, upload, file, and reconcile - the same five moves that
-closed every quarter close the year:
-
-```bash
-aeat app modelo work verify --modelo 100 --year 2026 --period 0A
-aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./modelo-100-2026-0A.boe
-aeat app modelo work file --modelo 100 --year 2026 --period 0A
-aeat app modelo reconcile pull --modelo 100 --year 2026 --period 0A
-```
+Verify, export, upload, file, and reconcile - the same five moves that closed
+every quarter close the year: `aeat app modelo work verify`, `aeat app modelo
+export`, `aeat app modelo work file`, and `aeat app modelo reconcile pull`, each
+with `--modelo 100 --year 2026 --period 0A`.
 
 ## What you completed
 
