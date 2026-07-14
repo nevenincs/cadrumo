@@ -5,7 +5,8 @@ relocates both data trees under ``src/cadrumo/_data/`` so the existing
 ``packages = ["src/cadrumo"]`` hatchling directive carries them inside
 the wheel without any force-include declaration. The terminology tree
 uses the same shipped-data contract. The wheel-split packaging decision
-then excludes the corpus SOURCE binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``)
+then excludes the corpus SOURCE binaries
+(``_data/corpus/**/*.{pdf,docx,xls,xlsx,zip}``)
 from this slim ``aeat`` wheel — they ship in the two separate ``aeat-data-*``
 companion distributions — while every derived surface the runtime reads
 (extracted text, normative html, registry, terminology, agent data) stays.
@@ -46,7 +47,9 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 # Corpus source binaries excluded from the slim ``aeat`` wheel (they ship in the
 # two ``aeat-data-*`` companions). A path is an excluded corpus source binary
 # when it lives under ``_data/corpus/`` and carries one of these suffixes.
-_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+# Mirrors the ``tool.hatch.build`` exclude patterns in ``pyproject.toml`` and
+# the companion builders' suffix sets (``packaging/*/hatch_build.py``).
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".docx", ".xls", ".xlsx", ".zip")
 
 
 def _is_corpus_source_binary(source_relative: str) -> bool:
@@ -94,7 +97,8 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
     shipped *functional* payload, so it must not expect the excluded test
     pool to appear in the archive.
 
-    Also excludes the corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``):
+    Also excludes the corpus source binaries
+    (``_data/corpus/**/*.{pdf,docx,xls,xlsx,zip}``):
     the wheel-split decision moves them to the two ``aeat-data-*`` companions, so
     they are legitimately absent from this slim wheel and must not be expected here.
     """
@@ -190,7 +194,7 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
 
 
 def test_wheel_ships_no_corpus_source_binaries(built_wheel: Path) -> None:
-    """No ``_data/corpus`` pdf/xls/xlsx member survives in the slim wheel."""
+    """No ``_data/corpus`` pdf/docx/xls/xlsx/zip member survives in the slim wheel."""
 
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}
