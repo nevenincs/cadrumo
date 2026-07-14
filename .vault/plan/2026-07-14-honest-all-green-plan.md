@@ -106,7 +106,7 @@ Root-cause and fix the ~55 registry renta calc-data failures and their ~12 appli
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Diagnose the renta binding-resolution root cause including the profile-has-economic-activity unsupplied binding and classify each failing assertion as engine defect or expectation defect with authority evidence; `src/cadrumo/domain/calculations/registry`.
+- [x] `P01.S01` - Diagnose the renta binding-resolution root cause including the profile-has-economic-activity unsupplied binding and classify each failing assertion as engine defect or expectation defect with authority evidence; `src/cadrumo/domain/calculations/registry`.
 - [ ] `P01.S02` - Fix the renta registry data or engine per the diagnosis with AEAT/BOE grounding and rerun the registry suite sequentially; `registry renta surfaces`.
 - [ ] `P01.S03` - Verify the application/modelo cascade failures clear downstream and fix any residual independent defects; `src/cadrumo/application/modelo/tests`.
 
