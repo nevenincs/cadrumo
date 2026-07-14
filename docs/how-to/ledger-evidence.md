@@ -13,22 +13,41 @@ You need:
 
 ## Add an evidence record
 
-Record the invoice file and its details:
+Record the invoice file and its details, then view the stored record. The file
+path is the only required part; every metadata flag is optional. `--iva-rate 21`
+means 21 %:
 
-```bash
-aeat app ledger evidence add ./invoices/supplier-march.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --notes "Office supplies, March"
+```{cli-sequence} ledger-evidence-add
+:verify: Confirm the evidence record stored the supplier and invoice details.
+@step Record the invoice file and its details as encrypted evidence.
+aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --notes "Office supplies, March"
+@capture evidence_id result.evidence_id
+@step Confirm the stored record carries the details you typed.
+@result aeat --format json app ledger evidence view {evidence_id}
+@expect result.supplier == "Papelería Sol SL"
+@expect result.invoice_number == "2026-0142"
 ```
 
-The file path is the only required part; every metadata flag is optional. `--iva-rate 21` means 21 %. Add what you know now; update the rest later.
-
-The command prints the evidence ID. Note the full ID down - later commands need it.
+The command prints the evidence ID. Note the full ID down - later commands need it. Add what you know now; update the rest later.
 
 ## Link an evidence record to a transaction
 
-Attach the evidence record to the transaction it supports:
+Attach the evidence record to the transaction it supports. The sequence records
+an evidence file and an expense, then attaches one to the other:
 
-```bash
-aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
+```{cli-sequence} ledger-evidence-attach
+:verify: Confirm the purchase-invoice evidence attached to the transaction.
+@step Record the purchase invoice as encrypted evidence.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
+@capture evidence_id result.evidence_id
+@step Record the deductible expense the invoice supports.
+@setup aeat --format json app ledger add --date 2026-03-10 --amount 121.00 --direction OUTGOING --description "Material de oficina" --category-id material_oficina --taxable-base 100 --iva-rate 0.21 --iva-amount 21 --idempotency-key evidence-attach
+@capture transaction_id result.transaction_id
+@step Attach the evidence record to the transaction it supports.
+aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
+@step Confirm the transaction now carries the purchase-invoice evidence.
+@result aeat --format json app ledger view {transaction_id}
+@expect exit_code == 0
 ```
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
@@ -39,7 +58,7 @@ The `attach` command also has an `--attachment-id` option (repeatable) for a gen
 
 ## Pull a document from Google Drive instead
 
-When the document lives in Google Drive, pull it straight into encrypted evidence storage:
+When the document lives in Google Drive, pull it straight into encrypted evidence storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
 
 ```bash
 aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
@@ -49,7 +68,7 @@ The command downloads the Drive file, stores its bytes encrypted with the transa
 
 ## Bulk-fetch every invoice in a Drive folder
 
-Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time:
+Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time. Like `doclink`, this command reaches Google Drive and runs against your own authorized account:
 
 ```bash
 aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
@@ -72,31 +91,27 @@ evidence and link to transactions.
 
 ## List, view, update, and remove evidence records
 
-List every stored evidence record:
+List every stored record, view one in full, update its details, and remove one
+you no longer need. The sequence records an evidence file, lists and inspects
+it, changes the supplier, and confirms the change:
 
-```bash
+```{cli-sequence} ledger-evidence-manage
+:verify: Confirm the evidence record's supplier was updated.
+@step Record an evidence file to manage.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
+@capture evidence_id result.evidence_id
+@step List every stored evidence record.
 aeat app ledger evidence list
+@step View one evidence record in full.
+aeat app ledger evidence view {evidence_id}
+@step Update a detail on the record - the same optional flags as add.
+aeat app ledger evidence update {evidence_id} --supplier "Papelería Central SL"
+@step Confirm the supplier now reads the updated value.
+@result aeat --format json app ledger evidence view {evidence_id}
+@expect result.supplier == "Papelería Central SL"
 ```
 
-View one evidence record in full:
-
-```bash
-aeat app ledger evidence view <evidence-id>
-```
-
-Update details on an existing evidence record - the same optional flags as `add`:
-
-```bash
-aeat app ledger evidence update <evidence-id> --supplier "Papelería Sol SL"
-```
-
-Remove an evidence record you no longer need:
-
-```bash
-aeat app ledger evidence remove <evidence-id> --yes
-```
-
-Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
+Remove an evidence record with `aeat app ledger evidence remove <evidence-id> --yes`. Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
 
 ## After you correct a row
 
