@@ -30,7 +30,7 @@ after this guide.
 ## Create, calculate, and verify the annual draft
 
 **Requirement:** a valid taxpayer profile. Create one with `aeat config profile
-create <name>` — see [Set up your taxpayer profile](profile-setup.md).
+create <name>`. See [Set up your taxpayer profile](profile-setup.md).
 
 The preparation below files the four 2025 Modelo 303 quarters locally, so the
 annual summary can fold them in, then creates the Modelo 390 draft for 2025,
@@ -123,24 +123,33 @@ with `cross_period_dependency_unclean` blocking findings until each 303 quarter
 `blockers=missing_observation, missing_current_filing_record` for every quarter
 that lacks a filed record.
 
-Establish each quarter's evidence one of two ways before you verify Modelo 390:
+Establish each quarter's evidence one of two ways before you verify Modelo 390.
 
-- Mark each 303 quarter as filed locally, while its AEAT filing-obligation
-  window is open. Prepare and verify each quarter (see
-  [Prepare a Modelo 303 IVA filing](modelo-303.md)), then record each one with
-  `aeat app modelo work file --modelo 303 --year 2025 --period 1T` (repeat for
-  `2T`, `3T`, `4T`). `work file` records the filing locally only; it does not
-  submit to AEAT, and it refuses outside the obligation window.
+The first way is to mark each 303 quarter as filed locally, while its AEAT
+filing-obligation window is open. Prepare and verify each quarter (see
+[Prepare a Modelo 303 IVA filing](modelo-303.md)), then record each one with the
+local filed marker, repeating for `1T`, `2T`, `3T`, and `4T`. `work file`
+records the filing locally only; it does not submit to AEAT, and it refuses
+outside the obligation window:
 
-- Capture or reconcile the official AEAT justificante for each quarter: pull the
-  filed sources with `aeat app live filed pull-sources --modelo 390 --year 2025
-  --period 0A`, or reconcile a local justificante with `aeat app modelo reconcile
-  file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf`.
+```{cli-sequence} modelo-390-file-quarter
+@step Record the local filed marker for one 303 quarter, in its obligation window.
+@static aeat app modelo work file --modelo 303 --year 2025 --period 1T
+```
 
-  `live filed pull-sources` reads filed declarations from AEAT and refuses
-  when AEAT authentication is not configured (it needs a Cl@ve identity
-  matching the active profile). `reconcile file` reads a local justificante
-  PDF and never contacts AEAT.
+The second way is to capture or reconcile the official AEAT justificante for each
+quarter. `live filed pull-sources` reads filed declarations from AEAT and refuses
+when AEAT authentication is not configured (it needs a Cl@ve identity matching
+the active profile), so it is a live read shown as a display frame. `reconcile
+file` reads a local justificante PDF and never contacts AEAT, but it needs the
+real receipt:
+
+```{cli-sequence} modelo-390-external-evidence
+@step Pull the filed sources straight from AEAT (a live read).
+@static aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+@step Or reconcile a local justificante PDF against the filed quarter.
+@static aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
+```
 
 If you cannot establish a quarter's evidence, do not force the annual return
 past the block. Repair the missing 303 evidence first, or report the gap.
@@ -148,12 +157,10 @@ past the block. Repair the missing 303 evidence first, or report the gap.
 ## Check each visible filing target
 
 Use the same active profile for every command. Inspect the four 303 filing
-targets before you work on the annual target — repeat the status check for
-each of `1T`, `2T`, `3T`, and `4T`, with `aeat config profile status` and `aeat
-app modelo work status --modelo 303 --year 2025 --period 1T`.
-
-List all saved work when you need to see the active profile's broader filing
-surface with `aeat app modelo work list`.
+targets before you work on the annual target, repeating the `work status` check
+for each of `1T`, `2T`, `3T`, and `4T`, and list all saved work with `work list`
+to see the broader filing surface (the inspect sequence under "Inspect the
+annual work unit" below runs `work list` and the annual `work status`).
 
 No command switches a current filing target for you. To move from one quarter
 to another, change `--period`. To move from the quarterly 303 review to the
@@ -207,11 +214,32 @@ it (it refuses once an already-filed Modelo 303 has consumed that basis).
 
 ## Inspect the annual work unit
 
-Check the saved annual target and its bindings (add `--missing` to the
-bindings listing to focus on unfilled fields) with `aeat app modelo work status`,
-`aeat app modelo work history`, `aeat app modelo bindings list` (all with `--modelo
-390 --year 2025 --period 0A`), `aeat app modelo casillas 390 --period 0A`, and
-`aeat app modelo formulas 390 --period 0A --explain`.
+Check the saved annual target and its bindings, casillas, and formulas. Add
+`--missing` to the bindings listing to focus on unfilled fields. The sequence
+below creates the annual draft and inspects its structure; the full-value chain
+that folds in the four filed quarters is the "Create, calculate, and verify"
+sequence above:
+
+```{cli-sequence} modelo-390-inspect
+:verify: Confirm the annual work unit's bindings and formulas read back.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
+@setup aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
+@setup aeat --format json app modelo work calculate --modelo 390 --year 2025 --period 0A
+@step List every saved work unit on the profile.
+aeat app modelo work list
+@step Check the annual ledger window.
+aeat app ledger preflight --year 2025 --period 0A
+@step Inspect the annual work unit's status and bindings.
+aeat app modelo work status --modelo 390 --year 2025 --period 0A
+aeat app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
+@step List the annual casillas.
+aeat app modelo casillas 390 --period 0A
+@step Track the IVA compensation wallet across the year.
+aeat --format json app modelo iva-wallet balance --as-of-year 2025
+@step Explain how each annual formula is computed, with its legal references.
+@result aeat --format json app modelo formulas 390 --period 0A --explain
+@expect exit_code == 0
+```
 
 The binding list shows ledger IVA aggregation bindings (source
 `ledger_iva_aggregation`) and 303-derived bindings (source `relation_prefill`,
