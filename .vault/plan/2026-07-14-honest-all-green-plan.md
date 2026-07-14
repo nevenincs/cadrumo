@@ -136,7 +136,7 @@ Fix the companion-wheel build errors and make the loader-cache and import-hygien
 
 - [x] `P05.S09` - Fix the companion-wheel uv build failures or prove them environment-only with evidence; `packaging`.
 - [x] `P05.S10` - Make the loader-cache cross-session proof and the import-hygiene scan robust under parallel execution without weakening them; `parallel-sensitive tests`.
-- [ ] `P05.S12` - Root-cause the stale registry disk-cache pickles serving pre-correction snapshots under pytest and prove fingerprint invalidation completeness or fix the gap; `src/cadrumo/domain/calculations/registry/_loader.py`.
+- [x] `P05.S12` - Root-cause the stale registry disk-cache pickles serving pre-correction snapshots under pytest and prove fingerprint invalidation completeness or fix the gap; `src/cadrumo/domain/calculations/registry/_loader.py`.
 
 ### Phase `P06` - All-green verification
 
