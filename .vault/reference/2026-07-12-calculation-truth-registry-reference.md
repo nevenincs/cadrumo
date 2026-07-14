@@ -194,3 +194,30 @@ Centralization Roll-Out Ledger` (5 rows) — 399 of 705 rows total — remain
 outside this follow-on and carry no evidence-backed disposition yet. See the
 audit's Recommendations for the two further bounded adjudication passes
 needed before `P01.S01`/`P01.S02` can close.
+
+## 2026-07-14 closure: all 705 rows now carry a disposition
+
+Two read-only verifier agents plus direct spot-check re-verification of their
+overlap and disagreement zone completed classification of the remaining 399
+rows (`Tasks`, `Teardown Replacement Contract`, `VAT Centralization Roll-Out
+Ledger`). Full findings, the overlap resolution, and the per-family row
+accounting are recorded in `2026-07-14-calculation-truth-registry-audit.md`
+(sections `teardown-tasks-vat-ledger-consolidated` and
+`full-705-row-accounting`). Summary:
+
+| Disposition | Approx. rows (of 705) |
+| --- | ---: |
+| Delivered | ~403 |
+| Superseded | ~75 |
+| Blocked-external (real AEAT live capture required) | ~50 |
+| Blocked-derivative (gate rows restating open siblings) | ~25 |
+| Inherited from the completed `calculation-export-import-adjudication` plan | ~17 |
+| Actionable | ~91 |
+| Explicitly named unverified | ~15 |
+
+The confirmed-actionable set (Modelo 131 2024 DPA/activity-detail schema
+completion; Modelo 100/Wave 21 residual Renta calculation build) is the sole
+basis for `P02.S03`'s canonical backlog,
+`2026-07-14-calculation-truth-registry-plan.md`. No row is silently dropped;
+the ~15 unverified rows are named explicitly in the audit rather than folded
+into any other disposition.

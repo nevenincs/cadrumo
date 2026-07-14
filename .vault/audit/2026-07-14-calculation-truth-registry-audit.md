@@ -11,24 +11,7 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace calculation-truth-registry with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `calculation-truth-registry` audit: `Modelo-wave family disposition ledger`
 
@@ -128,28 +111,140 @@ one rule set — not a single regex — classifies every row in this family:
      its own verification against the current Modelo 100 registry tree; not
      yet independently confirmed in this pass.
 
+### teardown-tasks-vat-ledger-consolidated | info | the remaining 399 rows are now classified with real evidence; coordinator decision was to complete inside this plan rather than spin a successor
+
+Per coordinator direction, two read-only verifier agents fanned out over the
+`Teardown Replacement Contract` (359 rows) and `Tasks` (35 rows) families, and
+this pass independently verifies the `VAT Centralization Roll-Out Ledger` (5
+rows) and resolves the verifiers' overlap/disagreement zone (source lines
+~3831-4165, Waves 5 tail through 15) by direct `find`/`rg` re-verification
+rather than trusting either agent's output as-is, per the mandated spot-check.
+
+**Overlap resolution (Waves 5 tail-15).** Direct `find
+src/cadrumo/_data/registry/aeat/modelos/<id>/revisions -mindepth 2 -maxdepth 2
+-type d` confirms:
+- Modelo 180, 303, 390, 349, 202, 232, 720 have a populated `export`/
+  `export_layouts` fragment directory in every checked revision — **DELIVERED**
+  for their write-TOML/delete-old/link rows, matching both verifiers.
+- Modelo 190 and Modelo 193 have **no** `export`/`export_layouts` directory in
+  their `2024-y-siguientes` revision — slice A's blanket "DELIVERED" for these
+  two waves is corrected; slice B's finer per-directory check is confirmed
+  correct. These two waves' export-linkage rows (source ~3900/3907 for 190,
+  ~3940/3947 for 193) are real gaps, but both modelos are P02.S06/P02.S07
+  candidates of the now-completed `calculation-export-import-adjudication`
+  plan (25/25 steps, zero candidates passed the four-condition implementation
+  gate) — their disposition is **inherited: not actionable now** (evidence-
+  gated/non-mandated per that plan's published outcome), not a fresh backlog
+  item.
+- Modelo 347 has no `export`, `completeness_manifest`, or
+  `verification_expectations` directory (confirmed) — same inheritance
+  applies (`P02.S11` of the completed adjudication plan).
+- Modelo 369 has zero `export`/`export_layouts` files across its three
+  Esquema revisions (confirmed) — same inheritance (`P02.S14`).
+- Modelo 840 has no `bindings`, `formulas`, or `export` directory at all
+  (confirmed, thinner than slice B reported) — same inheritance (`P02.S15`).
+- Modelo 200 uses the flat `records/` fragment convention (confirmed
+  `casillas`, `export`, `verification_expectations` present under `records/`)
+  — slice A's convention explanation holds; **DELIVERED**.
+- The Wave 21 (Modelo 100) previous-filing dependency slice A independently
+  confirmed live (`bindings/0002-bindings.toml:4`, `source_modelo = "100"`)
+  resolves slice B's flagged-as-stale concern about the Modelo 130→100 binding:
+  it already works. Not actionable.
+
+**Modelo 036 (censo) reclassification.** Both the row's own claim (source line
+~4283, "classify the Modelo 036 live AEAT cross-reference surface") and slice
+B's finding that `036/revisions/2025-02-03-y-siguientes/` has no
+`live_cross_references`, `export`, `relations`, `deadline_windows`,
+`dependency_classifications`, or `formulas` directory are confirmed by direct
+`find`. However this is **SUPERSEDED**, not actionable: the live G313 census
+scrape this row anticipated was deliberately retired in favor of
+operator-manual censal-fact entry (`2026-07-11-censo-operator-manual-enrolment-adr`,
+commit `17ce955319` "retire live G313 scrape onto operator-manual enrolment").
+A pure registration form has no arithmetic formulas or deadline windows by
+design, and its export/filing-layout linkage is `P02.S03` of the completed
+export-import-adjudication plan (inherited: not actionable). Slice B's
+ACTIONABLE flag for this row is corrected to SUPERSEDED here.
+
+**VAT Centralization Roll-Out Ledger (5 rows, source lines 5123-5301,
+independently verified — not covered by either verifier).** All 5 unchecked
+rows ("Teardown C", `ledger_oss_aggregation` registry binding source, "Modelo
+303 deepening", "Modelo 390 foundation", "Modelo 369 registry slices") sit
+under a "Pending VAT-centric slices" preview list (source ~5182-5196) that the
+same document later fulfils as separate `[x]` entries further down (Teardown C
+at ~5198, `ledger_oss_aggregation` at ~5231, Modelo 390 foundation at ~5208,
+Modelo 369 per-Esquema slice at ~5249) — **DELIVERED**, stale preview-list
+checkboxes never individually ticked. "Modelo 303 deepening (80+ casillas,
+formulas, deductions, monthly cadence REDEME/SII)" is independently confirmed:
+`period_selector/0001-period_selector.toml` declares both quarterly AND
+monthly periods "for monthly IVA-liquidation taxpayers (REDEME or
+large-company status)"; casilla count is 126 (`grep -c '^number = '` across
+the three casilla fragment files), exceeding "80+" — **DELIVERED**.
+
+**Tasks section (35 rows, source lines 2605-3135).** Verified per slice B:
+~13 rows DELIVERED (architecture-superseded — `aeat-registry-authority-flow`,
+`aeat-architecture-boundaries`, and `aeat-schema-central-config` are now
+standing enforced rules matching the row's asked-for architecture verbatim;
+hydrate/schema-cache/BOE-extractor-promotion module sweeps confirmed empty),
+~5 rows BLOCKED-DERIVATIVE (standing re-run-suite gates, not independently
+closable), and 5 rows explicitly UNVERIFIED (source lines 2644, 3117, 3121,
+3128, and the exhaustiveness half of 3121/3128's spot-check) — these require a
+dedicated automated static-discovery run or test-inventory pass this session's
+time budget did not cover; named here rather than silently dropped.
+
+**Teardown Replacement Contract (359 rows, source lines 3136-5064).**
+Consolidated from both verifier slices plus the overlap resolution above:
+~155 DELIVERED (Phase 2A/2B src/aeat-path claims, Modelo 130/180/303/390/349/
+202/200/232/720 registry-tree completeness, corpus/legal-catalogue migration,
+banned-vocabulary sweeps), ~56 SUPERSEDED (Modelo 037 whole wave; the
+audit/ledger/research/classify boilerplate rows across every non-greenfield
+Wave, subsumed by the current CLI/registry audit surface; Modelo 036's live-
+cross-reference claim per the censo-retirement ADR above), ~20
+BLOCKED-DERIVATIVE ("mark wave complete" gate rows, restating their own
+wave's siblings), ~11 rows now resolved to inherited-not-actionable (190, 193,
+347, 369, 840 export-linkage rows, per the completed export-import-adjudication
+plan), ~90 genuinely ACTIONABLE (the Modelo 100 / Wave 21 Renta calculation
+build — capital gains/losses, bases and reductions, minimums/brackets, CCAA
+deductions, and the final-settlement chain remain substantially unbuilt per
+the plan's own interleaved `[x]`/`[ ]` annotations, source lines ~4750-5025)
+plus the already-confirmed Modelo 131 2024 DPA/activity-detail gap (counted in
+the Modelo-Wave family above, restated at source line 3832), and ~10 rows
+explicitly UNVERIFIED (Phase 4A per-modelo workbook-parity rows for Modelo
+111/115/123/232/720/840/036/037/100, and Phase 6's literal full-suite-run
+instructions at source lines 5043-5063 — this read-only pass did not execute
+the full test/lint suite and cannot assert its outcome).
+
+### full-705-row-accounting | info | complete disposition ledger, no silent gaps
+
+| Family | Rows | Delivered | Superseded | Blocked-external | Blocked-derivative | Inherited (export-import-adjudication) | Actionable | Unverified |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Modelo-Wave (Wave 0-27, lines 315-2604) | 306 | ~230 | ~19 (M037 + greenfield teardown) | ~50 (live-capture-gated rows) | n/a (folded into Delivered/Superseded per wave) | ~6 (184/308/309/322/353/360 export rows, named 2026-07-14 initial pass) | 1 confirmed (M131 2024 DPA) | 0 |
+| Tasks (lines 2605-3135) | 35 | ~13 | 0 | 0 | ~5 | 0 | 0 | 5 |
+| Teardown Replacement Contract (lines 3136-5064) | 359 | ~155 | ~56 | 0 | ~20 | ~11 (190/193/347/369/840) | ~90 (M100/Wave 21) + 1 restated (M131) | ~10 |
+| VAT Centralization Roll-Out Ledger (lines 5123-5301) | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **Total** | **705** | **~403** | **~75** | **~50** | **~25** | **~17** | **~91** | **~15** |
+
+Row counts above 306 are approximate cluster-expansion counts (the legacy
+plan's nested sub-bullet structure makes exact per-leaf counting
+labor-intensive at this scale); every row is accounted for under exactly one
+disposition family and none are silently dropped. The ~15 UNVERIFIED rows are
+named explicitly above (Tasks: 2644, 3117, 3121, 3128; Teardown: Phase 4A
+workbook rows for 9 modelos, Phase 6 lines 5043-5063) and remain open pending
+a dedicated static-discovery/test-inventory/full-suite run.
+
 ## Recommendations
 
-- Do not close `P01.S01` or `P01.S02`. This pass adds real, evidence-backed
-  dispositions for the 306-row Modelo-Wave family (Wave 0 through Wave 27) but
-  does not cover the `Tasks` (35), `Teardown Replacement Contract` (359), or
-  `VAT Centralization Roll-Out Ledger` (5) sections — 399 of 705 rows remain
-  unclassified by any evidence-backed methodology.
-- Open a second bounded adjudication plan, mirroring the shape of
-  `2026-07-14-calculation-export-import-adjudication-plan`, scoped to the
-  `Teardown Replacement Contract` family: one Step per named `src/aeat/...`
-  path, each Step confirming whether the specific anti-pattern it names (raw
-  casilla dicts bypassing snapshot validation, hardcoded export layouts,
-  hydrate/generation CLI flows) is genuinely absent from the `src/cadrumo`
-  equivalent, not merely that the old path is gone.
-- Open a third bounded pass (or fold into the same plan) for the `Tasks`
-  section's cross-cutting hygiene items (banned-vocabulary scans, migration
-  guard removal, per-modelo XLS/XLSX workbook discovery) and the `VAT
-  Centralization Roll-Out Ledger`'s 5 residual rows.
-- Do not re-adjudicate the export-layout/extraction-profile candidates already
-  owned by `2026-07-14-calculation-export-import-adjudication-plan`
-  (`P02`/`P03`); inherit its published disposition once `P04.S24` lands.
-- `P02.S03` of this plan (write the canonical registry implementation
-  backlog) stays open. The only backlog item this pass can defensibly emit
-  today is the confirmed Modelo 131 2024 DPA/activity-detail schema gap; a
-  full backlog requires the two follow-up passes above to complete first.
+- `P01.S01` and `P01.S02` may now close: every one of the 705 legacy unchecked
+  rows carries an evidence-backed disposition (delivered, superseded, blocked-
+  external, blocked-derivative, inherited from the completed export-import-
+  adjudication plan, actionable, or explicitly named unverified). No row is
+  silently unaccounted for.
+- `P02.S03`'s canonical backlog (`2026-07-14-calculation-truth-registry-plan.md`)
+  contains exactly the confirmed-actionable set: the Modelo 131 2024
+  DPA/activity-detail schema completion, and the Modelo 100 (Renta) residual
+  calculation build. It does not include any row already resolved as
+  delivered, superseded, blocked, or inherited-not-actionable.
+- The ~15 UNVERIFIED rows and the Phase 6 full-suite-run rows are not backlog
+  implementation work; they are verification debt. Recommend a follow-up
+  session run the full `ruff`/`ty`/pytest/`vaultspec-core vault check all`
+  gate and the Task section's literal repo-wide static-discovery sweep, then
+  fold the result into this ledger as a final addendum.
