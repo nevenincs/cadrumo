@@ -217,6 +217,26 @@ the parser's ability to refuse an uncapped sequence); requiring
 machine-classification of read-only verbs (no reliable mutating/read
 taxonomy exists on the Click tree today; an allowlist would rot).
 
+**Amendment (2026-07-14, operator-driven): the `@result` assertion must
+address the result payload.** The original "at least one `@expect`"
+requirement was satisfied by `@expect exit_code == 0` alone, and a large set
+of result frames took that route: they proved the command exited without
+proving it produced the right answer. The tightened contract requires at
+least one `@expect` on the result PAYLOAD, a `result.<path>` or `result[...]`
+json-path, not merely `exit_code` or the `status` envelope-spine field. A
+result frame asserting only `exit_code`/`status` is an offender. The
+detection helper `result_frame_asserts_result_payload` lives in the parser
+(the rule's home). Enforcement is a ratcheting per-page gate
+(`test_sequence_contract.py` reading `result_assertion_baseline.json`), the
+same discipline as the mandatory-display fence gate of D7, so the docs build,
+the check tier, and the engine's own synthetic unit tests stay green while
+converters add the missing assertions. The baseline is generated from
+HEAD-committed docs and only decreases; a page below its baseline passes, and
+an empty baseline means every enrolled `@result` frame asserts its payload.
+The gate, not a hard parse-time refusal, carries the enforcement: a raise in
+the parser would need a baseline file read (wrong layering) and would break
+the engine's synthetic result frames to satisfy the letter of "parse error".
+
 ### D5 — Frontend component contract: server-rendered frames progressively enhanced by a vendored framework-free widget, help keyed into a generated `cli-tree.json`
 
 **Chosen.** The directive renders, at build time, a
@@ -366,6 +386,27 @@ Amendment 1 while keeping its factual point that plain fences still receive the
 base verb-path/option-name checks; the executed-vs-`@static` distinction stays
 visual and golden-backed (executed frames carry a verified transcript; `@static`
 frames a command card without output).
+
+**Amendment 3 (2026-07-14, operator-driven): the ratcheting-gate family and its
+shared robust fence strip.** The mandatory-display doctrine grew a family of
+checked-in per-page ratcheting baselines that all share the fence-gate mechanics:
+a page may never exceed its baseline, an absent page starts at zero, an empty
+baseline means the rule is fully applied, and generation is from HEAD so the
+parallel sweep never reds the tree. The family covers the plain-fence gate; an
+inline-span gate closing the loophole of moving a command out of a fence into an
+inline `code` span (a span carrying two or more option/argument tokens is a
+violation, and the detector joins soft line wraps within a paragraph so a wrapped
+span is caught as its single-line form); the em-dash and LLM-marker prose gates;
+and the D4 result-payload gate. Every fence-stripping gate uses one line-based
+strip that excludes a fenced block in full regardless of indentation, fence
+character, or fence length, and drops an unclosed fence to end of input rather
+than mis-pairing with a later fence. At conversion complete the plain-fence and
+inline-span baselines are empty; the em-dash baseline retains only the
+non-user-facing contributor surfaces. Separately, the golden canonicalisation
+tokenises the per-run sandbox storage root, workdir, and the repository checkout
+root inside envelope string values (value-anchored on the known roots), so a
+command whose output echoes an absolute path (such as `config check`) is
+golden-stable across runs and machine-portable for CI.
 
 *Rejected:* flag-day migration of all how-tos (35 pages of goldens landing
 at once is unreviewable and blocks every doc change on the new machinery);
