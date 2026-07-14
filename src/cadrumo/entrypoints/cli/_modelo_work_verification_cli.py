@@ -182,6 +182,11 @@ def _register_work_verify_command(
             )
             require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
+            # A revision already out of BORRADOR is the current verified answer, so
+            # the verify call is a guarded-idempotent no-op that returns the
+            # existing granting report unchanged (no re-run, no duplicate lifecycle
+            # event). Capture that before the call to surface it as an info Notice.
+            already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
             report = verify_modelo_revision(
                 selected_revision.calculation_revision_id,
                 actor=actor or resolve_default_actor(),
@@ -200,6 +205,23 @@ def _register_work_verify_command(
         result = WorkVerifyResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.verify", *verification_report_lines(report)]
         notices = verification_report_notices(report)
+        if already_verified:
+            noop_message = tr(
+                "cli.app.modelo.work.verify_idempotent_noop",
+                calculation_revision_id=report.calculation_revision_id,
+            )
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="modelo.work.verify.idempotent_noop",
+                    message=noop_message,
+                    context={
+                        "calculation_revision_id": report.calculation_revision_id,
+                        "verification_report_id": report.verification_report_id,
+                    },
+                ),
+            )
+            lines.append(noop_message)
         if report.granted_verificado_completo:
             notices.append(
                 next_action_notice(

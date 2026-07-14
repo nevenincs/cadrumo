@@ -2656,6 +2656,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id} is already verified; returned the existing verification report without changes.'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits

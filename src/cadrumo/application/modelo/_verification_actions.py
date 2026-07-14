@@ -76,6 +76,7 @@ from ...domain.modelos import (
     TransactionRevisionParticipation,
     VerificationCompletenessStatus,
     VerificationReport,
+    VerificationReportCatalogue,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
@@ -491,6 +492,24 @@ def _collect_verification_gate_findings(
     return findings, resolved_casilla_ids, missing_required_casilla_ids
 
 
+def _existing_granting_verification_report(
+    catalogue: VerificationReportCatalogue,
+    calculation_revision_id: str,
+) -> VerificationReport | None:
+    """Return the granting verification report for a locked revision, or ``None``.
+
+    Used by the idempotent re-verify no-op: a revision that has transitioned out
+    of ``BORRADOR`` (``VERIFICADO_COMPLETO`` / ``PRESENTADO``) was granted
+    verification, so exactly one granting :class:`VerificationReport` exists for
+    it; ``None`` flags an inconsistent state (a non-draft revision with no
+    granting report) that the caller refuses rather than papering over.
+    """
+    for report in catalogue.reports.values():
+        if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo:
+            return report
+    return None
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -593,6 +612,20 @@ def verify_modelo_revision(
             context={"calculation_revision_id": calculation_revision_id},
         )
     if target.state is not CalculationRevisionState.BORRADOR:
+        # Idempotent re-verify (single-subject-mutation-is-idempotent-guarded): a
+        # revision that has already been verified-and-granted (VERIFICADO_COMPLETO,
+        # or PRESENTADO after filing) is LOCKED — its content, and therefore its
+        # verification outcome, cannot change — so a retry returns the existing
+        # granting VerificationReport as a clean no-op: no re-run of the
+        # verification gates, no duplicate report (the report id is clock-free —
+        # derive_verification_report_id folds the outcome, not run_at), and no
+        # second lifecycle event. The CLI surfaces the no-op as an info Notice.
+        # A non-draft revision with no granting report is an inconsistent state,
+        # so it falls through to the hard refusal below rather than fabricating
+        # one. Mirrors the re-file no-op in file_modelo_revision.
+        existing = _existing_granting_verification_report(vr_repo.load(), calculation_revision_id)
+        if existing is not None:
+            return existing
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified",

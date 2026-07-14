@@ -2787,6 +2787,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id} számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul lett visszaadva.'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
