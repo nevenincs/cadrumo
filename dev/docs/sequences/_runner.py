@@ -60,7 +60,7 @@ from tempfile import TemporaryDirectory
 from typing import Literal
 
 from click.testing import Result
-from pydantic import BaseModel, Field, JsonValue, SecretStr
+from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage import dispose_engine
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -426,17 +426,13 @@ def sequence_sandbox(
     with (
         _neutralized_ambient_env(),
         suppress_operator_dotenv(),
-        # The synthetic auth posture is sandbox fixture state, like the
-        # injected profile: the modelo workflow's preflight deliberately
-        # requires a READY auth provider even for local verify purposes, and
-        # the Cl@ve Móvil readiness probe is purely local (it classifies the
-        # configured identity and never contacts AEAT). The identity is the
-        # sandbox profile's own synthetic tax id; live frames are refused
-        # up front regardless, so this posture can never reach the sede.
+        # The docs sandbox runs genuinely zero-auth: per the operator ruling,
+        # auth-provider readiness binds only live/AEAT-touching purposes, never
+        # the local build/calculate/verify/file/export flow the sequences drive.
+        # A taxpayer with no auth provider configured completes the whole local
+        # artefact flow, and the docs gates prove that ruled behaviour in CI.
         override_settings(
             cadrumo_output_language="en",
-            cadrumo_auth_provider="clave_movil",
-            cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
         ),
         isolated_profile_storage_root(tmp_path=sandbox_root) as storage_root,
         frozen_clock(SANDBOX_INSTANT),
