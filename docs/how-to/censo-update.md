@@ -29,8 +29,9 @@ prompts for it. The tool's messages are in Spanish.
 If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+```{cli-sequence} censo-update-create-profile
+@step Create a taxpayer profile non-interactively.
+@static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
 ```
 
 Check the active profile first:
@@ -64,8 +65,9 @@ warning and refuses strict projection until you accept that basis; see
 
 Edit the active profile with the wizard:
 
-```bash
-aeat config profile edit <profile-name>
+```{cli-sequence} censo-update-edit-wizard
+@step Edit the active profile with the interactive wizard.
+@static aeat config profile edit <profile-name>
 ```
 
 The wizard walks the profile fields, including the census-backed ones. For a
@@ -108,8 +110,9 @@ aeat --format json config profile status
 
 If the profile still reports missing facts, edit those fields directly:
 
-```bash
-aeat config profile edit <profile-name> --quiet --activity <value>
+```{cli-sequence} censo-update-edit-field
+@step Edit a specific profile field directly.
+@static aeat config profile edit <profile-name> --quiet --activity <value>
 ```
 
 For modelo-specific readiness, use profile preflight:
