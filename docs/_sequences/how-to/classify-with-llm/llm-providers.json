@@ -1,0 +1,57 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "providers"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.providers",
+        "notices": [],
+        "result": {
+          "providers": [
+            {
+              "available": true,
+              "cli_binary": "claude",
+              "provider": "claude",
+              "resolved_path": "C:\\Users\\hello\\.local\\bin\\claude.EXE"
+            },
+            {
+              "available": true,
+              "cli_binary": "agy",
+              "provider": "antigravity",
+              "resolved_path": "C:\\Users\\hello\\AppData\\Local\\agy\\bin\\agy.EXE"
+            },
+            {
+              "available": true,
+              "cli_binary": "codex",
+              "provider": "codex",
+              "resolved_path": "C:\\Users\\hello\\AppData\\Roaming\\npm\\codex.CMD"
+            }
+          ],
+          "vision": {
+            "available": false,
+            "detail": "Ollama is not reachable at http://127.0.0.1",
+            "remediation": "start Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url",
+            "service": "ollama-vision"
+          }
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "llm-providers"
+}
