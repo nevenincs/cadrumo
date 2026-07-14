@@ -46,3 +46,16 @@ No legacy checkbox, source, test, locale, or user-facing documentation changed.
 Later formal review rejected this as final closure because none of the 705 rows
 was mapped to current source plus execution or accepted-decision evidence.
 `P02.S03` is not started.
+
+## Follow-on (2026-07-14): partial publication for the Modelo-Wave family
+
+`2026-07-14-calculation-truth-registry-audit.md` is the evidence-backed
+disposition for the 306-row Modelo-Wave family only (Wave 0-27): blocked on
+live AEAT capture, superseded (Modelo 037 retirement, greenfield-modelo
+teardown rows), blocked-derivative (teardown/quality/completion gate rows
+pending their own follow-up pass), or genuinely actionable (Modelo 131 2024
+DPA/activity-detail schema gap, confirmed against the registry TOML tree).
+`P01.S02` is not published as complete because 399 of 705 rows (`Tasks`,
+`Teardown Replacement Contract`, `VAT Centralization Roll-Out Ledger`) still
+carry no evidence-backed disposition; the audit recommends two further bounded
+adjudication plans for that remainder.

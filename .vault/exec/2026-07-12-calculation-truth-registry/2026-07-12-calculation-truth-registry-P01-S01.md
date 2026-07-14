@@ -65,3 +65,16 @@ blocker adjudication; the remaining 647 rows are mechanically classified as
 unverified residuals, not individually proven actionable or delivered. This
 historical run did not complete `P01.S01`. `P01.S02` and `P02.S03` remain
 out of scope for this execution record.
+
+## Follow-on (2026-07-14): bounded Modelo-Wave family classified with real evidence
+
+`2026-07-14-calculation-truth-registry-audit.md` classifies the 306-row
+Modelo-Wave family (source lines 315-2604, Waves 0-27) using registry
+directory presence, confirmed `src/aeat` package deletion, the Modelo 037
+retirement decision, and cross-reference against the concurrently running
+`calculation-export-import-adjudication` plan, replacing lexical matching with
+real technical verification for that bounded family. `Tasks` (35),
+`Teardown Replacement Contract` (359), and the `VAT Centralization Roll-Out
+Ledger` (5) — 399 of 705 rows — remain unclassified and require the two
+follow-up bounded adjudication passes the audit recommends. `P01.S01` still
+does not cover all 705 rows and stays open.
