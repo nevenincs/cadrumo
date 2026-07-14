@@ -3021,6 +3021,7 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repite la nueva contrasena con --confirm-new-passphrase.
         new_passphrase_mismatch: La nueva contrasena y su confirmacion no coinciden.
+        non_interactive_passphrase_required: 'Esta orden necesita un terminal interactivo para solicitar la nueva contraseña. Proporciónala de forma no interactiva con --new-passphrase y --confirm-new-passphrase.'
       new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
         de forma interactiva.
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
