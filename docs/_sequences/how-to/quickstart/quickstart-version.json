@@ -1,0 +1,19 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--version"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "CADRUMO 0.2.1\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "quickstart-version"
+}

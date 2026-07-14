@@ -91,8 +91,6 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "work",
@@ -104,55 +102,41 @@
         "--period",
         "1T"
       ],
-      "captures": [
-        {
-          "json_path": "result.work_unit_id",
-          "name": "work_unit_id",
-          "value": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.create",
-        "notices": [],
-        "result": {
-          "applicability_guard_bypassed": false,
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "130",
-          "name": "130-2026-1T",
-          "name_applied": null,
-          "operation": "modelo.work.create",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "revision_id": "2019-y-siguientes",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "41987b138584",
-          "state": "borrador",
-          "status": "created",
-          "status_message": "New work unit created.",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
-      "kind": "command",
+      "kind": "setup",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584\nshort_work_unit_id\t41987b138584\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--binding",
+        "modelo-130-resultados-negativos-anteriores=0",
+        "--binding",
+        "modelo-130-pagos-fraccionados-anteriores=0",
+        "--binding",
+        "irpf.previous_year_economic_activity_net_income=0"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\tafd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f\nwork_unit_id\t98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 130 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\t03\t500.00\tNet yield\nkey_figure\t04\t100.00\tFractional payment amount\nkey_figure\t07\t100.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t100.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t0.00\tNet amount after reduction\nkey_figure\t17\t0.00\tDifference\nkey_figure\t19\t0.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t500\ncasilla\t03\t500.00\tsubtract(01, 02) = subtract(1000, 500) = 500.00\ncasilla\t04\t100.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(500.00, 20) = 100.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t100.00\tsubtract(04, 05, 06) = subtract(100.00, 0, 0) = 100.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t100.00\tmaximum(07, 11) = maximum(100.00, 0.00) = 100.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t0.00\tsubtract(12, 13) = subtract(100.00, 100.00) = 0.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, 0.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t0.00\tsubtract(14, 15, 16) = subtract(0.00, 0.00, 0) = 0.00\ncasilla\t18\t0\ncasilla\t19\t0.00\tsubtract(17, 18) = subtract(0.00, 0) = 0.00\ncasilla\tsaldo-negativo-fin-periodo\t0.00\tmaximum(17) = maximum(0.00) = 0.00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f`.\n"
     },
     {
       "argv": [
@@ -162,28 +146,20 @@
         "app",
         "modelo",
         "work",
-        "calculate",
-        "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584",
-        "--binding",
-        "modelo-130-resultados-negativos-anteriores=0",
-        "--binding",
-        "modelo-130-pagos-fraccionados-anteriores=0",
-        "--binding",
-        "irpf.previous_year_economic_activity_net_income=0"
+        "revision",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
       ],
-      "captures": [
-        {
-          "json_path": "result.calculation_revision_id",
-          "name": "calculation_revision_id",
-          "value": "afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f"
-        }
-      ],
+      "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.calculate",
+        "command": "modelo.work.revision",
         "notices": [],
         "result": {
-          "authorization_state": null,
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "500",
@@ -218,12 +194,6 @@
             "saldo-negativo-fin-periodo": "0.00"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
-          "deadline": {
-            "closes_on": "2026-04-20",
-            "conditional_recargo_preview": null,
-            "days_overdue": null,
-            "days_remaining": 19
-          },
           "detail_rows": [],
           "filed_at": null,
           "filed_by": null,
@@ -724,7 +694,7 @@
               "value": "0.00"
             }
           ],
-          "operation": "modelo.work.calculate",
+          "operation": "modelo.work.revision",
           "relation_overrides": {},
           "result_summary": [
             {
@@ -838,8 +808,6 @@
               "value": "0.00"
             }
           ],
-          "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -852,140 +820,11 @@
       },
       "envelope_source": "stdout",
       "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "modelo",
-        "work",
-        "verify",
-        "afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f"
-      ],
-      "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.verify",
-        "notices": [
-          {
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "rd-1065-2007:art-9",
-              "severity": "warning",
-              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
-            },
-            "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
-            "severity": "warning",
-            "suggestion": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared."
-          },
-          {
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
-              "severity": "warning",
-              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
-            },
-            "message": "output VAT transaction '5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-            "severity": "warning",
-            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303 --attachment-id ATTACHMENT_ID`, then rerun verification."
-          },
-          {
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
-              "severity": "warning",
-              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
-            },
-            "message": "deductible VAT transaction 'e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-            "severity": "warning",
-            "suggestion": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6 --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification."
-          },
-          {
-            "code": "modelo.work.verify.next_action_granted",
-            "context": null,
-            "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo export"
-          }
-        ],
-        "result": {
-          "calculation_revision_id": "afd456c187e9b51ae385f62cd8305914894a8b4f53e9b278c37357399173c76f",
-          "completeness_status": "complete",
-          "findings": [
-            {
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "rd-1065-2007:art-9"
-              ],
-              "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
-              "next_action": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ]
-            },
-            {
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "ley-37-1992:art-97",
-                "rd-1619-2012:art-2"
-              ],
-              "message": "output VAT transaction '5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303 --attachment-id ATTACHMENT_ID`, then rerun verification.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ]
-            },
-            {
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "ley-37-1992:art-97",
-                "rd-1619-2012:art-2"
-              ],
-              "message": "deductible VAT transaction 'e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6 --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ]
-            }
-          ],
-          "granted_verificado_completo": true,
-          "missing_required_casilla_ids": [],
-          "operation": "modelo.work.verify",
-          "resolved_casilla_ids": [],
-          "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "64fe29647c4d6fa55e6692fb65e6a515c9636031cdaa17048d29dd043f9c444c",
-          "verified_by": "docs-sequence-sandbox"
-        },
-        "schema_version": "2",
-        "status": "warning"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null
     }
   ],
   "golden_schema_version": 1,
-  "sequence_id": "quickstart-modelo-130"
+  "sequence_id": "quickstart-revision"
 }
