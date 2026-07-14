@@ -32,27 +32,26 @@ Desktop extension bundle covered below.
 
 ## Confirm the install
 
-Confirm the command is on your path:
+No taxpayer profile is needed for these checks; you create one with
+`aeat config profile create` after installing. See
+[Set up a profile](how-to/profile-setup.md).
 
-```bash
-aeat --version
-```
+Confirm the command is on your path, then ask `aeat` what is installed and
+what is missing. The report lists each external dependency, whether it is
+available, and the exact command to fix any gap; it exits with an error when
+a capability you turned on has a missing dependency. The last step shows the
+machine-readable form for scripted setups (`--format json` is a global flag,
+so it goes before the command):
 
-Then ask `aeat` what is installed and what is missing:
-
-```bash
-aeat config check
-```
-
-The report lists each external dependency, whether it is available, and the
-exact command to fix any gap. It exits with an error when a capability you
-turned on has a missing dependency.
-
-Run the check with machine-readable output when you script the setup.
-`--format json` is a global flag, so it goes before the command:
-
-```bash
-aeat --format json config check
+```{cli-sequence} install-confirm
+:verify: Confirm the installed command reports its version.
+@step Confirm the command is on your path.
+@result aeat --version
+@expect exit_code == 0
+@step Ask what is installed and what is missing.
+@static aeat config check
+@step Run the same check with machine-readable output for scripted setups.
+@static aeat --format json config check
 ```
 
 ## Install optional extras
@@ -96,18 +95,40 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 ## Install the AI-assistant surface (MCP)
 
 Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, so an AI
-assistant can operate the same local, gated commands the CLI exposes. There
-are three ways to install it. Pick the one that matches your client.
+assistant can operate the same local, gated commands the CLI exposes,
+together with an agent harness: the operator rules, taxpayer-situation
+skills, and scoped agent personas that keep the assistant inside the safety
+boundary. There are three ways to install the server, plus the harness
+workspace for project use. Pick what matches your client.
 [Connect an agent](how-to/connect-an-agent.md) walks through each in full and
 explains what the agent can and cannot do.
 
+### Before you start: uv and a Claude client
+
+The plugin and the Desktop extension bundle both launch the server through
+`uvx`, so install [uv](https://docs.astral.sh/uv/) first:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+On Windows:
+
+```pwsh
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+You also need a client. Claude Code, Claude Desktop, and Cowork all work
+(see [Claude's own install instructions](https://claude.com/claude-code)),
+and any other MCP-capable client connects through the plain server
+registration below.
+
 ### Claude plugin (recommended for Claude Code, Claude Desktop, and Cowork)
 
-The plugin bundles the server configuration together with the rules, skills,
-and scoped agent personas that keep the assistant inside the safety boundary.
-It launches the server itself through `uvx`, so it needs
-[uv](https://docs.astral.sh/uv/) on your `PATH`, and nothing else installed
-beforehand. Add the marketplace once, then install the plugin:
+The plugin bundles the MCP server configuration together with the full agent
+harness. It launches the server itself through `uvx`, so with uv installed
+nothing else is needed beforehand. Add the marketplace once, then install
+the plugin:
 
 ```text
 /plugin marketplace add nevenincs/neve-marketplace
@@ -138,6 +159,20 @@ cadrumo-mcp --help
 then register `cadrumo-mcp` as a stdio server in your client's MCP
 configuration. The exact JSON is in
 [Connect an agent](how-to/connect-an-agent.md#connect-any-other-mcp-client).
+
+### Materialize the agent harness in a project workspace
+
+The plugin carries the harness for you. To place the same harness (rules,
+personas, skills, and a `CLAUDE.md`) directly into a project directory
+instead, materialize it with the CLI. Use `--layout plugin` to emit the
+one-click plugin form of the same content:
+
+```{cli-sequence} install-agent-harness
+:verify: Confirm the operator harness materializes as a native Claude workspace.
+@step Write the operator harness into a workspace directory.
+@result aeat --format json app agent --output ./operator-workspace
+@expect exit_code == 0
+```
 
 ## Next steps
 
