@@ -38,9 +38,11 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/application/calculations/tests/test_cross_period_clean_state.py": 1645,  # SPLIT-CANDIDATE
     "src/cadrumo/application/ledger/_llm_classification.py": 1664,  # SPLIT-CANDIDATE (active LLM-ledger growth)
     "src/cadrumo/application/modelo/_verification_actions.py": 1750,  # SPLIT-CANDIDATE
-    # Centralised live-test opt-in added the live_tests_* predicates, the Google
-    # opt-in field, and the opt-in constants; re-pinned to the present size.
-    "src/cadrumo/core/config.py": 1281,
+    # Grew with the state-root derivation table and the per-family growth-lifecycle
+    # settings (log rotation cap/backup, LLM cache/usage/run-telemetry retention,
+    # run-trace + wallet-dump + corpus-cache retention/derivation); re-pinned to
+    # present size. SPLIT-CANDIDATE: the settings model is a split-by-mixin target.
+    "src/cadrumo/core/config.py": 1390,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
     # Live-censo calendar reconciliation is actively landing and growing; bounded
@@ -84,7 +86,8 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # (`21f3875c90`, `17919422a6`, `1f848d087c`). Load-bearing registry compiler;
     # re-pinned to present size pending an owner split pass rather than a
     # same-pass extraction.
-    "src/cadrumo/domain/calculations/registry/_loader.py": 1306,  # SPLIT-CANDIDATE
+    # Regrew again from the fingerprint-count disk-cache eviction helper.
+    "src/cadrumo/domain/calculations/registry/_loader.py": 1350,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/_queries.py": 1331,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1440,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1373,  # SPLIT-CANDIDATE
