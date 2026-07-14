@@ -39,19 +39,22 @@ No taxpayer profile is needed for these checks; you create one with
 Confirm the command is on your path, then ask `aeat` what is installed and
 what is missing. The report lists each external dependency, whether it is
 available, and the exact command to fix any gap; it exits with an error when
-a capability you turned on has a missing dependency. The last step shows the
-machine-readable form for scripted setups (`--format json` is a global flag,
-so it goes before the command):
+a capability you turned on has a missing dependency, so the setup step below
+first turns off a capability this example machine does not provision. The
+last step shows the machine-readable form for scripted setups
+(`--format json` is a global flag, so it goes before the command):
 
 ```{cli-sequence} install-confirm
-:verify: Confirm the installed command reports its version.
+:verify: Confirm the installed command reports its version and its dependency report resolves.
 @step Confirm the command is on your path.
-@result aeat --version
-@expect exit_code == 0
+aeat --version
+@step Turn off a capability whose dependency this machine does not have.
+@setup aeat config profile capabilities set llm_vision off
 @step Ask what is installed and what is missing.
-@static aeat config check
+aeat config check
 @step Run the same check with machine-readable output for scripted setups.
-@static aeat --format json config check
+@result aeat --format json config check
+@expect exit_code == 0
 ```
 
 ## Install optional extras

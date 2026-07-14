@@ -9,9 +9,213 @@
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
-      "kind": "result",
+      "kind": "command",
       "stderr_text": null,
       "text": "CADRUMO 0.2.1\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "capabilities",
+        "set",
+        "llm_vision",
+        "off"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "capability\tllm_vision\nstate\toff\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "check"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile\t<profile-id>\ncapability\tcloud_evidence_upload\tdisabled\tglobal_setting\ncapability\tllm_vision\tdisabled\tprofile\ncapability\tgoogle_export\tenabled\tdefault\ndependency\tollama-vision\tmissing\tstart Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url\ndependency\tllm-provider:claude\tavailable\ndependency\tllm-provider:antigravity\tavailable\ndependency\tllm-provider:codex\tavailable\ndependency\tplaywright-chromium\tavailable\ndependency\textra:google\tavailable\ndependency\textra:browser\tavailable\ndependency\textra:anthropic\tavailable\ndependency\textra:ofx\tavailable\npreflight\tauth-provider:certificate\tok\tNo certificate file has been selected.\npreflight\tauth-provider:clave_movil\tok\tNo DNI/NIE has been configured for Cl@ve Móvil.\npreflight\tauth-provider:clave_permanente\tok\tprovider clave_permanente: unknown\npreflight\tstorage:local-root\tok\tsecure-storage root <sandbox-storage-root> is reachable and writable (present)\npreflight\tcorpus:normatives\tok\tthe bundled legal normatives corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\normatives\npreflight\tcorpus:manuals\tok\tthe bundled Manual práctico corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\manuals\npreflight\tenv:configuration\tok\tdeployment configuration loaded and a master-key passphrase is configured\npreflight\tstorage:windows-long-path\tok\tLongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply\npreflight\tregistry:referential-integrity\tok\tall 90 registry revisions pass the typed-ID referential-integrity gate\npreflight\tportal-registry:health\tok\t41 portals registered; no portal drift recorded\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "check"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.check",
+        "notices": [],
+        "result": {
+          "capabilities": [
+            {
+              "capability": "cloud_evidence_upload",
+              "enabled": false,
+              "source": "global_setting"
+            },
+            {
+              "capability": "llm_vision",
+              "enabled": false,
+              "source": "profile"
+            },
+            {
+              "capability": "google_export",
+              "enabled": true,
+              "source": "default"
+            }
+          ],
+          "dependencies": [
+            {
+              "available": false,
+              "detail": "Ollama is not reachable at http://127.0.0.1",
+              "remediation": "start Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url",
+              "service": "ollama-vision"
+            },
+            {
+              "available": true,
+              "detail": "claude resolved at C:\\Users\\hello\\.local\\bin\\claude.EXE",
+              "remediation": "",
+              "service": "llm-provider:claude"
+            },
+            {
+              "available": true,
+              "detail": "agy resolved at C:\\Users\\hello\\AppData\\Local\\agy\\bin\\agy.EXE",
+              "remediation": "",
+              "service": "llm-provider:antigravity"
+            },
+            {
+              "available": true,
+              "detail": "codex resolved at C:\\Users\\hello\\AppData\\Roaming\\npm\\codex.CMD",
+              "remediation": "",
+              "service": "llm-provider:codex"
+            },
+            {
+              "available": true,
+              "detail": "Chromium build present under C:\\Users\\hello\\AppData\\Local\\ms-playwright",
+              "remediation": "",
+              "service": "playwright-chromium"
+            },
+            {
+              "available": true,
+              "detail": "Google Drive / Sheets export is available (googleapiclient importable)",
+              "remediation": "",
+              "service": "extra:google"
+            },
+            {
+              "available": true,
+              "detail": "live AEAT browser automation is available (playwright importable)",
+              "remediation": "",
+              "service": "extra:browser"
+            },
+            {
+              "available": true,
+              "detail": "the Anthropic-API LLM provider is available (anthropic importable)",
+              "remediation": "",
+              "service": "extra:anthropic"
+            },
+            {
+              "available": true,
+              "detail": "OFX/QFX bank-statement import is available (ofxtools importable)",
+              "remediation": "",
+              "service": "extra:ofx"
+            }
+          ],
+          "issues": [],
+          "ok": true,
+          "preflight": [
+            {
+              "check": "auth-provider:certificate",
+              "detail": "No certificate file has been selected.",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "auth-provider:clave_movil",
+              "detail": "No DNI/NIE has been configured for Cl@ve Móvil.",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "auth-provider:clave_permanente",
+              "detail": "provider clave_permanente: unknown",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "storage:local-root",
+              "detail": "secure-storage root <sandbox-storage-root> is reachable and writable (present)",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "corpus:normatives",
+              "detail": "the bundled legal normatives corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\normatives",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "corpus:manuals",
+              "detail": "the bundled Manual práctico corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\manuals",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "env:configuration",
+              "detail": "deployment configuration loaded and a master-key passphrase is configured",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "storage:windows-long-path",
+              "detail": "LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "registry:referential-integrity",
+              "detail": "all 90 registry revisions pass the typed-ID referential-integrity gate",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            },
+            {
+              "check": "portal-registry:health",
+              "detail": "41 portals registered; no portal drift recorded",
+              "healthy": true,
+              "remediation": "",
+              "severity": "ok"
+            }
+          ],
+          "profile_id": "<profile-id>"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
     }
   ],
   "golden_schema_version": 1,
