@@ -1,0 +1,88 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "explain",
+        "303",
+        "--year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.explain",
+        "notices": [],
+        "result": {
+          "applicable": false,
+          "generated_at": "2026-04-01T09:00:00Z",
+          "legal_refs": [
+            "ley-35-2006:art-99",
+            "ley-27-2014:art-124"
+          ],
+          "modelo": "303",
+          "out_of_plazo_warning": null,
+          "profile_facts": {
+            "art109_activity_income_withholding_ge_70pct": false,
+            "bienes_extranjero_above_threshold": false,
+            "does_intracomunitario": false,
+            "entity_type": "natural_person",
+            "has_employees": false,
+            "irpf_estimation_regime": "",
+            "irpf_income_categories": "",
+            "iva.group_dominant_entity_enrolled": false,
+            "iva.group_member_enrolled": false,
+            "iva.intracommunity_operations_exceed_50000_eur": false,
+            "iva.oss_enrolled": false,
+            "iva.roi_enrolled": false,
+            "iva_regime": "GENERAL",
+            "legal_entity_form": "",
+            "monedas_virtuales_extranjero_above_threshold": false,
+            "pays_capital_income_with_retencion": false,
+            "pays_professionals_with_retencion": false,
+            "pays_rent_with_retencion": false,
+            "tax_id": "sha256:1c9f9632",
+            "third_party_transactions_above_347_threshold": false
+          },
+          "rationale": "No se puede determinar la aplicabilidad: el tipo de contribuyente no está declarado. Declare primero el tipo de entidad y, en su caso, las categorías de renta del IRPF con 'aeat config profile edit'.",
+          "scheduling_rationale": "Aplica segun la ventana registral del modelo.",
+          "verdict": "incomplete",
+          "year": 2026
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "iva-lifecycle-applicability"
+}

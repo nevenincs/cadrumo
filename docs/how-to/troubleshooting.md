@@ -20,11 +20,12 @@ If the active setting points at unreadable profile state, clear it and switch to
 
 ```{cli-sequence} troubleshooting-clear-active
 :verify: Confirm you can clear a broken active setting, then switch to a good profile by name.
+@setup aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
 @step Clear the active setting when it points at unreadable profile state.
-@result aeat config repair profile --clear-active --yes
-@expect exit_code == 0
+aeat config repair profile --clear-active --yes
 @step Switch to a good profile by name.
-@static aeat config switch <profile-name>
+@result aeat config switch me
+@expect exit_code == 0
 ```
 
 If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
@@ -212,12 +213,12 @@ aeat config repair integrity objects
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
 ```{cli-sequence} troubleshooting-quarantine
-:verify: Confirm the quarantine preview reports what it would move without changing anything.
+:verify: Confirm the quarantine preview and the real run both complete.
 @step Preview how many records would move, per storage area.
-@result aeat config repair quarantine --dry-run
-@expect exit_code == 0
+aeat config repair quarantine --dry-run
 @step Apply the move for real; the real run requires --yes.
-@static aeat config repair quarantine --yes
+@result aeat config repair quarantine --yes
+@expect exit_code == 0
 ```
 
 The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover (for example with the recovery key, see [Protect access to your data](protect-data-access.md)), the archived records still exist.

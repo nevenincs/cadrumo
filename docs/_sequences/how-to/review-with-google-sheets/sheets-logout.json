@@ -1,0 +1,36 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "google",
+        "logout"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.google.logout",
+        "notices": [],
+        "result": {
+          "client_preserved": true,
+          "metadata_removed": false,
+          "operation": "config.google.logout",
+          "profile": "<profile-id>",
+          "token_removed": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "sheets-logout"
+}

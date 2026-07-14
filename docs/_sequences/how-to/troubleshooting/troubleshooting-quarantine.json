@@ -12,9 +12,25 @@
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
-      "kind": "result",
+      "kind": "command",
       "stderr_text": null,
       "text": "dry_run\ttrue\nwould_quarantine\t0\nwould_retain\t3\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "quarantine",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "dry_run\tfalse\nquarantined\t0\nretained\t3\n"
     }
   ],
   "golden_schema_version": 1,
