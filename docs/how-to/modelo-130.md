@@ -95,9 +95,16 @@ through registry bindings; prior filings feed the carries. Casillas `06`,
 (withholdings, second-activity volume, vivienda habitual deduction, prior
 complementary results). Inspect what is bound, missing, or manual:
 
-```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
-aeat app modelo casillas 130 --period 1T
+```{cli-sequence} modelo-130-inspect-boxes
+:seed: autonomo-irpf-2026
+:verify: Confirm the draft's bindings and the modelo's casilla definitions read back.
+@setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@step Show which casillas are bound, missing, or supplied by hand.
+aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
+@step Show the modelo's casilla definitions for the period.
+@result aeat --format json app modelo casillas 130 --period 1T
+@expect exit_code == 0
 ```
 
 ## Supply a manual box value
@@ -158,12 +165,26 @@ The chain is the standard filing workflow - see
 [The filing workflow](filing-spine.md) for how work units and calculation
 revisions behave. In short:
 
-```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+```{cli-sequence} modelo-130-review-chain
+:seed: autonomo-irpf-2026
+:verify: Confirm the draft calculates, reviews, and verifies before you export it.
+@setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@step Calculate the quarter from the classified ledger.
+aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@step Review the saved revision.
+aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
+@step Verify the draft before you export it.
+@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
+@expect result.granted_verificado_completo == true
+@expect exit_code == 0
 ```
+
+Once the draft verifies, export it with `aeat app modelo export --modelo 130
+--year 2026 --period 1T --output ./modelo-130.boe`. Export refuses until every
+deductible-expense row carries linked purchase-invoice evidence — see
+[Attach invoices and receipts](ledger-evidence.md). The full evidence-to-export
+chain runs end to end on
+[Prepare a Modelo 303 IVA filing](modelo-303.md).
 
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
