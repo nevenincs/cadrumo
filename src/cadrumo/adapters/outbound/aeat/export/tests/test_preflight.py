@@ -97,6 +97,24 @@ class _UnavailableAuthProvider:
         )
 
 
+class _UnconfiguredAuthProvider:
+    """The clean-sandbox posture: no auth provider configured at all."""
+
+    kind = AuthProviderKind.CERTIFICATE
+
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="No provider configured",
+            configured=False,
+            available=False,
+            identity_nif=None,
+            subject=None,
+            expires_on=None,
+            health_summary="not configured",
+        )
+
+
 _TODAY = date(2026, 4, 10)
 
 
@@ -175,3 +193,37 @@ class TestPreflightGates:
         assert raised.value.context["configured"] is True
         assert raised.value.context["available"] is False
         assert "configured but not ready" in str(raised.value.context["operator_impact"])
+
+    def test_gate_4_default_refuses_an_unconfigured_provider(self) -> None:
+        """A live purpose (gate not skipped) still REFUSES with no auth configured.
+
+        Preserves the live-side contract: the auth gate binds by default.
+        """
+        with pytest.raises(SubmissionPreflightError) as raised:
+            _preflight(cert=_UnconfiguredAuthProvider()).check(_Draft(), today=_TODAY)
+        assert raised.value.translated_message == "errors.refused.submission_preflight_auth_not_ready"
+        assert raised.value.context is not None
+        assert raised.value.context["configured"] is False
+
+    def test_gate_4_skipped_grants_with_no_auth_configured(self) -> None:
+        """Local purposes skip gate 4: a zero-auth taxpayer completes the flow.
+
+        Operator ruling — with no auth provider configured (the clean-sandbox
+        ``Settings.cadrumo_auth_provider=None`` case), a local verify/file/export
+        MUST still grant. ``skip_auth_readiness=True`` short-circuits the gate.
+        """
+        result = _preflight(cert=_UnconfiguredAuthProvider()).check(
+            _Draft(),
+            today=_TODAY,
+            skip_auth_readiness=True,
+        )
+        assert result is None
+
+    def test_gate_4_skipped_short_circuits_before_the_provider_probe(self) -> None:
+        """skip_auth_readiness bypasses gate 4 even when the probe would raise."""
+        result = _preflight(cert=_FailingAuthProvider()).check(
+            _Draft(),
+            today=_TODAY,
+            skip_auth_readiness=True,
+        )
+        assert result is None
