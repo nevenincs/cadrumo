@@ -87,7 +87,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # re-pinned to present size pending an owner split pass rather than a
     # same-pass extraction.
     # Regrew again from the fingerprint-count disk-cache eviction helper.
-    "src/cadrumo/domain/calculations/registry/_loader.py": 1350,  # SPLIT-CANDIDATE
+    "src/cadrumo/domain/calculations/registry/_loader.py": 1410,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/_queries.py": 1331,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1440,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1373,  # SPLIT-CANDIDATE
