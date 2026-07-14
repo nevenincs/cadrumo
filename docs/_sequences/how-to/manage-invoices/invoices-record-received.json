@@ -1,0 +1,125 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "add",
+        "--kind",
+        "received",
+        "--counterparty-nif",
+        "A87654321",
+        "--counterparty-name",
+        "Proveedor SA",
+        "--invoice-number",
+        "PROV-99",
+        "--invoice-date",
+        "2026-02-20",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--total-amount",
+        "605"
+      ],
+      "captures": [
+        {
+          "json_path": "result.invoice_id",
+          "name": "invoice_id",
+          "value": "1610aa13bee81e99"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "d1f10d6c4241c2615dc8921392e049dbdeb99154e841e0d8fa6cd493a5151564"
+          ],
+          "bucket_id": "<bucket-id>",
+          "counterparty_name": "Proveedor SA",
+          "counterparty_nif": "A87654321",
+          "country_code": null,
+          "created_at": "2026-04-01T09:00:00Z",
+          "currency": "EUR",
+          "eu_iva_id": null,
+          "invoice_date": "2026-02-20",
+          "invoice_id": "1610aa13bee81e99",
+          "invoice_number": "PROV-99",
+          "iva_amount": "105",
+          "iva_rate": "0.21",
+          "notes": "",
+          "operation_type": null,
+          "source_kind": "payable_invoice",
+          "taxable_base": "500",
+          "total_amount": "605",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "view",
+        "1610aa13bee81e99",
+        "--kind",
+        "received"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.view",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [],
+          "bucket_id": "<bucket-id>",
+          "counterparty_name": "Proveedor SA",
+          "counterparty_nif": "A87654321",
+          "country_code": null,
+          "created_at": "2026-04-01T09:00:00Z",
+          "currency": "EUR",
+          "eu_iva_id": null,
+          "invoice_date": "2026-02-20",
+          "invoice_id": "1610aa13bee81e99",
+          "invoice_number": "PROV-99",
+          "iva_amount": "105",
+          "iva_rate": "0.21",
+          "notes": "",
+          "operation_type": null,
+          "source_kind": "payable_invoice",
+          "taxable_base": "500",
+          "total_amount": "605",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "invoices-record-received"
+}

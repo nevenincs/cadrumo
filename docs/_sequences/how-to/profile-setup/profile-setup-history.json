@@ -1,0 +1,139 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "create",
+        "carla-2026",
+        "--quiet",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "44444444A",
+        "--name",
+        "Carla",
+        "--surnames",
+        "Lopez Sanz"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tcarla-2026\nStatus\tcreated\nActive profile\tcarla-2026\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "rename",
+        "carla-2026",
+        "carla-real"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "profile_id\t<profile-id>\nprevious_display_name\tcarla-2026\ndisplay_name\tcarla-real\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "carla-real",
+        "--quiet",
+        "--address-postcode",
+        "28013"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tcarla-real\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "history",
+        "carla-real"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t5\n2026-04-01T09:00:00+00:00\tprofile.bucket.created\tprofile\t<profile-id>\tcadrumo.application.user_profile\n2026-04-01T09:00:00+00:00\tprofile.values.updated\tprofile\t<profile-id>\tcadrumo.application.user_profile\n2026-04-01T09:00:00+00:00\tprofile.renamed\tprofile\t<profile-id>\tcadrumo.application.user_profile\n2026-04-01T09:00:00+00:00\tbucket.renamed\tbucket\t<profile-id>\tbucket-maintenance\n2026-04-01T09:00:00+00:00\tprofile.values.updated\tprofile\t<profile-id>\tcadrumo.application.user_profile\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "history",
+        "carla-real",
+        "--event-type",
+        "profile.renamed"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t1\n2026-04-01T09:00:00+00:00\tprofile.renamed\tprofile\t<profile-id>\tcadrumo.application.user_profile\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "history",
+        "carla-real",
+        "--since",
+        "2026-01-01",
+        "--until",
+        "2026-03-31"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "history",
+        "carla-real",
+        "--actor",
+        "operator"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t0\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-history"
+}

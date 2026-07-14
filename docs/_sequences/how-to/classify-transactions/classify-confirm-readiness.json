@@ -1,0 +1,141 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "preflight",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t2\nissues\t0\nready\ttrue\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "status",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.status",
+        "notices": [],
+        "result": {
+          "active_count": 2,
+          "archived_count": 0,
+          "bucket_id": "<bucket-id>",
+          "business_expense_total": "605",
+          "business_income_total": "1210",
+          "business_net_total": "605",
+          "checked_transaction_count": 2,
+          "pending_review_count": 0,
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "readiness_issue_count": 0,
+          "ready": true,
+          "reviewed_count": 2,
+          "skipped_count": 0,
+          "split_count": 0,
+          "stashed_count": 0,
+          "total_count": 2
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "classify-confirm-readiness"
+}

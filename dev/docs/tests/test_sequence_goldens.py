@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import io
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
@@ -40,6 +40,7 @@ from sphinx.application import Sphinx
 from sphinx.errors import SphinxError
 
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, differing_paths
+from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.sequences import (
     ParsedSequence,
     SequenceGolden,
@@ -235,12 +236,15 @@ _FIXTURE_INDEX = (
 
 
 @pytest.fixture
-def _hermetic_env(tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch) -> None:
+def _hermetic_env(tmp_path: pytest.TempPathFactory) -> Iterator[None]:
     """Pin an isolated storage root and English output for the CLI-tree walk."""
     root = Path(str(tmp_path)) / "cadrumo-store"
     root.mkdir()
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
-    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "en")
+    with (
+        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
+        scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
+    ):
+        yield
 
 
 def _write_fixture_docs(root: Path) -> tuple[Path, Path]:

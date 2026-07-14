@@ -1,0 +1,275 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-15",
+        "--amount",
+        "121.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Split to undo",
+        "--idempotency-key",
+        "correct-merge"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "94224987ec09db1750a3c91a29f6c8b3a05dde03924434358fa0b1c1fe36e1d3"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "121",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "Split to undo",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "split",
+        "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d",
+        "--child-amount",
+        "100.00",
+        "--child-description",
+        "part one",
+        "--child-amount",
+        "21.00",
+        "--child-description",
+        "part two",
+        "--reason",
+        "mixed receipt",
+        "--yes"
+      ],
+      "captures": [
+        {
+          "json_path": "result.child_transactions[0].full_id",
+          "name": "first_child",
+          "value": "e0504b924f0b4500f0be1c70fe2958279ff9d9d0e5f61c4c66615fe9ed65ae84"
+        },
+        {
+          "json_path": "result.child_transactions[1].full_id",
+          "name": "second_child",
+          "value": "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.split",
+        "notices": [],
+        "result": {
+          "bucket_event_id": "65e2bef977d41c01b6839c392c42ad7564ddeb0a424eb209e9c8c49b3ec4705e",
+          "bucket_id": "<bucket-id>",
+          "child_transaction_ids": [
+            "e0504b924f0b4500f0be1c70fe2958279ff9d9d0e5f61c4c66615fe9ed65ae84",
+            "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d"
+          ],
+          "child_transactions": [
+            {
+              "display_id": "e0504b92",
+              "full_id": "e0504b924f0b4500f0be1c70fe2958279ff9d9d0e5f61c4c66615fe9ed65ae84"
+            },
+            {
+              "display_id": "63c3f924",
+              "full_id": "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d"
+            }
+          ],
+          "classified_child_count": null,
+          "llm": null,
+          "parent_amount": null,
+          "parent_transaction_id": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d",
+          "persisted": null,
+          "proposed_children": null,
+          "provenance": null,
+          "provider": null,
+          "reason": null,
+          "split_group_id": "ea58900b8c1962062494a7fb1c80418936a96ae53f2e402af33f8b212fb055c0"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "merge",
+        "--child-id",
+        "e0504b924f0b4500f0be1c70fe2958279ff9d9d0e5f61c4c66615fe9ed65ae84",
+        "--child-id",
+        "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d",
+        "--reason",
+        "undo split",
+        "--yes"
+      ],
+      "captures": [
+        {
+          "json_path": "result.merged_transaction_id",
+          "name": "merged",
+          "value": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.merge",
+        "notices": [],
+        "result": {
+          "bucket_event_id": "5c7ef9b5d65e5ead29666206cb2c76c3f30844c53e5bf5a5f34226658ac49144",
+          "bucket_id": "<bucket-id>",
+          "merged_transaction_id": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9",
+          "parent_transaction_id": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d",
+          "source_child_ids": [
+            "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d",
+            "e0504b924f0b4500f0be1c70fe2958279ff9d9d0e5f61c4c66615fe9ed65ae84"
+          ],
+          "split_group_id": "ea58900b8c1962062494a7fb1c80418936a96ae53f2e402af33f8b212fb055c0"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "121",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "Split to undo",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "correct-merge-parts"
+}

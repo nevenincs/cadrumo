@@ -1,0 +1,96 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "rule",
+        "add",
+        "--description-pattern",
+        "material",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "rule_id\t16719284a6b5e971...\npattern\tmaterial\nclassification\tBUSINESS\npriority\t100\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "rule",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "priority\tclassification\tpattern\trule_id\n100\tBUSINESS\tmaterial\t16719284a6b5e971...\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "rule",
+        "apply",
+        "--dry-run"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "dry-run: 0 transaction(s) would be classified\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "rule",
+        "apply"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.rule.apply",
+        "notices": [],
+        "result": {
+          "applied": [],
+          "count": null,
+          "dry_run": null,
+          "matched": 0,
+          "no_match": 0,
+          "rules_evaluated": 1,
+          "skipped_already_classified": 0,
+          "transactions_scanned": 0,
+          "would_match": null
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "classify-rules"
+}

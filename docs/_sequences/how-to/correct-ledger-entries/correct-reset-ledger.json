@@ -1,0 +1,151 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-15",
+        "--amount",
+        "10.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "To be cleared",
+        "--idempotency-key",
+        "correct-reset"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "153d4816b5a4152deba9632db75a5eb7fa1c5131e250728a042e6677f6b195e5"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "10",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "To be cleared",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "c631b77031f47fc2db4f956ba472928ad3f981f332265a28b29feb05baa614b3",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "c631b77031f47fc2db4f956ba472928ad3f981f332265a28b29feb05baa614b3"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "reset",
+        "--reason",
+        "re-importing all statements",
+        "--dry-run"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nRows\t1\nReset\tFalse\nDRY RUN MODE\tTrue\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "reset",
+        "--reason",
+        "re-importing all statements",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nRows\t1\nReset\tTrue\nDRY RUN MODE\tFalse\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.list",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "limit": null,
+          "offset": 0,
+          "rows": [],
+          "shown": 0,
+          "total": 0,
+          "truncated": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "correct-reset-ledger"
+}

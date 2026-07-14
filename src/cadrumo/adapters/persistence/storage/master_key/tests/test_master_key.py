@@ -23,6 +23,7 @@ from .. import (
     KeyringMasterKeyProvider,
     MasterKeyProvider,
     UnsecuredMasterKeyProvider,
+    atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
     refuse_unsecured_with_real_nif,
@@ -436,3 +437,28 @@ class TestUnsecuredNifCanary:
         refuse_unsecured_with_real_nif("00000000T", provider=UnsecuredMasterKeyProvider())
         with pytest.raises(UnsecuredModeRefusedError, match="real tax id"):
             refuse_unsecured_with_real_nif("12345678Z", provider=UnsecuredMasterKeyProvider())
+
+
+class TestAtomicWriteSecureBytes:
+    def test_roundtrip_preserves_newline_bytes(self, tmp_path: Path) -> None:
+        """A 0x0A byte in the master-key payload must survive verbatim.
+
+        The secure-write fd must be opened O_BINARY: on Windows a text-mode fd
+        makes os.write translate every 0x0A to 0x0D0A, lengthening the file and
+        corrupting the encrypted master-key bytes unrecoverably whenever the
+        payload contains a newline byte. This pins the byte-exact contract on
+        every platform.
+        """
+        payload = b"key-head\nkey\r\nmid\x00\x0a\xff-tail\n"
+        target = tmp_path / "master.key"
+        atomic_write_secure_bytes(target, payload)
+        written = target.read_bytes()
+        assert written == payload
+        assert len(written) == len(payload)
+
+    def test_roundtrip_preserves_random_binary_payload(self, tmp_path: Path) -> None:
+        """A full-range random binary payload (key-sized) survives byte-exact."""
+        payload = secrets.token_bytes(KEY_SIZE) + b"\x0a" * 4 + secrets.token_bytes(KEY_SIZE)
+        target = tmp_path / "master.key"
+        atomic_write_secure_bytes(target, payload)
+        assert target.read_bytes() == payload

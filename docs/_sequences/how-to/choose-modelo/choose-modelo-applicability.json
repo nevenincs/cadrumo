@@ -1,0 +1,148 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--irpf-income-categories",
+        "actividad_economica",
+        "--irpf-estimation-regime",
+        "directa_simplificada",
+        "--iva-regime",
+        "GENERAL",
+        "--tax-residence-ccaa",
+        "madrid",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "explain",
+        "303",
+        "--year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.explain",
+        "notices": [],
+        "result": {
+          "applicable": true,
+          "generated_at": "2026-04-01T09:00:00Z",
+          "legal_refs": [
+            "ley-37-1992:art-99"
+          ],
+          "modelo": "303",
+          "out_of_plazo_warning": null,
+          "profile_facts": {
+            "art109_activity_income_withholding_ge_70pct": false,
+            "bienes_extranjero_above_threshold": false,
+            "does_intracomunitario": false,
+            "entity_type": "natural_person",
+            "has_employees": false,
+            "irpf_estimation_regime": "directa_simplificada",
+            "irpf_income_categories": "actividad_economica",
+            "iva.group_dominant_entity_enrolled": false,
+            "iva.group_member_enrolled": false,
+            "iva.intracommunity_operations_exceed_50000_eur": false,
+            "iva.oss_enrolled": false,
+            "iva.roi_enrolled": false,
+            "iva_regime": "GENERAL",
+            "legal_entity_form": "",
+            "monedas_virtuales_extranjero_above_threshold": false,
+            "pays_capital_income_with_retencion": false,
+            "pays_professionals_with_retencion": false,
+            "pays_rent_with_retencion": false,
+            "tax_id": "sha256:1c9f9632",
+            "third_party_transactions_above_347_threshold": false
+          },
+          "rationale": "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica.",
+          "scheduling_rationale": "Aplica segun la ventana registral del modelo.",
+          "verdict": "applicable",
+          "year": 2026
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "preflight",
+        "--modelo",
+        "303",
+        "--filing-year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.preflight",
+        "notices": [],
+        "result": {
+          "filing_year": 2026,
+          "missing": [],
+          "modelo": "303",
+          "period": "1T",
+          "profile_id": "<profile-id>",
+          "ready": true,
+          "revision_id": "2023-y-siguientes"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "choose-modelo-applicability"
+}

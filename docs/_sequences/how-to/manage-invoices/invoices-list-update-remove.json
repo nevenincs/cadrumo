@@ -1,0 +1,183 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "add",
+        "--kind",
+        "issued",
+        "--counterparty-nif",
+        "B12345678",
+        "--counterparty-name",
+        "Cliente SL",
+        "--invoice-number",
+        "FAC-2026-050",
+        "--invoice-date",
+        "2026-02-15",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210",
+        "--total-amount",
+        "1210"
+      ],
+      "captures": [
+        {
+          "json_path": "result.invoice_id",
+          "name": "invoice_id",
+          "value": "0e4ce5daba8d2eac"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "8aea188efed97b4dee482dc0a364b00ed3d267c7d1427b7665971ae0e1454516"
+          ],
+          "bucket_id": "<bucket-id>",
+          "counterparty_name": "Cliente SL",
+          "counterparty_nif": "B12345678",
+          "country_code": null,
+          "created_at": "2026-04-01T09:00:00Z",
+          "currency": "EUR",
+          "eu_iva_id": null,
+          "invoice_date": "2026-02-15",
+          "invoice_id": "0e4ce5daba8d2eac",
+          "invoice_number": "FAC-2026-050",
+          "iva_amount": "210",
+          "iva_rate": "0.21",
+          "notes": "",
+          "operation_type": null,
+          "source_kind": "collectible_invoice",
+          "taxable_base": "1000",
+          "total_amount": "1210",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "invoice",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\ncount\t1\n0e4ce5daba8d2eac\tcollectible_invoice\tB12345678\tFAC-2026-050\t2026-02-15\t1210\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "invoice",
+        "list",
+        "--kind",
+        "issued"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\ncount\t1\n0e4ce5daba8d2eac\tcollectible_invoice\tB12345678\tFAC-2026-050\t2026-02-15\t1210\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "invoice",
+        "update",
+        "0e4ce5daba8d2eac",
+        "--kind",
+        "issued",
+        "--notes",
+        "paid late"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "invoice_id\t0e4ce5daba8d2eac\nsource_kind\tcollectible_invoice\nbucket\t<profile-id>\ncounterparty_nif\tB12345678\ncounterparty_name\tCliente SL\ninvoice_number\tFAC-2026-050\ninvoice_date\t2026-02-15\ncurrency\tEUR\ntaxable_base\t1000\niva_rate\t0.21\niva_amount\t210\ntotal_amount\t1210\nbucket_event_ids\ta9db29660d4452f1da5e6df75761168375234eea8dbf86a7e5ddfe626d78e72a\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "remove",
+        "0e4ce5daba8d2eac",
+        "--kind",
+        "issued",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.remove",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "839da52c818f6f16646836be1dee92ef48445248cba0d5ff55f1ac814f189881"
+          ],
+          "bucket_id": "<bucket-id>",
+          "counterparty_name": "Cliente SL",
+          "counterparty_nif": "B12345678",
+          "country_code": null,
+          "created_at": "2026-04-01T09:00:00Z",
+          "currency": "EUR",
+          "eu_iva_id": null,
+          "invoice_date": "2026-02-15",
+          "invoice_id": "0e4ce5daba8d2eac",
+          "invoice_number": "FAC-2026-050",
+          "iva_amount": "210",
+          "iva_rate": "0.21",
+          "notes": "paid late",
+          "operation_type": null,
+          "source_kind": "collectible_invoice",
+          "taxable_base": "1000",
+          "total_amount": "1210",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "invoices-list-update-remove"
+}

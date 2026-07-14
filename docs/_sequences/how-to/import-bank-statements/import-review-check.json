@@ -1,0 +1,86 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "review",
+        "--filter",
+        "period=1T",
+        "--filter",
+        "year=2026"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "ACCOUNTING LEDGER REVIEW SESSION\n71a5db2b\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\t2026-02-10\t1210\tCobro factura F-2026-001 servicios de consultoria\tpending\ne3eeac5e\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\t2026-02-11\t605\tCompra de material de oficina proveedor local\tpending\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "check"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.check",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "checked_transaction_count": 2,
+          "issues": [
+            {
+              "detail": "business classification 'NOT_YET_PROCESSED' is not ready for modelo calculation",
+              "reason": "missing_business_classification",
+              "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "detail": "business classification 'NOT_YET_PROCESSED' is not ready for modelo calculation",
+              "reason": "missing_business_classification",
+              "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            }
+          ],
+          "periods": [
+            "2026"
+          ],
+          "ready": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "import-review-check"
+}

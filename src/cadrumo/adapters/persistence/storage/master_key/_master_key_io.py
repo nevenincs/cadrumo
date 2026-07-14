@@ -49,6 +49,12 @@ def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     flags |= getattr(os, "O_NOINHERIT", 0)
     flags |= getattr(os, "O_CLOEXEC", 0)
+    # O_BINARY is required on Windows: an fd opened without it is in text mode,
+    # so os.write() translates every 0x0A byte to CRLF and silently corrupts
+    # binary payloads (here the encrypted master-key bytes) that contain a
+    # newline byte. The flag is absent on POSIX, where getattr resolves to 0 (a
+    # no-op).
+    flags |= getattr(os, "O_BINARY", 0)
     fd = os.open(tmp_path, flags, 0o600)
     try:
         try:

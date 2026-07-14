@@ -314,6 +314,8 @@ def refresh_sequences(
     all_problems = list(problems)
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
+        if not item.sequence.executed_frames:
+            continue  # all-@static: nothing runs, so there is no golden to write
         try:
             transcript = _execute_in_fresh_sandbox(item.sequence)
         except SequenceEngineError as exc:
@@ -349,6 +351,8 @@ def check_sequences(
     advisories: list[str] = []
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
+        if not item.sequence.executed_frames:
+            continue  # all-@static: nothing runs, so there is no golden to compare
         try:
             golden = read_golden(item.page, item.sequence_id, goldens_root=goldens_root)
         except SequenceEngineError as exc:

@@ -1,0 +1,124 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "categories"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "RECOGNISED LEDGER SPENDING CATEGORIES\ncategory-id (pass this exact value)\tfamily\ncuotas_colegiales\tsocial_security\ncuotas_autonomos_ss\tsocial_security\nmutualidad_alternativa\tsocial_security\narrendamiento_local\tpremises\narrendamiento_vivienda_afecto\tpremises\nibi_local_afecto\tpremises\nsuministros_home_office_luz\thome_office_suministros\nsuministros_home_office_agua\thome_office_suministros\nsuministros_home_office_gas\thome_office_suministros\nsuministros_home_office_internet\thome_office_suministros\namortizacion_vivienda_afecto\thome_office_ownership\nibi_vivienda_afecto\thome_office_ownership\ncomunidad_vivienda_afecto\thome_office_ownership\ntelefonia_movil\ttelecoms\ntelefonia_fija\ttelecoms\nmaterial_oficina\toffice\nsoftware_suscripcion\toffice\nhardware_amortizable\toffice\nmobiliario_amortizable\toffice\nreparaciones_conservacion\toffice\npublicidad_marketing\toffice\nformacion_profesional\toffice\nvehiculo_combustible\tvehicle\nvehiculo_mantenimiento\tvehicle\nvehiculo_seguro\tvehicle\nvehiculo_peaje\tvehicle\nvehiculo_parking\tvehicle\nmanutencion_dietas_nacional\tmeals\nmanutencion_dietas_extranjero\tmeals\nasesoria_fiscal\tprofessional_services\nasesoria_juridica\tprofessional_services\nasesoria_contable\tprofessional_services\nviajes_transporte\ttravel\nviajes_alojamiento\ttravel\nseguros_responsabilidad_civil\tinsurance\nseguros_salud_autonomo\tinsurance\ngastos_bancarios\tfinancial\ngastos_financieros\tfinancial\nsuministros_cliente_directos\tdirect_costs\nsubcontratacion\tdirect_costs\ntributos_fiscalmente_deducibles\ttaxes\nPass the bare id, e.g. --category-id cuotas_colegiales (not a family-prefixed or compound key).\nDeductible expenses only. Income (INCOMING) transactions are classified by direction and need no --category-id; `ledger check` and `ledger preflight` do not flag income as missing_category.\n\nIRPF CATEGORIES FOR --irpf-category\nirpf-category (pass this exact value)\tuse\nactividad_economica\tprofessional activity withholding (received or paid net)\narrendamiento_local\tnet-paid rent expense withholding\narrendamiento_vivienda_afecto\tnet-paid rent expense withholding\ntrabajo\temployment income (not for net-paid invoices)\nNet-paid rent example: --category-id arrendamiento_local --irpf-category arrendamiento_local. Net-paid professional service: --category-id asesoria_fiscal --irpf-category actividad_economica.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "e3eeac5e"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "605",
+            "attachment_ids": [],
+            "booked_date": "2026-02-11",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": "material_oficina",
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger classify",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-02-11",
+            "description": "Compra de material de oficina proveedor local",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": null,
+            "taxable_base": null,
+            "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+            "usage_ratio_id": null,
+            "value_date": "2026-02-11",
+            "value_in_eur": null
+          },
+          "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "classify-expense-category"
+}

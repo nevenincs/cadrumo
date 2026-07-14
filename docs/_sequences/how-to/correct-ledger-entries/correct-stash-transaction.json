@@ -1,0 +1,173 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-15",
+        "--amount",
+        "80.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Awaiting invoice",
+        "--idempotency-key",
+        "correct-stash"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "78ad404abaedb72ff65685f682bb8eeb58032ac35d5553aabd48810cc6cbea06"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "80",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "Awaiting invoice",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "stash",
+        "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22",
+        "--reason",
+        "waiting for invoice",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "ID\tf5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22\nDate\t2026-03-15\nAmount\t80\nDescription\tAwaiting invoice\nReview status\tpending\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "80",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "Awaiting invoice",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "STASHED",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "f5c6e7a8fce9960b36a29df9e59c7954affef5dc4bf50cd6a0aaaebc3eed8c22"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "correct-stash-transaction"
+}

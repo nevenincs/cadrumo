@@ -22,6 +22,7 @@ from typing import cast
 import pytest
 from sphinx.application import Sphinx
 
+from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.cli_tree import default_cli_tree_path
 from dev.docs.sequence_build_gate import emit_cli_tree, should_emit_cli_tree
 
@@ -53,19 +54,19 @@ def test_incremental_without_artifact_regenerates(tmp_path: Path) -> None:
     assert should_emit_cli_tree(output, specific_sources=[tmp_path / "index.md"]) is True
 
 
-def test_force_env_overrides_incremental_skip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_force_env_overrides_incremental_skip(tmp_path: Path) -> None:
     """``CADRUMO_DOCS_FORCE_CLI_TREE`` regenerates even on an incremental build."""
     output = _artifact(tmp_path)
     output.parent.mkdir(parents=True)
     output.write_text("{}", encoding="utf-8")
-    monkeypatch.setenv("CADRUMO_DOCS_FORCE_CLI_TREE", "1")
-    assert should_emit_cli_tree(output, specific_sources=[tmp_path / "index.md"]) is True
+    with scoped_env_var("CADRUMO_DOCS_FORCE_CLI_TREE", "1"):
+        assert should_emit_cli_tree(output, specific_sources=[tmp_path / "index.md"]) is True
 
 
-def test_skip_env_overrides_full_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_skip_env_overrides_full_build(tmp_path: Path) -> None:
     """``CADRUMO_DOCS_SKIP_CLI_TREE`` suppresses the projection unconditionally."""
-    monkeypatch.setenv("CADRUMO_DOCS_SKIP_CLI_TREE", "1")
-    assert should_emit_cli_tree(_artifact(tmp_path), specific_sources=None) is False
+    with scoped_env_var("CADRUMO_DOCS_SKIP_CLI_TREE", "1"):
+        assert should_emit_cli_tree(_artifact(tmp_path), specific_sources=None) is False
 
 
 def test_emit_skips_incremental_build_leaving_artifact_untouched(tmp_path: Path) -> None:
