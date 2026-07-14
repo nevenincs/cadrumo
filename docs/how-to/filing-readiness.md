@@ -6,18 +6,24 @@ in place — profile facts, transaction data, and earlier filings? Use the
 commands in this guide before you calculate, and again before you export, so
 nothing silent is missing underneath a clean-looking draft.
 
+These commands read the active profile and prompt for your master-key
+passphrase. Create a profile first with
+[Set up your taxpayer profile](profile-setup.md) if you have none.
+
 ## Run the readiness report
 
-Report whether the active profile is ready for one modelo, year, and period:
+Find the resolved revision id first, then report whether the active profile is
+ready for that modelo, year, and period:
 
-```bash
-aeat app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id <revision-id>
-```
-
-Find the revision id first — it is listed by:
-
-```bash
-aeat app modelo describe 303 --year 2026 --period 1T
+```{cli-sequence} filing-readiness-report
+:verify: Confirm the readiness report resolves for the modelo, year, and period.
+@step Describe the modelo to read its resolved revision id.
+aeat --format json app modelo describe 303 --year 2026 --period 1T
+@capture revision_id result.revision
+@step Report whether the active profile is ready for that revision.
+@result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id {revision_id}
+@expect result.modelo == "303"
+@expect exit_code == 0
 ```
 
 The report covers two things:
@@ -37,17 +43,19 @@ Readiness does not check box-level completeness of a draft — that is what
 
 Some modelos fold in values from other filings — an annual summary reads its
 quarters, a cross-modelo box reads another form's result. List the
-registry-declared dependencies for a filing year:
+registry-declared dependencies for a filing year, then narrow to one modelo, or
+to one modelo and period:
 
-```bash
-aeat app modelo work dependencies --year 2026
-```
-
-Narrow to one modelo, or to one modelo and period:
-
-```bash
-aeat app modelo work dependencies --year 2026 --modelo 390
-aeat app modelo work dependencies --year 2026 --modelo 390 --period 0A
+```{cli-sequence} filing-readiness-dependencies
+:verify: Confirm the dependency inventory resolves for the filing year.
+@step List the registry-declared dependencies for the filing year.
+aeat --format json app modelo work dependencies --year 2026
+@step Narrow the inventory to one modelo.
+aeat --format json app modelo work dependencies --year 2026 --modelo 390
+@step Narrow further to one modelo and period, which also evaluates its blockers.
+@result aeat --format json app modelo work dependencies --year 2026 --modelo 390 --period 0A
+@expect result.filing_year == 2026
+@expect exit_code == 0
 ```
 
 `--period` requires `--modelo`. With both set, the command also evaluates the
@@ -61,8 +69,12 @@ this period can safely build on the ones before it. For the background, see
 Stream every recorded lifecycle event — calculations, verification passes
 and refusals, filings, amendments, imports — for one modelo:
 
-```bash
-aeat app modelo history --modelo 303 --year 2026
+```{cli-sequence} filing-readiness-history
+:verify: Confirm the modelo history stream resolves for the filing year.
+@step Stream every recorded lifecycle event for the modelo and year.
+@result aeat --format json app modelo history --modelo 303 --year 2026
+@expect result.modelo == "303"
+@expect exit_code == 0
 ```
 
 Add `--period` to narrow to one period. This is the modelo-wide audit trail;
@@ -132,12 +144,18 @@ For when the year-end filing actually happens, see
 Every computed value carries its grounding, and you can surface it at each
 review stage:
 
-- The formula behind each computed box, with its legal and source references —
-  see [Review and supply calculation inputs](review-calculation-values.md):
+The formula behind each computed box carries its legal and source references —
+see [Review and supply calculation inputs](review-calculation-values.md):
 
-  ```bash
-  aeat app modelo formulas 303 --period 1T --explain
-  ```
+```{cli-sequence} filing-readiness-formulas
+:verify: Confirm each computed box exposes its formula and grounding.
+@step Show the formulas for the modelo and period, with their legal references.
+@result aeat --format json app modelo formulas 303 --period 1T --explain
+@expect result.code == "303"
+@expect exit_code == 0
+```
+
+Two more grounding surfaces round out the trace:
 
 - Verification findings name the legal references behind each rule — see
   [Verify a filing](verification-reports.md).
