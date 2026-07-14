@@ -12,7 +12,7 @@ profile-scoped taxpayer state, not an AEAT filing surface.
 The tool needs a master-key passphrase and prompts for it.
 
 **Requirement:** a valid taxpayer profile. Create one with
-`aeat config profile create <name>` before you start — [Set up your taxpayer
+`aeat config profile create <name>` before you start. [Set up your taxpayer
 profile](profile-setup.md) walks through it.
 
 ## Which prorrata applies
@@ -62,7 +62,7 @@ Elect especial for the year:
 @expect exit_code == 0
 ```
 
-Here `--percentage` is the common-use percentage — the rate applied to shared
+Here `--percentage` is the common-use percentage, the rate applied to shared
 inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same `--provenance` and
 `--reference` options apply.
 
@@ -78,11 +78,11 @@ Then tag each input row with its use when you add it:
 
 `--input-classification` takes one value:
 
-- `exclusively_deductible` — the input serves only operations that grant the
+- `exclusively_deductible` - the input serves only operations that grant the
   right to deduct; it deducts in full.
-- `exclusively_non_deductible` — the input serves only operations that do not; it
+- `exclusively_non_deductible` - the input serves only operations that do not; it
   deducts nothing.
-- `common` — the input is shared; it deducts at the common-use percentage.
+- `common` - the input is shared; it deducts at the common-use percentage.
 
 Tag an input but elect no especial for that year and the tool warns the tag is
 inert: the input deducts under the general percentage. Elect especial to make
@@ -130,13 +130,13 @@ sector. Declare the sector first, or fix the id.
 When you calculate the year-end Modelo 303 (the 4T settlement), the tool may
 surface non-blocking advisories:
 
-- **Especial may be mandatory** — when the taxpayer computes under general
+- **Especial may be mandatory** - when the taxpayer computes under general
   prorrata and especial would deduct at least 10% less, the law (LIVA
   art. 103.Dos.2) makes especial mandatory. Classify every input of the year so
   the tool can run this check; until then it prompts you to classify.
-- **Inert classification** — an `--input-classification` tag set with no especial
+- **Inert classification** - an `--input-classification` tag set with no especial
   election for that year.
-- **Unmatched sector** — a `--sector` tag naming a sector not yet declared.
+- **Unmatched sector** - a `--sector` tag naming a sector not yet declared.
 
 These are advisories, not refusals. Read them alongside the
 [calculation inputs](review-calculation-values.md) before you
