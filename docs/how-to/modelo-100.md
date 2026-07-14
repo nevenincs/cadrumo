@@ -20,7 +20,7 @@ you upload through the official AEAT channel yourself.
 ## Before you create the draft
 
 **Requirement:** a valid taxpayer profile carrying the Renta-relevant facts.
-Create one with `aeat config profile create <name>` — see [Set up your taxpayer
+Create one with `aeat config profile create <name>`. See [Set up your taxpayer
 profile](profile-setup.md).
 
 - Modelo 100 is annual: the period token is always `0A`, and the filing year
@@ -135,14 +135,22 @@ evidenced, and every carried figure must still point at the revision it was
 filed under. A blocked report names the dependency in the way - resolve it and
 re-run. See [Verify a draft filing](verification-reports.md).
 
-Export the verified declaration with `aeat app modelo export --modelo 100
---year 2025 --period 0A --output ./modelo-100.boe`. The full evidence-to-export
-chain runs end to end on [Prepare a Modelo 303 IVA filing](modelo-303.md).
+Export the verified declaration. The full evidence-to-export chain runs end to
+end, executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md); here the
+export and the post-portal steps are shown as display frames, since the filed
+marker records a portal submission and the reconcile pull is a live read from
+AEAT:
 
-After you file at the portal, record the local marker with `aeat app modelo
-work file --modelo 100 --year 2025 --period 0A`, then pull the justificante and
-reconcile with `aeat app modelo reconcile pull --modelo 100 --year 2025 --period
-0A`. The pull is a live read from AEAT — see [Reconcile a filing](reconcile.md).
+```{cli-sequence} modelo-100-export-file
+@step Export the verified declaration to a local fichero-BOE.
+@static aeat app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
+@step After you upload at the portal, record the local filed marker.
+@static aeat app modelo work file --modelo 100 --year 2025 --period 0A
+@step Pull the justificante and reconcile it against the filed record (a live AEAT read).
+@static aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
+```
+
+See [Reconcile a filing](reconcile.md) for the reconciliation verdicts.
 
 ## Next steps
 
