@@ -86,8 +86,9 @@ for the event stream of a single workspace, use
 
 See how this year's figures moved against last year's, box by box:
 
-```bash
-aeat app modelo compare --modelo 100 --year 2024 --year 2025
+```{cli-sequence} filing-readiness-compare
+@step Compare a modelo's boxes across two filing years.
+@static aeat app modelo compare --modelo 100 --year 2024 --year 2025
 ```
 
 Pass `--year` exactly twice. Each row shows the box, its label and section,
@@ -105,8 +106,9 @@ box is worth tracing back to its transactions before you export.
 If you file quarterly Modelo 130 instalments, project what the year-end
 Modelo 100 would look like from the quarters filed so far:
 
-```bash
-aeat app modelo project --year 2026 --ccaa cataluna
+```{cli-sequence} filing-readiness-project
+@step Project the year-end Modelo 100 from the quarters filed so far.
+@static aeat app modelo project --year 2026 --ccaa cataluna
 ```
 
 `--ccaa` names your autonomous community of tax residence, which selects the
@@ -127,8 +129,9 @@ like the filed ones.
 Refine the projection with values the quarters cannot know: withholdings,
 personal circumstances, or specific boxes:
 
-```bash
-aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
+```{cli-sequence} filing-readiness-project-refine
+@step Refine the projection with withholdings, personal circumstances, or specific boxes.
+@static aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
 ```
 
 Withholdings bindings default to zero when not supplied, so a projection
