@@ -307,7 +307,7 @@ Read the frames in order:
 - **Rename** changes only the visible label; the active-profile pointer follows
   it.
 - **Duplicate** starts a second profile from the same facts. The second name you
-  pass is the new profile's name — the name you address it by in every later
+  pass is the new profile's name, the name you address it by in every later
   command. The new profile becomes the active one.
 - **Delete** removes a profile for good. If the deleted profile was active,
   Cadrumo clears the active-profile pointer.
@@ -358,15 +358,15 @@ aeat config profile capabilities set llm_vision off
 
 The three capabilities are:
 
-- `cloud_evidence_upload` — allow sending sensitive evidence to a cloud LLM
+- `cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM
   provider. Off by default. Barred for gestor profiles.
-- `llm_vision` — read invoices with the on-host vision model. On by default.
-- `google_export` — export calculations to Google Sheets. On by default.
+- `llm_vision` - read invoices with the on-host vision model. On by default.
+- `google_export` - export calculations to Google Sheets. On by default.
 
-Turn any capability on or off for the active profile the same way — for
+Turn any capability on or off for the active profile the same way. For
 example, `aeat config profile capabilities set cloud_evidence_upload on`. A
 capability whose package extra is not installed refuses with the exact install
-command — see [Install Cadrumo](../workstation-setup.md) for the extras.
+command. See [Install Cadrumo](../workstation-setup.md) for the extras.
 
 ## See what changed
 

@@ -2,7 +2,7 @@
 
 Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
-Every profile-scoped command needs your master-key passphrase; the tool prompts for it, and it needs an active taxpayer profile — see [Set up your taxpayer profile](profile-setup.md) if you have none. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+Every profile-scoped command needs your master-key passphrase; the tool prompts for it, and it needs an active taxpayer profile. See [Set up your taxpayer profile](profile-setup.md) if you have none. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
 
 ## "This operation requires an active profile"
 
@@ -153,9 +153,9 @@ aeat config auth diagnostics list
 aeat config auth diagnostics show <diagnostic-id>
 ```
 
-`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted — configured credentials appear only as present/absent flags and fingerprints, never as values.
+`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted. Configured credentials appear only as present/absent flags and fingerprints, never as values.
 
-For Cl@ve failures, the missing piece is often what happened on your phone — something the tool cannot see. Record what you observed so the diagnostic is complete:
+For Cl@ve failures, the missing piece is often what happened on your phone, something the tool cannot see. Record what you observed so the diagnostic is complete:
 
 ```bash
 aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
@@ -181,7 +181,7 @@ aeat config repair integrity objects
 @expect exit_code == 0
 ```
 
-`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines — use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records, and `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records, and `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
@@ -190,7 +190,7 @@ aeat config repair quarantine --dry-run
 aeat config repair quarantine --yes
 ```
 
-The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover — for example with the recovery key, see [Protect access to your data](protect-data-access.md) — the archived records still exist.
+The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover (for example with the recovery key, see [Protect access to your data](protect-data-access.md)), the archived records still exist.
 
 When you need to know which finalized calculations and filings used a transaction, ask the participation index:
 

@@ -13,7 +13,7 @@ Check the profile first with `aeat config profile status`. It confirms the profi
 
 ## Ask whether one modelo applies
 
-Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`. The card below confirms the profile, asks whether Modelo 303 applies for 2026, then checks readiness for the first quarter — the whole diagnostic flow in order.
+Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`. The card below confirms the profile, asks whether Modelo 303 applies for 2026, then checks readiness for the first quarter, the whole diagnostic flow in order.
 
 ```{cli-sequence} choose-modelo-applicability
 :seed: choose-modelo-autonomo
@@ -60,7 +60,7 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md). 
 
 ## Check readiness for one filing
 
-When you already know which modelo, year, and period you're aiming at, ask for a preflight check with `aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T` — the closing frame of the card above.
+When you already know which modelo, year, and period you're aiming at, ask for a preflight check with `aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T`, the closing frame of the card above.
 
 The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
 
