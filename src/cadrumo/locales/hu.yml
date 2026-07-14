@@ -1649,9 +1649,11 @@ cli:
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
         list_help: Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).
-        operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T
-          háromszögügylet, R helyesbítés, A áruátvétel, I szolgáltatásvásárlás, M
-          egyéb.'
+        operation_type_help: 'M349 műveleti kód: E termékértékesítés, M adómentes
+          importot követő értékesítés, H ugyanez adóügyi képviselő útján, A termékbeszerzés,
+          T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
+          R vevői készlet áthelyezése, D vevői készlet visszaszállítása, C vevői készlet
+          címzettcseréje'
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
         remove_help: Üzleti számla törlése.
@@ -2934,7 +2936,9 @@ cli:
         missing_new_passphrase_confirmation: Ismetelje meg az uj passphrase erteket
           a --confirm-new-passphrase kapcsoloval.
         new_passphrase_mismatch: Az uj passphrase es a megerosites nem egyezik.
-        non_interactive_passphrase_required: 'Ez a parancs interaktív terminált igényel az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase és --confirm-new-passphrase kapcsolókkal.'
+        non_interactive_passphrase_required: Ez a parancs interaktív terminált igényel
+          az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase
+          és --confirm-new-passphrase kapcsolókkal.
       new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
     errors:
