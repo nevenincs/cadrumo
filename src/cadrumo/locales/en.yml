@@ -2623,9 +2623,6 @@ cli:
         status_help: Show the metadata of one work unit
         status_next_action: Draft or recalculate this unit with `aeat app modelo work
           calculate`, then verify the draft with `aeat app modelo work verify`.
-        verify_already_verified_refused: Calculation revision %{calculation_revision_id}
-          is already %{state} and cannot be verified again. Verification accepts only
-          a draft revision.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_next_action_granted: Verification passed. Export the filing artefact
