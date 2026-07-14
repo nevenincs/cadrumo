@@ -795,6 +795,25 @@
       "argv": [
         "aeat",
         "app",
+        "ledger",
+        "status",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nbusiness_income_total\t0\nbusiness_expense_total\t0\nbusiness_net_total\t0\nRows\t0\nActive\t0\nArchived\t0\nStashed\t0\nPending review\t0\nReviewed\t0\nSkipped\t0\nPeriod\t2025 0A\nChecked transactions\t0\nReadiness issues\t0\nReady\tTrue\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
         "modelo",
         "work",
         "status",
@@ -853,6 +872,50 @@
       "kind": "command",
       "stderr_text": null,
       "text": "casilla_id\tnumber\tinput\trequired\tlabel\niva.anual.repercutido.general\tiva.anual.repercutido.general\tbound\tfalse\tCuota IVA repercutido al tipo general (21%) - anual\niva.anual.repercutido.reducido\tiva.anual.repercutido.reducido\tbound\tfalse\tCuota IVA repercutido al tipo reducido (10%) - anual\niva.anual.repercutido.super-reducido\tiva.anual.repercutido.super-reducido\tbound\tfalse\tCuota IVA repercutido al tipo super-reducido (4%) - anual\niva.anual.soportado.interiores\tiva.anual.soportado.interiores\tbound\tfalse\tCuota IVA soportado en operaciones interiores corrientes - anual\niva.anual.soportado.importaciones\tiva.anual.soportado.importaciones\tbound\tfalse\tCuota IVA soportado deducible en importaciones de bienes corrientes - anual\niva.anual.regularizacion-prorrata-definitiva\t522\tmanual\tfalse\tRegularizacion por aplicacion del porcentaje definitivo de prorrata - anual\niva.anual.regularizacion-bienes-inversion\t63\tbound\tfalse\tRegularizacion de inversiones - anual\niva.anual.autorepercutido.intracomunitaria\tiva.anual.autorepercutido.intracomunitaria\tbound\tfalse\tCuota IVA autorepercutida en adquisiciones intracomunitarias - anual\niva.anual.repercutido.recargo.general\tiva.anual.repercutido.recargo.general\tbound\tfalse\tRecargo de equivalencia tipo 5.2pct - Cuota devengada anual\niva.anual.repercutido.recargo.reducido\tiva.anual.repercutido.recargo.reducido\tbound\tfalse\tRecargo de equivalencia tipo 1.4pct - Cuota devengada anual\niva.anual.repercutido.recargo.super-reducido\tiva.anual.repercutido.recargo.super-reducido\tbound\tfalse\tRecargo de equivalencia tipo 0.5pct - Cuota devengada anual\niva.anual.reconciliacion.devengada-303\tiva.anual.reconciliacion.devengada-303\tbound\tfalse\tCuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales\niva.anual.reconciliacion.deducible-303\tiva.anual.reconciliacion.deducible-303\tbound\tfalse\tCuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales\niva.anual.reconciliacion.resultado-303\tiva.anual.reconciliacion.resultado-303\tbound\tfalse\tResultado anual reconciliado desde los cuatro Modelos 303 trimestrales\niva.anual.reconciliacion.devengada-simplificado-303\t79\tbound\tfalse\tIVA devengado regimen simplificado - Total cuota resultante (anual desde Modelo 303 4T)\niva.anual.compensacion-ultimo-periodo-97\t97\tbound\tfalse\tResultado declaracion-liquidacion ultimo periodo - A compensar\niva.anual.compensacion-generada-ejercicio-no-97\t662\tbound\tfalse\tCuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97\niva.anual.cuota-devengada-total\tiva.anual.cuota-devengada-total\tcomputed\tfalse\tTotal cuota IVA devengada anual (repercutido + autorepercutido)\niva.anual.cuota-deducible-total\tiva.anual.cuota-deducible-total\tcomputed\tfalse\tTotal cuota IVA deducible anual (soportado + autorepercutido)\niva.anual.resultado-regimen-general\tiva.anual.resultado-regimen-general\tcomputed\tfalse\tResultado anual del regimen general (cuota devengada - cuota deducible)\ndecl.ejercicio\tejercicio\tinformational\ttrue\tEjercicio al que se refiere la declaracion-resumen\ndecl.tipo-declaracion\ttipo-declaracion\tinformational\ttrue\tTipo de declaracion (originaria / sustitutiva / complementaria)\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "revisions",
+        "--modelo",
+        "390",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\nbbbee5b87476\te0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476\t091db9a258b0\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\tborrador\t2026-04-01T09:00:00+00:00\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "revision",
+        "--modelo",
+        "390",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\te0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476\nwork_unit_id\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 390 2025 0A\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.anual.cuota-devengada-total\t0.00\tTotal cuota IVA devengada anual (repercutido + autorepercutido)\nkey_figure\tiva.anual.cuota-deducible-total\t0.00\tTotal cuota IVA deducible anual (soportado + autorepercutido)\nkey_figure\tiva.anual.resultado-regimen-general\t0.00\tResultado anual del regimen general (cuota devengada - cuota deducible)\ncasilla\tdecl.ejercicio\t2025\ncasilla\tdecl.tipo-declaracion\t0\ncasilla\tiva.anual.autorepercutido.intracomunitaria\t0\ncasilla\tiva.anual.compensacion-generada-ejercicio-no-97\t0\ncasilla\tiva.anual.compensacion-ultimo-periodo-97\t0\ncasilla\tiva.anual.cuota-deducible-total\t0.00\tsum(iva.anual.soportado.interiores, iva.anual.soportado.importaciones, iva.anual.regularizacion-bienes-inversion, iva.anual.regularizacion-prorrata-definitiva, iva.anual.autorepercutido.intracomunitaria) = sum(0, 0, 0.00, 0, 0) = 0.00\ncasilla\tiva.anual.cuota-devengada-total\t0.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria, iva.anual.repercutido.recargo.general, iva.anual.repercutido.recargo.reducido, iva.anual.repercutido.recargo.super-reducido) = sum(0, 0, 0, 0, 0, 0, 0) = 0.00\ncasilla\tiva.anual.reconciliacion.deducible-303\t0\ncasilla\tiva.anual.reconciliacion.devengada-303\t0\ncasilla\tiva.anual.reconciliacion.devengada-simplificado-303\t0\ncasilla\tiva.anual.reconciliacion.resultado-303\t0\ncasilla\tiva.anual.regularizacion-bienes-inversion\t0.00\ncasilla\tiva.anual.regularizacion-prorrata-definitiva\t0\ncasilla\tiva.anual.repercutido.general\t0\ncasilla\tiva.anual.repercutido.recargo.general\t0\ncasilla\tiva.anual.repercutido.recargo.reducido\t0\ncasilla\tiva.anual.repercutido.recargo.super-reducido\t0\ncasilla\tiva.anual.repercutido.reducido\t0\ncasilla\tiva.anual.repercutido.super-reducido\t0\ncasilla\tiva.anual.resultado-regimen-general\t0.00\tsubtract(iva.anual.cuota-devengada-total, iva.anual.cuota-deducible-total) = subtract(0.00, 0.00) = 0.00\ncasilla\tiva.anual.soportado.importaciones\t0\ncasilla\tiva.anual.soportado.interiores\t0\n"
     },
     {
       "argv": [
