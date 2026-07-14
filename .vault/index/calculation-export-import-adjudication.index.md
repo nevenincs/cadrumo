@@ -32,6 +32,7 @@ related:
   - '[[2026-07-14-calculation-export-import-adjudication-P04-S24]]'
   - '[[2026-07-14-calculation-export-import-adjudication-P04-S25]]'
   - '[[2026-07-14-calculation-export-import-adjudication-adr]]'
+  - '[[2026-07-14-calculation-export-import-adjudication-audit]]'
   - '[[2026-07-14-calculation-export-import-adjudication-plan]]'
   - '[[2026-07-14-calculation-export-import-adjudication-reference]]'
   - '[[2026-07-14-calculation-export-import-adjudication-research]]'
@@ -45,7 +46,11 @@ Auto-generated index of all documents tagged with `#calculation-export-import-ad
 
 ### adr
 
-- `2026-07-14-calculation-export-import-adjudication-adr` - `calculation-export-import-adjudication` adr: `Export and import backlog admission boundary` | (**status:** `proposed`)
+- `2026-07-14-calculation-export-import-adjudication-adr` - `calculation-export-import-adjudication` adr: `Export and import backlog admission boundary` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-14-calculation-export-import-adjudication-audit` - `calculation-export-import-adjudication` audit: `Export and import candidate adjudication`
 
 ### exec
 
