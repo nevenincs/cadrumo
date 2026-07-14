@@ -112,6 +112,7 @@ Fixes this campaign's gates and sweeps surfaced and landed (shas recorded for th
 - **Non-interactive robustness:** the rekey/recover flows now convert a non-interactive `EOFError` into a typed REFUSED outcome instead of an uncaught crash (`3e30eba9f2`).
 - **Evidence identity:** evidence identity is now path-independent, so the same evidence bytes resolve to one identity regardless of the source path they arrived by (`0d16e2e45d`).
 - **Diagnostics routing:** the relation-prefill diagnostics fix landed (`bdd3c9d516`). Accuracy note: the landed fix is DEMOTE-TO-DEBUG, not `Notice`-enrollment — a grounded, coordinator-approved deviation from the originally-framed goal. The lines in question are non-actionable cold-start carries whose silence is an existing tested contract; the actionable relation diagnostics already ride the `Notice` channel, so demoting the cold-start lines to debug (rather than surfacing them as notices) is the correct routing.
+- **Argv path echo:** the argv-verbatim path-echo polish landed (`a9ffdc0611`); the evidence path echo is byte-identical across platforms and anti-tautology-verified. With this the production-fix ledger is COMPLETE — no open slots remain.
 - **Error-envelope threading:** the error-envelope command-identifier threading landed (`3beb36ccf3`); the identifier derivation is guaranteed byte-identical to the success-envelope convention, and is null only pre-resolution (before the command path is resolved).
 
 ### Open recorded findings
