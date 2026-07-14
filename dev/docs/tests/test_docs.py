@@ -62,3 +62,28 @@ def test_documentation_shell_examples_do_not_embed_destructive_commands() -> Non
                 violations.append(f"{relative}:{lineno}: {command}")
 
     assert not violations, "destructive shell examples in docs:\n" + "\n".join(violations)
+
+
+def test_documentation_install_snippets_cite_the_current_version() -> None:
+    """Every versioned install reference in docs matches the shipped package version.
+
+    The install pages cite the release wheel filename (``cadrumo-X.Y.Z-...whl``)
+    and pinned uvx/pip specs (``cadrumo[agent]==X.Y.Z``). A hardcoded version
+    rots silently on every release — the 0.2.0→0.2.1 bump left five stale
+    install commands behind — so this gate pins every cited version to
+    ``cadrumo.__version__``.
+    """
+    from cadrumo import __version__
+
+    version_re = re.compile(r"cadrumo-(\d+\.\d+\.\d+)-py3|cadrumo\[[\w,]+\]==(\d+\.\d+\.\d+)|release is `(\d+\.\d+\.\d+)`")
+    violations: list[str] = []
+    for path in _markdown_docs():
+        relative = path.relative_to(_REPO_ROOT).as_posix()
+        source = path.read_text(encoding="utf-8")
+        for match in version_re.finditer(source):
+            cited = next(group for group in match.groups() if group)
+            if cited != __version__:
+                lineno = source[: match.start()].count("\n") + 1
+                violations.append(f"{relative}:{lineno}: cites {cited}, package is {__version__}")
+
+    assert not violations, "stale install versions in docs:\n" + "\n".join(violations)
