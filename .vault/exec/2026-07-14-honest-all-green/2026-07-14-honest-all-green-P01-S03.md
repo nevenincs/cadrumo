@@ -71,8 +71,7 @@ related:
 
 ## Outcome
 
-11 of the ~12 cascade findings are now GREEN. One category remains OPEN and
-is NOT this step's to close unilaterally:
+ALL ~12 cascade findings are now GREEN; S03 is complete.
 
 1. RESOLVED (follow-up by another executor holding the S01 diagnosis
    context): `test_taxation_comparison.py`'s in-flight peer WIP completed —
@@ -84,42 +83,35 @@ is NOT this step's to close unilaterally:
    recommendation direction / delta sign / typed envelope contract per the
    module's own no-tautological-test docstring, not vacuously. Commit
    `c76e9639b5`.
-2. STILL OPEN: `test_file_flow_filing.py::test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks`
-   and `test_file_flow_verify.py::test_verify_runs_workflow_gate_and_refuses_before_verified_state_write`
-   assert the OBSOLETE premise that an unavailable auth provider blocks the
-   LOCAL file/verify flow. Commit `93bd51b0ab` ("fix(modelo): auth readiness
-   gates only live purposes per operator ruling") deliberately narrowed
-   preflight gate-4 to skip the local build/verify/file/export flow, so an
-   unavailable auth provider no longer blocks. Independently re-confirmed
-   this finding by reading `application/workflow/_engine.py`'s
-   `skip_auth = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)`
-   and the test harness's `_workflow_gate` helper
-   (`application/modelo/tests/_file_flow_support.py`): the harness
-   constructs its `WorkflowEngine` with `certificate_bundle=None`, so the
-   ONE other cert-expiry check that also gates on provider availability is
-   structurally inert in this test file too — the `auth_provider` fixture
-   these two tests pass has no reachable effect on either test's outcome.
-   Of the four `SubmissionEngine` preflight gates, only gate-1
-   (draft-approval status) and gate-2 (error-severity findings) remain
-   un-skipped for FILE/VERIFY; the harness's `_RevisionDraftBuilder`
-   unconditionally approves the draft it builds (gate-1 always passes by
-   construction), so a genuine replacement blocking condition would need to
-   engineer an intentionally-invalid casilla input that trips gate-2 — a
-   registry-validation-rule change with real risk of an artificial,
-   not-truly-representative fixture if done without deeper domain grounding.
-   The "gate refuses -> no partial state written" atomicity invariant these
-   tests protect is already covered by the passing
-   `test_file_refuses_future_period_before_filing_window_opens` (the
-   still-applicable deadline/obligation gate). Reported to the coordinator
-   for adjudication rather than guessed a gate-2 fixture.
+2. RESOLVED per coordinator adjudication (INVERT to lock the ruling):
+   `test_file_flow_filing.py` and `test_file_flow_verify.py`'s two gate
+   tests asserted the OBSOLETE premise that an unavailable auth provider
+   blocks the LOCAL file/verify flow. Commit `93bd51b0ab` ("fix(modelo):
+   auth readiness gates only live purposes per operator ruling") deliberately
+   narrowed preflight gate-4 to skip the local build/verify/file/export flow.
+   Inverted both to lock the ruling in as regression coverage: renamed to
+   `test_file_proceeds_locally_when_auth_provider_unavailable` /
+   `test_verify_proceeds_locally_when_auth_provider_unavailable`, asserting the
+   local flow now PROCEEDS with an unavailable provider (filing VIGENTE +
+   revision PRESENTADO + MODELO_FILED event; verify -> VERIFICADO_COMPLETO +
+   report + MODELO_VERIFICATION_PASSED event) and never consults the provider
+   (`describe_calls == 0`). Did NOT engineer a synthetic gate-2 fixture (the
+   unrepresentative-fixture risk the coordinator concurred with; atomicity is
+   already covered by `test_file_refuses_future_period_before_filing_window_opens`,
+   the deadline gate). The live-purpose half of the ruling — a non-skipped
+   preflight gate-4 STILL refusing on an unavailable provider — was verified
+   already pinned by `test_preflight.py::test_gate_4_unavailable_provider_surfaces_structured_context`
+   (a genuinely reachable gate-4 refusal, not the inert cert path), so no new
+   live-purpose test was needed. Commit `50f272a6a3`.
 
 Commits: `843518562a` (binding count + invoice_repository), `d9fad8f0b7`
 (cross-period ca locale rewording), `c76e9639b5` (taxation-comparison
-profile-binding supply, closing item 1).
+profile-binding supply, closing item 1), `50f272a6a3` (file/verify auth-gate
+inversion, closing item 2).
 
 ## Notes
 
-- S03 is left OPEN pending item 2 above, a cross-campaign surface (another
-  campaign's committed operator ruling) that would either mis-test the
-  ruling or fabricate an unrepresentative fixture if closed unilaterally.
-  No destructive git; explicit-pathspec commits throughout.
+- Both open items resolved: item 1 by the stood-down executor, item 2 by the
+  coordinator's INVERT adjudication. Both halves of the auth-readiness ruling
+  are now pinned as regression coverage (local flow proceeds; live gate-4 still
+  refuses). No destructive git; explicit-pathspec commits throughout.
