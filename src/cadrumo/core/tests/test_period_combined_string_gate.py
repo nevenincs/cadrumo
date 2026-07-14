@@ -153,7 +153,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="result-summary label tests pin external work-unit name labels that embed a period token",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/(core|domain)/(?:_period|period)\.py$|^src/cadrumo/(core|domain)/tests/test_period\.py$"),
+        path=_path(
+            r"^src/cadrumo/(core|domain)/(?:_period|period)\.py$|^src/cadrumo/(core|domain)/tests/test_period\.py$"
+        ),
         reason="Period source and tests explicitly document/refuse the killed combined input forms",
     ),
     AllowlistRule(
@@ -270,7 +272,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="filing export support tests preserve external export path labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"),
+        path=_path(
+            r"^src/cadrumo/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"
+        ),
         reason="live capture support tests preserve external justificante fixture and work-unit labels",
     ),
     AllowlistRule(
@@ -310,7 +314,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"),
+        path=_path(
+            r"^src/cadrumo/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"
+        ),
         reason="CLI tests preserve external projection, justificante, and evidence labels",
     ),
     AllowlistRule(
@@ -329,7 +335,17 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         pattern_names=frozenset({"year-qualified quarterly token"}),
     ),
     AllowlistRule(
-        path=_path(r"^docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter\.json$"),
+        path=_path(
+            r"^docs/_sequences/how-to/(?:"
+            r"first-quarterly-filing/modelo-130-first-quarter|"
+            r"modelo-130/modelo-130-(?:manual-casilla|quarterly)|"
+            r"modelo-303/modelo-303-first-quarter|"
+            r"modelo-349/modelo-349-first-quarter|"
+            r"modelo-390/modelo-390-annual-2025|"
+            r"quickstart/quickstart-modelo-130|"
+            r"verification-reports/verification-reports-modelo-303"
+            r")\.json$"
+        ),
         reason="captured CLI sequence preserves the WorkUnit.name display-name field "
         "(<modelo>-<year>-<period>, no modelo- stem), not export filename or period input grammar",
         pattern_names=frozenset({"year-qualified quarterly token"}),
