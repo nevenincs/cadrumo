@@ -246,17 +246,21 @@ Clear one provider:
 Clear sessions or locks:
 
 ```{cli-sequence} authenticate-clear-sessions
+:verify: Confirm the tool clears saved sessions and locks.
 @step Clear saved sessions.
-@static aeat config auth clear --sessions
+aeat config auth clear --sessions
 @step Clear saved locks.
-@static aeat config auth clear --locks
+@result aeat config auth clear --locks
+@expect exit_code == 0
 ```
 
 If you intend to reset authentication setup, clear all configured providers:
 
 ```{cli-sequence} authenticate-clear-all
+:verify: Confirm the tool clears all configured providers.
 @step Clear all configured providers.
-@static aeat config auth clear --all
+@result aeat config auth clear --all
+@expect exit_code == 0
 ```
 
 ## Act for someone else (apoderado)

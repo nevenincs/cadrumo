@@ -1,0 +1,22 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "clear",
+        "--all"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "removed_sessions\t0\ncleared_workflow_state\tTrue\ncleared_locks\t0\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-clear-all"
+}
