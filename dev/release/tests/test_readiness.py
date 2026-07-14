@@ -61,12 +61,32 @@ def _write_manifest(root: Path, version: str) -> None:
     (root / ".release-please-manifest.json").write_text(json.dumps({".": version}), encoding="utf-8")
 
 
+def _write_mcpb_manifest(root: Path, version: str) -> None:
+    manifest_dir = root / "packaging" / "mcpb"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    (manifest_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "version": version,
+                "server": {
+                    "mcp_config": {
+                        "command": "uvx",
+                        "args": ["--from", f"cadrumo[agent]=={version}", "cadrumo-mcp"],
+                    },
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+
 def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     root = tmp_path / "repo"
     root.mkdir()
     _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
+    _write_mcpb_manifest(root, version)
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [1.2.3] - 2026-07-04\n\n### Features\n- thing\n", encoding="utf-8"
     )
@@ -82,6 +102,25 @@ def test_version_surfaces_agree_passes_when_all_release_authorities_match(tmp_pa
     assert check.severity == "blocking"
     assert check.passed is True
     assert "2.0.0" in check.detail
+
+
+def test_version_surfaces_agree_fails_when_the_mcpb_bundle_pin_is_stale(tmp_path: Path) -> None:
+    """A stale ``.mcpb`` version or uvx self-install pin reds the release parity gate.
+
+    Enrolling the Desktop-Extension bundle in this gate means a release bump that
+    updates every other surface but leaves the bundle pinned to the prior release
+    (so the bundle would self-install a stale ``cadrumo[agent]``) fails loudly.
+    """
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    # Bump every other release surface to 2.1.0, leaving the mcpb bundle at 2.0.0.
+    _write_pyprojects(root, "2.1.0")
+    _write_init(root, "2.1.0")
+    _write_manifest(root, "2.1.0")
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "mcpb='2.0.0'" in check.detail
 
 
 def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path) -> None:
