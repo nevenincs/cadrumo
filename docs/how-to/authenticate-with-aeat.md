@@ -26,8 +26,10 @@ You need:
   Spanish tax identifier):
 
   ```{cli-sequence} authenticate-profile
-  @step Create a taxpayer profile non-interactively.
-  @static aeat config profile create me --quiet --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"
+  :verify: Confirm a taxpayer profile can be created non-interactively.
+  @step Create a taxpayer profile non-interactively (use your own NIF, CIF, DNI, or NIE).
+  @result aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
+  @expect exit_code == 0
   ```
 
 - the master-key passphrase that protects your local store; the tool
@@ -175,8 +177,10 @@ Select the one you want active:
 Remove a registered certificate you no longer need:
 
 ```{cli-sequence} authenticate-certificate-remove
+:verify: Confirm the tool removes a registered certificate by name.
 @step Remove a registered certificate you no longer need.
-@static aeat config auth certificate remove --name personal
+@result aeat config auth certificate remove --name personal
+@expect exit_code == 0
 ```
 
 ### Check every registered certificate's expiry
@@ -233,8 +237,10 @@ is not.
 Clear one provider:
 
 ```{cli-sequence} authenticate-clear-provider
+:verify: Confirm the tool clears the saved authentication for one provider.
 @step Clear the saved authentication for one provider.
-@static aeat config auth clear --provider certificate
+@result aeat config auth clear --provider certificate
+@expect exit_code == 0
 ```
 
 Clear sessions or locks:
@@ -291,8 +297,10 @@ Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) and
 the scopes that match the grant at AEAT:
 
 ```{cli-sequence} authenticate-apoderado-configure
+:verify: Confirm the tool records the represented party and scopes locally.
 @step Record who you represent and the scopes that match the grant at AEAT.
-@static aeat config auth apoderado configure --represented-nif <nif> --scope IVA --scope PAGOSF
+@result aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
+@expect exit_code == 0
 ```
 
 Repeat `--scope` for each code. The CLI rejects a comma-separated list. Scope
@@ -321,8 +329,10 @@ for the offline configuration read.
 Remove the configuration when the representation ends:
 
 ```{cli-sequence} authenticate-apoderado-clear
+:verify: Confirm the tool removes the local apoderado record.
 @step Remove the local apoderado record when the representation ends.
-@static aeat config auth apoderado clear
+@result aeat config auth apoderado clear
+@expect exit_code == 0
 ```
 
 Clearing removes only the local record. The apoderamiento at AEAT is
