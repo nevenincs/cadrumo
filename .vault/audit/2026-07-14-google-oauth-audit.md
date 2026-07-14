@@ -100,6 +100,38 @@ apart from the CLI-managed modified stamp. Dry runs proved one-row diffs before 
 reconciliation records were created and their rows checked. Structural mutation of the
 legacy shape remains prohibited pending a canonical migration or upstream fix.
 
+### master-plan-reconciliation | high | retirement closes documentary residue, not production work
+
+The final raw-row inventory remains 183 rows: 76 checked and 107 open. The
+archive-aware canonical parser reports 177 Steps, with 74 complete and 103 open
+(41.8 percent); the difference remains the six non-canonical suffixed rows, two
+of which are checked. The definitive disposition ledger accounts for every raw
+row: 67 `shipped-equivalent`, 83 `retired-obsolete`, 24
+`moved-domain-not-approved`, 9 `new-ADR-only`, and 0
+`genuine-current-gap`. These counts establish that the legacy plan is not an
+implementation backlog.
+
+The legacy Google retirement archived exactly one document,
+`2026-05-13-google-oauth-plan`, after classifying all 63 incoming references as
+preserved provenance: 63 preserve, 0 rewrite, and 0 active-authority block. The
+active source is absent, the archive destination exists, and the archived file
+still contains the same 183-row, 76-checked, 107-open inventory.
+
+The ledger-Google retirement archived exactly four historical documents: its
+superseded ADR, reconciled plan, research, and feature index. Their active
+locations are absent, all four archive destinations exist, and the four
+incoming references remain provenance: 4 preserve, 0 rewrite, and 0 block. The
+accepted optional-adapter ADR is the successor authority; the checked legacy
+ledger-Google plan is historical evidence, not proof of a shipped live ledger
+round trip.
+
+This reconciliation and retirement sequence changes Vault documentation and
+lifecycle state only. It does not implement Google escrow or restore, watched
+inbound ingestion, reverse merge, a Google-owned taxonomy, persistent Sheets
+pull, or any other production capability. The honest implementation outcome is
+zero new production code and zero genuine current Google gap authorized by the
+retired plans.
+
 ## Recommendations
 
 1. Treat P01 and P02 as the completed Google authentication and provider foundation;
@@ -121,8 +153,9 @@ legacy shape remains prohibited pending a canonical migration or upstream fix.
 
 - The plan contains 183 rows before and after reconciliation. Exactly the 39 approved
   rows changed state; no row action or scope changed, and no row was added or removed.
-- Plan status reports 76 of 183 rows complete, or 41.5 percent, with no missing
-  execution-record warning.
+- The archived raw plan remains 76 of 183 rows checked. Canonical parser status
+  reports 74 of 177 parsed Steps complete, or 41.8 percent, and retains the
+  known legacy execution-record diagnostics rather than hiding them.
 - The Google OAuth feature index was rebuilt and contains the reconciliation audit and
   all 39 execution records.
 - Feature-scoped Markdown, frontmatter, placeholder, body-link, annotation,
@@ -135,3 +168,9 @@ legacy shape remains prohibited pending a canonical migration or upstream fix.
   old heading depths, duplicate phase-local leaf identifiers, alpha-suffixed rows, and
   historical row-scope forms. Those findings require a separate structural migration;
   they do not contradict the preserved row set or the checked reconciliation state.
+- Archive-state verification finds the one legacy Google destination and all four
+  ledger-Google destinations present, with their five active source paths absent.
+- Production-path diffs are inherited concurrent work. Their unstaged and staged
+  hashes remained `40fb4a0434b99c935499c7582201caeb5eae2c40` and
+  `e69de29bb2d1d6434b8b29ae775ad8c2e48c5391`, with no untracked production paths,
+  across this documentation Step.
