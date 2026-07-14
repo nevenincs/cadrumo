@@ -24,8 +24,11 @@ You need:
 
 Confirm the active profile before you write transaction data:
 
-```bash
-aeat config profile status
+```{cli-sequence} import-confirm-profile
+:verify: Confirm a profile is active before you write transaction data.
+@step Confirm the active profile.
+@result aeat --format json config profile status
+@expect exit_code == 0
 ```
 
 ## Statement file format
@@ -40,75 +43,74 @@ Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
 ```
 
 The sign of `Importe` carries the direction: a positive amount is income, a
-negative amount is an expense. Save this as `statement.csv` and import it with
-`--provider auto`.
+negative amount is an expense.
 
 ## Preview an import
 
-Run a dry run first. A dry run shows what `aeat` would import and saves no
-rows:
+Run a dry run first. A dry run shows what `aeat` would import and saves no rows.
+Then repeat the command without `--dry-run` to save the rows. The sequence
+previews the standard quarter's statement, imports it, and confirms one imported
+row:
 
-```bash
-aeat app ledger import ./statement.csv --provider auto --dry-run
+```{cli-sequence} import-preview-save
+:verify: Confirm the statement's rows were imported into the ledger.
+@step Preview the import - a dry run saves no rows.
+aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv --dry-run
+@step Save the rows by repeating the command without --dry-run.
+aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Confirm an imported row is now in the ledger.
+@result aeat --format json app ledger view 71a5db2b
+@expect result.transaction.description == "Cobro factura F-2026-001 servicios de consultoria"
 ```
 
-`--provider auto` asks `aeat` to detect the statement format. The recognized
-providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`, `excel`, `n26`, `pdf`, and
-`pdf-n26`. If detection picks the wrong format, replace `auto` with the exact
-provider - run `aeat app ledger import --help` or see the
-[CLI reference](../cli/index.rst) for the current provider list.
+`--provider csv` names the statement format. `--provider auto` asks `aeat` to
+detect it. The recognized providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
+`excel`, `n26`, `pdf`, and `pdf-n26`. If detection picks the wrong format,
+replace `auto` with the exact provider - run `aeat app ledger import --help` or
+see the [CLI reference](../cli/index.rst) for the current provider list.
 
 If the path does not exist, the command refuses cleanly and names the missing
 file (`El archivo de origen no existe: ...`); fix the path and run it again.
 
-## Save imported rows
+## Save imported rows with diagnostics
 
-When the dry run looks right, repeat the command without `--dry-run`:
+Add `--verify` when you want import diagnostics alongside the save:
 
-```bash
-aeat app ledger import ./statement.csv --provider auto
+```{cli-sequence} import-diagnostics
+:verify: Confirm the verified import saved the statement's rows.
+@step Import the statement with diagnostics.
+aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv --verify
+@step Confirm the imported row is present.
+@result aeat --format json app ledger view 71a5db2b
+@expect result.transaction.direction == "INCOMING"
 ```
 
-Add `--verify` when you want import diagnostics:
-
-```bash
-aeat app ledger import ./statement.csv --provider auto --verify
-```
-
-If the diagnostic source should point at a different original file, pass it
-with `--file`:
-
-```bash
-aeat app ledger import ./processed.csv --provider csv --verify --file ./statement.csv
-```
-
-Use `--period` only when you intentionally want to label the import with a
-fiscal period. Leave it out — aeat assigns the period from each transaction's
-date automatically.
+If the diagnostic source should point at a different original file, pass it with
+`--file <original>`. Use `--period` only when you intentionally want to label the
+import with a fiscal period; leave it out and aeat assigns the period from each
+transaction's date automatically.
 
 ## Add one transaction manually
 
-Use `ledger add` when a transaction is missing from imported statements:
-
-```bash
-aeat app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --description "Software subscription"
-```
-
+Use `ledger add` when a transaction is missing from imported statements.
 Required fields are date, amount, direction, and description. Write the amount
-as a positive figure. The direction carries whether money came in or went out,
-and the command refuses a negative amount. `OUTGOING` is for expenses, money you
-paid out. `INCOMING` is for income, money you received.
+as a positive figure - the direction carries whether money came in or went out,
+and the command refuses a negative amount. `OUTGOING` is for expenses;
+`INCOMING` is for income:
 
-For a received payment or issued invoice, use `INCOMING`:
-
-```bash
-aeat app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment"
-```
-
-For an expense or supplier invoice, use `OUTGOING`:
-
-```bash
-aeat app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies"
+```{cli-sequence} import-add-manual
+:verify: Confirm a manually added transaction is stored with its direction.
+@step Record an expense you paid out.
+aeat --format json app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --description "Software subscription" --idempotency-key import-add-software
+@capture transaction_id result.transaction_id
+@step Record a payment you received.
+aeat --format json app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment" --idempotency-key import-add-client
+@step Record a supplier expense.
+aeat --format json app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies" --idempotency-key import-add-supplies
+@step Confirm the first transaction was stored as an outgoing expense.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.amount == "49.99"
+@expect result.transaction.direction == "OUTGOING"
 ```
 
 The third direction, `INTERNAL_TRANSFER`, records money moved between your own
@@ -117,13 +119,19 @@ accounts.
 ### Record tax details on a manual transaction
 
 `ledger add` accepts the same tax fields you set during classification, so you
-record a complete transaction in one step:
+record a complete transaction in one step. `--amount` is the gross total
+(taxable base plus IVA), and the tool refuses the row if the base plus IVA does
+not match the gross to the cent:
 
-```bash
-aeat app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING \
-  --description "Office supplies" --counterparty "Papeleria SL" \
-  --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00 \
-  --notes "Receipt filed"
+```{cli-sequence} import-add-tax-details
+:verify: Confirm the tax fields were recorded on the manual transaction.
+@step Record a purchase with its full IVA breakdown in one step.
+aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --counterparty "Papeleria SL" --category-id material_oficina --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00 --notes "Receipt filed" --idempotency-key import-tax-details
+@capture transaction_id result.transaction_id
+@step Confirm the taxable base and IVA were stored.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.taxable_base == "100"
+@expect result.transaction.iva_amount == "21"
 ```
 
 Useful optional fields:
@@ -139,126 +147,153 @@ Useful optional fields:
 - `--notes` adds a short operator note.
 
 For a part-business, part-personal movement, set `--classification MIXED` and the
-business share with `--business-pct`, a value from `0` to `1`:
-
-```bash
-aeat app ledger add --date 2026-03-22 --amount 80.00 --direction OUTGOING \
-  --description "Mobile phone" --classification MIXED --business-pct 0.5 --category-id <category-id>
-```
-
-For the IVA category, EU member-state, and usage-ratio semantics behind these
-fields, see [Classify transactions](classify-transactions.md).
+business share with `--business-pct`, a value from `0` to `1`. For the IVA
+category, EU member-state, and usage-ratio semantics behind these fields, see
+[Classify transactions](classify-transactions.md).
 
 Use the invoice commands when you also need to track whether an invoice exists
-separately from the bank movement:
+separately from the bank movement. Received invoices are supplier invoices you
+owe; issued invoices are customer invoices owed to you:
 
-```bash
-aeat app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21
+```{cli-sequence} import-invoice-records
+:verify: Confirm the recorded invoice resolved to a payable invoice.
+@step Record a supplier's received invoice.
+aeat --format json app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21
+@capture invoice_id result.invoice_id
+@step List issued invoices.
 aeat app ledger invoice list --kind issued
+@step Confirm the received invoice is a payable invoice.
+@result aeat --format json app ledger invoice view {invoice_id} --kind received
+@expect result.source_kind == "payable_invoice"
 ```
 
-Received invoices are supplier invoices you owe. Issued invoices are customer
-invoices owed to you. For the full invoice-record workflow, see
+For the full invoice-record workflow, see
 [Attach invoices and receipts](ledger-evidence.md).
 
 ## Review rows
 
-List rows:
+List rows, narrow the list with filters, inspect one row, and read its event
+history. The sequence imports the quarter and walks the read commands:
 
-```bash
+```{cli-sequence} import-review-rows
+:verify: Confirm the inspected row reads the imported income movement.
+@step Import the quarter's movements so there are rows to review.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step List every row.
 aeat app ledger list
-```
-
-Narrow the list with filters:
-
-```bash
-aeat app ledger list --filter period=03 --filter year=2026
+@step Narrow the list with filters.
+aeat app ledger list --filter period=1T --filter year=2026
+@step List only the rows still needing a decision.
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
-aeat app ledger list --limit 20 --offset 20
+@step Inspect one row before changing it.
+aeat app ledger view 71a5db2b
+@step Read the event history for the row.
+aeat app ledger history 71a5db2b
+@step Track the same row.
+aeat app ledger track 71a5db2b
+@step Confirm the row is the imported income movement.
+@result aeat --format json app ledger view 71a5db2b
+@expect result.transaction.direction == "INCOMING"
 ```
 
-Inspect one row before changing it:
+For a broader review queue, use `ledger review` to inspect selected rows and
+`ledger check` to report aggregate ledger anomalies across periods. Both are
+local-only:
 
-```bash
-aeat app ledger view <transaction-id>
-```
-
-See the event history for one row:
-
-```bash
-aeat app ledger history <transaction-id>
-aeat app ledger track <transaction-id>
-```
-
-For a broader review queue, use:
-
-```bash
+```{cli-sequence} import-review-check
+:verify: Confirm the aggregate ledger check runs cleanly.
+@step Import the quarter's movements so there is something to review.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Inspect selected ledger rows for a period.
 aeat app ledger review --filter period=1T --filter year=2026
-aeat app ledger check
+@step Report aggregate ledger anomalies across periods.
+@result aeat --format json app ledger check
+@expect exit_code == 0
 ```
-
-`review` helps inspect selected ledger rows. `check` reports aggregate ledger
-anomalies across periods and is local-only.
 
 ## Export rows for review
 
-Export the active ledger to a file:
+Export the active ledger to a file. The `--year` and `--period` filter keeps the
+export aligned with the transaction dates. Exports are review snapshots, not an
+edit-and-reimport path:
 
-```bash
-aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
+```{cli-sequence} import-export-rows
+:verify: Confirm the ledger exports for the requested period.
+@step Import the quarter's movements so there is something to export.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Export the first quarter to a CSV snapshot.
+@result aeat --format json app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
-The `--year` and `--period` filter keeps the export aligned with the run-through
-transaction dates. A transaction dated `2026-03-15` belongs in `--year 2026
---period 1T`, so it appears in the command above. Use the annual token `0A`
-when a whole year is the review scope:
+Add `--export-format xlsx` to write an XLSX snapshot instead, and use the annual
+token `0A` when a whole year is the review scope, for example `aeat app ledger
+export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A`.
 
-```bash
-aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
-```
-
-Exports are review snapshots. They are not a general edit-and-reimport
-mutation path for existing ledger rows. To change saved rows, use `ledger
-update`, `ledger classify`, `ledger allocate`, `ledger split`, or `ledger
-merge`.
+To change saved rows, use `ledger update`, `ledger classify`, `ledger allocate`,
+`ledger split`, or `ledger merge`.
 
 ## Update a row
 
-Use `ledger update` for editable transaction fields:
+Use `ledger update` for editable transaction fields - date, value date, amount,
+direction, currency, counterparty, description, taxable base, IVA rate, IVA
+amount, IRPF category, notes, or group label:
 
-```bash
-aeat app ledger update <transaction-id> --description "Corrected description"
-aeat app ledger update <transaction-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+```{cli-sequence} import-update-row
+:verify: Confirm the row's description and IVA fields were updated.
+@step Record a transaction to update.
+@setup aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --idempotency-key import-update
+@capture transaction_id result.transaction_id
+@step Correct the description. Each update rotates the id, so capture the new one.
+aeat --format json app ledger update {transaction_id} --description "Corrected description"
+@capture after_description result.transaction_id
+@step Record the IVA breakdown against the current id.
+aeat --format json app ledger update {after_description} --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+@capture after_iva result.transaction_id
+@step Add an operator note against the current id.
+aeat app ledger update {after_iva} --notes "Receipt checked against supplier PDF"
+@step The original id still resolves for reads; confirm the correction landed.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.taxable_base == "100"
 ```
 
-Use this for corrections such as date, value date, amount, direction, currency,
-counterparty, description, taxable base, IVA rate, IVA amount, IRPF category,
-notes, or group label.
+An update gives the transaction a new id; an id you wrote down earlier still
+resolves in `view`, `history`, and `track`. For the full correction workflow -
+splitting, merging, archiving, stashing, removing, and resetting rows - see
+[Correct mistakes in your ledger](correct-ledger-entries.md).
 
-Add or modify notes when you need a short operator explanation:
-
-```bash
-aeat app ledger update <transaction-id> --notes "Receipt checked against supplier PDF"
-```
+## Attach evidence to a transaction
 
 Attach secure purchase evidence to a transaction. The evidence id comes from
-`aeat app ledger evidence add` (it prints `evidence_id`):
+`aeat app ledger evidence add`. The sequence records evidence and an expense,
+then attaches one to the other:
 
-```bash
-# Attach purchase evidence to a transaction
-aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
-
-# Same purchase-evidence link through the link command
-aeat app ledger link <transaction-id> --evidence-id <evidence-id>
+```{cli-sequence} import-attach-evidence
+:verify: Confirm the purchase-invoice evidence attached to the transaction.
+@step Record the purchase invoice as encrypted evidence.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria SL" --invoice-number "2026-0142" --invoice-date 2026-03-21 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
+@capture evidence_id result.evidence_id
+@step Record the expense the invoice supports.
+@setup aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --category-id material_oficina --taxable-base 100 --iva-rate 0.21 --iva-amount 21 --idempotency-key import-attach
+@capture transaction_id result.transaction_id
+@step Attach the purchase evidence to the transaction.
+aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
+@step Confirm the transaction resolves after the attachment.
+@result aeat --format json app ledger view {transaction_id}
+@expect exit_code == 0
 ```
 
-`link --invoice-id` expects an id from the reconciliation invoice catalogue
-(populated by the import and reconcile flows), not an id from
-`aeat app ledger invoice add`. See [Attach invoices and receipts](ledger-evidence.md)
-for the full evidence and invoice-record workflow, including the
-`--attachment-id` option and its current limitation.
+The same purchase-evidence link is also available through `aeat app ledger link
+<transaction-id> --evidence-id <evidence-id>`. Note that `link --invoice-id`
+expects an id from the reconciliation invoice catalogue (populated by the import
+and reconcile flows), not an id from `aeat app ledger invoice add`. See
+[Attach invoices and receipts](ledger-evidence.md) for the full evidence and
+invoice-record workflow, including the `--attachment-id` option and its current
+limitation.
 
-Pull a document straight from Google Drive into encrypted evidence storage:
+Pull a document straight from Google Drive into encrypted evidence storage with
+`doclink`. This command reaches Google Drive, so it runs against your own
+authorized account rather than in the documentation sandbox:
 
 ```bash
 aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
@@ -266,7 +301,7 @@ aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <driv
 
 The command downloads the Drive file, stores its bytes encrypted with the
 transaction, and keeps the original link as provenance. Gmail links, arbitrary
-URLs, and Drive files outside the granted scope are refused — evidence always
+URLs, and Drive files outside the granted scope are refused - evidence always
 carries the document itself, never a bare link. For a refused source, download
 the document yourself and attach it with `aeat app ledger attach
 --attachment-id`.
@@ -284,9 +319,18 @@ least destructive fix.
 Classify rows before calculation. At a minimum, imported business rows need
 a business/personal/mixed decision, and expense rows need a category:
 
-```bash
+```{cli-sequence} import-classify-rows
+:verify: Confirm the imported expense is classified as business.
+@step Import the quarter's movements so there is a row to classify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step List the recognized expense categories.
 aeat app ledger categories
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+@step Classify the imported expense as a business cost with a category.
+aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
+@step Confirm the row now reads business with its category.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.business_classification == "BUSINESS"
+@expect result.transaction.category_id == "material_oficina"
 ```
 
 [Classify transactions](classify-transactions.md) owns the full workflow -
@@ -295,33 +339,28 @@ and [LLM-assisted suggestions](classify-with-llm.md).
 
 ## Check readiness for a filing period
 
-Run preflight before calculating a modelo:
+Run preflight before calculating a modelo, then check the overall ledger state.
+Preflight looks at each record inside the period and flags anything still missing
+before any sums are trusted - a missing classification, category, base, IVA
+amount, IVA rate, split reference, or unconvertible currency:
 
-```bash
+```{cli-sequence} import-check-readiness
+:verify: Confirm the period's readiness is reported for the classified quarter.
+@step Import and classify the quarter's rows.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@step Check the period is ready to calculate.
 aeat app ledger preflight --year 2026 --period 1T
+@step Read the overall ledger state for the period.
+@result aeat --format json app ledger status --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
-Preflight looks at each record inside the period and flags anything still
-missing before any sums are trusted:
-
-- no business-versus-personal decision yet
-- no category on a deductible cost
-- no base amount, IVA amount, or IVA rate where one is expected
-- a mixed cost with no split reference attached
-- an amount in a currency the tool cannot convert to euros
-
-The check changes nothing; it names the rows that are not ready so you fix
-the raw material before trusting any total. Fix the rows it names, then run
-preflight again.
-
-Check the overall ledger state:
-
-```bash
-aeat app ledger status --year 2026 --period 1T
-```
-
-Continue to calculation only when the active profile and target period are
-ready enough for the modelo you are preparing.
+The check changes nothing; it names the rows that are not ready so you fix the
+raw material before trusting any total. Continue to calculation only when the
+active profile and target period are ready enough for the modelo you are
+preparing.
 
 For calculation review in Google Sheets, see
 [Review calculations with Google Sheets](review-with-google-sheets.md). That
@@ -343,4 +382,3 @@ ledger is not ready, use
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)
-
