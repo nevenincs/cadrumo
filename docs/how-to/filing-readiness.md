@@ -132,9 +132,13 @@ For when the year-end filing actually happens, see
 Every computed value carries its grounding, and you can surface it at each
 review stage:
 
-- `aeat app modelo formulas 303 --period 1T --explain` — the formula behind
-  each computed box with its legal and source references. See
-  [Review and supply calculation inputs](review-calculation-values.md).
+- The formula behind each computed box, with its legal and source references —
+  see [Review and supply calculation inputs](review-calculation-values.md):
+
+  ```bash
+  aeat app modelo formulas 303 --period 1T --explain
+  ```
+
 - Verification findings name the legal references behind each rule — see
   [Verify a filing](verification-reports.md).
 - `aeat app review queue --explain` — pending findings with their legal
