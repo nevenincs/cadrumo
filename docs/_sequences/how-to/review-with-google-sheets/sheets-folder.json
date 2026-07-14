@@ -1,0 +1,88 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "google",
+        "status"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.google.status",
+        "notices": [],
+        "result": {
+          "account_email": null,
+          "client_id": null,
+          "client_registered": false,
+          "granted_scopes": [],
+          "issued_at": null,
+          "last_refresh_at": null,
+          "operation": "config.google.status",
+          "profile": "<profile-id>",
+          "reauth_required": null,
+          "session_present": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "google",
+        "folder",
+        "set",
+        "docs-folder-123"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tconfig.google.folder.set\nprofile\t<profile-id>\nroot_folder_id\tdocs-folder-123\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "google",
+        "folder",
+        "get"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.google.folder.get",
+        "notices": [],
+        "result": {
+          "configured": true,
+          "operation": "config.google.folder.get",
+          "profile": "<profile-id>",
+          "root_folder_id": "docs-folder-123"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "sheets-folder"
+}

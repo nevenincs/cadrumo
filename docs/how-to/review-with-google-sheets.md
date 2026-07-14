@@ -13,10 +13,10 @@ supporting evidence, a copy you can keep, not an editable review tool: it
 does not recompute, and there is no way to edit it and feed changes back.
 Use Google Sheets when you want to review and adjust.
 
-Every `config google` command on this page reaches Google Drive and Sheets, so
-they run against your own authorized account rather than the documentation
-sandbox. They are shown as display-only frames. The local readiness checks at
-the end run live at build time.
+The local configuration commands on this page (status, folder binding, logout)
+and the ledger readiness checks run live at build time. The commands that reach
+Google Drive and Sheets run against your own authorized account rather than the
+documentation sandbox, so they are shown as display-only frames.
 
 ## Before you start
 
@@ -36,18 +36,38 @@ edits into Cadrumo.
 
 ## Configure Google access
 
-Register the Desktop OAuth client for the active profile, run the consent flow,
-and set the Drive folder where Cadrumo will create spreadsheets:
+Register the Desktop OAuth client for the active profile and run the consent
+flow. Both reach Google, so they are display-only here:
 
-```{cli-sequence} sheets-configure
+```{cli-sequence} sheets-oauth
 @step Register the Desktop OAuth client for the active profile.
 @static aeat config google register --client-json ./client_secret.json
-@step Run the Google consent flow and confirm the status.
+@step Run the Google consent flow.
 @static aeat config google login
-@static aeat config google status
-@step Set and confirm the Drive folder, then probe the connection.
-@static aeat config google folder set <drive-folder-id>
-@static aeat config google folder get
+```
+
+Check the Google status and set the Drive folder where Cadrumo will create
+spreadsheets. These are local configuration commands, so they run here. On an
+unconfigured profile the status reads not-connected, and the folder you set
+reads back verbatim:
+
+```{cli-sequence} sheets-folder
+:verify: Confirm the Drive folder binding reads back the value you set.
+@step Check the Google connection status for the active profile.
+aeat --format json config google status
+@step Set the Drive folder where Cadrumo will create spreadsheets.
+aeat config google folder set docs-folder-123
+@step Confirm the folder binding.
+@result aeat --format json config google folder get
+@expect result.root_folder_id == "docs-folder-123"
+@expect exit_code == 0
+```
+
+Probe the connection once the OAuth client is registered. The probe reaches
+Google, so it is display-only here:
+
+```{cli-sequence} sheets-probe
+@step Probe the Google connection.
 @static aeat config google sync probe
 ```
 
@@ -139,14 +159,16 @@ copy and never reads Drive back as a source of truth for your records.
 
 ## Sign out of Google
 
-Clear the Google session for the active profile. Logout removes the saved
-session token and its metadata. The registered OAuth client is kept on purpose,
-so a later `aeat config google login` can sign in again without re-importing
-the Cloud Console JSON:
+Clear the Google session for the active profile. Logout is a local command, so
+it runs here. It removes the saved session token and its metadata. The
+registered OAuth client is kept on purpose, so a later `aeat config google
+login` can sign in again without re-importing the Cloud Console JSON:
 
 ```{cli-sequence} sheets-logout
+:verify: Confirm the Google session clears for the active profile.
 @step Clear the Google session for the active profile.
-@static aeat config google logout
+@result aeat --format json config google logout
+@expect exit_code == 0
 ```
 
 ## Where this fits
