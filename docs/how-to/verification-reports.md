@@ -15,7 +15,7 @@ builds on is filed and evidenced, that the running IVA balance carried
 between periods reconciles, and that every carried-forward figure still
 points at the revision it was filed under.
 
-A passed check is a local check — treat it as "my draft is complete and
+A passed check is a local check. Treat it as "my draft is complete and
 consistent", never as "I have filed" or "I am on time". Verifying is **not**
 the agency accepting your filing (the tool never contacts AEAT), **not** a
 guarantee the upload will succeed (submission happens separately, outside
@@ -25,20 +25,16 @@ deadline; see [the deadline section](#the-filing-deadline-has-passed)).
 ## Before you start
 
 **Requirement:** an active taxpayer profile with a name and surnames, and a
-calculated draft to check. Create a profile with `aeat config profile create me
---quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity
-"consultoria" --activity-start-date 2026-01-01`.
-
-The `--activity-start-date` matters for a first filing: it scopes out the
-dependency on a prior period you never filed, so verification can pass. See
+calculated draft to check. Create a profile with `aeat config profile create`,
+supplying the name, surnames, and an activity-start date. The
+activity-start date matters for a first filing: it scopes out the dependency on
+a prior period you never filed, so verification can pass. See
 [Set up your profile](profile-setup.md).
 
 You also need a master-key passphrase (Cadrumo prompts for it). For a
-first-period Modelo 303, record some business activity in the ledger with `aeat
-app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING
---description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate
-0.21 --iva-amount 210`, then create and calculate the draft (the sequence below
-does all of this from the seed ledger).
+first-period Modelo 303, record some business activity in the ledger, then
+create and calculate the draft. The sequence below does all of this from the
+seed ledger.
 
 If you want to understand how filings and saved calculations fit together,
 read [The filing workflow](filing-spine.md) first.
@@ -116,8 +112,9 @@ Each finding carries:
 - The legal references behind the rule, where the rule has them.
 
 For the legal references in machine-readable form, render the report as JSON.
-`--format json` is a global flag, so it goes before the command: `aeat --format
-json app modelo verification-report view <verification-report-id>`.
+`--format json` is a global flag, so it goes before the command. The card in
+[Run verification](#run-verification) does exactly this: its closing frame is the
+JSON `verification-report view` of the report it just produced.
 
 Each finding in the JSON output carries `legal_refs` and `source_refs`. Most
 findings name a legal reference - a cross-period dependency, for example, cites
@@ -130,8 +127,10 @@ apply to you, and move on.
 
 ## After any fix: re-run verification
 
-After you change anything, run verification again with `aeat app modelo work
-verify --modelo 303 --year 2026 --period 1T`.
+After you change anything, run `aeat app modelo work verify` again for the same
+target, exactly as the card in [Run verification](#run-verification) does. That
+card addresses the draft by its revision id; passing `--modelo`, `--year`, and
+`--period` instead re-runs the check against the current draft for that target.
 
 Confirm the finding you addressed is gone from the new report. Repeat until the
 result shows `granted_verificado_completo` `true`. Each symptom section in this
@@ -142,15 +141,20 @@ guide finishes with this re-run step.
 Incomplete means required casillas have no value yet. The report lists which
 ones under **missing required casillas**.
 
-For a casilla you enter by hand, supply its value and recalculate with `aeat app
-modelo work calculate --modelo 303 --year 2026 --period 1T --casilla
-<ID>=<VALUE>`.
-
 `--casilla` works only on boxes whose input kind is `manual`. A box filled from
 your ledger or another source is `bound`, and `--casilla` refuses it with
-`cannot override bucket-derived source-bound casillas`. Fix the source for those
-— see [Review your calculation values](review-calculation-values.md). Check
-which kind a box is with `aeat app modelo casillas 303 --period 1T`.
+`cannot override bucket-derived source-bound casillas`. Fix the source for those.
+See [Review your calculation values](review-calculation-values.md). Check which
+kind a box is, then supply the value for a manual one and recalculate:
+
+```{cli-sequence} verification-reports-incomplete
+:verify: Confirm you can read each box's input kind before supplying a manual value.
+@step Check which input kind each box is; only manual boxes accept --casilla.
+@result aeat --format json app modelo casillas 303 --period 1T
+@expect exit_code == 0
+@step Supply a manual casilla's value and recalculate.
+@static aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
+```
 
 Then [re-run verification](#after-any-fix-re-run-verification). For the full
 input workflow, including where values come from and how to check them, see
@@ -174,8 +178,15 @@ expects you to do. The common kinds of blocking finding:
   earlier period that is missing or unconfirmed. Record or confirm that earlier
   filing first. If you had no obligation in that earlier period because you had
   not started your activity yet, set your activity-start date on the profile so
-  the dependency is scoped out with `aeat config profile edit me --quiet
-  --activity-start-date 2026-01-01` (replace `me` with your profile name).
+  the dependency is scoped out (replace `me` with your profile name):
+
+  ```{cli-sequence} verification-reports-scope-dependency
+  :verify: Confirm setting the activity-start date on the profile succeeds.
+  @setup aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
+  @step Set the activity-start date so an unstarted prior period is scoped out.
+  @result aeat config profile edit me --quiet --activity-start-date 2026-01-01
+  @expect exit_code == 0
+  ```
 
 After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
@@ -183,15 +194,22 @@ After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
 Export needs a verified (or locally-filed) saved calculation. It refuses a plain
 draft with a message such as "current revision is still draft; verify it before
-exporting" or "no exportable verified or filed revision exists". Check where your
-filing stands with `aeat app modelo work status --modelo 303 --year 2026
---period 1T`.
+exporting" or "no exportable verified or filed revision exists". If the saved
+calculation is still a draft, verify it first, as in
+[After any fix: re-run verification](#after-any-fix-re-run-verification). Check
+where the filing stands, then retry the export once verification grants
+verified-complete:
 
-If the saved calculation is still a draft, verify it with `aeat app modelo work
-verify --modelo 303 --year 2026 --period 1T`.
-
-Once verification grants verified-complete, retry the export with `aeat app
-modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe`.
+```{cli-sequence} verification-reports-export-check
+:verify: Confirm you can read where a filing stands before exporting.
+@setup aeat config switch docs-sequence-sandbox
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@step Check where your filing stands.
+@result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@expect exit_code == 0
+@step Once verification grants verified-complete, retry the export.
+@static aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+```
 
 ## More than one filing matches
 
@@ -208,6 +226,7 @@ on it:
 ```{cli-sequence} verification-reports-work-history
 :seed: autonomo-irpf-2026
 :verify: Confirm the work unit's state and action history read back.
+@setup aeat config switch docs-sequence-sandbox
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Show the work unit's current state.
 aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T

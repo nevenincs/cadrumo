@@ -1,0 +1,3394 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "casillas",
+        "303",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.casillas",
+        "notices": [],
+        "result": {
+          "casilla_count": 126,
+          "modelo": "303",
+          "operation": "modelo.casillas",
+          "revision": "2023-y-siguientes",
+          "rows": [
+            {
+              "casilla_id": "iva.repercutido.general",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the standard rate (21%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Total d'IVA repercutit calculat al tipus general del 21%.",
+                "en": "Total output VAT calculated at the standard 21% rate.",
+                "hu": "Az általános 21%-os kulccsal kiszámított teljes felszámított ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Quota IVA repercutit al tipus general (21%)",
+                "en": "Output VAT amount at the standard rate (21%)",
+                "hu": "Felszámított ÁFA összeg általános kulccsal (21%)"
+              },
+              "number": "iva.repercutido.general",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.repercutido.reducido",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the reduced rate (10%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Total d'IVA repercutit calculat al tipus reduït del 10%.",
+                "en": "Total output VAT calculated at the reduced 10% rate.",
+                "hu": "A 10%-os csökkentett kulccsal kiszámított teljes felszámított ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Quota d'IVA repercutit al tipus reduït (10%)",
+                "en": "Output VAT amount at the reduced rate (10%)",
+                "hu": "Felszámított ÁFA összeg csökkentett kulccsal (10%)"
+              },
+              "number": "iva.repercutido.reducido",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.repercutido.super-reducido",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the super-reduced rate (4%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Total d'IVA repercutit calculat al tipus superreduït del 4%.",
+                "en": "Total output VAT calculated at the super-reduced 4% rate.",
+                "hu": "A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Quota d'IVA repercutit al tipus superreduït (4%)",
+                "en": "Output VAT amount at the super-reduced rate (4%)",
+                "hu": "Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)"
+              },
+              "number": "iva.repercutido.super-reducido",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.soportado.interiores",
+              "input_kind": "bound",
+              "label": "Deductible input VAT on domestic current transactions",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Total d'IVA suportat pagat en compres interiors de béns i serveis corrents.",
+                "en": "Deductible input VAT borne on domestic current transactions.",
+                "hu": "A belföldi termékbeszerzések és szolgáltatásigénybevételek után fizetett, levonható ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Quota IVA suportat en operacions interiors corrents",
+                "en": "Deductible input VAT on domestic current transactions",
+                "hu": "Levonható ÁFA összeg belföldi folyó ügyletek után"
+              },
+              "number": "iva.soportado.interiores",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.intracomunitaria",
+              "input_kind": "bound",
+              "label": "Reverse-charge VAT amount on intra-Community acquisitions",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Quota d'IVA autorepercutit en adquisicions intracomunitàries subjectes a inversió del subjecte passiu.",
+                "en": "Self-assessed VAT amount on intra-Community acquisitions under the reverse-charge rules.",
+                "hu": "Fordított adózás keretében önadózott ÁFA összeg Közösségen belüli beszerzéseknél."
+              },
+              "localized_labels": {
+                "ca": "Quota d'IVA autorepercutit en adquisicions intracomunitàries",
+                "en": "Reverse-charge VAT amount on intra-Community acquisitions",
+                "hu": "Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél"
+              },
+              "number": "iva.autorepercutido.intracomunitaria",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.interior.devengado",
+              "input_kind": "bound",
+              "label": "Accrued reverse-charge VAT on domestic transactions",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "IVA autorepercutit meritat en operacions interiors subjectes a inversió del subjecte passiu.",
+                "en": "Accrued self-assessed VAT on domestic transactions subject to reverse charge.",
+                "hu": "Fordított adózás alá tartozó belföldi ügyleteknél keletkezett önadózott ÁFA."
+              },
+              "localized_labels": {
+                "ca": "IVA autorepercutit meritat en operacions interiors",
+                "en": "Accrued reverse-charge VAT on domestic transactions",
+                "hu": "Keletkezett fordított adózású ÁFA belföldi ügyleteknél"
+              },
+              "number": "iva.autorepercutido.interior.devengado",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.interior.deducible",
+              "input_kind": "bound",
+              "label": "Deductible reverse-charge VAT on domestic transactions",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "IVA autorepercutit deduïble en operacions interiors subjectes a inversió del subjecte passiu.",
+                "en": "Deductible self-assessed VAT on domestic transactions subject to reverse charge.",
+                "hu": "Fordított adózás alá tartozó belföldi ügyleteknél levonható önadózott ÁFA."
+              },
+              "localized_labels": {
+                "ca": "IVA autorepercutit deduïble en operacions interiors",
+                "en": "Deductible reverse-charge VAT on domestic transactions",
+                "hu": "Levonható fordított adózású ÁFA belföldi ügyleteknél"
+              },
+              "number": "iva.autorepercutido.interior.deducible",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
+              "input_kind": "bound",
+              "label": "Accrued reverse-charge VAT on intra-Community acquisitions",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "IVA autorepercutit meritat en adquisicions intracomunitàries de béns i serveis.",
+                "en": "Accrued self-assessed VAT on intra-Community acquisitions of goods and services.",
+                "hu": "Közösségen belüli termék- és szolgáltatásbeszerzéseknél keletkezett önadózott ÁFA."
+              },
+              "localized_labels": {
+                "ca": "IVA autorepercutit meritat en adquisicions intracomunitàries",
+                "en": "Accrued reverse-charge VAT on intra-Community acquisitions",
+                "hu": "Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél"
+              },
+              "number": "iva.autorepercutido.intracomunitaria.devengado",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.intracomunitaria.deducible",
+              "input_kind": "bound",
+              "label": "Deductible reverse-charge VAT on intra-Community acquisitions",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "IVA autorepercutit deduïble en adquisicions intracomunitàries de béns i serveis.",
+                "en": "Deductible self-assessed VAT on intra-Community acquisitions of goods and services.",
+                "hu": "Közösségen belüli termék- és szolgáltatásbeszerzéseknél levonható önadózott ÁFA."
+              },
+              "localized_labels": {
+                "ca": "IVA autorepercutit deduïble en adquisicions intracomunitàries",
+                "en": "Deductible reverse-charge VAT on intra-Community acquisitions",
+                "hu": "Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél"
+              },
+              "number": "iva.autorepercutido.intracomunitaria.deducible",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.soportado.importaciones",
+              "input_kind": "bound",
+              "label": "Deductible input VAT on imports of current goods",
+              "legal_refs": [
+                "ley-37-1992:art-17",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "IVA suportat deduïble en importacions de béns corrents.",
+                "en": "Deductible input VAT borne on imports of current goods.",
+                "hu": "Folyó áruk importján előzetesen felszámított levonható ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Quota d'IVA suportat deduïble en importacions de béns corrents",
+                "en": "Deductible input VAT on imports of current goods",
+                "hu": "Levonható előzetesen felszámított ÁFA folyó áruk importján"
+              },
+              "number": "iva.soportado.importaciones",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autoconsumo.promotor.base",
+              "input_kind": "bound",
+              "label": "Taxable base for property developer self-supply",
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Base imposable de l'autoconsum del promotor immobiliari, basada en el cost de construcció.",
+                "en": "Taxable base for self-supply by a property developer, based on construction cost.",
+                "hu": "Az ingatlanfejlesztő saját felhasználásának adóalapja, az építési költség alapján."
+              },
+              "localized_labels": {
+                "ca": "Base imposable de l'autoconsum del promotor immobiliari",
+                "en": "Taxable base for property developer self-supply",
+                "hu": "Ingatlanfejlesztő saját felhasználásának adóalapja"
+              },
+              "number": "iva.autoconsumo.promotor.base",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autoconsumo.promotor.cuota",
+              "input_kind": "computed",
+              "label": "VAT amount for property developer self-supply",
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "ley-37-1992:art-90",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Quota d'IVA de l'autoconsum del promotor immobiliari, calculada al 21% de la base imposable.",
+                "en": "VAT amount for property developer self-supply, calculated at 21% of the taxable base.",
+                "hu": "Az ingatlanfejlesztő saját felhasználásának ÁFA összege, az adóalap 21%-aként számítva."
+              },
+              "localized_labels": {
+                "ca": "Quota d'IVA de l'autoconsum del promotor immobiliari",
+                "en": "VAT amount for property developer self-supply",
+                "hu": "Ingatlanfejlesztő saját felhasználásának ÁFA összege"
+              },
+              "number": "iva.autoconsumo.promotor.cuota",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.cuota-devengada-total",
+              "input_kind": "computed",
+              "label": "Total accrued VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Total de la quota d'IVA meritada, inclòs l'IVA repercutit i l'IVA autorepercutit aplicable.",
+                "en": "Total accrued VAT amount, including output VAT and applicable reverse-charge VAT.",
+                "hu": "Összes keletkezett ÁFA összeg, beleértve a felszámított ÁFÁ-t és az alkalmazandó fordított adózású ÁFÁ-t."
+              },
+              "localized_labels": {
+                "ca": "Total quota d'IVA meritada",
+                "en": "Total accrued VAT amount",
+                "hu": "Összes keletkezett ÁFA összeg"
+              },
+              "number": "iva.cuota-devengada-total",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.cuota-deducible-total",
+              "input_kind": "computed",
+              "label": "Total deductible VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Total de la quota d'IVA deduïble, inclòs l'IVA suportat interior i l'IVA autorepercutit deduïble.",
+                "en": "Total deductible VAT amount, including domestic input VAT and deductible reverse-charge VAT.",
+                "hu": "Összes levonható ÁFA összeg, beleértve a belföldi előzetesen felszámított ÁFÁ-t és a levonható fordított adózású ÁFÁ-t."
+              },
+              "localized_labels": {
+                "ca": "Total quota d'IVA deduïble",
+                "en": "Total deductible VAT amount",
+                "hu": "Összes levonható ÁFA összeg"
+              },
+              "number": "iva.cuota-deducible-total",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.resultado-regimen-general",
+              "input_kind": "computed",
+              "label": "General regime result",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Resultat del règim general calculat com IVA meritat menys IVA deduïble.",
+                "en": "General regime result calculated as accrued VAT minus deductible VAT.",
+                "hu": "Az általános rendszer eredménye, a keletkezett ÁFA és a levonható ÁFA különbségeként számítva."
+              },
+              "localized_labels": {
+                "ca": "Resultat del règim general",
+                "en": "General regime result",
+                "hu": "Általános rendszer eredménye"
+              },
+              "number": "iva.resultado-regimen-general",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.prorrata-volumen-con-derecho",
+              "input_kind": "manual",
+              "label": "Annual turnover giving deduction rights",
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-102",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Volum anual d'operacions que originen dret a deduir l'IVA.",
+                "en": "Annual transaction volume that gives the right to deduct VAT.",
+                "hu": "Az éves ügyletvolumen, amely ÁFA-levonási jogot keletkeztet."
+              },
+              "localized_labels": {
+                "ca": "Volum anual d'operacions que originen dret a deducció",
+                "en": "Annual turnover giving deduction rights",
+                "hu": "Levonási jogot keletkeztető éves ügyletvolumen"
+              },
+              "number": "prorrata-volumen-con-derecho",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "iva.prorrata-volumen-total",
+              "input_kind": "manual",
+              "label": "Total annual turnover",
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-102",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Volum anual total d'operacions emprat per al càlcul de la prorrata general.",
+                "en": "Total annual transaction volume used for the general pro rata calculation.",
+                "hu": "Az általános levonási hányad számításához használt teljes éves ügyletvolumen."
+              },
+              "localized_labels": {
+                "ca": "Volum anual total d'operacions",
+                "en": "Total annual turnover",
+                "hu": "Teljes éves ügyletvolumen"
+              },
+              "number": "prorrata-volumen-total",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "iva.prorrata-porcentaje",
+              "input_kind": "computed",
+              "label": "General pro rata percentage",
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-102",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Percentatge de prorrata general calculat a partir del volum amb dret a deducció sobre el volum total.",
+                "en": "General pro rata percentage calculated from deductible-right turnover over total turnover.",
+                "hu": "Az általános levonási hányad százaléka, a levonási jogot keletkeztető volumen és a teljes volumen alapján."
+              },
+              "localized_labels": {
+                "ca": "Percentatge de prorrata general",
+                "en": "General pro rata percentage",
+                "hu": "Általános levonási hányad százaléka"
+              },
+              "number": "prorrata-porcentaje",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "iva.regularizacion-inversiones",
+              "input_kind": "manual",
+              "label": "Capital goods adjustment",
+              "legal_refs": [
+                "ley-37-1992:art-107",
+                "ley-37-1992:art-108",
+                "ley-37-1992:art-109",
+                "ley-37-1992:art-110",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Regularització de l'IVA corresponent a béns d'inversió.",
+                "en": "VAT adjustment for capital goods under the investment-goods regularization rules.",
+                "hu": "Beruházási javakhoz kapcsolódó ÁFA-korrekció."
+              },
+              "localized_labels": {
+                "ca": "Regularització de béns d'inversió",
+                "en": "Capital goods adjustment",
+                "hu": "Beruházási javak korrekciója"
+              },
+              "number": "regularizacion-inversiones",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
+              "input_kind": "bound",
+              "label": "Amounts to offset pending from prior periods",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Quotes d'IVA a compensar que resten pendents de períodes anteriors.",
+                "en": "VAT amounts to offset that remain pending from prior periods.",
+                "hu": "Korábbi időszakokból fennmaradó, beszámításra váró ÁFA összegek."
+              },
+              "localized_labels": {
+                "ca": "Quotes a compensar pendents de períodes anteriors",
+                "en": "Amounts to offset pending from prior periods",
+                "hu": "Korábbi időszakokból fennmaradó beszámítandó összegek"
+              },
+              "number": "110",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": "iva.compensacion-aplicada-periodo",
+              "input_kind": "computed",
+              "label": "Prior-period offsets applied in this period",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Quotes pendents de períodes anteriors aplicades en aquest període.",
+                "en": "VAT amounts pending from prior periods that are applied in this period.",
+                "hu": "Korábbi időszakokból fennmaradó ÁFA összegek, amelyeket ebben az időszakban alkalmaznak."
+              },
+              "localized_labels": {
+                "ca": "Compensacions de períodes anteriors aplicades en aquest període",
+                "en": "Prior-period offsets applied in this period",
+                "hu": "Ebben az időszakban alkalmazott korábbi időszaki beszámítások"
+              },
+              "number": "78",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
+              "input_kind": "computed",
+              "label": "Prior-period offsets pending for later periods",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Compensacions d'IVA de períodes anteriors que resten pendents per a períodes posteriors.",
+                "en": "Prior-period VAT offsets that remain pending for later periods.",
+                "hu": "Korábbi időszaki ÁFA beszámítások, amelyek későbbi időszakokra fennmaradnak."
+              },
+              "localized_labels": {
+                "ca": "Compensacions de períodes anteriors pendents per a períodes posteriors",
+                "en": "Prior-period offsets pending for later periods",
+                "hu": "Későbbi időszakokra fennmaradó korábbi beszámítások"
+              },
+              "number": "87",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": "iva.resultado",
+              "input_kind": "computed",
+              "label": "Self-assessment result",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-hac-819-2024:art-1"
+              ],
+              "localized_help": {
+                "ca": "Resultat de l'autoliquidació després de la fórmula d'ajust del Modelo 303.",
+                "en": "Result of the self-assessment after the Modelo 303 adjustment formula.",
+                "hu": "Az önbevallás eredménye a Modelo 303 korrekciós képlete után."
+              },
+              "localized_labels": {
+                "ca": "Resultat de l'autoliquidació",
+                "en": "Self-assessment result",
+                "hu": "Önbevallás eredménye"
+              },
+              "number": "69",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "iva.compensacion-disponible-fin-periodo",
+              "input_kind": "computed",
+              "label": "Offset balance available at period end",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Saldo d'IVA a compensar disponible per traslladar a períodes posteriors.",
+                "en": "VAT offset balance available to carry forward after this period.",
+                "hu": "Későbbi időszakokra átvihető, az időszak végén rendelkezésre álló ÁFA beszámítási egyenleg."
+              },
+              "localized_labels": {
+                "ca": "Saldo de compensació disponible al final del període",
+                "en": "Offset balance available at period end",
+                "hu": "Időszak végén rendelkezésre álló beszámítási egyenleg"
+              },
+              "number": "compensacion-disponible-fin-periodo",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": "iva.compensacion-generada-periodo",
+              "input_kind": "computed",
+              "label": "Offset balance generated in this period",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Saldo d'IVA a compensar generat per l'autoliquidació d'aquest període.",
+                "en": "VAT offset balance generated by this period's self-assessment.",
+                "hu": "Az adott időszak önbevallása által keletkeztetett ÁFA beszámítási egyenleg."
+              },
+              "localized_labels": {
+                "ca": "Saldo a compensar generat en aquest període",
+                "en": "Offset balance generated in this period",
+                "hu": "Ebben az időszakban keletkezett beszámítási egyenleg"
+              },
+              "number": "compensacion-generada-periodo",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": "decl.ejercicio",
+              "input_kind": "informational",
+              "label": "Self-assessment tax year",
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Exercici fiscal al qual es refereix l'autoliquidació.",
+                "en": "Tax year to which the self-assessment refers.",
+                "hu": "Az az adóév, amelyre az önbevallás vonatkozik."
+              },
+              "localized_labels": {
+                "ca": "Exercici fiscal de l'autoliquidació",
+                "en": "Self-assessment tax year",
+                "hu": "Az önbevallás adóéve"
+              },
+              "number": "ejercicio",
+              "required": true,
+              "source_refs": [
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "decl.periodo",
+              "input_kind": "informational",
+              "label": "Quarterly period",
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Període trimestral de l'autoliquidació: 1T, 2T, 3T o 4T.",
+                "en": "Quarterly period for the self-assessment: 1Q, 2Q, 3Q, or 4Q.",
+                "hu": "Az önbevallás negyedéves időszaka: 1T, 2T, 3T vagy 4T."
+              },
+              "localized_labels": {
+                "ca": "Període trimestral",
+                "en": "Quarterly period",
+                "hu": "Negyedéves időszak"
+              },
+              "number": "periodo",
+              "required": true,
+              "source_refs": [
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "150",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 1 - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 150: base imposable de l'IVA meritat en el règim general nou tipus tram 1.",
+                "en": "Box 150: taxable base for accrued VAT under the general regime new rate tier 1.",
+                "hu": "150. mező: keletkezett ÁFA adóalapja az általános rendszer új kulcsának 1. sávjában."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general nou tipus tram 1 - base imposable",
+                "en": "Accrued VAT, general regime new rate tier 1 - taxable base",
+                "hu": "Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - adóalap"
+              },
+              "number": "150",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "151",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 1 - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 151: percentatge del tipus de l'IVA meritat en el règim general nou tipus tram 1.",
+                "en": "Box 151: rate percentage for accrued VAT under the general regime new rate tier 1.",
+                "hu": "151. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer új kulcsának 1. sávjában."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general nou tipus tram 1 - percentatge del tipus",
+                "en": "Accrued VAT, general regime new rate tier 1 - rate percentage",
+                "hu": "Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - kulcs százaléka"
+              },
+              "number": "151",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "152",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 1 - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 152: quota d'IVA meritat en el règim general nou tipus tram 1.",
+                "en": "Box 152: VAT amount for accrued VAT under the general regime new rate tier 1.",
+                "hu": "152. mező: keletkezett ÁFA összege az általános rendszer új kulcsának 1. sávjában."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general nou tipus tram 1 - quota",
+                "en": "Accrued VAT, general regime new rate tier 1 - VAT amount",
+                "hu": "Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - ÁFA összeg"
+              },
+              "number": "152",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "153",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 2 - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 153: base imposable de l'IVA meritat en el règim general nou tipus tram 2.",
+                "en": "Box 153: taxable base for accrued VAT under the general regime new rate tier 2.",
+                "hu": "153. mező: keletkezett ÁFA adóalapja az általános rendszer új kulcsának 2. sávjában."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general nou tipus tram 2 - base imposable",
+                "en": "Accrued VAT, general regime new rate tier 2 - taxable base",
+                "hu": "Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - adóalap"
+              },
+              "number": "153",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "154",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 2 - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 154: percentatge del tipus de l'IVA meritat en el règim general nou tipus tram 2.",
+                "en": "Box 154: rate percentage for accrued VAT under the general regime new rate tier 2.",
+                "hu": "154. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer új kulcsának 2. sávjában."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general nou tipus tram 2 - percentatge del tipus",
+                "en": "Accrued VAT, general regime new rate tier 2 - rate percentage",
+                "hu": "Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - kulcs százaléka"
+              },
+              "number": "154",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "155",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 2 - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 155: quota d'IVA meritat en el règim general nou tipus tram 2.",
+                "en": "Box 155: VAT amount for accrued VAT under the general regime new rate tier 2.",
+                "hu": "155. mező: keletkezett ÁFA összege az általános rendszer új kulcsának 2. sávjában."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general nou tipus tram 2 - quota",
+                "en": "Accrued VAT, general regime new rate tier 2 - VAT amount",
+                "hu": "Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - ÁFA összeg"
+              },
+              "number": "155",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "156",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 0.5% - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 156: base imposable del recàrrec d'equivalència al 0,5%.",
+                "en": "Box 156: taxable base for the 0.5% equivalence surcharge.",
+                "hu": "156. mező: a 0,5%-os egyenértékűségi felár adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 0,5% - base imposable",
+                "en": "Equivalence surcharge at 0.5% - taxable base",
+                "hu": "Egyenértékűségi felár 0,5% - adóalap"
+              },
+              "number": "156",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "157",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 0.5% - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 157: percentatge del tipus del recàrrec d'equivalència al 0,5%.",
+                "en": "Box 157: rate percentage for the 0.5% equivalence surcharge.",
+                "hu": "157. mező: a 0,5%-os egyenértékűségi felár kulcsának százaléka."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 0,5% - percentatge del tipus",
+                "en": "Equivalence surcharge at 0.5% - rate percentage",
+                "hu": "Egyenértékűségi felár 0,5% - kulcs százaléka"
+              },
+              "number": "157",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "158",
+              "input_kind": "bound",
+              "label": "Equivalence surcharge at 0.5% - surcharge amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 158: quota del recàrrec d'equivalència al 0,5%.",
+                "en": "Box 158: surcharge amount for the 0.5% equivalence surcharge.",
+                "hu": "158. mező: a 0,5%-os egyenértékűségi felár összege."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 0,5% - quota",
+                "en": "Equivalence surcharge at 0.5% - surcharge amount",
+                "hu": "Egyenértékűségi felár 0,5% - felár összege"
+              },
+              "number": "158",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "165",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime 2% rate from 2024 - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 165: base imposable de l'IVA meritat en el règim general al tipus del 2% des de 2024.",
+                "en": "Box 165: taxable base for accrued VAT under the general regime 2% rate from 2024.",
+                "hu": "165. mező: keletkezett ÁFA adóalapja az általános rendszer 2024-től alkalmazandó 2%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus 2% des de 2024 - base imposable",
+                "en": "Accrued VAT, general regime 2% rate from 2024 - taxable base",
+                "hu": "Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap"
+              },
+              "number": "165",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "166",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime 2% rate from 2024 - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 166: percentatge del tipus de l'IVA meritat en el règim general al tipus del 2% des de 2024.",
+                "en": "Box 166: rate percentage for accrued VAT under the general regime 2% rate from 2024.",
+                "hu": "166. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer 2024-től alkalmazandó 2%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus 2% des de 2024 - percentatge del tipus",
+                "en": "Accrued VAT, general regime 2% rate from 2024 - rate percentage",
+                "hu": "Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - kulcs százaléka"
+              },
+              "number": "166",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "167",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime 2% rate from 2024 - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 167: quota d'IVA meritat en el règim general al tipus del 2% des de 2024.",
+                "en": "Box 167: VAT amount for accrued VAT under the general regime 2% rate from 2024.",
+                "hu": "167. mező: keletkezett ÁFA összege az általános rendszer 2024-től alkalmazandó 2%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus 2% des de 2024 - quota",
+                "en": "Accrued VAT, general regime 2% rate from 2024 - VAT amount",
+                "hu": "Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - ÁFA összeg"
+              },
+              "number": "167",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "168",
+              "input_kind": "manual",
+              "label": "New equivalence surcharge rate from 2024 - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 168: base imposable del nou tipus de recàrrec d'equivalència des de 2024.",
+                "en": "Box 168: taxable base for the new equivalence surcharge rate from 2024.",
+                "hu": "168. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Nou tipus de recàrrec d'equivalència des de 2024 - base imposable",
+                "en": "New equivalence surcharge rate from 2024 - taxable base",
+                "hu": "Új egyenértékűségi felárkulcs 2024-től - adóalap"
+              },
+              "number": "168",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "169",
+              "input_kind": "manual",
+              "label": "New equivalence surcharge rate from 2024 - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 169: percentatge del tipus del nou recàrrec d'equivalència des de 2024.",
+                "en": "Box 169: rate percentage for the new equivalence surcharge rate from 2024.",
+                "hu": "169. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs százaléka."
+              },
+              "localized_labels": {
+                "ca": "Nou tipus de recàrrec d'equivalència des de 2024 - percentatge del tipus",
+                "en": "New equivalence surcharge rate from 2024 - rate percentage",
+                "hu": "Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka"
+              },
+              "number": "169",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "170",
+              "input_kind": "manual",
+              "label": "New equivalence surcharge rate from 2024 - surcharge amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 170: quota del nou recàrrec d'equivalència des de 2024.",
+                "en": "Box 170: surcharge amount for the new equivalence surcharge rate from 2024.",
+                "hu": "170. mező: a 2024-től alkalmazandó új egyenértékűségi felár összege."
+              },
+              "localized_labels": {
+                "ca": "Nou tipus de recàrrec d'equivalència des de 2024 - quota",
+                "en": "New equivalence surcharge rate from 2024 - surcharge amount",
+                "hu": "Új egyenértékűségi felárkulcs 2024-től - felár összege"
+              },
+              "number": "170",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "01",
+              "input_kind": "bound",
+              "label": "Accrued VAT, general regime super-reduced 4% rate - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 01: base imposable de l'IVA meritat en el règim general al tipus superreduït del 4%.",
+                "en": "Box 01: taxable base for accrued VAT under the general regime super-reduced 4% rate.",
+                "hu": "01. mező: keletkezett ÁFA adóalapja az általános rendszer szupercsökkentett 4%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus superreduït 4% - base imposable",
+                "en": "Accrued VAT, general regime super-reduced 4% rate - taxable base",
+                "hu": "Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs - adóalap"
+              },
+              "number": "01",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "02",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime super-reduced 4% rate - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 02: percentatge del tipus de l'IVA meritat en el règim general al tipus superreduït del 4%.",
+                "en": "Box 02: rate percentage for accrued VAT under the general regime super-reduced 4% rate.",
+                "hu": "02. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer szupercsökkentett 4%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus superreduït 4% - percentatge del tipus",
+                "en": "Accrued VAT, general regime super-reduced 4% rate - rate percentage",
+                "hu": "Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs - kulcs százaléka"
+              },
+              "number": "02",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "03",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime super-reduced 4% rate - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 03: quota d'IVA meritat en el règim general al tipus superreduït del 4%.",
+                "en": "Box 03: VAT amount for accrued VAT under the general regime super-reduced 4% rate.",
+                "hu": "03. mező: keletkezett ÁFA összege az általános rendszer szupercsökkentett 4%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus superreduït 4% - quota",
+                "en": "Accrued VAT, general regime super-reduced 4% rate - VAT amount",
+                "hu": "Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs - ÁFA összeg"
+              },
+              "number": "03",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "04",
+              "input_kind": "bound",
+              "label": "Accrued VAT, general regime reduced 10% rate - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 04: base imposable de l'IVA meritat en el règim general al tipus reduït del 10%.",
+                "en": "Box 04: taxable base for accrued VAT under the general regime reduced 10% rate.",
+                "hu": "04. mező: keletkezett ÁFA adóalapja az általános rendszer csökkentett 10%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus reduït 10% - base imposable",
+                "en": "Accrued VAT, general regime reduced 10% rate - taxable base",
+                "hu": "Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs - adóalap"
+              },
+              "number": "04",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "05",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime reduced 10% rate - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 05: percentatge del tipus de l'IVA meritat en el règim general al tipus reduït del 10%.",
+                "en": "Box 05: rate percentage for accrued VAT under the general regime reduced 10% rate.",
+                "hu": "05. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer csökkentett 10%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus reduït 10% - percentatge del tipus",
+                "en": "Accrued VAT, general regime reduced 10% rate - rate percentage",
+                "hu": "Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs - kulcs százaléka"
+              },
+              "number": "05",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "06",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime reduced 10% rate - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 06: quota d'IVA meritat en el règim general al tipus reduït del 10%.",
+                "en": "Box 06: VAT amount for accrued VAT under the general regime reduced 10% rate.",
+                "hu": "06. mező: keletkezett ÁFA összege az általános rendszer csökkentett 10%-os kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus reduït 10% - quota",
+                "en": "Accrued VAT, general regime reduced 10% rate - VAT amount",
+                "hu": "Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs - ÁFA összeg"
+              },
+              "number": "06",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "07",
+              "input_kind": "bound",
+              "label": "Accrued VAT, general regime standard 21% rate - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 07: base imposable de l'IVA meritat en el règim general al tipus general del 21%.",
+                "en": "Box 07: taxable base for accrued VAT under the general regime standard 21% rate.",
+                "hu": "07. mező: keletkezett ÁFA adóalapja az általános rendszer 21%-os általános kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus general 21% - base imposable",
+                "en": "Accrued VAT, general regime standard 21% rate - taxable base",
+                "hu": "Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - adóalap"
+              },
+              "number": "07",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "08",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime standard 21% rate - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 08: percentatge del tipus de l'IVA meritat en el règim general al tipus general del 21%.",
+                "en": "Box 08: rate percentage for accrued VAT under the general regime standard 21% rate.",
+                "hu": "08. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer 21%-os általános kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus general 21% - percentatge del tipus",
+                "en": "Accrued VAT, general regime standard 21% rate - rate percentage",
+                "hu": "Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - kulcs százaléka"
+              },
+              "number": "08",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "09",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime standard 21% rate - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 09: quota d'IVA meritat en el règim general al tipus general del 21%.",
+                "en": "Box 09: VAT amount for accrued VAT under the general regime standard 21% rate.",
+                "hu": "09. mező: keletkezett ÁFA összege az általános rendszer 21%-os általános kulcsán."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat, règim general tipus general 21% - quota",
+                "en": "Accrued VAT, general regime standard 21% rate - VAT amount",
+                "hu": "Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - ÁFA összeg"
+              },
+              "number": "09",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "10",
+              "input_kind": "manual",
+              "label": "Accrued VAT on intra-Community acquisitions of goods and services - base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 10: base de l'IVA meritat per adquisicions intracomunitàries de béns i serveis.",
+                "en": "Box 10: base for accrued VAT on intra-Community acquisitions of goods and services.",
+                "hu": "10. mező: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat per adquisicions intracomunitàries de béns i serveis - base",
+                "en": "Accrued VAT on intra-Community acquisitions of goods and services - base",
+                "hu": "Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett ÁFA - alap"
+              },
+              "number": "10",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "11",
+              "input_kind": "computed",
+              "label": "Accrued VAT on intra-Community acquisitions of goods and services - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 11: quota d'IVA meritat per adquisicions intracomunitàries de béns i serveis.",
+                "en": "Box 11: VAT amount for accrued VAT on intra-Community acquisitions of goods and services.",
+                "hu": "11. mező: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat per adquisicions intracomunitàries de béns i serveis - quota",
+                "en": "Accrued VAT on intra-Community acquisitions of goods and services - VAT amount",
+                "hu": "Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett ÁFA - összeg"
+              },
+              "number": "11",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "12",
+              "input_kind": "manual",
+              "label": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 12: base de l'IVA meritat per altres operacions amb inversió del subjecte passiu excloses les intracomunitàries.",
+                "en": "Box 12: base for accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions.",
+                "hu": "12. mező: Közösségen belüli ügyleteken kívüli egyéb fordított adózású ügyletek után keletkezett ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat per altres operacions amb inversió del subjecte passiu excloses les intracomunitàries - base",
+                "en": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - base",
+                "hu": "Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen belüliek nélkül - alap"
+              },
+              "number": "12",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "13",
+              "input_kind": "computed",
+              "label": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 13: quota d'IVA meritat per altres operacions amb inversió del subjecte passiu excloses les intracomunitàries.",
+                "en": "Box 13: VAT amount for accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions.",
+                "hu": "13. mező: Közösségen belüli ügyleteken kívüli egyéb fordított adózású ügyletek után keletkezett ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA meritat per altres operacions amb inversió del subjecte passiu excloses les intracomunitàries - quota",
+                "en": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - VAT amount",
+                "hu": "Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen belüliek nélkül - összeg"
+              },
+              "number": "13",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "14",
+              "input_kind": "manual",
+              "label": "Changes to accrued VAT taxable bases and amounts - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 14: base imposable de la modificació de bases i quotes d'IVA meritat.",
+                "en": "Box 14: taxable base for changes to accrued VAT taxable bases and amounts.",
+                "hu": "14. mező: keletkezett ÁFA alapjainak és összegeinek módosításához tartozó adóalap."
+              },
+              "localized_labels": {
+                "ca": "Modificació de bases i quotes d'IVA meritat - base imposable",
+                "en": "Changes to accrued VAT taxable bases and amounts - taxable base",
+                "hu": "Keletkezett ÁFA alapjainak és összegeinek módosítása - adóalap"
+              },
+              "number": "14",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "15",
+              "input_kind": "manual",
+              "label": "Changes to accrued VAT taxable bases and amounts - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 15: quota de la modificació de bases i quotes d'IVA meritat.",
+                "en": "Box 15: VAT amount for changes to accrued VAT taxable bases and amounts.",
+                "hu": "15. mező: keletkezett ÁFA alapjainak és összegeinek módosításához tartozó ÁFA összeg."
+              },
+              "localized_labels": {
+                "ca": "Modificació de bases i quotes d'IVA meritat - quota",
+                "en": "Changes to accrued VAT taxable bases and amounts - VAT amount",
+                "hu": "Keletkezett ÁFA alapjainak és összegeinek módosítása - összeg"
+              },
+              "number": "15",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "16",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 1.0% - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 16: base imposable del recàrrec d'equivalència al 1,0%.",
+                "en": "Box 16: taxable base for the 1.0% equivalence surcharge.",
+                "hu": "16. mező: az 1,0%-os egyenértékűségi felár adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 1,0% - base imposable",
+                "en": "Equivalence surcharge at 1.0% - taxable base",
+                "hu": "Egyenértékűségi felár 1,0% - adóalap"
+              },
+              "number": "16",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "17",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 1.0% - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 17: percentatge del tipus del recàrrec d'equivalència al 1,0%.",
+                "en": "Box 17: rate percentage for the 1.0% equivalence surcharge.",
+                "hu": "17. mező: az 1,0%-os egyenértékűségi felár kulcsának százaléka."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 1,0% - percentatge del tipus",
+                "en": "Equivalence surcharge at 1.0% - rate percentage",
+                "hu": "Egyenértékűségi felár 1,0% - kulcs százaléka"
+              },
+              "number": "17",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "18",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 1.0% - surcharge amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 18: quota del recàrrec d'equivalència al 1,0%.",
+                "en": "Box 18: surcharge amount for the 1.0% equivalence surcharge.",
+                "hu": "18. mező: az 1,0%-os egyenértékűségi felár összege."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 1,0% - quota",
+                "en": "Equivalence surcharge at 1.0% - surcharge amount",
+                "hu": "Egyenértékűségi felár 1,0% - felár összege"
+              },
+              "number": "18",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "19",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 1.4% - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 19: base imposable del recàrrec d'equivalència al 1,4%.",
+                "en": "Box 19: taxable base for the 1.4% equivalence surcharge.",
+                "hu": "19. mező: az 1,4%-os egyenértékűségi felár adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 1,4% - base imposable",
+                "en": "Equivalence surcharge at 1.4% - taxable base",
+                "hu": "Egyenértékűségi felár 1,4% - adóalap"
+              },
+              "number": "19",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "20",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 1.4% - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 20: percentatge del tipus del recàrrec d'equivalència al 1,4%.",
+                "en": "Box 20: rate percentage for the 1.4% equivalence surcharge.",
+                "hu": "20. mező: az 1,4%-os egyenértékűségi felár kulcsának százaléka."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 1,4% - percentatge del tipus",
+                "en": "Equivalence surcharge at 1.4% - rate percentage",
+                "hu": "Egyenértékűségi felár 1,4% - kulcs százaléka"
+              },
+              "number": "20",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "21",
+              "input_kind": "bound",
+              "label": "Equivalence surcharge at 1.4% - surcharge amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 21: quota del recàrrec d'equivalència al 1,4%.",
+                "en": "Box 21: surcharge amount for the 1.4% equivalence surcharge.",
+                "hu": "21. mező: az 1,4%-os egyenértékűségi felár összege."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 1,4% - quota",
+                "en": "Equivalence surcharge at 1.4% - surcharge amount",
+                "hu": "Egyenértékűségi felár 1,4% - felár összege"
+              },
+              "number": "21",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "22",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 5.2% - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 22: base imposable del recàrrec d'equivalència al 5,2%.",
+                "en": "Box 22: taxable base for the 5.2% equivalence surcharge.",
+                "hu": "22. mező: az 5,2%-os egyenértékűségi felár adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 5,2% - base imposable",
+                "en": "Equivalence surcharge at 5.2% - taxable base",
+                "hu": "Egyenértékűségi felár 5,2% - adóalap"
+              },
+              "number": "22",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "23",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 5.2% - rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 23: percentatge del tipus del recàrrec d'equivalència al 5,2%.",
+                "en": "Box 23: rate percentage for the 5.2% equivalence surcharge.",
+                "hu": "23. mező: az 5,2%-os egyenértékűségi felár kulcsának százaléka."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 5,2% - percentatge del tipus",
+                "en": "Equivalence surcharge at 5.2% - rate percentage",
+                "hu": "Egyenértékűségi felár 5,2% - kulcs százaléka"
+              },
+              "number": "23",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "24",
+              "input_kind": "bound",
+              "label": "Equivalence surcharge at 5.2% - surcharge amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 24: quota del recàrrec d'equivalència al 5,2%.",
+                "en": "Box 24: surcharge amount for the 5.2% equivalence surcharge.",
+                "hu": "24. mező: az 5,2%-os egyenértékűségi felár összege."
+              },
+              "localized_labels": {
+                "ca": "Recàrrec d'equivalència al 5,2% - quota",
+                "en": "Equivalence surcharge at 5.2% - surcharge amount",
+                "hu": "Egyenértékűségi felár 5,2% - felár összege"
+              },
+              "number": "24",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "25",
+              "input_kind": "manual",
+              "label": "Changes to equivalence surcharge bases and amounts - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 25: base imposable de la modificació de bases i quotes del recàrrec d'equivalència.",
+                "en": "Box 25: taxable base for changes to equivalence surcharge bases and amounts.",
+                "hu": "25. mező: az egyenértékűségi felár alapjainak és összegeinek módosításához tartozó adóalap."
+              },
+              "localized_labels": {
+                "ca": "Modificació de bases i quotes del recàrrec d'equivalència - base imposable",
+                "en": "Changes to equivalence surcharge bases and amounts - taxable base",
+                "hu": "Egyenértékűségi felár alapjainak és összegeinek módosítása - adóalap"
+              },
+              "number": "25",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "26",
+              "input_kind": "manual",
+              "label": "Changes to equivalence surcharge bases and amounts - surcharge amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 26: quota de la modificació de bases i quotes del recàrrec d'equivalència.",
+                "en": "Box 26: surcharge amount for changes to equivalence surcharge bases and amounts.",
+                "hu": "26. mező: az egyenértékűségi felár alapjainak és összegeinek módosításához tartozó felár összege."
+              },
+              "localized_labels": {
+                "ca": "Modificació de bases i quotes del recàrrec d'equivalència - quota",
+                "en": "Changes to equivalence surcharge bases and amounts - surcharge amount",
+                "hu": "Egyenértékűségi felár alapjainak és összegeinek módosítása - felár összege"
+              },
+              "number": "26",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "27",
+              "input_kind": "computed",
+              "label": "Total accrued VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 27: total de la quota meritada.",
+                "en": "Box 27: total accrued VAT amount.",
+                "hu": "27. mező: összes keletkezett ÁFA összeg."
+              },
+              "localized_labels": {
+                "ca": "Total quota meritada",
+                "en": "Total accrued VAT amount",
+                "hu": "Összes keletkezett ÁFA összeg"
+              },
+              "number": "27",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "28",
+              "input_kind": "bound",
+              "label": "Deductible VAT on domestic current transactions - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 28: base de l'IVA deduïble en operacions interiors corrents.",
+                "en": "Box 28: base for deductible VAT on domestic current transactions.",
+                "hu": "28. mező: belföldi folyó ügyleteken levonható ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en operacions interiors corrents - base",
+                "en": "Deductible VAT on domestic current transactions - base",
+                "hu": "Levonható ÁFA belföldi folyó ügyleteken - alap"
+              },
+              "number": "28",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "29",
+              "input_kind": "computed",
+              "label": "Deductible VAT on domestic current transactions - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 29: quota d'IVA deduïble en operacions interiors corrents.",
+                "en": "Box 29: VAT amount for deductible VAT on domestic current transactions.",
+                "hu": "29. mező: belföldi folyó ügyleteken levonható ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en operacions interiors corrents - quota",
+                "en": "Deductible VAT on domestic current transactions - VAT amount",
+                "hu": "Levonható ÁFA belföldi folyó ügyleteken - összeg"
+              },
+              "number": "29",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "30",
+              "input_kind": "manual",
+              "label": "Deductible VAT on domestic capital goods - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 30: base de l'IVA deduïble en operacions interiors de béns d'inversió.",
+                "en": "Box 30: base for deductible VAT on domestic capital goods.",
+                "hu": "30. mező: belföldi beruházási javakon levonható ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en operacions interiors de béns d'inversió - base",
+                "en": "Deductible VAT on domestic capital goods - base",
+                "hu": "Levonható ÁFA belföldi beruházási javakon - alap"
+              },
+              "number": "30",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "31",
+              "input_kind": "manual",
+              "label": "Deductible VAT on domestic capital goods - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 31: quota d'IVA deduïble en operacions interiors de béns d'inversió.",
+                "en": "Box 31: VAT amount for deductible VAT on domestic capital goods.",
+                "hu": "31. mező: belföldi beruházási javakon levonható ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en operacions interiors de béns d'inversió - quota",
+                "en": "Deductible VAT on domestic capital goods - VAT amount",
+                "hu": "Levonható ÁFA belföldi beruházási javakon - összeg"
+              },
+              "number": "31",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "32",
+              "input_kind": "manual",
+              "label": "Deductible VAT on imports of current goods - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 32: base de l'IVA deduïble en importacions de béns corrents.",
+                "en": "Box 32: base for deductible VAT on imports of current goods.",
+                "hu": "32. mező: folyó áruk importján levonható ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en importacions de béns corrents - base",
+                "en": "Deductible VAT on imports of current goods - base",
+                "hu": "Levonható ÁFA folyó áruk importján - alap"
+              },
+              "number": "32",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "33",
+              "input_kind": "computed",
+              "label": "Deductible VAT on imports of current goods - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 33: quota d'IVA deduïble en importacions de béns corrents.",
+                "en": "Box 33: VAT amount for deductible VAT on imports of current goods.",
+                "hu": "33. mező: folyó áruk importján levonható ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en importacions de béns corrents - quota",
+                "en": "Deductible VAT on imports of current goods - VAT amount",
+                "hu": "Levonható ÁFA folyó áruk importján - összeg"
+              },
+              "number": "33",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "34",
+              "input_kind": "manual",
+              "label": "Deductible VAT on imports of capital goods - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 34: base de l'IVA deduïble en importacions de béns d'inversió.",
+                "en": "Box 34: base for deductible VAT on imports of capital goods.",
+                "hu": "34. mező: beruházási javak importján levonható ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en importacions de béns d'inversió - base",
+                "en": "Deductible VAT on imports of capital goods - base",
+                "hu": "Levonható ÁFA beruházási javak importján - alap"
+              },
+              "number": "34",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "35",
+              "input_kind": "manual",
+              "label": "Deductible VAT on imports of capital goods - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 35: quota d'IVA deduïble en importacions de béns d'inversió.",
+                "en": "Box 35: VAT amount for deductible VAT on imports of capital goods.",
+                "hu": "35. mező: beruházási javak importján levonható ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en importacions de béns d'inversió - quota",
+                "en": "Deductible VAT on imports of capital goods - VAT amount",
+                "hu": "Levonható ÁFA beruházási javak importján - összeg"
+              },
+              "number": "35",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "36",
+              "input_kind": "manual",
+              "label": "Deductible VAT on intra-Community acquisitions of current goods - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 36: base de l'IVA deduïble en adquisicions intracomunitàries corrents.",
+                "en": "Box 36: base for deductible VAT on intra-Community acquisitions of current goods.",
+                "hu": "36. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en adquisicions intracomunitàries corrents - base",
+                "en": "Deductible VAT on intra-Community acquisitions of current goods - base",
+                "hu": "Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap"
+              },
+              "number": "36",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "37",
+              "input_kind": "computed",
+              "label": "Deductible VAT on intra-Community acquisitions of current goods - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 37: quota d'IVA deduïble en adquisicions intracomunitàries corrents.",
+                "en": "Box 37: VAT amount for deductible VAT on intra-Community acquisitions of current goods.",
+                "hu": "37. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en adquisicions intracomunitàries corrents - quota",
+                "en": "Deductible VAT on intra-Community acquisitions of current goods - VAT amount",
+                "hu": "Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg"
+              },
+              "number": "37",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "38",
+              "input_kind": "manual",
+              "label": "Deductible VAT on intra-Community acquisitions of capital goods - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 38: base de l'IVA deduïble en adquisicions intracomunitàries de béns d'inversió.",
+                "en": "Box 38: base for deductible VAT on intra-Community acquisitions of capital goods.",
+                "hu": "38. mező: Közösségen belüli beruházási javak beszerzésén levonható ÁFA alapja."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en adquisicions intracomunitàries de béns d'inversió - base",
+                "en": "Deductible VAT on intra-Community acquisitions of capital goods - base",
+                "hu": "Levonható ÁFA Közösségen belüli beruházási javak beszerzésén - alap"
+              },
+              "number": "38",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "39",
+              "input_kind": "manual",
+              "label": "Deductible VAT on intra-Community acquisitions of capital goods - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 39: quota d'IVA deduïble en adquisicions intracomunitàries de béns d'inversió.",
+                "en": "Box 39: VAT amount for deductible VAT on intra-Community acquisitions of capital goods.",
+                "hu": "39. mező: Közösségen belüli beruházási javak beszerzésén levonható ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "IVA deduïble en adquisicions intracomunitàries de béns d'inversió - quota",
+                "en": "Deductible VAT on intra-Community acquisitions of capital goods - VAT amount",
+                "hu": "Levonható ÁFA Közösségen belüli beruházási javak beszerzésén - összeg"
+              },
+              "number": "39",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "40",
+              "input_kind": "manual",
+              "label": "Deduction corrections - base",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 40: base de la rectificació de deduccions.",
+                "en": "Box 40: base for deduction corrections.",
+                "hu": "40. mező: levonások helyesbítésének alapja."
+              },
+              "localized_labels": {
+                "ca": "Rectificació de deduccions - base",
+                "en": "Deduction corrections - base",
+                "hu": "Levonások helyesbítése - alap"
+              },
+              "number": "40",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "41",
+              "input_kind": "manual",
+              "label": "Deduction corrections - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 41: quota de la rectificació de deduccions.",
+                "en": "Box 41: VAT amount for deduction corrections.",
+                "hu": "41. mező: levonások helyesbítésének ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "Rectificació de deduccions - quota",
+                "en": "Deduction corrections - VAT amount",
+                "hu": "Levonások helyesbítése - összeg"
+              },
+              "number": "41",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "42",
+              "input_kind": "manual",
+              "label": "Special agriculture, livestock and fisheries scheme compensations - amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 42: quota de compensacions del règim especial d'agricultura, ramaderia i pesca.",
+                "en": "Box 42: compensation amount under the special agriculture, livestock and fisheries scheme.",
+                "hu": "42. mező: mezőgazdasági, állattenyésztési és halászati különös rendszer szerinti kompenzáció összege."
+              },
+              "localized_labels": {
+                "ca": "Compensacions del règim especial d'agricultura, ramaderia i pesca - quota",
+                "en": "Special agriculture, livestock and fisheries scheme compensations - amount",
+                "hu": "Mezőgazdasági, állattenyésztési és halászati különös rendszer kompenzációi - összeg"
+              },
+              "number": "42",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "43",
+              "input_kind": "manual",
+              "label": "Capital goods regularization - amount",
+              "legal_refs": [
+                "ley-37-1992:art-107",
+                "ley-37-1992:art-108",
+                "ley-37-1992:art-109",
+                "ley-37-1992:art-110",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 43: quota de regularització de béns d'inversió.",
+                "en": "Box 43: VAT amount for capital goods regularization.",
+                "hu": "43. mező: beruházási javak korrekciójának ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "Regularització de béns d'inversió - quota",
+                "en": "Capital goods regularization - amount",
+                "hu": "Beruházási javak korrekciója - összeg"
+              },
+              "number": "43",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "44",
+              "input_kind": "manual",
+              "label": "Pro rata regularization using final percentage - amount",
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-105",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 44: quota de regularització de prorrata per percentatge definitiu.",
+                "en": "Box 44: VAT amount for pro rata regularization using the final percentage.",
+                "hu": "44. mező: levonási hányad végleges százalék alapján végzett korrekciójának ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "Regularització de prorrata per percentatge definitiu - quota",
+                "en": "Pro rata regularization using final percentage - amount",
+                "hu": "Levonási hányad korrekciója végleges százalék alapján - összeg"
+              },
+              "number": "44",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "45",
+              "input_kind": "computed",
+              "label": "Total deductible amount",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 45: total de la quota d'IVA a deduir.",
+                "en": "Box 45: total deductible VAT amount.",
+                "hu": "45. mező: összes levonható ÁFA összeg."
+              },
+              "localized_labels": {
+                "ca": "Total a deduir - quota",
+                "en": "Total deductible amount",
+                "hu": "Összes levonható összeg"
+              },
+              "number": "45",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "47",
+              "input_kind": "manual",
+              "label": "Simplified regime, Q1-Q3 - sum of payments on account for all activities",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 47: suma d'ingressos a compte del conjunt d'activitats en règim simplificat en el 1T, 2T o 3T.",
+                "en": "Box 47: sum of payments on account for all activities under the simplified regime in Q1, Q2, or Q3.",
+                "hu": "47. mező: egyszerűsített rendszerben az összes tevékenység előlegfizetéseinek összege az 1T, 2T vagy 3T időszakban."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt d'activitats",
+                "en": "Simplified regime, Q1-Q3 - sum of payments on account for all activities",
+                "hu": "Egyszerűsített rendszer, 1T-2T-3T - minden tevékenység előlegfizetéseinek összege"
+              },
+              "number": "47",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "48",
+              "input_kind": "manual",
+              "label": "Simplified regime, Q4 - sum of derived amounts for all activities",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 48: suma de quotes derivades del conjunt d'activitats en règim simplificat en el 4T.",
+                "en": "Box 48: sum of amounts derived from all simplified-regime activities in Q4.",
+                "hu": "48. mező: egyszerűsített rendszerben az összes tevékenységből származó összegek összege a 4T időszakban."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat, 4T - suma de quotes derivades del conjunt d'activitats",
+                "en": "Simplified regime, Q4 - sum of derived amounts for all activities",
+                "hu": "Egyszerűsített rendszer, 4T - minden tevékenység származtatott összegeinek összege"
+              },
+              "number": "48",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "49",
+              "input_kind": "manual",
+              "label": "Simplified regime, Q4 - sum of payments on account made in the year",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 49: suma d'ingressos a compte realitzats durant l'exercici en règim simplificat en el 4T.",
+                "en": "Box 49: sum of payments on account made during the year under the simplified regime in Q4.",
+                "hu": "49. mező: egyszerűsített rendszerben az év során teljesített előlegfizetések összege a 4T időszakban."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat, 4T - suma d'ingressos a compte realitzats en l'exercici",
+                "en": "Simplified regime, Q4 - sum of payments on account made in the year",
+                "hu": "Egyszerűsített rendszer, 4T - az év során teljesített előlegfizetések összege"
+              },
+              "number": "49",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "50",
+              "input_kind": "manual",
+              "label": "Simplified regime, Q4 - result ([48] - [49])",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 50: resultat del règim simplificat en el 4T, calculat com la casella 48 menys la casella 49.",
+                "en": "Box 50: simplified-regime Q4 result calculated as box 48 minus box 49.",
+                "hu": "50. mező: egyszerűsített rendszer 4T eredménye, a 48. mező mínusz a 49. mező."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat, 4T - resultat ([48] - [49])",
+                "en": "Simplified regime, Q4 - result ([48] - [49])",
+                "hu": "Egyszerűsített rendszer, 4T - eredmény ([48] - [49])"
+              },
+              "number": "50",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "51",
+              "input_kind": "manual",
+              "label": "Simplified regime - accrued VAT on intra-Community acquisitions of goods",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 51: quotes d'IVA meritades per adquisicions intracomunitàries de béns en règim simplificat.",
+                "en": "Box 51: accrued VAT on intra-Community acquisitions of goods under the simplified regime.",
+                "hu": "51. mező: egyszerűsített rendszerben Közösségen belüli termékbeszerzések után keletkezett ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - quotes meritades per adquisicions intracomunitàries de béns",
+                "en": "Simplified regime - accrued VAT on intra-Community acquisitions of goods",
+                "hu": "Egyszerűsített rendszer - Közösségen belüli termékbeszerzések után keletkezett ÁFA"
+              },
+              "number": "51",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "52",
+              "input_kind": "manual",
+              "label": "Simplified regime - accrued VAT on supplies of fixed assets",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 52: quotes d'IVA meritades per lliuraments d'actius fixos en règim simplificat.",
+                "en": "Box 52: accrued VAT on supplies of fixed assets under the simplified regime.",
+                "hu": "52. mező: egyszerűsített rendszerben tárgyi eszközök értékesítése után keletkezett ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - quotes meritades per lliuraments d'actius fixos",
+                "en": "Simplified regime - accrued VAT on supplies of fixed assets",
+                "hu": "Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett ÁFA"
+              },
+              "number": "52",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "53",
+              "input_kind": "manual",
+              "label": "Simplified regime - accrued VAT from reverse-charge transactions",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 53: quotes d'IVA meritades en règim simplificat per operacions amb inversió del subjecte passiu.",
+                "en": "Box 53: accrued VAT under the simplified regime from transactions subject to reverse charge.",
+                "hu": "53. mező: egyszerűsített rendszerben fordított adózás alá tartozó ügyletekből keletkezett ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - quotes meritades d'IVA meritat per inversió del subjecte passiu",
+                "en": "Simplified regime - accrued VAT from reverse-charge transactions",
+                "hu": "Egyszerűsített rendszer - fordított adózású ügyletekből keletkezett ÁFA"
+              },
+              "number": "53",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "54",
+              "input_kind": "manual",
+              "label": "Simplified regime - total resulting amount",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 54: total de la quota resultant en règim simplificat.",
+                "en": "Box 54: total resulting VAT amount under the simplified regime.",
+                "hu": "54. mező: egyszerűsített rendszer szerinti teljes eredményösszeg."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - total quota resultant",
+                "en": "Simplified regime - total resulting amount",
+                "hu": "Egyszerűsített rendszer - teljes eredményösszeg"
+              },
+              "number": "54",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "55",
+              "input_kind": "manual",
+              "label": "Simplified regime - deductible VAT on acquisition or import of fixed assets",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 55: IVA deduïble per adquisició o importació d'actius fixos en règim simplificat.",
+                "en": "Box 55: deductible VAT on acquisition or import of fixed assets under the simplified regime.",
+                "hu": "55. mező: egyszerűsített rendszerben tárgyi eszköz beszerzésén vagy importján levonható ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - IVA deduïble per adquisició o importació d'actius fixos",
+                "en": "Simplified regime - deductible VAT on acquisition or import of fixed assets",
+                "hu": "Egyszerűsített rendszer - tárgyi eszköz beszerzésén vagy importján levonható ÁFA"
+              },
+              "number": "55",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "56",
+              "input_kind": "manual",
+              "label": "Simplified regime - deductible VAT from capital goods regularization",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 56: IVA deduïble per regularització de béns d'inversió en règim simplificat.",
+                "en": "Box 56: deductible VAT from capital goods regularization under the simplified regime.",
+                "hu": "56. mező: egyszerűsített rendszerben beruházási javak korrekciójából levonható ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - IVA deduïble per regularització de béns d'inversió",
+                "en": "Simplified regime - deductible VAT from capital goods regularization",
+                "hu": "Egyszerűsített rendszer - beruházási javak korrekciójából levonható ÁFA"
+              },
+              "number": "56",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "57",
+              "input_kind": "manual",
+              "label": "Simplified regime - total deductible VAT ([55] + [56])",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 57: total d'IVA deduïble en règim simplificat, calculat com la casella 55 més la casella 56.",
+                "en": "Box 57: total deductible VAT under the simplified regime, calculated as box 55 plus box 56.",
+                "hu": "57. mező: egyszerűsített rendszerben összes levonható ÁFA, az 55. mező és az 56. mező összegeként számítva."
+              },
+              "localized_labels": {
+                "ca": "Règim simplificat - total IVA deduïble ([55] + [56])",
+                "en": "Simplified regime - total deductible VAT ([55] + [56])",
+                "hu": "Egyszerűsített rendszer - összes levonható ÁFA ([55] + [56])"
+              },
+              "number": "57",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "58",
+              "input_kind": "manual",
+              "label": "Simplified regime result ([54] - [57])",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 58: resultat del règim simplificat, calculat com la casella 54 menys la casella 57.",
+                "en": "Box 58: simplified-regime result calculated as box 54 minus box 57.",
+                "hu": "58. mező: egyszerűsített rendszer eredménye, az 54. mező mínusz az 57. mező."
+              },
+              "localized_labels": {
+                "ca": "Resultat del règim simplificat ([54] - [57])",
+                "en": "Simplified regime result ([54] - [57])",
+                "hu": "Egyszerűsített rendszer eredménye ([54] - [57])"
+              },
+              "number": "58",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "59",
+              "input_kind": "bound",
+              "label": "Additional information - intra-Community supplies of goods and services",
+              "legal_refs": [
+                "ley-37-1992:art-25",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 59: informació addicional sobre lliuraments intracomunitaris de béns i serveis.",
+                "en": "Box 59: additional information on intra-Community supplies of goods and services.",
+                "hu": "59. mező: kiegészítő információ Közösségen belüli termék- és szolgáltatásértékesítésekről."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - lliuraments intracomunitaris de béns i serveis",
+                "en": "Additional information - intra-Community supplies of goods and services",
+                "hu": "Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések"
+              },
+              "number": "59",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "60",
+              "input_kind": "bound",
+              "label": "Additional information - exports and assimilated transactions",
+              "legal_refs": [
+                "ley-37-1992:art-21",
+                "ley-37-1992:art-22",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 60: informació addicional sobre exportacions i operacions assimilades.",
+                "en": "Box 60: additional information on exports and assimilated transactions.",
+                "hu": "60. mező: kiegészítő információ exportokról és azokkal egy tekintet alá eső ügyletekről."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - exportacions i operacions assimilades",
+                "en": "Additional information - exports and assimilated transactions",
+                "hu": "Kiegészítő információ - exportok és azokkal egy tekintet alá eső ügyletek"
+              },
+              "number": "60",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "120",
+              "input_kind": "manual",
+              "label": "Additional information - transactions not subject due to place-of-supply rules, excluding box 123",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 120: informació addicional sobre operacions no subjectes per regles de localització, exclosa la casella 123.",
+                "en": "Box 120: additional information on transactions not subject to VAT due to place-of-supply rules, excluding box 123.",
+                "hu": "120. mező: kiegészítő információ teljesítési hely szabályai miatt nem adóköteles ügyletekről, a 123. mező kivételével."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - operacions no subjectes per regles de localització, exclosa la casella 123",
+                "en": "Additional information - transactions not subject due to place-of-supply rules, excluding box 123",
+                "hu": "Kiegészítő információ - teljesítési hely szabályai miatt nem adóköteles ügyletek, a 123. mező kivételével"
+              },
+              "number": "120",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "122",
+              "input_kind": "manual",
+              "label": "Additional information - transactions subject to reverse charge",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 122: informació addicional sobre operacions subjectes a inversió del subjecte passiu.",
+                "en": "Box 122: additional information on transactions subject to reverse charge.",
+                "hu": "122. mező: kiegészítő információ fordított adózás alá tartozó ügyletekről."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - operacions subjectes a inversió del subjecte passiu",
+                "en": "Additional information - transactions subject to reverse charge",
+                "hu": "Kiegészítő információ - fordított adózás alá tartozó ügyletek"
+              },
+              "number": "122",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "123",
+              "input_kind": "manual",
+              "label": "Additional information - transactions not subject under one-stop shop special schemes place-of-supply rules",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 123: informació addicional sobre operacions no subjectes per regles de localització en règims especials de finestreta única.",
+                "en": "Box 123: additional information on transactions not subject under place-of-supply rules for one-stop shop special schemes.",
+                "hu": "123. mező: kiegészítő információ egyablakos különös rendszerek teljesítési hely szabályai szerint nem adóköteles ügyletekről."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - operacions no subjectes per localització en règims especials de finestreta única",
+                "en": "Additional information - transactions not subject under one-stop shop special schemes place-of-supply rules",
+                "hu": "Kiegészítő információ - egyablakos különös rendszerek teljesítési hely szabályai szerint nem adóköteles ügyletek"
+              },
+              "number": "123",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "124",
+              "input_kind": "manual",
+              "label": "Additional information - transactions subject under one-stop shop special schemes",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 124: informació addicional sobre operacions subjectes en règims especials de finestreta única.",
+                "en": "Box 124: additional information on transactions subject under one-stop shop special schemes.",
+                "hu": "124. mező: kiegészítő információ egyablakos különös rendszerek alá tartozó adóköteles ügyletekről."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - operacions subjectes en règims especials de finestreta única",
+                "en": "Additional information - transactions subject under one-stop shop special schemes",
+                "hu": "Kiegészítő információ - egyablakos különös rendszerek alá tartozó adóköteles ügyletek"
+              },
+              "number": "124",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "62",
+              "input_kind": "bound",
+              "label": "Additional information - cash accounting supplies accrued under Article 75 LIVA - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-75",
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 62: base imposable de lliuraments de criteri de caixa meritats segons l'article 75 LIVA.",
+                "en": "Box 62: taxable base for cash accounting supplies accrued under Article 75 LIVA.",
+                "hu": "62. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű teljesítések adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - lliuraments de criteri de caixa meritats art. 75 LIVA - base imposable",
+                "en": "Additional information - cash accounting supplies accrued under Article 75 LIVA - taxable base",
+                "hu": "Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk szerinti teljesítések - adóalap"
+              },
+              "number": "62",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "63",
+              "input_kind": "bound",
+              "label": "Additional information - cash accounting supplies accrued under Article 75 LIVA - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-75",
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 63: quota de lliuraments de criteri de caixa meritats segons l'article 75 LIVA.",
+                "en": "Box 63: VAT amount for cash accounting supplies accrued under Article 75 LIVA.",
+                "hu": "63. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű teljesítések ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - lliuraments de criteri de caixa meritats art. 75 LIVA - quota",
+                "en": "Additional information - cash accounting supplies accrued under Article 75 LIVA - VAT amount",
+                "hu": "Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk szerinti teljesítések - ÁFA összeg"
+              },
+              "number": "63",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "74",
+              "input_kind": "bound",
+              "label": "Additional information - cash accounting acquisitions - taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "ley-37-1992:art-163-quinquiesdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 74: base imposable d'adquisicions en el règim de criteri de caixa.",
+                "en": "Box 74: taxable base for acquisitions under the cash accounting scheme.",
+                "hu": "74. mező: pénzforgalmi szemléletű beszerzések adóalapja."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - adquisicions de criteri de caixa - base imposable",
+                "en": "Additional information - cash accounting acquisitions - taxable base",
+                "hu": "Kiegészítő információ - pénzforgalmi szemléletű beszerzések - adóalap"
+              },
+              "number": "74",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "75",
+              "input_kind": "bound",
+              "label": "Additional information - cash accounting acquisitions - VAT amount",
+              "legal_refs": [
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "ley-37-1992:art-163-quinquiesdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 75: quota d'adquisicions en el règim de criteri de caixa.",
+                "en": "Box 75: VAT amount for acquisitions under the cash accounting scheme.",
+                "hu": "75. mező: pénzforgalmi szemléletű beszerzések ÁFA összege."
+              },
+              "localized_labels": {
+                "ca": "Informació addicional - adquisicions de criteri de caixa - quota",
+                "en": "Additional information - cash accounting acquisitions - VAT amount",
+                "hu": "Kiegészítő információ - pénzforgalmi szemléletű beszerzések - ÁFA összeg"
+              },
+              "number": "75",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "76",
+              "input_kind": "manual",
+              "label": "Result - regularization under Article 80.Five.5 LIVA",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 76: ajust del resultat per regularització de quotes segons l'article 80.cinc.5a LIVA.",
+                "en": "Box 76: result adjustment for regularization under Article 80.Five.5 LIVA.",
+                "hu": "76. mező: eredménykorrekció a LIVA 80. cikk ötödik bekezdés 5a pontja szerint."
+              },
+              "localized_labels": {
+                "ca": "Resultat - regularització de quotes art. 80 cinc 5a LIVA",
+                "en": "Result - regularization under Article 80.Five.5 LIVA",
+                "hu": "Eredmény - LIVA 80. cikk ötödik bekezdés 5a pont szerinti korrekció"
+              },
+              "number": "76",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "64",
+              "input_kind": "computed",
+              "label": "Result - sum of results ([46] + [58] + [76])",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-hac-819-2024:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 64: suma de resultats, calculada com la casella 46 més la casella 58 més la casella 76.",
+                "en": "Box 64: sum of results, calculated as box 46 plus box 58 plus box 76.",
+                "hu": "64. mező: eredmények összege, a 46., 58. és 76. mező összegeként számítva."
+              },
+              "localized_labels": {
+                "ca": "Resultat - suma de resultats ([46] + [58] + [76])",
+                "en": "Result - sum of results ([46] + [58] + [76])",
+                "hu": "Eredmény - eredmények összege ([46] + [58] + [76])"
+              },
+              "number": "64",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "65",
+              "input_kind": "bound",
+              "label": "Result - percentage attributable to the State Tax Administration",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 65: percentatge del resultat atribuïble a l'Administració de l'Estat.",
+                "en": "Box 65: percentage of the result attributable to the State Tax Administration.",
+                "hu": "65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka."
+              },
+              "localized_labels": {
+                "ca": "Resultat - percentatge atribuïble a l'Administració de l'Estat",
+                "en": "Result - percentage attributable to the State Tax Administration",
+                "hu": "Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék"
+              },
+              "number": "65",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "66",
+              "input_kind": "computed",
+              "label": "Result - amount attributable to the State Tax Administration ([64] x [65] / 100)",
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-hac-819-2024:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 66: import atribuïble a l'Administració de l'Estat, calculat com la casella 64 per la casella 65 dividit per 100.",
+                "en": "Box 66: amount attributable to the State Tax Administration, calculated as box 64 times box 65 divided by 100.",
+                "hu": "66. mező: az Állami Adóigazgatásnak tulajdonítható összeg, a 64. mező szorozva a 65. mezővel, osztva 100-zal."
+              },
+              "localized_labels": {
+                "ca": "Resultat - import atribuïble a l'Administració de l'Estat ([64] x [65] / 100)",
+                "en": "Result - amount attributable to the State Tax Administration ([64] x [65] / 100)",
+                "hu": "Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64] x [65] / 100)"
+              },
+              "number": "66",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "77",
+              "input_kind": "manual",
+              "label": "Result - import VAT assessed by Customs pending payment",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 77: IVA a la importació liquidat per la Duana que resta pendent d'ingrés.",
+                "en": "Box 77: import VAT assessed by Customs that is pending payment.",
+                "hu": "77. mező: a Vámhatóság által megállapított, befizetésre váró import ÁFA."
+              },
+              "localized_labels": {
+                "ca": "Resultat - IVA a la importació liquidat per la Duana pendent d'ingrés",
+                "en": "Result - import VAT assessed by Customs pending payment",
+                "hu": "Eredmény - Vámhatóság által megállapított, befizetésre váró import ÁFA"
+              },
+              "number": "77",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "68",
+              "input_kind": "manual",
+              "label": "Result - joint taxation annual regularization result",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 68: resultat de regularització anual de tributació conjunta.",
+                "en": "Box 68: annual regularization result for joint taxation.",
+                "hu": "68. mező: közös adózás éves korrekciós eredménye."
+              },
+              "localized_labels": {
+                "ca": "Resultat - resultat de regularització anual de tributació conjunta",
+                "en": "Result - joint taxation annual regularization result",
+                "hu": "Eredmény - közös adózás éves korrekciós eredménye"
+              },
+              "number": "68",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "70",
+              "input_kind": "manual",
+              "label": "Result - amounts payable from previous self-assessments for the same year and period",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 70: resultats a ingressar procedents d'autoliquidacions anteriors del mateix exercici i període.",
+                "en": "Box 70: amounts payable from previous self-assessments for the same year and period.",
+                "hu": "70. mező: ugyanazon év és időszak korábbi önbevallásaiból fizetendő összegek."
+              },
+              "localized_labels": {
+                "ca": "Resultat - resultats a ingressar d'autoliquidacions anteriors de l'exercici i període",
+                "en": "Result - amounts payable from previous self-assessments for the same year and period",
+                "hu": "Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő eredmények"
+              },
+              "number": "70",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "109",
+              "input_kind": "manual",
+              "label": "Result - refunds agreed by AEAT for previous self-assessments for the same year and period",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 109: devolucions acordades per l'AEAT en autoliquidacions anteriors del mateix exercici i període.",
+                "en": "Box 109: refunds agreed by AEAT for previous self-assessments for the same year and period.",
+                "hu": "109. mező: AEAT által jóváhagyott visszatérítések ugyanazon év és időszak korábbi önbevallásaihoz kapcsolódóan."
+              },
+              "localized_labels": {
+                "ca": "Resultat - devolucions acordades per l'AEAT d'autoliquidacions anteriors de l'exercici i període",
+                "en": "Result - refunds agreed by AEAT for previous self-assessments for the same year and period",
+                "hu": "Eredmény - AEAT által jóváhagyott visszatérítések ugyanazon év és időszak korábbi önbevallásaiból"
+              },
+              "number": "109",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "71",
+              "input_kind": "computed",
+              "label": "Final result ([69] - [70] + [109])",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-hac-819-2024:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 71: resultat final calculat com la casella 69 menys la casella 70 més la casella 109.",
+                "en": "Box 71: final result calculated as box 69 minus box 70 plus box 109.",
+                "hu": "71. mező: végső eredmény, a 69. mező mínusz a 70. mező plusz a 109. mező."
+              },
+              "localized_labels": {
+                "ca": "Resultat final ([69] - [70] + [109])",
+                "en": "Final result ([69] - [70] + [109])",
+                "hu": "Végső eredmény ([69] - [70] + [109])"
+              },
+              "number": "71",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ]
+            },
+            {
+              "casilla_id": "108",
+              "input_kind": "manual",
+              "label": "Corrective return - other adjustments in cases determined by discrepancy with administrative criterion",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 108: altres ajustos en una autoliquidació rectificativa per supòsits determinats per discrepància de criteri administratiu.",
+                "en": "Box 108: other adjustments in a corrective return for cases determined by discrepancy with administrative criterion.",
+                "hu": "108. mező: helyesbítő bevallás egyéb korrekciói a közigazgatási állásponttal való eltérés meghatározott eseteiben."
+              },
+              "localized_labels": {
+                "ca": "Rectificativa - altres ajustos en supòsits determinats per discrepància de criteri administratiu",
+                "en": "Corrective return - other adjustments in cases determined by discrepancy with administrative criterion",
+                "hu": "Helyesbítő bevallás - egyéb korrekciók közigazgatási állásponttal való eltérés meghatározott eseteiben"
+              },
+              "number": "108",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "111",
+              "input_kind": "manual",
+              "label": "Corrective return - correction amount",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "localized_help": {
+                "ca": "Casella 111: import de la rectificació declarat en una autoliquidació rectificativa.",
+                "en": "Box 111: correction amount reported in a corrective return.",
+                "hu": "111. mező: helyesbítő bevallásban szereplő helyesbítés összege."
+              },
+              "localized_labels": {
+                "ca": "Rectificativa - import de la rectificació",
+                "en": "Corrective return - correction amount",
+                "hu": "Helyesbítő bevallás - helyesbítés összege"
+              },
+              "number": "111",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "modulos-iva-epigrafe",
+              "input_kind": "manual",
+              "label": "Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+              ],
+              "localized_help": {},
+              "localized_labels": {},
+              "number": "modulos-iva-epigrafe",
+              "required": false,
+              "source_refs": [
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            },
+            {
+              "casilla_id": "modulos-iva-1-unidades",
+              "input_kind": "manual",
+              "label": "Módulo 1 (Personal empleado): número de unidades",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+              ],
+              "localized_help": {},
+              "localized_labels": {},
+              "number": "modulos-iva-1-unidades",
+              "required": false,
+              "source_refs": [
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            },
+            {
+              "casilla_id": "modulos-iva-2-unidades",
+              "input_kind": "manual",
+              "label": "Módulo 2 (unidad actividad-específica: distancia recorrida, carga vehículos o superficie del local): número de unidades",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+              ],
+              "localized_help": {},
+              "localized_labels": {},
+              "number": "modulos-iva-2-unidades",
+              "required": false,
+              "source_refs": [
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            },
+            {
+              "casilla_id": "modulos-iva-3-unidades",
+              "input_kind": "manual",
+              "label": "Módulo 3 (unidad actividad-específica: consumo de energía eléctrica u otra): número de unidades",
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+              ],
+              "localized_help": {},
+              "localized_labels": {},
+              "number": "modulos-iva-3-unidades",
+              "required": false,
+              "source_refs": [
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            },
+            {
+              "casilla_id": "modulos-iva-cuota-devengada",
+              "input_kind": "computed",
+              "label": "Cuota devengada por operaciones corrientes (Σ unidades módulo × cuota devengada anual por unidad)",
+              "legal_refs": [
+                "ley-37-1992:art-123",
+                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+              ],
+              "localized_help": {},
+              "localized_labels": {},
+              "number": "modulos-iva-cuota-devengada",
+              "required": false,
+              "source_refs": [
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            },
+            {
+              "casilla_id": "modulos-iva-cuota-derivada",
+              "input_kind": "computed",
+              "label": "Cuota derivada del régimen simplificado (mayor de cuota devengada neta de deducibles/forfait, o cuota mínima)",
+              "legal_refs": [
+                "ley-37-1992:art-123",
+                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+              ],
+              "localized_help": {},
+              "localized_labels": {},
+              "number": "modulos-iva-cuota-derivada",
+              "required": false,
+              "source_refs": [
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "verification-reports-incomplete"
+}
