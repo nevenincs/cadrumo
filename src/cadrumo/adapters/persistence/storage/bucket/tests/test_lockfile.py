@@ -132,8 +132,12 @@ def test_wait_seconds_eventually_acquires(tmp_path: Path) -> None:
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
         _wait_for_ready(ready)
-        # Holder releases after 0.25s; wait window must succeed.
-        acquire_lock(paths, wait_seconds=2.0)
+        # Holder releases after 0.25s; the waiting acquisition must succeed
+        # once it does. The window is a hang guard, not a latency assertion:
+        # on a heavily loaded shared box the holder subprocess can be
+        # descheduled well past its nominal 0.25s hold, and a tight 2s
+        # budget produced false timeouts unrelated to the wait contract.
+        acquire_lock(paths, wait_seconds=30.0)
         try:
             assert lock_path(paths).is_file()
         finally:
