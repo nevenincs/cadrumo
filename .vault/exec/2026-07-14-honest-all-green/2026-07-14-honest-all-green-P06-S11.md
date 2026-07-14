@@ -109,3 +109,26 @@ updated. Full justificante suite green (159 passed).
 - No destructive git; explicit-pathspec commits throughout; the full-suite log
   is retained at the session scratchpad (`s11_full.log`) for signature
   verification.
+
+## Confirmation run (all-green-for-the-record)
+
+After S13 (period-gate allowlist for the landed docs frames, `96dc4701b5`) and
+S14 (locale cluster fix, `d487eb9781`) landed, re-ran the full
+`src/cadrumo -n auto` suite to an untruncated log (`s11_confirm.log`):
+**2 failed / 12909 passed** in 9m49s -- down from the pre-S13/S14 10 failed.
+
+The two `-n auto` residuals both PASS sequentially (`-n 0`), so both are
+parallel/concurrency artifacts, not real failures:
+
+| Failure | -n 0 result | Disposition |
+| --- | --- | --- |
+| `tests/test_import_hygiene_gate.py::...underscore_reaches_are_exactly_the_named_test_debt_set` | PASSES | Parallel-sensitive baseline scan (xdist worker interference). |
+| `core/tests/test_file_permissions.py::test_posix_file_permission_failures_are_logged` | PASSES | Parallel/concurrency artifact (not campaign-touched); passes `-n 0`. |
+
+The four previously-red gates the peer campaigns owned -- the period-combined
+gate, `test_codebase_to_locale_parity`, and both `test_audit` identity tests --
+were independently re-confirmed GREEN at current HEAD (which includes the two
+newest docs-cli-sequences commits `013a469f4b` / `c8d1fb0575` touching the
+iva-lifecycle frames). Campaign-owned and genuine sequential failures: ZERO. The
+tree is green for the record under sequential execution; the only `-n auto` reds
+are documented xdist-sensitivity artifacts.
