@@ -5,16 +5,16 @@ live-read opt-in, pytest-only posture, and plugin roster.
 
 ## Test topology
 
-Every Python test module under `src/aeat` lives inside a directory named
+Every Python test module under `src/cadrumo` lives inside a directory named
 `tests`, at the narrowest owning package or architectural boundary.
 
 Examples:
 
 ```text
-src/aeat/domain/modelos/tests/test_work_unit.py
-src/aeat/application/modelo/tests/test_work_addressing.py
-src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py
-src/aeat/tests/test_marker_integrity.py
+src/cadrumo/domain/modelos/tests/test_work_unit.py
+src/cadrumo/application/modelo/tests/test_work_addressing.py
+src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py
+src/cadrumo/tests/test_marker_integrity.py
 ```
 
 Test module filenames must start with `test_`. `_test_*.py` and
@@ -64,27 +64,27 @@ Each module carries exactly one layer marker:
 
 ## Enforcement
 
-`src/aeat/tests/test_marker_integrity.py` walks `test_*.py` modules under
-`src/aeat` via `ast` and fails if any module violates placement,
+`src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under
+`src/cadrumo` via `ast` and fails if any module violates placement,
 filename, module-level marker, execution-scope, hex-layer, or retired
 marker rules.
 
 The collection hook in `aeat.tests._marker_hook`, invoked from both the
-repo-root `conftest.py` and `src/aeat/tests/conftest.py`, also raises
+repo-root `conftest.py` and `src/cadrumo/tests/conftest.py`, also raises
 `pytest.UsageError` during collection when a test item lacks exactly one
 execution marker or exactly one accepted `hex_*` marker.
 
 ## Live Read Opt-In
 
-`aeat_live` tests are skipped unless `AEAT_LIVE_TESTS_ENABLED=1` is set
+`aeat_live` tests are skipped unless `CADRUMO_LIVE_TESTS_ENABLED=1` is set
 in the environment. The canonical env var name is
-`AEAT_LIVE_TESTS_ENABLED`.
+`CADRUMO_LIVE_TESTS_ENABLED`.
 
 The opt-in is enforced at two layers:
 
 1. `pyproject.toml` sets `addopts = "... -m 'unit' ..."` so plain local
    test runs select only unit tests.
-2. `src/aeat/tests/conftest.py` adds a skip marker to collected
+2. `src/cadrumo/tests/conftest.py` adds a skip marker to collected
    `aeat_live` items when the env var is not truthy.
 
 Google Workspace live tests additionally require
@@ -124,7 +124,7 @@ and clock-control libraries belong only in deterministic offline tests.
 
 ## Coverage Gate
 
-Starting threshold is 60% against `src/aeat`, enforced by the coverage
+Starting threshold is 60% against `src/cadrumo`, enforced by the coverage
 lane. Branch coverage is enabled. Test modules are omitted from
 coverage through the `tests` topology and `test_*.py` file pattern.
 
@@ -136,7 +136,7 @@ documented rationale.
 - `just test-unit` - unit suite (`-m 'unit'` via pyproject `addopts`).
 - `uv run pytest -m integration` - deterministic cross-layer tests.
 - `uv run pytest -m aeat_live` - live read-only tests; requires
-  `AEAT_LIVE_TESTS_ENABLED=1`.
+  `CADRUMO_LIVE_TESTS_ENABLED=1`.
 - `uv run pytest -m "unit and hex_domain"` - unit tests for the domain layer.
 - `uv run pytest -m "integration and hex_entrypoint"` - CLI integration tests.
 - `just test-coverage` - unit suite with coverage.
@@ -162,7 +162,7 @@ Checklist:
 
 ## Cross-References
 
-- `src/aeat/tests/_marker_hook.py` - shared collection hook body.
-- `src/aeat/tests/test_marker_integrity.py` - AST-backed drift detector.
+- `src/cadrumo/tests/_marker_hook.py` - shared collection hook body.
+- `src/cadrumo/tests/test_marker_integrity.py` - AST-backed drift detector.
 - `pyproject.toml` - pytest discovery, marker registry, and coverage
   omit settings.
