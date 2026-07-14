@@ -22,6 +22,7 @@
 [revisions."2025".completeness_manifest]
 source_ref = "aeat-modelo-210-procedure"
 legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1",
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
