@@ -1,0 +1,21 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "providers"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "certificate\tavailable\tDigital certificate\nclave_movil\tavailable\tCl@ve Móvil\nclave_pin\treserved (not available yet)\tCl@ve PIN\nclave_permanente\tavailable\tCl@ve Permanente\ndnie_pkcs\treserved (not available yet)\tDNI-e PKCS\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-providers"
+}
