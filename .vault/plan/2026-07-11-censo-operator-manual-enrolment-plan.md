@@ -3,10 +3,11 @@ tags:
   - '#plan'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
-modified: '2026-07-11'
+modified: '2026-07-14'
 tier: L2
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
+  - '[[2026-07-12-censo-operator-manual-enrolment-research]]'
 ---
 
 <!-- LINK RULES:
@@ -19,92 +20,11 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace censo-operator-manual-enrolment with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
-
 # `censo-operator-manual-enrolment` plan
 
 ### Phase `P01` - retire the scrape chain
 
 Delete the dead live-censo scrape chain and the censo pull/compare/apply CLI family atomically (delete-not-stub), preserving the read-only afectacion projection and the operator-manual profile path.
-
-
-<!-- One-line headline summary plan. -->
 
 - [x] `P01.S01` - Retire the sede live-censo scrape: delete the launcher drive, the G313 parser, their tests, the censo_g313_launcher constant, and the sede package exports; `src/aeat/adapters/outbound/aeat/sede/_censo_live.py, src/aeat/adapters/outbound/aeat/sede/_censo.py, src/aeat/adapters/outbound/aeat/sede/tests/, src/aeat/adapters/outbound/aeat/sede/__init__.py, src/aeat/core/external_constants.toml`.
 - [x] `P01.S02` - Retire the config profile censo pull/compare/apply/show verb family with its payloads and tests, deregister it from the profile app, and narrow CensoSyncService to the read-only afectacion projection the ledger still consumes; `src/aeat/entrypoints/cli/_config/_profile_censo.py, src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py, src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py, src/aeat/entrypoints/cli/_config/__init__.py, src/aeat/application/user_profile/_censo_sync.py, src/aeat/application/user_profile/_censo_errors.py, src/aeat/application/user_profile/tests/test_censo_sync.py`.
@@ -113,11 +33,11 @@ Delete the dead live-censo scrape chain and the censo pull/compare/apply CLI fam
 
 Sweep every surface that cites the retired verbs or deleted modules: generated CLI reference, locale catalogues, how-to docs and API stubs, agent-harness skills, the pull-and-file rule source, and derived baselines.
 
-- [ ] `P02.S03` - Purge the retired verb family from the generated CLI reference generator and its conformance tests, and from the storage write-policy allowlist if enrolled; `dev/docs/cli_reference.py, dev/docs/tests/test_cli_reference_conformance.py, src/aeat/application/storage_write_policy.py, docs/cli/config.rst, docs/cli/schemas.rst`.
+- [x] `P02.S03` - Purge the retired verb family from the generated CLI reference generator and its conformance tests, and from the storage write-policy allowlist if enrolled; `dev/docs/cli_reference.py, dev/docs/tests/test_cli_reference_conformance.py, src/aeat/application/storage_write_policy.py, docs/cli/config.rst, docs/cli/schemas.rst`.
 - [x] `P02.S04` - Remove the dead censo pull/compare/apply locale key subtree through the locales CLI (keeping the operator-manual advisory strings) and confirm scaffold --check is clean; `src/aeat/locales/en.yml, src/aeat/locales/es.yml, src/aeat/locales/ca.yml, src/aeat/locales/hu.yml`.
-- [ ] `P02.S05` - Rewrite the censo how-to docs to the operator-manual config profile edit path, drop the retired verbs from filing-calendar, modelo-036, and read-live-aeat-data guides, and regenerate the API stubs so no orphan _censo rst remains; `docs/how-to/censo-update.md, docs/how-to/filing-calendar.md, docs/how-to/modelo-036.md, docs/how-to/read-live-aeat-data.md, docs/api/`.
+- [x] `P02.S05` - Rewrite the censo how-to docs to the operator-manual config profile edit path, drop the retired verbs from filing-calendar, modelo-036, and read-live-aeat-data guides, and regenerate the API stubs so no orphan _censo rst remains; `docs/how-to/censo-update.md, docs/how-to/filing-calendar.md, docs/how-to/modelo-036.md, docs/how-to/read-live-aeat-data.md, docs/api/`.
 - [x] `P02.S06` - Re-author the inicio-actividad and cese-actividad agent skills onto the operator-manual censo mirror so the rule-surface conformance gate stays green; `src/aeat/_data/agent/skills/inicio-actividad/SKILL.md, src/aeat/_data/agent/skills/cese-actividad/SKILL.md`.
-- [ ] `P02.S07` - Update the aeat-cli-pull-and-file-standard rule source (it cites censo pull as a worked example), propagate with vaultspec-core sync, and prune stale terminology relevance rows and complexity-baseline entries for deleted modules; `.vaultspec/rules/rules/project/aeat-cli-pull-and-file-standard.md, src/aeat/_data/terminology/relevance/relevance.json, dev/audit/complexity_baseline.json`.
+- [x] `P02.S07` - Update the aeat-cli-pull-and-file-standard rule source (it cites censo pull as a worked example), propagate with vaultspec-core sync, and prune stale terminology relevance rows and complexity-baseline entries for deleted modules; `.vaultspec/rules/rules/project/aeat-cli-pull-and-file-standard.md, src/aeat/_data/terminology/relevance/relevance.json, dev/audit/complexity_baseline.json`.
 
 ### Phase `P03` - preserve posture and verify
 
@@ -125,7 +45,7 @@ Pin the honest end state with regressions (calendar enrolment_unverified posture
 
 - [x] `P03.S08` - Pin the calendar censo.enrolment_unverified posture with a regression: the warning is present and strict projection refuses for modelos 100/130/303/390 when censo is unverified; `src/aeat/application/overview/tests/`.
 - [x] `P03.S09` - Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty; `src/aeat/application/user_profile/tests/test_censo_sync.py`.
-- [ ] `P03.S10` - Run the full gate battery (collect-only, ruff, documented-command conformance, rule-surface conformance, locales and apidocs scaffold checks) and record the honest reconciliation of the superseded g313 plan as an exec note without fabricating completion; `src/aeat, .vault/exec/2026-07-11-censo-operator-manual-enrolment/`.
+- [x] `P03.S10` - Run the full gate battery (collect-only, ruff, documented-command conformance, rule-surface conformance, locales and apidocs scaffold checks) and record the honest reconciliation of the superseded g313 plan as an exec note without fabricating completion; `src/aeat, .vault/exec/2026-07-11-censo-operator-manual-enrolment/`.
 
 ### Phase `P04` - re-seat afectacion ratio and delete the snapshot substrate
 
@@ -157,58 +77,6 @@ The superseded `2026-07-10-censo-g313-launcher-fix-plan` is reconciled
 honestly: its remaining steps are retired-not-implemented, never checked.
 
 ## Steps
-
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
-
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
-
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
-
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
-
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
-
-     One sentence stating what this Phase delivers.
-
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
-
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
-
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
-
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorizing documents back it.
-
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
-
-     The Wave intent paragraph is mandatory. -->
-
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
-
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
-
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
 
 ## Parallelization
 
