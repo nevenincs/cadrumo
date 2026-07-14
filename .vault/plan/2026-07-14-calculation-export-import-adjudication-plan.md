@@ -86,9 +86,9 @@ Adjudicate each legacy outbound candidate against product mandate and source app
 - [ ] `P02.S10` - Adjudicate Modelo 322 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/322/, .vault/reference/`.
 - [ ] `P02.S11` - Adjudicate Modelo 347 export by registered authority window and gate uncatalogued 2008-to-2010 layouts; `src/cadrumo/_data/registry/aeat/modelos/347/, .vault/reference/`.
 - [ ] `P02.S12` - Adjudicate Modelo 353 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/353/, .vault/reference/`.
-- [x] `P02.S13` - Record that Modelo 360 has no legacy outbound mandate and preserve its layout authority as evidence only; `src/cadrumo/_data/registry/aeat/modelos/360/, .vault/reference/`.
-- [x] `P02.S14` - Adjudicate Modelo 369 export while preserving Union, Importacion, and Exterior revision separation; `src/cadrumo/_data/registry/aeat/modelos/369/, .vault/reference/`.
-- [x] `P02.S15` - Adjudicate Modelo 840 registry field and binding work only if machine-file generation is a confirmed product mandate; `src/cadrumo/_data/registry/aeat/modelos/840/, .vault/reference/`.
+- [ ] `P02.S13` - Record that Modelo 360 has no legacy outbound mandate and preserve its layout authority as evidence only; `src/cadrumo/_data/registry/aeat/modelos/360/, .vault/reference/`.
+- [ ] `P02.S14` - Adjudicate Modelo 369 export while preserving Union, Importacion, and Exterior revision separation; `src/cadrumo/_data/registry/aeat/modelos/369/, .vault/reference/`.
+- [ ] `P02.S15` - Adjudicate Modelo 840 registry field and binding work only if machine-file generation is a confirmed product mandate; `src/cadrumo/_data/registry/aeat/modelos/840/, .vault/reference/`.
 
 ### Phase `P03` - Inbound extraction-profile candidates
 
