@@ -10,6 +10,7 @@ related:
   - '[[2026-07-14-calculation-export-import-adjudication-reference]]'
   - '[[2026-07-12-calculation-truth-registry-plan]]'
   - '[[2026-07-14-calculation-export-import-adjudication-adr]]'
+  - '[[2026-07-14-calculation-export-import-adjudication-research]]'
 ---
 
 # `calculation-export-import-adjudication` plan
