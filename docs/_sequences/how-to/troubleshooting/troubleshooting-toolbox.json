@@ -1,0 +1,85 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "overview",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Workspace status\n\nYou are working in profile `docs-sequence-sandbox`.\nNo bank transactions have been imported yet.\nNo sales or purchase invoices are stored in the invoice register. This is a separate store from your bank ledger - it does not count classified ledger transactions. An empty invoice register is normal if you only use the bank ledger.\nNo saved declaration drafts were found.\nNo modelo work units have been started yet.\nLocal encrypted storage is readable with the current master key.\n\nWhat to type next\n  aeat app ledger import <bank-statement.csv> --provider csv - import bank transactions.\n  aeat app ledger review - review imported rows.\n  aeat --help - return to the command guide.\ncoverage_advised\t65\t65 filing obligation(s) could not be positively scoped for this profile and may be under-reported: 038, 100, 111, 115, 117, 121, 122, 123, 126, 128, 130, 131, 136, 140, 143, 156, 165, 179, 180, 181, 182, 185, 186, 187, 188, 189, 190, 193, 194, 210, 216, 220, 222, 231, 232, 233, 234, 238, 270, 280, 289, 296, 303, 308, 309, 322, 341, 345, 347, 349, 353, 360, 361, 369, 379, 380, 390, 490, 576, 592, 604, 720, 721, 763, 848. Investigate each with 'aeat app overview explain <modelo>'.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "logs",
+        "--lines",
+        "50"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "path\t<sandbox-storage-root>\\logs\\cadrumo.log\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "integrity",
+        "objects"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "readable\t3\nunreadable\t0\ncadrumo.application.user_profile.value\treadable=1\tunreadable=0\ncadrumo.domain.buckets.event_history\treadable=1\tunreadable=0\ncadrumo.workflow\treadable=1\tunreadable=0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "integrity",
+        "registry"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "ok\tTrue\nissues\t0\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-toolbox"
+}
