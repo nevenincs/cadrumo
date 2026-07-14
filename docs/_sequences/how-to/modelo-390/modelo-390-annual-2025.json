@@ -303,7 +303,7 @@
           "iva_rate": "0.21",
           "media_kind": "pdf",
           "notes": "",
-          "source_path": "fixtures\\factura-material-oficina.pdf",
+          "source_path": "fixtures/factura-material-oficina.pdf",
           "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "supplier": "Papeleria Central SL",
           "taxable_base": "500",
