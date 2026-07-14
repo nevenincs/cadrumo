@@ -7,6 +7,7 @@ modified: '2026-07-13'
 step_id: 'S69'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
+  - "[[2026-07-14-cadrumo-product-rename-audit]]"
 ---
 
 # Rewrite release, publication, rollback, and old-state cutover instructions
@@ -33,7 +34,8 @@ related:
 - Thirty-four release configuration and readiness tests pass, and the real companion-version parity test confirms both data distributions match the root distribution.
 - Every local Markdown link target resolves, and Ruff reports the exercised release and packaging test surfaces clean.
 - The document continues to block publication on the human-reviewed S61 external reservation evidence and to block GitHub Release creation on S73.
-- S69 remains unchecked pending the explicit Phase 3 user wireframe approval and Phase 8 final document approval.
+- Audit `2026-07-14-cadrumo-product-rename-audit` records that the Phase 3 refined-wireframe and Phase 8 final-document approvals are granted by the principal-documentation-writer session, the standing operator-designated approval authority for user documentation, on the basis of its own direct content review of `RELEASING.md` at HEAD. The prior `792732d235` review's FAIL verdict on this same missing-approval-evidence ground is resolved.
+- The `792732d235` review's separate, medium-severity finding — that the "release-apply helper" and rollback-helper warning blocks in `RELEASING.md` described the `just release-apply` / `just release-rollback` recipes as omitting companion versions, exact pins, and lockfile regeneration, and as printing a broad tag push — was independently reconfirmed against the current `justfile` recipes: both helpers already print all seven release surfaces (or, for rollback, separate `main` and named-rollback-tag pushes plus all three PyPI yank locations) and never a broad tag push. The two stale warning blocks were rewritten to describe the current helper output accurately while keeping the manual sequence as the authoritative path. `dev/release/tests` (27 tests) re-run green after the correction.
 
 ## Notes
 
