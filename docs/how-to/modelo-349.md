@@ -18,11 +18,15 @@ you upload through the official AEAT channel yourself.
 
 ## Before you create the draft
 
-- [Set up your taxpayer profile](profile-setup.md) with the intra-community
-  facts: ROI enrolment and intra-community activity. Check applicability and
-  cadence with `aeat app overview explain 349 --year 2026` - Modelo 349 is
-  quarterly (`1T`-`4T`) or monthly (`01`-`12`) depending on your profile and
-  operation volumes; the calendar surfaces which applies to you.
+**Requirement:** a valid taxpayer profile with intra-community (ROI) activity,
+and the intra-community invoice records the declaration lists. Create a profile
+with `aeat config profile create <name>` — see [Set up your taxpayer
+profile](profile-setup.md).
+
+- Check applicability and cadence with `aeat app overview explain 349 --year
+  2026` - Modelo 349 is quarterly (`1T`-`4T`) or monthly (`01`-`12`) depending
+  on your profile and operation volumes; the calendar surfaces which applies to
+  you.
 - Record the operations as invoice records, not bare ledger rows. The 349
   listing is built from your invoice catalogue: issued invoices to EU
   operators feed the entregas side, received invoices from EU suppliers feed
@@ -30,32 +34,41 @@ you upload through the official AEAT channel yourself.
   EU VAT number. See [Manage invoices](manage-invoices.md) and
   [Attach invoices and receipts](ledger-evidence.md).
 - Verify each counterparty's EU VAT number against the VIES register before
-  relying on it:
+  relying on it with `aeat app live verify nif-iva ESB12345678`. An invalid or
+  unregistered number is the most common 349 correction later; checking now is
+  cheaper. This is a live read-only command - see [Check AEAT notifications and
+  live observations](check-aeat-notifications.md).
 
-  ```bash
-  aeat app live verify nif-iva ESB12345678
-  ```
+## Create, calculate, and verify
 
-  An invalid or unregistered number is the most common 349 correction later;
-  checking now is cheaper. This is a live read-only command - see
-  [Check AEAT notifications and live observations](check-aeat-notifications.md).
+The preparation below records two intra-community issued invoices - a goods
+supply to a German customer and a service to a French one - then creates the
+draft, aggregates the invoices into the declaration, and verifies it:
 
-## Create, calculate, review
-
-```bash
-aeat app modelo work create --modelo 349 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 349 --year 2026 --period 1T
+```{cli-sequence} modelo-349-first-quarter
+:seed: intracomunitario-2026
+:verify: Confirm the recapitulative declaration passed verification before you export it.
+@step Open a Modelo 349 draft for the first quarter.
+aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Aggregate the quarter's intra-community invoices into the declaration.
+aeat --format json app modelo work calculate {work_unit_id}
+@capture calculation_revision_id result.calculation_revision_id
+@step Verify the draft before you export it.
+@result aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@expect result.completeness_status == "complete"
+@expect exit_code == 0
 ```
 
-Calculation aggregates the period's invoice records into the summary
-casillas (number of operators, total amounts, rectification counts and
-amounts) and builds the per-operator detail rows. Inspect what was bound and
-what is missing:
-
-```bash
-aeat app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
-aeat app modelo work revision --modelo 349 --year 2026 --period 1T
-```
+Calculation aggregates the period's invoice records into the summary casillas
+and builds the per-operator detail rows. With the two invoices above, the
+summary reports two intra-community operators (`decl.numero-operadores`) for a
+total of 8000 euros of operations (`decl.importe-operaciones`), and verify
+grants verified-complete. Inspect what was bound and what is missing with `aeat
+app modelo bindings list --modelo 349 --year 2026 --period 1T --missing`, and
+show the built rows with `aeat app modelo work revision --modelo 349 --year 2026
+--period 1T`.
 
 The per-operator row fields (country code, EU VAT number, name, operation
 key, base) come from the invoice records; a missing counterparty fact on an
@@ -70,16 +83,12 @@ the rectified year and period, the corrected base, and the base previously
 declared. Record the correction on the invoice record for the original
 operation; the rectification rows aggregate from there.
 
-## Verify and export
+## Export and file
 
-```bash
-aeat app modelo work verify --modelo 349 --year 2026 --period 1T
-aeat app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
-```
-
-After you file at the portal, record the local marker with
-`aeat app modelo work file --modelo 349 --year 2026 --period 1T` and
-[reconcile against the justificante](reconcile.md).
+Export the verified declaration with `aeat app modelo export --modelo 349 --year
+2026 --period 1T --output ./modelo-349.boe`. After you file at the portal,
+record the local marker with `aeat app modelo work file --modelo 349 --year 2026
+--period 1T` and [reconcile against the justificante](reconcile.md).
 
 Modelo 349 runs alongside your periodic Modelo 303: the same intra-community
 operations that appear here also feed the 303's intra-community boxes. Keep
