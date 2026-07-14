@@ -9,42 +9,6 @@ related:
   - "[[2026-07-11-censo-operator-manual-enrolment-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace censo-operator-manual-enrolment with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S11 and 2026-07-11-censo-operator-manual-enrolment-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Re-seat bound_raw_afectacion_ratio onto operator-declared vivienda_office m2 profile facts, delete the producerless censo snapshot substrate (module, namespace, custody resolver, re-exports, error entry + locale leaves, api stub, tests), reconcile away CENSO_CORROBORATED + censo_snapshot_id, and add real-behavior guard tests and ## Scope
-
-- `src/aeat/application/user_profile/_censo_sync.py`
-- `src/aeat/application/live/_censo.py`
-- `src/aeat/adapters/persistence/storage/_namespace_registry.py`
-- `src/aeat/application/calculations/_cross_period_models.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Re-seat bound_raw_afectacion_ratio onto operator-declared vivienda_office m2 profile facts, delete the producerless censo snapshot substrate (module, namespace, custody resolver, re-exports, error entry + locale leaves, api stub, tests), reconcile away CENSO_CORROBORATED + censo_snapshot_id, and add real-behavior guard tests
 
 ## Scope
