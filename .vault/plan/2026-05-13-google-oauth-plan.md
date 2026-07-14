@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#google-oauth'
 date: '2026-05-13'
-modified: '2026-07-12'
+modified: '2026-07-14'
 tier: L3
 related:
   - "[[2026-05-08-google-oauth-adr]]"
@@ -22,23 +22,36 @@ related:
   - '[[2026-07-12-google-oauth-audit]]'
   - '[[2026-07-12-google-oauth-research]]'
   - '[[2026-07-12-google-oauth-adr]]'
+  - '[[2026-07-14-google-oauth-audit]]'
+  - '[[2026-07-14-google-optional-adapter-boundary-adr]]'
 ---
 # `google-oauth` `Google OAuth integration master plan` plan
 
-> **Reconciled 2026-07-12 â€” partially complete.** P01 OAuth authentication and P02 storage-provider abstraction were delivered and are checked from their closeout records. P03-P05 and P08 remain active or require explicit command-surface adjudication; this plan is not closed. Evidence is recorded in `2026-07-12-google-oauth-audit`.
-Replaces the discarded gcloud-CLI Google Workspace stack with a fresh self-hosted OAuth Desktop application, a provider-agnostic storage abstraction, a per-row continuous mirror to Google Drive at the ciphertext layer, an incoming-bucket ingestion path, per-domain export tiers, calculation-to-Sheets visualisation, and a deferred-but-codified two-way sync verdict. Eight ADRs synthesise into eight phases organised under three Waves; each ADR maps to exactly one Phase.
+## Historical status
 
-## Proposed Changes
+This plan is retained as historical campaign evidence. It is not an executable authority, a current backlog, or proof that its checked rows shipped. The accepted `2026-07-14-google-optional-adapter-boundary-adr` is its successor authority.
 
-Eight ADRs (ADR-0 through ADR-7) close the architectural surface. The plan walks the implementation in dependency order across three Waves:
+The 183 checkbox rows preserve their original campaign state: 76 checked and 107 open. The definitive `2026-07-14-google-optional-adapter-boundary-audit` evaluates every row against current code, tests, and accepted decisions. It classifies 67 rows as shipped equivalents, 83 as retired or obsolete, 24 as moved to an owning domain without approval, and 9 as requiring a new ADR. It finds no genuine current gap.
+
+Current authority preserves OAuth Desktop, service-account impersonation, provider-neutral storage, ciphertext mirroring with integrity reads, explicit evidence acquisition, non-authoritative calculation-Sheets workflows, and canonical ledger updates. It retires Google-owned recovery, watched ingestion, reverse merge, parallel correction writers, and Sheet-to-calculation persistence. Future work requires current authority from the owning domain rather than an unchecked or checked row in this file.
+
+## Historical proposal
+
+The remaining prose and structural rows record the original proposal. Imperative wording describes its former intent only and does not authorize implementation.
+
+### Proposed changes
+
+The proposal treated eight ADRs (ADR-0 through ADR-7) as a closed architectural surface and arranged implementation across three Waves:
 
 - **`W01` Foundation** â€” `P01` (auth) + `P02` (storage provider abstraction) + `P06` (per-domain substrate hooks). Everything below the operator-facing surface: OAuth Desktop primitive, the `StorageProvider` Protocol with both backends, the substrate enumeration hooks and reverse-merge services, the canonical `SourceKind` enum, and the per-namespace label-deriver registrations.
 - **`W02` Surface** â€” `P03` (Drive bucket hierarchy + sync state + coordinator) + `P04` (snapshot encryption + KEK escrow) + `P05` (inbound ingestion) + `P08` (operator-facing CLI edit + CSV-corrections). Every operator-visible CLI verb against the Drive backend; the sync coordinator and its conflict semantics; the encryption boundary with cross-machine restore; the drop-zone ingestion path; the v1 reverse-merge entry points.
 - **`W03` Visualisation** â€” `P07` (calculation-to-Sheets four-sheet layout). Stand-alone surface depending on both `W01` (provider, substrate hooks) and the Drive write capabilities established by `W02`'s coordinator; the only Wave that consumes Sheets v4 in addition to Drive v3.
 
-Each Wave maps to one stage of the cross-phase step-range sequencing block below. The teardown commit `ab952f74` removed the prior stack with no migration shim. Every code path below is fresh; no backwards compatibility surfaces, no deprecation stubs, no partial implementations. Each phase ships complete or its rows stay open.
+Each Wave mapped to one stage of the cross-phase step-range sequence. The teardown commit `ab952f74` had removed the prior stack without a migration shim. The proposal therefore assumed fresh code paths and all-or-nothing phase delivery. The accepted successor and definitive row audit now govern what shipped, what was retired, and what requires separate authority.
 
 ## Steps
+
+All phase and Step rows below are frozen historical metadata. Their checkbox state must be interpreted through the definitive row audit, not as implementation evidence or remaining authority.
 
 ### Wave `W01` - Foundation
 
@@ -282,6 +295,8 @@ Lands the centerpiece architecture for bidirectional multi-turn modelo round-tri
 
 ## Parallelization
 
+This section preserves the proposal's original dependency model. It is not a current execution sequence.
+
 `P01` is the foundation; nothing in `W01.P02`, `W01.P06`, or any of `W02` / `W03` can proceed without authenticated access to Drive. Within `P03` and `P06`, dependencies cross phase boundaries at the Step level rather than the Phase level, so the sequencing below pins Step ranges rather than whole Phases.
 
 Cross-phase step-level dependencies:
@@ -290,7 +305,7 @@ Cross-phase step-level dependencies:
 - `P06.S01`-`P06.S03b` (substrate enumeration hooks: `iter_namespaces`, `iter_all_records_raw`, per-domain `iter_*` repository APIs) â€” depended on by `P03.S07` (DriveSync coordinator full-enumeration algorithm) and by `P03.S10`-`P03.S15` (push / pull / status / claim / appProperties / filename surfaces).
 - `P06.S28` (canonical `SourceKind` enum) â€” depended on by `P05.S19` (prefix router), `P06.S05`-`P06.S08` (reverse-merge services), and `P06.S29` (event emitter).
 
-Default sequencing (Step-range granularity, not whole Phases):
+Original default sequencing (Step-range granularity, not whole Phases):
 
 1. **`W01.P01`** (alone) â€” auth foundation, profile binding, `_config/` package promotion. Within P01, the actual execution order is `S00` â†’ `S01` â†’ `S16` (package promotion lands BEFORE any google CLI module so `_google.py` ships into the `_config/` package from the start) â†’ `S02` (registration slot) â†’ `S03`-`S15` (records / commands / refresh / errors / tests) â†’ `S17` (profile binding) â†’ `S18` (forbidden-import test).
 2. **`W01.P02`** âˆ¥ **`W02.P03.S01`-`W02.P03.S06`** âˆ¥ **`W01.P06.S01`-`W01.P06.S03b`** âˆ¥ **`W01.P06.S05`-`W01.P06.S08`** âˆ¥ **`W01.P06.S25`-`W01.P06.S28`** â€” provider abstraction, sync-state schema + deriver Protocol/registry, substrate enumeration hooks, reverse-merge services, allow-list, `SourceKind` enum. None of these have cross-dependencies on each other.
@@ -302,6 +317,8 @@ Default sequencing (Step-range granularity, not whole Phases):
 Within a Step range, Steps are sequenced by file dependency; reviewer judgement on each pair. The Step-level cross-phase contract above replaces any whole-Phase "P03 must finalise before P06" claim â€” the original phrasing concealed a circular dependency between `P03.S07` and `P06.S01`-`P06.S03b`.
 
 ## Drift Amendments
+
+These amendments record how the proposal evolved before its retirement. They do not supersede the accepted optional-adapter boundary.
 
 **Amendment 2026-05-14 (bidirectional calc-sheets supersession)**: A new ADR (`[[2026-05-14-google-oauth-adr]]`, ADR-8) was authored to formalise the schema-to-sheet engine module boundary, the tiered parity oracle stack (Tier-1 `formulas` PyPI in-process / Tier-2 LibreOffice headless / Tier-3 live Sheets API), and the bidirectional `aeat config google sync calc pull` contract for the `Entradas` (Inputs) sheet of calc-sheet exports. ADR-6 (`[[2026-05-13-google-oauth-calc-sheets-adr]]`) was amended in place to remove its read-only-by-design framing and cross-reference ADR-8. ADR-7 (`[[2026-05-13-google-oauth-twoway-adr]]`) was amended to clarify that its deferral verdict applies only to the **ledger reverse-merge surface** (Tier-1 ledger domains); the calc-sheets surface is now bidirectional in v1 per ADR-8's partition-by-cell-ownership contract. The new Phase `P09` covers every additional implementation surface; the existing `P07` retains the layout / Spanish UX / protected-range scope per the amended ADR-6.
 
@@ -315,11 +332,11 @@ The L3 plan was drafted against the codebase HEAD on 2026-05-13 morning. By the 
 - **`P06.S29` re-scoped.** The cli-workflow-redesign bucket-event-history infrastructure already ships: `src/aeat/domain/buckets/_event.py` exports a closed `BucketEventType` enum and `BucketEventHistoryRepository`, mounted under `aeat config bucket history`. S29 now extends the closed enum with six new values rather than constructing a new dispatcher. `P08.S11` consumes the extended enum through the existing repository.
 - **Storage paths.** Spot-checked: `src/aeat/adapters/persistence/storage/sql/secure_objects.py` exists at the assumed path; migration numbering `0005`-`0007` is correct (HEAD is at `0004`); `src/aeat/core/errors/registry/_adapters.py` is the correct registry path. No bulk path correction needed.
 
-Future drifts encountered mid-Step land in the corresponding `.vault/exec/2026-05-13-google-oauth/...-exec.md` step records and, if material, drive a follow-up plan amendment commit before the next Step executes.
+The original process expected later drift to land in the corresponding execution records and, when material, amend this plan before another Step ran. That instruction is no longer active.
 
 ## Verification
 
-The plan is complete when every Step is closed `[x]` and the following acceptance checks pass.
+The following bullets preserve the original proposal's acceptance expectations. They are not current gates, proof of delivery, or instructions to close the remaining rows. Verify current Google behavior against the accepted successor ADR, its implementation Reference, the definitive row audit, and current source and tests.
 
 - `uv run ty check src/` reports zero errors across all new code.
 - `uv run pytest -m unit` passes with new colocated unit tests green.
