@@ -57,7 +57,7 @@ from ._golden_store import (
     refresh_invocation,
     write_golden,
 )
-from ._parser import parse_frame_lines, parse_sequence
+from ._parser import parse_frame_lines, parse_sequence, result_frame_asserts_result_payload
 from ._runner import (
     SANDBOX_INSTANT,
     SANDBOX_PROFILE_ID,
@@ -139,6 +139,7 @@ __all__ = [
     "refresh_invocation",
     "refresh_sequences",
     "refuse_live_frames",
+    "result_frame_asserts_result_payload",
     "sequence_sandbox",
     "tokenise_command",
     "write_golden",

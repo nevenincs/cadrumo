@@ -52,7 +52,7 @@ from ._schema import (
     VerifySentence,
 )
 
-__all__ = ["parse_frame_lines", "parse_sequence"]
+__all__ = ["parse_frame_lines", "parse_sequence", "result_frame_asserts_result_payload"]
 
 #: The sole human CLI executable; every frame command leads with this token.
 _EXECUTABLE: str = "aeat"
@@ -468,6 +468,33 @@ def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str])
             f"the @result frame ({_at(result.source, result.line_number)}) must carry at least one "
             "@expect assertion (e.g. '@expect result.status == \"verified_complete\"')",
         )
+
+
+#: A json-path addressing the result PAYLOAD (the ``result`` object of the
+#: envelope), as opposed to the ``exit_code`` process status or the ``status``
+#: envelope-spine field.
+_RESULT_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[")
+
+
+def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
+    """Whether the sequence's ``@result`` frame asserts the result PAYLOAD.
+
+    The tightened @result contract (ADR D4) requires at least one ``@expect`` on
+    the result payload — a ``result.<path>`` / ``result[...]`` json-path — so a
+    sequence verifies the MEANING of its final output, not merely that the process
+    exited (``exit_code``) or that the envelope status equals a value (``status``,
+    a spine field). A frame asserting only ``exit_code`` (and/or ``status``) proves
+    the command ran without proving it produced the right answer, the weak pattern
+    this contract eliminates. An all-``@static`` sequence has no ``@result`` frame
+    and is vacuously compliant.
+    """
+    result = sequence.result_frame
+    if result is None:
+        return True
+    return any(
+        assertion.json_path == "result" or assertion.json_path.startswith(_RESULT_PAYLOAD_PREFIXES)
+        for assertion in result.expects
+    )
 
 
 def _enforce_captures_and_placeholders(builders: list[_FrameBuilder], problems: list[str]) -> None:
