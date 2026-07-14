@@ -62,18 +62,49 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "capabilities",
         "show"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "caps-demo",
+        "command": "config.profile.capabilities.show",
+        "notices": [],
+        "result": {
+          "capabilities": [
+            {
+              "capability": "cloud_evidence_upload",
+              "enabled": false,
+              "reason": "profile opted out of cloud evidence upload",
+              "source": "profile"
+            },
+            {
+              "capability": "llm_vision",
+              "enabled": false,
+              "reason": "profile opted out of llm_vision",
+              "source": "profile"
+            },
+            {
+              "capability": "google_export",
+              "enabled": true,
+              "reason": "profile opted in to google_export",
+              "source": "profile"
+            }
+          ],
+          "profile_id": "<profile-id>"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "cloud_evidence_upload\tdisabled\tprofile\tprofile opted out of cloud evidence upload\nllm_vision\tdisabled\tprofile\tprofile opted out of llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,
