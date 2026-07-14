@@ -1,0 +1,42 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "iva-wallet",
+        "balance",
+        "--as-of-year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.iva_wallet.balance",
+        "notices": [],
+        "result": {
+          "active_balance": "0",
+          "as_of_year": 2026,
+          "expired_balance": "0",
+          "lot_count": 0,
+          "next_expiry_year": null,
+          "operation": "modelo.iva_wallet.balance",
+          "total_balance": "0",
+          "unallocated_applied_amount": "0"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-303-wallet"
+}
