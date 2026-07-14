@@ -69,7 +69,7 @@ Load-bearing details:
 
 - [Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a
   profile with self-employed activity under estimación directa; check
-  applicability with `aeat app overview explain 130 --year 2026`.
+  applicability with `aeat app overview explain 130`.
 - [Plan your filing calendar](filing-calendar.md). Modelo 130 uses quarterly
   periods `1T` through `4T` only.
 - [Import or add your transactions](import-bank-statements.md), then
@@ -131,8 +131,9 @@ aeat --format json app modelo work calculate {work_unit_id} --casilla 06=100.00 
 
 `--casilla` works only on `manual` boxes; a `bound` box filled from your ledger
 (like casilla `02`) refuses the override. Check a box's kind with `aeat app
-modelo casillas 130 --period 1T`, and see [Review and supply calculation
-inputs](review-calculation-values.md) for the full input workflow.
+modelo casillas 130` (the inspect sequence above shows this), and see
+[Review and supply calculation inputs](review-calculation-values.md) for the
+full input workflow.
 
 ## Each quarter is cumulative
 
