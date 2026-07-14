@@ -1,0 +1,223 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-15",
+        "--amount",
+        "121.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Mixed receipt",
+        "--idempotency-key",
+        "correct-split"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "e55d6600ead7d9490cb4774a0de8f8e9254866b0015b5c6898c68569e8d7a6e9"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "9f5e7d2af0b80902321e3b1202a64f33db90510f94d37b6ac8a1faae0c89d25c"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "121",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "Mixed receipt",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "e55d6600ead7d9490cb4774a0de8f8e9254866b0015b5c6898c68569e8d7a6e9",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "e55d6600ead7d9490cb4774a0de8f8e9254866b0015b5c6898c68569e8d7a6e9"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "split",
+        "e55d6600ead7d9490cb4774a0de8f8e9254866b0015b5c6898c68569e8d7a6e9",
+        "--child-amount",
+        "100.00",
+        "--child-description",
+        "office supplies",
+        "--child-amount",
+        "21.00",
+        "--child-description",
+        "personal items",
+        "--reason",
+        "mixed receipt",
+        "--yes"
+      ],
+      "captures": [
+        {
+          "json_path": "result.child_transactions[0].full_id",
+          "name": "first_part",
+          "value": "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.split",
+        "notices": [],
+        "result": {
+          "bucket_event_id": "7f035a3ff5f63583d04503666a5c9b8f4cd25de7e34cd508fc1489d72cfc32a6",
+          "bucket_id": "<bucket-id>",
+          "child_transaction_ids": [
+            "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49",
+            "0bba86e710bdb3ccf97cd1cf82d62a5011a7107989ee76648f8ef8932c28ba0e"
+          ],
+          "child_transactions": [
+            {
+              "display_id": "9cc7a263",
+              "full_id": "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49"
+            },
+            {
+              "display_id": "0bba86e7",
+              "full_id": "0bba86e710bdb3ccf97cd1cf82d62a5011a7107989ee76648f8ef8932c28ba0e"
+            }
+          ],
+          "classified_child_count": null,
+          "llm": null,
+          "parent_amount": null,
+          "parent_transaction_id": "e55d6600ead7d9490cb4774a0de8f8e9254866b0015b5c6898c68569e8d7a6e9",
+          "persisted": null,
+          "proposed_children": null,
+          "provenance": null,
+          "provider": null,
+          "reason": null,
+          "split_group_id": "49e46bf12630b536b609999a5502582c94bc0faefcbba41cf784f89552823662"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "100",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "office supplies",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "correct-split-transaction"
+}
