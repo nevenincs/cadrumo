@@ -143,6 +143,8 @@ Fix the companion-wheel build errors and make the loader-cache and import-hygien
 Full-suite verification runs to a genuinely green state with zero skips and no new baselines or allowlist mutes.
 
 - [x] `P06.S11` - Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence; `full-tree gates`.
+- [x] `P06.S13` - Extend the period-gate allowlist for the landed docs sequences WorkUnit display frames per the established narrow-rule precedent; `src/cadrumo/core/tests/test_period_combined_string_gate.py`.
+- [ ] `P06.S14` - Complete the landed CLI-identity rename's locale sweep so codebase-to-locale parity and the two locale-audit tests are green; `src/cadrumo/locales`.
 
 ## Description
 
