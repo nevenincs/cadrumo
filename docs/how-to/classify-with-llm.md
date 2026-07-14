@@ -143,8 +143,14 @@ classification and category you choose:
 If the row is mixed-use, the LLM suggestion alone is not enough; supply the
 business share through the normal
 [mixed-use workflow](classify-transactions.md#classify-mixed-use-transactions).
-After important corrections, re-run
-`aeat app ledger preflight --year 2026 --period 1T`.
+After important corrections, re-run preflight for the period:
+
+```{cli-sequence} llm-preflight
+:verify: Confirm the period preflight reads back after corrections.
+@step Re-run the period preflight after important corrections.
+@result aeat --format json app ledger preflight --year 2026 --period 1T
+@expect exit_code == 0
+```
 
 ## Fill in the tax fields automatically
 
