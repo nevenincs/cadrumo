@@ -11,6 +11,15 @@ related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cadrumo-product-rename` plan
 
@@ -226,10 +235,10 @@ contract and referent.
 
 Resolve review findings, reverify, audit ownership, and close the Epic association.
 
-- [ ] `W06.P15.S81` - Perform the mandatory vaultspec formal code review for safety, intent, architecture, and quality; `CADRUMO rename change set`.
-- [ ] `W06.P15.S82` - Resolve every actionable formal-review finding without introducing compatibility shims; `formal review remediation set`.
-- [ ] `W06.P15.S83` - Rerun affected focused and artifact gates after review remediation; `post-review verification evidence`.
-- [ ] `W06.P15.S84` - Confirm every edited path is owned, every unrelated dirty path remains untouched, and commits use explicit pathspecs; `shared-worktree delivery audit`.
+- [x] `W06.P15.S81` - Perform the mandatory vaultspec formal code review for safety, intent, architecture, and quality; `CADRUMO rename change set`.
+- [x] `W06.P15.S82` - Resolve every actionable formal-review finding without introducing compatibility shims; `formal review remediation set`.
+- [x] `W06.P15.S83` - Rerun affected focused and artifact gates after review remediation; `post-review verification evidence`.
+- [x] `W06.P15.S84` - Confirm every edited path is owned, every unrelated dirty path remains untouched, and commits use explicit pathspecs; `shared-worktree delivery audit`.
 - [ ] `W06.P15.S85` - Close issue #476 and the chore-476 restructure execution association only after all Steps and external release gates are complete; `Epic project-management association`.
 
 ## Parallelization
