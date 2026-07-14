@@ -7,8 +7,13 @@ One comparison policy per frame kind, applied to an executed
 - **JSON frames** compare via the shared observability substrate —
   ``canonicalise`` + ``mask_document`` with exactly the central
   ``GOLDEN_MASK_FIELDS`` — over the FULL envelope (shared spine plus result),
-  reporting the post-mask ``differing_paths`` on failure. This module exposes
-  NO mask parameter and never overrides ``mask_document``'s central default:
+  reporting the post-mask ``differing_paths`` on failure. The live envelope is
+  first path-normalised (``normalise_document_paths``) with THIS run's sandbox
+  and checkout paths, matching the tokens the golden baked at build time, so a
+  path leaking into a string value (``config check``'s storage-root / corpus-path
+  ``detail``) does not diverge every run; this is a value-anchored replacement of
+  the known roots, orthogonal to and preceding the central field mask. This
+  module exposes NO mask parameter and never overrides ``mask_document``'s central default:
   the executor never declares its own mask set and a sequence cannot carry a
   per-sequence mask extension (the one dishonesty lever the substrate would
   otherwise allow). Both properties are pinned — a signature gate and an AST gate over
@@ -44,6 +49,7 @@ from ._errors import SequenceGoldenMismatchError
 from ._golden_store import (
     SequenceGolden,
     masked_envelope_values,
+    normalise_document_paths,
     normalise_text_output,
     refresh_invocation,
 )
@@ -142,8 +148,18 @@ def compare_transcript_to_golden(
                         f"{at}: the envelope moved streams — golden on "
                         f"{expected.envelope_source}, live on {actual.envelope_source}",
                     )
+                # The golden's envelope was path-normalised at build time; the
+                # live envelope carries THIS run's raw sandbox/checkout paths, so
+                # tokenise it the same value-anchored way before the central field
+                # mask — otherwise a path leaking into a string value (config
+                # check's storage-root / corpus-path detail) diverges every run.
+                live_envelope = normalise_document_paths(
+                    actual.envelope,
+                    storage_root=transcript.storage_root,
+                    workdir=transcript.workdir,
+                )
                 masked_expected = mask_document(expected.envelope)
-                masked_actual = mask_document(actual.envelope)
+                masked_actual = mask_document(live_envelope)
                 if canonicalise(masked_expected) != canonicalise(masked_actual):
                     diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
                     problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
