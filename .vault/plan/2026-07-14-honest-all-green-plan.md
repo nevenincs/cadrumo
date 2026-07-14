@@ -121,21 +121,22 @@ Fix the exception-base-hygiene unregistered roots and the period-combined-string
 
 Fix the three master-key-rotation secure-object integrity diagnostics failures and the three aggregation source-resolver enrollment and precedence-ladder failures.
 
-- [ ] `P03.S06` - Fix the secure-object integrity diagnostics failures after master-key rotation; `src/cadrumo diagnostics integrity`.
-- [ ] `P03.S07` - Fix the aggregation source-resolver enrollment and precedence-ladder failures; `src/cadrumo/application/aggregation`.
+- [x] `P03.S06` - Fix the secure-object integrity diagnostics failures after master-key rotation; `src/cadrumo diagnostics integrity`.
+- [x] `P03.S07` - Fix the aggregation source-resolver enrollment and precedence-ladder failures; `src/cadrumo/application/aggregation`.
 
 ### Phase `P04` - Structural inventory debt
 
 Close the structural-inventory findings honestly: real coverage, real-behavior tests replacing mock and monkeypatch and skip debt, size-budget compliance, marker metadata, mirror-manifest, parser-boundary and extraction-sidecar findings.
 
-- [ ] `P04.S08` - Close the structural-inventory findings with real-behavior fixes per finding; `structural inventory surfaces`.
+- [x] `P04.S08` - Close the structural-inventory findings with real-behavior fixes per finding; `structural inventory surfaces`.
 
 ### Phase `P05` - Packaging and parallel robustness
 
 Fix the companion-wheel build errors and make the loader-cache and import-hygiene tests robust under parallel execution without weakening what they prove.
 
-- [ ] `P05.S09` - Fix the companion-wheel uv build failures or prove them environment-only with evidence; `packaging`.
-- [ ] `P05.S10` - Make the loader-cache cross-session proof and the import-hygiene scan robust under parallel execution without weakening them; `parallel-sensitive tests`.
+- [x] `P05.S09` - Fix the companion-wheel uv build failures or prove them environment-only with evidence; `packaging`.
+- [x] `P05.S10` - Make the loader-cache cross-session proof and the import-hygiene scan robust under parallel execution without weakening them; `parallel-sensitive tests`.
+- [ ] `P05.S12` - Root-cause the stale registry disk-cache pickles serving pre-correction snapshots under pytest and prove fingerprint invalidation completeness or fix the gap; `src/cadrumo/domain/calculations/registry/_loader.py`.
 
 ### Phase `P06` - All-green verification
 
