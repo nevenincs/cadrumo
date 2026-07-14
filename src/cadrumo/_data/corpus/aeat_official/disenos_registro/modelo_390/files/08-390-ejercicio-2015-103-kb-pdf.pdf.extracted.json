@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_390/files/08-390-ejercicio-2015-103-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/08-390-ejercicio-2015-103-kb-pdf.pdf",
   "source_sha256": "49aa7389ea31d2a166b7ecc050a8f5066fdf052e84dff72f45e71063f3e57a60",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

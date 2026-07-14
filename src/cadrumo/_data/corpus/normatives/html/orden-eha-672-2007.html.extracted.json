@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-672-2007.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-672-2007.html",
   "source_sha256": "19682d74360f0f2eab5b7a23ebe53025ca17192d2f2db0d9da3fe9da4182a818",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

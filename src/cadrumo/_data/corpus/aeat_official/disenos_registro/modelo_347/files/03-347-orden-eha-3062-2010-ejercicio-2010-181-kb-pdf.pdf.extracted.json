@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_347/files/03-347-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/03-347-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf",
   "source_sha256": "4f9d5f9e3f7376a96408ea87b128bbb7316cd4650fbe4b9053a91e3dc5d30188",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

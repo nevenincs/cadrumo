@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/14-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2019-y-2020-290-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/14-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2019-y-2020-290-kb-xlsx.xlsx",
   "source_sha256": "bd570be2599aa7aba4740282fc06dd573e8d0d03dd0717ae3c1d26e0fae0446d",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

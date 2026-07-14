@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-819-2024-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-819-2024-art-1.html",
   "source_sha256": "fed8928773df42bfc5bdbbd32994008f8427b8afce0cc800c0ab5085b42f4583",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

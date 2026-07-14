@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_200/files/03-200-ejercicio-2011-522-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/03-200-ejercicio-2011-522-kb-pdf.pdf",
   "source_sha256": "481ca062674904111075c2b3679bc96c5937f784db3bd019120e39985b98d683",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

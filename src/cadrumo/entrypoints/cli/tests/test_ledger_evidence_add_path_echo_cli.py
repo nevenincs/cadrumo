@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....tests.env_scope import scoped_cwd
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -31,10 +32,7 @@ def _session(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_evidence_add_echoes_forward_slash_argv_path_verbatim(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_evidence_add_echoes_forward_slash_argv_path_verbatim(tmp_path: Path) -> None:
     """A forward-slash relative argv path is echoed forward-slash, even on Windows.
 
     The CLI takes the source path as a raw ``str`` (not a ``Path``), so the
@@ -46,10 +44,10 @@ def test_evidence_add_echoes_forward_slash_argv_path_verbatim(
     fixtures = tmp_path / "fixtures"
     fixtures.mkdir()
     (fixtures / "factura.pdf").write_bytes(b"%PDF-1.4 argv-verbatim")
-    monkeypatch.chdir(tmp_path)
 
     argv_path = "fixtures/factura.pdf"  # forward slashes, exactly as an operator types
-    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", argv_path, "--supplier", "Acme SL"])
+    with scoped_cwd(tmp_path):
+        added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", argv_path, "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
 
     record = json.loads(added.output)["result"]
