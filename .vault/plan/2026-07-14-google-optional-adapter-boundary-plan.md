@@ -67,7 +67,7 @@ After approval, scaffold one execution record per Step with `uv run vaultspec-co
 
 - [x] `S01` - Produce the definitive 183-row legacy Google disposition audit, recording raw-versus-CLI count drift and one evidence-backed disposition per row; `.vault/audit/2026-07-14-google-optional-adapter-boundary-audit.md`.
 - [x] `S02` - Reconcile the legacy Google master plan authority chain and prose as a historical non-executable record without changing structural rows or claiming retired work was implemented; `.vault/plan/2026-05-13-google-oauth-plan.md`.
-- [ ] `S03` - Retag only the legacy Google plan as google-oauth-legacy-plan-retirement through the canonical metadata command; `.vault/plan/2026-05-13-google-oauth-plan.md`.
+- [x] `S03` - Retag only the legacy Google plan as google-oauth-legacy-plan-retirement through the canonical metadata command; `.vault/plan/2026-05-13-google-oauth-plan.md`.
 - [ ] `S04` - Preview archiving google-oauth-legacy-plan-retirement, require archived_count 1, and record every incoming reference in the boundary audit; `.vault/audit/2026-07-14-google-optional-adapter-boundary-audit.md`.
 - [ ] `S05` - Archive only google-oauth-legacy-plan-retirement after its one-record preview proves every incoming reference remains valid; `.vault/_archive/plan/2026-05-13-google-oauth-plan.md`.
 - [x] `S06` - Supersede the ledger-Google warning-closeout ADR with the accepted optional-adapter boundary through the canonical ADR supersede command; `.vault/adr/2026-06-04-ledger-google-live-export-adr.md + .vault/adr/2026-07-14-google-optional-adapter-boundary-adr.md`.
