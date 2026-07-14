@@ -424,6 +424,45 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** establish mandate and exact earlier machine-file authority;
   do not extrapolate the 2019 layout.
 
+### modelo-353-declaration-pdf-2008-2025 | low | Accepted extraction lacks exact historical authority
+
+- **Candidate:** Modelo 353 declaration-PDF extraction from 2008 through 2025.
+- **Mandate:** `proven`; accepted live-filing capture requires PDF fallback.
+- **Exact authority window:** `missing`; registered record-design authority
+  begins in 2026.
+- **Canonical implementation state:** `gap`; the generic parser exists but no
+  Modelo 353 profile supplies this surface.
+- **Real evidence or specimen:** exact-window authority and sanitized filed
+  specimens are missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = false`, `canonical_gap_met = true`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `authority-gated`.
+- **Next action:** obtain exact historical declaration-copy authority and real
+  sanitized specimens before profile work.
+
+### modelo-353-declaration-pdf-2026-open | low | Current extraction awaits a sanitized filed specimen
+
+- **Candidate:** Modelo 353 declaration-PDF extraction from 2026, open end.
+- **Mandate:** `proven`.
+- **Exact authority window:** `aeat-dr-353-2026` covers 2026+ record design.
+- **Canonical implementation state:** `gap`; no extraction profile exists and
+  the generic parser remains the only permitted engine.
+- **Real evidence or specimen:** a sanitized filed Modelo 353 PDF is missing;
+  calculation manuals do not prove declaration geometry.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = true`, `canonical_gap_met = true`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `evidence-gated`.
+- **Next action:** obtain a real filed 2026+ PDF, then consider reviewed profile
+  data and corpus coverage through the generic parser only.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
