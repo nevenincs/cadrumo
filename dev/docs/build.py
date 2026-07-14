@@ -497,7 +497,14 @@ def write_deployment_sitemap(html_root: Path, base_url: str) -> Path:
     return sitemap_path
 
 
-def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page: bool = False) -> None:
+def build_docs(
+    repo_root: Path,
+    plan: DocBuildPlan,
+    *,
+    strict: bool,
+    single_page: bool = False,
+    scope: str = "full",
+) -> None:
     """Run Sphinx against the selected targets.
 
     Full builds write the actual documentation output under ``docs/_build/html``.
@@ -506,12 +513,17 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     artifacts never pollute the repository. Single-page builds are an explicit
     exception: they write the requested page into the canonical HTML output
     directory while excluding generated API/CLI/autodoc surfaces.
+
+    ``scope`` selects the documentation surface (``full`` | ``user``). Under
+    ``user`` scope the API autodoc tree is excluded and the app is never imported
+    for rendering (see ``CADRUMO_DOCS_SCOPE`` in ``docs/conf.py``), so the
+    apidocs scaffold is skipped — a user-scope build never regenerates API stubs.
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
     ensure_isolated_storage_root()
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs(os.environ)]
-    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
+    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root), "CADRUMO_DOCS_SCOPE": scope}
     if strict:
         command.extend(["-n", "-W"])
         env["CADRUMO_DOCS_OFFLINE"] = "1"
@@ -559,7 +571,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             temp_root = Path(tmp)
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)
-            if plan.api_scaffold_required:
+            if plan.api_scaffold_required and scope != "user":
                 ApiStubManager(src_cadrumo=repo_root / "src" / "cadrumo", docs_api=temp_docs_root / "api").scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
@@ -679,16 +691,37 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help=("Build one documentation source into docs/_build/html without rebuilding generated API/autodoc pages."),
     )
+    parser.add_argument(
+        "--scope",
+        choices=("full", "user"),
+        default=None,
+        help=(
+            "Documentation surface to build. 'full' (default, CI + deploy) includes the API autodoc tree; "
+            "'user' builds only the operator-facing surface, excluding docs/api and never importing the app "
+            "for rendering (minutes instead of an hour). Overrides CADRUMO_DOCS_SCOPE; bare '--scope user' "
+            "with no paths runs a full user build."
+        ),
+    )
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
+    # Precedence: explicit --scope flag, then the CADRUMO_DOCS_SCOPE env, then full.
+    scope = args.scope or os.environ.get("CADRUMO_DOCS_SCOPE") or "full"
+    if scope not in {"full", "user"}:
+        raise SystemExit(f"scope must be 'full' or 'user'; got {scope!r}")
     if args.single_page and args.paths:
         raise SystemExit("--single-page cannot be combined with positional paths")
-    paths = (
-        [Path(args.single_page)]
-        if args.single_page
-        else ([Path(path) for path in args.paths] if args.paths else changed_paths(repo_root, args.base))
-    )
+    if scope == "user" and not args.single_page and not args.paths:
+        # `--scope user` with no target is the ergonomic "build all user docs"
+        # command: force a full build (docs/conf.py is the full-build trigger),
+        # scoped to the user surface by CADRUMO_DOCS_SCOPE.
+        paths = [Path("docs") / "conf.py"]
+    else:
+        paths = (
+            [Path(args.single_page)]
+            if args.single_page
+            else ([Path(path) for path in args.paths] if args.paths else changed_paths(repo_root, args.base))
+        )
     plan = planned_doc_targets(repo_root, paths)
     if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
         raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
@@ -711,7 +744,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Building changed documentation targets:", flush=True)
         for target in plan.targets:
             print(f"  {target.relative_to(repo_root)}", flush=True)
-    build_docs(repo_root, plan, strict=args.strict, single_page=bool(args.single_page))
+    build_docs(repo_root, plan, strict=args.strict, single_page=bool(args.single_page), scope=scope)
     if args.rag_index:
         update_rag_index(repo_root)
     return 0

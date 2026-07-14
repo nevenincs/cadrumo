@@ -58,6 +58,23 @@ copyright = f"2026, the {PRODUCT_IDENTITY.prose_name} authors"
 release = str(_PYPROJECT["version"])
 version = release
 
+# ── Build scope ──────────────────────────────────────────────────────────────
+# ``CADRUMO_DOCS_SCOPE`` selects how much of the set this invocation builds:
+#   * ``full`` (default, CI + deploy): the whole handbook including the API
+#     autodoc tree (``docs/api/**`` — ~1,150 ``automodule`` stubs that import the
+#     entire application) and the viewcode ``_modules`` source tree.
+#   * ``user``: ONLY the operator-facing surface (index / how-to / explanation /
+#     reference / architecture / cli / glossary / the executed cli-sequences).
+#     The API autodoc tree and the ``_modules`` tree are excluded and the
+#     autodoc / viewcode / typehints extensions are never loaded, so the
+#     application is never imported for *rendering* — cutting the ~60 user pages
+#     free of the ~1,150 app-importing API pages so user-docs iteration builds in
+#     minutes instead of an hour.
+_DOCS_SCOPE = os.environ.get("CADRUMO_DOCS_SCOPE", "full")
+if _DOCS_SCOPE not in {"full", "user"}:
+    raise ValueError(f"CADRUMO_DOCS_SCOPE must be 'full' or 'user'; got {_DOCS_SCOPE!r}")
+_USER_SCOPE = _DOCS_SCOPE == "user"
+
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [
     "sphinx.ext.autodoc",
@@ -73,6 +90,14 @@ extensions = [
     "hoverxref.extension",
     "myst_parser",
 ]
+if _USER_SCOPE:
+    # Drop ONLY the app-importing autodoc machinery; every narrative/rendering
+    # extension (myst, design, mermaid, copybutton, hoverxref, opengraph,
+    # notfound, intersphinx, napoleon) stays so the user surface renders
+    # identically. napoleon is left loaded but inert (its docstring transform
+    # never fires without autodoc).
+    _AUTODOC_ONLY_EXTENSIONS = {"sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx_autodoc_typehints"}
+    extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
 
 # Hover tooltip cards on :term: cross-references to the generated glossary.
 # One term per glossary entry (the shared-entry rendering bug); aliases ride as
@@ -102,6 +127,11 @@ exclude_patterns = [
     "**/_test_*.py",
     "USERDOCS-KICKOFF-BRIEF.md",
 ]
+if _USER_SCOPE:
+    # User scope excludes the generated API autodoc tree and the viewcode
+    # ``_modules`` source pages from the read set entirely, so no app module is
+    # imported to render them.
+    exclude_patterns += ["api/**", "_modules/**"]
 
 _DOCS_ROOT = Path(__file__).resolve().parent
 _ONLY_SOURCES = {
@@ -134,6 +164,14 @@ suppress_warnings = [
 if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
+if _USER_SCOPE:
+    # The root toctree carries one ``API <api/cadrumo>`` entry (docs/index.md);
+    # under user scope that target is excluded, so the toctree reference to it is
+    # a benign ``toc.excluded`` — the entry simply drops from the nav. This is the
+    # only excluded toctree target in the user set, so the suppression is scoped
+    # to exactly the pruned API entry, and the ``-n -W`` gate stays on for every
+    # other reference class.
+    suppress_warnings.append("toc.excluded")
 
 # ── Autodoc / Napoleon ──────────────────────────────────────────────────────
 napoleon_google_docstring = True
@@ -439,6 +477,12 @@ html_context = {
         "and never replaces official AEAT tools or advice from a qualified professional."
     ),
 }
+if _USER_SCOPE:
+    # The header nav carries an "API" entry pointing at the excluded api/cadrumo
+    # page; drop it so the user-scope preview nav has no dead API link.
+    html_context["cadrumo_nav"] = [
+        entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/cadrumo"
+    ]
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
 ogp_site_name = f"{PRODUCT_IDENTITY.prose_name} documentation"
@@ -795,6 +839,11 @@ def _should_generate_cli_reference() -> bool:
 
 def _should_resolve_deferred_models() -> bool:
     """Return whether this Sphinx invocation needs diagnostics model rebuilding."""
+    if _USER_SCOPE:
+        # The deferred-model rebuild only exists so autodoc can import the
+        # diagnostics report models; user scope loads no autodoc, so importing
+        # the application here would defeat the whole point of the scope.
+        return False
     if os.environ.get("CADRUMO_DOCS_FORCE_DEFERRED_MODELS"):
         return True
     if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
@@ -958,6 +1007,51 @@ class _LegacyDirective(Directive):
         return [admonition]
 
 
+def _suppress_api_scope_reference(app, env, node, contnode):
+    """Resolve references into the excluded API surface inertly under user scope.
+
+    The user-scope build (``CADRUMO_DOCS_SCOPE=user``) excludes ``docs/api/**``
+    and loads no autodoc, so the py domain is intentionally empty and the API
+    reference doc is absent. Two reference classes then have no target and would
+    red the ``-n -W`` gate even though they resolve in the full/deployed build:
+
+    * every py-domain cross-reference (``:class:`` / ``:func:`` / ... — chiefly
+      the generated CLI reference pages, which point at the application symbols
+      autodoc documents in full scope); and
+    * the ``std:doc`` links into ``api/`` from the reference / architecture pages.
+
+    This handler — connected ONLY under user scope — resolves exactly those to
+    their plain display text (dropping the hyperlink), so the preview builds
+    clean while every OTHER missing reference still reds the gate. It is the
+    documented, scope-aware suppression of just the API-domain missing-reference
+    class (never a blanket ``-W`` off); full-scope builds never connect it.
+    """
+    if node.get("refdomain") == "py":
+        return contnode
+    if (
+        node.get("refdomain") == "std"
+        and node.get("reftype") == "doc"
+        and node.get("reftarget", "").lstrip("/").startswith("api/")
+    ):
+        return contnode
+    return None
+
+
+class _UserScopeApiWarningFilter:
+    """Drop the user-scope MyST 'Unknown source document api/...' warnings.
+
+    MyST emits ``myst.xref_missing`` for the markdown links into the excluded API
+    tree directly (not via the ``missing-reference`` event that
+    :func:`_suppress_api_scope_reference` intercepts), so this logging filter
+    drops exactly those API-targeted records under user scope, leaving every
+    other broken-link warning intact so the gate stays meaningful.
+    """
+
+    def filter(self, record) -> bool:
+        message = record.getMessage()
+        return not ("Unknown source document" in message and "api/" in message)
+
+
 def setup(app):
     """Resolve deferred pydantic forward references before autodoc runs.
 
@@ -1084,6 +1178,16 @@ def setup(app):
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.
     app.connect("missing-reference", _resolve_short_reference, priority=700)
+    if _USER_SCOPE:
+        # Scope-aware API-reference suppression (see the two helpers above): the
+        # missing-reference handler runs LAST (priority 900, after the short-name
+        # bridge) so it only inerts references the full build would resolve
+        # against the excluded autodoc surface; the logging filter drops the
+        # MyST markdown-link warnings into api/ that never reach that event.
+        import logging as _stdlib_logging
+
+        app.connect("missing-reference", _suppress_api_scope_reference, priority=900)
+        _stdlib_logging.getLogger("sphinx").addFilter(_UserScopeApiWarningFilter())
     app.add_role("paramref", _paramref_role)
     app.add_directive("legacy", _LegacyDirective)
 
