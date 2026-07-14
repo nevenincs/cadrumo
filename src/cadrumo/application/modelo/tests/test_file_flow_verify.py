@@ -37,7 +37,6 @@ from ._file_flow_support import (
     Decimal,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
-    ModeloWorkflowGateError,
     Repos,
     VerificationCompletenessStatus,
     VerificationReportNotFoundError,
@@ -115,11 +114,15 @@ def test_mark_verificado_completo_requires_borrador_state(repos: Repos) -> None:
         )
 
 
-def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos: Repos) -> None:
-    """A granted verification must still pass the WorkflowEngine gate.
+def test_verify_proceeds_locally_when_auth_provider_unavailable(repos: Repos) -> None:
+    """The local verify transition does not gate on auth-provider readiness.
 
-    Auth/preflight blockers abort before the verified-complete state,
-    verification report, or verification bucket event is persisted.
+    Per the operator ruling that auth readiness binds only live, AEAT-touching
+    purposes (not the local build/verify/file/export flow), verifying a
+    revision locally proceeds even when the auth provider is unavailable, and
+    the provider is never consulted. The live-purpose half of the ruling — an
+    unavailable auth provider still refuses a live/AEAT-touching flow — is
+    pinned by ``test_preflight.py::test_gate_4_unavailable_provider_surfaces_structured_context``.
     """
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
@@ -135,35 +138,33 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
     )
 
     unavailable_provider = AuthProvider(available=False)
-    with pytest.raises(ModeloWorkflowGateError) as gate_error:
-        verify_revision(
-            revision.calculation_revision_id,
-            revision=revision,
-            work_unit=work_unit,
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
-            clock=T2,
-            auth_provider=unavailable_provider,
-        )
-    assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
-    assert gate_error.value.context is not None
-    assert gate_error.value.context["stage"] == WorkflowStage.ABORTED.value
+    verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T2,
+        auth_provider=unavailable_provider,
+    )
 
-    assert unavailable_provider.describe_calls == 1
+    # Auth readiness gates only live purposes: the local verify flow never
+    # consults the provider, so an unavailable one does not block it.
+    assert unavailable_provider.describe_calls == 0
     refreshed_revision = get_calculation_revision(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
     )
-    assert refreshed_revision.state is CalculationRevisionState.BORRADOR
+    assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert (
         list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
             verification_repository=vr_repo,
         )
-        == ()
+        != ()
     )
     verification_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
@@ -172,7 +173,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
             BucketEventType.MODELO_VERIFICATION_REFUSED,
         ),
     )
-    assert verification_events == ()
+    assert tuple(event.event_type for event in verification_events) == (BucketEventType.MODELO_VERIFICATION_PASSED,)
 
 
 def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> None:
