@@ -108,7 +108,7 @@ Record unavailable-authority gates, publish the final residual audit, and author
 
 - [x] `P04.S23` - Record Modelo 100 exercise-2026 export authority as unavailable until an official current-year design is published and bundled; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/, .vault/reference/`.
 - [x] `P04.S24` - Publish the final adjudication audit with dispositions, evidence windows, duplicate-code guards, and unresolved external gates; `.vault/audit/, .vault/reference/`.
-- [ ] `P04.S25` - Determine whether any candidate passes all four gates and either record no successor handoff or write a successor implementation plan limited to proven gaps; `.vault/audit/, .vault/plan/`.
+- [x] `P04.S25` - Determine whether any candidate passes all four gates and either record no successor handoff or write a successor implementation plan limited to proven gaps; `.vault/audit/, .vault/plan/`.
 
 ## Parallelization
 
