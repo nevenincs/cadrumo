@@ -311,6 +311,43 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain a real filed 2023+ specimen, then consider reviewed
   profile data and corpus coverage through the generic parser only.
 
+### modelo-193-outbound-2025-open | low | Registered 2025 authority remains mandate-gated
+
+- **Candidate:** Modelo 193 outbound generation from 2025, open end.
+- **Mandate:** `unproven`.
+- **Exact authority window:** `aeat-dr-193-2025` covers 2025+.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic engine is delivered and fail-closed.
+- **Real evidence or specimen:** official design available; export layout and
+  golden outbound payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted 2025+ outbound mandate before layout work.
+
+### modelo-193-outbound-2024 | low | Bundled designs are not registered exact-window authority
+
+- **Candidate:** Modelo 193 outbound generation for exercise 2024.
+- **Mandate:** `unproven`.
+- **Exact authority window:** `missing`; two 2024 designs are bundled and
+  hashed but not registered as exact record-design authority.
+- **Canonical implementation state:** `gap` for optional layout data; no
+  2024/2025 structural-equivalence claim proves a revision split or parity.
+- **Real evidence or specimen:** registered authority and golden payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** register and compare exact 2024 authority before deciding
+  whether a registry revision split is necessary.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
