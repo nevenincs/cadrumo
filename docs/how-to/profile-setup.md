@@ -24,17 +24,20 @@ another taxpayer, separate a test profile from a real one, or restore a copy
 under a different name. To understand why the tool is local-first and
 human-gated, see the [explanation guides](../explanation/index.md).
 
-List your profiles and see which one is active:
+List your profiles with `aeat config profile list`, see which one is active,
+add a second taxpayer, then switch to it. The card runs the whole flow: it
+lists the profiles, adds a second one, and switches the active context to it.
 
-```bash
+```{cli-sequence} profile-setup-multiple
+:verify: Confirm you can list profiles, add a second taxpayer, and switch the active context to it.
+@step List the profiles and see which one is active.
 aeat config profile list
-aeat config profile status
-```
-
-Switch to another taxpayer before working on it:
-
-```bash
+@step Add a second taxpayer profile.
+@setup aeat config profile create my-other-profile --quiet --entity-type natural_person --tax-id 87654321X --name "Otra" --surnames "Persona Ejemplo"
+@step Switch the active context to the second profile.
 aeat config switch my-other-profile
+@result aeat config profile status
+@expect exit_code == 0
 ```
 
 Switching changes which local ledger, modelo drafts, and filing markers `aeat
@@ -94,19 +97,20 @@ anything. For unattended runs, see
 `cadrumo` prints its prompts, refusals, and error messages in Spanish. The output
 blocks quoted below are English translations of those messages.
 
-Use flags with `--quiet` when you want a repeatable, scriptable setup:
-
-```bash
-aeat config profile create my-profile --quiet --tax-id 12345678Z
-```
+Use flags with `--quiet` when you want a repeatable, scriptable setup, such as
+`aeat config profile create my-profile --quiet --entity-type natural_person
+--tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"`. The
+[worked example below](#worked-example-a-natural-person-with-an-activity) runs a
+complete scripted create.
 
 `--quiet` runs without prompts and uses only the flags you provide. A `--quiet`
-run refuses if a required flag is missing and tells you which one to add. The
-tax identifier is the one value you must always provide:
+run refuses if a required flag is missing and tells you which ones to add. A
+scripted create needs the filing identity: the tax identifier, the entity type,
+and the name and surnames:
 
 ```text
-Refused. This --quiet run is missing required details. Add these flags and run
-the command again: --tax-id.
+Refused. Profile creation is missing filing identity details. Add these flags
+and run the command again: --entity-type --name --surnames.
 ```
 
 Add `--accept-defaults` when you intentionally want Cadrumo to fill the questions
@@ -114,26 +118,17 @@ you omit from its built-in defaults.
 
 ### Worked example: a natural person with an activity
 
-This example creates a minimal natural-person profile for an individual with an
-economic activity:
+This example creates a natural-person profile for an individual with an
+economic activity, then inspects and validates it before you rely on it:
 
-```bash
-aeat config profile create ana-2026 --quiet --accept-defaults \
-  --entity-type natural_person \
-  --tax-id 12345678Z \
-  --name "Ana" --surnames "Garcia Lopez" \
-  --irpf-income-categories actividad_economica \
-  --activity "diseno grafico" \
-  --iva-regime GENERAL \
-  --tax-residence-ccaa madrid \
-  --output-language en
-```
-
-Inspect and validate it before you rely on it:
-
-```bash
+```{cli-sequence} profile-setup-worked-example
+:verify: Confirm the scripted create produces a natural-person profile that validates.
+@step Create the natural-person profile with activity and residence facts.
+aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 11111111H --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --output-language en
+@step Inspect the stored facts.
 aeat config profile show ana-2026
-aeat config profile validate ana-2026
+@result aeat config profile validate ana-2026
+@expect exit_code == 0
 ```
 
 ## The facts setup asks for
@@ -238,32 +233,20 @@ fact is undeclared, the readiness check reports the related form as *incomplete*
 ## Check your facts before you calculate
 
 A wrong or missing fact produces a wrong filing. Confirm the profile before you
-calculate a modelo.
+calculate a modelo. The card shows the active profile's readiness summary and
+stored facts, validates them against the schema, then checks whether the profile
+holds the facts a specific form needs for a specific filing context:
 
-Show the active profile's readiness summary:
-
-```bash
+```{cli-sequence} profile-setup-inspect
+:verify: Confirm the active profile's facts validate and see what a specific filing still needs.
+@step Show the active profile's readiness summary.
 aeat config profile status
-```
-
-Show the stored facts in full:
-
-```bash
+@step Show the stored facts in full.
 aeat config profile show
-```
-
-Validate the facts against the schema, which catches malformed or contradictory
-values:
-
-```bash
+@step Validate the facts against the schema.
 aeat config profile validate
-```
-
-Check whether the profile holds the facts a specific form needs, for a specific
-filing context:
-
-```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@result aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@expect exit_code == 0
 ```
 
 `preflight` names the missing fields for that `(modelo, filing-year, period)`
@@ -296,69 +279,81 @@ profile and the registry rules. To see what applies to your profile, use
 
 ## Maintain your profile
 
-Edit a profile with the flags you want to change:
+The card runs the maintenance lifecycle on one profile: it edits a fact,
+renames the profile, duplicates it, deletes the duplicate, then exports the
+profile to a portable JSON file:
 
-```bash
-aeat config profile edit ana-2026 --quiet --address-postcode 28013
+```{cli-sequence} profile-setup-maintain
+:verify: Confirm a profile survives an edit, rename, duplicate, delete, and export.
+@setup aeat config profile create bruno-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 22222222J --name "Bruno" --surnames "Martin Ruiz" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid
+@step Edit a fact with the flags you want to change.
+aeat config profile edit bruno-2026 --quiet --address-postcode 28013
+@step Rename the profile; the active-profile pointer follows the rename.
+aeat config profile rename bruno-2026 bruno-real
+@step Duplicate it to start a second profile from the same facts.
+aeat config profile duplicate bruno-real bruno-copy
+@step Delete the duplicate; deletion is local and irreversible.
+aeat config profile delete bruno-copy --yes
+@setup aeat config switch bruno-real
+@step Export the profile to a portable cleartext JSON file.
+@result aeat config profile export bruno-real --to bruno-real-profile.json --cleartext-local
+@expect exit_code == 0
 ```
 
-Run `show`, `status`, or `validate` again after editing.
+Read the frames in order:
 
-Rename a profile when only the visible label should change. The active-profile
-pointer follows the rename:
+- **Edit** changes only the flags you pass. Run `show`, `status`, or `validate`
+  again after editing.
+- **Rename** changes only the visible label; the active-profile pointer follows
+  it.
+- **Duplicate** starts a second profile from the same facts. The second name you
+  pass is the new profile's name — the name you address it by in every later
+  command. The new profile becomes the active one.
+- **Delete** removes a profile for good. If the deleted profile was active,
+  Cadrumo clears the active-profile pointer.
+- **Export** writes a portable JSON file. Pass `--cleartext-local` for a local
+  JSON file, or `--passphrase` for an encrypted transfer bundle.
 
-```bash
-aeat config profile rename ana-2026 ana-real
-```
-
-Duplicate a profile to start a second one from the same facts. The second name
-you pass is the new profile's name - the name you address it by in every later
-command. The new profile becomes the active one:
-
-```bash
-aeat config profile duplicate ana-real ana-copy
-```
-
-Delete a profile only when you mean to remove it. Deletion is local and
-irreversible. If the deleted profile was active, Cadrumo clears the active-profile
-pointer:
+Import a saved file back into another session or storage root. Import under a
+fresh label; the imported profile becomes the active one. A store that still
+holds the same profile refuses the import on the profile's identifier, so import
+is for restoring into a different storage root:
 
 ```bash
-aeat config profile delete ana-copy --yes
-```
-
-Clear the active profile without deleting it:
-
-```bash
-aeat config profile logout
-```
-
-Export a profile to a portable JSON file:
-
-```bash
-aeat config profile export ana-real --to ./ana-real-profile.json
-```
-
-Import a profile into another session or storage root. Import under a fresh label
-when one with the same name already exists. The imported profile becomes the
-active one:
-
-```bash
-aeat config profile import ./ana-real-profile.json --label ana-restored
+aeat config profile import ./bruno-real-profile.json --label bruno-restored
 ```
 
 A portable profile file contains taxpayer data, including the tax identifier,
 activity, and local filing history. Store it as sensitive tax data, and don't
 attach it to a support request unless you've removed personal details.
 
+Clear the active profile without deleting it using `aeat config profile logout`.
+The card confirms the active pointer is cleared afterward:
+
+```{cli-sequence} profile-setup-logout
+:verify: Confirm logout clears the active profile without deleting it.
+@step Clear the active profile.
+aeat config profile logout
+@result aeat config profile status
+@expect exit_code == 0
+```
+
 ## Choose your service capabilities
 
 Each profile carries its own opt-in for three optional services. The setup
 wizard asks these questions when you create or edit a profile, and you can
-change them at any time. Show the resolved posture:
+change them at any time. The card shows the resolved posture, turns one
+capability off, then shows the posture again:
 
-```bash
+```{cli-sequence} profile-setup-capabilities
+:verify: Confirm a capability toggle updates the active profile's posture.
+@setup aeat config profile create caps-demo --quiet --entity-type natural_person --tax-id 33333333P --name "Caps" --surnames "Demo Perez"
+@step Show the resolved capability posture.
 aeat config profile capabilities show
+@step Turn the on-host vision model off for the active profile.
+aeat config profile capabilities set llm_vision off
+@result aeat config profile capabilities show
+@expect exit_code == 0
 ```
 
 The three capabilities are:
@@ -368,35 +363,33 @@ The three capabilities are:
 - `llm_vision` — read invoices with the on-host vision model. On by default.
 - `google_export` — export calculations to Google Sheets. On by default.
 
-Turn a capability on or off for the active profile:
-
-```bash
-aeat config profile capabilities set llm_vision off
-aeat config profile capabilities set cloud_evidence_upload on
-```
-
-A capability whose package extra is not installed refuses with the exact
-install command — see [Install Cadrumo](../workstation-setup.md) for the
-extras.
+Turn any capability on or off for the active profile the same way — for
+example, `aeat config profile capabilities set cloud_evidence_upload on`. A
+capability whose package extra is not installed refuses with the exact install
+command — see [Install Cadrumo](../workstation-setup.md) for the extras.
 
 ## See what changed
 
 Every change to a profile - creation, edits, imports, classifications,
 calculations, and filings - is recorded as an event in that profile's
 append-only history (a log you can read but not alter). Reading history needs an
-active profile, so switch to it first if you ran `logout`. Browse it to see what
-changed, when, and by which command:
+active profile, so switch to it first if you ran `logout`. The card creates a
+profile, renames and edits it to generate events, then browses the full history
+and narrows it with filters that combine:
 
-```bash
-aeat config profile history ana-real
-```
-
-Narrow a long history with filters, which combine:
-
-```bash
-aeat config profile history ana-real --event-type profile.renamed
-aeat config profile history ana-real --since 2026-01-01 --until 2026-03-31
-aeat config profile history ana-real --actor operator
+```{cli-sequence} profile-setup-history
+:verify: Confirm the profile history records each change and can be filtered.
+@setup aeat config profile create carla-2026 --quiet --entity-type natural_person --tax-id 44444444A --name "Carla" --surnames "Lopez Sanz"
+@setup aeat config profile rename carla-2026 carla-real
+@setup aeat config profile edit carla-real --quiet --address-postcode 28013
+@step Browse the full change history.
+aeat config profile history carla-real
+@step Filter to a single event type.
+aeat config profile history carla-real --event-type profile.renamed
+@step Filter by date range.
+aeat config profile history carla-real --since 2026-01-01 --until 2026-03-31
+@result aeat config profile history carla-real --actor operator
+@expect exit_code == 0
 ```
 
 Repeat `--event-type` to include several types. An unknown type is refused with

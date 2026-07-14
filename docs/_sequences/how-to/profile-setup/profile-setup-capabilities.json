@@ -1,0 +1,81 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "create",
+        "caps-demo",
+        "--quiet",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "33333333P",
+        "--name",
+        "Caps",
+        "--surnames",
+        "Demo Perez"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tcaps-demo\nStatus\tcreated\nActive profile\tcaps-demo\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "capabilities",
+        "show"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "cloud_evidence_upload\tdisabled\tprofile\tprofile opted out of cloud evidence upload\nllm_vision\tenabled\tprofile\tprofile opted in to llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "capabilities",
+        "set",
+        "llm_vision",
+        "off"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "capability\tllm_vision\nstate\toff\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "capabilities",
+        "show"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "cloud_evidence_upload\tdisabled\tprofile\tprofile opted out of cloud evidence upload\nllm_vision\tdisabled\tprofile\tprofile opted out of llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-capabilities"
+}
