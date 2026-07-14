@@ -151,6 +151,7 @@ kind a box is, then supply the value for a manual one and recalculate:
 :verify: Confirm you can read each box's input kind before supplying a manual value.
 @step Check which input kind each box is; only manual boxes accept --casilla.
 @result aeat --format json app modelo casillas 303 --period 1T
+@expect result.modelo == "303"
 @expect exit_code == 0
 @step Supply a manual casilla's value and recalculate.
 @static aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
@@ -184,7 +185,8 @@ expects you to do. The common kinds of blocking finding:
   :verify: Confirm setting the activity-start date on the profile succeeds.
   @setup aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
   @step Set the activity-start date so an unstarted prior period is scoped out.
-  @result aeat config profile edit me --quiet --activity-start-date 2026-01-01
+  @result aeat --format json config profile edit me --quiet --activity-start-date 2026-01-01
+  @expect result.profile_name == "me"
   @expect exit_code == 0
   ```
 
@@ -206,6 +208,7 @@ verified-complete:
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Check where your filing stands.
 @result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@expect result.modelo == "303"
 @expect exit_code == 0
 @step Once verification grants verified-complete, retry the export.
 @static aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
@@ -232,6 +235,7 @@ on it:
 aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
 @step Show the actions taken on the work unit.
 @result aeat --format json app modelo work history --modelo 303 --year 2026 --period 1T
+@expect result.operation == "modelo.work.history"
 @expect exit_code == 0
 ```
 
