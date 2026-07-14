@@ -1,0 +1,44 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "preflight",
+        "--modelo",
+        "303",
+        "--filing-year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.preflight",
+        "notices": [],
+        "result": {
+          "filing_year": 2026,
+          "missing": [],
+          "modelo": "303",
+          "period": "1T",
+          "profile_id": "<profile-id>",
+          "ready": true,
+          "revision_id": "2023-y-siguientes"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "censo-update-preflight"
+}
