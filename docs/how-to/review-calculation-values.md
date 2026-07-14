@@ -26,33 +26,26 @@ You need:
 
 ## Inspect the modelo before entering values
 
-Describe the modelo and available revisions:
+Describe the modelo, list its casillas (all of them, then just the required
+manual ones), and inspect its formulas with their legal and source references:
 
-```bash
-aeat app modelo describe 130 --period 1T
-```
-
-List casillas:
-
-```bash
-aeat app modelo casillas 130 --period 1T
-```
-
-Show only required manual casillas:
-
-```bash
-aeat app modelo casillas 130 --period 1T --input-kind manual --required
+```{cli-sequence} review-values-inspect
+:verify: Confirm the describe, casillas, and formulas surfaces resolve.
+@step Describe the modelo and its available revisions.
+aeat --format json app modelo describe 130 --period 1T
+@step List the modelo's casillas.
+aeat --format json app modelo casillas 130 --period 1T
+@step Show only the required manual casillas.
+aeat --format json app modelo casillas 130 --period 1T --input-kind manual --required
+@step Inspect the formulas with their legal and source references.
+@result aeat --format json app modelo formulas 130 --period 1T --explain
+@expect result.code == "130"
+@expect exit_code == 0
 ```
 
 The `casillas` command shows the registry casilla id, printed form number,
 input kind, required flag, and label. Use this before providing any
 `--casilla` value so you know what the number means.
-
-Inspect formulas and their legal/source references:
-
-```bash
-aeat app modelo formulas 130 --period 1T --explain
-```
 
 ## Review a saved calculation
 
@@ -62,22 +55,23 @@ current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
 [Supply manual casilla values](#supply-manual-casilla-values) below) to produce a
 saved draft, then come back here.
 
-List calculation revisions for one filing:
+List the calculation revisions for one filing, show the current revision's
+persisted casilla values, then verify the current draft (the setup steps create
+and calculate the draft the reads below inspect):
 
-```bash
-aeat app modelo work revisions --modelo 130 --year 2026 --period 1T
-```
-
-Show the selected or current revision's persisted casilla values:
-
-```bash
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
-```
-
-Verify the current draft:
-
-```bash
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
+```{cli-sequence} review-values-review-saved
+:seed: autonomo-irpf-2026
+:verify: Confirm the saved calculation lists, shows values, and verifies.
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@setup aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@step List the calculation revisions for the filing.
+aeat --format json app modelo work revisions --modelo 130 --year 2026 --period 1T
+@step Show the current revision's persisted casilla values.
+aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
+@step Verify the current draft.
+@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
+@expect result.granted_verificado_completo == true
+@expect exit_code == 0
 ```
 
 Verification output reports whether completeness was granted, how many casillas
@@ -88,28 +82,32 @@ export.
 ## Supply manual casilla values
 
 Use `--casilla` only for a box whose input kind is `manual`. Use the box number
-printed on the official Agencia Estatal de Administración Tributaria (AEAT) form — the same number you see on the paper or PDF
+printed on the official Agencia Estatal de Administración Tributaria (AEAT) form.
+It is the same number you see on the paper or PDF
 version of the modelo. Run `aeat app modelo casillas 130 --period 1T` to see the
 list, and check the `input` column first.
 
 `--casilla` works only on manual boxes. A `bound` box is filled from your ledger
 or another source, so `--casilla` refuses it with `cannot override bucket-derived
 source-bound casillas` (for example, Modelo 130 box `02` Gastos is `bound`). Fix
-the source instead — see [Supply a missing field value](#supply-a-missing-field-value).
+the source instead. See [Supply a missing field value](#supply-a-missing-field-value).
 
 A first-period filing also needs its prior-period bindings supplied (record them
 as `0` when you have no prior figure). Supply the manual box and the bindings in
 the same calculate call. This example sets box `06` (Retenciones e ingresos a
 cuenta, a manual box) and seeds the three first-period bindings:
 
-```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 \
-  --binding modelo-130-resultados-negativos-anteriores=0 \
-  --binding modelo-130-pagos-fraccionados-anteriores=0 \
-  --binding irpf.previous_year_economic_activity_net_income=0
+```{cli-sequence} review-values-manual-casilla
+:seed: autonomo-irpf-2026
+:verify: Confirm the manual box and first-period bindings calculate a draft.
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@step Supply the manual box and the three first-period bindings in one calculate call.
+@result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.casilla_values.06 == "100.00"
+@expect exit_code == 0
 ```
 
-Do not enter a box value without checking the list first — read the label so
+Do not enter a box value without checking the list first. Read the label so
 you know which field you are filling.
 
 ## Supply a missing field value
@@ -118,29 +116,23 @@ When Cadrumo cannot fill a field automatically, the missing field appears in the
 bindings list. Use the list to see which fields need your input, then supply
 the value during calculation.
 
-List every field the modelo binds, with its `source` and a `readiness` label:
+List every field the modelo binds, focus on the ones with no value yet, preview
+what a value would produce without saving, then supply the first-period bindings
+during calculation:
 
-```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
-```
-
-Add `--missing` to focus on fields that have no value yet:
-
-```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
-```
-
-Preview what a value would produce — without saving anything:
-
-```bash
-aeat app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
-```
-
-Supply the value during calculation when the list shows the field cannot be
-resolved automatically:
-
-```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
+```{cli-sequence} review-values-bindings
+:seed: autonomo-irpf-2026
+:verify: Confirm the bindings list, preview, and calculation resolve the fields.
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@step List every field the modelo binds, with its source and readiness label.
+aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
+@step Focus on the fields that have no value yet.
+aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
+@step Preview what a value would produce, without saving anything.
+aeat --format json app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
+@step Supply the first-period bindings during calculation.
+@result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect exit_code == 0
 ```
 
 
@@ -165,8 +157,8 @@ filed revision`). Use the `source` to decide how to supply the value. The
   KEY=VALUE`, or `--casilla` for a box.
 
 A manual field always needs a value you enter by hand. A **prior filed revision**
-field also needs one when there is no earlier filing yet to carry it forward —
-see the first-time-filing note below. Profile, ledger, and relation fields are
+field also needs one when there is no earlier filing yet to carry it forward.
+See the first-time-filing note below. Profile, ledger, and relation fields are
 filled for you; correct those at their source rather than typing the value.
 
 If you are filing for the first time and a field asks for a prior-period figure
@@ -176,8 +168,8 @@ real prior figure only when you have one prepared outside Cadrumo.
 ### Régimen de atribución de rentas (socios)
 
 If you are a socio, comunero, or partícipe of an entity in the régimen de
-atribución de rentas — a sociedad civil, comunidad de bienes, or herencia
-yacente — the entity files its own Modelo 184 in its own Cadrumo workspace. Your
+atribución de rentas (a sociedad civil, comunidad de bienes, or herencia
+yacente), the entity files its own Modelo 184 in its own Cadrumo workspace. Your
 personal Modelo 100 does not read across workspaces, so enter the attributed base
 by hand.
 
@@ -185,8 +177,8 @@ Record the received share on your profile as `attribution_received` facts (entit
 NIF, entity name, share percentage, attributed base, and filing year), then fold
 the attributed base into your Modelo 100 régimen-de-atribución box with `--binding
 <box>=<attributed-base>` when you run `aeat app modelo work calculate`. Cadrumo
-warns you at verify time when the two halves disagree — facts recorded but the box
-left empty, or a box value with no facts behind it — so a forgotten transcription
+warns you at verify time when the two halves disagree (facts recorded but the box
+left empty, or a box value with no facts behind it), so a forgotten transcription
 never files silently.
 
 ## Handle offsets and carry-forwards
@@ -194,12 +186,18 @@ never files silently.
 Some modelos need prior-period values, credits, or compensation amounts. Do not
 guess these from the current transaction ledger.
 
-For Modelo 303 IVA compensation, inspect or seed the local IVA compensation
-wallet:
+For Modelo 303 IVA compensation, inspect the local wallet, seed a first-period
+opening balance, then correct it if you seeded the wrong amount:
 
-```bash
-aeat app modelo iva-wallet balance --as-of-year 2026
-aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+```{cli-sequence} review-values-iva-wallet
+:verify: Confirm the IVA compensation wallet seeds and corrects an opening balance.
+@step Inspect the local IVA compensation wallet balance.
+aeat --format json app modelo iva-wallet balance --as-of-year 2026
+@step Seed a first-period opening balance of zero.
+aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+@step Correct the seeded opening amount, recording the reason.
+@result aeat --format json app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+@expect exit_code == 0
 ```
 
 Use `--amount 0` only for a true first Modelo 303 period with no previous IVA
@@ -207,16 +205,9 @@ compensation balance. Use a positive amount only when you have the pending
 compensation amount from earlier Modelo 303 filings prepared outside this local
 history.
 
-Seeding refuses if a record already exists for the period. To fix a wrong
-opening amount you seeded earlier, correct it:
-
-```bash
-aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
-```
-
-The correction overwrites the seeded amount and records your `--reason` in an
-audit event. It refuses when no record exists for the period (seed it first) and
-when an already-filed Modelo 303 has consumed the seeded basis — correcting it
+Seeding refuses if a record already exists for the period. The correction
+overwrites the seeded amount and records your `--reason` in an audit event. It refuses when no record exists for the period (seed it first) and
+when an already-filed Modelo 303 has consumed the seeded basis. Correcting it
 then would change a return you have already filed. In that case file a
 complementaria instead (see [Correct an already filed local record](#correct-an-already-filed-local-record)).
 
@@ -295,12 +286,12 @@ For specialized calculations, the CLI provides evaluation and comparison command
   
   The command shows which tax boxes are affected by the exemption and the
   amounts, with references to the applicable law. This applies only to maritime
-  workers — most filers can skip this section.
+  workers. Most filers can skip this section.
 
 ## Correct an already filed local record
 
 If a filing was already uploaded and later needs correction, use the amendment
-command. Do not simply recalculate the same period — that would not create the
+command. Do not recalculate the same period. That would not create the
 correct complementaria (supplementary return) record:
 
 ```bash
