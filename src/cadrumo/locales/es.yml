@@ -2835,9 +2835,6 @@ cli:
         status_help: Mostrar los metadatos de una unidad de trabajo
         status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
           calculate` y luego verifica el borrador con `aeat app modelo work verify`.
-        verify_already_verified_refused: La revisión de cálculo %{calculation_revision_id}
-          ya está en estado %{state} y no se puede volver a verificar. La verificación
-          solo acepta una revisión en borrador.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_next_action_granted: La verificación se superó. Exporta el artefacto
           de presentación con `aeat app modelo export`.

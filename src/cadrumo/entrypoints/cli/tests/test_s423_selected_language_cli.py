@@ -200,7 +200,6 @@ def _create_modelo_revision(
         "formula_labels",
         "advisory_prefix",
         "next_action",
-        "verified_state",
         "already_verified_phrase",
     ),
     [
@@ -212,8 +211,7 @@ def _create_modelo_revision(
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
             "la dependència entre períodes s'ha exclòs com a sense obligació prèvia",
             "Confirmeu que la data d'inici d'activitat registrada és correcta.",
-            "Verificat complet",
-            "no es pot verificar de nou",
+            "ja està verificada",
         ),
         (
             "hu",
@@ -223,8 +221,7 @@ def _create_modelo_revision(
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),
             "Az időszakok közötti függőséget előzetes kötelezettség hiánya miatt kizártuk",
             "Erősítse meg, hogy a rögzített tevékenységkezdési dátum helyes.",
-            "Teljesen ellenorizve",
-            "nem ellenőrizhető újra",
+            "már ellenőrzött",
         ),
     ],
 )
@@ -237,7 +234,6 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     formula_labels: tuple[str, ...],
     advisory_prefix: str,
     next_action: str,
-    verified_state: str,
     already_verified_phrase: str,
 ) -> None:
     """Exercise the real entrypoint and persisted M130 work for each selected locale."""
@@ -361,13 +357,16 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     assert "cross-period dependency scoped out" not in verification_output
     assert "Confirm the recorded activity-start date" not in verification_output
 
+    # Re-verifying an already-verified revision is a guarded idempotent no-op
+    # (single-subject-mutation-is-idempotent-guarded): the verb returns exit 0
+    # with the existing report and a localized idempotent-no-op notice, never the
+    # old refusal. The raw enum token and the retired refusal phrase must not leak.
     already_verified = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "verify", revision_match.group(1)],
     )
     already_verified_output = _combined_output(already_verified)
-    assert already_verified.returncode != 0, already_verified_output
-    assert verified_state in already_verified_output
+    assert already_verified.returncode == 0, already_verified_output
     assert already_verified_phrase in already_verified_output
     assert "verificado_completo" not in already_verified_output
     assert "verification requires borrador" not in already_verified_output

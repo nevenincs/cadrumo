@@ -2750,9 +2750,6 @@ cli:
         status_next_action: Készítse el vagy számolja újra ezt az egységet a `aeat
           app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `aeat
           app modelo work verify` paranccsal.
-        verify_already_verified_refused: A(z) %{calculation_revision_id} számítási
-          revízió már %{state} állapotú, ezért nem ellenőrizhető újra. Az ellenőrzés
-          csak piszkozat állapotú revíziót fogad el.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási

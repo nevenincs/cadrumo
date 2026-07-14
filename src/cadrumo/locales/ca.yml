@@ -2807,9 +2807,6 @@ cli:
         status_help: Mostrar les metadades d'una unitat de treball
         status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
           calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
-        verify_already_verified_refused: La revisió de càlcul %{calculation_revision_id}
-          ja està en estat %{state} i no es pot tornar a verificar. La verificació
-          només accepta una revisió en esborrany.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
           de presentació amb `aeat app modelo export`.
