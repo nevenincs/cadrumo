@@ -28,8 +28,7 @@ import pytest
 # wizard package hits the "Wizard catalogue has not been registered"
 # guard.
 from .core.external_constants import UTF_8_ENCODING
-from .tests import package_python_files, prime_ast_cache
-from .tests._collection_storage_root import apply_collection_storage_root
+from .tests import apply_collection_storage_root, package_python_files, prime_ast_cache
 
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise

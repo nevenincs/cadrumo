@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import os
 
-from cadrumo.tests._collection_storage_root import collection_storage_root
+from cadrumo.tests import collection_storage_root
 
 # Mirror src/cadrumo/conftest.py: point the Cadrumo storage root at a
 # process-private temp directory BEFORE any Cadrumo import resolves Settings.
@@ -47,7 +47,7 @@ os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(collection_storage_root(
 
 import pytest
 
-from cadrumo.tests._collection_storage_root import register_collection_storage_root_cleanup
+from cadrumo.tests import register_collection_storage_root_cleanup
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers
 

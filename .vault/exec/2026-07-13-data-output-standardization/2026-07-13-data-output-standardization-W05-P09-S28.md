@@ -109,20 +109,55 @@ related:
   `register_collection_storage_root_cleanup` against a live root plus a
   synthetic aged sibling directory, then ran `atexit._run_exitfuncs()` and
   confirmed both were removed.
+- Two follow-ups requested by the team lead after the initial commit,
+  folded into this Step rather than deferred:
+  1. `src/cadrumo/tests/test_import_hygiene_gate.py` flagged
+     `src/cadrumo/conftest.py`'s new reach into the private
+     `cadrumo.tests._collection_storage_root` submodule as an
+     undocumented test-only cross-package private import. Rather than
+     adding another named entry to `dev/import_hygiene_test_debt.json`,
+     promoted `collection_storage_root`, `register_collection_storage_root_cleanup`,
+     and `apply_collection_storage_root` to the public
+     `cadrumo.tests.__all__` facade (the module's own docstring already
+     states it exists specifically to be shared by both conftests, so it
+     is a genuine promotion candidate, not a one-off private reach) and
+     retargeted both conftest imports at the public path.
+  2. The `aeat-storage` directory-name literal inside
+     `isolated_profile_storage_root` / `isolated_sessionless_storage_root`
+     / `isolated_runtime_profile` / `isolated_two_bucket_runtime` (all in
+     `secure_sql.py`) is an app-owned artifact name the naming-rename wave
+     (ruling R4) missed. Renamed all 5 occurrences to `cadrumo-storage` and
+     swept every literal consumer
+     (`rg 'aeat-storage' src` after the rename returns nothing): the
+     4 test files asserting on the on-disk path
+     (`adapters/outbound/llm/tests/test_cache.py`,
+     `adapters/persistence/profile/tests/test_transactions_repository_roundtrip.py`,
+     `application/workflow/tests/test_persistence.py`,
+     `domain/tests/test_runtime_repository_enrollment.py`), plus this
+     Step's own `isolated_storage_root` docstring in
+     `core/tests/test_isolation_fixture_state_root_coverage.py`. Confirmed
+     the 3 previously-flagged `entrypoints/cli/_config/tests/test_config.py`
+     failures (whose `_corrupt_bucket_db` helper already expected
+     `cadrumo-storage`) now pass.
 
 ## Outcome
 
 - `uv run --no-sync ruff check` / `ruff format --check` pass clean on all 12
-  touched files (`secure_sql.py`, `_collection_storage_root.py`, both
-  conftests, and the 9 real `_isolated_storage` sites minus the 1 deleted
-  dead fixture).
+  originally-touched files, plus the 2 conftest re-targeted imports,
+  `tests/__init__.py`, and the 6 files touched by the `aeat-storage` rename.
 - `uv run --no-sync pytest --collect-only -q` collects clean (12890 tests,
   0 errors).
+- `src/cadrumo/tests/test_import_hygiene_gate.py` passes clean (11/11) —
+  the private-submodule reach is gone.
 - Ran the full test suite for all 8 live swept files plus the dependent
   `test_runtime_attached_repositories_part1.py`: 29/29 pass with
   `-m integration`, 61/61 pass with `-m "unit or integration"` — matching
   the pre-sweep baseline exactly (also 29 with `-m integration` before any
   edit).
+- `entrypoints/cli/_config/tests/test_config.py`: 11/11 pass with
+  `-m integration` (previously 8/11, 3 failing on the `aeat-storage` vs
+  `cadrumo-storage` mismatch). The 5 `aeat-storage`-consumer files plus this
+  file: 55/55 pass with `-m "unit or integration"`.
 - Ran `src/cadrumo/core/tests/` and
   `src/cadrumo/domain/calculations/registry/tests/` as a broader sanity
   check on the conftest change (the highest-risk edit in this Step, since it

@@ -216,7 +216,7 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     that must all operate without an active session.
     """
 
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
@@ -230,7 +230,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
     """Run tests against a flat, session-less real storage root at ``tmp_path`` itself.
 
     Unlike :func:`isolated_sessionless_storage_root` (which nests the root
-    under ``tmp_path / "aeat-storage"``), this fixture points
+    under ``tmp_path / "cadrumo-storage"``), this fixture points
     ``cadrumo_local_storage_root`` directly at ``tmp_path`` — the shape a
     cluster of lower-level repository and runtime test modules already relied
     on before this fixture was promoted as their single canonical source.
@@ -271,7 +271,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     ``CADRUMO_SECRET_STORE_BACKEND=unsecured``.
     """
 
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
@@ -309,7 +309,7 @@ def isolated_runtime_profile(
     nested :func:`profile_storage_session` re-resolves on the read path.
     """
 
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
@@ -411,7 +411,7 @@ def isolated_two_bucket_runtime(
     cross-bucket DEK reuse in production code still surfaces as a test
     failure.
     """
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
