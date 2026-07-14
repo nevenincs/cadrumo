@@ -1,0 +1,52 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "prorrata",
+        "elect-general",
+        "--ejercicio",
+        "2026",
+        "--percentage",
+        "80"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.prorrata.elect_general",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "count": 1,
+          "entry": {
+            "authorisation_reference": null,
+            "definitive_percentage": null,
+            "definitive_volume_con_derecho": null,
+            "definitive_volume_sin_derecho": null,
+            "ejercicio": 2026,
+            "interrupted": false,
+            "provisional_percentage": "80",
+            "provisional_provenance": "carried_prior_definitiva",
+            "regime": "general",
+            "schema_version": "1",
+            "sector_id": null,
+            "source_observation_ref": null
+          }
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "prorrata-elect-general"
+}
