@@ -96,7 +96,7 @@ Adjudicate each inbound candidate against real filed-artifact evidence and the e
 
 - [x] `P03.S16` - Record Modelo 037 extraction as retired and preserve the active Modelo 036 successor boundary; `src/cadrumo/_data/registry/aeat/, .vault/reference/`.
 - [x] `P03.S17` - Confirm Modelo 200 submitted-file parsing as delivered through the generic export parser and gate declaration-PDF work on a real specimen; `src/cadrumo/_data/registry/aeat/modelos/200/, src/cadrumo/adapters/inbound/declaracion/, .vault/reference/`.
-- [x] `P03.S18` - Gate Modelo 308 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/308/, .vault/reference/`.
+- [ ] `P03.S18` - Gate Modelo 308 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/308/, .vault/reference/`.
 - [ ] `P03.S19` - Gate Modelo 309 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/309/, .vault/reference/`.
 - [ ] `P03.S20` - Gate Modelo 322 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/322/, .vault/reference/`.
 - [ ] `P03.S21` - Gate Modelo 353 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/353/, .vault/reference/`.
