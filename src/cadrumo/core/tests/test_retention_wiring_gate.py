@@ -8,9 +8,9 @@ module source for the invocation. A retention family whose prune is dormant -
 defined but never called on a write/finalise path - fails here.
 
 The registry-disk-cache accessor is additionally checked to carry no
-``PROJECT_ROOT`` fallback, closing the wave-2 review LOW: an opt-in
-(``None``-default) field whose accessor silently applied a ``PROJECT_ROOT``
-fallback would escape the lifecycle gate's derivation check.
+``PROJECT_ROOT`` fallback: an opt-in (``None``-default) field whose accessor
+silently applied a ``PROJECT_ROOT`` fallback would escape the lifecycle gate's
+derivation check.
 """
 
 from __future__ import annotations
