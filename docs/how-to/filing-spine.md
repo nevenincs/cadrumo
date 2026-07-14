@@ -31,11 +31,19 @@ The CLI emits help, results, and refusals in Spanish.
 The command-line interface is the same one used in the quickstart. Run the four
 commands in order, from the profile above:
 
-```bash
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+```{cli-sequence} filing-spine-chain
+:seed: iva-evidence-2026
+:verify: Confirm the chain verifies and exports a local fichero.
+@step Create the work unit for the filing target.
+aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@step Calculate the quarter's IVA from the classified ledger.
+aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step Verify the calculated draft.
+aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
+@expect result.granted_verificado_completo == true
+@step Export the verified revision to a local fichero-BOE.
+@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303.boe
+@expect exit_code == 0
 ```
 
 The `--activity-start-date` in the profile above scopes out the prior-period
@@ -63,10 +71,18 @@ quarter of 2026, for the active profile."
 
 That same visible target works across the normal workflow:
 
-```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
-aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T
+```{cli-sequence} filing-spine-visible-target
+:seed: filing-spine-303-ledger
+:verify: Confirm the visible target addresses the same saved work across reads.
+@setup aeat app modelo work create --modelo 303 --year 2026 --period 1T
+@setup aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step Show the work unit status for the visible target.
+aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@step List the saved calculation revisions.
+aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
+@step Show the current revision's persisted values.
+@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
 If no saved work exists yet, create it first:
@@ -81,7 +97,7 @@ the existing saved work for that filing.
 ## How a filing gets its ID
 
 The tool assigns a unique reference number to each filing workspace. For most
-use you do not need to know or remember it — the tool finds your work
+use you do not need to know or remember it. The tool finds your work
 automatically from the modelo, year, and period you type.
 
 The tool knows which version of the official tax rules applies to each form and
@@ -90,9 +106,15 @@ support or an error message asks you to target a specific ruleset version.
 
 To see the reference number for a saved filing:
 
-```bash
-aeat app modelo work list
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
+```{cli-sequence} filing-spine-work-list
+:seed: filing-spine-303-ledger
+:verify: Confirm the saved filing appears in the work list.
+@setup aeat app modelo work create --modelo 303 --year 2026 --period 1T
+@step List every saved work unit to see its reference number.
+aeat --format json app modelo work list
+@step Show the status for one visible filing target.
+@result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
 After you have the `work_unit_id`, address the same saved work by ID:
@@ -175,10 +197,10 @@ aeat app modelo work revision <calculation-revision-id>
 
 Reference numbers to know:
 
-- the filing workspace reference — from `aeat app modelo work list`
-- the saved calculation reference — from `aeat app modelo work revisions`
-- the rules version reference — shown in status output; you rarely need this
-- a run reference — only appears when a command was interrupted mid-way
+- the filing workspace reference - from `aeat app modelo work list`
+- the saved calculation reference - from `aeat app modelo work revisions`
+- the rules version reference - shown in status output; you rarely need this
+- a run reference - only appears when a command was interrupted mid-way
 
 ## How verify, file, and export choose a revision
 
