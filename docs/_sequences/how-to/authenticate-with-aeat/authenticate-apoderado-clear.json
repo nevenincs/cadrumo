@@ -6,15 +6,49 @@
         "config",
         "auth",
         "apoderado",
-        "clear"
+        "configure",
+        "--represented-nif",
+        "11111111H",
+        "--scope",
+        "IVA",
+        "--scope",
+        "PAGOSF"
       ],
       "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "bucket_id\t<bucket-id>\nrepresented_nif\tsha256:33982da1\ngranted_scopes\tIVA,PAGOSF\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "auth",
+        "apoderado",
+        "clear"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.apoderado.clear",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "cleared": true
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "bucket_id\t<bucket-id>\ncleared\tFalse\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

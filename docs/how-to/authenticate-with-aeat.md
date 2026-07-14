@@ -28,7 +28,8 @@ You need:
   ```{cli-sequence} authenticate-profile
   :verify: Confirm a taxpayer profile can be created non-interactively.
   @step Create a taxpayer profile non-interactively (use your own NIF, CIF, DNI, or NIE).
-  @result aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
+  @result aeat --format json config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
+  @expect result.profile_name == "me"
   @expect exit_code == 0
   ```
 
@@ -42,7 +43,8 @@ List providers:
 ```{cli-sequence} authenticate-providers
 :verify: Confirm the tool lists the supported authentication providers.
 @step List the supported authentication providers and their availability.
-@result aeat config auth providers
+@result aeat --format json config auth providers
+@expect result.providers[0].id == "certificate"
 @expect exit_code == 0
 ```
 
@@ -81,7 +83,8 @@ Check what is configured:
 @step Show what authentication is configured.
 aeat config auth status
 @step Probe the stored credentials locally, without contacting AEAT.
-@result aeat config auth test
+@result aeat --format json config auth test
+@expect result.configured == false
 @expect exit_code == 0
 ```
 
@@ -99,7 +102,8 @@ Check the remaining validity:
 ```{cli-sequence} authenticate-check-validity
 :verify: Confirm the local probe reports the certificate's remaining validity.
 @step Read the certificate's remaining validity from the local probe.
-@result aeat config auth test
+@result aeat --format json config auth test
+@expect result.configured == false
 @expect exit_code == 0
 ```
 
@@ -138,7 +142,8 @@ Confirm the new expiry:
 ```{cli-sequence} authenticate-confirm-expiry
 :verify: Confirm the local probe reports the renewed certificate's later expiry.
 @step Read the renewed certificate's expiry from the local probe.
-@result aeat config auth test
+@result aeat --format json config auth test
+@expect result.configured == false
 @expect exit_code == 0
 ```
 
@@ -163,7 +168,8 @@ List every registered certificate:
 ```{cli-sequence} authenticate-certificate-list
 :verify: Confirm the tool lists the registered certificates.
 @step List every registered certificate.
-@result aeat config auth certificate list
+@result aeat --format json config auth certificate list
+@expect result.active_source == ""
 @expect exit_code == 0
 ```
 
@@ -179,7 +185,8 @@ Remove a registered certificate you no longer need:
 ```{cli-sequence} authenticate-certificate-remove
 :verify: Confirm the tool removes a registered certificate by name.
 @step Remove a registered certificate you no longer need.
-@result aeat config auth certificate remove --name personal
+@result aeat --format json config auth certificate remove --name personal
+@expect result.name == "personal"
 @expect exit_code == 0
 ```
 
@@ -191,7 +198,8 @@ certificates in one pass, not only the active one:
 ```{cli-sequence} authenticate-certificate-check
 :verify: Confirm the tool checks every registered certificate's expiry in one pass.
 @step Check every registered certificate's expiry.
-@result aeat config auth certificate check
+@result aeat --format json config auth certificate check
+@expect result.has_warnings == false
 @expect exit_code == 0
 ```
 
@@ -239,7 +247,8 @@ Clear one provider:
 ```{cli-sequence} authenticate-clear-provider
 :verify: Confirm the tool clears the saved authentication for one provider.
 @step Clear the saved authentication for one provider.
-@result aeat config auth clear --provider certificate
+@result aeat --format json config auth clear --provider certificate
+@expect result.removed_sessions == 0
 @expect exit_code == 0
 ```
 
@@ -250,7 +259,8 @@ Clear sessions or locks:
 @step Clear saved sessions.
 aeat config auth clear --sessions
 @step Clear saved locks.
-@result aeat config auth clear --locks
+@result aeat --format json config auth clear --locks
+@expect result.removed_sessions == 0
 @expect exit_code == 0
 ```
 
@@ -259,7 +269,8 @@ If you intend to reset authentication setup, clear all configured providers:
 ```{cli-sequence} authenticate-clear-all
 :verify: Confirm the tool clears all configured providers.
 @step Clear all configured providers.
-@result aeat config auth clear --all
+@result aeat --format json config auth clear --all
+@expect result.removed_sessions == 0
 @expect exit_code == 0
 ```
 
@@ -282,7 +293,8 @@ List the scope codes the tool accepts:
 ```{cli-sequence} authenticate-apoderado-scopes
 :verify: Confirm the tool lists the accepted apoderamiento scope codes.
 @step List the scope codes the tool accepts.
-@result aeat config auth apoderado scopes list
+@result aeat --format json config auth apoderado scopes list
+@expect result.catalogue_version == "2026.05.bootstrap"
 @expect exit_code == 0
 ```
 
@@ -303,7 +315,8 @@ the scopes that match the grant at AEAT:
 ```{cli-sequence} authenticate-apoderado-configure
 :verify: Confirm the tool records the represented party and scopes locally.
 @step Record who you represent and the scopes that match the grant at AEAT.
-@result aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
+@result aeat --format json config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
+@expect result.catalogue_version == "2026.05.bootstrap"
 @expect exit_code == 0
 ```
 
@@ -320,8 +333,10 @@ Show what is recorded for the active profile:
 
 ```{cli-sequence} authenticate-apoderado-status
 :verify: Confirm the tool shows the apoderado configuration recorded locally.
+@setup aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
 @step Show the apoderado configuration recorded for the active profile.
-@result aeat config auth apoderado status
+@result aeat --format json config auth apoderado status
+@expect result.configured == true
 @expect exit_code == 0
 ```
 
@@ -334,8 +349,10 @@ Remove the configuration when the representation ends:
 
 ```{cli-sequence} authenticate-apoderado-clear
 :verify: Confirm the tool removes the local apoderado record.
+@setup aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
 @step Remove the local apoderado record when the representation ends.
-@result aeat config auth apoderado clear
+@result aeat --format json config auth apoderado clear
+@expect result.cleared == true
 @expect exit_code == 0
 ```
 
