@@ -31,9 +31,14 @@ configured. Configure a provider first — see
 ## Before you start
 
 You need:
-- an [active profile](profile-setup.md#what-the-active-profile-means). Create one
-  non-interactively with `aeat config profile create me --quiet --tax-id
-  <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`.
+- an [active profile](profile-setup.md#what-the-active-profile-means). Create
+  one non-interactively:
+
+  ```bash
+  aeat config profile create me --quiet --tax-id <NIF/CIF/DNI/NIE> \
+    --name "Ana" --surnames "Garcia Lopez"
+  ```
+
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
 - the master-key passphrase that protects your local store; the tool
   prompts for it.
