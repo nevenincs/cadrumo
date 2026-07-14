@@ -114,8 +114,8 @@ Root-cause and fix the ~55 registry renta calc-data failures and their ~12 appli
 
 Fix the exception-base-hygiene unregistered roots and the period-combined-string docs findings at root cause.
 
-- [ ] `P02.S04` - Register or rehome the FormerProduct exception classes so the exception-base-hygiene gate passes without allowlist mutes; `src/cadrumo/core/errors`.
-- [ ] `P02.S05` - Resolve the period-combined-string findings in docs at root cause per the gate grammar; `docs period tokens`.
+- [x] `P02.S04` - Register or rehome the FormerProduct exception classes so the exception-base-hygiene gate passes without allowlist mutes; `src/cadrumo/core/errors`.
+- [x] `P02.S05` - Resolve the period-combined-string findings in docs at root cause per the gate grammar; `docs period tokens`.
 
 ### Phase `P03` - Storage diagnostics and aggregation
 
