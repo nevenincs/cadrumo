@@ -272,6 +272,44 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** register exact 2024 authority and establish a mandate without
   splitting the shared revision unless official structure diverges.
 
+### modelo-309-declaration-pdf-2004-2022 | low | Historical windows lack exact declaration-copy authority
+
+- **Candidate:** Modelo 309 declaration-PDF extraction from 2004 through 2022.
+- **Mandate:** `proven`; accepted live-filing capture requires PDF fallback.
+- **Exact authority window:** `missing`; registered record-design authority
+  begins in 2023 and no historical filed-PDF representation is evidenced.
+- **Canonical implementation state:** `gap`; the generic parser exists but no
+  Modelo 309 profile supplies this surface.
+- **Real evidence or specimen:** exact-window authority and sanitized filed
+  specimens are missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = false`, `canonical_gap_met = true`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `authority-gated`.
+- **Next action:** obtain exact historical declaration-copy authority and real
+  sanitized specimens before profile work.
+
+### modelo-309-declaration-pdf-2023-open | low | Current extraction awaits a sanitized filed specimen
+
+- **Candidate:** Modelo 309 declaration-PDF extraction from 2023, open end.
+- **Mandate:** `proven`.
+- **Exact authority window:** `aeat-dr-309-2023` covers 2023+.
+- **Canonical implementation state:** `gap`; no registry extraction profile
+  exists, while the generic parser is the only permitted engine.
+- **Real evidence or specimen:** a sanitized filed Modelo 309 PDF is missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = true`, `canonical_gap_met = true`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `evidence-gated`.
+- **Next action:** obtain a real filed 2023+ specimen, then consider reviewed
+  profile data and corpus coverage through the generic parser only.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
