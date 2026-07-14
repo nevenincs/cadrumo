@@ -107,11 +107,19 @@ Interactive use never needs this - every command prompts.
 
 ## Lock the session
 
-Clear the active-profile selection so commands stop operating on your data
-until a profile is selected again:
+Clear the active-profile selection with `aeat config lock` so commands stop
+operating on your data until a profile is selected again. The card confirms a
+profile is active, locks the session, then shows that the active selection is
+cleared:
 
-```bash
+```{cli-sequence} protect-data-access-lock
+:verify: Confirm locking clears the active-profile selection without deleting anything.
+@step Confirm a profile is currently active.
+aeat config profile status
+@step Clear the active-profile selection.
 aeat config lock
+@result aeat config profile status
+@expect exit_code == 0
 ```
 
 Nothing is deleted — locking only clears the active-profile pointer. Select
