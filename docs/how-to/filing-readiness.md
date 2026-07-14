@@ -2,7 +2,7 @@
 
 Verification tells you whether a draft's box values pass the registry rules.
 Readiness asks an earlier question: is everything the calculation depends on
-in place — profile facts, transaction data, and earlier filings? Use the
+in place: profile facts, transaction data, and earlier filings? Use the
 commands in this guide before you calculate, and again before you export, so
 nothing silent is missing underneath a clean-looking draft.
 
@@ -28,21 +28,21 @@ aeat --format json app modelo describe 303 --year 2026 --period 1T
 
 The report covers two things:
 
-- **Profile readiness** — every profile fact the modelo requires. Each
+- **Profile readiness** - every profile fact the modelo requires. Each
   missing fact is listed by its section and field key, so you know exactly
   what to fill in with `aeat config profile edit`.
-- **Ledger readiness** — for ledger-fed modelos, the same source checks as
+- **Ledger readiness** - for ledger-fed modelos, the same source checks as
   `aeat app ledger preflight`, listing each transaction that blocks the
   period and why.
 
-Readiness does not check box-level completeness of a draft — that is what
+Readiness does not check box-level completeness of a draft. That is what
 `aeat app modelo work verify` does. See
 [Verify a filing](verification-reports.md).
 
 ## Check what this filing depends on
 
-Some modelos fold in values from other filings — an annual summary reads its
-quarters, a cross-modelo box reads another form's result. List the
+Some modelos fold in values from other filings. An annual summary reads its
+quarters, and a cross-modelo box reads another form's result. List the
 registry-declared dependencies for a filing year, then narrow to one modelo, or
 to one modelo and period:
 
@@ -59,15 +59,15 @@ aeat --format json app modelo work dependencies --year 2026 --modelo 390
 ```
 
 `--period` requires `--modelo`. With both set, the command also evaluates the
-current blockers for that exact filing — for example an earlier period whose
-official evidence is still missing — so you see what must be resolved before
+current blockers for that exact filing (for example an earlier period whose
+official evidence is still missing), so you see what must be resolved before
 this period can safely build on the ones before it. For the background, see
 [Building on earlier filings](../explanation/building-on-earlier-filings.md).
 
 ## See everything that happened to a filing
 
-Stream every recorded lifecycle event — calculations, verification passes
-and refusals, filings, amendments, imports — for one modelo:
+Stream every recorded lifecycle event for one modelo (calculations,
+verification passes and refusals, filings, amendments, imports):
 
 ```{cli-sequence} filing-readiness-history
 :verify: Confirm the modelo history stream resolves for the filing year.
@@ -79,7 +79,7 @@ and refusals, filings, amendments, imports — for one modelo:
 
 Add `--period` to narrow to one period. This is the modelo-wide audit trail;
 for the event stream of a single workspace, use
-`aeat app modelo work history` — see
+`aeat app modelo work history`. See
 [The filing workflow](filing-spine.md).
 
 ## Compare two filing years
@@ -94,7 +94,7 @@ Pass `--year` exactly twice. Each row shows the box, its label and section,
 both values, the difference, and the percent change; all-zero rows are
 omitted from the text output. The comparison uses the most recent verified
 revision of each year and falls back to the latest draft when no verified
-revision exists — a year compared from a draft is flagged `BORRADOR` in the
+revision exists. A year compared from a draft is flagged `BORRADOR` in the
 output.
 
 Use the comparison as a sanity check before filing: an unexpected jump in a
@@ -119,12 +119,12 @@ líquida), and the resulting balance after instalments (cuota resultante).
 
 **Read the extrapolation flag before trusting the numbers.** With fewer than
 four quarters filed, the projection extrapolates a full year from the
-quarters available and marks the output — for example
+quarters available and marks the output, for example
 `quarters_filed 2/4 (extrapolated from 2Q)`. An extrapolated projection is a
 planning estimate, not a draft Renta: it assumes the remaining quarters look
 like the filed ones.
 
-Refine the projection with values the quarters cannot know — withholdings,
+Refine the projection with values the quarters cannot know: withholdings,
 personal circumstances, or specific boxes:
 
 ```bash
@@ -144,8 +144,8 @@ For when the year-end filing actually happens, see
 Every computed value carries its grounding, and you can surface it at each
 review stage:
 
-The formula behind each computed box carries its legal and source references —
-see [Review and supply calculation inputs](review-calculation-values.md):
+The formula behind each computed box carries its legal and source references.
+See [Review and supply calculation inputs](review-calculation-values.md):
 
 ```{cli-sequence} filing-readiness-formulas
 :verify: Confirm each computed box exposes its formula and grounding.
@@ -157,20 +157,20 @@ see [Review and supply calculation inputs](review-calculation-values.md):
 
 Two more grounding surfaces round out the trace:
 
-- Verification findings name the legal references behind each rule — see
+- Verification findings name the legal references behind each rule. See
   [Verify a filing](verification-reports.md).
-- `aeat app review queue --explain` — pending findings with their legal
+- `aeat app review queue --explain` - pending findings with their legal
   references. See
   [the review queue](classify-transactions.md#see-everything-that-still-needs-a-decision).
 
 ## Next steps
 
-- [Verify a filing](verification-reports.md) — box-level verification of the
+- [Verify a filing](verification-reports.md) - box-level verification of the
   draft.
-- [Review and supply calculation inputs](review-calculation-values.md) —
+- [Review and supply calculation inputs](review-calculation-values.md) -
   fill missing values readiness or verification surfaced.
-- [Building on earlier filings](../explanation/building-on-earlier-filings.md)
-  — how cross-period dependencies work.
-- [The filing workflow](filing-spine.md) — workspaces,
+- [Building on earlier filings](../explanation/building-on-earlier-filings.md) -
+  how cross-period dependencies work.
+- [The filing workflow](filing-spine.md) - workspaces,
   revisions, and per-workspace history.
-- [CLI reference](../cli/index.rst) — full option reference.
+- [CLI reference](../cli/index.rst) - full option reference.
