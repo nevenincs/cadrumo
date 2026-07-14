@@ -1,5 +1,4 @@
 {
-  "explanation/how-renta-is-assembled": 4,
   "how-to/censo-update": 1,
   "how-to/check-aeat-notifications": 1,
   "how-to/classify-transactions": 5,
@@ -25,6 +24,5 @@
   "how-to/review-calculation-values": 2,
   "how-to/review-with-google-sheets": 2,
   "how-to/troubleshooting": 12,
-  "how-to/verification-reports": 4,
-  "workstation-setup": 2
+  "how-to/verification-reports": 4
 }
