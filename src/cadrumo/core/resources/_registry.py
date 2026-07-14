@@ -80,5 +80,5 @@ def resources() -> ResourceRegistry:
     settings = load_settings()
     return ResourceRegistry(
         manuals=ManualRepository(root=settings.aeat_manuals_root),
-        iva_catalogues=IvaCatalogueRepository(root=settings.aeat_iva_catalogue_root),
+        iva_catalogues=IvaCatalogueRepository(root=settings.cadrumo_iva_catalogue_root),
     )

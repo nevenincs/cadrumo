@@ -87,9 +87,9 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
     Móvil live suite.
     """
     settings = _settings_or_skip()
-    if not settings.aeat_clave_permanente_dni_nie or not settings.aeat_clave_permanente_password:
+    if not settings.cadrumo_clave_permanente_dni_nie or not settings.cadrumo_clave_permanente_password:
         pytest.fail(
-            "AEAT_CLAVE_PERMANENTE_DNI_NIE and AEAT_CLAVE_PERMANENTE_PASSWORD "
+            "CADRUMO_CLAVE_PERMANENTE_DNI_NIE and CADRUMO_CLAVE_PERMANENTE_PASSWORD "
             "are not both configured after live opt-in",
         )
 
@@ -98,7 +98,7 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
         try:
             session = await provider.authenticate()
             assert isinstance(session, AeatSession)
-            expected_identity = settings.aeat_clave_permanente_dni_nie.get_secret_value().strip().upper()
+            expected_identity = settings.cadrumo_clave_permanente_dni_nie.get_secret_value().strip().upper()
             assert session.identity_nif == expected_identity
             assert isinstance(session.provider_detail, ClavePermanenteSessionDetail)
             assertion = await provider.verify(session)

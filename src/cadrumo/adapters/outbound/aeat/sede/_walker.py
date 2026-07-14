@@ -58,7 +58,7 @@ DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
 
 
 def _get_navigation_timeout_ms() -> int:
-    return load_settings().aeat_browser_navigation_timeout_ms
+    return load_settings().cadrumo_browser_navigation_timeout_ms
 
 
 @asynccontextmanager

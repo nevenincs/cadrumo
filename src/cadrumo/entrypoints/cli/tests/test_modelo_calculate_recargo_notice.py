@@ -26,10 +26,8 @@ always reachable and no calendar-edge skip is needed.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -39,7 +37,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from .._modelo_rendering import _work_unit_deadline_output_from_posture
 from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_envelope_notices
@@ -56,12 +54,6 @@ _M130_FILING_YEAR = 2026
 # chronological close order. Each test resolves their real registry close
 # dates and selects deterministically against ``date.today()``.
 _M130_QUARTERLY_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _create_natural_person_profile() -> None:

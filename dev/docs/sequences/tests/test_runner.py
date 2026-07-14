@@ -296,3 +296,99 @@ class TestNumericJsonPathResolution:
         document = {"result": {"casilla_values": {"0": "zero-key"}}}
         assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
         assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
+
+
+class TestAmbientEnvNeutralisation:
+    def test_ambient_operator_env_never_reaches_frame_execution(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Operator machine state (ambient CADRUMO_*/AEAT_* env — Cl@ve
+        credentials, live opt-ins) is scrubbed for the whole sandbox scope, so
+        no frame execution can observe it; the storage-root isolation pin
+        survives, and everything is restored verbatim on exit."""
+        import os
+
+        from .._runner import sequence_sandbox
+
+        monkeypatch.setenv("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R")
+        monkeypatch.setenv("AEAT_FAKE_SESSION_TOKEN", "fake-session-token-do-not-leak")
+
+        observed: dict[str, str | None] = {}
+        with sequence_sandbox(sequence_id="env-scrub-probe", sandbox_root=tmp_path / "scope"):
+            observed["clave"] = os.environ.get("CADRUMO_CLAVE_MOVIL_DNI_NIE")
+            observed["aeat"] = os.environ.get("AEAT_FAKE_SESSION_TOKEN")
+            observed["pin"] = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+
+        # Inside the scope: operator vars gone, the isolation pin intact.
+        assert observed["clave"] is None
+        assert observed["aeat"] is None
+        assert observed["pin"] is not None
+        # Outside the scope: restored verbatim.
+        assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
+        assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
+
+    def test_frames_execute_green_and_leak_free_under_ambient_operator_env(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A real sequence executes normally with fake operator env exported,
+        and no frame's captured output carries the operator value — the
+        end-to-end proof that docs builds never observe machine state."""
+        secret = "fake-operator-dni-99999999R"  # noqa: S105 - synthetic test value
+        monkeypatch.setenv("CADRUMO_CLAVE_MOVIL_DNI_NIE", secret)
+
+        sequence = _result_sequence(
+            "aeat --format json config profile list\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n',
+            sequence_id="runner-env-scrub",
+        )
+        transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
+
+        for frame in transcript.frames:
+            assert frame.exit_code == 0
+            assert secret not in frame.output
+            assert secret not in frame.stderr
+
+    def test_operator_dotenv_never_reaches_frame_execution(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The second operator-state channel: the project dotenv (env/.env,
+        loaded by pydantic-settings via an ABSOLUTE path) must not reach
+        sandboxed settings. The REAL dotenv source is redirected to a poisoned
+        temp file; the channel is proven live outside the sandbox
+        (anti-vacuity), then the sandbox scope resolves settings as if no
+        dotenv existed, and a real sequence run never carries the value."""
+        from cadrumo.core.config import Settings, load_settings
+
+        from .._runner import sequence_sandbox
+
+        poison_marker = str(tmp_path / "poisoned-operator-runs")
+        poisoned_dotenv = tmp_path / "poisoned.env"
+        poisoned_dotenv.write_text(f"CADRUMO_RUNS_DIR={poison_marker}\n", encoding="utf-8")
+        monkeypatch.setitem(Settings.model_config, "env_file", poisoned_dotenv)
+
+        # Anti-vacuity: outside a sandbox, the poisoned dotenv IS a live source.
+        assert str(load_settings().cadrumo_runs_dir) == poison_marker
+
+        with sequence_sandbox(sequence_id="dotenv-probe", sandbox_root=tmp_path / "scope"):
+            assert str(load_settings().cadrumo_runs_dir) != poison_marker
+
+        # Restored outside the scope: the dotenv source reads again.
+        assert str(load_settings().cadrumo_runs_dir) == poison_marker
+
+        # End to end: a real sequence executes green and no frame observes it.
+        sequence = _result_sequence(
+            "@result aeat --format json config profile list\n" + '@expect status == "success"\n',
+            sequence_id="runner-dotenv-scrub",
+        )
+        transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
+        for frame in transcript.frames:
+            assert frame.exit_code == 0
+            assert poison_marker not in frame.output
+            assert poison_marker not in frame.stderr

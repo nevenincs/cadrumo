@@ -53,7 +53,7 @@ adapters:
           előtt hívja meg a close() metódust.
         approval_timeout: A Cl@ve Móvil böngészős hitelesítés nem fejeződött be a
           beállított időkorláton belül.
-        dni_nie_not_set: Az AEAT_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
+        dni_nie_not_set: Az CADRUMO_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
           előtt adja meg DNI- vagy NIE-számát.
         initial_navigation_timeout: A Cl@ve Movil kezdeti navigacioja nem fejezodott
           be a beallitott idokorlaton belul.
@@ -443,13 +443,13 @@ application:
         ISO-8601 karakterlánc lehet.
     operator:
       alignment:
-        both_missing_detail: Sem a Cl@ve azonosító (AEAT_CLAVE_MOVIL_DNI_NIE), sem
-          az aktív profil adóazonosítója nincs beállítva. Mindkettőt ugyanarra a DNI/NIE-re
-          állítsa be.
+        both_missing_detail: Sem a Cl@ve azonosító (CADRUMO_CLAVE_MOVIL_DNI_NIE),
+          sem az aktív profil adóazonosítója nincs beállítva. Mindkettőt ugyanarra
+          a DNI/NIE-re állítsa be.
         both_missing_next_action: Szerkessze az aktív profilt a `aeat config profile
           edit NÉV --tax-id DNI/NIE` paranccsal, és ugyanezt a DNI/NIE-t állítsa be
           a Cl@ve Móvilhoz.
-        clave_identity_missing_detail: A Cl@ve azonosító (AEAT_CLAVE_MOVIL_DNI_NIE)
+        clave_identity_missing_detail: A Cl@ve azonosító (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           nincs beállítva, ezért nem hasonlítható össze az aktív profil adóazonosítójával.
           Állítsa be.
         clave_identity_missing_next_action: Konfigurálja a Cl@ve Móvil DNI/NIE-t úgy,
@@ -532,7 +532,7 @@ application:
     sessions:
       errors:
         clave_identity_missing: A Cl@ve Móvil élő hitelesítés konfigurált DNI/NIE-t
-          (AEAT_CLAVE_MOVIL_DNI_NIE) igényel, mielőtt bármely AEAT munkamenet használható
+          (CADRUMO_CLAVE_MOVIL_DNI_NIE) igényel, mielőtt bármely AEAT munkamenet használható
           lenne.
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil

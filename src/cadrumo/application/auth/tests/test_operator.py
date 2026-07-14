@@ -259,7 +259,7 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
 
     ``configured`` is operational readiness, and it must stay coherent
     with ``health_summary``: the live backend probe sources the
-    certificate path from ``Settings.aeat_certificate_path``. When that
+    certificate path from ``Settings.cadrumo_certificate_path``. When that
     path resolves, the backend no longer reports ``certificate path not
     configured`` and the canonical ``configured`` is ``True``.
     """
@@ -268,7 +268,7 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
 
-    with override_settings(aeat_certificate_path=cert_path):
+    with override_settings(cadrumo_certificate_path=cert_path):
         configure_operator_auth("certificate", certificate_path=cert_path)
 
         result = inspect_operator_auth()
@@ -291,7 +291,7 @@ def test_inspect_operator_auth_configured_true_when_path_persisted_to_workflow_s
     Round-5 B1: ``auth configure --provider certificate --file PATH``
     persists the path to workflow state. Without an env-var override,
     ``auth status`` previously contradicted itself because the live
-    backend probe read ``Settings.aeat_certificate_path`` (env-driven)
+    backend probe read ``Settings.cadrumo_certificate_path`` (env-driven)
     and reported ``certificate path not configured`` even though the
     workflow-state record carried the path. The state projection now
     folds the workflow-state path into the Settings the backend sees,
@@ -478,10 +478,10 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
         ),
     )
     settings = Settings(
-        aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
-        aeat_clave_movil_nie_soporte=SecretStr("support-present"),
-        aeat_clave_prefer_non_qr=True,
-        aeat_clave_movil_timeout_ms=120_000,
+        cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
+        cadrumo_clave_movil_nie_soporte=SecretStr("support-present"),
+        cadrumo_clave_prefer_non_qr=True,
+        cadrumo_clave_movil_timeout_ms=120_000,
     )
 
     report = build_live_auth_preflight_report("clave_movil", settings=settings)
@@ -512,7 +512,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")):
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("12345678Z")):
         configure_operator_auth("clave_movil")
         captured_at = _EXPIRED_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
@@ -548,10 +548,10 @@ def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) 
         cadrumo_secret_store_backend=base_settings.cadrumo_secret_store_backend,
         cadrumo_secret_store_dir=base_settings.cadrumo_secret_store_dir,
         cadrumo_secret_passphrase=base_settings.cadrumo_secret_passphrase,
-        aeat_certificate_path=cert_path,
+        cadrumo_certificate_path=cert_path,
     )
 
-    with override_settings(aeat_certificate_path=None):
+    with override_settings(cadrumo_certificate_path=None):
         report = build_live_auth_preflight_report("certificate", settings=explicit_settings)
 
     assert report.provider == "certificate"
@@ -566,7 +566,7 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     ``auth test`` performs a local persisted-session probe and reports
     ``persisted_session_present`` / ``persisted_session_expired`` /
     ``probe_summary`` — fields ``auth status`` (``AuthStatusResult``)
-    does not carry at all (persona-fleet finding G5). On a fresh state
+    does not carry at all. On a fresh state
     with no persisted token the probe reports no session and a concrete
     operator-facing summary.
     """
@@ -599,8 +599,8 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
 def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     """An ``identity_alignment: mismatch`` must explain what mismatches.
 
-    A bare ``mismatch`` token tells the operator nothing (persona-fleet
-    finding G2). The result must carry an ``identity_alignment_detail``
+    A bare ``mismatch`` token tells the operator nothing. The result
+    must carry an ``identity_alignment_detail``
     that names both compared values — the Cl@ve DNI/NIE and the active
     profile tax id — and a ``next_action`` that routes to the actual
     fix, not a futile ``auth test``.
@@ -614,7 +614,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
             overrides={"identity.tax_id": "00000000T"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie="00000001R"):
+    with override_settings(cadrumo_clave_movil_dni_nie="00000001R"):
         result = configure_operator_auth("clave_movil")
 
     assert result.identity_alignment == "mismatch"
@@ -638,7 +638,7 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie="12345678Z"):
+    with override_settings(cadrumo_clave_movil_dni_nie="12345678Z"):
         result = configure_operator_auth("clave_movil")
 
     assert result.identity_alignment == "matches"
@@ -656,7 +656,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
             overrides={"identity.tax_id": "TEST-IDENTITY"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
         configure_operator_auth("clave_movil")
         captured_at = _LIVE_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
@@ -690,7 +690,7 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")) as settings:
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("12345678Z")) as settings:
         assert _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL) == "12345678Z"
 
 
@@ -705,11 +705,11 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
             overrides={"identity.tax_id": "00000000T"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie=SecretStr("00000001R")) as settings:
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("00000001R")) as settings:
         with pytest.raises(AuthProfileIdentityMismatchError) as raised:
             _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
         # The refusal text is routed through the locale system so it honours
-        # the profile language (persona-fleet finding G3); assert it equals
+        # the profile language; assert it equals
         # the localised string for the canonical key rather than a
         # hard-coded English fragment.
         assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_profile_mismatch"

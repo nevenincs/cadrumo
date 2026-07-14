@@ -176,3 +176,23 @@ def test_load_records_raises_on_a_payload_missing_its_object_key_uuid(tmp_path: 
 
     with pytest.raises(LLMCacheError, match="object_key_uuid"):
         recorder.load_records()
+
+
+def test_client_construction_sweeps_the_run_telemetry_store(tmp_path: Path) -> None:
+    """Building an LLMClient fires the retention sweep over its run-telemetry recorder.
+
+    Records persist through ``record`` (which does not prune); constructing an
+    ``LLMClient`` around the recorder then prunes stale records via the
+    once-per-client retention sweep - proving the retention R3 promises fires in
+    production rather than depending on a manual prune() call.
+    """
+    from .._client import LLMClient
+
+    anchor = datetime.now(UTC)
+    recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
+    recorder.record(_record(1, run_id="fresh", anchor=anchor))
+    recorder.record(_record(45, run_id="stale", anchor=anchor))
+
+    LLMClient(run_telemetry_recorder=recorder)
+
+    assert {item.run_id for item in recorder.load_records()} == {"fresh"}

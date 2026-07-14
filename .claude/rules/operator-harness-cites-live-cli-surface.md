@@ -8,7 +8,7 @@ trigger: always_on
 ## Rule
 
 Every operator agent-harness document — each operator rule, persona, and skill
-under `src/aeat/_data/agent/` — that names a CLI verb (an `aeat ...` invocation)
+under `src/cadrumo/_data/agent/` — that names a CLI verb (an `aeat ...` invocation)
 or a JSON-envelope field MUST cite only verbs that resolve against the live
 operator-surface manifest and fields that exist on the live envelope models, and
 MUST be co-committed with the CLI surface it couples to. A harness document and
@@ -24,7 +24,7 @@ form of the verb-drift failure the `aeat-cli-pull-and-file-standard` rule exists
 to prevent. During the agent-harness build a safety rule cited `aeat app modelo
 work export`, which does not exist (the real verb is `aeat app modelo export`); the
 drift gate caught it before commit. The gate
-(`src/aeat/agent/tests/test_rule_surface_conformance.py`) parses every shipped
+(`src/cadrumo/agent/tests/test_rule_surface_conformance.py`) parses every shipped
 rule, persona, and skill, extracts each `aeat ...` command path and each named
 envelope-spine field, and asserts they all resolve against the live manifest and
 the real `SchemaEnvelope`/`Notice` models, so a drift is a loud test failure rather

@@ -17,7 +17,8 @@ from pathlib import Path
 import pytest
 
 from ...config import override_settings
-from .._store import prune_run_traces
+from .._models import RunOutcome, RunTrace
+from .._store import prune_run_traces, save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -97,3 +98,34 @@ def test_prune_defaults_to_central_retention_setting(tmp_path: Path) -> None:
     assert removed == 1
     assert (runs_dir / _FRESH_RUN_ID).exists()
     assert not (runs_dir / _STALE_RUN_ID).exists()
+
+
+def test_save_trace_write_path_fires_retention_prune(tmp_path: Path) -> None:
+    """Saving a run trace triggers run-trace retention (no explicit prune call).
+
+    A pre-existing stale run directory is removed by the prune that ``save_trace``
+    runs at run finalisation, while the freshly-saved trace persists - proving
+    retention fires on the production write path.
+    """
+    runs_dir = tmp_path / "runs"
+    anchor = datetime.now(UTC)
+    stale = _make_run_dir(runs_dir, _STALE_RUN_ID, age_days=45, anchor=anchor)
+    fresh_run_id = "cccccccccccccccc"
+    trace = RunTrace(
+        run_id=fresh_run_id,
+        started_at=anchor,
+        finished_at=anchor,
+        entrypoint="cadrumo hello",
+        arguments=(),
+        corpus_sha256="a" * 64,
+        db_sha256="b" * 64,
+        cert_fingerprint="",
+        outcome=RunOutcome.OK,
+        replay_of=None,
+    )
+
+    with override_settings(cadrumo_runs_dir=runs_dir):
+        save_trace(trace)
+
+    assert not stale.exists()
+    assert (runs_dir / fresh_run_id / "trace.json").exists()

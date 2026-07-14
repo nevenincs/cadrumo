@@ -35,14 +35,14 @@ def test_verify_handshake_live_against_aeat() -> None:
     requires_live_enabled()
 
     settings = Settings()
-    if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
+    if settings.cadrumo_certificate_path is None or settings.cadrumo_certificate_password_secret is None:
         pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     bundle = CertificateBundle(
-        path=settings.aeat_certificate_path,
-        password=settings.aeat_certificate_password_secret,
-        friendly_name=settings.aeat_certificate_friendly_name,
-        backend=settings.aeat_certificate_backend,
+        path=settings.cadrumo_certificate_path,
+        password=settings.cadrumo_certificate_password_secret,
+        friendly_name=settings.cadrumo_certificate_friendly_name,
+        backend=settings.cadrumo_certificate_backend,
     )
     loaded = load_certificate(bundle)
     result = verify_handshake(loaded, settings.aeat_certificate_verify_url)

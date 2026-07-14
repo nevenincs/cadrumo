@@ -30,7 +30,7 @@ class ManualReviewRequiredError(ManualError):
     :class:`~cadrumo.domain.manuals.Section`, or
     :class:`~cadrumo.domain.manuals.Rule` record missing
     ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
-    ``AEAT_MANUALS_REVIEW_REQUIRED`` setting is enabled.
+    ``CADRUMO_MANUALS_REVIEW_REQUIRED`` setting is enabled.
     """
 
 

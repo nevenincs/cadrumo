@@ -85,6 +85,22 @@ class TestVerifyPurpose:
         _run_for_obligation(fresh, purpose=WorkflowPurpose.FILE)
         assert fresh.submission_engine.skip_deadline_window_calls == [True]
 
+    def test_local_purposes_skip_the_preflight_auth_readiness_gate(self) -> None:
+        """VERIFY and FILE skip gate 4: auth binds only live/AEAT purposes.
+
+        Operator ruling — a taxpayer with no auth provider configured must
+        complete the whole local artefact flow. Both workflow purposes are
+        local (the app never performs an actual AEAT submission), so the engine
+        passes ``skip_auth_readiness=True`` for each.
+        """
+        fx = _fixtures()
+        _run_for_obligation(fx, purpose=WorkflowPurpose.VERIFY)
+        assert fx.submission_engine.skip_auth_readiness_calls == [True]
+
+        fresh = _fixtures()
+        _run_for_obligation(fresh, purpose=WorkflowPurpose.FILE)
+        assert fresh.submission_engine.skip_auth_readiness_calls == [True]
+
     def test_verify_still_refuses_an_unsound_draft(self) -> None:
         fx = _fixtures()
         fx.deadline_engine.obligation = None

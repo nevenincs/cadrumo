@@ -26,21 +26,32 @@ See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 from __future__ import annotations
 
 import os
-from pathlib import Path
-from tempfile import gettempdir
+
+from cadrumo.tests import collection_storage_root
 
 # Mirror src/cadrumo/conftest.py: point the Cadrumo storage root at a
 # process-private temp directory BEFORE any Cadrumo import resolves Settings.
 # The repo root also collects dev/** test trees that never traverse the
 # src/cadrumo conftest; without this, their module imports resolve the real
 # platform state root (which may hold retired former-product state and trip
-# the FormerProductStateError guard at collection time).
-os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(Path(gettempdir()) / f"cadrumo-pytest-{os.getpid()}"))
+# the FormerProductStateError guard at collection time). Importing the
+# derivation helper itself is safe pre-Settings-resolution: `cadrumo/__init__.py`
+# and `cadrumo/tests/__init__.py` are both documented import-light (no logging,
+# registry, or storage side effects), and `src/cadrumo/conftest.py` already
+# imports from `.tests` before this same env var is set on its own path. A bare
+# `os.environ.setdefault` call (ruff's tolerated pre-import idiom) keeps this
+# block free of E402 "import not at top" against the imports below, which must
+# still run AFTER the env var is set; cleanup registration therefore happens
+# after the import block instead of here.
+os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(collection_storage_root()))
 
 import pytest
 
+from cadrumo.tests import register_collection_storage_root_cleanup
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers
+
+register_collection_storage_root_cleanup(collection_storage_root())
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:

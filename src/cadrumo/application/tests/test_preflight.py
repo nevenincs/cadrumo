@@ -52,7 +52,7 @@ def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
 
 def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
     """An unconfigured optional provider is OK — not-configured is not a fault."""
-    with override_settings(aeat_certificate_path=None, aeat_clave_movil_dni_nie=None):
+    with override_settings(cadrumo_certificate_path=None, cadrumo_clave_movil_dni_nie=None):
         rows = probe_auth_providers()
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is True
@@ -63,7 +63,7 @@ def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
 def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_path: Path) -> None:
     """A configured certificate path pointing at a missing file is a red row."""
     missing = tmp_path / "does-not-exist.p12"
-    with override_settings(aeat_certificate_path=missing):
+    with override_settings(cadrumo_certificate_path=missing):
         rows = probe_auth_providers()
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is False
@@ -73,7 +73,7 @@ def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_pa
 
 def test_auth_provider_clave_invalid_identity_is_error() -> None:
     """A malformed Cl@ve Móvil DNI/NIE is classified as an error row."""
-    with override_settings(aeat_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
         rows = probe_auth_providers()
     clave = _row(rows, "auth-provider:clave_movil")
     assert clave.healthy is False

@@ -219,7 +219,7 @@ def read_cert_fingerprint() -> str:
     # bypasses the context-var so a test that overrides the cert path
     # sees the project-default fingerprint instead of its own.
     settings = load_settings()
-    cert_path = settings.aeat_certificate_path
+    cert_path = settings.cadrumo_certificate_path
     if cert_path is None or not cert_path.exists():
         return ""
     return _file_sha256(cert_path)

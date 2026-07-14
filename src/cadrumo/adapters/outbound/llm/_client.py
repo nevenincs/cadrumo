@@ -88,6 +88,28 @@ class LLMClient:
         self.caller = caller
         self.prompt_id = prompt_id
         self._adapter_override = adapter_override
+        self._sweep_retention_stores()
+
+    def _sweep_retention_stores(self) -> None:
+        """Enforce the retention lifecycle for the three LLM diagnostic stores.
+
+        Building an :class:`LLMClient` is the once-per-run production entry point
+        into the LLM surface, so pruning the response cache, usage records, and
+        run-telemetry here bounds their growth without a separate scheduler and
+        without pruning on every append (which would rescan the whole encrypted
+        store per call). Each prune is best-effort and independent: a failure of
+        one (or an absent active bucket at construction time) is logged and never
+        blocks client construction or the other prunes.
+        """
+        for label, prune in (
+            ("cache", self.cache.prune),
+            ("usage", self.usage_recorder.prune),
+            ("run_telemetry", self.run_telemetry_recorder.prune),
+        ):
+            try:
+                prune()
+            except Exception:  # LLM stores are diagnostic; retention must never block a client
+                _LOGGER.debug("llm retention sweep failed for %s store", label, exc_info=True)
 
     async def complete(self, request: LLMRequest) -> LLMResponse:
         """Complete a prompt request.

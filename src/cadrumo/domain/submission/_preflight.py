@@ -122,6 +122,7 @@ class Preflight:
         *,
         today: date,
         skip_deadline_window: bool = False,
+        skip_auth_readiness: bool = False,
     ) -> None:
         """Run the four preflight gates against ``draft``.
 
@@ -130,11 +131,17 @@ class Preflight:
             today: Reference date for the deadline-window gate.
             skip_deadline_window: When ``True``, gate 3 (the AEAT
                 filing-window check) is skipped. Workflow callers use
-                this for local VERIFY and local FILE purposes: gates 1,
-                2, and 4 still confirm draft soundness and auth-provider
-                readiness, while the redundant AEAT submission-window
-                check remains disabled for paths that do not submit to
-                AEAT.
+                this for local VERIFY and local FILE purposes: the
+                redundant AEAT submission-window check remains disabled
+                for paths that do not submit to AEAT.
+            skip_auth_readiness: When ``True``, gate 4 (auth-provider
+                readiness) is skipped. Auth binds only live/AEAT-touching
+                purposes (pull, reconcile, a live session): the whole
+                local artefact flow — build, calculate, VERIFY, local
+                FILE, export — completes with no auth provider configured,
+                because the human uploads at the AEAT portal themselves.
+                Callers that perform an actual AEAT read/submission leave
+                the gate enabled (the default).
 
         Raises:
             SubmissionPreflightError: If any gate fails. The exception
@@ -192,6 +199,13 @@ class Preflight:
             )
         else:
             _logger.debug("preflight gate-3 ok: deadline window is open")
+
+        if skip_auth_readiness:
+            _logger.debug(
+                "preflight gate-4 skipped: auth-provider readiness binds only "
+                "live/AEAT-touching purposes, not the local build/verify/file/export flow",
+            )
+            return
 
         try:
             description = self.auth_provider.describe()

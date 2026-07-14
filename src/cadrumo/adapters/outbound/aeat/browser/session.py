@@ -136,9 +136,9 @@ class BrowserSession:
             logger.info(
                 "browser context create starting profile=%s channel=%s headless=%s has_proxy=%s",
                 self.profile.name,
-                self.settings.aeat_browser_channel,
-                self.settings.aeat_browser_headless,
-                bool(self.settings.aeat_proxy_url),
+                self.settings.cadrumo_browser_channel,
+                self.settings.cadrumo_browser_headless,
+                bool(self.settings.cadrumo_proxy_url),
             )
             proxy = self._build_proxy_settings()
             browser = await self._launch_chromium(proxy)
@@ -175,24 +175,24 @@ class BrowserSession:
 
     def _build_proxy_settings(self) -> ProxySettings | None:
         """Translate the settings's proxy block into a Playwright ProxySettings record."""
-        if not self.settings.aeat_proxy_url:
+        if not self.settings.cadrumo_proxy_url:
             return None
         from playwright.async_api import ProxySettings
 
-        proxy = ProxySettings(server=self.settings.aeat_proxy_url)
-        if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret is not None:
-            proxy["username"] = self.settings.aeat_proxy_username
-            proxy["password"] = self.settings.aeat_proxy_password_secret.get_secret_value()
-        if self.settings.aeat_proxy_bypass:
-            proxy["bypass"] = self.settings.aeat_proxy_bypass
+        proxy = ProxySettings(server=self.settings.cadrumo_proxy_url)
+        if self.settings.cadrumo_proxy_username and self.settings.cadrumo_proxy_password_secret is not None:
+            proxy["username"] = self.settings.cadrumo_proxy_username
+            proxy["password"] = self.settings.cadrumo_proxy_password_secret.get_secret_value()
+        if self.settings.cadrumo_proxy_bypass:
+            proxy["bypass"] = self.settings.cadrumo_proxy_bypass
         return proxy
 
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's channel/headless/proxy config; raise BrowserError on failure."""
         try:
             return await self.playwright.chromium.launch(
-                channel=self.settings.aeat_browser_channel,
-                headless=self.settings.aeat_browser_headless,
+                channel=self.settings.cadrumo_browser_channel,
+                headless=self.settings.cadrumo_browser_headless,
                 proxy=proxy,
             )
         except Exception as exc:
@@ -200,9 +200,9 @@ class BrowserSession:
                 "browser launch failed failure_mode=%s profile=%s channel=%s headless=%s has_proxy=%s exc_type=%s",
                 BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 self.profile.name,
-                self.settings.aeat_browser_channel,
-                self.settings.aeat_browser_headless,
-                bool(self.settings.aeat_proxy_url),
+                self.settings.cadrumo_browser_channel,
+                self.settings.cadrumo_browser_headless,
+                bool(self.settings.cadrumo_proxy_url),
                 type(exc).__name__,
                 exc_info=True,
             )
@@ -217,9 +217,9 @@ class BrowserSession:
                 failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 context={
                     "profile": self.profile.name,
-                    "channel": self.settings.aeat_browser_channel,
-                    "headless": self.settings.aeat_browser_headless,
-                    "has_proxy": bool(self.settings.aeat_proxy_url),
+                    "channel": self.settings.cadrumo_browser_channel,
+                    "headless": self.settings.cadrumo_browser_headless,
+                    "has_proxy": bool(self.settings.cadrumo_proxy_url),
                     "cause_type": type(exc).__name__,
                 },
             ) from exc

@@ -10,7 +10,7 @@ Before deleting a retired enum member, reconcile every validation, schema, fixtu
 
 ## Why
 
-The `2026-06-11-ledger-hardening-close-audit` found that `AggregationSourceKind.INVOICE` looked retired at the CLI layer but still powered a contradictory registry-validation surface: schema construction accepted it, validation routed it positively, and selector validation rejected it. Deleting that member before reconciling consumers would break registry fixtures and hide whether the intended final state is acceptance or rejection. The project needs one coherent state before enum deletion.
+The `2026-06-11-ledger-hardening-close-audit` found that the (since-reconciled and deleted) `AggregationSourceKind.INVOICE` member looked retired at the CLI layer but still powered a contradictory registry-validation surface: schema construction accepted it, validation routed it positively, and selector validation rejected it. Deleting a member before reconciling consumers breaks registry fixtures and hides whether the intended final state is acceptance or rejection. The project needs one coherent state before enum deletion. (That reconciliation completed: `AggregationSourceKind` itself was later deleted and its source kinds moved to `BindingSourceKind`.)
 
 ## How
 

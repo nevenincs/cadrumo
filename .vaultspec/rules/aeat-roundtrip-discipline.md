@@ -16,4 +16,4 @@ Provide an anti-tautology proof test for each boundary class. Save a record, mut
 
 Never use xfail, skip, or stub. A test that passes today but is documented as expected-to-fail is a process leak. Write tests that fail loudly today when the structural work is incomplete, and pass cleanly when it lands. Do not wrap roundtrips in try/except to hide failures.
 
-Carry every roundtrip in the production test path. Tests in scratch/ are ephemeral; tests under src/aeat/.../test_*.py participate in the CI gate. Move ad-hoc verification scripts into the durable test surface as soon as they prove a contract worth defending.
+Carry every roundtrip in the production test path. Tests in scratch/ are ephemeral; tests under src/cadrumo/.../test_*.py participate in the CI gate. Move ad-hoc verification scripts into the durable test surface as soon as they prove a contract worth defending.

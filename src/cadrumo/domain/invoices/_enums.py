@@ -17,6 +17,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
+from ...core.time import today_madrid
 from ..iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, lookup_rate
 
 
@@ -86,12 +87,14 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     Slot membership in :class:`IvaRate` is structural; the actual
     percentage is resolved against
     :func:`cadrumo.domain.iva.lookup_rate` for Spain at ``on_date``. When
-    ``on_date`` is omitted the lookup uses today's date.
+    ``on_date`` is omitted the lookup uses the current Europe/Madrid civil date
+    (:func:`cadrumo.core.time.today_madrid`), the date the IVA devengo rate binds
+    to (LIVA art. 90.Dos with art. 75).
 
     Args:
         rate: IVA rate slot.
         on_date: Date at which to resolve the rate percentage.
-            Defaults to ``date.today()``.
+            Defaults to the Europe/Madrid civil date (``today_madrid()``).
 
     Returns:
         ``Decimal("0")`` for :attr:`IvaRate.RATE_0`; the substrate's
@@ -106,7 +109,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
         return None
 
     kind = _IVA_RATE_TO_IVA_KIND[rate]
-    effective_date = on_date or date.today()
+    effective_date = on_date or today_madrid()
     rate_record = lookup_rate(EUMemberState.ES, kind, effective_date)
     return rate_record.pct / Decimal("100")
 

@@ -5,7 +5,7 @@ trigger: always_on
 
 # AEAT architecture boundaries
 
-Place Python application code under `src/aeat/`. Do not add top-level Python packages, ad-hoc module roots, or hidden parallel implementations.
+Place Python application code under `src/cadrumo/`. Do not add top-level Python packages, ad-hoc module roots, or hidden parallel implementations.
 
 Expose validated boundary data through pydantic v2 models. Use strict config where practical. Do not expose bare `dict[str, Any]` for persisted records, wire payloads, configuration, CLI input, MCP messages, LLM responses, or fixtures.
 

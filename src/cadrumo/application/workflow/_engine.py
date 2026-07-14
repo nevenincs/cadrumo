@@ -24,6 +24,7 @@ from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
+from ...core.time import today_madrid
 from ...domain.deadlines import (
     ModeloDeadline,
     ObligationStatus,
@@ -249,7 +250,7 @@ class WorkflowEngine:
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
-        reference_today = today or date.today()
+        reference_today = today or today_madrid()
 
         # Record run context so ``_record_site_unavailable`` can lazily
         # recompute the run_id from whichever information is latest
@@ -1138,10 +1139,17 @@ class WorkflowEngine:
             # seeds the next period's cross-period carry. The window gate binds
             # only an actual AEAT submission, which this app never performs.
             skip_window = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
+            # Auth-provider readiness (gate 4) binds only live/AEAT-touching
+            # purposes. Both workflow purposes are local (the app performs no
+            # actual AEAT submission), so auth is not required to complete the
+            # local build/verify/file/export flow; a taxpayer with no provider
+            # configured uploads at the AEAT portal themselves (operator ruling).
+            skip_auth = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
             self._submission_engine.preflight(
                 draft,
                 today=today,
                 skip_deadline_window=skip_window,
+                skip_auth_readiness=skip_auth,
             )
         except SiteHealthError as exc:
             self._record_site_unavailable(

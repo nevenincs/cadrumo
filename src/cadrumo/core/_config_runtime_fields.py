@@ -59,22 +59,22 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
         le=2.0,
         description="Default sampling temperature when an LLM request omits ``temperature``",
     )
-    aeat_browser_locale: str = Field(
+    cadrumo_browser_locale: str = Field(
         default="es-ES",
         min_length=2,
         description="Default browser locale passed to Playwright context (BCP-47 tag)",
     )
-    aeat_browser_timezone: str = Field(
+    cadrumo_browser_timezone: str = Field(
         default="Europe/Madrid",
         min_length=1,
         description="Default IANA timezone string passed to Playwright context",
     )
-    aeat_browser_viewport_width: int = Field(
+    cadrumo_browser_viewport_width: int = Field(
         default=1366,
         gt=0,
         description="Default Playwright viewport width (px) for AEAT sede sessions",
     )
-    aeat_browser_viewport_height: int = Field(
+    cadrumo_browser_viewport_height: int = Field(
         default=900,
         gt=0,
         description="Default Playwright viewport height (px) for AEAT sede sessions",
@@ -102,7 +102,7 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
     cadrumo_auth_clave_movil_lock_buffer_s: int = Field(
         default=90,
         gt=0,
-        description="Headroom (seconds) added to ``aeat_clave_movil_timeout_ms`` for the acquisition lock TTL",
+        description="Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the acquisition lock TTL",
     )
     cadrumo_auth_certificate_lock_ttl_s: int = Field(
         default=180,
@@ -134,7 +134,7 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
         default="DEBUG",
         description="Root logger level installed by ``cadrumo.core.logging``",
     )
-    aeat_manuals_http_timeout_s: float = Field(
+    cadrumo_manuals_http_timeout_s: float = Field(
         default=60.0,
         gt=0,
         description="HTTP timeout (seconds) for AEAT manual PDF downloads",

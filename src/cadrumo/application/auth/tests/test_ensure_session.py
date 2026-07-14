@@ -114,7 +114,7 @@ def test_scripted_provider_satisfies_auth_provider_protocol() -> None:
 @pytest.fixture(autouse=True)
 def _active_profile(tmp_path: Path) -> Iterator[None]:
     with override_settings(
-        aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
+        cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
         cadrumo_local_storage_root=tmp_path,
         cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         cadrumo_secret_passphrase=SecretStr(dev_test_database_password()),
@@ -144,7 +144,7 @@ def _settings(tmp_path: Path) -> Settings:
     into functions that take ``settings`` as a kwarg.
     """
     return Settings(
-        aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
+        cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
         cadrumo_token_dir=tmp_path / "tokens",
     )
 

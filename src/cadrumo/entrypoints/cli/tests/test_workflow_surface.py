@@ -72,12 +72,12 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
     dispose_engine()
     dev_test_passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
-        aeat_auth_provider=None,
-        aeat_certificate_path=None,
-        aeat_certificate_password_secret=None,
-        aeat_clave_movil_dni_nie=None,
-        aeat_clave_movil_dni_fecha=None,
-        aeat_clave_movil_nie_soporte=None,
+        cadrumo_auth_provider=None,
+        cadrumo_certificate_path=None,
+        cadrumo_certificate_password_secret=None,
+        cadrumo_clave_movil_dni_nie=None,
+        cadrumo_clave_movil_dni_fecha=None,
+        cadrumo_clave_movil_nie_soporte=None,
         cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         cadrumo_secret_passphrase=dev_test_passphrase,
         cadrumo_secret_store_dir=tmp_path / "secrets",

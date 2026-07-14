@@ -52,8 +52,8 @@ adapters:
           authenticating again.
         approval_timeout: Cl@ve Móvil browser authentication did not complete within
           the configured timeout.
-        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI or
-          NIE before authenticating.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI
+          or NIE before authenticating.
         initial_navigation_timeout: Initial navigation to Cl@ve Movil did not complete
           within the configured timeout.
         metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
@@ -430,12 +430,12 @@ application:
         or ISO-8601 string.
     operator:
       alignment:
-        both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+        both_missing_detail: Neither the Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           nor the active profile tax id is set. Set both to the same DNI/NIE before
           live AEAT auth.
         both_missing_next_action: Edit the active profile with 'aeat config profile
           edit NAME --tax-id DNI/NIE' and set the same DNI/NIE for Cl@ve Móvil.
-        clave_identity_missing_detail: The Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+        clave_identity_missing_detail: The Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           is not set, so it cannot be compared with the active profile tax id. Set
           it to the DNI/NIE of the active profile.
         clave_identity_missing_next_action: Configure the Cl@ve Móvil DNI/NIE to match
@@ -518,7 +518,7 @@ application:
     sessions:
       errors:
         clave_identity_missing: Cl@ve Móvil live auth requires a configured DNI/NIE
-          (AEAT_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
+          (CADRUMO_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.

@@ -163,8 +163,8 @@ def test_select_provider_dispatches_clave_permanente(tmp_path: Path) -> None:
 
     settings = _settings_for(
         tmp_path,
-        AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-        AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+        CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+        CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
     )
     provider = select_provider(AuthProviderKind.CLAVE_PERMANENTE, settings=settings)
     assert isinstance(provider, ClavePermanenteAuthProvider)
@@ -176,21 +176,21 @@ def test_select_provider_dispatches_clave_permanente(tmp_path: Path) -> None:
 
 class TestPreconditions:
     def test_missing_identity_raises_configuration_error(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2")
         provider = ClavePermanenteAuthProvider(settings)
 
         async def run() -> None:
-            with pytest.raises(AuthConfigurationError, match="AEAT_CLAVE_PERMANENTE_DNI_NIE"):
+            with pytest.raises(AuthConfigurationError, match="CADRUMO_CLAVE_PERMANENTE_DNI_NIE"):
                 await provider.authenticate()
 
         _run(run())
 
     def test_missing_password_raises_configuration_error(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
         provider = ClavePermanenteAuthProvider(settings)
 
         async def run() -> None:
-            with pytest.raises(AuthConfigurationError, match="AEAT_CLAVE_PERMANENTE_PASSWORD"):
+            with pytest.raises(AuthConfigurationError, match="CADRUMO_CLAVE_PERMANENTE_PASSWORD"):
                 await provider.authenticate()
 
         _run(run())
@@ -198,8 +198,8 @@ class TestPreconditions:
     def test_malformed_identity_raises_configuration_error(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="NOT-A-VALID-ID",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="NOT-A-VALID-ID",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
 
@@ -225,7 +225,7 @@ class TestDescribe:
         assert "AEAT_CLAVE_PERMANENTE" not in (description.health_summary or "")
 
     def test_describe_missing_password_only(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z")
         provider = ClavePermanenteAuthProvider(settings)
         description = provider.describe()
         assert description.configured is False
@@ -234,8 +234,8 @@ class TestDescribe:
     def test_describe_configured(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
         description = provider.describe()
@@ -247,8 +247,8 @@ class TestDescribe:
     def test_describe_invalid_identity(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="BAD",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="BAD",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
         description = provider.describe()
@@ -264,8 +264,8 @@ class TestAuthenticateFresh:
     def test_fresh_login_writes_encrypted_metadata_and_storage_state(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
@@ -301,8 +301,8 @@ class TestAuthenticateFresh:
     def test_password_never_appears_in_persisted_metadata(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="super-secret-password",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="super-secret-password",
         )
         provider = ClavePermanenteAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -320,8 +320,8 @@ class TestAuthenticateFresh:
     def test_initial_selector_navigation_timeout_is_reported(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
         browser_session = _InitialNavigationTimeoutBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -339,8 +339,8 @@ class TestAuthenticateFresh:
     def test_invalid_credentials_marker_raises_typed_error(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="wrong-password",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="wrong-password",
         )
         provider = ClavePermanenteAuthProvider(settings)
         browser_session = _InvalidCredentialsBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -356,8 +356,8 @@ class TestAuthenticateFresh:
     def test_elevation_required_marker_raises_typed_error_with_suggestion(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
         browser_session = _ElevationRequiredBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -380,8 +380,8 @@ class TestAuthenticateResume:
     def test_resume_reuses_persisted_session_after_live_probe(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         target_path = settings.aeat_sede_expedientes_path
 
@@ -403,8 +403,8 @@ class TestAuthenticateResume:
     def test_resume_falls_back_to_fresh_login_on_expired_idle_deadline(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         target_path = settings.aeat_sede_expedientes_path
 
@@ -449,8 +449,8 @@ class TestVerify:
     def test_verify_without_active_context_raises(self, tmp_path: Path) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
-            AEAT_CLAVE_PERMANENTE_PASSWORD="hunter2",
+            CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_PERMANENTE_PASSWORD="hunter2",
         )
         provider = ClavePermanenteAuthProvider(settings)
 

@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
-from ...core.time import now
+from ...core.time import now, today_madrid
 from ...domain.calculations.registry import LegalRefId
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -252,7 +252,7 @@ def build_overview_explain(
         raise OverviewExplainError(
             translated_message="application.overview.explain.errors.modelo_blank",
         )
-    reference_today = today or date.today()
+    reference_today = today or today_madrid()
     resolved_year = year or reference_today.year
 
     if not _modelo_is_registered(modelo_id):

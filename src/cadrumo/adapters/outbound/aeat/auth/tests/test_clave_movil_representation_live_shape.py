@@ -53,7 +53,7 @@ class _LiveCheckedOwnNameRepresentationPage(_RecordingPage):
 
 
 def test_representation_dispatcher_handles_live_checked_own_name_shape(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     page = _LiveCheckedOwnNameRepresentationPage(target_path=settings.aeat_sede_expedientes_path)
     page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)

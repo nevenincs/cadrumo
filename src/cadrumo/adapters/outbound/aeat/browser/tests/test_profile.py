@@ -49,8 +49,8 @@ def test_profile_resolves_browser_defaults_on_construction(tmp_path: Path) -> No
     settings = Settings()
     profile = Profile(name="defaults", storage_state_path=tmp_path / "state.json")
 
-    assert profile.locale == settings.aeat_browser_locale
-    assert profile.timezone_id == settings.aeat_browser_timezone
+    assert profile.locale == settings.cadrumo_browser_locale
+    assert profile.timezone_id == settings.cadrumo_browser_timezone
 
 
 def test_profile_honours_explicit_locale_without_touching_settings(tmp_path: Path) -> None:

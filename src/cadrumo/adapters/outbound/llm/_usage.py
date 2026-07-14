@@ -21,6 +21,7 @@ from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
+from ....core.logging import get_logger
 from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
 from ._errors import LLMCacheError
@@ -28,6 +29,7 @@ from ._models import LLMResponse, UsageRecord, UsageSummary
 
 _USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
 _USAGE_VERSION = 1
+_log = get_logger(__name__)
 
 
 class UsageRecorder:
@@ -137,20 +139,7 @@ class UsageRecorder:
             Loaded :class:`adapters.outbound.llm.UsageRecord` entries in
             file-iteration order.
         """
-        return tuple(record for record, _ in self._load_records_with_object_keys(since=since, until=until))
-
-    def _load_records_with_object_keys(
-        self,
-        since: date | None = None,
-        until: date | None = None,
-    ) -> tuple[tuple[UsageRecord, str], ...]:
-        """Load usage records paired with their reconstructed save-time object key.
-
-        Internal helper shared by :meth:`load_records` and :meth:`prune`; the
-        object key is needed only for pruning and is not part of the public
-        :meth:`load_records` contract.
-        """
-        rows: list[tuple[UsageRecord, str]] = []
+        records: list[UsageRecord] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _USAGE_NAMESPACE,
             expected_class=SensitivityClass.DIAGNOSTIC,
@@ -165,11 +154,37 @@ class UsageRecorder:
                 continue
             if until is not None and record_date > until:
                 continue
-            try:
-                object_key_uuid = decoded["object_key_uuid"]
-            except KeyError as exc:
-                msg = "LLM usage payload is missing its object_key_uuid; cannot reconstruct its save-time key."
-                raise LLMCacheError(msg) from exc
+            records.append(record)
+        return tuple(sorted(records, key=lambda item: (item.created_at, item.request_id, item.prompt_id, item.caller)))
+
+    def _load_records_with_object_keys(self) -> tuple[tuple[UsageRecord, str | None], ...]:
+        """Load usage records paired with their reconstructed save-time object key.
+
+        Used only by :meth:`prune`. A record whose payload lacks its
+        ``object_key_uuid`` yields a ``None`` key (its save-time key cannot be
+        reconstructed) and is logged; :meth:`prune` decides how to treat that.
+        The public read path (:meth:`load_records`) does not reconstruct keys, so
+        a record missing its uuid stays fully readable rather than bricking the
+        usage view.
+        """
+        rows: list[tuple[UsageRecord, str | None]] = []
+        for stored in secure_object_repository_for_active_bucket().list_records(
+            _USAGE_NAMESPACE,
+            expected_class=SensitivityClass.DIAGNOSTIC,
+            max_supported_version=_USAGE_VERSION,
+        ):
+            decoded = json.loads(stored.payload.decode("utf-8"))
+            if decoded.get("logical_root") != self._logical_root():
+                continue
+            record = UsageRecord.model_validate_json(json.dumps(decoded["record"]))
+            object_key_uuid = decoded.get("object_key_uuid")
+            if object_key_uuid is None:
+                _log.warning(
+                    "llm_usage: record %r has no object_key_uuid; its save-time key cannot be reconstructed for prune",
+                    record.request_id,
+                )
+                rows.append((record, None))
+                continue
             rows.append((record, self._object_key_for(record, object_key_uuid)))
         return tuple(
             sorted(rows, key=lambda item: (item[0].created_at, item[0].request_id, item[0].prompt_id, item[0].caller)),
@@ -184,8 +199,12 @@ class UsageRecorder:
         is removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to the
         centralized ``cadrumo_llm_usage_retention_days`` and
-        ``cadrumo_llm_usage_max_records`` settings. A record whose key no longer
-        resolves (e.g. removed by a concurrent prune) is silently skipped.
+        ``cadrumo_llm_usage_max_records`` settings.
+
+        Unlike the read path, ``prune`` hard-refuses (raises ``LLMCacheError``)
+        when any record lacks its ``object_key_uuid``: pruning must reconstruct
+        the exact save-time key to issue a matching delete, and a missing uuid
+        on a record this app wrote is storage corruption, not a legacy shape.
         """
         settings = load_settings()
         effective_retention_days = (
@@ -195,12 +214,23 @@ class UsageRecorder:
 
         cutoff = now() - timedelta(days=effective_retention_days)
         rows = self._load_records_with_object_keys()
+        unreconstructable = [record.request_id for record, object_key in rows if object_key is None]
+        if unreconstructable:
+            msg = (
+                f"cannot prune LLM usage: {len(unreconstructable)} record(s) are missing their "
+                "object_key_uuid, so their save-time keys cannot be reconstructed for deletion"
+            )
+            raise LLMCacheError(msg)
 
-        to_remove: list[str] = [object_key for record, object_key in rows if record.created_at < cutoff]
+        to_remove: list[str] = [
+            object_key for record, object_key in rows if object_key is not None and record.created_at < cutoff
+        ]
         remaining = [row for row in rows if row[0].created_at >= cutoff]
         if len(remaining) > effective_max_records:
             excess_count = len(remaining) - effective_max_records
-            to_remove.extend(object_key for _, object_key in remaining[:excess_count])
+            to_remove.extend(
+                object_key for _, object_key in remaining[:excess_count] if object_key is not None
+            )
 
         repository = secure_object_repository_for_active_bucket()
         removed = 0

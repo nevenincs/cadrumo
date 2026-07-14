@@ -36,7 +36,7 @@ class CertificateSourceRecord(BaseModel):
             bundle.
         friendly_name: Optional human-readable label distinct from
             ``name``, mirroring
-            :attr:`core.config.Settings.aeat_certificate_friendly_name`.
+            :attr:`core.config.Settings.cadrumo_certificate_friendly_name`.
         registered_at: UTC timestamp the source was registered or last
             re-pointed at a different path.
     """

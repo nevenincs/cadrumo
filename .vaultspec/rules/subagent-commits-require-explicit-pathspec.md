@@ -31,8 +31,8 @@ destructive un-bundling that a swept commit tempts).
 
 ## How
 
-- **Good:** `git commit -m "..." -- src/aeat/foo.py src/aeat/tests/test_foo.py`
-  after `git diff --cached -- src/aeat/foo.py src/aeat/tests/test_foo.py` confirms
+- **Good:** `git commit -m "..." -- src/cadrumo/foo.py src/cadrumo/tests/test_foo.py`
+  after `git diff --cached -- src/cadrumo/foo.py src/cadrumo/tests/test_foo.py` confirms
   only your hunks are staged; a pathspec commit ignores every other staged path.
 - **Good:** for a file entangled with a peer's uncommitted hunks, use the
   apply-cached gated drive from `uncommitted-wip-is-not-orphaned` (stage a

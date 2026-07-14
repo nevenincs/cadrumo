@@ -271,8 +271,8 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     from ..auth import AuthProviderKind, probe_provider_configuration
 
     settings = Settings(
-        aeat_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
-        aeat_certificate_password_secret=SecretStr(_PKCS12_TEST_TEXT),
+        cadrumo_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
+        cadrumo_certificate_password_secret=SecretStr(_PKCS12_TEST_TEXT),
         cadrumo_cert_warn_days=10,
         cadrumo_cert_critical_days=30,
     )

@@ -484,18 +484,18 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
     assert not hasattr(constants.online_services, "llm_endpoints")
     settings = Settings()
     expected_defaults: dict[str, object] = {
-        "aeat_browser_navigation_timeout_ms": 30_000,
-        "aeat_browser_form_interaction_timeout_ms": 10_000,
-        "aeat_browser_ver_click_timeout_ms": 15_000,
-        "aeat_browser_buscar_settle_ms": 3_000,
-        "aeat_browser_selector_probe_timeout_ms": 2_500,
-        "aeat_browser_close_timeout_ms": 5_000,
-        "aeat_live_iva_declaration_capture_timeout_ms": 120_000,
-        "aeat_live_iva_cli_watchdog_timeout_ms": 240_000,
-        "aeat_browser_locale": "es-ES",
-        "aeat_browser_timezone": "Europe/Madrid",
-        "aeat_browser_viewport_width": 1366,
-        "aeat_browser_viewport_height": 900,
+        "cadrumo_browser_navigation_timeout_ms": 30_000,
+        "cadrumo_browser_form_interaction_timeout_ms": 10_000,
+        "cadrumo_browser_ver_click_timeout_ms": 15_000,
+        "cadrumo_browser_buscar_settle_ms": 3_000,
+        "cadrumo_browser_selector_probe_timeout_ms": 2_500,
+        "cadrumo_browser_close_timeout_ms": 5_000,
+        "cadrumo_live_iva_declaration_capture_timeout_ms": 120_000,
+        "cadrumo_live_iva_cli_watchdog_timeout_ms": 240_000,
+        "cadrumo_browser_locale": "es-ES",
+        "cadrumo_browser_timezone": "Europe/Madrid",
+        "cadrumo_browser_viewport_width": 1366,
+        "cadrumo_browser_viewport_height": 900,
         "cadrumo_file_lock_timeout_s": 30.0,
         "cadrumo_file_lock_retry_backoff_s": 0.05,
         "cadrumo_bucket_lock_poll_interval_s": 0.1,
@@ -513,14 +513,14 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_calc_sheets_recalc_delay_s": 2.0,
         "cadrumo_llm_default_max_tokens": 1024,
         "cadrumo_llm_default_temperature": 0.0,
-        "aeat_manuals_http_timeout_s": 60.0,
+        "cadrumo_manuals_http_timeout_s": 60.0,
     }
 
     for field_name, expected_value in expected_defaults.items():
         assert getattr(settings, field_name) == expected_value, field_name
 
-    assert settings.aeat_live_iva_declaration_capture_timeout_ms < settings.aeat_live_iva_surface_timeout_ms
-    assert settings.aeat_live_iva_cli_watchdog_timeout_ms < 300_000
+    assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
+    assert settings.cadrumo_live_iva_cli_watchdog_timeout_ms < 300_000
     assert settings.cadrumo_llm_openai_chat_completions_url.startswith("https://api.openai.com")
     assert "{model}" in settings.cadrumo_llm_gemini_generate_content_template
     assert settings.cadrumo_llm_ollama_chat_url.startswith("http://")
@@ -535,17 +535,17 @@ def test_settings_refuse_the_former_product_google_drive_vault_folder() -> None:
 def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> None:
     """One declaration timeout must fire before the whole filed-history surface timeout."""
 
-    with pytest.raises(ValueError, match="aeat_live_iva_declaration_capture_timeout_ms"):
+    with pytest.raises(ValueError, match="cadrumo_live_iva_declaration_capture_timeout_ms"):
         Settings(
-            aeat_live_iva_declaration_capture_timeout_ms=180_000,
-            aeat_live_iva_surface_timeout_ms=180_000,
+            cadrumo_live_iva_declaration_capture_timeout_ms=180_000,
+            cadrumo_live_iva_surface_timeout_ms=180_000,
         )
 
 
 def test_clave_movil_operator_wait_is_capped_at_two_minutes() -> None:
     """Cl@ve Móvil approval waits fail fast enough for production retry loops."""
 
-    assert Settings().aeat_clave_movil_timeout_ms == 120_000
+    assert Settings().cadrumo_clave_movil_timeout_ms == 120_000
 
     with pytest.raises(ValidationError):
-        Settings(aeat_clave_movil_timeout_ms=120_001)
+        Settings(cadrumo_clave_movil_timeout_ms=120_001)

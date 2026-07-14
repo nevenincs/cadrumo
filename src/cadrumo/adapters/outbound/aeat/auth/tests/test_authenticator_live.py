@@ -41,7 +41,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     """
     requires_live_enabled()
     settings = Settings()
-    if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
+    if settings.cadrumo_certificate_path is None or settings.cadrumo_certificate_password_secret is None:
         pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     # Production cert loader reads the passphrase via
@@ -82,7 +82,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     """
     requires_live_enabled()
     settings = Settings()
-    if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
+    if settings.cadrumo_certificate_path is None or settings.cadrumo_certificate_password_secret is None:
         pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     from typing import Any, cast

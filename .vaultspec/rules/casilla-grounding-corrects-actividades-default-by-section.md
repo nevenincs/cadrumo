@@ -20,48 +20,36 @@ CORRECT grounding and MUST be preserved.
 
 ## Why
 
-The 2021-2024 Modelo-100 revisions used the actividades chapter as a generic-default
-`legal_refs` filler across ~6000 non-actividades casillas (income, cuota, base,
-autonomic deductions, ganancias, reductions, inmueble, contribuyente identification) —
-documented in the `2026-06-14-legal-grounding-centralization-audit` (V12-V22). Three
-hazards made naive correction wrong: (1) casilla ids RENUMBER across years (id `1911`
-is a ganancia box in 2024 but a deducción-maternidad box in 2022), so id-keyed maps
-inject wrong articles — the section tag is concept-specific and stable; (2) the
-"different corpus" assumption for autonomic deductions was false — `art-77` (which
-applies them to the cuota) is the correct LIRPF framework home, collapsing a
-~2000-casilla "separate campaign" into a section grounding; (3) calculation-chain
-casillas are CONSTRUCT- and BINDING-entangled — the validator's three-layer coverage
-check (casilla → construct ⊇ casilla refs AND construct ⊇ binding refs) means a casilla
-grounded without sweeping its construct+binding breaks registry load. This rule is the
-correction-method companion to `registry-calculation-legal-grounding` (which governs the
-binding provision a compiled VALUE must cite) and `legal-grounding-verifies-bundled-
-authoritative-corpus` (verify the figure against bundled corpus).
+Per audit `2026-06-14-legal-grounding-centralization-audit` (V12-V22), the 2021-2024
+Modelo-100 revisions used the actividades chapter as a generic-default `legal_refs`
+filler across ~6000 non-actividades casillas. Three hazards make naive correction wrong:
+casilla ids RENUMBER across years (id `1911` is a ganancia box in 2024, a
+deducción-maternidad box in 2022), so id-keyed maps inject wrong articles — the section
+tag is concept-specific and stable; the "different corpus" assumption for autonomic
+deductions was false (`art-77` is the correct LIRPF framework home); and calculation-chain
+casillas are construct- and binding-entangled, so the validator's three-layer coverage
+check (casilla → construct ⊇ casilla refs AND construct ⊇ binding refs) breaks registry
+load if a casilla is grounded without sweeping its construct+binding. Companion to
+`registry-calculation-legal-grounding` and `legal-grounding-verifies-bundled-authoritative-corpus`.
 
 ## How
 
 - **Good:** ground every `c_valenciana_res`/`canarias_res`/… autonomic-deduction box to
-  `art-77` by matching the comunidad name in the section path; pin with a substring gate.
-- **Good:** the base-liquidable-negativa carry-forward grounds the 13 casillas + the
-  anexo-c construct + the previous_filing binding all to `[art-48, art-50]` in one commit,
-  so the validator's binding-coverage check passes.
-- **Good:** a heterogeneous section (the `gravamenes_res` cuota computation) is grounded
-  PER-BOX by deaccented label (escala→`art-63/74`, cuota líquida→`art-67/77`, each
-  deducción→its own article), leaving the RIC/regularización boxes that bind elsewhere.
+  `art-77` by matching the comunidad name in the section path (pin with a substring gate);
+  the base-liquidable-negativa carry-forward grounds its 13 casillas + the anexo-c construct
+  + the previous_filing binding all to `[art-48, art-50]` in one commit, so the validator's
+  binding-coverage check passes.
 - **Good:** an actividad-económica box (`actividad_est_directa`, "inmueble afecto a
   actividades económicas") KEEPS the actividades chapter — it is correct there.
 - **Bad:** mapping `2024`-id → `2025`-id to copy grounding — the renumbering injects a
   maternidad-deduction article onto a ganancia box.
 - **Bad:** grounding a construct-member casilla without also grounding its construct and
   bindings — `construct '…' does not include legal refs […] required by binding '…'`,
-  registry fails to load.
-- **Bad:** assuming a regime needs a "different corpus" before checking whether a LIRPF
-  framework article (cuota líquida autonómica, régimen de atribución, base liquidable)
-  already applies it.
+  registry fails to load; or assuming a regime needs a "different corpus" before checking
+  whether a LIRPF framework article already applies it.
 
 ## Source
 
-Campaign `legal-grounding-centralization`, audit
-`2026-06-14-legal-grounding-centralization-audit` (findings V12 section-tag discriminator,
-V19/V20 construct+binding-aware sweep, V21 framework-foundation for autonomic). ~6345
-M100 casillas re-grounded across ~40 sections; 14 LIRPF legal entries authored. Promoted
-per the `vaultspec-codify` discipline after the method held across the full form.
+Audit `2026-06-14-legal-grounding-centralization-audit` (findings V12 section-tag
+discriminator, V19/V20 construct+binding-aware sweep, V21 framework-foundation for
+autonomic). ~6345 M100 casillas re-grounded across ~40 sections; 14 LIRPF entries authored.

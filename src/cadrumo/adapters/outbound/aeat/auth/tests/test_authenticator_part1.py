@@ -173,12 +173,12 @@ def test_invalid_persisted_session_redacts_path_and_reason(
 
 def test_describe_warns_when_password_missing(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_factory(bundle_path, aeat_certificate_password_secret=None)
+    settings = _settings_factory(bundle_path, cadrumo_certificate_password_secret=None)
     description = AeatAuthenticator(settings).describe()
 
     assert description.configured is True
     assert description.available is False
-    assert description.health_summary == "AEAT_CERTIFICATE_PASSWORD_SECRET not set"
+    assert description.health_summary == "CADRUMO_CERTIFICATE_PASSWORD_SECRET not set"
 
 
 def test_describe_preserves_expired_certificate_severity(tmp_path: Path, _settings_factory) -> None:
@@ -256,7 +256,7 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
     bundle_path = _build_bundle(tmp_path)
     from pydantic import SecretStr
 
-    settings = _settings_factory(bundle_path, aeat_certificate_friendly_name="operator cert")
+    settings = _settings_factory(bundle_path, cadrumo_certificate_friendly_name="operator cert")
 
     captured: dict[str, object] = {}
     real_certificate_health = authenticator_module.certificate_health

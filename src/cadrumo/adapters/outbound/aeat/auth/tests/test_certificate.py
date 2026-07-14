@@ -353,18 +353,18 @@ def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
     placeholder_p12 = tmp_path / "op.p12"
     placeholder_p12.write_bytes(b"placeholder")
     with isolated_aeat_env(
-        AEAT_CERTIFICATE_PATH=str(placeholder_p12),
-        AEAT_CERTIFICATE_PASSWORD_SECRET=SECRET_PASSPHRASE,
-        AEAT_CERTIFICATE_FRIENDLY_NAME="op-cert",
-        AEAT_CERTIFICATE_BACKEND="httpx_fallback",
+        CADRUMO_CERTIFICATE_PATH=str(placeholder_p12),
+        CADRUMO_CERTIFICATE_PASSWORD_SECRET=SECRET_PASSPHRASE,
+        CADRUMO_CERTIFICATE_FRIENDLY_NAME="op-cert",
+        CADRUMO_CERTIFICATE_BACKEND="httpx_fallback",
         AEAT_CERTIFICATE_VERIFY_URL="https://example.test/",
     ):
         settings = settings_without_env_file()
-    assert settings.aeat_certificate_path == placeholder_p12
-    assert settings.aeat_certificate_password_secret is not None
-    assert settings.aeat_certificate_password_secret.get_secret_value() == SECRET_PASSPHRASE
-    assert settings.aeat_certificate_friendly_name == "op-cert"
-    assert settings.aeat_certificate_backend.name == CertificateBackend.HTTPX_FALLBACK.name
+    assert settings.cadrumo_certificate_path == placeholder_p12
+    assert settings.cadrumo_certificate_password_secret is not None
+    assert settings.cadrumo_certificate_password_secret.get_secret_value() == SECRET_PASSPHRASE
+    assert settings.cadrumo_certificate_friendly_name == "op-cert"
+    assert settings.cadrumo_certificate_backend.name == CertificateBackend.HTTPX_FALLBACK.name
     assert settings.aeat_certificate_verify_url == "https://example.test/"
 
     # SecretStr must not leak via repr()
@@ -414,6 +414,6 @@ def test_load_certificate_not_after_is_utc_aware(tmp_path: Path) -> None:
 def test_settings_rejects_removed_certificate_backends() -> None:
     import pydantic
 
-    with isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="MTLS_PROXY"):
-        with pytest.raises(pydantic.ValidationError, match=r"aeat_certificate_backend|MTLS_PROXY|Input should be"):
+    with isolated_aeat_env(CADRUMO_CERTIFICATE_BACKEND="MTLS_PROXY"):
+        with pytest.raises(pydantic.ValidationError, match=r"cadrumo_certificate_backend|MTLS_PROXY|Input should be"):
             settings_without_env_file()

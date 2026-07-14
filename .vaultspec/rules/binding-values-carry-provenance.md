@@ -31,8 +31,9 @@ roundtrip + anti-tautology proof is `test_binding_value_provenance_roundtrip.py`
 - **Good:** `ModeloBindingValue` carries `legal_refs`/`source_refs` +
   `source: BindingSourceKind`; the filing builder reads `binding.legal_refs` /
   `binding.source_refs` / `binding.source` from the definition it already holds.
-- **Good:** `bindings list` returns a typed `BindingRowPayload` sequence carrying
-  the grounding, not `list[dict[str, object]]`.
+- **Good:** `bindings list` / preview return typed `BindingListRowPayload` /
+  `BindingPreviewRowPayload` sequences carrying the grounding, not
+  `list[dict[str, object]]`.
 - **Bad:** constructing a `ModeloBindingValue` with a literal free-text `source`
   string, or dropping the binding definition's grounding at the builder.
 - **Bad:** a bindings CLI payload that omits `legal_refs`/`source_refs` while the

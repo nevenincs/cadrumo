@@ -71,7 +71,7 @@ _VERIFY_SESSION_AUTHENTICATED_AT = datetime(2099, 5, 28, 15, 10, tzinfo=UTC)
 
 
 def test_auth_browser_action_policy_allows_configured_own_name_representation_action(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     policy = _auth_browser_action_policy(settings)
 
     result = assert_remote_operation_allowed(
@@ -86,7 +86,7 @@ def test_auth_browser_action_policy_allows_configured_own_name_representation_ac
 
 
 def test_auth_browser_action_policy_rejects_unclassified_representation_action(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     policy = _auth_browser_action_policy(settings)
 
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
@@ -98,7 +98,7 @@ def test_auth_browser_action_policy_rejects_unclassified_representation_action(t
 
 def test_auth_browser_action_policy_admits_sibling_load_balancer_host(tmp_path: Path) -> None:
     """An auth navigation dispatched to a www{n} sibling beyond the enumerated hosts is allowed."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     policy = _auth_browser_action_policy(settings)
     drifted = _aeat_url(_DOMAINS.www2, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
 
@@ -112,7 +112,7 @@ def test_auth_browser_action_policy_admits_sibling_load_balancer_host(tmp_path: 
 
 def test_auth_browser_action_policy_refuses_non_aeat_host(tmp_path: Path) -> None:
     """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     policy = _auth_browser_action_policy(settings)
 
     with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
@@ -132,8 +132,8 @@ def _isolated_secure_session_backend(tmp_path: Path):
 
 
 def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
-        update={"aeat_browser_close_timeout_ms": 1},
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+        update={"cadrumo_browser_close_timeout_ms": 1},
     )
     provider = ClaveMovilAuthProvider(settings)
     context = _HangingCloseContext(target_path=settings.aeat_sede_expedientes_path)
@@ -147,8 +147,8 @@ def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
 
 
 def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
-        update={"aeat_browser_close_timeout_ms": 1},
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+        update={"cadrumo_browser_close_timeout_ms": 1},
     )
     provider = ClaveMovilAuthProvider(settings)
     session = _HangingCloseBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -200,10 +200,10 @@ class TestAttemptDiagnostics:
                 ),
             )
             settings = Settings(
-                aeat_clave_movil_dni_nie=SecretStr("X1234567L"),
-                aeat_clave_movil_nie_soporte=SecretStr("support-marker"),
-                aeat_clave_prefer_non_qr=True,
-                aeat_clave_movil_timeout_ms=120_000,
+                cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
+                cadrumo_clave_movil_nie_soporte=SecretStr("support-marker"),
+                cadrumo_clave_prefer_non_qr=True,
+                cadrumo_clave_movil_timeout_ms=120_000,
             )
 
             context = ClaveMovilAuthProvider(settings)._attempt_context()
@@ -240,12 +240,12 @@ class TestDescribe:
         # Round-5 B2: refusal text is user prose, never the raw
         # env-var name; severity is ``info`` for an undeclared state,
         # not the loudest ``error`` token.
-        assert "AEAT_CLAVE_MOVIL_DNI_NIE" not in (description.health_summary or "")
+        assert "CADRUMO_CLAVE_MOVIL_DNI_NIE" not in (description.health_summary or "")
         assert description.health_severity == "info"
         assert "DNI" in (description.health_summary or "") or "NIE" in (description.health_summary or "")
 
     def test_describe_configured(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         description = provider.describe()
         assert description.configured is True
@@ -254,7 +254,7 @@ class TestDescribe:
         assert description.kind == AuthProviderKind.CLAVE_MOVIL
 
     def test_describe_invalid_identity(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="BAD")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="BAD")
         provider = ClaveMovilAuthProvider(settings)
         description = provider.describe()
         assert description.configured is True
@@ -296,7 +296,7 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
         )
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
@@ -339,7 +339,7 @@ class TestAuthenticateFresh:
         is armed, the wait banner (carrying the code the operator confirms in
         their app) is handed to it as the fresh login reaches the wait state."""
 
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(
             target_path=settings.aeat_sede_expedientes_path,
@@ -362,7 +362,7 @@ class TestAuthenticateFresh:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _InitialNavigationTimeoutBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
@@ -383,15 +383,15 @@ class TestAuthenticateFresh:
         (
             (
                 {
-                    "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
-                    "AEAT_CLAVE_MOVIL_DNI_FECHA": "2030-01-01",
+                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA": "2030-01-01",
                 },
                 (("#NIF", "12345678Z"), ("#FECHA", "2030-01-01")),
             ),
             (
                 {
-                    "AEAT_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
-                    "AEAT_CLAVE_MOVIL_NIE_SOPORTE": "E00000000",
+                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
+                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE": "E00000000",
                 },
                 (("#NIF", "Y0000000Z"), ("#SOPORTE", "E00000000")),
             ),
@@ -407,7 +407,7 @@ class TestAuthenticateFresh:
         settings = _settings_for(
             tmp_path,
             **env_overrides,
-            AEAT_CLAVE_PREFER_NON_QR="true",
+            CADRUMO_CLAVE_PREFER_NON_QR="true",
         )
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -430,18 +430,18 @@ class TestAuthenticateFresh:
         (
             pytest.param(
                 {
-                    "AEAT_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
-                    "AEAT_CLAVE_PREFER_NON_QR": "true",
+                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
+                    "CADRUMO_CLAVE_PREFER_NON_QR": "true",
                 },
-                r"AEAT_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE",
+                r"CADRUMO_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE",
                 id="nie-support",
             ),
             pytest.param(
                 {
-                    "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
-                    "AEAT_CLAVE_PREFER_NON_QR": "true",
+                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+                    "CADRUMO_CLAVE_PREFER_NON_QR": "true",
                 },
-                r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback",
+                r"CADRUMO_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback",
                 id="dni-fecha",
             ),
         ),
@@ -484,7 +484,7 @@ class TestPostAuthLanding:
     ) -> None:
         from .._authenticator import AeatSession
 
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
         target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
@@ -519,7 +519,7 @@ class TestPostAuthLanding:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
         target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
@@ -538,7 +538,7 @@ class TestPostAuthLanding:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
         landing_url = f"{external.aeat.domains.www6}{external.aeat.sede_paths.expedientes_resumen}"
@@ -556,7 +556,7 @@ class TestPostAuthLanding:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
 
@@ -588,7 +588,7 @@ class TestPostAuthLanding:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _RecordingPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
@@ -606,7 +606,7 @@ class TestPostAuthLanding:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _RepresentationAlertPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
@@ -629,7 +629,7 @@ class TestPostAuthLanding:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="TEST-IDENTITY")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="TEST-IDENTITY")
         provider = ClaveMovilAuthProvider(settings)
         page = _OwnNameInputOnlyRepresentationPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
@@ -649,7 +649,7 @@ class TestPendingPetitionRefusal:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
 
@@ -682,7 +682,7 @@ class TestPendingPetitionRefusal:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
@@ -700,7 +700,7 @@ class TestPendingPetitionRefusal:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _CancelableClavePage(target_path=settings.aeat_sede_expedientes_path)
 
@@ -720,7 +720,7 @@ class TestPendingPetitionRefusal:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _CancelableClavePage(target_path=settings.aeat_sede_expedientes_path, status=500)
 
@@ -744,7 +744,7 @@ class TestClaveWaitState:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
@@ -769,7 +769,7 @@ class TestClaveWaitState:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
@@ -795,7 +795,7 @@ class TestProbePersistedSession:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
@@ -811,7 +811,7 @@ class TestProbePersistedSession:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
         # Seed a session via a fresh login.
@@ -853,7 +853,7 @@ class TestProbePersistedSession:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         external = settings.external_constants()
         provider = ClaveMovilAuthProvider(settings)
         browser_session_login = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -892,7 +892,7 @@ class TestResume:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
+            CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
         )
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path

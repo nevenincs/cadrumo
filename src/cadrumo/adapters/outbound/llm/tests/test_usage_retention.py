@@ -17,11 +17,38 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage import secure_object_repository_for_active_bucket
+from .....core.classification import SensitivityClass
+from .....core.hashing import canonical_json_bytes
+from .....core.redaction import default_rules_for_class, redact_structured
 from .. import LLMProvider
+from .._errors import LLMCacheError
 from .._models import UsageRecord
-from .._usage import UsageRecorder
+from .._usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def _inject_legacy_usage_record(recorder: UsageRecorder, *, request_id: str, anchor: datetime) -> None:
+    """Persist a pre-change usage payload that lacks ``object_key_uuid``.
+
+    Reproduces a record written before the retention change so the read/prune
+    split can be exercised against a genuinely uuid-less payload.
+    """
+    record = _record(1, request_id=request_id, anchor=anchor)
+    redacted = redact_structured(
+        record.model_dump(mode="json"),
+        rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+    )
+    payload = {"logical_root": recorder._logical_root(), "record": redacted}
+    secure_object_repository_for_active_bucket().save(
+        namespace=_USAGE_NAMESPACE,
+        object_key=f"{recorder._logical_root()}|{record.created_at.isoformat()}|{request_id}|legacy",
+        classification=SensitivityClass.DIAGNOSTIC,
+        schema_version=_USAGE_VERSION,
+        written_at=record.created_at,
+        payload=canonical_json_bytes(payload),
+    )
 
 
 def _record(days_ago: int, *, request_id: str, anchor: datetime) -> UsageRecord:
@@ -89,3 +116,43 @@ def test_prune_defaults_to_central_settings(tmp_path: Path) -> None:
 
     assert removed == 1
     assert {item.request_id for item in recorder.load_records()} == {"fresh"}
+
+
+def test_client_construction_sweeps_the_usage_store(tmp_path: Path) -> None:
+    """Building an LLMClient fires the retention sweep over its usage recorder.
+
+    Records persist through ``record`` (which does not prune); constructing an
+    ``LLMClient`` around the recorder then prunes stale records via the
+    once-per-client retention sweep - proving retention fires in production
+    rather than relying on a manual prune() call.
+    """
+    from .._client import LLMClient
+
+    anchor = datetime.now(UTC)
+    recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
+    recorder.record(_record(1, request_id="fresh", anchor=anchor))
+    recorder.record(_record(400, request_id="stale", anchor=anchor))
+
+    LLMClient(usage_recorder=recorder)
+
+    assert {item.request_id for item in recorder.load_records()} == {"fresh"}
+
+
+def test_read_path_tolerates_record_missing_object_key_uuid(tmp_path: Path) -> None:
+    """A legacy record with no object_key_uuid stays readable (no brick on the read path)."""
+    anchor = datetime.now(UTC)
+    recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
+    _inject_legacy_usage_record(recorder, request_id="legacy", anchor=anchor)
+
+    # load_records does not reconstruct keys, so the uuid-less record loads fine.
+    assert {item.request_id for item in recorder.load_records()} == {"legacy"}
+
+
+def test_prune_hard_refuses_a_record_missing_object_key_uuid(tmp_path: Path) -> None:
+    """prune cannot reconstruct a uuid-less record's key, so it refuses loudly."""
+    anchor = datetime.now(UTC)
+    recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
+    _inject_legacy_usage_record(recorder, request_id="legacy", anchor=anchor)
+
+    with pytest.raises(LLMCacheError, match="object_key_uuid"):
+        recorder.prune(retention_days=30, max_records=1000)

@@ -8,23 +8,14 @@ import pytest
 
 from .....core.config import override_settings
 from .....domain.modelos import WorkUnitPersistenceError
-from ...storage import StorageValidationError, dispose_engine
+from .....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
+from ...storage import StorageValidationError
 from .._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _EXPLICIT_BUCKET_ID = "5bfb9265-6886-4067-8d27-138978e71d95"
 _ACTIVE_BUCKET_ID = "9cc2d040-7e90-4f88-8f83-8d6bf63c4e65"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path):
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
 
 
 def test_resolve_modelo_repository_bucket_id_accepts_explicit_bucket() -> None:

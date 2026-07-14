@@ -290,8 +290,8 @@ class TestAuthenticatorDescribeNarrowing:
         cert_path.write_bytes(b"x")
 
         settings = Settings(
-            aeat_certificate_path=cert_path,
-            aeat_certificate_password_secret=SecretStr("test"),
+            cadrumo_certificate_path=cert_path,
+            cadrumo_certificate_password_secret=SecretStr("test"),
         )
 
         class _UnexpectedError(Exception):
@@ -335,8 +335,8 @@ class TestAuthenticatorDescribeNarrowing:
         cert_path.write_bytes(b"x")
 
         settings = Settings(
-            aeat_certificate_path=cert_path,
-            aeat_certificate_password_secret=SecretStr("test"),
+            cadrumo_certificate_path=cert_path,
+            cadrumo_certificate_password_secret=SecretStr("test"),
         )
 
         def _raise_certificate_error(

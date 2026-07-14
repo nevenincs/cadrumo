@@ -37,7 +37,7 @@ def test_isolated_cli_backend_covers_every_state_root_derived_dir(
     authoring time.
 
     Most fields nest directly under the yielded storage root
-    (``isolated_cli_backend`` = ``tmp_path / "aeat-storage"``); the fixture's
+    (``isolated_cli_backend`` = ``tmp_path / "cadrumo-storage"``); the fixture's
     underlying :func:`isolated_profile_storage_root` deliberately keeps
     ``cadrumo_secret_store_dir`` as a *sibling* of the storage root
     (``tmp_path / "secrets"``) so the secret substrate and the bucket

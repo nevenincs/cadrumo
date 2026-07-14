@@ -685,7 +685,7 @@ async def _run_live_iva_evidence_pull_command[T](
     from ...core.config import load_settings
 
     resolved_timeout_ms = (
-        timeout_ms if timeout_ms is not None else load_settings().aeat_live_iva_cli_watchdog_timeout_ms
+        timeout_ms if timeout_ms is not None else load_settings().cadrumo_live_iva_cli_watchdog_timeout_ms
     )
     preexisting_profiles = _playwright_profile_tokens(_process_command_inventory())
     pre_timeout_auth_context = _live_iva_auth_watchdog_context(stage="before")
@@ -714,12 +714,12 @@ def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) 
 
     settings = load_settings()
     year_count = max(1, year_to - year_from + 1)
-    filed_history_budget_ms = settings.aeat_live_iva_surface_timeout_ms * year_count
-    wallet_budget_ms = settings.aeat_live_iva_surface_timeout_ms
-    auth_budget_ms = settings.aeat_clave_movil_timeout_ms
-    cleanup_budget_ms = settings.aeat_live_iva_cli_watchdog_timeout_ms
+    filed_history_budget_ms = settings.cadrumo_live_iva_surface_timeout_ms * year_count
+    wallet_budget_ms = settings.cadrumo_live_iva_surface_timeout_ms
+    auth_budget_ms = settings.cadrumo_clave_movil_timeout_ms
+    cleanup_budget_ms = settings.cadrumo_live_iva_cli_watchdog_timeout_ms
     return max(
-        settings.aeat_live_iva_cli_watchdog_timeout_ms,
+        settings.cadrumo_live_iva_cli_watchdog_timeout_ms,
         auth_budget_ms + filed_history_budget_ms + wallet_budget_ms + cleanup_budget_ms,
     )
 
@@ -867,10 +867,10 @@ def filed_list_cmd(
     across every registry-configured modelo. Omitted year bounds default to the
     current calendar year.
     """
-    from datetime import date as _date
+    from ...core.time import today_madrid
 
-    resolved_from = year_from if year_from is not None else _date.today().year
-    resolved_to = year_to if year_to is not None else _date.today().year
+    resolved_from = year_from if year_from is not None else today_madrid().year
+    resolved_to = year_to if year_to is not None else today_madrid().year
     _emit_live_auth_preflight()
     if modelo is None:
         bulk_report = asyncio.run(

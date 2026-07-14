@@ -179,7 +179,7 @@ def test_login_refuses_when_certificate_path_unset(
 
     assert exc_info.value.translated_message is not None
     message = tr(exc_info.value.translated_message)
-    assert "AEAT_CERTIFICATE_PATH" not in message
+    assert "CADRUMO_CERTIFICATE_PATH" not in message
     assert "CertificateBundle" not in message
     assert "configure" in message.lower() or "certificat" in message.lower()
 
@@ -290,7 +290,7 @@ def test_severity_for_clave_movil_pending_is_not_error(
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
-    with override_settings(aeat_clave_movil_dni_nie="12345678Z"):
+    with override_settings(cadrumo_clave_movil_dni_nie="12345678Z"):
         configure_operator_auth("clave_movil")
 
         status = inspect_operator_auth()
@@ -327,7 +327,7 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
         ),
     )
     with override_settings(
-        aeat_clave_movil_dni_nie="00000001R",
+        cadrumo_clave_movil_dni_nie="00000001R",
         cadrumo_output_language="ca",
     ):
         from .....core.i18n import clear_output_language_cache

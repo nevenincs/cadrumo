@@ -201,8 +201,8 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
 
     Returns a :class:`PersistedAuthSession`.
     """
-    if kind is None and settings.aeat_auth_provider is not None:
-        kind = AuthProviderKind(settings.aeat_auth_provider.value)
+    if kind is None and settings.cadrumo_auth_provider is not None:
+        kind = AuthProviderKind(settings.cadrumo_auth_provider.value)
     if kind is not None:
         paths = storage_state_paths(kind)
         if not _get_session_store().exists(paths.storage_state):
@@ -473,8 +473,8 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
 def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:
     if kind is not None:
         return kind
-    if settings.aeat_auth_provider is not None:
-        return AuthProviderKind(settings.aeat_auth_provider.value)
+    if settings.cadrumo_auth_provider is not None:
+        return AuthProviderKind(settings.cadrumo_auth_provider.value)
     return AuthProviderKind.CERTIFICATE
 
 
@@ -491,7 +491,7 @@ def _assert_active_profile_identity_matches_provider(
     """Fail closed before live auth can bind one taxpayer's session to another profile."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
-    provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)
+    provider_identity = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
     if not provider_identity:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.clave_identity_missing",

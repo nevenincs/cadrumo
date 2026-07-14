@@ -8,7 +8,7 @@ name: carried-observations-stamp-their-revision
 
 Every persisted calculation observation MUST stamp the registry revision its
 source filing resolved to (`stamped_revision_id` on the observation envelope,
-`src/aeat/application/calculations/_observations_repository.py`), and every
+`src/cadrumo/application/calculations/_observations_repository.py`), and every
 cross-period / cross-year carry read MUST re-confirm that stamp against
 `select_revision` for the source context before trusting the value — a divergent
 stamp blocks the carry, a missing (legacy) stamp surfaces a non-blocking

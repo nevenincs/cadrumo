@@ -103,7 +103,7 @@ log = get_logger(__name__)
 
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
-_CERT_PASSWORD_SECRET_ENV: Final[str] = "AEAT_CERTIFICATE_PASSWORD_SECRET"
+_CERT_PASSWORD_SECRET_ENV: Final[str] = "CADRUMO_CERTIFICATE_PASSWORD_SECRET"
 _PERSISTED_SESSION_LABEL: Final[str] = "<persisted-aeat-session>"
 
 
@@ -117,7 +117,7 @@ env-var change — the operator surface stays narrow.
 """
 
 
-AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
+AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = _Settings().cadrumo_browser_navigation_timeout_ms
 """Playwright navigation timeout for post-auth verification probes."""
 
 
@@ -589,7 +589,7 @@ class AeatAuthenticator:
         """
         from .....core.i18n import tr
 
-        if self._settings.aeat_certificate_path is None:
+        if self._settings.cadrumo_certificate_path is None:
             return AuthProviderDescription(
                 kind=self.kind,
                 label="AEAT certificate",
@@ -598,7 +598,7 @@ class AeatAuthenticator:
                 health_severity="info",
                 health_summary=tr("application.auth.certificate.health.path_unset"),
             )
-        if not self._settings.aeat_certificate_path.is_file():
+        if not self._settings.cadrumo_certificate_path.is_file():
             return AuthProviderDescription(
                 kind=self.kind,
                 label="AEAT certificate",
@@ -607,10 +607,10 @@ class AeatAuthenticator:
                 health_severity="warning",
                 health_summary=tr(
                     "application.auth.certificate.health.file_missing",
-                    path=str(self._settings.aeat_certificate_path),
+                    path=str(self._settings.cadrumo_certificate_path),
                 ),
             )
-        if self._settings.aeat_certificate_password_secret is None:
+        if self._settings.cadrumo_certificate_password_secret is None:
             return AuthProviderDescription(
                 kind=self.kind,
                 label="AEAT certificate",
@@ -624,14 +624,14 @@ class AeatAuthenticator:
         # gone, so the secret never enters os.environ.
         _deferred_error: AuthValidationError | None = None
         try:
-            backend = self._settings.aeat_certificate_backend
+            backend = self._settings.cadrumo_certificate_backend
             health = self._certificate_health_check(
-                self._settings.aeat_certificate_path,
-                password=self._settings.aeat_certificate_password_secret,
+                self._settings.cadrumo_certificate_path,
+                password=self._settings.cadrumo_certificate_password_secret,
                 warn_days=self._settings.cadrumo_cert_warn_days,
                 critical_days=self._settings.cadrumo_cert_critical_days,
                 backend=backend,
-                friendly_name=self._settings.aeat_certificate_friendly_name,
+                friendly_name=self._settings.cadrumo_certificate_friendly_name,
             )
             identity_nif: str | None = None
             try:
@@ -643,8 +643,8 @@ class AeatAuthenticator:
                         not_after=health.not_after,
                         serial_number=health.serial_number,
                         sha256_thumbprint="",
-                        source_path=self._settings.aeat_certificate_path,
-                        friendly_name=self._settings.aeat_certificate_friendly_name,
+                        source_path=self._settings.cadrumo_certificate_path,
+                        friendly_name=self._settings.cadrumo_certificate_friendly_name,
                         backend=backend,
                     ),
                 )
@@ -1123,12 +1123,12 @@ class AeatAuthenticator:
         relevant operational auth/profile/read-only gates before calling
         the authenticator.
         """
-        path = self._settings.aeat_certificate_path
+        path = self._settings.cadrumo_certificate_path
         if path is None:
             raise CertificateLoadError(
                 translated_message="application.auth.certificate.load.path_unset",
             )
-        password = self._settings.aeat_certificate_password_secret
+        password = self._settings.cadrumo_certificate_password_secret
         if password is None:
             raise CertificateLoadError(
                 translated_message="application.auth.certificate.load.password_unset",
@@ -1136,8 +1136,8 @@ class AeatAuthenticator:
         return CertificateBundle(
             path=path,
             password=password,
-            friendly_name=self._settings.aeat_certificate_friendly_name,
-            backend=self._settings.aeat_certificate_backend,
+            friendly_name=self._settings.cadrumo_certificate_friendly_name,
+            backend=self._settings.cadrumo_certificate_backend,
         )
 
     async def _resolve_browser_session(self) -> BrowserSessionLike:

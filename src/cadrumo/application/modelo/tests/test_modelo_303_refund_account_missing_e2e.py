@@ -201,8 +201,8 @@ def _calculate_verified_negative_period() -> str:
         filing_repository=filing_repo,
         bucket_event_repository=event_repo,
         settings=Settings(
-            aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-            aeat_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         ),
         clock=verified_at,
     )

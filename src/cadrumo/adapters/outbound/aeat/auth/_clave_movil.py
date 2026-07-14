@@ -103,10 +103,10 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
+_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().cadrumo_browser_navigation_timeout_ms
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
-_CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "AEAT_CLAVE_MOVIL_DNI_NIE"
+_CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
 
 
 class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
@@ -153,7 +153,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         Attempts to resume a cached session first. Falls back to the
         human-in-the-loop QR-scan flow (or the non-QR DNI/NIE +
         contraste fallback, when
-        ``AEAT_CLAVE_PREFER_NON_QR=true``). Fresh success writes
+        ``CADRUMO_CLAVE_PREFER_NON_QR=true``). Fresh success writes
         :class:`ClaveMovilSessionMetadata` and returns a session whose
         provider detail is :class:`ClaveMovilSessionDetail`.
         """
@@ -419,7 +419,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         delegated to :func:`classify_identity`, which raises
         :class:`ClaveMovilConfigurationError` for unsupported DNI/NIE shapes.
         """
-        dni_nie = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie).strip()
+        dni_nie = unwrap_optional_secret(self._settings.cadrumo_clave_movil_dni_nie).strip()
         if not dni_nie:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -464,7 +464,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     # ── Identity + target helpers ───────────────────────────────────────────
 
     def _require_identity(self) -> str:
-        raw = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie)
+        raw = unwrap_optional_secret(self._settings.cadrumo_clave_movil_dni_nie)
         if not raw:
             raise ClaveMovilConfigurationError(
                 f"{_CLAVE_MOVIL_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
@@ -542,35 +542,38 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
 
     @override
     def _attempt_context(self) -> dict[str, object]:
-        identity = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie).strip()
+        identity = unwrap_optional_secret(self._settings.cadrumo_clave_movil_dni_nie).strip()
         try:
             identity_kind = _classify_identity(identity)
         except ClaveMovilConfigurationError:
             identity_kind = "invalid_or_missing"
-        auth_mode = "non_qr" if self._settings.aeat_clave_prefer_non_qr else "qr"
+        auth_mode = "non_qr" if self._settings.cadrumo_clave_prefer_non_qr else "qr"
         auth_route = (
-            "clave_movil_non_qr_request" if self._settings.aeat_clave_prefer_non_qr else "clave_movil_qr_request"
+            "clave_movil_non_qr_request" if self._settings.cadrumo_clave_prefer_non_qr else "clave_movil_qr_request"
         )
+        certificate_path = self._settings.cadrumo_certificate_path
         context: dict[str, object] = {
             "auth_mode": auth_mode,
             "auth_route": auth_route,
             "identity_kind": identity_kind,
             "clave_identity_configured": bool(identity),
             "clave_identity_fingerprint": _diagnostic_fingerprint(identity),
-            "dni_fecha_configured": bool((self._settings.aeat_clave_movil_dni_fecha or "").strip()),
-            "dni_fecha_fingerprint": _diagnostic_fingerprint(self._settings.aeat_clave_movil_dni_fecha),
-            "nie_soporte_configured": bool(unwrap_optional_secret(self._settings.aeat_clave_movil_nie_soporte).strip()),
-            "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.aeat_clave_movil_nie_soporte),
-            "prefer_non_qr": self._settings.aeat_clave_prefer_non_qr,
-            "headless": self._settings.aeat_browser_headless,
-            "timeout_ms": self._settings.aeat_clave_movil_timeout_ms,
-            "certificate_path_configured": self._settings.aeat_certificate_path is not None,
-            "certificate_password_configured": self._settings.aeat_certificate_password_secret is not None,
-            "certificate_backend": self._settings.aeat_certificate_backend.value,
-            "certificate_file_present": bool(
-                self._settings.aeat_certificate_path is not None and self._settings.aeat_certificate_path.is_file(),
+            "dni_fecha_configured": bool((self._settings.cadrumo_clave_movil_dni_fecha or "").strip()),
+            "dni_fecha_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_dni_fecha),
+            "nie_soporte_configured": bool(
+                unwrap_optional_secret(self._settings.cadrumo_clave_movil_nie_soporte).strip(),
             ),
-            "certificate_path_fingerprint": _diagnostic_fingerprint(self._settings.aeat_certificate_path),
+            "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_nie_soporte),
+            "prefer_non_qr": self._settings.cadrumo_clave_prefer_non_qr,
+            "headless": self._settings.cadrumo_browser_headless,
+            "timeout_ms": self._settings.cadrumo_clave_movil_timeout_ms,
+            "certificate_path_configured": certificate_path is not None,
+            "certificate_password_configured": self._settings.cadrumo_certificate_password_secret is not None,
+            "certificate_backend": self._settings.cadrumo_certificate_backend.value,
+            "certificate_file_present": bool(
+                certificate_path is not None and certificate_path.is_file(),
+            ),
+            "certificate_path_fingerprint": _diagnostic_fingerprint(certificate_path),
         }
         context.update(self._active_profile_diagnostic_context(identity))
         return context
@@ -685,13 +688,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         try:
             await asyncio.wait_for(
                 context.close(),
-                timeout=self._settings.aeat_browser_close_timeout_ms / 1000,
+                timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
             )
         except TimeoutError:
             log.warning(
                 "ClaveMovilAuthProvider: context.close in %s exceeded %d ms",
                 reason,
-                self._settings.aeat_browser_close_timeout_ms,
+                self._settings.cadrumo_browser_close_timeout_ms,
             )
         except Exception as _exc:
             log.debug(
@@ -712,12 +715,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             if asyncio.iscoroutine(result):
                 await asyncio.wait_for(
                     result,
-                    timeout=self._settings.aeat_browser_close_timeout_ms / 1000,
+                    timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
                 )
         except TimeoutError:
             log.warning(
                 "ClaveMovilAuthProvider: browser session close exceeded %d ms",
-                self._settings.aeat_browser_close_timeout_ms,
+                self._settings.cadrumo_browser_close_timeout_ms,
             )
         except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
             log.warning("ClaveMovilAuthProvider: browser session close failed", exc_info=True)
@@ -787,7 +790,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             identity_nif=dni_nie,
             provider_detail=ClaveMovilSessionDetail(
                 dni_nie=dni_nie,
-                used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
+                used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
                 verification_code=verification_code,
                 landing_url=landing_url,
             ),
@@ -831,11 +834,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     },
                     suggestion=(
                         "Retry the live read after confirming the AEAT Sede is reachable, or increase "
-                        "AEAT_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
+                        "CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
                     ),
                 ) from exc
 
-            use_non_qr = self._settings.aeat_clave_prefer_non_qr
+            use_non_qr = self._settings.cadrumo_clave_prefer_non_qr
             verification_code: str | None = None
             log.info(
                 "ClaveMovilAuthProvider: starting fresh login mode=%s route=%s identity_kind=%s "
@@ -861,7 +864,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 used_non_qr_fallback=use_non_qr,
             )
 
-            timeout_ms = int(self._settings.aeat_clave_movil_timeout_ms)
+            timeout_ms = int(self._settings.cadrumo_clave_movil_timeout_ms)
             _render_progress_banner(
                 verification_code=verification_code,
                 timeout_seconds=timeout_ms // 1000,
@@ -933,7 +936,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 authenticated_at=authenticated_at,
                 idle_deadline=idle_deadline,
                 storage_state_sha256=_session_store.storage_state_sha256(storage_state),
-                used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
+                used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
                 verification_code=verification_code,
                 landing_url=landing_url,
             )
@@ -970,7 +973,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         self._active_session = session
         log.info(
             "ClaveMovilAuthProvider: authenticated non_qr=%s landing=%s",
-            self._settings.aeat_clave_prefer_non_qr,
+            self._settings.cadrumo_clave_prefer_non_qr,
             landing_url,
         )
         return session

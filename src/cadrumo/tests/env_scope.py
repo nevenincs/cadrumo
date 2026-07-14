@@ -94,8 +94,8 @@ def settings_without_env_file(**overrides: Any) -> Settings:
 
 def ready_clave_settings(tax_id: str) -> Settings:
     return settings_without_env_file(
-        aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-        aeat_clave_movil_dni_nie=SecretStr(tax_id),
+        cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+        cadrumo_clave_movil_dni_nie=SecretStr(tax_id),
     )
 
 
@@ -121,14 +121,14 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
 
     Arguments:
         **overrides: Env vars to set within the with-block, by name
-            (e.g. ``AEAT_AUTH_PROVIDER="clave_movil"``). Pass an empty
+            (e.g. ``CADRUMO_AUTH_PROVIDER="clave_movil"``). Pass an empty
             string to test the "explicitly set to blank" path; pass no
             key for that var to test the "unset" path.
 
     Examples:
-        >>> with isolated_aeat_env(AEAT_AUTH_PROVIDER="clave_movil"):
+        >>> with isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
         ...     settings = Settings()
-        ...     assert settings.aeat_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
+        ...     assert settings.cadrumo_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
     """
     saved: dict[str, str | None] = {}
     for name in Settings.env_var_names():

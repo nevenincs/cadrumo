@@ -117,9 +117,9 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     # The cache persists entries as encrypted secure objects (see LLMCache),
     # never a plaintext JSON file under its logical partition. The only JSON
     # under the shared tmp root is the active bucket's encrypted-DEK keystore
-    # (aeat-storage/keystore/.../bucket.dek.json) — storage infrastructure, not
+    # (cadrumo-storage/keystore/.../bucket.dek.json) — storage infrastructure, not
     # a cache entry — so exclude that subtree from the no-plaintext assertion.
-    cache_entries = [p for p in tmp_path.rglob("*.json") if "aeat-storage" not in p.parts]
+    cache_entries = [p for p in tmp_path.rglob("*.json") if "cadrumo-storage" not in p.parts]
     assert not cache_entries, f"cache must not materialise plaintext entries: {cache_entries}"
 
 

@@ -56,12 +56,12 @@ def _isolated_secure_session_backend(tmp_path: Path):
 
 def _settings_for(tmp_path: Path, **env: str) -> Settings:
     env_overrides = {key.lower(): value for key, value in env.items()}
-    unexpected = set(env_overrides) - {"aeat_clave_movil_dni_nie"}
+    unexpected = set(env_overrides) - {"cadrumo_clave_movil_dni_nie"}
     assert unexpected == set()
     return Settings(
         cadrumo_token_dir=tmp_path,
         cadrumo_local_storage_root=tmp_path / "storage",
-        aeat_clave_movil_dni_nie=_secret_or_none(env_overrides.get("aeat_clave_movil_dni_nie")),
+        cadrumo_clave_movil_dni_nie=_secret_or_none(env_overrides.get("cadrumo_clave_movil_dni_nie")),
     )
 
 
@@ -131,7 +131,7 @@ def test_load_persisted_no_session_carries_translated_message(
 ) -> None:
     """_load_persisted raises AeatLoginAssertionError with no_persisted_session key
     when _session_store.load returns None (no file on disk)."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     storage_state_path = tmp_path / "nonexistent-storage.json"
 
@@ -152,7 +152,7 @@ def test_probe_persisted_session_carries_no_persisted_session_translated_message
 ) -> None:
     """probe_persisted_session raises AeatLoginAssertionError with translated_message
     set to no_persisted_session when no session file exists."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     browser_session = _MinimalBrowserSession()
 
@@ -177,7 +177,7 @@ def test_probe_persisted_session_expired_carries_translated_message(
     when the persisted metadata's idle_deadline is in the past."""
     from .. import _session_store
 
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     # Use the canonical storage path so _storage_state_path() locates the record.
     storage_state_path = provider._storage_state_path()
@@ -221,7 +221,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
     when the persisted sha256 does not match the metadata sha256."""
     from .. import _session_store
 
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     # Use the canonical storage path so _storage_state_path() locates the record.
     storage_state_path = provider._storage_state_path()
@@ -267,7 +267,7 @@ def test_click_clave_movil_button_missing_click_carries_translated_message(
 ) -> None:
     """_click_clave_movil_button raises AeatLoginAssertionError with page_missing_click
     key when the page stand-in has no click attribute."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
     provider = ClaveMovilAuthProvider(settings)
     page = _MinimalPage()  # no click() method
 

@@ -31,7 +31,7 @@ Ensuring user-facing docs are simple, technically accurate, and logically cross-
 - **Cross-linking:** Involve the user gradually in complex topics by cross-referencing to how-to guides and CLI references.
 
 ### 3. Verification & Compliance Gates
-- **Command Conformance:** Verify all documented commands against the live Click/Typer tree using `pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`.
+- **Command Conformance:** Verify all documented commands against the live Click/Typer tree using `pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`.
 - **Sphinx Build:** Verify all cross-references and formatting using the nitpicky build gate `pytest dev/docs/tests/test_docs_build.py`.
 - **No Self-Praise:** Keep descriptions objective, factual, and free of self-congratulatory or boastful phrasing.
 - **Wiki-links:** Chat responses must use absolute `file://` scheme links with forward slashes for code and files; user-facing docs use relative markdown links.

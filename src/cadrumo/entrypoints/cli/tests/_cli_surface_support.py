@@ -17,12 +17,12 @@ def isolated_cli_surface_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
-            aeat_auth_provider=None,
-            aeat_certificate_path=None,
-            aeat_certificate_password_secret=None,
-            aeat_clave_movil_dni_nie=None,
-            aeat_clave_movil_dni_fecha=None,
-            aeat_clave_movil_nie_soporte=None,
+            cadrumo_auth_provider=None,
+            cadrumo_certificate_path=None,
+            cadrumo_certificate_password_secret=None,
+            cadrumo_clave_movil_dni_nie=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_movil_nie_soporte=None,
         ),
     ):
         yield

@@ -89,6 +89,7 @@ from ..core import BindingSourceKind, Period, resolve_active_bucket_id
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
+from ..core.time import today_madrid
 from ..domain.calculations.registry import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..domain.deadlines import (
     DeadlineEngine,
@@ -420,10 +421,10 @@ def _build_auth_readiness(
                 if (
                     provider == AuthProviderKind.CERTIFICATE.value
                     and auth.certificate_path
-                    and backend_settings.aeat_certificate_path is None
+                    and backend_settings.cadrumo_certificate_path is None
                 ):
                     backend_settings = backend_settings.model_copy(
-                        update={"aeat_certificate_path": Path(auth.certificate_path)},
+                        update={"cadrumo_certificate_path": Path(auth.certificate_path)},
                     )
                 backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
                 description = backend.describe()
@@ -1102,7 +1103,7 @@ def build_operator_state_projection(
         it mutates no store.
     """
     _ensure_profile_key_registry_registered()
-    reference_today = today or date.today()
+    reference_today = today or today_madrid()
     active_bucket_id = resolve_active_bucket_id()
     has_active_profile = active_bucket_id is not None
 
