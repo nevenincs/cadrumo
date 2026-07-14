@@ -14,7 +14,7 @@ AEAT channel yourself.
 The tool needs a master-key passphrase and prompts for it.
 
 **Requirement:** a valid taxpayer profile. Create one with
-`aeat config profile create <name>` before you start — [Set up your
+`aeat config profile create <name>` before you start. [Set up your
 profile](profile-setup.md) walks through it step by step.
 
 ## The complete first-quarter chain
@@ -63,12 +63,12 @@ Load-bearing details:
   `aeat app ledger categories`. The example uses `material_oficina`.
 - Calculation charges 210.00 of IVA on the sale (`IVA repercutido`) and deducts
   105.00 on the purchase (`IVA soportado`), so casilla 71 (Resultado final) is
-  105.00 — the IVA due for the quarter. The deductible IVA counts at calculate
+  105.00, the IVA due for the quarter. The deductible IVA counts at calculate
   time; the attached invoice evidence is what lets the row be *filed*, not what
   changes the figure.
 - Attach the purchase invoice as evidence *before* you verify. Verification
   finalizes the revision and captures a snapshot over the contributing rows, so
-  the evidence must already be on the expense row — a locked row cannot take a
+  the evidence must already be on the expense row. A locked row cannot take a
   late attachment.
 - `verify` reports `completeness complete` and `granted true`. `work file` then
   writes the local filed marker, and `export` writes the `.boe` and reports its
@@ -140,10 +140,8 @@ reverse-charge. Rows that are unclassified or missing required IVA fields can
 block calculation or produce missing binding guidance.
 
 When you add a row by hand, pass the GROSS amount on `--amount` and the IVA
-detail explicitly with `aeat app ledger add --date 2026-02-10 --amount 1210
---direction INCOMING --description "venta" --classification BUSINESS
---taxable-base 1000 --iva-rate 0.21 --iva-amount 210` (the complete-chain
-sequence above runs this from the seed ledger).
+detail explicitly with `aeat app ledger add`. The complete-chain sequence above
+runs this from the seed ledger.
 
 `--amount` is `--taxable-base` plus `--iva-amount`, and the tool refuses the row
 if they do not match to the cent. A deductible-expense row also needs a
@@ -153,18 +151,15 @@ if they do not match to the cent. A deductible-expense row also needs a
 
 Create or reuse the saved workspace for the active profile, modelo, filing year,
 period, and registry revision. This needs an active profile; create one first
-if you have none with `aeat config profile create me --quiet --tax-id 12345678Z
---name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
---activity-start-date 2026-01-01`, then open the work unit with `aeat app modelo
-work create --modelo 303 --year 2026 --period 1T` (both run in the
-complete-chain sequence above).
+if you have none with `aeat config profile create`, then open the work unit with
+`aeat app modelo work create`. Both run in the complete-chain sequence above.
 
 The command is idempotent for the same visible target. If a work unit already
 exists for the active profile, Modelo 303, year, period, and resolved registry
 revision, Cadrumo returns it instead of creating a duplicate.
 
 Use the same visible target on the later commands, for example `aeat app modelo
-work status --modelo 303 --year 2026 --period 1T`.
+work status`.
 
 For routine work, the visible target (`--modelo`, `--year`, `--period`) is all
 you need. Reference-number workflows are covered in
@@ -209,9 +204,8 @@ Cadrumo does not silently choose a quarter from today's date. The work unit's
 
 ## Calculate the draft
 
-Run calculation for the same target with `aeat app modelo work calculate
---modelo 303 --year 2026 --period 1T` (the complete-chain sequence above runs
-this).
+Run calculation for the same target with `aeat app modelo work calculate`. The
+complete-chain sequence above runs this.
 
 Calculation resolves the registry revision for that work unit, reads the active
 profile's ledger for the target period, resolves profile and
@@ -245,28 +239,28 @@ example, inspect the IVA compensation wallet before relying on a prior
 compensation amount:
 
 ```{cli-sequence} modelo-303-wallet
-:verify: Confirm the IVA compensation wallet balance reads back.
+:verify: Confirm the IVA compensation wallet seeds and reads back its balance.
+@step Seed the opening balance for a true first Modelo 303 period.
+aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 @step Show the IVA compensation wallet balance for the year.
 @result aeat --format json app modelo iva-wallet balance --as-of-year 2026
 @expect exit_code == 0
 ```
 
-Seed the opening balance for a true first Modelo 303 period with no previous
-pending compensation with `aeat app modelo iva-wallet seed --filing-year 2024
---period 4T --amount 0 --confirm`. Use `--amount 0` only for a true first Modelo
-303 period with no previous
+Use `--amount 0` only for a true first Modelo 303 period with no previous
 pending IVA compensation.
 
 ## Review the calculated values
 
-List saved revisions with `aeat app modelo work revisions --modelo 303 --year
-2026 --period 1T`, then show the current revision's persisted values:
+List the saved revisions, then show the current revision's persisted values:
 
 ```{cli-sequence} modelo-303-revision
 :seed: autonomo-irpf-2026
-:verify: Confirm the current revision's persisted values read back.
+:verify: Confirm the saved revisions and the current revision's values read back.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step List the saved calculation revisions for the filing.
+aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
 @step Show the current revision's persisted casilla values and provenance.
 @result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
 @expect exit_code == 0
@@ -284,9 +278,8 @@ manual inputs, bindings, offsets, and revision selection, see
 
 ## Verify and export
 
-Verify the selected calculation with `aeat app modelo work verify --modelo 303
---year 2026 --period 1T` (the complete-chain sequence above runs verify, file,
-and export end to end).
+Verify the selected calculation with `aeat app modelo work verify`. The
+complete-chain sequence above runs verify, file, and export end to end.
 
 Verification checks the selected draft against the verified-complete contract.
 The report exposes the calculation revision id, completeness status, whether
@@ -299,8 +292,7 @@ revision. That evidence lets later staleness checks detect whether a
 contributing ledger row changed or disappeared. It is not a general lock on the
 whole ledger, and it does not freeze unrelated rows.
 
-Export the verified or filed revision with `aeat app modelo export --modelo 303
---year 2026 --period 1T --output ./modelo-303.boe`.
+Export the verified or filed revision with `aeat app modelo export`.
 
 Export writes a local AEAT-compatible fichero-BOE file and reports the output
 path, size, checksum, and IDs. It does not contact AEAT. For ledger-derived
@@ -308,9 +300,8 @@ revisions, export expects bundled evidence or a resolvable snapshot reference;
 do not treat export as a way to bypass missing evidence.
 
 If you need to mark the verified revision as filed in local history after you
-submit through AEAT, record the local marker with `aeat app modelo work file
---modelo 303 --year 2026 --period 1T`. `work file` is an internal local marker,
-not an AEAT submission.
+submit through AEAT, record the local marker with `aeat app modelo work file`.
+`work file` is an internal local marker, not an AEAT submission.
 
 ## Periods, carry-forward, and special cases
 
