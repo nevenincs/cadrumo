@@ -133,7 +133,7 @@ Preview with `--dry-run` first; it reports what would upload per storage
 area without changing anything. Narrow a large push with `--namespace` or
 `--limit`.
 
-Only ciphertext is uploaded — your records leave the machine exactly as they
+Only ciphertext is uploaded. Your records leave the machine exactly as they
 sit encrypted on disk, and the master key never leaves your computer, so the
 Drive copy is unreadable without it. The mirror is one-way: Cadrumo writes the
 copy and never reads Drive back as a source of truth for your records.
