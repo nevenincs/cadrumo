@@ -1,0 +1,50 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "lock"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "locked_profile\t<profile-id>\nLogout cleared the active-profile pointer. Subsequent verbs in this terminal will refuse with NoActiveBucketSessionError until you run aeat config switch NAME or open a new terminal and re-select.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "No profile configured. Run `aeat config profile create NAME` to get started.\nnext_action\taeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "protect-data-access-lock"
+}
