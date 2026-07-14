@@ -54,6 +54,8 @@ aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
 @step Aggregate the quarter's intra-community invoices into the declaration.
 aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values["decl.numero-operadores"] == "2"
+@expect result.casilla_values["decl.importe-operaciones"] == "8000"
 @step Verify the draft before you export it.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
