@@ -387,6 +387,43 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain a real filed 2026+ PDF, then consider reviewed profile
   data and corpus coverage through the generic parser only.
 
+### modelo-308-outbound-2019-open | low | Exact machine-file authority remains mandate-gated
+
+- **Candidate:** Modelo 308 outbound generation from 2019, open end.
+- **Mandate:** `unproven`.
+- **Exact authority window:** `aeat-dr-308-2019` covers 2019+ record design.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic exporter/parser is delivered and fail-closed.
+- **Real evidence or specimen:** official design available; export layout and
+  golden outbound payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted outbound mandate before layout work.
+
+### modelo-308-outbound-2009-2018 | low | Form authority is not machine-file authority
+
+- **Candidate:** Modelo 308 outbound generation from 2009 through 2018.
+- **Mandate:** `unproven`.
+- **Exact authority window:** `missing`; the 2008 BOE form grounds obligation,
+  not a pre-2019 machine-file layout.
+- **Canonical implementation state:** `gap` for optional layout data; no new
+  renderer or parser is permitted.
+- **Real evidence or specimen:** exact-window design and golden payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** establish mandate and exact earlier machine-file authority;
+  do not extrapolate the 2019 layout.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
