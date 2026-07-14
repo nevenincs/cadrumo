@@ -38,8 +38,11 @@ The import reads the statement and stores each movement as a ledger row. The
 listing confirms the two rows landed in the first quarter of 2026. Point
 `--provider` at the format your bank exports; list the accepted providers with:
 
-```bash
-aeat app ledger import --help
+```{cli-sequence} import-provider-list
+:verify: Confirm the import command lists its accepted providers.
+@step Show the import command's help, including the accepted providers.
+@result aeat app ledger import --help
+@expect exit_code == 0
 ```
 
 ## Classify each transaction
@@ -49,17 +52,17 @@ tax calculation should treat it. Classify each row before you calculate.
 
 Mark the collected payment as business income and the purchase as a deductible
 business expense with a category. Take each transaction id from the listing
-above. For income:
-
-```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS
-```
+above. For income, run `aeat app ledger classify <transaction-id>
+--classification BUSINESS`.
 
 For an expense, add `--category-id <category-id>` plus the taxable base and
 IVA fields. List the accepted categories any time:
 
-```bash
-aeat app ledger categories
+```{cli-sequence} ledger-category-list
+:verify: Confirm the accepted expense categories read back.
+@step List the accepted expense categories.
+@result aeat --format json app ledger categories
+@expect exit_code == 0
 ```
 
 For the full classification workflow — bulk classification, mixed-use shares,
@@ -108,18 +111,14 @@ Read the frames in order:
 ## Check the figures and export
 
 The verification result is the signal that the draft is ready. When
-`granted_verificado_completo` reads true, export the file:
+`granted_verificado_completo` reads true, export the file with `aeat app modelo
+export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe`. Export
+refuses until every deductible-expense row carries linked purchase-invoice
+evidence — the full evidence-to-export chain runs end to end on
+[Prepare a Modelo 303 IVA filing](modelo-303.md).
 
-```bash
-aeat app modelo export --modelo 130 --year 2026 --period 1T \
-  --output ./modelo-130.boe
-```
-
-Upload it at the AEAT portal yourself, then record the local marker:
-
-```bash
-aeat app modelo work file --modelo 130 --year 2026 --period 1T
-```
+Upload it at the AEAT portal yourself, then record the local marker with `aeat
+app modelo work file --modelo 130 --year 2026 --period 1T`.
 
 A later quarter builds on this one: leave the three prior-period bindings unset
 so they resolve from your filed history. See
