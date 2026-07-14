@@ -142,7 +142,7 @@ Fix the companion-wheel build errors and make the loader-cache and import-hygien
 
 Full-suite verification runs to a genuinely green state with zero skips and no new baselines or allowlist mutes.
 
-- [ ] `P06.S11` - Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence; `full-tree gates`.
+- [x] `P06.S11` - Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence; `full-tree gates`.
 
 ## Description
 
