@@ -182,55 +182,42 @@ workflow; keep the census facts in your profile correct first - see
 For bulk review, `classify --from-csv` reads a CSV with columns
 `transaction_id`, `classification`, and optional classification facts such as
 `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and IVA columns,
-`iva_category`, and `irpf_category`:
+`iva_category`, and `irpf_category`. Prepare a narrow CSV holding only the rows
+you mean to change, one row per transaction:
 
-```bash
-aeat app ledger classify --from-csv ./classifications.csv
+```text
+transaction_id,classification,category_id,business_pct,usage_ratio_id
+<business-expense-id>,BUSINESS,<category-id>,,
+<mixed-expense-id>,MIXED,<category-id>,0.5,<category-id>
+<private-row-id>,PERSONAL,,,
 ```
 
-The CSV path is the implemented batch-editing workflow for classifications.
-Use it when filtered review shows many rows that can be classified safely from
-their descriptions, counterparties, and source documents.
+The sequence below imports the quarter, lists the rows still needing a decision,
+exports a review snapshot to work from, applies a prepared CSV, and confirms the
+result:
 
-Recommended workflow:
+```{cli-sequence} classify-from-csv
+:verify: Confirm the CSV batch classified the quarter's rows.
+@step Import the quarter's movements so there are rows to classify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Select the rows still needing a decision.
+aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
+@step Export the period as a review snapshot to work from.
+aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
+@step Apply the prepared classification CSV to the quarter's rows.
+aeat app ledger classify --from-csv fixtures/classifications-2026-1t.csv
+@step Confirm the expense row is now classified as business.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.business_classification == "BUSINESS"
+@expect result.transaction.category_id == "material_oficina"
+```
 
-1. Select rows with `ledger list`:
-
-   ```bash
-   aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
-   ```
-
-2. Export the period as a review snapshot:
-
-   ```bash
-   aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
-   ```
-
-3. Prepare a narrow CSV containing only the rows you mean to change:
-
-   ```text
-   transaction_id,classification,category_id,business_pct,usage_ratio_id
-   <business-expense-id>,BUSINESS,<category-id>,,
-   <mixed-expense-id>,MIXED,<category-id>,0.5,<category-id>
-   <private-row-id>,PERSONAL,,,
-   ```
-
-4. Apply and review:
-
-   ```bash
-   aeat app ledger classify --from-csv ./classifications.csv
-   aeat app ledger list --filter period=1T --filter year=2026
-   aeat app ledger preflight --year 2026 --period 1T
-   ```
-
-Keep a copy of the file. It gives you a record of how you classified that
-period if you are later asked to justify your return. This path does not batch-update amounts,
+Use the CSV path when filtered review shows many rows you can classify safely
+from their descriptions, counterparties, and source documents. Keep a copy of
+the file. It gives you a record of how you classified that period if you are
+later asked to justify your return. This path does not batch-update amounts,
 descriptions, IVA values, notes, attachments, or split/merge state; use the
 transaction workflow for those row-level edits.
-
-The commands in this section use example ids and a CSV you supply, so they are
-shown as plain commands rather than executed sequences. Fill in your own
-transaction ids and category ids before running them.
 
 ## Apply stored rules automatically
 
