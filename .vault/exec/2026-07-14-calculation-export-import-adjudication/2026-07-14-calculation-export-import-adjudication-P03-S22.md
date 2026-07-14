@@ -77,6 +77,10 @@ related:
 
 ## Notes
 
+- A concurrent coordinator committed this record together with P02.S09 and
+  closed both plan rows before independent review completed. The rows were
+  reopened through the canonical CLI; this record is reclosed only after the
+  reviewer accepted its substantive outcome.
 - Intent-first Vaultspec RAG located the shared parser and exact profile
   selection boundary and the accepted 2026-05-04 live filed-declaration
   data-capture ADR that supplies the fallback mandate.
@@ -90,6 +94,9 @@ related:
   are real Modelo 360 behavioral coverage of registry, schedule, read-only,
   parity, persistence, and two-year fidelity behavior, but they do not evidence
   PDF extraction.
+- A bounded run of those two suites timed out after `64.1s` before pytest
+  emitted a summary. The run is inconclusive, not a test failure or a passing
+  result; no test or runtime source was changed in response.
 - This Step writes only the adjudication record. It changes no production
   source, tests, registry data, shared Reference or audit, plan state, staging,
   or commits, and it leaves unrelated inherited worktree changes untouched.

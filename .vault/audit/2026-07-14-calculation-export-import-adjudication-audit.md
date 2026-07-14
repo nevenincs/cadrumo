@@ -500,6 +500,26 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** `none`; do not seek authority or create work absent a future
   accepted mandate.
 
+### modelo-360-declaration-pdf-2010-open | low | Aligned authority still lacks a filed specimen
+
+- **Candidate:** Modelo 360 declaration-PDF extraction from `2010-04-01`, open
+  end; no earlier registry or authority window exists.
+- **Mandate:** `proven`; accepted live-filing capture requires PDF fallback.
+- **Exact authority window:** `aeat-dr-360-2010` aligns with the revision from
+  `2010-04-01` but is record-design authority, not a filed specimen.
+- **Canonical implementation state:** `gap`; no extraction profile exists and
+  the generic parser remains the only permitted engine.
+- **Real evidence or specimen:** a sanitized filed Modelo 360 PDF is missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = true`,
+  `exact_authority_met = true`, `canonical_gap_met = true`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `evidence-gated`.
+- **Next action:** obtain a real filed 2010+ PDF, then consider reviewed profile
+  data and real corpus coverage through the generic parser only.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
