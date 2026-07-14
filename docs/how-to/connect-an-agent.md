@@ -42,45 +42,36 @@ surface to one role (leave blank for the full surface), and a **tool surface**
 choice between the default orientation core and advertising every verb up
 front.
 
-## Connect classic Claude Desktop with the extension bundle
+## Connect Claude Desktop with the extension bundle
 
-Claude Desktop also loads Cadrumo as a Desktop Extension bundle (`.mcpb`). The
-bundle points at the `cadrumo-mcp` command on your machine, so this path needs
-the `agent` extra installed first.
+Claude Desktop also loads Cadrumo as a Desktop Extension bundle (`.mcpb`).
+Download `cadrumo.mcpb` from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and open
+it with Claude Desktop.
 
-Install the `agent` extra of the same `cadrumo` package. Download the package
-from the
-[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and
-install it with the extra named:
+The bundle installs the Cadrumo release it was built for. On first launch it
+runs the server through `uvx`, which fetches the pinned `cadrumo[agent]`
+package from PyPI. The only prerequisite is
+[uv](https://docs.astral.sh/uv/) on your `PATH`; no separate `pip install` is
+needed. The bundle is unsigned, so Claude Desktop shows its standard
+unsigned-extension prompt when you install it.
 
-```bash
-pip install "./cadrumo-0.2.1-py3-none-any.whl[agent]"
-```
-
-Confirm the server script is on your path:
-
-```bash
-cadrumo-mcp --help
-```
-
-Without the extra, `cadrumo-mcp` refuses with an install hint instead of
-running.
-
-Build the bundle from the source tree, then open the resulting file with
-Claude Desktop to install it:
-
-```bash
-python packaging/mcpb/build.py
-```
-
-The build writes `dist/cadrumo.mcpb` and states plainly whether the bundle is
-signed. Its settings expose the same persona option as the plugin.
+Its settings expose the same two options as the plugin: the persona and the
+tool surface.
 
 ## Connect any other MCP client
 
-Install the `agent` extra and confirm `cadrumo-mcp --help` runs, exactly as in
-the previous section. Then register `cadrumo-mcp` as a stdio server in your
-client's MCP configuration:
+Install the `agent` extra from PyPI and confirm the server script is on your
+path. Without the extra, `cadrumo-mcp` refuses with an install hint instead
+of running:
+
+```bash
+pip install "cadrumo[agent]"
+cadrumo-mcp --help
+```
+
+Then register `cadrumo-mcp` as a stdio server in your client's MCP
+configuration:
 
 ```json
 {

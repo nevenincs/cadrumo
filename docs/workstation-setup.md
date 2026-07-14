@@ -18,17 +18,17 @@ You need:
 
 ## Install the CLI
 
-Download the current Cadrumo package from the
-[releases page](https://github.com/nevenincs/cadrumo/releases/latest). Each
-release lists its downloadable files and release notes; record the version you
-install, as [Updates and downloads](updates.md) recommends.
-
-Install the downloaded wheel file. The filename carries the version you
-downloaded. The current release is `0.2.1`:
+Cadrumo is published on the Python Package Index (PyPI). Install it with
+`pip`:
 
 ```bash
-pip install ./cadrumo-0.2.1-py3-none-any.whl
+pip install cadrumo
 ```
+
+Record the version you installed, as [Updates and downloads](updates.md)
+recommends. The [releases page](https://github.com/nevenincs/cadrumo/releases/latest)
+lists each release's notes and downloadable artifacts, including the Claude
+Desktop extension bundle covered below.
 
 ## Confirm the install
 
@@ -59,11 +59,10 @@ aeat --format json config check
 
 The core install is lean. Google export, the live AEAT browser, the
 Anthropic-API provider, OFX/QFX bank-statement import, and the agent surface
-are optional package extras. Name the extras you need when you install the
-wheel:
+are optional package extras. Name the extras you need when you install:
 
 ```bash
-pip install "./cadrumo-0.2.1-py3-none-any.whl[google,browser]"
+pip install "cadrumo[google,browser]"
 ```
 
 The available extras are `google`, `browser`, `anthropic`, `ofx`, `agent`, and
@@ -117,21 +116,15 @@ beforehand. Add the marketplace once, then install the plugin:
 
 ### Claude Desktop extension bundle (`.mcpb`)
 
-Classic Claude Desktop can also load Cadrumo as a Desktop Extension bundle.
-The bundle points at the `cadrumo-mcp` command on your machine, so install the
-`agent` extra first:
-
-```bash
-pip install "./cadrumo-0.2.1-py3-none-any.whl[agent]"
-```
-
-The bundle is built from the source tree:
-
-```bash
-python packaging/mcpb/build.py
-```
-
-The build writes `dist/cadrumo.mcpb`; open it with Claude Desktop to install.
+Claude Desktop can load Cadrumo as a Desktop Extension bundle. Download
+`cadrumo.mcpb` from the
+[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and open
+it with Claude Desktop. The bundle installs the Cadrumo release it was built
+for: on first launch it runs the server through `uvx`, which fetches the
+pinned `cadrumo[agent]` package from PyPI. The only prerequisite is
+[uv](https://docs.astral.sh/uv/) on your `PATH`; no separate `pip install` is
+needed. The bundle is unsigned, so Claude Desktop shows its standard
+unsigned-extension prompt when you install it.
 
 ### Any other MCP client
 
