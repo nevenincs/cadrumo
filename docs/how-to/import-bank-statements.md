@@ -244,7 +244,7 @@ amount, IRPF category, notes, or group label:
 @step Record a transaction to update.
 @setup aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --idempotency-key import-update
 @capture transaction_id result.transaction_id
-@step Correct the description. Each update rotates the id, so capture the new one.
+@step Correct the description, capturing the new id the update rotates to.
 aeat --format json app ledger update {transaction_id} --description "Corrected description"
 @capture after_description result.transaction_id
 @step Record the IVA breakdown against the current id.
