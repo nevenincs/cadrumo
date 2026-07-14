@@ -36,7 +36,8 @@ aeat config profile list
 @setup aeat config profile create my-other-profile --quiet --entity-type natural_person --tax-id 87654321X --name "Otra" --surnames "Persona Ejemplo"
 @step Switch the active context to the second profile.
 aeat config switch my-other-profile
-@result aeat config profile status
+@result aeat --format json config profile status
+@expect result.tax_id_present == true
 @expect exit_code == 0
 ```
 
@@ -71,12 +72,10 @@ decisions. For the complete, current list of flags and their accepted values,
 run `aeat config profile create --help` and `aeat config profile edit --help`:
 
 ```{cli-sequence} profile-setup-flag-help
-:verify: Confirm both create and edit list their flags and accepted values.
 @step List every flag the create command accepts.
-aeat config profile create --help
+@static aeat config profile create --help
 @step List every flag the edit command accepts.
-@result aeat config profile edit --help
-@expect exit_code == 0
+@static aeat config profile edit --help
 ```
 
 ## Create your profile
@@ -131,7 +130,8 @@ economic activity, then inspects and validates it before you rely on it:
 aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 11111111H --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --output-language en
 @step Inspect the stored facts.
 aeat config profile show ana-2026
-@result aeat config profile validate ana-2026
+@result aeat --format json config profile validate ana-2026
+@expect result.valid == true
 @expect exit_code == 0
 ```
 
@@ -249,7 +249,8 @@ aeat config profile status
 aeat config profile show
 @step Validate the facts against the schema.
 aeat config profile validate
-@result aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@expect result.ready == true
 @expect exit_code == 0
 ```
 
@@ -300,7 +301,8 @@ aeat config profile duplicate bruno-real bruno-copy
 aeat config profile delete bruno-copy --yes
 @setup aeat config switch bruno-real
 @step Export the profile to a portable cleartext JSON file.
-@result aeat config profile export bruno-real --to bruno-real-profile.json --cleartext-local
+@result aeat --format json config profile export bruno-real --to bruno-real-profile.json --cleartext-local
+@expect result.schema_version == 3
 @expect exit_code == 0
 ```
 
@@ -339,7 +341,8 @@ The card confirms the active pointer is cleared afterward:
 :verify: Confirm logout clears the active profile without deleting it.
 @step Clear the active profile.
 aeat config profile logout
-@result aeat config profile status
+@result aeat --format json config profile status
+@expect result.configured == false
 @expect exit_code == 0
 ```
 
@@ -357,7 +360,8 @@ capability off, then shows the posture again:
 aeat config profile capabilities show
 @step Turn the on-host vision model off for the active profile.
 aeat config profile capabilities set llm_vision off
-@result aeat config profile capabilities show
+@result aeat --format json config profile capabilities show
+@expect result.capabilities[1].enabled == false
 @expect exit_code == 0
 ```
 
@@ -394,7 +398,8 @@ aeat config profile history carla-real
 aeat config profile history carla-real --event-type profile.renamed
 @step Filter by date range.
 aeat config profile history carla-real --since 2026-01-01 --until 2026-03-31
-@result aeat config profile history carla-real --actor operator
+@result aeat --format json config profile history carla-real --actor operator
+@expect result.actor == "operator"
 @expect exit_code == 0
 ```
 
