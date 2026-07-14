@@ -97,6 +97,33 @@ complementary results). Inspect what is bound, missing, or manual with `aeat
 app modelo bindings list --modelo 130 --year 2026 --period 1T` and `aeat app
 modelo casillas 130 --period 1T`.
 
+## Supply a manual box value
+
+Casilla `06` (Retenciones e ingresos a cuenta) is a manual box: the ledger
+does not fill it, so you supply it by hand with `--casilla`. Pass it in the
+same calculate call as the first-period bindings, then review the saved
+calculation to confirm your value landed:
+
+```{cli-sequence} modelo-130-manual-casilla
+:seed: autonomo-irpf-2026
+:verify: Confirm the manual value you supplied appears in the saved calculation.
+@step Open the Modelo 130 draft for the first quarter.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate, supplying casilla 06 by hand alongside the first-period bindings.
+aeat --format json app modelo work calculate {work_unit_id} --casilla 06=100.00 --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@capture calculation_revision_id result.calculation_revision_id
+@step Review the saved calculation and confirm casilla 06 holds your value.
+@result aeat --format json app modelo work revision {calculation_revision_id}
+@expect result.casilla_values.06 == "100.00"
+@expect exit_code == 0
+```
+
+`--casilla` works only on `manual` boxes; a `bound` box filled from your ledger
+(like casilla `02`) refuses the override. Check a box's kind with `aeat app
+modelo casillas 130 --period 1T`, and see [Review and supply calculation
+inputs](review-calculation-values.md) for the full input workflow.
+
 ## Each quarter is cumulative
 
 Modelo 130 is a year-to-date form, not a quarter-slice form. The second
