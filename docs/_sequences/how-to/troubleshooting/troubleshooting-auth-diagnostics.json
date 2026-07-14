@@ -3,18 +3,30 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "auth",
         "diagnostics",
         "list"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.diagnostics.list",
+        "notices": [],
+        "result": {
+          "row_count": 0,
+          "rows": []
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "row_count\t0\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

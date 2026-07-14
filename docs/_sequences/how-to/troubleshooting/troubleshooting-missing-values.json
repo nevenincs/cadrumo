@@ -3,6 +3,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "app",
         "modelo",
         "bindings",
@@ -16,12 +18,713 @@
         "--missing"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.bindings.list",
+        "notices": [],
+        "result": {
+          "binding_count": 27,
+          "bindings": [
+            {
+              "binding_id": "modelo-303-iva-repercutido-general-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-repercutido-reducido-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-repercutido-super-reducido-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-interiores-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-compensacion-pendiente-anteriores",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "prior filed revision",
+              "relation_inputs": [
+                "modelo-303-rel-self-compensacion-anteriores"
+              ],
+              "revision": "2023-y-siguientes",
+              "source": "previous_filing",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-criterio-caja-entregas-art75-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-75",
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-criterio-caja-entregas-art75-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-75",
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-criterio-caja-adquisiciones-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "ley-37-1992:art-163-quinquiesdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-criterio-caja-adquisiciones-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "ley-37-1992:art-163-quinquiesdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-bienes-inversion-regularizacion-casilla-43",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-107",
+                "ley-37-1992:art-108",
+                "ley-37-1992:art-109",
+                "ley-37-1992:art-110",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "bienes_inversion_regularizacion",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-prorrata-regularizacion-casilla-44",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-105",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "prorrata_regularizacion",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-autoconsumo-promotor-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "profile",
+              "source_refs": [
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-interior-devengado-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-autorepercutido-interior-deducible-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-importaciones-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-17",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-casilla-59-entregas-intracomunitarias-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-25",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-casilla-60-exportaciones-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-21",
+                "ley-37-1992:art-22",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-repercutido-general-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-repercutido-reducido-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-repercutido-super-reducido-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-iva-soportado-interiores-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-recargo-equivalencia-general-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-recargo-equivalencia-reducido-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-recargo-equivalencia-super-reducido-cuota",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2023-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            }
+          ],
+          "missing_filter": true,
+          "modelo_filter": "303",
+          "operation": "modelo.bindings.list",
+          "period_filter": "1T",
+          "year_filter": 2026
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t303\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t27\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-soportado-interiores-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-intracomunitaria-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-compensacion-pendiente-anteriores\tprevious_filing\tprior filed revision\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-entregas-art75-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-entregas-art75-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-adquisiciones-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-adquisiciones-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-bienes-inversion-regularizacion-casilla-43\tbienes_inversion_regularizacion\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-prorrata-regularizacion-casilla-44\tprorrata_regularizacion\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-autoconsumo-promotor-base\tprofile\tprofile fact\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-interior-devengado-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-interior-deducible-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-soportado-importaciones-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-casilla-59-entregas-intracomunitarias-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-casilla-60-exportaciones-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-general-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-reducido-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-super-reducido-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-soportado-interiores-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-recargo-equivalencia-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-recargo-equivalencia-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-recargo-equivalencia-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\nrelation_guidance\tSome bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.\nrelation_input\tmodelo-303-compensacion-pendiente-anteriores\tfed by relation modelo-303-rel-self-compensacion-anteriores\tuse --relation modelo-303-rel-self-compensacion-anteriores=VALUE\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,
