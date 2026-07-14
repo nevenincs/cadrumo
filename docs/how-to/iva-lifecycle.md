@@ -27,7 +27,7 @@ A working `aeat` command, a master-key passphrase (the tool prompts for
 it), and the profile and
 first-quarter ledger rows from
 [the income-tax year, stages 1 and 2](irpf-lifecycle.md). If you have no
-profile yet, create one with `aeat config profile create <name>` — [Set up your
+profile yet, create one with `aeat config profile create <name>`. [Set up your
 taxpayer profile](profile-setup.md) walks through it.
 
 Confirm the IVA obligations:
@@ -114,20 +114,30 @@ The per-box detail of this workflow is
 ## Stage 3: a credit quarter, and the carry
 
 Suppose the second quarter goes the other way: Ana buys a laptop and other
-equipment, and her deductible IVA exceeds what she charged. Record the
-quarter's rows (the income-tax run-through's stage 3 rows, plus the equipment -
-an `aeat app ledger add` for the 1815-gross `equipo informatico` purchase with
-315 of deductible IVA).
+equipment, and her deductible IVA exceeds what she charged. When deductible IVA
+exceeds charged IVA, the result box is negative and the return declares the
+difference as credit to compensate: the quarter ends with nothing to pay, and
+the wallet remembers the credit. The whole second quarter runs against Ana's
+filed first quarter and inside the July presentation window, which the frozen
+documentation sandbox cannot reproduce, so the chain is shown as display frames:
 
-Run the same create-calculate-verify-export loop for `--period 2T`. When
-deductible IVA exceeds charged IVA, the result box is negative and the
-return declares the difference as credit to compensate - the quarter ends
-with nothing to pay, and the wallet remembers the credit.
+```{cli-sequence} iva-lifecycle-q2
+@step Record the equipment purchase whose deductible IVA exceeds the quarter's charged IVA.
+@static aeat app ledger add --date 2026-05-12 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id equipamiento_informatico --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
+@step Create and calculate the second-quarter return.
+@static aeat app modelo work create --modelo 303 --year 2026 --period 2T
+@static aeat app modelo work calculate --modelo 303 --year 2026 --period 2T
+@step Verify, export, file, and reconcile the credit quarter.
+@static aeat app modelo work verify --modelo 303 --year 2026 --period 2T
+@static aeat app modelo export --modelo 303 --year 2026 --period 2T --output ./modelo-303-2026-2T.boe
+@static aeat app modelo work file --modelo 303 --year 2026 --period 2T
+@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 2T
+```
 
-In the third quarter the carry shows itself: calculate `--period 3T` and the
-prior-compensation box arrives from the wallet - the second quarter's credit
-reduces what you pay now. Watch the balance move across the year with `aeat app
-modelo iva-wallet balance --as-of-year 2026` (shown running in stage 1 above).
+In the third quarter the carry shows itself: the same chain with `3T` brings the
+prior-compensation box from the wallet, so the second quarter's credit reduces
+what you pay now. Watch the balance move across the year with the wallet balance
+command shown running in stage 1 above.
 
 The balance reports the total, active, and expired credit and the lots it is
 made of. Credit expires after the legal window, so the wallet also names the
@@ -142,8 +152,13 @@ If Ana takes an EU client, the operations must also appear on the
 recapitulative Modelo 349 - a listing, per EU operator, of the period's
 intra-community operations. The operations are recorded as invoice records
 carrying the counterparty's country and EU VAT number, and the VAT number is
-worth checking against the VIES register first with `aeat app live verify
-nif-iva DE123456789` (a live read from AEAT).
+worth checking against the VIES register first. That check is a live read from
+AEAT, so it is shown as a display frame:
+
+```{cli-sequence} iva-lifecycle-vies
+@step Check an EU VAT number against the VIES register (a live AEAT read).
+@static aeat app live verify nif-iva DE123456789
+```
 
 The full workflow - invoice records, the operation keys, rectifications of
 earlier periods - is
@@ -153,21 +168,29 @@ consistent by fixing the underlying records, never the declarations.
 
 ## Stage 5: the fourth quarter and the annual summary
 
-Close the fourth quarter with the same loop in January (`--period 4T`).
-Then prepare the annual Modelo 390 summary - annual token `0A`, same year - with
-`aeat app modelo work create --modelo 390 --year 2026 --period 0A`, then `aeat
-app modelo work calculate --modelo 390 --year 2026 --period 0A`.
+Close the fourth quarter with the same `4T` chain in January. Then prepare the
+annual Modelo 390 summary, annual token `0A`, same year. Modelo 390 declares no
+new figures: it summarises the year, and its totals must reconcile with the four
+quarterly returns you filed. The calculation reads your filed Modelo 303
+records; a missing or unevidenced quarter blocks the annual verify with a
+cross-period finding that names it. The verification includes the reconciliation
+rule: an annual total that disagrees with the sum of the quarters is a blocking
+finding, not a warning.
 
-Modelo 390 declares no new figures: it summarises the year, and its totals
-must reconcile with the four quarterly returns you filed. The calculation
-reads your filed Modelo 303 records; a missing or unevidenced quarter
-blocks the annual verify with a cross-period finding that names it. The
-verification includes the reconciliation rule - an annual total that
-disagrees with the sum of the quarters is a blocking finding, not a warning.
+The annual summary resolves the four filed quarters and the 2026 Modelo 390
+registry revision, published for the 2027 filing season after this documentation
+is built, so the chain is shown as display frames:
 
-Verify, export, file, and reconcile the annual summary with `aeat app modelo
-work verify`, `aeat app modelo export`, `aeat app modelo work file`, and `aeat
-app modelo reconcile pull`, each with `--modelo 390 --year 2026 --period 0A`.
+```{cli-sequence} iva-lifecycle-annual
+@step Create and calculate the annual Modelo 390 summary.
+@static aeat app modelo work create --modelo 390 --year 2026 --period 0A
+@static aeat app modelo work calculate --modelo 390 --year 2026 --period 0A
+@step Verify, export, file, and reconcile the annual summary.
+@static aeat app modelo work verify --modelo 390 --year 2026 --period 0A
+@static aeat app modelo export --modelo 390 --year 2026 --period 0A --output ./modelo-390-2026.boe
+@static aeat app modelo work file --modelo 390 --year 2026 --period 0A
+@static aeat app modelo reconcile pull --modelo 390 --year 2026 --period 0A
+```
 
 The per-box detail is
 [Prepare the annual Modelo 390 summary](modelo-390.md).
