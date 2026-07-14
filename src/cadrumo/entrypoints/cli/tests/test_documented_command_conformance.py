@@ -544,6 +544,84 @@ def _current_aeat_fence_counts() -> dict[str, int]:
     return counts
 
 
+# A whole fenced block (code, CLI output, or a cli-sequence directive body):
+# stripped before the inline-span scan so only reader-facing prose is measured.
+_FENCE_BLOCK_RE = re.compile(r"```.*?```", re.DOTALL)
+
+_INLINE_AEAT_SPAN_BASELINE_PATH = PROJECT_ROOT / "src/cadrumo/entrypoints/cli/tests/inline_aeat_span_baseline.json"
+
+
+def _inline_command_complexity(span: str) -> int | None:
+    """Return an inline ``aeat`` span's option/argument-token count, or ``None``.
+
+    ``None`` when the span is not a concrete ``aeat`` invocation (a bare verb, an
+    ellipsis reference, the version echo). Otherwise the count of option flags
+    plus positional arguments beyond the resolved verb path; an option's value
+    rides its option and is not counted separately, and leading global options
+    are handled. So a bare verb reference (``aeat config switch``) is 0, a
+    single-flag or single-argument mention (``aeat app modelo describe 303``,
+    ``aeat config auth configure --file``) is 1, and a real command
+    (``aeat app modelo export --modelo 130 --output ./x.boe``) is 2 or more.
+    """
+    cited = _parse_command_line(span)
+    if cited is None:
+        return None
+    resolved = _resolve_path(cited.verb_tokens)
+    value_consuming = _value_consuming_option_names(_root_command())
+    if resolved.command is not None:
+        value_consuming = value_consuming | _value_consuming_option_names(resolved.command)
+    verb_path = list(resolved.resolved_path)
+    verb_index = 0
+    count = 0
+    expect_value = False
+    for tok in cited.tokens:
+        if expect_value:
+            expect_value = False
+            continue  # an option value, ridden by its option
+        if tok.startswith("-") and tok != "-":
+            count += 1
+            name = tok.split("=", 1)[0]
+            if "=" not in tok and name in value_consuming:
+                expect_value = True
+            continue
+        if verb_index < len(verb_path) and tok == verb_path[verb_index]:
+            verb_index += 1
+            continue  # part of the verb path
+        count += 1  # a positional argument
+    return count
+
+
+def _inline_aeat_command_spans(text: str) -> list[str]:
+    """Return inline code spans in prose that are ``aeat`` commands with 2+ option/arg tokens.
+
+    Fenced blocks (code, CLI output, cli-sequence directives) are stripped first,
+    so only reader-facing inline ``code`` spans are scanned. The two-token
+    threshold keeps bare verb references and single-flag/argument mentions legal
+    while flagging a full command moved inline (the fence-ratchet loophole).
+    """
+    prose = _FENCE_BLOCK_RE.sub("", text)
+    offending: list[str] = []
+    for match in _INLINE_CODE_RE.finditer(prose):
+        span = match.group(1)
+        if _AEAT_TOKEN_RE.search(span) is None:
+            continue
+        complexity = _inline_command_complexity(span)
+        if complexity is not None and complexity >= 2:
+            offending.append(span.strip())
+    return offending
+
+
+def _current_inline_aeat_span_counts() -> dict[str, int]:
+    """Return the live per-page count of complex inline ``aeat`` spans, keyed by docs-relative path."""
+    docs = PROJECT_ROOT / "docs"
+    counts: dict[str, int] = {}
+    for page in _user_doc_pages():
+        spans = _inline_aeat_command_spans(page.read_text(encoding="utf-8"))
+        if spans:
+            counts[page.relative_to(docs).as_posix()] = len(spans)
+    return counts
+
+
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
@@ -917,6 +995,41 @@ def test_no_new_aeat_plain_fences_in_user_docs() -> None:
     )
 
 
+def test_no_new_inline_aeat_command_spans_in_user_docs() -> None:
+    """No user-docs page inlines more complex ``aeat`` commands than its ratcheting baseline.
+
+    Closes the fence-ratchet loophole: moving a plain ``aeat`` fence into an
+    inline ``code`` span shrinks the fence baseline while recreating the
+    readability complaint. An inline ``aeat ...`` span carrying two or more
+    option/argument tokens is a violation, remediated the same way (render through
+    a ``{cli-sequence}`` directive, or ``@static`` where hermetic execution is
+    impossible). Bare verb references (``aeat config switch``) and single
+    flag/argument mentions stay legal. Ratchets DOWN from a committed per-page
+    baseline, the same discipline as the fence gate, so it never reds the tree
+    during the parallel conversion.
+    """
+    baseline: dict[str, int] = json.loads(_INLINE_AEAT_SPAN_BASELINE_PATH.read_text(encoding="utf-8"))
+    current = _current_inline_aeat_span_counts()
+    docs = PROJECT_ROOT / "docs"
+    problems: list[str] = []
+    for page in sorted(current):
+        count = current[page]
+        allowed = baseline.get(page, 0)
+        if count > allowed:
+            spans = _inline_aeat_command_spans((docs / page).read_text(encoding="utf-8"))
+            example = spans[allowed] if allowed < len(spans) else spans[-1]
+            problems.append(
+                f"docs/{page}: {count} inline aeat command span(s) with 2+ option/arg tokens, "
+                f"baseline allows {allowed} (e.g. `{example}`). Render every aeat command through a "
+                "{cli-sequence} executed directive, or an @static frame where hermetic execution is "
+                f"impossible; then tighten the entry in {_INLINE_AEAT_SPAN_BASELINE_PATH.name}"
+            )
+    assert not problems, (
+        "user docs must render aeat commands through the cli-sequence display, not inline command "
+        "spans (mandatory-display doctrine, 2026-07-14):\n  " + "\n  ".join(problems)
+    )
+
+
 def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface() -> None:
     """The ratchet baseline is well-formed and the gate scans the real user-docs surface.
 
@@ -934,11 +1047,16 @@ def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface(
         f"the mandatory-display gate scans only {len(pages)} user-docs pages; the surface "
         "the gate governs has collapsed — its scan is vacuous"
     )
-    baseline = json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
-    assert isinstance(baseline, dict), "the baseline must be a JSON object mapping page → count"
-    for page, allowed in baseline.items():
-        assert isinstance(page, str) and page, "baseline keys must be non-empty docs-relative page paths"
-        assert isinstance(allowed, int) and allowed > 0, (
-            f"baseline entry {page!r} must be a positive integer count, got {allowed!r}; "
-            "remove the entry instead of setting it to zero"
-        )
+    for baseline_path in (_AEAT_FENCE_BASELINE_PATH, _INLINE_AEAT_SPAN_BASELINE_PATH):
+        baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+        assert isinstance(baseline, dict), f"{baseline_path.name} must be a JSON object mapping page → count"
+        for page, allowed in baseline.items():
+            assert isinstance(page, str) and page, (
+                f"{baseline_path.name} keys must be non-empty docs-relative page paths"
+            )
+            # A non-negative int: a converter may zero a fully-converted page's
+            # entry rather than delete the key (a 0 allowance enforces zero for
+            # that page, same as an absent key), and the count never goes negative.
+            assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed >= 0, (
+                f"{baseline_path.name} entry {page!r} must be a non-negative integer count, got {allowed!r}"
+            )
