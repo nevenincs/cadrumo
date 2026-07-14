@@ -8,40 +8,8 @@ step_id: 'S76'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-13-cadrumo-product-rename-audit]]"
+  - "[[2026-07-14-cadrumo-product-rename-s76-residue-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S76 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect and ## Scope
-
-- `repository rename residue report` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect
 
@@ -109,3 +77,38 @@ reopened), `S39`/`S40` (defects D-PKG-01/02), `S58` (reopened, defect D-CI-01),
 landed per the team lead but carry no execution records and were not verified in this
 pass), `S79`/`S80` (gate runs, no record), and `S81`-`S85` (formal review and
 closure).
+
+## Fresh HEAD-current pass (2026-07-15)
+
+Re-audited every `aeat`/`AEAT`/`Aeat` token at current HEAD independently of the
+2026-07-13 pass above, targeting patterns the earlier bookkeeping pass had not
+enumerated: a Python import root of `aeat`, `Aeat`-prefixed class names,
+`AEAT_*` env-var declarations, npm package manifests, and top-level repo docs.
+Full classification recorded in `2026-07-14-cadrumo-product-rename-s76-residue-audit`.
+
+Two genuine defects found and fixed this pass:
+
+- `src/cadrumo/core/_config_timeouts.py` module docstring claimed fields
+  "still read the same ``AEAT_*`` environment variable by field name"; every
+  field in the class is `cadrumo_*`-prefixed and reads `CADRUMO_*`. Corrected
+  the docstring.
+- `frontend/package.json` / `frontend/package-lock.json` still declared
+  `"name": "aeat-marketing-frontend"` for the CADRUMO marketing site. Renamed
+  to `cadrumo-marketing-frontend` in both files.
+
+One medium-severity naming residue recorded but deferred: the
+`AeatTimeoutSettings` / `AeatRuntimeSettings` / `AeatIntegrationSettings`
+settings-mixin chain (`src/cadrumo/core/_config_*.py`) mixes broad app-owned
+fields (LLM provider endpoints, file-lock timeouts, log rotation) under an
+`Aeat*` name; its direct consumer `src/cadrumo/core/config.py`
+(`class Settings(AeatIntegrationSettings)`) currently carries an unrelated,
+uncommitted peer edit in the shared working tree, so a clean atomic rename
+commit could not land without risking bundling foreign work per
+`subagent-commits-require-explicit-pathspec`. Left for a follow-up Step.
+
+Confirmed no `import aeat` / `from aeat` root exists (re-verifies `S77`); the
+sole `[project.scripts]` entry is `aeat = "cadrumo.entrypoints.cli:main"` plus
+the distinct `cadrumo-mcp`; every `Aeat`-prefixed class names an AEAT-authority
+concept (session, portal paths, oracles, live-safety gate), none the product.
+
+Step closed on this fresh-pass evidence plus the residue audit document.
