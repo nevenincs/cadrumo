@@ -204,13 +204,17 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
     if kind is None and settings.cadrumo_auth_provider is not None:
         kind = AuthProviderKind(settings.cadrumo_auth_provider.value)
     if kind is not None:
+        if kind not in _STEM_BY_KIND:
+            # A provider without a persisted-session stem holds no reusable
+            # session, so there is nothing to load (and no stem to resolve).
+            return None
         paths = storage_state_paths(kind)
         if not _get_session_store().exists(paths.storage_state):
             _logger.debug("load_persisted_session: no session metadata found for provider %s", kind.value)
             return None
         return _parse_single(paths.storage_state, kind)
 
-    for candidate in AuthProviderKind:
+    for candidate in _STEM_BY_KIND:
         paths = storage_state_paths(candidate)
         if _get_session_store().exists(paths.storage_state):
             return _parse_single(paths.storage_state, candidate)
@@ -219,10 +223,22 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
 
 
 def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
-    """Remove persisted encrypted sessions for ``kind`` or every supported provider."""
+    """Remove persisted encrypted sessions for ``kind`` or every session-bearing provider.
+
+    A ``kind`` of ``None`` sweeps every provider that actually persists a browser
+    session (the ``_STEM_BY_KIND`` set). Iterating the full ``AuthProviderKind``
+    enum here is wrong: a provider with no session stem (e.g. Cl@ve Permanente,
+    which holds no reusable session) has nothing to delete, and asking
+    ``storage_state_paths`` for its non-existent stem raised ``KeyError`` — which
+    surfaced to the operator as a spurious "unknown provider" refusal on
+    ``auth clear --sessions`` / ``--all``. A provider without a stem is simply
+    skipped.
+    """
     removed: list[Path] = []
-    kinds = [kind] if kind is not None else list(AuthProviderKind)
+    kinds = [kind] if kind is not None else list(_STEM_BY_KIND)
     for candidate_kind in kinds:
+        if candidate_kind not in _STEM_BY_KIND:
+            continue
         paths = storage_state_paths(candidate_kind)
         if not _get_session_store().delete(paths.storage_state):
             continue
