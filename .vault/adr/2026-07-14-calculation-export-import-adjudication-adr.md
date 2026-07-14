@@ -10,7 +10,7 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-reference]]"
 ---
 
-# `calculation-export-import-adjudication` adr: `Export and import backlog admission boundary` | (**status:** `proposed`)
+# `calculation-export-import-adjudication` adr: `Export and import backlog admission boundary` | (**status:** `accepted`)
 
 ## Problem Statement
 
