@@ -74,38 +74,38 @@ re-run + git-evidence triage:
 | `tests/test_parity.py::test_codebase_to_locale_parity` | FAILS | LIVE peer campaign: the known 26-orphan-key locale drift (all four catalogues carry 26 keys no codebase `tr()` references, from the committed CLI underscore rename whose locale cleanup is pending). Active locale campaign (commits 88 min / 2 h ago). On the coordinator's watch-list. |
 | `locales/tests/test_audit.py::...pass_production_audit` | FAILS | LIVE peer campaign: the active locale-identity campaign (`7725c3c7cb`, `829e0f571d`, `d0a88fc329` correcting Catalan/Hungarian identity contexts). |
 | `locales/tests/test_audit.py::...contextual_product_identity_contract` | FAILS | LIVE peer campaign: same locale-identity surface. |
-| `adapters/inbound/justificante/tests/test_parser.py::...test_corpus_pdf_parses[202/2025-1P]` | FAILS | NOT live peer WIP -> REPORTED. Pre-existing test defect (see below). |
-| `adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py::...[-34]` | FAILS | NOT live peer WIP -> REPORTED. Same root cause (the 202/2025-1P M202 fixture). |
+| `adapters/inbound/justificante/tests/test_parser.py::...test_corpus_pdf_parses[202/2025-1P]` | FIXED | Campaign fallout (S08), now green -- commit `1bef3269c8` (see below). |
+| `adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py::...[-34]` | FIXED | Same root cause; fixed together in `1bef3269c8`. |
 
 Campaign-owned (P01 + P05) failures: ZERO. Every P01/P05 surface is green
 sequentially; the four `-n auto`-only artifacts pass `-n 0`; the four
 locale/docs failures are live in-flight peer campaigns on the coordinator's
 watch-list.
 
-ONE residual is NOT explainable as live peer WIP and is surfaced for
-adjudication (not triaged away): the two Modelo 202 justificante corpus tests.
-`test_parser.py:213` blanket-asserts `record.tax_id == "Y0000001S"` (a redacted
-NIE) for EVERY corpus fixture, but the `202/2025-1P` fixture parses to
-`B00000001` -- and its sidecar declares `"synthetic": "B00000001"`, i.e. the
-sanitiser DELIBERATELY wrote that value: Modelo 202 is Impuesto sobre Sociedades,
-whose filer is a sociedad with a CIF (`B00000001`), not an individual's NIE. The
-test's blanket individual-NIE assertion does not accommodate corporate modelos,
-and its docstring already says "Redacted NIE/NIF survives the round-trip"
-(acknowledging both) -- an oversight, not a convention. The fixture and the
-assertion are both only rename-touched (2 days ago); no active M202 or
-justificante-corpus campaign. Candidate fixes: (a) derive the expected tax_id
-per-fixture from the sidecar's declared `synthetic` value rather than hardcoding
-one, or (b) regenerate the 202 fixture to the uniform redacted NIE if the corpus
-convention is a single placeholder. Direction (a) matches the docstring intent;
-reported to the coordinator rather than guessing the corpus convention.
+The two Modelo 202 justificante corpus tests were OUR OWN campaign's fallout,
+not pre-existing: the S08 fixture pass (commit `710217daf6`) correctly
+re-sanitised the M202 fixture's tax_id from a personal NIE to a CIF-shaped
+`B00000001` (Modelo 202 is Impuesto sobre Sociedades; a sociedad files with a
+CIF -- the correction was right) and regenerated the fixture + sidecar, but
+missed the two corpus tests' blanket `Y0000001S` assertion
+(`test_parser.py:213` and `test_corpus_sidecar_roundtrip.py`'s
+`_SYNTHETIC_TAX_ID`). Fixed per the coordinator's direction (a), commit
+`1bef3269c8`: both tests now derive the expected tax_id per-fixture from the
+fixture-provenance sidecar (the authoritative declaration) -- the sole DISTINCT
+tax-id-shaped synthetic token, deduped across the repeated substitution surfaces
+-- and assert exact equality against it (not merely "some string"). Docstrings
+updated. Full justificante suite green (159 passed).
 
 ## Notes
 
-- No campaign-owned regressions. The genuine (non-WIP) residual is the M202
-  justificante corpus tests -- a pre-existing test-vs-fixture mismatch on a
-  surface with no active owner, surfaced above for adjudication per the
-  "fix it or report it" bar. Everything else is either a live in-flight peer
-  campaign (docs-cli-sequences, locale identity/parity -- on the watch-list) or
-  an `-n auto`-only concurrency/parallel artifact that passes `-n 0`.
-- No destructive git; the full-suite log is retained at the session scratchpad
-  (`s11_full.log`) for signature verification.
+- CAMPAIGN-OWNED FAILURES: ZERO (including the M202 corpus tests, now fixed in
+  `1bef3269c8`). The three remaining reds each have an active owner + evidence
+  (docs-cli-sequences period gate; locale parity/identity). The four
+  `-n auto`-only artifacts pass `-n 0`.
+- Honest reading of the goal per the coordinator: everything within reach is
+  green; the residual reds are live in-flight peer campaigns with documented
+  evidence, not campaign misses. A confirmation re-run after those campaigns
+  land is welcome but does not block this close.
+- No destructive git; explicit-pathspec commits throughout; the full-suite log
+  is retained at the session scratchpad (`s11_full.log`) for signature
+  verification.
