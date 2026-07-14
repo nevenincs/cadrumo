@@ -91,29 +91,6 @@
     {
       "argv": [
         "aeat",
-        "app",
-        "modelo",
-        "iva-wallet",
-        "seed",
-        "--filing-year",
-        "2025",
-        "--period",
-        "4T",
-        "--amount",
-        "0",
-        "--confirm"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2025\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nstatus\tseeded\n"
-    },
-    {
-      "argv": [
-        "aeat",
         "--format",
         "json",
         "app",
@@ -3243,7 +3220,13 @@
         "verify",
         "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.verification_report_id",
+          "name": "verification_report_id",
+          "value": "937bff434c537e2c9523cbeecd70199038929cbaf4d339db62347cfcdd52f011"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.verify",
@@ -3390,11 +3373,117 @@
       },
       "envelope_source": "stdout",
       "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "verification-report",
+        "view",
+        "937bff434c537e2c9523cbeecd70199038929cbaf4d339db62347cfcdd52f011"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.verification_report.view",
+        "notices": [],
+        "result": {
+          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "completeness_status": "complete",
+          "findings": [
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "rd-1065-2007:art-9"
+              ],
+              "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=303 year=2025 period=4T origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
+              "next_action": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "rd-1065-2007:art-9"
+              ],
+              "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=303 year=2025 period=4T origin=registry_relation. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
+              "next_action": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form",
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form",
+                "boe-orden-hac-1347-2024-iva-authority"
+              ]
+            }
+          ],
+          "granted_verificado_completo": true,
+          "missing_required_casilla_ids": [],
+          "operation": "modelo.verification_report.show",
+          "resolved_casilla_ids": [],
+          "run_at": "2026-04-01T09:00:00+00:00",
+          "verification_report_id": "937bff434c537e2c9523cbeecd70199038929cbaf4d339db62347cfcdd52f011",
+          "verified_by": "docs-sequence-sandbox"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null
     }
   ],
   "golden_schema_version": 1,
-  "sequence_id": "iva-lifecycle-modelo-303"
+  "sequence_id": "verification-reports-modelo-303"
 }

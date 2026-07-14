@@ -132,8 +132,11 @@ _LIVE_TOKENS: frozenset[str] = frozenset({"live", "pull"})
 _PULL_VERB_PREFIX: str = "pull-"
 
 #: One json-path segment: a dotted key (an identifier or an all-digit object
-#: key such as a casilla number) or a ``[index]`` list address.
-_PATH_SEGMENT_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*|[0-9]+)|\[([0-9]+)\]")
+#: key such as a casilla number), a ``[index]`` list address, or a bracketed
+#: double-quoted ``["<key>"]`` literal object key (any char except a
+#: double-quote). Group 1 = dotted key, group 2 = list index, group 3 = quoted
+#: object key. The three forms are mutually exclusive per match.
+_PATH_SEGMENT_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_]*|[0-9]+)|\[([0-9]+)\]|\["([^"]*)"\]')
 
 #: Transient registry-race markers: concurrent modification of the registry
 #: TOML tree during local development produces these transient failures; the
@@ -513,14 +516,27 @@ def _parse_envelope(output: str) -> dict[str, JsonValue] | None:
 def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
     """Walk a dotted/bracketed json-path; return ``(found, value)``.
 
-    Digit-segment resolution rule: an all-digit DOTTED segment (``.03``) is a
-    string OBJECT KEY first — casilla numbers are JSON object keys — and is
-    treated as a list index only when the current node is a list. The bracketed
-    ``[n]`` form is always and only a list index.
+    Segment-form resolution rules:
+
+    * A dotted key: an all-digit segment (``.03``) is a string OBJECT KEY first
+      — casilla numbers are JSON object keys — and is a list index only when the
+      current node is a list; an identifier segment is an object key.
+    * The bracketed integer form ``[n]`` is always and only a LIST INDEX.
+    * The bracketed double-quoted form ``["<key>"]`` is always and only a
+      literal OBJECT KEY (never a list index); on a non-Mapping node it misses
+      cleanly, returning ``(False, None)``.
     """
     current: object = document
     for match in _PATH_SEGMENT_RE.finditer(path):
-        key, index = match.group(1), match.group(2)
+        key, index, quoted_key = match.group(1), match.group(2), match.group(3)
+        if quoted_key is not None:
+            if isinstance(current, Mapping):
+                step_q: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
+                if quoted_key not in step_q:
+                    return False, None
+                current = step_q[quoted_key]
+                continue
+            return False, None
         if key is not None:
             if isinstance(current, Mapping):
                 # Re-key defensively: JSON object keys are always strings, and

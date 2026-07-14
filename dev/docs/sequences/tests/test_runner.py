@@ -297,6 +297,48 @@ class TestNumericJsonPathResolution:
         assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
         assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
 
+    def test_bracket_quoted_segment_resolves_a_dotted_hyphenated_object_key(self) -> None:
+        from .._runner import _resolve_json_path
+
+        # M349's declarante casillas are flat string keys carrying a literal dot
+        # and hyphens; the dotted grammar would split on the dot, so the
+        # bracket-quoted form is the only way to address them.
+        document = {
+            "result": {
+                "casilla_values": {
+                    "decl.importe-operaciones": "12345.00",
+                    "decl.numero-operadores": "3",
+                },
+            },
+        }
+        assert _resolve_json_path(
+            document, 'result.casilla_values["decl.importe-operaciones"]'
+        ) == (True, "12345.00")
+        assert _resolve_json_path(
+            document, 'result.casilla_values["decl.numero-operadores"]'
+        ) == (True, "3")
+        # An absent quoted key misses cleanly.
+        assert _resolve_json_path(document, 'result.casilla_values["decl.nope"]') == (False, None)
+
+    def test_bracket_quoted_segment_is_a_dict_key_never_a_list_index(self) -> None:
+        from .._runner import _resolve_json_path
+
+        # On a list node the quoted form addresses no element and misses cleanly
+        # (it is a literal object key only, never a list index).
+        document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
+        assert _resolve_json_path(document, 'result.items["0"]') == (False, None)
+        # On a dict whose key is the digit string, the quoted form finds it.
+        digit_key_doc = {"result": {"casilla_values": {"0": "zero-key"}}}
+        assert _resolve_json_path(digit_key_doc, 'result.casilla_values["0"]') == (True, "zero-key")
+
+    def test_bracket_quoted_segment_on_a_non_dict_node_misses_cleanly(self) -> None:
+        from .._runner import _resolve_json_path
+
+        # A quoted key applied to a scalar (non-Mapping, non-list) node returns
+        # (False, None) rather than raising.
+        document = {"result": {"status": "verified_complete"}}
+        assert _resolve_json_path(document, 'result.status["x"]') == (False, None)
+
 
 class TestAmbientEnvNeutralisation:
     def test_ambient_operator_env_never_reaches_frame_execution(
