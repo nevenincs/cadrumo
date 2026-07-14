@@ -14,10 +14,13 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterator
 from io import StringIO
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.env_scope import scoped_env_var
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -727,12 +730,15 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
 
 
 @pytest.fixture
-def _isolated_sequence_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def _isolated_sequence_storage(tmp_path: Path) -> Iterator[None]:
     """Pin isolated Cadrumo storage and English output for the in-build CLI-tree walk."""
     root = tmp_path / "cadrumo-store"
     root.mkdir()
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
-    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "en")
+    with (
+        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
+        scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
+    ):
+        yield
 
 
 def test_sequence_page_ships_widget_and_degrades_without_js(
