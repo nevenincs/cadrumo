@@ -28,6 +28,8 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "profile",
         "edit",
@@ -37,12 +39,30 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": null,
+        "command": "config.profile.edit",
+        "notices": [
+          {
+            "code": "config.profile.edit.next_step",
+            "context": null,
+            "message": "Next",
+            "severity": "info",
+            "suggestion": "aeat app modelo work create"
+          }
+        ],
+        "result": {
+          "profile_name": "me",
+          "status": "updated"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "Profile\tme\nStatus\tupdated\nNext\taeat app modelo work create\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

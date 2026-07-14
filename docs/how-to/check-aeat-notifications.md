@@ -37,7 +37,8 @@ You need:
   ```{cli-sequence} check-notifications-profile
   :verify: Confirm a taxpayer profile can be created non-interactively.
   @step Create a taxpayer profile non-interactively (use your own NIF, CIF, DNI, or NIE).
-  @result aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
+  @result aeat --format json config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
+  @expect result.profile_name == "me"
   @expect exit_code == 0
   ```
 
