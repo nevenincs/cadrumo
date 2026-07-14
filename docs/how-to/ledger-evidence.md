@@ -47,6 +47,7 @@ an evidence file and an expense, then attaches one to the other:
 aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
 @step Confirm the transaction now carries the purchase-invoice evidence.
 @result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.purchase_invoice_evidence_id == "40241ba7308fb7df"
 @expect exit_code == 0
 ```
 

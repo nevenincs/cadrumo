@@ -28,6 +28,7 @@ Confirm the active profile before you write transaction data:
 :verify: Confirm a profile is active before you write transaction data.
 @step Confirm the active profile.
 @result aeat --format json config profile status
+@expect result.active_profile == "docs-sequence-sandbox"
 @expect exit_code == 0
 ```
 
@@ -208,6 +209,7 @@ local-only:
 aeat app ledger review --filter period=1T --filter year=2026
 @step Report aggregate ledger anomalies across periods.
 @result aeat --format json app ledger check
+@expect result.ready == false
 @expect exit_code == 0
 ```
 
@@ -223,6 +225,7 @@ edit-and-reimport path:
 @setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
 @step Export the first quarter to a CSV snapshot.
 @result aeat --format json app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
+@expect result.export_format == "csv"
 @expect exit_code == 0
 @step Write an XLSX snapshot of the whole year instead. XLSX embeds a per-run id, so it is shown as a display frame.
 @static aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
@@ -281,6 +284,7 @@ then attaches one to the other:
 aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
 @step Confirm the transaction resolves after the attachment.
 @result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.purchase_invoice_evidence_id == "6509f06abb0c5756"
 @expect exit_code == 0
 ```
 
@@ -363,6 +367,7 @@ amount, IVA rate, split reference, or unconvertible currency:
 aeat app ledger preflight --year 2026 --period 1T
 @step Read the overall ledger state for the period.
 @result aeat --format json app ledger status --year 2026 --period 1T
+@expect result.business_income_total == "1210"
 @expect exit_code == 0
 ```
 

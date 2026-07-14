@@ -207,9 +207,12 @@ stored history, and the history reads reach AEAT, so they are shown as display
 frames:
 
 ```{cli-sequence} modelo-390-wallet
+:verify: Confirm the opening compensation balance seeds.
 @step Seed an opening compensation balance for a first Modelo 303 period.
-@static aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
-@step Fix a wrong seed; it refuses once an already-filed 303 has consumed the basis.
+@result aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+@expect result.amount == "0"
+@expect exit_code == 0
+@step Fix a wrong seed. This refuses once an already-filed 303 has consumed the basis, so it is a display frame.
 @static aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
 @step Review the AEAT-side compensation history (a live read).
 @static aeat app live iva-wallet pull-history --from-year 2024 --to-year 2025
@@ -250,6 +253,7 @@ aeat app modelo work revision --modelo 390 --year 2025 --period 0A
 aeat --format json app modelo iva-wallet balance --as-of-year 2025
 @step Explain how each annual formula is computed, with its legal references.
 @result aeat --format json app modelo formulas 390 --period 0A --explain
+@expect result.formula_count == 3
 @expect exit_code == 0
 ```
 

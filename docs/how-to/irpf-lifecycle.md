@@ -54,6 +54,7 @@ Confirm what the year will ask of Ana:
 aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
 @step Explain why Modelo 130 applies this year.
 @result aeat --format json app overview explain 130 --year 2026
+@expect result.applicable == true
 @expect exit_code == 0
 ```
 
@@ -180,6 +181,7 @@ Check the year's IRPF position at any point:
 aeat --format json app overview status
 @step List the modelo work units on record.
 @result aeat --format json app modelo work list
+@expect result.operation == "modelo.work.list"
 @expect exit_code == 0
 ```
 
@@ -196,8 +198,11 @@ for the annual period runs locally:
 :verify: Confirm the year's ledger reads back clean for the annual period.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-income-categories actividad_economica
 @setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
 @step Run the annual-period ledger preflight.
 @result aeat --format json app ledger preflight --year 2026 --period 0A
+@expect result.ready == true
 @expect exit_code == 0
 ```
 

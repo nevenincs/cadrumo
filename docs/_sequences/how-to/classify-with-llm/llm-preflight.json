@@ -3,6 +3,74 @@
     {
       "argv": [
         "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
         "--format",
         "json",
         "app",
@@ -17,21 +85,10 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.preflight",
-        "notices": [
-          {
-            "code": "ledger.preflight.empty_period",
-            "context": {
-              "period": "1T",
-              "year": "2026"
-            },
-            "message": "No active ledger transactions were checked for this period. If activity occurred, add or import ledger rows before calculating; if there was genuinely no activity, the empty ledger can support a zero-activity local filing.",
-            "severity": "warning",
-            "suggestion": "aeat app ledger add --help; aeat app ledger import --help"
-          }
-        ],
+        "notices": [],
         "result": {
           "bucket_id": "<bucket-id>",
-          "checked_transaction_count": 0,
+          "checked_transaction_count": 2,
           "issues": [],
           "period": {
             "code": "1T",
@@ -40,7 +97,7 @@
           "ready": true
         },
         "schema_version": "2",
-        "status": "warning"
+        "status": "success"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

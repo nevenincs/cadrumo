@@ -37,6 +37,7 @@ Confirm the IVA obligations:
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
 @step Explain why and how often Modelo 303 applies this year.
 @result aeat --format json app overview explain 303 --year 2026
+@expect result.modelo == "303"
 @expect exit_code == 0
 ```
 
@@ -59,6 +60,7 @@ Ana started her activity this year, so her true opening balance is zero:
 aeat --format json app modelo iva-wallet seed --filing-year 2025 --period 4T --amount 0 --confirm
 @step Show the wallet balance as of the filing year.
 @result aeat --format json app modelo iva-wallet balance --as-of-year 2026
+@expect result.total_balance == "0"
 @expect exit_code == 0
 ```
 
@@ -94,6 +96,7 @@ aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
 @step Export the filed revision to a local fichero-BOE.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303-2026-1T.boe
+@expect result.byte_size == 7365
 @expect exit_code == 0
 @static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
 ```
