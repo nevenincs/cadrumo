@@ -346,7 +346,16 @@ golden (output is never fabricated, so the honesty rules hold). `@static` is the
 carve-out and is admissible ONLY where the hermetic sandbox genuinely cannot run
 the command: a live-AEAT read (`pull` / the `app live` group), a Google OAuth or
 other interactive-consent flow, an interactive wizard, or an operator-machine-
-specific path. Non-`aeat` commands (`pip`, `playwright`, `ollama`, `python -m`,
+specific path. `@static` is a sigil-prefixed command frame like `@setup` /
+`@result`; its step header comes from a preceding `@step` or the leaf-help
+fallback. The frame grammar carries three rules. A sequence with executed frames
+keeps exactly one `@result` with `@expect`, and that `@result` must be the LAST
+EXECUTED frame, so `@static` frames may follow it. An all-`@static` sequence runs
+nothing, so it requires no `@result` and REFUSES the `:verify:` option (a
+verification sentence would overclaim), while `:verify:` stays mandatory on a
+sequence with executed frames. `@expect` and `@capture` on a `@static` frame are
+parse errors, because a non-executed frame produces no output to assert or
+capture. Non-`aeat` commands (`pip`, `playwright`, `ollama`, `python -m`,
 `/plugin`) remain ordinary plain fences. The mandate is scoped to the `aeat`
 executable. Enforcement is a ratcheting gate: a plain shell fence carrying an
 `aeat` invocation in a user-docs page is a violation, governed by a checked-in
