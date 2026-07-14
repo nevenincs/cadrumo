@@ -295,8 +295,9 @@ Pull a document straight from Google Drive into encrypted evidence storage with
 `doclink`. This command reaches Google Drive, so it runs against your own
 authorized account rather than in the documentation sandbox:
 
-```bash
-aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+```{cli-sequence} import-doclink
+@step Pull a document from Google Drive into encrypted evidence.
+@static aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the

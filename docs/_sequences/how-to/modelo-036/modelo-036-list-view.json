@@ -1,0 +1,127 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "m036",
+        "alta",
+        "--declared-on",
+        "2026-01-10",
+        "--sede-justificante",
+        "ACUSE-036-2026"
+      ],
+      "captures": [
+        {
+          "json_path": "result.declaration_id",
+          "name": "declaration_id",
+          "value": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.m036.alta",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
+          "declared_on": "2026-01-10",
+          "event_kind": "alta",
+          "note": null,
+          "profile_id": "<profile-id>",
+          "recorded_at": "2026-04-01T09:00:00+00:00",
+          "sede_justificante": "ACUSE-036-2026"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "m036",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.m036.list",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "declaration_count": 1,
+          "declarations": [
+            {
+              "bucket_id": "<bucket-id>",
+              "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
+              "declared_on": "2026-01-10",
+              "event_kind": "alta",
+              "note": null,
+              "profile_id": "<profile-id>",
+              "recorded_at": "2026-04-01T09:00:00+00:00",
+              "sede_justificante": "ACUSE-036-2026"
+            }
+          ],
+          "operation": "modelo.m036.list"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "m036",
+        "view",
+        "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.m036.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
+          "declared_on": "2026-01-10",
+          "event_kind": "alta",
+          "note": null,
+          "operation": "modelo.m036.view",
+          "profile_id": "<profile-id>",
+          "recorded_at": "2026-04-01T09:00:00+00:00",
+          "sede_justificante": "ACUSE-036-2026"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-036-list-view"
+}

@@ -36,35 +36,30 @@ add `--allow-incomplete` where the command accepts it (`agenda`, `backlog`, and
 
 ## What are my filing obligations?
 
-Start with the agenda:
+Start with the agenda. It ranks obligations around a reference date, showing
+what is due today, what is coming up in the next two weeks, and what is already
+overdue. Pass `--allow-incomplete` on a profile whose census facts are not yet
+fully filled in, change the reference date with `--date`, and widen the upcoming
+window with `--horizon` (the default is 14 days):
 
-```bash
-aeat app overview agenda
-```
-
-The agenda ranks obligations around a reference date. The agenda shows:
-
-- obligations due today
-- obligations coming up in the next two weeks
-- obligations that are already overdue
-
-Use another reference date when planning ahead or reviewing a past point in
-time:
-
-```bash
-aeat app overview agenda --date 2026-04-15
-```
-
-Change the upcoming window with `--horizon`; the default is 14 days:
-
-```bash
-aeat app overview agenda --date 2026-04-15 --horizon 30
+```{cli-sequence} filing-calendar-agenda
+:verify: Confirm the agenda ranks obligations around each reference date.
+@step Rank obligations around today.
+aeat --format json app overview agenda --allow-incomplete
+@step Rank obligations around another reference date.
+aeat --format json app overview agenda --date 2026-04-15 --allow-incomplete
+@step Widen the upcoming window to 30 days.
+@result aeat --format json app overview agenda --date 2026-04-15 --horizon 30 --allow-incomplete
+@expect exit_code == 0
 ```
 
 To understand why one modelo appears or does not appear, use:
 
-```bash
-aeat app overview explain 130 --year 2026
+```{cli-sequence} filing-calendar-explain
+:verify: Confirm the explain report resolves for the modelo and year.
+@step Explain whether Modelo 130 applies for the filing year.
+@result aeat --format json app overview explain 130 --year 2026
+@expect exit_code == 0
 ```
 
 `explain` reports whether that modelo applies, the registry reason, and the
@@ -85,17 +80,18 @@ capture requires AEAT authentication and is read-only.
 
 ## What missed modelos did I forget to file?
 
-Use backlog for past-due obligations that are not locally marked as presented:
+Use backlog for past-due obligations that are not locally marked as presented.
+The default window starts 365 days before today and ends today; narrow it with
+`--from` and `--to` when you are checking a specific period:
 
-```bash
-aeat app overview backlog
-```
-
-The default backlog window starts 365 days before today and ends today. Narrow
-the review when you are checking a specific period:
-
-```bash
-aeat app overview backlog --from 2026-01-01 --to 2026-06-30
+```{cli-sequence} filing-calendar-backlog
+:seed: filing-calendar-obligated-profile
+:verify: Confirm the backlog resolves for the default and narrowed windows.
+@step List past-due obligations in the default 365-day window.
+aeat --format json app overview backlog --allow-incomplete
+@step Narrow the backlog to a specific date range.
+@result aeat --format json app overview backlog --from 2026-01-01 --to 2026-06-30 --allow-incomplete
+@expect exit_code == 0
 ```
 
 Backlog is a local planning tool. It does not prove what AEAT has or has not
@@ -121,25 +117,21 @@ AEAT-verified; AEAT publishes no read-only census view the tool could confirm
 them against. Review the profile facts (see
 [Maintain Modelo 036 census facts in your profile](censo-update.md)) and add
 `--allow-incomplete` to print a provisional calendar. Provisional entries are
-marked `censo_enrolment=unverified`:
+marked `censo_enrolment=unverified`. Add `--all-profiles` to include every
+registered profile instead of only the
+[active profile](profile-setup.md#what-the-active-profile-means), or
+`--show-suppressed` to inspect obligations Cadrumo normally filters out:
 
-```bash
-aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
-```
-
-To see every registered profile instead of only the
-[active profile](profile-setup.md#what-the-active-profile-means), add
-`--all-profiles`:
-
-```bash
-aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles
-```
-
-When you want to inspect obligations that Cadrumo normally filters out, add
-`--show-suppressed`:
-
-```bash
-aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed
+```{cli-sequence} filing-calendar-calendar
+:seed: filing-calendar-obligated-profile
+:verify: Confirm the provisional calendar prints across its variants.
+@step Print a provisional calendar for the year.
+aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
+@step Include every registered profile.
+aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles --allow-incomplete
+@step Inspect obligations Cadrumo normally filters out.
+@result aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed --allow-incomplete
+@expect exit_code == 0
 ```
 
 Suppressed entries include obligations that do not apply given your profile
@@ -180,8 +172,11 @@ The `ledger list` and `ledger review` commands filter by period through
 `--filter` clauses. The period token and the year travel as two separate
 clauses, using the same AEAT tokens:
 
-```bash
-aeat app ledger list --filter period=1T --filter year=2026
+```{cli-sequence} filing-calendar-ledger-filter
+:verify: Confirm the ledger filter accepts the split period and year clauses.
+@step Filter the ledger by period and year as two separate clauses.
+@result aeat --format json app ledger list --filter period=1T --filter year=2026
+@expect exit_code == 0
 ```
 
 Pass the bare token to `period=` and the year to `year=`. The two clauses go
@@ -196,18 +191,20 @@ adjustments.
 
 ## What should I do with one modelo?
 
-List the modelo catalogue:
+List the modelo catalogue, then describe one modelo before creating filing work:
 
-```bash
-aeat app modelo list
-aeat app modelo list --year 2026
-```
-
-Describe one modelo before creating filing work:
-
-```bash
-aeat app modelo describe 130
-aeat app modelo describe 130 --period 1T
+```{cli-sequence} filing-calendar-catalogue
+:verify: Confirm the catalogue lists modelos and describes one for a period.
+@step List the modelo catalogue.
+aeat --format json app modelo list
+@step Scope the catalogue to one filing year.
+aeat --format json app modelo list --year 2026
+@step Describe one modelo.
+aeat --format json app modelo describe 130
+@step Describe the same modelo for one period.
+@result aeat --format json app modelo describe 130 --period 1T
+@expect result.code == "130"
+@expect exit_code == 0
 ```
 
 Then follow the filing workflow for the target modelo, year, and period:

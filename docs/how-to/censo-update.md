@@ -35,8 +35,13 @@ aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames
 
 Check the active profile first:
 
-```bash
-aeat config profile status
+```{cli-sequence} censo-update-check-profile
+:verify: Confirm the active profile reports its status.
+@step Check the active profile.
+@result aeat --format json config profile status
+@expect result.active_profile == "docs-sequence-sandbox"
+@expect result.configured == true
+@expect exit_code == 0
 ```
 
 ## Why census facts matter
@@ -64,10 +69,16 @@ aeat config profile edit <profile-name>
 ```
 
 The wizard walks the profile fields, including the census-backed ones. For a
-scripted update, pass the field flags with `--quiet`:
+scripted update, pass the field flags with `--quiet`. Name your own profile in
+place of `docs-sequence-sandbox`:
 
-```bash
-aeat config profile edit <profile-name> --quiet --activity "consultoria"
+```{cli-sequence} censo-update-record-facts
+:verify: Confirm the profile validates after you record the census facts.
+@step Record the activity description from your Modelo 036 copy.
+aeat --format json config profile edit docs-sequence-sandbox --quiet --activity "consultoria"
+@step Confirm the edited profile still validates.
+@result aeat --format json config profile validate
+@expect exit_code == 0
 ```
 
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
@@ -85,9 +96,14 @@ After you record a filing, update the profile fields the filing changed.
 
 Validate the active profile after editing census facts:
 
-```bash
-aeat config profile status
-aeat config profile validate
+```{cli-sequence} censo-update-validate
+:verify: Confirm the active profile validates after the census edits.
+@step Read the active profile status.
+aeat --format json config profile status
+@step Validate the active profile.
+@result aeat --format json config profile validate
+@expect result.valid == true
+@expect exit_code == 0
 ```
 
 If the profile still reports missing facts, edit those fields directly:
@@ -98,8 +114,12 @@ aeat config profile edit <profile-name> --quiet --activity <value>
 
 For modelo-specific readiness, use profile preflight:
 
-```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+```{cli-sequence} censo-update-preflight
+:verify: Confirm the profile preflight runs for the target modelo and period.
+@step Run the profile readiness preflight for Modelo 303, first quarter of 2026.
+@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@expect result.modelo == "303"
+@expect exit_code == 0
 ```
 
 ## Keep the facts current
