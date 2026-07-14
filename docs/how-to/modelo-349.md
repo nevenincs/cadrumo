@@ -27,8 +27,11 @@ profile](profile-setup.md).
   monthly (`01`-`12`) depending on your profile and operation volumes; the
   calendar surfaces which applies to you:
 
-  ```bash
-  aeat app overview explain 349 --year 2026
+  ```{cli-sequence} modelo-349-applicability
+  :verify: Confirm the modelo's applicability and cadence read back.
+  @step Check when and why Modelo 349 applies this year.
+  @result aeat --format json app overview explain 349 --year 2026
+  @expect exit_code == 0
   ```
 - Record the operations as invoice records, not bare ledger rows. The 349
   listing is built from your invoice catalogue: issued invoices to EU
@@ -73,9 +76,16 @@ total of 8000 euros of operations (`decl.importe-operaciones`), and verify
 grants verified-complete. Inspect what was bound and what is missing, then
 show the built rows:
 
-```bash
-aeat app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
-aeat app modelo work revision --modelo 349 --year 2026 --period 1T
+```{cli-sequence} modelo-349-inspect
+:seed: intracomunitario-2026
+:verify: Confirm the aggregated declaration's bindings and detail rows read back.
+@setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
+@step Show which casillas are bound and which are missing.
+aeat --format json app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
+@step Show the saved revision with its per-operator detail rows.
+@result aeat --format json app modelo work revision --modelo 349 --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
 The per-operator row fields (country code, EU VAT number, name, operation
@@ -95,17 +105,22 @@ operation; the rectification rows aggregate from there.
 
 Export the verified declaration:
 
-```bash
-aeat app modelo export --modelo 349 --year 2026 --period 1T \
-  --output ./modelo-349.boe
+```{cli-sequence} modelo-349-export
+:seed: intracomunitario-2026
+:verify: Confirm the verified declaration exports to a local fichero-BOE file.
+@setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
+@setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
+@step Export the verified declaration to a local fichero-BOE file.
+@result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
+@expect exit_code == 0
 ```
 
-After you file at the portal, record the local marker, then
-[reconcile against the justificante](reconcile.md):
-
-```bash
-aeat app modelo work file --modelo 349 --year 2026 --period 1T
-```
+After you file at the portal, record the local marker with `aeat app modelo
+work file --modelo 349 --year 2026 --period 1T`, then
+[reconcile against the justificante](reconcile.md). The marker is optional and
+only applies while the obligation window is open; export is the local finish
+line.
 
 Modelo 349 runs alongside your periodic Modelo 303: the same intra-community
 operations that appear here also feed the 303's intra-community boxes. Keep

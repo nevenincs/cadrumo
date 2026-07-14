@@ -1,0 +1,70 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "explain",
+        "349",
+        "--year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.explain",
+        "notices": [],
+        "result": {
+          "applicable": false,
+          "generated_at": "2026-04-01T09:00:00Z",
+          "legal_refs": [
+            "orden-eha-769-2010:art-1",
+            "orden-hac-174-2020:art-1",
+            "rd-1624-1992:art-79",
+            "ley-58-2003:art-93"
+          ],
+          "modelo": "349",
+          "out_of_plazo_warning": null,
+          "profile_facts": {
+            "art109_activity_income_withholding_ge_70pct": false,
+            "bienes_extranjero_above_threshold": false,
+            "does_intracomunitario": false,
+            "entity_type": "natural_person",
+            "has_employees": false,
+            "irpf_estimation_regime": "",
+            "irpf_income_categories": "",
+            "iva.group_dominant_entity_enrolled": false,
+            "iva.group_member_enrolled": false,
+            "iva.intracommunity_operations_exceed_50000_eur": false,
+            "iva.oss_enrolled": false,
+            "iva.roi_enrolled": false,
+            "iva_regime": "GENERAL",
+            "legal_entity_form": "",
+            "monedas_virtuales_extranjero_above_threshold": false,
+            "pays_capital_income_with_retencion": false,
+            "pays_professionals_with_retencion": false,
+            "pays_rent_with_retencion": false,
+            "tax_id": "sha256:1c9f9632",
+            "third_party_transactions_above_347_threshold": false
+          },
+          "rationale": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: realiza operaciones intracomunitarias.",
+          "scheduling_rationale": null,
+          "verdict": "incomplete",
+          "year": 2026
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-349-applicability"
+}
