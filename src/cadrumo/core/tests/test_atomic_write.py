@@ -92,6 +92,23 @@ class TestHardenedTier:
         atomic_write_hardened_bytes(target, b"\x00\x01secret\xff")
         assert target.read_bytes() == b"\x00\x01secret\xff"
 
+    def test_bytes_roundtrip_preserves_newline_bytes(self, tmp_path: Path) -> None:
+        """A 0x0A byte must survive verbatim (no Windows text-mode CRLF translation).
+
+        Binary payloads written through the hardened tier (ciphertext, master
+        keys, fichero-BOE / PDF bytes) routinely contain 0x0A bytes. If the
+        underlying fd is opened in text mode on Windows, os.write translates
+        every 0x0A to 0x0D0A and lengthens the file, silently corrupting the
+        payload and breaking every content-hash / decrypt check downstream.
+        This pins the byte-exact contract on every platform.
+        """
+        payload = b"line-one\nline-two\r\nbinary\x00\x0a\xff-tail\n"
+        target = tmp_path / "newline.bin"
+        atomic_write_hardened_bytes(target, payload)
+        written = target.read_bytes()
+        assert written == payload
+        assert len(written) == len(payload)
+
     def test_text_roundtrip(self, tmp_path: Path) -> None:
         target = tmp_path / "secret.txt"
         atomic_write_hardened_text(target, "passphrase-material", encoding="utf-8")
