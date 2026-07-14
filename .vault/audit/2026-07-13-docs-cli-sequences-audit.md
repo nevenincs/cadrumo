@@ -112,12 +112,13 @@ Fixes this campaign's gates and sweeps surfaced and landed (shas recorded for th
 - **Non-interactive robustness:** the rekey/recover flows now convert a non-interactive `EOFError` into a typed REFUSED outcome instead of an uncaught crash (`3e30eba9f2`).
 - **Evidence identity:** evidence identity is now path-independent, so the same evidence bytes resolve to one identity regardless of the source path they arrived by (`0d16e2e45d`).
 - **Diagnostics routing (in flight):** relation-prefill diagnostics move onto the `Notice` channel — sha to be added when it lands.
-- **Error-envelope threading (in flight):** the error-envelope command-identifier threading — sha to be added when it lands.
+- **Error-envelope threading:** the error-envelope command-identifier threading landed (`3beb36ccf3`); the identifier derivation is guaranteed byte-identical to the success-envelope convention, and is null only pre-resolution (before the command path is resolved).
 
 ### Open recorded findings
 
 - **Certificate/bundle as-given path-keyed events (accepted):** a different class from the evidence-identity fix above — certificate and bundle events are keyed on the as-given path by design; accepted, not a regression.
 - **M390 deducible/evidence coupling (resolving):** the M390 deducible-versus-evidence coupling is resolving via seed 5b; tracked to that resolution.
+- **Peer-campaign regression (reported, unaddressable-peer):** `core/errors` `test_exception_base_hygiene` fails on 3 unregistered `RuntimeError`-rooted exception classes (including `FormerProductAuthSessionStateError`) introduced by the auth-session-custody rename commit `7cc976dd66`; owned by that campaign, flagged 2026-07-14. Reported as inventory, not fixed here — the owning campaign holds it.
 
 ### Wave C ruling — profile-setup enrollment (coordinator, 2026-07-14)
 
