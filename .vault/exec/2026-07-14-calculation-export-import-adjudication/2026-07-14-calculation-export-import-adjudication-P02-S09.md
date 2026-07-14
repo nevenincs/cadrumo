@@ -113,6 +113,10 @@ golden outbound payload exists.
 
 ## Notes
 
+- A concurrent coordinator committed this record together with P03.S22 and
+  closed both plan rows before independent review completed. The rows were
+  reopened through the canonical CLI; this record is reclosed only after the
+  reviewer accepted its substantive outcome.
 - Grounding used the accepted adjudication contract, exact Modelo 309
   registry/legal files, generic exporter boundaries, and direct test/fixture
   inventory. The bounded `vaultspec-rag` query returned unrelated export

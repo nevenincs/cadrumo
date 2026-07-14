@@ -463,6 +463,43 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain a real filed 2026+ PDF, then consider reviewed profile
   data and corpus coverage through the generic parser only.
 
+### modelo-309-outbound-2023-open | low | Source availability does not create outbound scope
+
+- **Candidate:** Modelo 309 outbound generation from 2023, open end.
+- **Mandate:** `absent`; no accepted or legacy outbound requirement exists.
+- **Exact authority window:** `aeat-dr-309-2023` covers 2023+.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic engine is delivered and fail-closed.
+- **Real evidence or specimen:** official design available; layout and golden
+  outbound payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `not-mandated`.
+- **Next action:** `none`; create no outbound implementation unless a future
+  accepted mandate changes scope.
+
+### modelo-309-outbound-2004-2022 | low | Historical source gaps do not matter without a mandate
+
+- **Candidate:** Modelo 309 outbound generation from 2004 through 2022.
+- **Mandate:** `absent`.
+- **Exact authority window:** `missing`; registered design begins in 2023.
+- **Canonical implementation state:** `gap` for optional layout data; no new
+  engine is permitted.
+- **Real evidence or specimen:** exact-window design and golden payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `not-mandated`.
+- **Next action:** `none`; do not seek authority or create work absent a future
+  accepted mandate.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
