@@ -46,6 +46,7 @@ UPSTREAM_SCHEMA_VERSION: Final[int] = 1
 
 _EXIT_UNSUPPORTED: Final[int] = 2
 _EXIT_EMPTY: Final[int] = 3
+_UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "UPSTREAM_SCHEMA_VERSION",
@@ -172,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     payload = adapt_outputs(outputs, source=source, repo_root=repo_root)
     # Write UTF-8 bytes directly: the upstream runner decodes stdout as UTF-8,
     # while a Windows console python defaults to cp1252 for text-mode stdout.
-    sys.stdout.buffer.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+    sys.stdout.buffer.write(json.dumps(payload, ensure_ascii=False).encode(_UTF_8))
     sys.stdout.buffer.write(b"\n")
     return 0
 

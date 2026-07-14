@@ -16,6 +16,7 @@ instructive problem, not a crash, so the parser accumulates it with the rest.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 from ._parser import _FrameBuilder, parse_frame_lines
 from ._schema import FrameKind
@@ -24,6 +25,7 @@ __all__ = ["SEED_SUFFIX", "default_seeds_root", "load_seed_frames"]
 
 #: File extension of a committed seed recipe.
 SEED_SUFFIX: str = ".seq"
+_UTF_8: Final[str] = "utf-8"
 
 
 def default_seeds_root() -> Path:
@@ -65,7 +67,7 @@ def load_seed_frames(
         return [], [f"{source}: recipe not found at {recipe_path}"]
 
     try:
-        text = recipe_path.read_text(encoding="utf-8")
+        text = recipe_path.read_text(encoding=_UTF_8)
     except OSError as exc:
         return [], [f"{source}: cannot read recipe at {recipe_path} ({exc})"]
 
