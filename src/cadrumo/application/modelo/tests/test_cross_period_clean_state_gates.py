@@ -695,23 +695,24 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
             if finding["kind"] == "advisory" and "període=1T" in finding["message"]
         )
 
-        assert "La dependència entre períodes no està neta" in blocking_notice["message"]
+        assert "la dependència entre períodes no està neta" in blocking_notice["message"]
         assert "model=303" in blocking_notice["message"]
         assert blocking_notice["suggestion"] is not None
         assert (
             "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A"
             in (blocking_notice["suggestion"])
         )
-        assert "La dependència entre períodes no està neta" in blocking_payload["message"]
+        assert "la dependència entre períodes no està neta" in blocking_payload["message"]
         assert blocking_payload["next_action"] == blocking_notice["suggestion"]
-        assert "La dependència entre períodes no està neta" in text_projection.output
-        assert "la dependència entre períodes s'ha exclòs" in suppression_notice["message"]
+        assert "la dependència entre períodes no està neta" in text_projection.output
+        assert "dependència entre períodes exclosa perquè no hi ha obligació prèvia" in suppression_notice["message"]
         assert "2025-10-01" in suppression_notice["message"]
         assert suppression_notice["suggestion"] is not None
-        assert "Confirmeu que la data d'inici d'activitat registrada és correcta" in (suppression_notice["suggestion"])
-        assert "la dependència entre períodes s'ha exclòs" in suppression_payload["message"]
+        assert "Confirmeu que la data" in (suppression_notice["suggestion"])
+        assert "Quan estigui disponible la lectura en viu del cens" in (suppression_notice["suggestion"])
+        assert "dependència entre períodes exclosa perquè no hi ha obligació prèvia" in suppression_payload["message"]
         assert suppression_payload["next_action"] == suppression_notice["suggestion"]
-        assert "la dependència entre períodes s'ha exclòs" in text_projection.output
+        assert "dependència entre períodes exclosa perquè no hi ha obligació prèvia" in text_projection.output
         assert all("%{" not in message for message, _ in stored_finding_evidence)
 
         reloaded_report = reports.load().for_calculation_revision(revision_id)[0]
