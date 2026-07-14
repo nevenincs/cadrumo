@@ -221,7 +221,7 @@ def _stderr_view(golden_frame: GoldenFrame) -> dict[str, str] | None:
 
 def _frame_payload(
     parsed_frame: SequenceFrame,
-    golden_frame: GoldenFrame,
+    golden_frame: GoldenFrame | None,
     index: int,
     shells: list[str],
 ) -> dict[str, Any]:
@@ -233,7 +233,9 @@ def _frame_payload(
     the token-index groupings per display line for each declared shell — the
     packing is shell-independent (only the continuation marker differs), so the
     groupings are identical across shells and the render appends the shell's
-    marker at build time.
+    marker at build time. A ``@static`` frame passes ``golden_frame=None``: it is
+    display-only, so it carries no output, no stderr, and no exit code (output is
+    never fabricated).
     """
     from dev.docs.sequences import tokenise_command
 
@@ -247,9 +249,9 @@ def _frame_payload(
         "command_line": parsed_frame.command_line,
         "tokens": token_dicts,
         "wrapped": {shell: [list(line) for line in lines] for shell in shells},
-        "exit_code": golden_frame.exit_code,
-        "output": _output_view(golden_frame),
-        "stderr": _stderr_view(golden_frame),
+        "exit_code": golden_frame.exit_code if golden_frame is not None else None,
+        "output": _output_view(golden_frame) if golden_frame is not None else {"format": "empty", "body": ""},
+        "stderr": _stderr_view(golden_frame) if golden_frame is not None else None,
         "expects": [
             {
                 "json_path": assertion.json_path,
@@ -264,34 +266,45 @@ def _frame_payload(
 
 def build_sequence_payload(
     sequence: ParsedSequence,
-    golden: SequenceGolden,
+    golden: SequenceGolden | None,
     *,
     shells: list[str] | None = None,
 ) -> dict[str, Any]:
     """Assemble the one inline payload for a sequence from its parse and golden.
 
     ``shells`` is the ordered reader-facing shell set (default ``bash pwsh``);
-    the first entry is the default variant.
+    the first entry is the default variant. ``@static`` frames render from the
+    parse alone (no golden); ``golden`` is the executed-frames golden, aligned
+    1:1 with the sequence's executed (non-static) frames, and is ``None`` for an
+    all-static sequence (nothing executes, so there is no golden).
 
     Raises:
-        ValueError: When the authored body and its committed golden disagree on
-            frame count or a frame's kind — the golden is stale and must be
-            refreshed.
+        ValueError: When the authored body's executed frames and its committed
+            golden disagree on count or a frame's kind — the golden is stale and
+            must be refreshed.
     """
     resolved_shells = shells if shells else list(_DEFAULT_SHELLS)
-    if len(sequence.frames) != len(golden.frames):
+    golden_frames = golden.frames if golden is not None else ()
+    executed = [frame for frame in sequence.frames if frame.kind.value != "static"]
+    if len(executed) != len(golden_frames):
         raise ValueError(
-            f"the golden for {sequence.sequence_id!r} has {len(golden.frames)} frames "
-            f"but the directive body parses to {len(sequence.frames)}; refresh the golden",
+            f"the golden for {sequence.sequence_id!r} has {len(golden_frames)} frames "
+            f"but the directive body parses to {len(executed)} executed frames; refresh the golden",
         )
     frames: list[dict[str, Any]] = []
-    for index, (parsed_frame, golden_frame) in enumerate(zip(sequence.frames, golden.frames, strict=True)):
+    golden_index = 0
+    for index, parsed_frame in enumerate(sequence.frames):
+        if parsed_frame.kind.value == "static":
+            frames.append(_frame_payload(parsed_frame, None, index, resolved_shells))
+            continue
+        golden_frame = golden_frames[golden_index]
         if parsed_frame.kind is not golden_frame.kind:
             raise ValueError(
                 f"frame {index} of {sequence.sequence_id!r} is {parsed_frame.kind.value!r} in the "
                 f"body but {golden_frame.kind.value!r} in the golden; refresh the golden",
             )
         frames.append(_frame_payload(parsed_frame, golden_frame, index, resolved_shells))
+        golden_index += 1
     return {
         "sequence_id": sequence.sequence_id,
         "verify": sequence.verify,
@@ -354,7 +367,7 @@ def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
     return f'<pre class="{css_class}" data-format="{data_format}">{body}</pre>'
 
 
-def _render_frame_html(frame: dict[str, Any], verify: str, shells: list[str]) -> str:
+def _render_frame_html(frame: dict[str, Any], verify: str | None, shells: list[str]) -> str:
     """Render one frame's static HTML from its payload dict.
 
     The command block carries one ``cadrumo-cmd-variant`` per declared shell (the
@@ -384,7 +397,7 @@ def _render_frame_html(frame: dict[str, Any], verify: str, shells: list[str]) ->
     stderr_html = _render_output_html(frame.get("stderr"), css_class="cadrumo-frame-stderr")
     if stderr_html:
         parts.append(stderr_html)
-    if frame["kind"] == "result":
+    if frame["kind"] == "result" and verify is not None:
         parts.append(f'<p class="cadrumo-verify">{html.escape(verify)}</p>')
         if frame["expects"]:
             checks = "".join(
@@ -474,7 +487,10 @@ class CliSequenceDirective(Directive):
             # only at execution, so the author gets a clear error here rather
             # than an opaque missing-golden failure.
             refuse_live_frames(sequence)
-            golden = read_golden(page, sequence_id, goldens_root=goldens_root)
+            # An all-@static sequence executes nothing, so it has no golden; it
+            # renders from the parse alone. A sequence with executed frames reads
+            # its committed golden (executed frames only).
+            golden = read_golden(page, sequence_id, goldens_root=goldens_root) if sequence.executed_frames else None
             payload = build_sequence_payload(sequence, golden, shells=shells)
         except SequenceEngineError as exc:
             raise self.error(f"cli-sequence {sequence_id!r} on page {page!r}: {exc}") from exc
