@@ -520,6 +520,314 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain a real filed 2010+ PDF, then consider reviewed profile
   data and real corpus coverage through the generic parser only.
 
+### modelo-322-outbound-2026-open | low | Registered 2026 authority remains mandate-gated
+
+- **Candidate:** Modelo 322 outbound generation from `2026-01-01`, open end.
+- **Mandate:** `unproven`; the legacy goal names export/file layout support
+  only "where required," a conditional pointer, not an accepted decision.
+- **Exact authority window:** `aeat-dr-322-2026` covers 2026+.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic exporter/parser is delivered and fails closed.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload and real Modelo 322 round trip missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted 2026+ outbound mandate before layout work.
+
+### modelo-322-outbound-2008-2025 | low | Later authority cannot be projected backwards
+
+- **Candidate:** Modelo 322 outbound generation for filing years 2008-2025.
+- **Mandate:** `unproven`, same reasoning as the 2026-open window.
+- **Exact authority window:** `missing`; the 2026 XLSX does not cover
+  2008-2025 and no other record design is registered.
+- **Canonical implementation state:** `gap` for optional layout data; no new
+  renderer or parser is permitted.
+- **Real evidence or specimen:** exact-window design and golden payload
+  missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** establish a mandate before seeking exact 2008-2025
+  authority; never extrapolate the 2026 design backward.
+
+### modelo-347-outbound-2025-open | low | Deferred legacy transcription is not an accepted mandate
+
+- **Candidate:** Modelo 347 outbound generation from `2025-01-01`, open end.
+- **Mandate:** `unproven`; the legacy deferral names a future transcription
+  task, not a proven current requirement.
+- **Exact authority window:** `aeat-dr-347-2025` covers 2025+.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic exporter/parser is delivered and fails closed.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload and real round trip missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted outbound mandate before layout work.
+
+### modelo-347-outbound-2011-2024 | low | Second registered window carries the same unresolved mandate
+
+- **Candidate:** Modelo 347 outbound generation from `2011-12-13` through
+  `2024-12-31`.
+- **Mandate:** `unproven`, same reasoning as the 2025-open window.
+- **Exact authority window:** `aeat-dr-347-2011` covers this exact window.
+- **Canonical implementation state:** `gap` for optional layout data.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** one shared product decision covers both registered
+  windows; each then needs its own registry layout data because the record
+  designs differ.
+
+### modelo-347-outbound-2008-2011-gap | low | Uncatalogued span has neither mandate nor authority
+
+- **Candidate:** Modelo 347 outbound generation for the uncatalogued span
+  from `2008-10-23` through `2011-12-12`.
+- **Mandate:** `unproven`, same reasoning as the other two windows.
+- **Exact authority window:** `missing`; neither registered PDF record design
+  covers this span.
+- **Canonical implementation state:** `gap` for optional layout data.
+- **Real evidence or specimen:** no exact-window design or golden payload.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** establish a mandate first; never derive 2008-2011 record
+  design authority from either bundled PDF.
+
+### modelo-353-outbound-2026-open | low | Registered 2026 authority remains mandate-gated
+
+- **Candidate:** Modelo 353 outbound generation from `2026-01-01`, open end.
+- **Mandate:** `unproven`; the legacy goal names export/file layout support
+  only "where required."
+- **Exact authority window:** `aeat-dr-353-2026` covers 2026+.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic exporter/parser is delivered and fails closed.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload and real round trip missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted 2026+ outbound mandate before layout work.
+
+### modelo-353-outbound-2008-2025 | low | Later authority cannot be projected backwards
+
+- **Candidate:** Modelo 353 outbound generation for filing years 2008-2025.
+- **Mandate:** `unproven`, same reasoning as the 2026-open window.
+- **Exact authority window:** `missing`; the 2026 XLSX does not cover
+  2008-2025.
+- **Canonical implementation state:** `gap` for optional layout data.
+- **Real evidence or specimen:** exact-window design and golden payload
+  missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** establish a mandate before seeking exact 2008-2025
+  authority; never extrapolate the 2026 design backward.
+
+### modelo-360-outbound-2010-open | low | Aligned record design does not create outbound scope
+
+- **Candidate:** Modelo 360 outbound generation from `2010-04-01`, open end.
+- **Mandate:** `absent`; no accepted or legacy outbound requirement exists.
+- **Exact authority window:** `aeat-dr-360-2010` aligns with the revision from
+  `2010-04-01`.
+- **Canonical implementation state:** `gap` for optional layout data; the
+  generic exporter/parser is delivered and fails closed.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `not-mandated`.
+- **Next action:** `none`; preserve `aeat-dr-360-2010` as registered
+  layout-authority evidence and create no outbound implementation unless a
+  future accepted mandate changes scope.
+
+### modelo-369-outbound-union-2021-open | low | Esquema Union outbound remains mandate-gated
+
+- **Candidate:** Modelo 369 Esquema Union outbound generation from
+  `2021-07-01`, open end.
+- **Mandate:** `unproven`; legacy discovery identifies a possible outbound
+  surface, not an accepted decision.
+- **Exact authority window:** `aeat-dr-369-2021` covers this window.
+- **Canonical implementation state:** `gap` for optional layout data on this
+  revision.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain a product decision naming Esquema Union
+  specifically.
+
+### modelo-369-outbound-importacion-2021-open | low | Esquema Importacion outbound remains mandate-gated
+
+- **Candidate:** Modelo 369 Esquema Importacion (IOSS) outbound generation
+  from `2021-07-01`, open end.
+- **Mandate:** `unproven`, same reasoning as Esquema Union; the three regime
+  variants require independent decisions.
+- **Exact authority window:** `aeat-dr-369-2021` covers this window, shared
+  with the other two variants.
+- **Canonical implementation state:** `gap` for optional layout data on this
+  revision.
+- **Real evidence or specimen:** golden outbound payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain a product decision naming Esquema Importacion
+  specifically; never assume a Union decision covers this variant.
+
+### modelo-369-outbound-exterior-2021-open | low | Esquema Exterior outbound remains mandate-gated
+
+- **Candidate:** Modelo 369 Esquema Exterior outbound generation from
+  `2021-07-01`, open end.
+- **Mandate:** `unproven`, same reasoning as the other two variants.
+- **Exact authority window:** `aeat-dr-369-2021` covers this window, shared
+  with the other two variants.
+- **Canonical implementation state:** `gap` for optional layout data on this
+  revision.
+- **Real evidence or specimen:** golden outbound payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain a product decision naming Esquema Exterior
+  specifically; never assume a Union or Importacion decision covers this
+  variant.
+
+### modelo-840-outbound-2003-open | low | Explicit legacy gap remains mandate-gated, not scoped
+
+- **Candidate:** Modelo 840 outbound generation from `2003-09-19`, open end.
+- **Mandate:** `unproven`; legacy wording explicitly names the missing
+  layout-binding rows, but naming a known optional-data gap is not an
+  accepted decision or explicit current product goal.
+- **Exact authority window:** `aeat-dr-840` aligns exactly with the revision
+  start and covers this candidate with an open end.
+- **Canonical implementation state:** `gap` for optional layout and
+  layout-binding data; the generic exporter/parser is delivered and fails
+  closed.
+- **Real evidence or specimen:** official design available; golden outbound
+  payload missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted machine-file-generation mandate before
+  transcribing any registry field or layout-binding row.
+
+### modelo-100-outbound-exercise-2026 | low | No exercise-2026 authority is published or bundled
+
+- **Candidate:** Modelo 100 outbound fichero generation for exercise 2026.
+- **Mandate:** not the controlling gate; authority absence fails the gate
+  regardless of mandate status.
+- **Exact authority window:** `missing`; the most recent bundled artefacts
+  (dictionary, XSD) are dated for exercise 2025 and no exercise-2026 AEAT or
+  BOE record design exists to acquire, verify, or bundle. The registry has
+  revisions `2020` through `2025` only; no `2026` revision exists.
+- **Canonical implementation state:** not separable from the authority gap;
+  there is no exercise-2026 revision to hold layout data.
+- **Real evidence or specimen:** `missing`; no exercise-2026 artefact can
+  exist before AEAT publishes one.
+- **Retirement:** `false`.
+- **Evidence block:** `true`; the missing artefact is the unpublished
+  official exercise-2026 record design.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `authority-gated`.
+- **Next action:** wait for AEAT/BOE publication; then acquire, verify, and
+  bundle the artefact, register a `2026` revision from it, and re-run this
+  adjudication. Never roll the 2025 revision forward by assumption.
+
+## Duplicate-code guards confirmed
+
+- Every export-layout candidate's canonical implementation state is `gap`
+  only in optional per-Modelo registry data (`export_layouts`, layout-binding
+  rows). No finding proposes a Modelo-specific renderer; every candidate
+  routes through the single `resolve_export_layout` / `export_draft` /
+  `_render_export_layout` path, which already fails closed on an absent
+  layout.
+- Every declaration-extraction candidate's canonical implementation state is
+  `gap` only in optional per-Modelo `extraction_profiles` data. No finding
+  proposes a Modelo-specific parser; every candidate routes through the
+  single `parse_declaracion_bytes` profile-selection path, which hard-fails
+  when no unique applicable profile exists.
+- The Modelo 369 three-regime candidate keeps one shared record-design
+  source (`aeat-dr-369-2021`) as authority for three distinct disposition
+  rows (Union, Importacion, Exterior); it does not flatten the three regime
+  revisions into one candidate or one schema.
+- The sealed-archive persistence service is not named by any finding as a
+  substitute for, or extension of, an AEAT export/import format.
+
+## Unresolved external gates
+
+- **Sanitized filed declaration specimens** (blocking `evidence-gated`
+  findings): Modelo 200 exercise 2025, Modelo 308 2019-open, Modelo 309
+  2023-open, Modelo 322 2026-open, Modelo 353 2026-open, Modelo 360
+  2010-open. No production work may proceed on any of these until a real
+  sanitized filed PDF is obtained for the named window.
+- **Exact historical declaration-copy authority** (blocking `authority-gated`
+  extraction findings): Modelo 308 2009-2018, Modelo 309 2004-2022, Modelo
+  322 2008-2025, Modelo 353 2008-2025. No production work may proceed without
+  first registering exact historical record-design or filed-copy authority;
+  the later windows' designs must not be extrapolated backward.
+- **Modelo 100 exercise-2026 official record design**: unpublished by AEAT
+  or BOE as of this adjudication. The 2025 revision must not be rolled
+  forward by assumption.
+- **Product mandate decisions** (blocking every `mandate-gated` finding
+  across Modelos 036, 184, 190, 193, 308, 322, 347, 353, 369, and 840): no
+  outbound work may proceed on any of these Modelos until an accepted
+  decision or explicit current product goal establishes the exact-window
+  requirement named in the corresponding finding.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
@@ -529,3 +837,7 @@ and real-behavior coverage through the canonical engines.
   archive formats regardless of candidate disposition.
 - Leave candidate outcomes unrecorded until their individual plan Steps inspect
   the required mandate, authority, implementation, and real evidence.
+- Zero candidates in this audit reach `implementation-admitted`. Any
+  successor plan must be limited to candidates that later cross all four
+  gate conditions; until then, this adjudication authorizes no production
+  work.
