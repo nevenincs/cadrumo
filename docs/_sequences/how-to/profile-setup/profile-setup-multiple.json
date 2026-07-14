@@ -1,0 +1,76 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "active_profile\tdocs-sequence-sandbox\n*\tdocs-sequence-sandbox\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "create",
+        "my-other-profile",
+        "--quiet",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "87654321X",
+        "--name",
+        "Otra",
+        "--surnames",
+        "Persona Ejemplo"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tmy-other-profile\nStatus\tcreated\nActive profile\tmy-other-profile\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "switch",
+        "my-other-profile"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "active_profile\tmy-other-profile\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "profile\tmy-other-profile\nreadiness\tblocked\nidentity.tax_id\tpresent\nactivities.description\tmissing\nnext_action\taeat config profile edit my-other-profile\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-multiple"
+}
