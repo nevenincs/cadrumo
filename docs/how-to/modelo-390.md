@@ -46,12 +46,12 @@ aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @step Calculate the annual summary from the year's ledger and the filed 303 quarters.
 aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values["iva.anual.cuota-devengada-total"] == "0.00"
-@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "0.00"
+@expect result.casilla_values["iva.anual.cuota-devengada-total"] == "1470.00"
+@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "1470.00"
 @expect result.casilla_values["iva.anual.cuota-deducible-total"] == "0.00"
 @expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "0.00"
-@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "0.00"
-@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "0.00"
+@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "1470.00"
+@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1470.00"
 @step Verify the annual draft; the four filed 303 quarters satisfy the cross-period gate.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
@@ -64,11 +64,13 @@ quarters are filed locally but carry no external AEAT justificante yet, so the
 tool discloses that the annual reconciliation rests on local-only evidence. That
 disclosure is correct - a locally-filed quarter is honest evidence for the
 annual fold-in, and the advisory tells you where an official justificante would
-strengthen the record. In this example the four quarters record no IVA activity,
-so every annual total and its 303-reconciliation value is 0.00: the point is the
-structural fold-in and the reconciliation invariant - each annual total equals
-the sum of the quarters it summarises - rather than a specific amount. The rest
-of this guide explains each stage and the checks around it.
+strengthen the record. In this example the four quarters charged 1470.00 of IVA
+between them (420 + 315 + 210 + 525), so the annual cuota devengada and the
+régimen-general result both read 1470.00 - matching the sum of the quarters,
+which is the reconciliation invariant each annual total upholds. The deducible
+total stays 0.00 here because deductible IVA rows need linked purchase-invoice
+evidence before they count; attach that evidence to claim input IVA. The rest of
+this guide explains each stage and the checks around it.
 
 ## Setup steps before you start
 
