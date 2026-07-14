@@ -127,17 +127,27 @@ Establish each quarter's evidence one of two ways before you verify Modelo 390:
 
 - Mark each 303 quarter as filed locally, while its AEAT filing-obligation
   window is open. Prepare and verify each quarter (see
-  [Prepare a Modelo 303 IVA filing](modelo-303.md)), then run `aeat app modelo
-  work file --modelo 303 --year 2025 --period 1T` for each. `work file` records
-  the filing locally only; it does not submit to AEAT, and it refuses outside the
-  obligation window.
-- Capture or reconcile the official AEAT justificante for each quarter with
-  `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` and
-  `aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T --file
-  ./303-2025-1T-justificante.pdf`. `live filed pull-sources` reads filed
-  declarations from AEAT and refuses when AEAT authentication is not configured
-  (it needs a Cl@ve identity matching the active profile). `reconcile file` reads
-  a local justificante PDF and never contacts AEAT.
+  [Prepare a Modelo 303 IVA filing](modelo-303.md)), then record each one:
+
+  ```bash
+  aeat app modelo work file --modelo 303 --year 2025 --period 1T
+  ```
+
+  `work file` records the filing locally only; it does not submit to AEAT, and
+  it refuses outside the obligation window.
+
+- Capture or reconcile the official AEAT justificante for each quarter:
+
+  ```bash
+  aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+  aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T \
+    --file ./303-2025-1T-justificante.pdf
+  ```
+
+  `live filed pull-sources` reads filed declarations from AEAT and refuses
+  when AEAT authentication is not configured (it needs a Cl@ve identity
+  matching the active profile). `reconcile file` reads a local justificante
+  PDF and never contacts AEAT.
 
 If you cannot establish a quarter's evidence, do not force the annual return
 past the block. Repair the missing 303 evidence first, or report the gap.
@@ -145,10 +155,20 @@ past the block. Repair the missing 303 evidence first, or report the gap.
 ## Check each visible filing target
 
 Use the same active profile for every command. Inspect the four 303 filing
-targets before you work on the annual target: `aeat config profile status`, then
-`aeat app modelo work status --modelo 303 --year 2025 --period 1T` for each of
-`1T`, `2T`, `3T`, and `4T`. List all saved work with `aeat app modelo work list`
-when you need to see the active profile's broader filing surface.
+targets before you work on the annual target — repeat the status check for
+each of `1T`, `2T`, `3T`, and `4T`:
+
+```bash
+aeat config profile status
+aeat app modelo work status --modelo 303 --year 2025 --period 1T
+```
+
+List all saved work when you need to see the active profile's broader filing
+surface:
+
+```bash
+aeat app modelo work list
+```
 
 No command switches a current filing target for you. To move from one quarter
 to another, change `--period`. To move from the quarterly 303 review to the
@@ -156,11 +176,15 @@ annual 390 review, change both `--modelo` and `--period`.
 
 ## Review the 303 values that feed Modelo 390
 
-For each Modelo 303 period, list revisions and inspect the selected revision
-with `aeat app modelo work revisions --modelo 303 --year 2025 --period 1T` and
-`aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select
-filed`. If no filed revision exists locally, inspect the current or verified
-revision instead with `--select latest-verified` or `--select current`.
+For each Modelo 303 period, list revisions and inspect the selected revision:
+
+```bash
+aeat app modelo work revisions --modelo 303 --year 2025 --period 1T
+aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select filed
+```
+
+If no filed revision exists locally, inspect the current or verified revision
+instead with `--select latest-verified` or `--select current`.
 
 Repeat that review for `2T`, `3T`, and `4T`. Pay attention to the values that
 Modelo 390 reconciles from Modelo 303:
@@ -171,9 +195,14 @@ Modelo 390 reconciles from Modelo 303:
 - `iva.compensacion-generada-periodo`
 
 If a 303 return was filed outside Cadrumo, capture or reconcile the official
-evidence before you rely on local values with `aeat app live filed pull-sources
---modelo 390 --year 2025 --period 0A` and `aeat app modelo reconcile file
---modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf`.
+evidence before you rely on local values:
+
+```bash
+aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T \
+  --file ./303-2025-1T-justificante.pdf
+```
+
 Live filed capture is read-only. Reconciliation reads the justificante or
 declaration file you supply. These commands help you compare local and external
 filing evidence, but the current Modelo 390 calculation path does not make a
@@ -181,14 +210,21 @@ fresh AEAT remote-state check a blanket prerequisite for calculation.
 
 For IVA compensation history, use the IVA wallet commands - they support the
 compensation carry-forward review; they are not a general Modelo 390
-reconciliation gate: `aeat app modelo iva-wallet balance --as-of-year 2025`,
-`aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0
---confirm`, `aeat app modelo iva-wallet correct --filing-year 2024 --period 4T
---amount 1200.50 --reason "fix opening balance" --confirm`, `aeat app live
-iva-wallet history`, and `aeat app live iva-wallet pull-history --from-year 2024
---to-year 2025`. `pull-history` requires both `--from-year` and `--to-year`; it
-reads filed Modelo 303 history from AEAT and refuses when AEAT authentication is
-not configured.
+reconciliation gate:
+
+```bash
+aeat app modelo iva-wallet balance --as-of-year 2025
+aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 \
+  --confirm
+aeat app modelo iva-wallet correct --filing-year 2024 --period 4T \
+  --amount 1200.50 --reason "fix opening balance" --confirm
+aeat app live iva-wallet history
+aeat app live iva-wallet pull-history --from-year 2024 --to-year 2025
+```
+
+`pull-history` requires both `--from-year` and `--to-year`; it reads filed
+Modelo 303 history from AEAT and refuses when AEAT authentication is not
+configured.
 
 Use `seed` only when you have a real opening compensation balance from before
 the local Modelo 303 history. If you seeded a wrong amount, `correct` overwrites
@@ -196,12 +232,16 @@ it (it refuses once an already-filed Modelo 303 has consumed that basis).
 
 ## Inspect the annual work unit
 
-Check the saved annual target and its bindings with `aeat app modelo work status
---modelo 390 --year 2025 --period 0A`, `aeat app modelo work history --modelo 390
---year 2025 --period 0A`, `aeat app modelo bindings list --modelo 390 --year 2025
---period 0A` (add `--missing` to focus on unfilled fields), `aeat app modelo
-casillas 390 --period 0A`, and `aeat app modelo formulas 390 --period 0A
---explain`.
+Check the saved annual target and its bindings (add `--missing` to the
+bindings listing to focus on unfilled fields):
+
+```bash
+aeat app modelo work status --modelo 390 --year 2025 --period 0A
+aeat app modelo work history --modelo 390 --year 2025 --period 0A
+aeat app modelo bindings list --modelo 390 --year 2025 --period 0A
+aeat app modelo casillas 390 --period 0A
+aeat app modelo formulas 390 --period 0A --explain
+```
 
 The binding list shows ledger IVA aggregation bindings (source
 `ledger_iva_aggregation`) and 303-derived bindings (source `relation_prefill`,
@@ -212,17 +252,25 @@ local filing record automatically.
 
 ## Supply reviewed 303-derived values if needed
 
-Check the annual ledger window before calculation with `aeat app ledger preflight
---year 2025 --period 0A` and `aeat app ledger status --year 2025 --period 0A`.
+Check the annual ledger window before calculation:
+
+```bash
+aeat app ledger preflight --year 2025 --period 0A
+aeat app ledger status --year 2025 --period 0A
+```
 
 The annual calculation uses the annual ledger window for 390 ledger-backed IVA
 aggregates. For 303-derived values, the registry defines the binding IDs and the
 source periods. If those binding values are not already available to the
 calculation, inspect the missing binding list and supply reviewed values
-explicitly, for example `aeat app modelo work calculate --modelo 390 --year 2025
---period 0A --binding modelo-390-prev-303-cuota-devengada-total=<sum-from-303>
---binding modelo-390-prev-303-cuota-deducible-total=<sum-from-303> --binding
-modelo-390-prev-303-resultado-regimen-general=<sum-from-303>`.
+explicitly, for example:
+
+```bash
+aeat app modelo work calculate --modelo 390 --year 2025 --period 0A \
+  --binding modelo-390-prev-303-cuota-devengada-total=<sum-from-303> \
+  --binding modelo-390-prev-303-cuota-deducible-total=<sum-from-303> \
+  --binding modelo-390-prev-303-resultado-regimen-general=<sum-from-303>
+```
 
 Use reviewed numbers, not placeholders. If the reviewed 303 history is missing
 or inconsistent, stop and repair the 303 evidence before continuing. For
@@ -231,9 +279,12 @@ casilla-level review and binding mechanics, see
 
 ## Review the annual calculation
 
-Inspect the saved annual revision with `aeat app modelo work revisions --modelo
-390 --year 2025 --period 0A` and `aeat app modelo work revision --modelo 390
---year 2025 --period 0A`.
+Inspect the saved annual revision:
+
+```bash
+aeat app modelo work revisions --modelo 390 --year 2025 --period 0A
+aeat app modelo work revision --modelo 390 --year 2025 --period 0A
+```
 
 Compare the annual totals with the 303 reconciliation values:
 
@@ -247,10 +298,14 @@ Compare the annual totals with the 303 reconciliation values:
 If the annual ledger totals and 303-derived reconciliation values diverge, do
 not force the 390 to pass first. Review the annual ledger window, each 303
 revision, any official justificantes, and the supplied 390 bindings. Use the
-spreadsheet review loop when you need a wider calculation surface with `aeat
-config google sync calc export --modelo 390 --year 2025 --period 0A`, then
-`compute` and `verify` on the same target. The spreadsheet workflow is a review
-surface; it does not submit to AEAT.
+spreadsheet review loop when you need a wider calculation surface, then
+`compute` and `verify` on the same target:
+
+```bash
+aeat config google sync calc export --modelo 390 --year 2025 --period 0A
+```
+
+The spreadsheet workflow is a review surface; it does not submit to AEAT.
 
 ## Export and file
 
@@ -260,31 +315,53 @@ The verify step in the sequence above promoted the annual draft to
 missing filed evidence - establish it first (see "What each Modelo 303 quarter
 needs before you verify" above), then verify again. Verification does not prove
 that AEAT has accepted the filing. Inspect the stored verification report when
-you need the detailed result with `aeat app modelo verification-report list
---calculation-revision-id <calculation-revision-id>` and `aeat app modelo
-verification-report view <verification-report-id>`.
+you need the detailed result:
 
-Export the verified or locally filed revision with `aeat app modelo export
---modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe`. Upload the
-exported file through AEAT's official channel - the full checklist is in
-[Upload your exported modelo at the AEAT portal](file-at-aeat.md). After filing,
-record the local marker with `aeat app modelo work file --modelo 390 --year 2025
---period 0A`, review your filing records with `aeat app modelo filing-record
-list` and `aeat app modelo filing-record view <filing-record-id>`, and reconcile
-the justificante with `aeat app modelo reconcile file --modelo 390 --year 2025
---period 0A --file ./390-2025-justificante.pdf`.
+```bash
+aeat app modelo verification-report list \
+  --calculation-revision-id <calculation-revision-id>
+aeat app modelo verification-report view <verification-report-id>
+```
+
+Export the verified or locally filed revision:
+
+```bash
+aeat app modelo export --modelo 390 --year 2025 --period 0A \
+  --output ./modelo-390-2025.boe
+```
+
+Upload the exported file through AEAT's official channel - the full checklist
+is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md). After
+filing, record the local marker, review your filing records, and reconcile the
+justificante:
+
+```bash
+aeat app modelo work file --modelo 390 --year 2025 --period 0A
+aeat app modelo filing-record list
+aeat app modelo filing-record view <filing-record-id>
+aeat app modelo reconcile file --modelo 390 --year 2025 --period 0A \
+  --file ./390-2025-justificante.pdf
+```
 
 `work file` is an internal local marker. It does not submit anything to AEAT.
 If the annual return was filed outside this local workflow, import an external
-filing record only from official evidence with `aeat app modelo filing-record
-import <work-unit-id> --evidence-kind aeat_justificante_pdf --evidence-id
-<justificante-or-capture-id> --set <casilla>=<value>`.
+filing record only from official evidence:
+
+```bash
+aeat app modelo filing-record import <work-unit-id> \
+  --evidence-kind aeat_justificante_pdf \
+  --evidence-id <justificante-or-capture-id> --set <casilla>=<value>
+```
 
 If a verification or export workflow creates an evidence bundle, inspect and
-archive it with the audit commands: `aeat app modelo audit show <bundle-id>`,
-`aeat app modelo audit check <bundle-id>`, `aeat app modelo audit export
-<bundle-id> --output ./modelo-390-evidence.zip`, and `aeat app modelo audit
-replay <bundle-id>`.
+archive it with the audit commands:
+
+```bash
+aeat app modelo audit show <bundle-id>
+aeat app modelo audit check <bundle-id>
+aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
+aeat app modelo audit replay <bundle-id>
+```
 
 ## What Modelo 390 does not check for you
 
