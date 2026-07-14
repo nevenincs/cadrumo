@@ -1,0 +1,36 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Authentication is not configured yet.\nprovider\t\nconfigured\tFalse\nauthenticated\tFalse\navailable\tFalse\nactive_profile\t<profile-id>\nactive_profile_status\tready\nactive_profile_registered\tTrue\nactive_profile_record_present\tTrue\nactive_profile_next_action\taeat app overview status\nbackend_configured\tFalse\nbackend_available\tFalse\ncertificate_path\t\nhealth_severity\t\nhealth_summary\t\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "test"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "provider\t\nconfigured\tFalse\nauthenticated\tFalse\navailable\tFalse\nactive_profile\t<profile-id>\nactive_profile_status\tready\nactive_profile_registered\tTrue\nactive_profile_record_present\tTrue\nactive_profile_next_action\taeat app overview status\nbackend_configured\tFalse\nbackend_available\tFalse\ncertificate_path\t\nhealth_severity\t\nhealth_summary\t\npersisted_session_present\tFalse\npersisted_session_expired\tNone\npersisted_session_state\tno_provider\nprobe_summary\tNo auth provider is configured; nothing to probe locally.\nprobe_result\tno_provider\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-auth-check"
+}

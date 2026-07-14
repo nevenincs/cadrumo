@@ -1,0 +1,29 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "bindings",
+        "list",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--missing"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t303\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t27\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-soportado-interiores-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-intracomunitaria-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-compensacion-pendiente-anteriores\tprevious_filing\tprior filed revision\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-entregas-art75-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-entregas-art75-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-adquisiciones-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-criterio-caja-adquisiciones-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-bienes-inversion-regularizacion-casilla-43\tbienes_inversion_regularizacion\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-prorrata-regularizacion-casilla-44\tprorrata_regularizacion\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-autoconsumo-promotor-base\tprofile\tprofile fact\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-interior-devengado-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-autorepercutido-interior-deducible-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-soportado-importaciones-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-casilla-59-entregas-intracomunitarias-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-casilla-60-exportaciones-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-general-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-reducido-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-repercutido-super-reducido-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-iva-soportado-interiores-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-recargo-equivalencia-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-recargo-equivalencia-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n303\t2023-y-siguientes\t1T\tmodelo-303-recargo-equivalencia-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\nrelation_guidance\tSome bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.\nrelation_input\tmodelo-303-compensacion-pendiente-anteriores\tfed by relation modelo-303-rel-self-compensacion-anteriores\tuse --relation modelo-303-rel-self-compensacion-anteriores=VALUE\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-missing-values"
+}
