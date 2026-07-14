@@ -224,11 +224,12 @@ edit-and-reimport path:
 @step Export the first quarter to a CSV snapshot.
 @result aeat --format json app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 @expect exit_code == 0
+@step Write an XLSX snapshot of the whole year instead. XLSX embeds a per-run id, so it is shown as a display frame.
+@static aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
 ```
 
 Add `--export-format xlsx` to write an XLSX snapshot instead, and use the annual
-token `0A` when a whole year is the review scope, for example `aeat app ledger
-export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A`.
+token `0A` when a whole year is the review scope.
 
 To change saved rows, use `ledger update`, `ledger classify`, `ledger allocate`,
 `ledger split`, or `ledger merge`.
@@ -283,10 +284,17 @@ aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence
 @expect exit_code == 0
 ```
 
-The same purchase-evidence link is also available through `aeat app ledger link
-<transaction-id> --evidence-id <evidence-id>`. The `link --invoice-id` option
-expects an id from the reconciliation invoice catalogue (populated by the import
-and reconcile flows), not an id from `aeat app ledger invoice add`. See
+The same purchase-evidence link is also available through the `link` command,
+addressing the transaction and evidence by id:
+
+```{cli-sequence} import-link-evidence
+@step Link purchase evidence to a transaction by id, an alternative to attach.
+@static aeat app ledger link <transaction-id> --evidence-id <evidence-id>
+```
+
+The `link --invoice-id` option expects an id from the reconciliation invoice
+catalogue (populated by the import and reconcile flows), not an id from `aeat app
+ledger invoice add`. See
 [Attach invoices and receipts](ledger-evidence.md) for the full evidence and
 invoice-record workflow, including the `--attachment-id` option and its current
 limitation.
