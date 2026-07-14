@@ -266,7 +266,7 @@ Review which form boxes were filled, supply missing values, and handle offsets.
 :link: review-with-google-sheets
 :link-type: doc
 
-Export, edit, and pull back model calculations using a Google Sheets spreadsheet.
+Export, edit, and pull back modelo calculations using a Google Sheets spreadsheet.
 :::
 
 :::{grid-item-card} Verify a filing
