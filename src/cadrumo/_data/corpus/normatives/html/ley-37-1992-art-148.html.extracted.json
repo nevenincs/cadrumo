@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-148.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-148.html",
   "source_sha256": "ad0c5c661b2b81514c48dbab16727a800faecca75160386a0de31c62ee9251a2",
   "preprocessor_id": "normatives-html-example",
   "preprocessor_version": "0.1",

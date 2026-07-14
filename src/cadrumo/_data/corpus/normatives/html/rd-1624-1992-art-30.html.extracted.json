@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1624-1992-art-30.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1624-1992-art-30.html",
   "source_sha256": "78fa1705926353f800ebaa10e46bffe7a2f56a94a0156e74776eea5cd49faf0b",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

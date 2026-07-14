@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/forms/modelo_145/files/mod145_es_es.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/forms/modelo_145/files/mod145_es_es.pdf",
   "source_sha256": "2061c0035b2ce7a4bd25dd7727798ed3754c6902306eac783112aa2824af5667",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

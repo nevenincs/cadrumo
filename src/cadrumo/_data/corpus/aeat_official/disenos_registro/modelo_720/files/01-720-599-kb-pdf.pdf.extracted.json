@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf",
   "source_sha256": "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

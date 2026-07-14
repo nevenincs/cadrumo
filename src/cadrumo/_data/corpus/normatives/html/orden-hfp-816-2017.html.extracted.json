@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-816-2017.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-816-2017.html",
   "source_sha256": "c9ac79e79a63c9bbf4f65e61fa176dd1ac1273d64555cac16b7b69fb9405f6f4",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

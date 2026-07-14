@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf",
   "source_sha256": "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

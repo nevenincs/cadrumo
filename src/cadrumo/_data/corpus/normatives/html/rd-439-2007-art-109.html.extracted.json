@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-109.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-109.html",
   "source_sha256": "dd427133585597a3633f1a8a2c74a720108503a0dcbf34e1a58220f05f657562",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

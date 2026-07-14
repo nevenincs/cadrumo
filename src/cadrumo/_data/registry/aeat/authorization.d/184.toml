@@ -10,4 +10,4 @@
 modelo = "184"
 renta_years = [2024, 2025]
 evidence_class = "data_fidelity"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_184_informativa_fidelity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_184_informativa_fidelity.py"

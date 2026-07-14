@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo-ultimo-periodo-12m-4t-de-2018.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo-ultimo-periodo-12m-4t-de-2018.xlsx",
   "source_sha256": "3fbad46fdad001a6faab1a68cd7e13958901e208cc7ab888786fc7ba44065098",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

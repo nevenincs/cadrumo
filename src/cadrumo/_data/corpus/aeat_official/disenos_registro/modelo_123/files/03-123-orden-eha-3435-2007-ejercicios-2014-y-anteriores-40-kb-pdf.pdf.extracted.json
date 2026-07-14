@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_123/files/03-123-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_123/files/03-123-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-pdf.pdf",
   "source_sha256": "172c238f5b06c4360c9e47e13092ef6703fe0c8f04bd4b7a279017694087f3c5",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

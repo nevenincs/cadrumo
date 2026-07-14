@@ -13,4 +13,4 @@
 modelo = "202"
 renta_years = [2026, 2027]
 evidence_class = "calculation"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py"

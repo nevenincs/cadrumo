@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf",
   "source_sha256": "88a12fbe5ce9de01fc6a04941db498cd30ef959c85bf6106bfdc3611c13f3481",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

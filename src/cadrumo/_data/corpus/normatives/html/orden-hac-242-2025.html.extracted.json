@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-242-2025.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-242-2025.html",
   "source_sha256": "88a5691d05c87c4ff0f672d0020428e20296c971b963e399c836e1b381cd78e3",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

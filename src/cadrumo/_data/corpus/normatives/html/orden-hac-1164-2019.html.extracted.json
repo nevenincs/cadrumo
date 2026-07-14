@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-1164-2019.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-1164-2019.html",
   "source_sha256": "45b3c1266dc3879b45801163d1b11fe700a4f06518b0536027af61cc38d3e137",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

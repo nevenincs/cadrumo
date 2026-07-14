@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588-kb-pdf.pdf",
   "source_sha256": "0733d9fdd39249b8b933aef2ed465b6824aa04dc1d7e4d52dbf3e821eddd4405",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

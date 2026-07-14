@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3378-2011.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3378-2011.html",
   "source_sha256": "435d999db6df8b0958b11c661a0b9da9fffe8c81c5a166d09d7718f3da70027d",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
