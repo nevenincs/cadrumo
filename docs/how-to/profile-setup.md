@@ -68,11 +68,15 @@ rest of setup follows:
 
 You don't need to memorize flag names. The guided wizard walks you through these
 decisions. For the complete, current list of flags and their accepted values,
-run:
+run `aeat config profile create --help` and `aeat config profile edit --help`:
 
-```bash
+```{cli-sequence} profile-setup-flag-help
+:verify: Confirm both create and edit list their flags and accepted values.
+@step List every flag the create command accepts.
 aeat config profile create --help
-aeat config profile edit --help
+@step List every flag the edit command accepts.
+@result aeat config profile edit --help
+@expect exit_code == 0
 ```
 
 ## Create your profile
@@ -81,8 +85,9 @@ Create a profile interactively, or non-interactively with flags.
 
 Run the guided wizard when you're setting up a profile for the first time:
 
-```bash
-aeat config profile create my-profile
+```{cli-sequence} profile-setup-interactive-create
+@step Start the guided wizard for a new profile.
+@static aeat config profile create my-profile
 ```
 
 The wizard asks the questions described in this guide. Its prompt labels are
@@ -319,8 +324,9 @@ fresh label; the imported profile becomes the active one. A store that still
 holds the same profile refuses the import on the profile's identifier, so import
 is for restoring into a different storage root:
 
-```bash
-aeat config profile import ./bruno-real-profile.json --label bruno-restored
+```{cli-sequence} profile-setup-import
+@step Restore a saved profile file under a fresh label.
+@static aeat config profile import ./bruno-real-profile.json --label bruno-restored
 ```
 
 A portable profile file contains taxpayer data, including the tax identifier,
