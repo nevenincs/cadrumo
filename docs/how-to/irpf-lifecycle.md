@@ -30,9 +30,14 @@ the first time each command runs.
 
 ## Stage 1: set up the taxpayer
 
-Create the profile with `aeat config profile create ana --quiet --tax-id
-12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
---activity-start-date 2026-01-01`.
+Create the profile with `aeat config profile`, as
+[Set up your taxpayer profile](profile-setup.md) walks through. The documentation
+sandbox provisions its own profile, so this create is shown as a display frame:
+
+```{cli-sequence} irpf-lifecycle-profile
+@step Create the taxpayer profile with the identity and activity-start facts.
+@static aeat config profile create ana --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+```
 
 The `--name` and `--surnames` are required: the export step refuses without
 an operator name. The `--activity-start-date` marks when the activity began,
