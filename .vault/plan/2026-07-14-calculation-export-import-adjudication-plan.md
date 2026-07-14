@@ -83,9 +83,9 @@ Adjudicate each legacy outbound candidate against product mandate and source app
 - [x] `P02.S07` - Reconcile Modelo 193 2024 and 2025 design windows before deciding any outbound mandate; `src/cadrumo/_data/registry/aeat/modelos/193/, .vault/reference/`.
 - [x] `P02.S08` - Adjudicate Modelo 308 export only for the 2019-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/308/, .vault/reference/`.
 - [x] `P02.S09` - Record that Modelo 309 has no legacy outbound mandate and prevent source availability from manufacturing one; `src/cadrumo/_data/registry/aeat/modelos/309/, .vault/reference/`.
-- [x] `P02.S10` - Adjudicate Modelo 322 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/322/, .vault/reference/`.
-- [x] `P02.S11` - Adjudicate Modelo 347 export by registered authority window and gate uncatalogued 2008-to-2010 layouts; `src/cadrumo/_data/registry/aeat/modelos/347/, .vault/reference/`.
-- [x] `P02.S12` - Adjudicate Modelo 353 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/353/, .vault/reference/`.
+- [ ] `P02.S10` - Adjudicate Modelo 322 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/322/, .vault/reference/`.
+- [ ] `P02.S11` - Adjudicate Modelo 347 export by registered authority window and gate uncatalogued 2008-to-2010 layouts; `src/cadrumo/_data/registry/aeat/modelos/347/, .vault/reference/`.
+- [ ] `P02.S12` - Adjudicate Modelo 353 export only for the 2026-and-following authority window and gate earlier revisions; `src/cadrumo/_data/registry/aeat/modelos/353/, .vault/reference/`.
 - [x] `P02.S13` - Record that Modelo 360 has no legacy outbound mandate and preserve its layout authority as evidence only; `src/cadrumo/_data/registry/aeat/modelos/360/, .vault/reference/`.
 - [x] `P02.S14` - Adjudicate Modelo 369 export while preserving Union, Importacion, and Exterior revision separation; `src/cadrumo/_data/registry/aeat/modelos/369/, .vault/reference/`.
 - [x] `P02.S15` - Adjudicate Modelo 840 registry field and binding work only if machine-file generation is a confirmed product mandate; `src/cadrumo/_data/registry/aeat/modelos/840/, .vault/reference/`.
@@ -107,7 +107,7 @@ Adjudicate each inbound candidate against real filed-artifact evidence and the e
 Record unavailable-authority gates, publish the final residual audit, and authorize successor planning only for confirmed current gaps.
 
 - [x] `P04.S23` - Record Modelo 100 exercise-2026 export authority as unavailable until an official current-year design is published and bundled; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/, .vault/reference/`.
-- [ ] `P04.S24` - Publish the final adjudication audit with dispositions, evidence windows, duplicate-code guards, and unresolved external gates; `.vault/audit/, .vault/reference/`.
+- [x] `P04.S24` - Publish the final adjudication audit with dispositions, evidence windows, duplicate-code guards, and unresolved external gates; `.vault/audit/, .vault/reference/`.
 - [ ] `P04.S25` - Determine whether any candidate passes all four gates and either record no successor handoff or write a successor implementation plan limited to proven gaps; `.vault/audit/, .vault/plan/`.
 
 ## Parallelization
