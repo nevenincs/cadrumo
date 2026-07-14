@@ -11,15 +11,6 @@ related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `cadrumo-product-rename` plan
 
@@ -214,7 +205,7 @@ Update active user-facing documentation and regenerate derived references.
 - [x] `W05.P13.S72` - Update documentation site identity, titles, marks, and generated API configuration; `docs/conf.py and docs/_static product assets`.
 - [x] `W05.P13.S73` - Update release templates, checklist, and current verification proofs; `docs release and verification surfaces`.
 - [x] `W05.P13.S74` - Regenerate API references and documentation indexes from CADRUMO source authorities; `generated documentation surfaces`.
-- [ ] `W05.P13.S75` - Render and inspect the complete documentation site for stale product identity and broken references; `built documentation site`.
+- [x] `W05.P13.S75` - Render and inspect the complete documentation site for stale product identity and broken references; `built documentation site`.
 
 ## Wave `W06` - run residue audit, formal review, and epic closure
 
