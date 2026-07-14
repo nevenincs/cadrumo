@@ -2,20 +2,18 @@
 
 Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
-Every profile-scoped command needs your master-key passphrase; the tool prompts for it. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+Every profile-scoped command needs your master-key passphrase; the tool prompts for it, and it needs an active taxpayer profile — see [Set up your taxpayer profile](profile-setup.md) if you have none. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
 
 ## "This operation requires an active profile"
 
-The command needs a taxpayer profile and none is active. Check what the tool thinks is active:
+The command needs a taxpayer profile and none is active. The card checks what the tool thinks is active, then repairs the active setting if it will not load:
 
-```bash
+```{cli-sequence} troubleshooting-active-profile
+:verify: Confirm you can read the active profile and repair the active setting.
+@step Check what the tool thinks is active.
 aeat config profile status
-```
-
-If a profile exists but the active setting won't load, repair it:
-
-```bash
-aeat config repair profile
+@result aeat config repair profile
+@expect exit_code == 0
 ```
 
 If the active setting points at unreadable profile state, clear it and switch to a good profile:
@@ -33,8 +31,10 @@ If a profile loads but the numbers look wrong, see the next symptom.
 
 The wrong profile is active. Each profile keeps its own ledger, calculations, and filings, so a command run under the wrong one shows someone else's data. See which profile is active:
 
-```bash
-aeat config profile status
+```{cli-sequence} troubleshooting-wrong-profile
+:verify: Confirm the active profile is the one you expect to be working under.
+@result aeat config profile status
+@expect exit_code == 0
 ```
 
 Switch to the right profile with `aeat config switch <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
@@ -49,9 +49,12 @@ ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>.
 
 The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`, so add it even though the message above omits it:
 
-```bash
+```{cli-sequence} troubleshooting-ledger-ready
+:verify: Confirm the ledger preflight and status run for the period you are calculating.
+@step Run the preflight check for the period you are calculating.
 aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status
+@result aeat app ledger status
+@expect exit_code == 0
 ```
 
 The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Import and manage transactions](import-bank-statements.md), then run the calculation again.
@@ -162,33 +165,23 @@ Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `a
 
 ## The diagnostic toolbox
 
-Use these when no single symptom matches, or to gather context before asking for help.
+Use these when no single symptom matches, or to gather context before asking for help. The card runs the read-only diagnostics in order: overall status, the active profile, the recent logs, and the two integrity checks:
 
-When you don't know where to start, check overall status:
-
-```bash
+```{cli-sequence} troubleshooting-toolbox
+:verify: Confirm the read-only diagnostics all run and report on your setup and data.
+@step Check overall readiness of your profile, ledger, and modelos.
 aeat app overview status
+@step Report the active profile.
 aeat config profile status
-```
-
-`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data.
-
-When a command fails and you want the details, read the logs:
-
-```bash
+@step Read the most recent log lines.
 aeat config repair logs --lines 50
-```
-
-It prints the log file path and the most recent lines. Use `--lines` to control how many it prints.
-
-When a command reports corrupt or unreadable data, check integrity:
-
-```bash
+@step Check the security seals on your encrypted records.
 aeat config repair integrity objects
-aeat config repair integrity registry
+@result aeat config repair integrity registry
+@expect exit_code == 0
 ```
 
-`integrity objects` checks the security seals on your encrypted records; `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines — use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records, and `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
