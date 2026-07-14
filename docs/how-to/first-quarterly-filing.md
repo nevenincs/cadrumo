@@ -15,7 +15,7 @@ The transactions, amounts, and taxpayer are invented. Run the same commands
 against your own profile to see your own figures.
 
 **Requirement:** a valid taxpayer profile. Create one with
-`aeat config profile create <name>` before you start — [Set up your
+`aeat config profile create <name>` before you start. [Set up your
 profile](profile-setup.md) walks through it step by step.
 
 ## Bring your quarter's transactions in
@@ -52,8 +52,15 @@ tax calculation should treat it. Classify each row before you calculate.
 
 Mark the collected payment as business income and the purchase as a deductible
 business expense with a category. Take each transaction id from the listing
-above. For income, run `aeat app ledger classify <transaction-id>
---classification BUSINESS`.
+above. The income classification takes only the business decision:
+
+```{cli-sequence} first-quarter-classify-income
+:verify: Confirm the collected payment is classified as business income.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Classify the collected payment as business income.
+@result aeat --format json app ledger classify 71a5db2b --classification BUSINESS
+@expect result.transaction.business_classification == "BUSINESS"
+```
 
 For an expense, add `--category-id <category-id>` plus the taxable base and
 IVA fields. List the accepted categories any time:
@@ -65,8 +72,8 @@ IVA fields. List the accepted categories any time:
 @expect exit_code == 0
 ```
 
-For the full classification workflow — bulk classification, mixed-use shares,
-and the review queue — read [Classify transactions](classify-transactions.md).
+For the full classification workflow (bulk classification, mixed-use shares,
+and the review queue), read [Classify transactions](classify-transactions.md).
 
 ## Prepare the Modelo 130 draft
 
@@ -111,14 +118,18 @@ Read the frames in order:
 ## Check the figures and export
 
 The verification result is the signal that the draft is ready. When
-`granted_verificado_completo` reads true, export the file with `aeat app modelo
-export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe`. Export
-refuses until every deductible-expense row carries linked purchase-invoice
-evidence — the full evidence-to-export chain runs end to end on
-[Prepare a Modelo 303 IVA filing](modelo-303.md).
+`granted_verificado_completo` reads true, export the file. Export refuses until
+every deductible-expense row carries linked purchase-invoice evidence; this
+first-filing example omits that evidence, so the export and the post-portal
+filed marker are shown as display frames. The full evidence-to-export chain runs
+end to end, executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
 
-Upload it at the AEAT portal yourself, then record the local marker with `aeat
-app modelo work file --modelo 130 --year 2026 --period 1T`.
+```{cli-sequence} first-quarter-export-file
+@step Export the verified draft to a local fichero-BOE.
+@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+@step After you upload at the portal, record the local filed marker.
+@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
+```
 
 A later quarter builds on this one: leave the three prior-period bindings unset
 so they resolve from your filed history. See
