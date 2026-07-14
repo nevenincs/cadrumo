@@ -1,20 +1,5 @@
 {
   "_release_notes_template.md": 2,
   "authoring-guide.md": 3,
-  "how-to/choose-modelo.md": 0,
-  "how-to/classify-transactions.md": 0,
-  "how-to/filing-readiness.md": 22,
-  "how-to/filing-spine.md": 5,
-  "how-to/import-bank-statements.md": 0,
-  "how-to/ledger-evidence.md": 0,
-  "how-to/manage-invoices.md": 0,
-  "how-to/modelo-303.md": 0,
-  "how-to/modelo-390.md": 2,
-  "how-to/profile-setup.md": 0,
-  "how-to/protect-data-access.md": 0,
-  "how-to/quickstart.md": 6,
-  "how-to/review-calculation-values.md": 12,
-  "how-to/troubleshooting.md": 0,
-  "how-to/verification-reports.md": 0,
   "reference/environment-overrides.md": 4
 }
