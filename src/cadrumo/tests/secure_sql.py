@@ -225,6 +225,36 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
             dispose_engine(settings)
 
 
+@pytest.fixture(autouse=True)
+def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
+    """Run tests against a flat, session-less real storage root at ``tmp_path`` itself.
+
+    Unlike :func:`isolated_sessionless_storage_root` (which nests the root
+    under ``tmp_path / "aeat-storage"``), this fixture points
+    ``cadrumo_local_storage_root`` directly at ``tmp_path`` — the shape a
+    cluster of lower-level repository and runtime test modules already relied
+    on before this fixture was promoted as their single canonical source.
+    Several of those modules also write ancillary fixture bytes (e.g. a
+    synthetic PDF) directly under ``tmp_path`` alongside the storage root, so
+    the two paths must stay coincident rather than nesting one under the
+    other.
+
+    ``autouse=True`` for the same reason as :func:`isolated_cli_backend`:
+    every current call site wants it active for every test in the importing
+    module. Import it directly rather than re-declaring the override block
+    locally, e.g.::
+
+        from ....tests.secure_sql import isolated_storage_root as _isolated_storage
+    """
+
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)
+
+
 @contextmanager
 def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     """Run profile-bootstrap tests against an empty real storage root.
@@ -483,7 +513,7 @@ def isolated_cli_runtime_profile(
         yield profile
 
 
-@pytest.fixture(autouse=False)
+@pytest.fixture(autouse=True)
 def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     """Canonical isolated storage root for CLI end-to-end tests.
 
@@ -501,18 +531,23 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     to English so operator-facing text assertions stay locale-stable across
     CLI test suites.
 
-    Import this fixture directly into a test module rather than
-    re-declaring the override block locally, e.g.::
+    ``autouse=True`` because every current call site wants the isolated
+    backend active for every test in the importing module — matching the
+    convention the ~22 sites this fixture replaces already established.
+    Import it directly into a test module rather than re-declaring the
+    override block locally, e.g.::
 
         from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 
-    The re-bound name becomes an autouse fixture in the importing module
+    The re-bound name still carries ``autouse=True`` in the importing module
     because pytest resolves fixtures by the name bound in the requesting
     module's namespace, not by the module that originally defined the
     function; this is the same pattern the entrypoints CLI test suite
     already uses for its intra-package ``_isolated_cli_backend`` re-export.
-    Add ``@pytest.fixture(autouse=True)`` on re-import only when a caller
-    wants autouse without renaming the parameter it requests explicitly.
+    A caller that wants the storage-root isolation WITHOUT autouse should
+    call :func:`isolated_profile_storage_root` directly instead of importing
+    this fixture — pytest does not support re-decorating an already-wrapped
+    fixture function to change its ``autouse`` value.
     """
     dispose_engine()
     with (
@@ -535,6 +570,7 @@ __all__ = [
     "isolated_profile_storage_root",
     "isolated_runtime_profile",
     "isolated_sessionless_storage_root",
+    "isolated_storage_root",
     "isolated_two_bucket_runtime",
     "reset_secure_object_store",
 ]

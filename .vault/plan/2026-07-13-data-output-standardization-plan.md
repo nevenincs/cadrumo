@@ -9,6 +9,15 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `data-output-standardization` plan
 
@@ -105,7 +114,7 @@ One canonical public isolation fixture with coverage gate; sweep the copy-pasted
 
 - [x] `W05.P09.S26` - Promote one canonical public isolation fixture covering every settings dir field, with a structural coverage gate; `src/cadrumo/tests/secure_sql.py`.
 - [x] `W05.P09.S27` - Sweep the copy-pasted isolated-cli-backend fixture copies onto the canonical fixture; `cli test isolation fixtures`.
-- [ ] `W05.P09.S28` - Sweep the isolated-storage fixture family and unify the two collection-time pytest storage roots into one cleanup-registered helper; `conftest storage roots`.
+- [x] `W05.P09.S28` - Sweep the isolated-storage fixture family and unify the two collection-time pytest storage roots into one cleanup-registered helper; `conftest storage roots`.
 
 ## Wave `W06` - Verification and close
 
