@@ -493,6 +493,11 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
     }
     binding_values = {
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        # The fixture exercises the estimación directa "normal" regime branch
+        # (the sibling binding above), which the rendimiento-neto formula only
+        # reaches when the taxpayer has economic activity; keep the two
+        # bindings consistent so the es-normal input is not dead.
+        "renta-2025-profile-has-economic-activity": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-2025-profile-declaration-type": Decimal("1"),
         "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
