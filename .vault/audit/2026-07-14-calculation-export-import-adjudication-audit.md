@@ -159,6 +159,44 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** obtain and sanitize a real filed exercise-2025 PDF before
   proposing profile data and real corpus coverage through the generic parser.
 
+### modelo-184-outbound-2025-open | low | Exact 2025 authority remains mandate-gated
+
+- **Candidate:** Modelo 184 outbound generation from `2025-01-01`, open end.
+- **Mandate:** `unproven`; conditional legacy wording is not current scope.
+- **Exact authority window:** `aeat-dr-184-2025` covers 2025+.
+- **Canonical implementation state:** `gap` for the optional behavior; no layout
+  exists, while the generic engine is delivered and fails closed.
+- **Real evidence or specimen:** official design available; golden payload and
+  real round trip missing.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** obtain an accepted 2025+ outbound product mandate before any
+  registry or implementation proposal.
+
+### modelo-184-outbound-2015-2024 | low | Later authority cannot be projected backwards
+
+- **Candidate:** Modelo 184 outbound generation from 2015 through 2024.
+- **Mandate:** `unproven`.
+- **Exact authority window:** `missing`; the 2025 design does not cover this
+  earlier revision window.
+- **Canonical implementation state:** `gap` for the optional behavior; the
+  generic engine remains the only permitted path.
+- **Real evidence or specimen:** no exact-window design or golden payload.
+- **Retirement:** `false`.
+- **Evidence block:** `true`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = false`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `mandate-gated`.
+- **Next action:** establish both a current mandate and exact earlier-window
+  authority; do not back-project the 2025 design.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
