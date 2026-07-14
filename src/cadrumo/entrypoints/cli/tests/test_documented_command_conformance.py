@@ -445,15 +445,17 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
 
 
 # ---------------------------------------------------------------------------
-# Enrolled-page tier
+# Enrollment detection
 # ---------------------------------------------------------------------------
 
 # A backtick-fenced ``cli-sequence`` directive: ```` ```{cli-sequence} <id> ````.
 # The info string is the fence's first line after the opening backticks; a page
-# carrying at least one such fence is *enrolled* (all executable commands live
-# inside executed sequences), so a plain fence with an ``aeat`` invocation on it
-# is refused. ``_FENCE_WITH_INFO_RE`` captures the info string alongside the body
-# so the directive fences can be told apart from plain ```` ```bash ```` fences.
+# carrying at least one such fence is *enrolled* — it hosts at least one executed,
+# golden-backed sequence. Enrollment is NOT exclusionary: an enrolled page may
+# ALSO carry ordinary executable ``aeat`` fences, and those fences receive the
+# same base verb-path and option-name checks every fence gets (the executed vs.
+# static distinction is visual and golden-backed, not a refusal — ADR D7 as
+# amended). ``_FENCE_WITH_INFO_RE`` captures the info string alongside the body.
 _CLI_SEQUENCE_INFO_RE = re.compile(r"^\{cli-sequence\}")
 _FENCE_WITH_INFO_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.DOTALL)
 
@@ -461,29 +463,6 @@ _FENCE_WITH_INFO_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.DOTALL)
 def _page_is_enrolled(text: str) -> bool:
     """A page is enrolled when it carries at least one ``{cli-sequence}`` directive."""
     return any(_CLI_SEQUENCE_INFO_RE.match(info.strip()) for info, _ in _FENCE_WITH_INFO_RE.findall(text))
-
-
-def _plain_executable_aeat_fences(text: str) -> list[str]:
-    """Return executable ``aeat`` invocation lines in PLAIN fences of an enrolled page.
-
-    On an enrolled page every executable ``aeat`` invocation must live inside a
-    ``{cli-sequence}`` directive: a plain ```` ``` ```` fence (bash,
-    console, text) carrying a concrete ``aeat`` invocation is refused. The
-    ``{cli-sequence}`` directive fences are the sanctioned executed surface and
-    are exempt, and inline-backtick verb references (narrative) are never scanned
-    here — only fenced blocks are. The caller applies this only to enrolled pages.
-    """
-    offending: list[str] = []
-    for info, body in _FENCE_WITH_INFO_RE.findall(text):
-        if _CLI_SEQUENCE_INFO_RE.match(info.strip()):
-            continue  # the executed surface — exempt
-        joined = body.replace("\\\n", " ")
-        for line in joined.splitlines():
-            if _AEAT_TOKEN_RE.search(line) is None:
-                continue
-            if _parse_command_line(line) is not None:
-                offending.append(line.strip())
-    return offending
 
 
 # ---------------------------------------------------------------------------
@@ -705,21 +684,22 @@ aeat app modelo work calculate {work_unit_id}
 ```
 """
 
-# An enrolled page whose executable commands live inside the directive, with a
-# narrative inline-backtick reference (permitted) and no plain executable fence.
-_ENROLLED_CLEAN_FIXTURE = (
-    "# Calculate Modelo 303\n\n"
-    "Introduce the quarter with `aeat app modelo work create` (narrative).\n\n" + _CLI_SEQUENCE_BODY_FIXTURE
-)
-
-# An enrolled page that ALSO carries a plain ```bash fence with an executable
-# ``aeat`` invocation — the refusal case.
+# An enrolled page that ALSO carries a plain ```bash fence with a CORRECT
+# executable ``aeat`` invocation — permitted, and scanned by the base checks
+# (which pass); enrollment does not refuse or exempt the plain fence.
 _ENROLLED_WITH_PLAIN_FENCE_FIXTURE = (
     _CLI_SEQUENCE_BODY_FIXTURE + "\nThen import more data:\n\n```bash\naeat app ledger import --file extra.csv\n```\n"
 )
 
-# A non-enrolled page with a plain executable fence — untouched by the enrolled
-# tier (it keeps exactly today's verb-path and option-name checks).
+# An enrolled page whose plain ```bash fence cites a genuinely WRONG option —
+# proves the base verb-path/option-name checks fire on an enrolled page's plain
+# fence exactly as on a non-enrolled page (enrollment does not exempt it).
+_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE = (
+    _CLI_SEQUENCE_BODY_FIXTURE + "\nThen import more data:\n\n```bash\naeat app ledger import --bogus-option\n```\n"
+)
+
+# A non-enrolled page with a plain executable fence — it keeps exactly today's
+# verb-path and option-name checks (the same checks an enrolled page's fence gets).
 _NON_ENROLLED_FIXTURE = "# How-to\n\n```bash\naeat app ledger import --file extra.csv\n```\n"
 
 
@@ -748,118 +728,71 @@ def test_cli_sequence_frame_lines_conform_as_ordinary_invocations() -> None:
     assert not violations, f"cli-sequence frame lines must conform to the live CLI: {violations}"
 
 
-def test_enrolled_page_refuses_plain_executable_fence() -> None:
-    """On an enrolled page a plain executable ``aeat`` fence is refused.
-
-    A page carrying a ``{cli-sequence}`` directive is enrolled; every executable
-    invocation must then live inside a sequence. A plain ```` ```bash ```` fence
-    with a real ``aeat`` invocation is flagged, while the sanctioned directive
-    fences and narrative inline references are exempt. A non-enrolled page is
-    untouched by this tier.
-    """
-    # Enrolled + a plain executable fence: refused, naming the offending line.
-    assert _page_is_enrolled(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
-    offending = _plain_executable_aeat_fences(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
-    assert offending, "an executable aeat invocation in a plain fence on an enrolled page must be refused"
-    assert "ledger import" in offending[0]
-
-    # Enrolled but all-executed (aeat only inside the directive + inline narrative): clean.
-    assert _page_is_enrolled(_ENROLLED_CLEAN_FIXTURE)
-    assert _plain_executable_aeat_fences(_ENROLLED_CLEAN_FIXTURE) == []
-
-    # A non-enrolled page carries no cli-sequence directive, so the tier does not apply.
-    assert not _page_is_enrolled(_NON_ENROLLED_FIXTURE)
-
-
-def test_shipped_enrolled_pages_have_no_plain_executable_fences() -> None:
-    """No shipped enrolled page carries a plain executable ``aeat`` fence.
-
-    Scans every user-facing doc, applies the enrolled-page refusal to those that
-    carry a ``{cli-sequence}`` directive, and fails if any enrolled page cites an
-    executable ``aeat`` invocation outside a sequence. This gates real enrolled
-    pages as they land; it is a live scan, not a skip, so it protects the
-    surface the moment a page enrolls.
-    """
-    violations: list[str] = []
-    for doc in _flat_docs():
-        text = doc.read_text(encoding="utf-8")
-        if not _page_is_enrolled(text):
-            continue
-        for line in _plain_executable_aeat_fences(text):
-            violations.append(f"{doc.relative_to(PROJECT_ROOT)}: plain executable fence `{line}`")
-    assert not violations, (
-        "enrolled pages must place every executable aeat invocation inside a cli-sequence "
-        "directive:\n  " + "\n  ".join(violations)
-    )
-
-
 def test_shipped_enrolled_page_scan_is_not_vacuous() -> None:
-    """At least one shipped page is enrolled, so the enrolled-page scan has a real subject.
+    """At least one shipped page is enrolled, so the enrolled surface is not vacuous.
 
-    The enrolled-page refusal scan (above) passes vacuously when no shipped page
-    carries a ``{cli-sequence}`` directive. With ``docs/how-to/first-quarterly-filing.md``
-    enrolled, the scan exercises a real enrolled instance; this tripwire
-    (the enrolled-page analogue of :func:`test_gate_scans_a_realistic_invocation_count`)
-    fails loudly if the enrolled surface ever silently collapses back to zero, so
-    the refusal tier and the co-located golden gate cannot rot into vacuity behind
-    a green suite.
+    The sequence-grammar frame validation and the co-located golden gate only
+    protect a real surface if a shipped page actually carries a
+    ``{cli-sequence}`` directive. This tripwire (the enrolled-page analogue of
+    :func:`test_gate_scans_a_realistic_invocation_count`) fails loudly if the
+    enrolled surface ever silently collapses back to zero.
     """
     enrolled = [
         doc.relative_to(PROJECT_ROOT) for doc in _flat_docs() if _page_is_enrolled(doc.read_text(encoding="utf-8"))
     ]
     assert enrolled, (
-        "no shipped page carries a `{cli-sequence}` directive, so the enrolled-page "
-        "refusal scan is vacuous — the enrolled doc surface has collapsed to zero"
+        "no shipped page carries a `{cli-sequence}` directive — the enrolled doc "
+        "surface has collapsed to zero, so the sequence-grammar and golden gates are vacuous"
     )
 
 
-# A non-enrolled page whose plain fence cites a genuinely WRONG option. Proves
-# the base verb-path/option-name checks still fire on a non-enrolled page (tier
-# two) — the enrolled refusal must not have displaced them.
+# A non-enrolled page whose plain fence cites a genuinely WRONG option, and an
+# enrolled page whose plain fence cites the same wrong option — proving the base
+# verb-path/option-name checks fire identically regardless of enrollment.
 _NON_ENROLLED_BAD_OPTION_FIXTURE = "# How-to\n\n```bash\naeat app ledger import --bogus-option\n```\n"
 
 
-def test_two_tier_enrollment_gate_coexists() -> None:
-    """Both tiers coexist across the enrollment boundary end to end.
+def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
+    """Enrolled and non-enrolled pages alike get the base verb-path/option checks.
 
-    The contract is the *coexistence* of the two tiers, not either tier in
-    isolation: the enrolled plain-fence refusal must apply to an enrolled page
-    *while* a non-enrolled page keeps exactly today's verb-path and option-name
-    checks. This pins the tier boundary in one place so a future change that
-    silently displaces the base checks, or leaks the enrolled refusal onto a
-    non-enrolled page, reds loudly.
-
-    Tier two (non-enrolled keeps the base checks):
-    - A non-enrolled page is never enrolled, so the plain-fence refusal does not
-      apply to it — yet its plain fence still receives the base checks, which
-      flag a genuinely wrong option.
-    - A non-enrolled page whose plain fence is correct passes the base checks
-      cleanly and is untouched by the enrolled tier.
-
-    Tier one (enrolled refuses the plain fence, base checks still apply):
-    - An enrolled page's plain executable fence is refused, and its directive
-      frame lines still receive the base verb-path and option-name checks (the
-      refusal is orthogonal to, never a replacement for, the base validation).
+    The enrolled/executed distinction is visual and golden-backed, not
+    exclusionary (ADR D7 as amended): an enrolled page MAY carry ordinary
+    executable ``aeat`` fences, and those fences receive exactly the same base
+    verb-path and option-name validation every fence gets — enrollment neither
+    refuses nor exempts them, and never displaces the base checks. This pins the
+    contract in one place so a future change that silently drops the base checks
+    on an enrolled page's plain fence, or re-introduces a plain-fence refusal,
+    reds loudly.
     """
-    # --- Tier two: non-enrolled page keeps exactly today's checks ---
+    # A non-enrolled page's plain fence keeps the base checks (a wrong option flags).
     assert not _page_is_enrolled(_NON_ENROLLED_BAD_OPTION_FIXTURE)
-    base_violations = [v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in _validate_command(c)]
-    assert any("--bogus-option" in v for v in base_violations), (
-        "a non-enrolled page must keep the verb-path and option-name checks — the "
-        "base validator must flag a wrong option in its plain fence"
+    non_enrolled_violations = [
+        v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in _validate_command(c)
+    ]
+    assert any("--bogus-option" in v for v in non_enrolled_violations), (
+        "a non-enrolled page must keep the verb-path and option-name checks on its plain fence"
     )
 
+    # A correct non-enrolled plain fence passes cleanly.
     assert not _page_is_enrolled(_NON_ENROLLED_FIXTURE)
     assert [v for c in _cited_commands(_NON_ENROLLED_FIXTURE) for v in _validate_command(c)] == [], (
         "a non-enrolled page whose plain-fence command is correct passes the base checks"
     )
 
-    # --- Tier one: enrolled page refuses the plain fence, base checks still apply ---
+    # An ENROLLED page's plain executable fence is NOT refused and IS scanned: a
+    # correct command passes, and a wrong option is flagged exactly as on a
+    # non-enrolled page (its directive frame lines conform too, so the only
+    # violation is the deliberate wrong option in the plain fence).
     assert _page_is_enrolled(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
-    assert _plain_executable_aeat_fences(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE), (
-        "an enrolled page's plain executable fence must be refused"
-    )
     assert [v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in _validate_command(c)] == [], (
-        "an enrolled page's directive frame lines must still conform to the live CLI — "
-        "the enrolled refusal is orthogonal to the base verb-path/option-name checks"
+        "an enrolled page's correct plain fence and its directive frame lines all pass the base checks"
+    )
+
+    assert _page_is_enrolled(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE)
+    enrolled_violations = [
+        v for c in _cited_commands(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE) for v in _validate_command(c)
+    ]
+    assert any("--bogus-option" in v for v in enrolled_violations), (
+        "an enrolled page's plain executable fence must still receive the base checks — "
+        "enrollment does not exempt or refuse it"
     )
