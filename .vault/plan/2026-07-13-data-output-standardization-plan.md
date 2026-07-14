@@ -124,7 +124,7 @@ Run the full gates with owner triage and the mandated fresh-context honesty revi
 
 Full-tree gates with owner triage plus the mandated fresh-context honesty review and audit record.
 
-- [ ] `W06.P10.S29` - Run collect-only, targeted suites, and lint gates with owner-triage of any shared-worktree failures; `full-tree gates`.
+- [x] `W06.P10.S29` - Run collect-only, targeted suites, and lint gates with owner-triage of any shared-worktree failures; `full-tree gates`.
 - [ ] `W06.P10.S30` - Run the fresh-context honesty review against the campaign closure summary and persist the audit record; `.vault/audit`.
 
 ## Description
