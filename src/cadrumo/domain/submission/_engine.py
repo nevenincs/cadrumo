@@ -88,6 +88,7 @@ class SubmissionEngine:
         *,
         today: date,
         skip_deadline_window: bool = False,
+        skip_auth_readiness: bool = False,
     ) -> None:
         """Run preflight gates without browser work or AEAT writes.
 
@@ -99,8 +100,17 @@ class SubmissionEngine:
                 verification and local mark-as-filed paths; callers that
                 perform an actual AEAT submission must leave the gate
                 enabled.
+            skip_auth_readiness: When ``True``, the auth-provider
+                readiness gate is skipped. Local build/verify/file/export
+                purposes pass this; only live/AEAT-touching callers leave
+                it enabled.
         """
-        self._preflight.check(draft, today=today, skip_deadline_window=skip_deadline_window)
+        self._preflight.check(
+            draft,
+            today=today,
+            skip_deadline_window=skip_deadline_window,
+            skip_auth_readiness=skip_auth_readiness,
+        )
 
     def load_submission(self, submission_id: str) -> ModeloPresentado:
         """Load a historical :class:`ModeloPresentado` by id.

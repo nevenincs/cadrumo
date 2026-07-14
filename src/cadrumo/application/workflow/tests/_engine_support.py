@@ -118,6 +118,7 @@ class _ConcreteSubmissionEngine:
     preflight_exc: BaseException | None = None
     preflight_calls: list[date] = field(default_factory=list)
     skip_deadline_window_calls: list[bool] = field(default_factory=list)
+    skip_auth_readiness_calls: list[bool] = field(default_factory=list)
 
     def preflight(
         self,
@@ -125,9 +126,11 @@ class _ConcreteSubmissionEngine:
         *,
         today: date,
         skip_deadline_window: bool = False,
+        skip_auth_readiness: bool = False,
     ) -> None:
         self.preflight_calls.append(today)
         self.skip_deadline_window_calls.append(skip_deadline_window)
+        self.skip_auth_readiness_calls.append(skip_auth_readiness)
         if self.preflight_exc is not None:
             raise self.preflight_exc
 
