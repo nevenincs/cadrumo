@@ -42,16 +42,19 @@ aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justific
 @expect exit_code == 0
 ```
 
-Record a modificacion:
+Record a modificacion (the same record-and-view flow as the alta above, with a
+different event kind):
 
-```bash
-aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
+```{cli-sequence} modelo-036-record-modificacion
+@step Record the modificacion you filed at the sede, with the sede receipt number.
+@static aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
 ```
 
 Record a baja:
 
-```bash
-aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
+```{cli-sequence} modelo-036-record-baja
+@step Record the baja you filed at the sede, with the sede receipt number.
+@static aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
 ```
 
 `--declared-on` is required - the ISO date (year-month-day) you filed at the sede.
