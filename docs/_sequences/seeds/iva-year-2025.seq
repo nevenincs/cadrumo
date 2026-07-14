@@ -1,0 +1,33 @@
+@step Record when the activity started so every 2025 quarter is a valid obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
+@step Open the first-quarter Modelo 303 work unit.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 1T
+@capture wu1 result.work_unit_id
+@step Calculate the first quarter.
+@setup aeat --format json app modelo work calculate {wu1}
+@capture cr1 result.calculation_revision_id
+@step Verify the first quarter before filing it.
+@setup aeat --format json app modelo work verify {cr1}
+@step File the first quarter locally so the annual summary can fold it in.
+@setup aeat --format json app modelo work file {cr1}
+@step Open, calculate, verify and file the second quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 2T
+@capture wu2 result.work_unit_id
+@setup aeat --format json app modelo work calculate {wu2}
+@capture cr2 result.calculation_revision_id
+@setup aeat --format json app modelo work verify {cr2}
+@setup aeat --format json app modelo work file {cr2}
+@step Open, calculate, verify and file the third quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 3T
+@capture wu3 result.work_unit_id
+@setup aeat --format json app modelo work calculate {wu3}
+@capture cr3 result.calculation_revision_id
+@setup aeat --format json app modelo work verify {cr3}
+@setup aeat --format json app modelo work file {cr3}
+@step Open, calculate, verify and file the fourth quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 4T
+@capture wu4 result.work_unit_id
+@setup aeat --format json app modelo work calculate {wu4}
+@capture cr4 result.calculation_revision_id
+@setup aeat --format json app modelo work verify {cr4}
+@setup aeat --format json app modelo work file {cr4}
