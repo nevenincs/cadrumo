@@ -85,6 +85,7 @@ show the built rows:
 aeat --format json app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
 @step Show the saved revision with its per-operator detail rows.
 @result aeat --format json app modelo work revision --modelo 349 --year 2026 --period 1T
+@expect result.casilla_values["decl.numero-operadores"] == "2"
 @expect exit_code == 0
 ```
 
@@ -113,6 +114,7 @@ Export the verified declaration:
 @setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
 @step Export the verified declaration to a local fichero-BOE file.
 @result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
+@expect result.filing_year == 2026
 @expect exit_code == 0
 ```
 

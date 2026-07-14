@@ -183,6 +183,7 @@ Check that period before calculating:
 aeat --format json app ledger preflight --year 2026 --period 1T
 @step Show the quarter's ledger status.
 @result aeat --format json app ledger status --year 2026 --period 1T
+@expect result.active_count == 2
 @expect exit_code == 0
 ```
 
@@ -230,6 +231,7 @@ before adding values:
 aeat --format json app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
 @step List the casillas the modelo requires.
 @result aeat --format json app modelo casillas 303 --period 1T --required
+@expect result.casilla_count == 2
 @expect exit_code == 0
 ```
 
@@ -244,6 +246,7 @@ compensation amount:
 aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 @step Show the IVA compensation wallet balance for the year.
 @result aeat --format json app modelo iva-wallet balance --as-of-year 2026
+@expect result.total_balance == "0"
 @expect exit_code == 0
 ```
 
@@ -263,6 +266,7 @@ List the saved revisions, then show the current revision's persisted values:
 aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
 @step Show the current revision's persisted casilla values and provenance.
 @result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
+@expect result.casilla_values.71 == "105.00"
 @expect exit_code == 0
 ```
 

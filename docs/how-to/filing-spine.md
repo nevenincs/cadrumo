@@ -44,6 +44,7 @@ aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
 @step Export the verified revision to a local fichero-BOE.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303.boe
+@expect result.byte_size == 7365
 @expect exit_code == 0
 ```
 
@@ -83,6 +84,7 @@ aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
 aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
 @step Show the current revision's persisted values.
 @result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
+@expect result.casilla_values.71 == "105.00"
 @expect exit_code == 0
 ```
 
@@ -111,6 +113,7 @@ To see the reference number for a saved filing:
 aeat --format json app modelo work list
 @step Show the status for one visible filing target.
 @result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@expect result.modelo == "303"
 @expect exit_code == 0
 ```
 

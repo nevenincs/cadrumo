@@ -124,6 +124,7 @@ aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
 aeat --format json app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 @step Supply the first-period bindings during calculation.
 @result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.saved == true
 @expect exit_code == 0
 ```
 
@@ -189,6 +190,7 @@ aeat --format json app modelo iva-wallet balance --as-of-year 2026
 aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 @step Correct the seeded opening amount, recording the reason.
 @result aeat --format json app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+@expect result.amount == "1200.50"
 @expect exit_code == 0
 ```
 
