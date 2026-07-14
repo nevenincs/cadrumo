@@ -4,6 +4,31 @@
       "argv": [
         "aeat",
         "config",
+        "profile",
+        "create",
+        "me",
+        "--quiet",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "87654321X",
+        "--name",
+        "Ana",
+        "--surnames",
+        "Garcia Lopez"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tme\nStatus\tcreated\nActive profile\tme\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
         "repair",
         "profile",
         "--clear-active",
@@ -13,9 +38,24 @@
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
-      "kind": "result",
+      "kind": "command",
       "stderr_text": null,
       "text": "dry_run\tFalse\ncleared_pointer\tTrue\nactive_profile\t\nsource\tnone\nstatus\tnone\nregistered_bucket\tFalse\nprofile_record_present\tFalse\nrepairable_by_clearing_pointer\tFalse\nnext_action\taeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "switch",
+        "me"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "active_profile\tme\n"
     }
   ],
   "golden_schema_version": 1,
