@@ -87,3 +87,34 @@ Three things a fresh maintainer would be surprised by, recorded unsoftened:
 1. A constant rename can break the docs build SILENTLY from the maintainer's mental model — the coupling between a renamed CLI constant and the sequence goldens is real but not obvious, so a rename that does not refresh goldens surfaces only at the docs gate, not at the rename site.
 2. Prose numbers are UNVERIFIED — a maintainer reasonably assumes "executed docs" means every number on the page is checked; it does not (F2). Only the command frames and the terminal assertion are golden-gated.
 3. The anti-tautology proof pins the EMPTY set — the S18 proof's teeth are the mutation mask-bite test (a deliberately-injected nondeterministic field must be caught by the mask), not the empty-set assertion alone; a maintainer reading only the empty-set line would under-estimate what actually guards mask honesty.
+
+## CLI-surface hardening sweep and production-fix ledger (2026-07-14)
+
+The documented-command work spun up a hermetic zero-auth sandbox that doubled as a whole-CLI-surface hardening instrument. This section persists the sweep results and the production fixes the campaign's gates and sweeps produced.
+
+### Whole-surface sweep
+
+The full CLI tree was walked in the hermetic zero-auth sandbox: 350 nodes (282 leaves, 68 groups). Results:
+
+- **Help:** 309/309 nodes render `--help` clean.
+- **Bare groups:** 68/68 groups invoked with no subcommand behave correctly (usage/help, no crash).
+- **No-arg leaves:** 251 leaves invoked with no arguments produce an exit-code histogram of 73×exit-0 and 178×exit-2. Every exit-0 is an optional-arg verb (the verb legitimately runs with no argument); there are ZERO silent no-ops on a verb carrying required parameters. The 178 exit-2 are instructive refusals (missing-argument usage errors that name the accepted form), i.e. the CLI-gate-is-the-operator's-first-instructive-surface contract holds across the surface.
+- **JSON envelope spine:** 250/251 no-arg leaf outputs carry the shared envelope spine; the single gap is accounted for and not a spine regression.
+- **Safety-skipped:** live/`pull` nodes (41 leaves under 31 groups) are skipped by safety design — the sandbox never sets `CADRUMO_LIVE_TESTS_ENABLED` and never contacts AEAT, so those nodes are out of the sweep's scope by construction, not untested by omission.
+
+### Production-fix ledger
+
+Fixes this campaign's gates and sweeps surfaced and landed (shas recorded for the audit trail):
+
+- **Clock seam:** a `date.today()` bypass of the clock authority was closed (`c59e214862`); the `today_madrid` civil-date authority was established and threaded (`6f60d9ca46`, `7f3cb7cadf`, `e659b44ab8`) with the ADR amendment recording the decision (`c074b99ec6`).
+- **Sandbox privacy:** ambient environment scrub so the sandbox cannot inherit host secrets (`0c675db472`), plus a dotenv-suppression seam so a developer's `.env` cannot leak into hermetic runs (`9f1a86ed56`).
+- **Auth surface:** gate-4 purpose scoping per the operator ruling (`93bd51b0ab`) and the zero-auth docs sandbox itself (`fa2275a812`).
+- **Non-interactive robustness:** the rekey/recover flows now convert a non-interactive `EOFError` into a typed REFUSED outcome instead of an uncaught crash (`3e30eba9f2`).
+- **Evidence identity:** evidence identity is now path-independent, so the same evidence bytes resolve to one identity regardless of the source path they arrived by (`0d16e2e45d`).
+- **Diagnostics routing (in flight):** relation-prefill diagnostics move onto the `Notice` channel — sha to be added when it lands.
+- **Error-envelope threading (in flight):** the error-envelope command-identifier threading — sha to be added when it lands.
+
+### Open recorded findings
+
+- **Certificate/bundle as-given path-keyed events (accepted):** a different class from the evidence-identity fix above — certificate and bundle events are keyed on the as-given path by design; accepted, not a regression.
+- **M390 deducible/evidence coupling (resolving):** the M390 deducible-versus-evidence coupling is resolving via seed 5b; tracked to that resolution.
