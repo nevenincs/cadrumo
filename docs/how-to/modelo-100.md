@@ -19,6 +19,10 @@ you upload through the official AEAT channel yourself.
 
 ## Before you create the draft
 
+**Requirement:** a valid taxpayer profile carrying the Renta-relevant facts.
+Create one with `aeat config profile create <name>` — see [Set up your taxpayer
+profile](profile-setup.md).
+
 - Modelo 100 is annual: the period token is always `0A`, and the filing year
   is the year the income belongs to (the 2025 declaration is filed in 2026).
   Each filing year resolves to its own registry revision automatically.
@@ -35,47 +39,58 @@ you upload through the official AEAT channel yourself.
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
-  declaration expects and what blocks it:
-
-  ```bash
-  aeat app modelo requires 100 --year 2025 --period 0A
-  aeat app modelo work dependencies --modelo 100 --year 2025 --period 0A
-  ```
-
-  `dependencies` names each source filing and whether its clean-state
-  evidence is satisfied; an unfiled or unevidenced quarter blocks the annual
-  verify. Record or reconcile those filings first - see
+  declaration expects and what blocks it with `aeat app modelo requires 100
+  --year 2025 --period 0A` and `aeat app modelo work dependencies --modelo 100
+  --year 2025 --period 0A`. `dependencies` names each source filing and whether
+  its clean-state evidence is satisfied; an unfiled or unevidenced quarter
+  blocks the annual verify. Record or reconcile those filings first - see
   [Reconcile a filing](reconcile.md).
 
-## Create, calculate, review
+## Create, calculate, and verify
 
-```bash
-aeat app modelo work create --modelo 100 --year 2025 --period 0A
-aeat app modelo work calculate --modelo 100 --year 2025 --period 0A
+The example below follows an employee filer - a Madrid-resident salaried
+taxpayer filing an individual 2025 return, with no self-employed activity, so
+the Modelo 130/131 and retención-model folds are scoped out and the annual
+grants on the employment figures alone. If you also file quarterly Modelo 130
+instalments, they fold in as payments on account - see [Prepare a Modelo 130
+IRPF instalment](modelo-130.md).
+
+```{cli-sequence} modelo-100-renta-2025
+:seed: renta-2025
+:verify: Confirm the annual declaration passed verification before you export it.
+@step Open the annual Modelo 100 work unit for 2025.
+aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@capture work_unit_id result.work_unit_id
+@step Calculate, supplying this employee filer's salary income and withholdings by hand, with a zero prior-year negative-base carry for a first filing.
+aeat --format json app modelo work calculate {work_unit_id} --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values.0003 == "24000"
+@expect result.casilla_values.0012 == "24000.00"
+@expect result.casilla_values.0019 == "2000.00"
+@step Verify the annual declaration before you export it.
+@result aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@expect result.completeness_status == "complete"
+@expect exit_code == 0
 ```
 
 Calculation reads the year's classified ledger, the profile facts, the prior
 filings the registry binds in, and any carry-forward from last year's
 declaration (negative bases carry via a prior-filing binding), then runs the
-registry formulas and saves a draft revision. The tool never fabricates a
-missing prior period: what it does not have on record stays a visible blank
-for you to resolve, not a guessed zero.
+registry formulas and saves a draft revision. Here casilla `0003` carries the
+24000 of salary income, casilla `0012` the rendimiento neto del trabajo, and
+casilla `0019` the reducción por rendimientos del trabajo (art. 20 LIRPF) of
+2000. The tool never fabricates a missing prior period: what it does not have
+on record stays a visible blank for you to resolve, not a guessed zero.
 
 Most of Modelo 100's casillas are optional manual inputs for situations the
 ledger cannot know (employment income details, capital income, deductions).
-Find what applies to you and what is still missing:
-
-```bash
-aeat app modelo bindings list --modelo 100 --year 2025 --period 0A --missing
-aeat app modelo casillas 100 --period 0A --required
-aeat app modelo work observations --modelo 100 --year 2025 --period 0A
-```
-
-Supply a manual casilla and recalculate:
-
-```bash
-aeat app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000
-```
+Find what applies to you and what is still missing with `aeat app modelo
+bindings list --modelo 100 --year 2025 --period 0A --missing`, `aeat app modelo
+casillas 100 --period 0A --required`, and `aeat app modelo work observations
+--modelo 100 --year 2025 --period 0A`. Supply a manual casilla and recalculate
+with `aeat app modelo work calculate --modelo 100 --year 2025 --period 0A
+--casilla 0003=24000`.
 
 For the full input workflow - bound versus manual casillas, offsets, and
 revision selection - see
@@ -83,25 +98,19 @@ revision selection - see
 spreadsheet review of the assembled declaration, see
 [Review calculations with Google Sheets](review-with-google-sheets.md).
 
-## Verify and export
+## Export and file
 
-```bash
-aeat app modelo work verify --modelo 100 --year 2025 --period 0A
-aeat app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
-```
+The verify step in the sequence above ran the annual completeness check,
+including the cross-period gates: every dependency filing must be filed and
+evidenced, and every carried figure must still point at the revision it was
+filed under. A blocked report names the dependency in the way - resolve it and
+re-run. See [Verify a draft filing](verification-reports.md).
 
-Verification runs the annual completeness check, including the cross-period
-gates: every dependency filing must be filed and evidenced, and every
-carried figure must still point at the revision it was filed under. A
-blocked report names the dependency in the way - resolve it and re-run. See
-[Verify a draft filing](verification-reports.md).
-
-After you file at the portal, record the local marker and reconcile:
-
-```bash
-aeat app modelo work file --modelo 100 --year 2025 --period 0A
-aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
-```
+Export the verified declaration with `aeat app modelo export --modelo 100 --year
+2025 --period 0A --output ./modelo-100.boe`. After you file at the portal, record
+the local marker with `aeat app modelo work file --modelo 100 --year 2025
+--period 0A` and reconcile with `aeat app modelo reconcile pull --modelo 100
+--year 2025 --period 0A`.
 
 ## Next steps
 
