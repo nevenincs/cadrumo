@@ -122,7 +122,18 @@ def test_every_canonical_feeder_appears_in_at_least_one_summary() -> None:
 
 
 def test_declared_canonical_chains_use_pago_or_summary_dependency_role() -> None:
-    """A declared chain's dependency_role must be one of the contract-shaped roles."""
+    """Every declared chain carries at least one contract-shaped dependency_role.
+
+    A canonical feeder -> summary chain must be declared with a structural role
+    (annual-summary roll-up, instalment-to-final-settlement, or factual evidence)
+    on at least one of the feeder's relations, so the chain is modelled as a real
+    AEAT reconciliation rather than an incidental data feed. A feeder may ALSO
+    carry a ``direct_calculation`` value feed alongside its structural relation
+    (e.g. Modelo 131 supplies both the pago fraccionado, an instalment, and the
+    módulos rendimiento, a direct calculation input to M100 income); such a
+    value feed is separately guarded by the value-consumption and per-role
+    cross-dependency contracts and is not an offence here.
+    """
 
     registry = _registry()
     failures: list[str] = []
@@ -155,21 +166,30 @@ def _chain_role_offences(
     feeder_id: str,
     summary_id: str,
 ) -> tuple[str, ...]:
-    """Return any dependency_role offences for one (feeder -> summary) pair across all revisions."""
+    """Return an offence per revision where a declared (feeder -> summary) chain
+    carries no relation with a contract-shaped dependency_role.
+
+    The chain must be structurally declared by at least one accepted-role
+    relation; additional ``direct_calculation`` value feeds from the same feeder
+    are legitimate and do not constitute an offence.
+    """
     offences: list[str] = []
     for revision in summary.revisions.values():
-        for relation in revision.relations:
-            if relation.source_modelo != feeder_id:
-                continue
-            if relation.kind not in _CROSS_MODEL_RELATION_KINDS:
-                continue
-            if relation.dependency_role not in _ACCEPTED_CHAIN_DEPENDENCY_ROLES:
-                offences.append(
-                    f"summary modelo {summary_id!r} revision {revision.id!r} "
-                    f"relation {relation.id!r} feeds from {feeder_id!r} but uses "
-                    f"dependency_role {relation.dependency_role!r}; expected one of "
-                    f"{sorted(_ACCEPTED_CHAIN_DEPENDENCY_ROLES)!r}",
-                )
+        chain_relations = [
+            relation
+            for relation in revision.relations
+            if relation.source_modelo == feeder_id and relation.kind in _CROSS_MODEL_RELATION_KINDS
+        ]
+        if not chain_relations:
+            continue
+        if not any(relation.dependency_role in _ACCEPTED_CHAIN_DEPENDENCY_ROLES for relation in chain_relations):
+            roles_present = sorted({relation.dependency_role for relation in chain_relations})
+            offences.append(
+                f"summary modelo {summary_id!r} revision {revision.id!r} declares "
+                f"relations from feeder {feeder_id!r} but none carry a contract-shaped "
+                f"dependency_role; roles present: {roles_present!r}; expected at least one of "
+                f"{sorted(_ACCEPTED_CHAIN_DEPENDENCY_ROLES)!r}",
+            )
     return tuple(offences)
 
 
