@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-cli-sequences'
-date: '2026-07-13'
-modified: '2026-07-13'
+date: '2026-07-14'
+modified: '2026-07-14'
 related:
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S01]]'
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S02]]'
@@ -48,6 +48,7 @@ related:
   - '[[2026-07-13-docs-cli-sequences-audit]]'
   - '[[2026-07-13-docs-cli-sequences-plan]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
+  - '[[2026-07-14-docs-cli-sequences-audit]]'
 ---
 
 # `docs-cli-sequences` feature index
@@ -63,6 +64,7 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 ### audit
 
 - `2026-07-13-docs-cli-sequences-audit` - `docs-cli-sequences` audit: `docs-cli-sequences codification candidates and follow-up register`
+- `2026-07-14-docs-cli-sequences-audit` - `docs-cli-sequences` audit: `operator mandatory-display remediation`
 
 ### exec
 
