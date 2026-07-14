@@ -13,6 +13,16 @@ related:
   - '[[2026-07-14-calculation-export-import-adjudication-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `calculation-export-import-adjudication` plan
 
 ## Outcome and boundary
@@ -59,7 +69,7 @@ must not become implementation work.
 
 Freeze the mandate, authority, current-implementation, evidence, and non-duplication gate before any candidate can become implementation work.
 
-- [ ] `P01.S01` - Reconfirm the canonical registry, export renderer/parser, declaration parser, and sealed-archive boundaries against current source and tests; `src/cadrumo/, .vault/reference/`.
+- [x] `P01.S01` - Reconfirm the canonical registry, export renderer/parser, declaration parser, and sealed-archive boundaries against current source and tests; `src/cadrumo/, .vault/reference/`.
 - [ ] `P01.S02` - Publish the shared disposition taxonomy, evidence-field contract, and four-condition gate for the individual candidate Steps; `.vault/reference/, .vault/audit/`.
 
 ### Phase `P02` - Outbound export-layout candidates
