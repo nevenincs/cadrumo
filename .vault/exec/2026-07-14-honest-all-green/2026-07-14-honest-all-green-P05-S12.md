@@ -118,3 +118,20 @@ reds.
   (negligible vs the multi-second registry compile it guards). Correctness is
   favoured over cache-hit-rate: any registry-module edit invalidates all
   pickles, which is the safe direction.
+- REVIEW MEDIUM closed (commit `3a052b578b`): the fingerprint originally covered
+  only the registry package, missing the cross-package core modules whose types
+  are EMBEDDED in the pickled compiled objects. Extended
+  `_compute_loader_code_fingerprint` to also hash an explicit, criterion-commented
+  list `_EMBEDDED_SCHEMA_CORE_MODULES` (`cadrumo.core.aggregation` for
+  BindingSourceKind/BindingAggregation/BindingTypedEnumKind, `cadrumo.core.classification`
+  for SensitivityClass, `cadrumo.core._period` for Period, `cadrumo.core._tax_domain`
+  for TaxDomain), resolved via importlib with a per-module unresolved-marker
+  fallback. Chose the explicit list over deriving from `_schema.py` imports
+  because the compiled objects embed core types via SEVERAL registry schema
+  modules (not just `_schema.py`), so an import-derived list would under-capture;
+  the drift hazard is bounded by `test_embedded_schema_core_modules_all_resolve`
+  (every declared module must resolve to a real file) plus
+  `test_loader_fingerprint_incorporates_embedded_core_module_source` (proves the
+  core bytes genuinely contribute), and the criterion comment states the
+  maintenance obligation. The public `_registry_disk_cache_key` shape is
+  unchanged, so the poison-pickle regression test needed no change.
