@@ -71,36 +71,55 @@ related:
 
 ## Outcome
 
-10 of the ~12 cascade findings are GREEN. Two categories remain OPEN and are
-NOT this step's to close unilaterally:
+11 of the ~12 cascade findings are now GREEN. One category remains OPEN and
+is NOT this step's to close unilaterally:
 
-1. `test_taxation_comparison.py` (5 tests) carries ACTIVE uncommitted peer WIP
-   (a peer removed the now-computed `0501` input but has not yet supplied the
-   `renta-2025-profile-has-economic-activity` binding, leaving the file mid-fix
-   with the exact profile-binding under-supply S02 fixed elsewhere). Per the
-   STOP-on-active-peer-WIP discipline I did not edit it; the peer's in-flight
-   fix will complete it. Flagged to the coordinator.
-2. `test_file_flow_filing.py::test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks`
+1. RESOLVED (follow-up by another executor holding the S01 diagnosis
+   context): `test_taxation_comparison.py`'s in-flight peer WIP completed —
+   the `0501` computed-input removal is paired with a
+   `renta-2025-profile-has-economic-activity` supply in both the shared
+   `_BASE_BINDINGS` fixture and the `test_verify.py` grounded-fraction test
+   (the same under-supply class S02 fixed for the registry-level tests).
+   All 9 tests in the file pass; the assertions still check the real
+   recommendation direction / delta sign / typed envelope contract per the
+   module's own no-tautological-test docstring, not vacuously. Commit
+   `c76e9639b5`.
+2. STILL OPEN: `test_file_flow_filing.py::test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks`
    and `test_file_flow_verify.py::test_verify_runs_workflow_gate_and_refuses_before_verified_state_write`
    assert the OBSOLETE premise that an unavailable auth provider blocks the
    LOCAL file/verify flow. Commit `93bd51b0ab` ("fix(modelo): auth readiness
    gates only live purposes per operator ruling") deliberately narrowed
    preflight gate-4 to skip the local build/verify/file/export flow, so an
-   unavailable auth provider no longer blocks. The "gate refuses -> no partial
-   state written" atomicity invariant these tests protect is already covered by
-   the passing `test_file_refuses_future_period_before_filing_window_opens`
-   (the still-applicable deadline/obligation gate). Correct resolution is a
-   design decision on that campaign's ruling: either invert the two tests to
-   assert the local flow now PROCEEDS with an unavailable auth provider
-   (locking the ruling), or rework them onto a still-applicable preflight gate.
-   Reported to the coordinator for adjudication rather than guessed.
+   unavailable auth provider no longer blocks. Independently re-confirmed
+   this finding by reading `application/workflow/_engine.py`'s
+   `skip_auth = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)`
+   and the test harness's `_workflow_gate` helper
+   (`application/modelo/tests/_file_flow_support.py`): the harness
+   constructs its `WorkflowEngine` with `certificate_bundle=None`, so the
+   ONE other cert-expiry check that also gates on provider availability is
+   structurally inert in this test file too — the `auth_provider` fixture
+   these two tests pass has no reachable effect on either test's outcome.
+   Of the four `SubmissionEngine` preflight gates, only gate-1
+   (draft-approval status) and gate-2 (error-severity findings) remain
+   un-skipped for FILE/VERIFY; the harness's `_RevisionDraftBuilder`
+   unconditionally approves the draft it builds (gate-1 always passes by
+   construction), so a genuine replacement blocking condition would need to
+   engineer an intentionally-invalid casilla input that trips gate-2 — a
+   registry-validation-rule change with real risk of an artificial,
+   not-truly-representative fixture if done without deeper domain grounding.
+   The "gate refuses -> no partial state written" atomicity invariant these
+   tests protect is already covered by the passing
+   `test_file_refuses_future_period_before_filing_window_opens` (the
+   still-applicable deadline/obligation gate). Reported to the coordinator
+   for adjudication rather than guessed a gate-2 fixture.
 
 Commits: `843518562a` (binding count + invoice_repository), `d9fad8f0b7`
-(cross-period ca locale rewording).
+(cross-period ca locale rewording), `c76e9639b5` (taxation-comparison
+profile-binding supply, closing item 1).
 
 ## Notes
 
-- S03 is left OPEN pending the two items above; both are cross-campaign
-  surfaces (active peer WIP; another campaign's committed operator ruling), so
-  closing them unilaterally would either collide with live work or mis-test an
-  operator ruling. No destructive git; explicit-pathspec commits throughout.
+- S03 is left OPEN pending item 2 above, a cross-campaign surface (another
+  campaign's committed operator ruling) that would either mis-test the
+  ruling or fabricate an unrepresentative fixture if closed unilaterally.
+  No destructive git; explicit-pathspec commits throughout.
