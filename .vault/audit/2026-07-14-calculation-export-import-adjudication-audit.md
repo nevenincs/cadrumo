@@ -92,6 +92,28 @@ and real-behavior coverage through the canonical engines.
 - **Next action:** `none`; preserve Modelo 036 and add no 037 profile, parser,
   shim, or active entry point.
 
+### modelo-037-outbound | low | Current outbound support is retired in favour of Modelo 036
+
+- **Candidate:** Modelo 037 outbound generation for current support from
+  `2025-02-03` with an open end.
+- **Mandate:** `absent`; accepted authority mandates suppression and names
+  Modelo 036 as successor.
+- **Exact authority window:** `BOE-A-2025-410` applies from `2025-02-03`; it is
+  retirement authority, not an active export design.
+- **Canonical implementation state:** `delivered`; 037 is historical metadata,
+  has no active registry snapshot/layout, and the generic exporter fails closed.
+- **Real evidence or specimen:** `not-required`; the zero-artefact inventory is
+  negative evidence and must not revive support.
+- **Retirement:** `true`.
+- **Evidence block:** `false`.
+- **Four-condition gate:** `mandate_met = false`,
+  `exact_authority_met = true`, `canonical_gap_met = false`, and
+  `eligible_met = false`.
+- **Gate result:** `fail`.
+- **Disposition:** `retired`.
+- **Next action:** `none`; add no 037 registry, layout, renderer, parser, shim,
+  test, active entry point, or successor work.
+
 ## Recommendations
 
 - Append one candidate finding per surface and exact applicability window.
