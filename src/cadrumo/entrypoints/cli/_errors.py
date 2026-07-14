@@ -60,6 +60,12 @@ from ...domain.user_profile import StoredProfileDriftError
 _log = get_logger(__name__)
 
 _UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_test", default=False)
+#: Dotted identifier of the command whose callback is currently executing,
+#: set by :func:`command_error_boundary` at entry so the error spine's
+#: ``command`` field can name the failing command (byte-identical to the
+#: ``command=`` its success envelope would emit). ``None`` before any command
+#: resolves — an argv parse failure — so the field is honestly null there.
+_ACTIVE_COMMAND_ID: ContextVar[str | None] = ContextVar("cadrumo_cli_active_command_id", default=None)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
 
 
@@ -247,6 +253,22 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
 
     @functools.wraps(callback)
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
+        # Name the executing command on the error spine: Typer injects the
+        # Context as a callback parameter, so capture its command_path here (the
+        # global click context stack is not populated under this invocation).
+        # Duck-type on ``command_path`` rather than ``isinstance(click.Context)``
+        # — the vendored Typer Context is not a guaranteed upstream subclass.
+        command_path = next(
+            (
+                path
+                for value in (*args, *kwargs.values())
+                if isinstance(path := getattr(value, "command_path", None), str)
+            ),
+            None,
+        )
+        token = _ACTIVE_COMMAND_ID.set(
+            _command_identifier_from_path(command_path) if command_path is not None else None,
+        )
         try:
             return callback(*args, **kwargs)
         except StoredProfileDriftError as error:
@@ -310,6 +332,8 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
                 exc_info=True,
             )
             _emit_error_and_exit(CliUnexpectedBoundaryError(error))
+        finally:
+            _ACTIVE_COMMAND_ID.reset(token)
 
     _WRAPPED_CALLBACKS[id(callback)] = _wrapped
     _WRAPPED_CALLBACKS[id(_wrapped)] = _wrapped
@@ -392,6 +416,36 @@ def active_profile_label_for_error() -> str | None:
         return None
 
 
+def _command_identifier_from_path(command_path: str) -> str | None:
+    """Map a click ``command_path`` to the dotted envelope command identifier.
+
+    The click command *path* uses the root prog token plus hyphenated CLI
+    tokens (``aeat config show-recovery``); the envelope ``command`` identifier
+    uses dotted, underscored tokens (``config.show_recovery``). Drop the root
+    prog token, join the rest with ``.``, map ``-`` to ``_`` per token — the
+    inverse of that convention, so a command's error envelope names it
+    identically to the ``command=`` its success envelope emits, and the two can
+    never disagree. ``None`` for the bare root (no subcommand).
+    """
+    segments = command_path.split()[1:]
+    if not segments:
+        return None
+    return ".".join(segment.replace("-", "_") for segment in segments)
+
+
+def _active_command_identifier() -> str | None:
+    """Return the dotted identifier of the command currently executing, or ``None``.
+
+    Read from the :data:`_ACTIVE_COMMAND_ID` context var, which
+    :func:`command_error_boundary` sets from the executing command's injected
+    :class:`click.Context` at callback entry (click's global context stack is
+    not populated under the Typer/cached-tree invocation, so the injected ctx
+    parameter is the reliable source). ``None`` when no command has resolved —
+    an argv parse failure raised before any command callback runs.
+    """
+    return _ACTIVE_COMMAND_ID.get()
+
+
 def _emit_error_and_exit(error: AeatError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
@@ -400,12 +454,17 @@ def _emit_error_and_exit(error: AeatError) -> Never:
     :func:`json_output_requested`, writes the payload
     through :func:`write_stderr`, and raises
     :class:`~typer.Exit` with the category-mapped exit code. In JSON mode
-    the shared-spine ``active_profile`` identity anchor is resolved
-    best-effort and injected into the error document.
+    the shared-spine ``active_profile`` identity anchor and the dotted
+    ``command`` identifier are resolved best-effort and injected into the
+    error document.
     """
     code = get_registered_error_code(error)
     payload = (
-        render_error_json(error, active_profile=active_profile_label_for_error())
+        render_error_json(
+            error,
+            active_profile=active_profile_label_for_error(),
+            command=_active_command_identifier(),
+        )
         if json_output_requested()
         else render_error_text(error)
     )
