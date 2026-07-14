@@ -81,6 +81,20 @@ _ALLOWLIST = {
     "cadrumo.application.invoices._wizard._WizardFieldError": (
         "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
     ),
+    "cadrumo.core._config_state_root.FormerProductStateError": (
+        "raised from inside Settings/pydantic validation during bootstrap, before the AeatError "
+        "registry can be relied upon; the CLI boundary explicitly catches it ahead of the AeatError "
+        "arm and translates it into a registered CliRefusedBoundaryError"
+    ),
+    "cadrumo.adapters.outbound.aeat.auth._session_store.FormerProductAuthSessionStateError": (
+        "same former-product refusal shape as core._config_state_root.FormerProductStateError, raised "
+        "at the session-store storage boundary before any repository/registry access; a refusal-only "
+        "signal that never reads, moves, or adopts the retired state it detects"
+    ),
+    "cadrumo.domain.modelos._row_models.Modelo210AgrupacionRentaRowsError": (
+        "private domain row-validation carrier for the M210 agrupacion-renta gate; its sole production "
+        "call site converts it to ModeloError (AeatError-derived) before it leaves the module boundary"
+    ),
 }
 
 

@@ -351,6 +351,34 @@ A portable profile file contains taxpayer data, including the tax identifier,
 activity, and local filing history. Store it as sensitive tax data, and don't
 attach it to a support request unless you've removed personal details.
 
+## Choose your service capabilities
+
+Each profile carries its own opt-in for three optional services. The setup
+wizard asks these questions when you create or edit a profile, and you can
+change them at any time. Show the resolved posture:
+
+```bash
+aeat config profile capabilities show
+```
+
+The three capabilities are:
+
+- `cloud_evidence_upload` — allow sending sensitive evidence to a cloud LLM
+  provider. Off by default. Barred for gestor profiles.
+- `llm_vision` — read invoices with the on-host vision model. On by default.
+- `google_export` — export calculations to Google Sheets. On by default.
+
+Turn a capability on or off for the active profile:
+
+```bash
+aeat config profile capabilities set llm_vision off
+aeat config profile capabilities set cloud_evidence_upload on
+```
+
+A capability whose package extra is not installed refuses with the exact
+install command — see [Install Cadrumo](../workstation-setup.md) for the
+extras.
+
 ## See what changed
 
 Every change to a profile - creation, edits, imports, classifications,

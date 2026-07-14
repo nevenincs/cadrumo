@@ -17,27 +17,20 @@ has tax-specific setup or review choices.
 already have a profile, skip it. [Set up your taxpayer
 profile](profile-setup.md) covers every profile question in depth.
 
-## Install the CLI
+## Before you start
 
-Download the current `cadrumo` package from the
-[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and
-install it with `pip`; the [installation guide](../workstation-setup.md) walks
-through the full setup, including optional integrations:
+This page assumes the `aeat` command is installed and on your path — confirm
+with:
 
 ```bash
-pip install ./cadrumo-0.2.0-py3-none-any.whl
+aeat --version
 ```
 
-Confirm the command is on your path by running `aeat --version`.
+If it is not, [Install Cadrumo](../workstation-setup.md) covers the full
+setup: the package download, the optional integrations, and the AI-assistant
+(MCP) surface.
 
-To use Cadrumo with an AI agent later, install the `agent` extra instead; see
-[Connect an agent](connect-an-agent.md):
-
-```bash
-pip install "./cadrumo-0.2.0-py3-none-any.whl[agent]"
-```
-
-## Before you start: the master-key passphrase
+## The master-key passphrase
 
 `aeat` encrypts your local data with a master key derived from a passphrase.
 The first command that touches the store asks for the passphrase and the tool
@@ -52,10 +45,14 @@ describes what each step does.
 A profile is your personal taxpayer record inside the tool. Create it with your
 own details. The name and surnames are required — the export step refuses
 without them — and the activity start date scopes out prior periods so a first
-filing has no earlier quarter to depend on. Run `aeat config profile create me
---quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity
-"consultoria" --activity-start-date 2026-01-01`, then check the active profile
-with `aeat config profile status`.
+filing has no earlier quarter to depend on:
+
+```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  --surnames "Garcia Lopez" --activity "consultoria" \
+  --activity-start-date 2026-01-01
+aeat config profile status
+```
 
 `--quiet` runs without the interactive setup wizard. The create command
 confirms the active profile and points you to the next step:
@@ -79,16 +76,24 @@ are two ways to add them.
 
 The simplest is to add each row directly with its tax fields. `--amount` is the
 gross total (taxable base plus IVA); an expense row also needs a `--category-id`
-from the recognised expense families. Add the income row with `aeat app ledger
-add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta"
---classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210`,
-add the expense with `aeat app ledger add --date 2026-02-11 --amount 605
---direction OUTGOING --description "compra" --classification BUSINESS
---category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount
-105`, then review them with `aeat app ledger list`.
+from the recognised expense families:
 
-List the recognised expense categories any time with `aeat app ledger
-categories`.
+```bash
+aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+  --description "venta" --classification BUSINESS \
+  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
+  --description "compra" --classification BUSINESS \
+  --category-id material_oficina --taxable-base 500 --iva-rate 0.21 \
+  --iva-amount 105
+aeat app ledger list
+```
+
+List the recognised expense categories any time:
+
+```bash
+aeat app ledger categories
+```
 
 If you instead have a bank export, import it. `aeat` reads a semicolon-delimited
 CSV with comma decimals and a negative `Importe` for money leaving the account:
@@ -99,9 +104,12 @@ Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
 2026-02-11;2026-02-11;compra;-605,00;605,00;EUR
 ```
 
-Preview the import with `aeat app ledger import ./statement.csv --provider auto
---dry-run`, then run it for real with `aeat app ledger import ./statement.csv
---provider auto`.
+Preview the import, then run it for real:
+
+```bash
+aeat app ledger import ./statement.csv --provider auto --dry-run
+aeat app ledger import ./statement.csv --provider auto
+```
 
 Imported rows arrive without a tax category and must be classified before they
 count in a calculation (see the next step). The `ledger add` rows above are
@@ -115,10 +123,13 @@ and run readiness checks.
 
 Each imported transaction has no tax category until you classify it.
 Classification tells `aeat` whether a row is a business expense, personal
-spending, or a mix of both. Take the transaction id from `ledger list`, then run
-`aeat app ledger classify <transaction-id> --classification BUSINESS
---category-id material_oficina` and confirm the quarter is ready with `aeat app
-ledger preflight --year 2026 --period 1T`.
+spending, or a mix of both. Take the transaction id from `ledger list`:
+
+```bash
+aeat app ledger classify <transaction-id> --classification BUSINESS \
+  --category-id material_oficina
+aeat app ledger preflight --year 2026 --period 1T
+```
 
 `preflight` reports whether the quarter's rows are ready to calculate.
 
@@ -162,13 +173,18 @@ Read the frames in order:
   inputs. The tool fills the boxes from your ledger: casilla `01` is the
   quarter's income (`1000.00`, the taxable base — IVA is never part of your
   income), casilla `03` the net yield (`500.00`), and casilla `04` the
-  instalment (`100.00`, twenty percent of the net). Review every saved box with
-  `aeat app modelo work revision --modelo 130 --year 2026 --period 1T`.
+  instalment (`100.00`, twenty percent of the net).
 - Verify the draft. Verification is a local check — it does not send anything to
   AEAT. When the draft is complete the report reads `completeness_status
   complete` and `granted_verificado_completo true`. A first filing also shows one
   advisory noting that the period falls before your activity start date; this is
   informational and does not block the export.
+
+Review every saved box with:
+
+```bash
+aeat app modelo work revision --modelo 130 --year 2026 --period 1T
+```
 
 If a value is missing or a modelo needs a value you must enter by hand, see
 [Review and supply calculation inputs](review-calculation-values.md). That page
@@ -178,9 +194,12 @@ earlier quarters. For how the tool organises filing work behind the scenes, see
 
 ## 5. Export the file
 
-Export creates the `.boe` file — the format AEAT's upload portal accepts. Run
-`aeat app modelo export --modelo 130 --year 2026 --period 1T --output
-./modelo-130-2026-1T.boe`.
+Export creates the `.boe` file — the format AEAT's upload portal accepts:
+
+```bash
+aeat app modelo export --modelo 130 --year 2026 --period 1T \
+  --output ./modelo-130-2026-1T.boe
+```
 
 The tool shows where the file was saved, its size in bytes, and a `file_sha256`
 verification code. Keep this code so you can later confirm you uploaded the
@@ -190,8 +209,12 @@ exact file that was generated.
 
 Use the local calendar to see what may be due for the active profile. On a fresh
 profile, pass `--allow-incomplete` so the agenda runs before every profile fact
-is filled in: run `aeat app overview agenda --allow-incomplete` and `aeat app
-overview explain 130 --year 2026`.
+is filled in:
+
+```bash
+aeat app overview agenda --allow-incomplete
+aeat app overview explain 130 --year 2026
+```
 
 The calendar uses profile facts and local filing context. It does not replace
 AEAT's official portal. For the full calendar flow, see
@@ -209,10 +232,14 @@ The final filing step is outside `aeat`:
 The full handoff checklist, including what to do when the upload goes wrong,
 is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
 
-After a real filing, record the local filing marker with `aeat app modelo work
-file --modelo 130 --year 2026 --period 1T`. This only records the action on your
-own computer. It does not contact AEAT. To compare your local record with the
-AEAT receipt, see
+After a real filing, record the local filing marker:
+
+```bash
+aeat app modelo work file --modelo 130 --year 2026 --period 1T
+```
+
+This only records the action on your own computer. It does not contact AEAT.
+To compare your local record with the AEAT receipt, see
 [How to reconcile a filed modelo against its justificante](reconcile.md).
 
 ## Next steps
