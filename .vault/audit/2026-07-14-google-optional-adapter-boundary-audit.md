@@ -228,6 +228,28 @@ The complete ledger classifies 183 rows: `shipped-equivalent`: 67; `retired-obso
 
 Open rows divide into three honest categories: mechanisms already delivered by a different current architecture, mechanisms retired because they would make Google authoritative or add a parallel writer, and domain capabilities that need their own mandate or ADR. In particular, OAuth and provider setup are shipped; encrypted Drive mirroring is intentionally not recovery; the sealed provider-neutral archive owns recovery; evidence acquisition is explicit rather than watched-folder ingestion; Sheets compute is advisory and persists nothing; canonical domain services own all writes.
 
+### legacy-plan-archive-preview | low | all incoming references are retained provenance
+
+The canonical `google-oauth-legacy-plan-retirement` archive preview reported `status: unchanged`, `dry_run: true`, `archived_count: 1`, and the sole destination `.vault/_archive/plan/2026-05-13-google-oauth-plan.md`. It reported 63 incoming references to the unchanged `2026-05-13-google-oauth-plan` stem. Every edge is retained as historical provenance because the archive-aware Vault graph resolves the same bare stem after the move. No edge requires rewriting, and none blocks archival as an active authority dependency.
+
+The 53 execution-record references are all under `.vault/exec/2026-05-13-google-oauth/`:
+
+- `2026-05-13-google-oauth-P03-S01`, `2026-05-13-google-oauth-P03-S02`, `2026-05-13-google-oauth-P03-S03`, `2026-05-13-google-oauth-P03-S04`, `2026-05-13-google-oauth-P03-S05`, `2026-05-13-google-oauth-P03-S06`, `2026-05-13-google-oauth-P03-S07`, `2026-05-13-google-oauth-P03-S08`, `2026-05-13-google-oauth-P03-S09`, `2026-05-13-google-oauth-P03-S10`, `2026-05-13-google-oauth-P03-S11`, `2026-05-13-google-oauth-P03-S12`, `2026-05-13-google-oauth-P03-S13`, `2026-05-13-google-oauth-P03-S14`, `2026-05-13-google-oauth-P03-S15`, `2026-05-13-google-oauth-P03-S16`, `2026-05-13-google-oauth-P03-S17`, `2026-05-13-google-oauth-P03-S18`, `2026-05-13-google-oauth-P03-S19`, and `2026-05-13-google-oauth-P03-S20`.
+- `2026-05-13-google-oauth-P06-S01`, `2026-05-13-google-oauth-P06-S02`, `2026-05-13-google-oauth-P06-S14`, `2026-05-13-google-oauth-P06-S15`, `2026-05-13-google-oauth-p06-s15a-exec`, `2026-05-13-google-oauth-p06-s15b-exec`, `2026-05-13-google-oauth-P06-S16`, `2026-05-13-google-oauth-P06-S17`, `2026-05-13-google-oauth-P06-S18`, `2026-05-13-google-oauth-P06-S19`, `2026-05-13-google-oauth-P06-S20`, `2026-05-13-google-oauth-P06-S21`, `2026-05-13-google-oauth-P06-S22`, `2026-05-13-google-oauth-P06-S23`, `2026-05-13-google-oauth-P06-S24`, `2026-05-13-google-oauth-P06-S25`, and `2026-05-13-google-oauth-P06-S28`.
+- `2026-05-13-google-oauth-P07-S01`, `2026-05-13-google-oauth-P08-S14`, `2026-05-13-google-oauth-w01-p01-s00-exec`, `2026-05-13-google-oauth-w01-p01-s01-exec`, and `2026-05-13-google-oauth-w01-p01-s16-exec`.
+- `2026-05-14-google-oauth-w01-p01-cli-surface-exec`, `2026-05-14-google-oauth-w01-p01-closeout-exec`, `2026-05-14-google-oauth-w01-p01-records-errors-exec`, `2026-05-14-google-oauth-w01-p01-s05-s13-exec`, `2026-05-14-google-oauth-w01-p01-s08-s09-s12-exec`, `2026-05-14-google-oauth-w01-p01-s17-exec`, `2026-05-14-google-oauth-w01-p02-backends-exec`, `2026-05-14-google-oauth-w01-p02-closeout-exec`, `2026-05-14-google-oauth-w01-p02-foundation-exec`, `2026-05-14-google-oauth-w01-p02-google-drive-exec`, and `2026-05-14-google-oauth-w01-p06-s01-s02-s28-exec`.
+
+The other ten incoming references are:
+
+- ADRs: `2026-05-14-google-oauth-adr` at `.vault/adr/2026-05-14-google-oauth-adr.md` and `2026-07-12-google-oauth-adr` at `.vault/adr/2026-07-12-google-oauth-adr.md`.
+- Audits: `2026-05-14-calc-sheets-translator-audit`, `2026-05-14-google-oauth-audit`, `2026-07-12-google-oauth-audit`, and `2026-07-14-google-oauth-audit` under `.vault/audit/`.
+- Index: `google-oauth.index` at `.vault/index/google-oauth.index.md`.
+- Plan: `2026-07-14-google-optional-adapter-boundary-plan` at `.vault/plan/2026-07-14-google-optional-adapter-boundary-plan.md`.
+- Reference: `2026-05-14-google-oauth-reference` at `.vault/reference/2026-05-14-google-oauth-reference.md`.
+- Research: `2026-07-12-google-oauth-research` at `.vault/research/2026-07-12-google-oauth-research.md`.
+
+The current boundary plan and master Google audit point to the legacy plan as the historical subject being reconciled, not as decision authority. The accepted `2026-07-12-google-oauth-adr` is self-contained and retains the edge as the provenance of the plan it corrected; the current optional-adapter ADR remains the successor authority. The superseded May ADR, execution records, older audits, reference, research, and index likewise use the edge only for historical traceability. Classification totals are therefore 63 preserve, 0 rewrite, and 0 block.
+
 ## Recommendations
 
 1. Reconcile and close the legacy plan from this row-level ledger; do not execute it as a backlog.
