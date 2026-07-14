@@ -13,9 +13,9 @@ field must map to exactly one declared growth-lifecycle class:
 
 The gate fails when a field is unclassified, double-classified, or - for a
 non-exempt output directory - defaults outside the state-root derivation
-without being an opt-in (``None``-default) override. This closes the wave-1
-review's MEDIUM finding: a new dir field with a ``PROJECT_ROOT``-anchored
-default or no declared lifecycle can no longer land silently.
+without being an opt-in (``None``-default) override, so a new dir field with a
+``PROJECT_ROOT``-anchored default or no declared lifecycle can no longer land
+silently.
 """
 
 from __future__ import annotations
