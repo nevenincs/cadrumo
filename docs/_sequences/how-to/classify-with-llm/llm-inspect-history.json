@@ -1,0 +1,90 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "view",
+        "e3eeac5e"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nValue date\t2026-02-11\nAmount\t605\nCurrency\tEUR\nDirection\tOUTGOING\nDescription\tCompra de material de oficina proveedor local\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEU counterparty\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "history",
+        "e3eeac5e"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.history",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "event_count": 1,
+          "events": [
+            {
+              "actor": "<profile-id>",
+              "bucket_id": "<bucket-id>",
+              "event_id": "216049abc14de7287f01ae4f31b75e164a3ae520c7ae88ea7bc6b9ac017cef30",
+              "event_type": "ledger.transaction.imported",
+              "object_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+              "object_type": "ledger_transaction",
+              "occurred_at": "2026-04-01T09:00:00Z",
+              "payload": {
+                "import_batch_id": "644ceb0a0aa9829b9cd0bf4d3a2ba43ce73f7ab6b333d46776496818650a0816",
+                "imported_count": "2",
+                "provider_name": "CSV provider",
+                "skipped_count": "0",
+                "source_command": "aeat app ledger import",
+                "source_format": "csv",
+                "source_row_index": "3"
+              },
+              "payload_version": 1
+            }
+          ],
+          "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "llm-inspect-history"
+}

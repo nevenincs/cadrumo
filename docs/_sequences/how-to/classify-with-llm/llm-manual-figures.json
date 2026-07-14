@@ -1,0 +1,168 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-10",
+        "--amount",
+        "121.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Compra tipo reducido",
+        "--idempotency-key",
+        "llm-manual"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "8178f315fbeaed697e591b90d4d8f1135a69e011e6e88704f99727bb09a9a955"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "121",
+            "attachment_ids": [],
+            "booked_date": "2026-03-10",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-10",
+            "description": "Compra tipo reducido",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "classify",
+        "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c",
+        "--classification",
+        "BUSINESS",
+        "--iva-category",
+        "domestic_reduced_10",
+        "--taxable-base",
+        "110.00",
+        "--iva-rate",
+        "0.10",
+        "--iva-amount",
+        "11.00"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.classify",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "4709827e7a2d385fce18501344d5594c060f64e17ce7aefa6b7aa52adbb1a268",
+            "2e292ca6b3c73c0340365ffeadcb123a7e8b8993a025610e198a38e59902c2d9"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "121",
+            "attachment_ids": [],
+            "booked_date": "2026-03-10",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger classify",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-10",
+            "description": "Compra tipo reducido",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "11",
+            "iva_category": "domestic_reduced_10",
+            "iva_rate": "0.1",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": "110",
+            "transaction_id": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "b0a6349c28d268e65a577b9709ab304661cd8f8a3f29a7acd5527adfd1f8740c"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "llm-manual-figures"
+}
