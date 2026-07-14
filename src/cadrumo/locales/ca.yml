@@ -1713,8 +1713,11 @@ cli:
         kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
           a un proveïdor)'
         list_help: Llista les factures de negoci (ambdós tipus llevat que --kind filtri)
-        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T
-          triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_help: 'Clau d''operació M349: E lliuraments, M lliuraments
+          posteriors a importació exempta, H les mateixes per representant fiscal,
+          A adquisicions, T lliuraments triangulars, S serveis prestats, I serveis
+          adquirits, R transferències de béns en consigna, D devolucions de béns en
+          consigna, C substitucions del destinatari en consigna'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura de negoci
         update_help: Actualitza les dades d'una factura de negoci
@@ -2991,7 +2994,9 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repeteix la nova contrasenya amb --confirm-new-passphrase.
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
-        non_interactive_passphrase_required: 'Aquesta ordre necessita un terminal interactiu per demanar la nova contrasenya. Proporciona-la de manera no interactiva amb --new-passphrase i --confirm-new-passphrase.'
+        non_interactive_passphrase_required: Aquesta ordre necessita un terminal interactiu
+          per demanar la nova contrasenya. Proporciona-la de manera no interactiva
+          amb --new-passphrase i --confirm-new-passphrase.
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
       new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '

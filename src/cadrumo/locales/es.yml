@@ -1728,8 +1728,11 @@ cli:
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
         list_help: Lista las facturas de negocio (ambos tipos salvo que --kind filtre)
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
-          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_help: 'Clave de operación M349: E entregas, M entregas posteriores
+          a importación exenta, H las mismas por representante fiscal, A adquisiciones,
+          T entregas triangulares, S servicios prestados, I servicios adquiridos,
+          R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
+          C sustituciones del destinatario en consigna'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura de negocio
         update_help: Actualiza los datos de una factura de negocio
@@ -3021,7 +3024,9 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repite la nueva contrasena con --confirm-new-passphrase.
         new_passphrase_mismatch: La nueva contrasena y su confirmacion no coinciden.
-        non_interactive_passphrase_required: 'Esta orden necesita un terminal interactivo para solicitar la nueva contraseña. Proporciónala de forma no interactiva con --new-passphrase y --confirm-new-passphrase.'
+        non_interactive_passphrase_required: Esta orden necesita un terminal interactivo
+          para solicitar la nueva contraseña. Proporciónala de forma no interactiva
+          con --new-passphrase y --confirm-new-passphrase.
       new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
         de forma interactiva.
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '

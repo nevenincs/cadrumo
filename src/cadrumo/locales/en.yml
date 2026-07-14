@@ -1599,9 +1599,10 @@ cli:
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
         list_help: List business invoices (both kinds unless --kind filters)
-        operation_type_help: 'M349 operation type: E supply of goods, S services,
-          T triangular, R rectification, A acquisition of goods, I acquisition of
-          services, M miscellaneous'
+        operation_type_help: 'M349 operation key: E supplies of goods, M supplies
+          after an exempt import, H the same via a fiscal representative, A acquisitions
+          of goods, T triangular supplies, S services supplied, I services acquired,
+          R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a business invoice
         update_help: Update business invoice details
@@ -2797,7 +2798,9 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
-        non_interactive_passphrase_required: 'This command needs an interactive terminal to prompt for the new passphrase. Provide it non-interactively with --new-passphrase and --confirm-new-passphrase.'
+        non_interactive_passphrase_required: This command needs an interactive terminal
+          to prompt for the new passphrase. Provide it non-interactively with --new-passphrase
+          and --confirm-new-passphrase.
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
       new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     errors:
