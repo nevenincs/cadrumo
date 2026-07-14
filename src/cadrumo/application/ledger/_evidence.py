@@ -356,7 +356,7 @@ class PurchaseInvoiceEvidenceService:
         self,
         *,
         bucket_id: str,
-        source_path: Path,
+        source_path: str | Path,
         supplier: str | None = None,
         invoice_number: str | None = None,
         invoice_date: str | None = None,
@@ -385,7 +385,13 @@ class PurchaseInvoiceEvidenceService:
 
         Args:
             bucket_id: Ledger bucket the evidence belongs to.
-            source_path: Local path to a PDF or image file.
+            source_path: Local path to a PDF or image file. A ``str`` (the raw
+                operator argv) is echoed onto the record verbatim — separators are
+                preserved exactly, never OS-normalized — so the persisted path and
+                envelope are identical across platforms (a forward-slash relative
+                path stays forward-slash on Windows). A ``Path`` is accepted for
+                programmatic callers and stringified for the echo. Byte access
+                always resolves the path regardless.
             supplier: Optional vendor name extracted from the invoice.
             invoice_number: Optional invoice identifier from the document.
             invoice_date: Optional issue date string (free-form; typically

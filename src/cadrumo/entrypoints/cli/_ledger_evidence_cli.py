@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import typer
 
 from ...application.ledger import (
@@ -72,7 +70,7 @@ def _register_evidence_add_command() -> None:
     )
     def evidence_add(
         ctx: typer.Context,
-        source_path: Path = typer.Argument(
+        source_path: str = typer.Argument(
             ...,
             help=tr("cli.app.ledger.evidence.source_path_help", default="Path to a PDF or image receipt/invoice."),
         ),

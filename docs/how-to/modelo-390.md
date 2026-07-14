@@ -48,10 +48,10 @@ aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values["iva.anual.cuota-devengada-total"] == "1470.00"
 @expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "1470.00"
-@expect result.casilla_values["iva.anual.cuota-deducible-total"] == "0.00"
-@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "0.00"
-@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "1470.00"
-@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1470.00"
+@expect result.casilla_values["iva.anual.cuota-deducible-total"] == "105.00"
+@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "105.00"
+@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "1365.00"
+@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1365.00"
 @step Verify the annual draft; the four filed 303 quarters satisfy the cross-period gate.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
@@ -65,12 +65,13 @@ tool discloses that the annual reconciliation rests on local-only evidence. That
 disclosure is correct - a locally-filed quarter is honest evidence for the
 annual fold-in, and the advisory tells you where an official justificante would
 strengthen the record. In this example the four quarters charged 1470.00 of IVA
-between them (420 + 315 + 210 + 525), so the annual cuota devengada and the
-régimen-general result both read 1470.00 - matching the sum of the quarters,
-which is the reconciliation invariant each annual total upholds. The deducible
-total stays 0.00 here because deductible IVA rows need linked purchase-invoice
-evidence before they count; attach that evidence to claim input IVA. The rest of
-this guide explains each stage and the checks around it.
+between them (420 + 315 + 210 + 525) and the year carries 105.00 of deductible
+input IVA (one evidenced purchase, 500 base at 21%), so the annual cuota
+devengada is 1470.00, the deducible total is 105.00, and the régimen-general
+result is 1365.00 (1470.00 − 105.00) - the full annual IVA equation, each figure
+matching the sum of the quarters (the reconciliation invariant). Input IVA counts
+only once the purchase carries linked invoice evidence. The rest of this guide
+explains each stage and the checks around it.
 
 ## Setup steps before you start
 

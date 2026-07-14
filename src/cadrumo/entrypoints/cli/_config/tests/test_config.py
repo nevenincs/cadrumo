@@ -413,3 +413,43 @@ def test_rekey_refusal_json_stream_parses_cleanly_without_traceback_leak() -> No
     assert document["status"] == "error"
     assert document["error"]["category"] == "REFUSED"
     assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+
+
+def test_error_envelope_carries_the_active_command_identifier() -> None:
+    """A refused leaf command's error envelope names the failing command.
+
+    The dotted id is resolved by the CLI boundary from the executing command's
+    click ``command_path`` via the same convention the SUCCESS envelope uses
+    (root token dropped, ``.``-joined, ``-`` mapped to ``_``), so success and
+    error can never disagree on the command name. A machine consumer of the
+    error stream thus knows which command failed without argv bookkeeping.
+    """
+    rekey = json.loads(invoke_cached_cli(["--format", "json", "config", "rekey"]).stderr)
+    assert rekey["command"] == "config.rekey"
+
+    recover = json.loads(
+        invoke_cached_cli(["--format", "json", "config", "recover", "--recovery-key", "a b c"]).stderr,
+    )
+    assert recover["command"] == "config.recover"
+
+    # A hyphenated CLI leaf maps to its underscored envelope id, and a deeper
+    # path threads every segment (unknown-profile refusal on a nested command).
+    bad_show = json.loads(
+        invoke_cached_cli(["--format", "json", "config", "profile", "show", "no-such-profile"]).stderr,
+    )
+    assert bad_show["command"] == "config.profile.show"
+
+
+def test_pre_resolution_error_envelope_command_stays_null() -> None:
+    """An error rendered before a command resolves keeps ``command`` null honestly.
+
+    ``render_error_json`` defaults ``command`` to ``None``; the CLI boundary
+    passes the dotted id only once a command context is active. An error raised
+    before any command callback runs (an argv parse failure) therefore carries
+    null, so the field is never a fabricated command name.
+    """
+    from .....core.errors import render_error_json
+    from .....core.locks_errors import LockAcquisitionError
+
+    document = json.loads(render_error_json(LockAcquisitionError()))
+    assert document["command"] is None
