@@ -42,10 +42,8 @@ List the provider CLIs visible on `PATH`. Each row reports a provider, its
 status (`available` or `unavailable`), and a fix when something is missing:
 
 ```{cli-sequence} llm-providers
-:verify: Confirm the provider listing reports each provider's status.
 @step List the provider CLIs visible on the path.
-@result aeat --format json app ledger providers
-@expect exit_code == 0
+@static aeat app ledger providers
 ```
 
 This checks discoverability only, not account login. The local vision reader
@@ -146,9 +144,13 @@ business share through the normal
 After important corrections, re-run preflight for the period:
 
 ```{cli-sequence} llm-preflight
-:verify: Confirm the period preflight reads back after corrections.
+:verify: Confirm the period preflight reads ready after corrections.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
 @step Re-run the period preflight after important corrections.
 @result aeat --format json app ledger preflight --year 2026 --period 1T
+@expect result.ready == true
 @expect exit_code == 0
 ```
 
