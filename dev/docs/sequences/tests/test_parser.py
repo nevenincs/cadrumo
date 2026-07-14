@@ -77,6 +77,42 @@ def test_worked_example_parses_into_typed_frames() -> None:
     assert all(frame.source == "body" for frame in sequence.frames)
 
 
+def test_bracket_quoted_object_key_path_parses() -> None:
+    """@capture and @expect accept a bracket-quoted object key with dots and hyphens.
+
+    M349's declarante casillas are flat string keys carrying a literal dot and
+    hyphens (``decl.importe-operaciones`` / ``decl.numero-operadores``); the
+    dotted grammar would split on the dot, so the bracket-quoted form is the only
+    way to address them.
+    """
+    body = (
+        "aeat --format json app modelo calculate x\n"
+        '@capture importe result.casilla_values["decl.importe-operaciones"]\n'
+        "@result aeat --format json app modelo verify x\n"
+        '@expect result.casilla_values["decl.numero-operadores"] == "3"\n'
+    )
+    sequence = _parse(body)
+
+    assert sequence.frames[0].captures == (
+        CaptureBinding(name="importe", json_path='result.casilla_values["decl.importe-operaciones"]'),
+    )
+    assert sequence.result_frame.expects == (
+        ExpectAssertion(json_path='result.casilla_values["decl.numero-operadores"]', expected="3"),
+    )
+
+
+def test_unterminated_quoted_key_path_is_refused() -> None:
+    body = "@result aeat app modelo verify\n@expect result.x[\"abc == 1\n"
+    problems = _problems(body)
+    assert any("is not a valid dotted path" in problem for problem in problems)
+
+
+def test_embedded_double_quote_in_key_path_is_refused() -> None:
+    body = "@result aeat app modelo verify\n@expect result.x[\"a\"b\"] == 1\n"
+    problems = _problems(body)
+    assert any("is not a valid dotted path" in problem for problem in problems)
+
+
 def test_setup_frame_is_classified_and_argv_decomposed() -> None:
     body = (
         "@setup aeat app ledger import --file fixtures/2026-1t-statement.csv\n"
