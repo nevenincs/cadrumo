@@ -1,0 +1,22 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "apoderado",
+        "clear"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "bucket_id\t<bucket-id>\ncleared\tFalse\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-apoderado-clear"
+}

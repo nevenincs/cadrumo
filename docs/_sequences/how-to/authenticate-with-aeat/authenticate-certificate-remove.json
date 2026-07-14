@@ -1,0 +1,24 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "certificate",
+        "remove",
+        "--name",
+        "personal"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": "name\tpersonal\nremoved\tFalse\n"
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-certificate-remove"
+}
