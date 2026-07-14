@@ -1,7 +1,7 @@
 ---
 tags:
   - '#plan'
-  - '#google-oauth'
+  - '#google-oauth-legacy-plan-retirement'
 date: '2026-05-13'
 modified: '2026-07-14'
 tier: L3
