@@ -21,10 +21,15 @@ Cadrumo no longer retrieves these facts live.
 You need:
 
 - an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
-  config auth configure` refuses with `No hay un perfil activo` until you create
-  one. Create one non-interactively with `aeat config profile create me --quiet
-  --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`. A NIF,
-  CIF, DNI, or NIE is a Spanish tax identifier.
+  config auth configure` refuses with `No hay un perfil activo` until you
+  create one. Create one non-interactively (a NIF, CIF, DNI, or NIE is a
+  Spanish tax identifier):
+
+  ```bash
+  aeat config profile create me --quiet --tax-id <NIF/CIF/DNI/NIE> \
+    --name "Ana" --surnames "Garcia Lopez"
+  ```
+
 - the master-key passphrase that protects your local store; the tool
   prompts for it.
 
