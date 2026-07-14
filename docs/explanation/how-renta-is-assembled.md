@@ -9,7 +9,10 @@ Renta is the filing where you most need to see for yourself how a value
 arrived.
 
 The commands are shown for the 2025 declaration (`--year 2025 --period 0A`);
-substitute your filing year. The step-by-step preparation lives in
+substitute your filing year. They assume an active taxpayer profile, created
+with `aeat config profile create` as
+[Set up your taxpayer profile](../how-to/profile-setup.md) explains. The
+step-by-step preparation lives in
 [Prepare the annual Modelo 100 Renta declaration](../how-to/modelo-100.md).
 
 ## One declaration, four kinds of source
@@ -20,8 +23,11 @@ arrives through a declared data source - the listing below calls each one
 a *binding* - and every source is one of four kinds. List them for your
 filing year:
 
-```bash
-aeat app modelo bindings list --modelo 100 --year 2025 --period 0A
+```{cli-sequence} renta-assembly-bindings
+:verify: Confirm the declaration's bindings list with their four source kinds.
+@step List every data source the declaration binds for the filing year.
+@result aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A
+@expect exit_code == 0
 ```
 
 - **Profile facts.** Who you are: tax id, residence comunidad, marital
@@ -46,8 +52,11 @@ Everything else - employment income details, capital income, deductions the
 ledger cannot know about - is a manual casilla you supply when it applies to
 you. The full inventory for your year:
 
-```bash
-aeat app modelo requires 100 --year 2025 --period 0A
+```{cli-sequence} renta-assembly-requires
+:verify: Confirm the declaration's requirement inventory reads back.
+@step List everything the declaration requires for the filing year.
+@result aeat --format json app modelo requires 100 --year 2025 --period 0A
+@expect exit_code == 0
 ```
 
 ## How the quarterly filings fold in
@@ -63,8 +72,11 @@ The fold-in is evidence-gated. Before the annual verify passes, every prior
 filing the declaration depends on must be filed and evidenced on your
 record. See what the declaration expects and what currently blocks it:
 
-```bash
-aeat app modelo work dependencies --modelo 100 --year 2025 --period 0A
+```{cli-sequence} renta-assembly-dependencies
+:verify: Confirm each dependency reports whether its evidence is satisfied.
+@step Show each source filing the declaration folds in and its current blockers.
+@result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
+@expect exit_code == 0
 ```
 
 Each dependency row names the source modelo and period and whether its
@@ -90,19 +102,28 @@ carry rather than silently importing figures computed under different law.
 
 After a calculation, every resolved value carries typed provenance: the
 binding or formula that produced it, its operands, and its legal and source
-references. Read them:
+references. Read them (the setup steps calculate the employee filer's draft
+the reads inspect, and the last step looks up one box's definition):
 
-```bash
-aeat app modelo work observations --modelo 100 --year 2025 --period 0A
-aeat app modelo work revision --modelo 100 --year 2025 --period 0A
+```{cli-sequence} renta-assembly-provenance
+:seed: renta-2025
+:verify: Confirm every resolved value carries its legal and source references.
+@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@step Read the saved observations behind the calculated figures.
+aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
+@step Show the saved revision's persisted values.
+aeat --format json app modelo work revision --modelo 100 --year 2025 --period 0A
+@step Look up one box's definition, with its legal references.
+@result aeat --format json app modelo casilla 100 0003 --period 0A
+@expect exit_code == 0
 ```
 
-For a single box, `aeat app modelo casilla 100 <casilla-id> --period 0A`
-shows its definition, and the JSON output of any of these commands carries
-`legal_refs` and `source_refs` on every row. This is the property Cadrumo
-preserves end to end: if an inspector asks why a box holds a figure, the
-answer is on your machine - the records behind it, the rule that routed
-them, and the article of law behind the rule.
+The JSON output of any of these commands carries `legal_refs` and
+`source_refs` on every row. This is the property Cadrumo preserves end to
+end: if an inspector asks why a box holds a figure, the answer is on your
+machine - the records behind it, the rule that routed them, and the article
+of law behind the rule.
 
 ## Where this sits in the journey
 

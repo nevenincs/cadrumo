@@ -1,0 +1,1211 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "dependencies",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.dependencies",
+        "notices": [],
+        "result": {
+          "clean_state": {
+            "blockers": [
+              "missing_observation",
+              "missing_current_filing_record"
+            ],
+            "clean": false,
+            "dependencies": [
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2024,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "0A",
+                  "filing_year": 2024
+                },
+                "source_modelo": "100",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "01",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "02",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "03",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "04",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "05",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "06",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "07",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "08",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "09",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "10",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "11",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "12",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "123",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "123",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "123",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "123",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "0A",
+                  "filing_year": 2025
+                },
+                "source_modelo": "184",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "0A",
+                  "filing_year": 2025
+                },
+                "source_modelo": "190",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "0A",
+                  "filing_year": 2025
+                },
+                "source_modelo": "193",
+                "unexpected_member_nifs": []
+              }
+            ],
+            "requires_clean_state": true,
+            "target_filing_year": 2025,
+            "target_modelo": "100",
+            "target_period": {
+              "code": "0A",
+              "filing_year": 2025
+            }
+          },
+          "filing_year": 2025,
+          "items": [
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2024,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "renta-2025-base-liquidable-negativa-general-anterior"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2024
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "1391"
+                  ],
+                  "source_modelo": "100"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "01",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "02",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "03",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "04",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "05",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "06",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "07",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "08",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "09",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "10",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "11",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-mensuales"
+                  ],
+                  "period": {
+                    "code": "12",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-111-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-123-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-123-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-123-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-123-retenciones-trimestrales"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-184-atribucion-actividades-economicas"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "tipo2.renta-atribuible-importe"
+                  ],
+                  "source_modelo": "184"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-190-retenciones-anuales"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "decl.retenciones-total"
+                  ],
+                  "source_modelo": "190"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-2025-rel-193-retenciones-anuales"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "decl.retenciones-total"
+                  ],
+                  "source_modelo": "193"
+                }
+              ],
+              "dependency_count": 32,
+              "source_modelos": [
+                "100",
+                "111",
+                "123",
+                "130",
+                "131",
+                "184",
+                "190",
+                "193"
+              ],
+              "target_filing_year": 2025,
+              "target_modelo": "100",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2025
+              },
+              "target_revision_id": "2025"
+            }
+          ],
+          "modelo_filter": "100",
+          "operation": "modelo.work.dependencies",
+          "period_filter": "0A",
+          "source_modelos": [
+            "100",
+            "111",
+            "123",
+            "130",
+            "131",
+            "184",
+            "190",
+            "193"
+          ],
+          "target_count": 1,
+          "target_modelos": [
+            "100"
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "renta-assembly-dependencies"
+}
