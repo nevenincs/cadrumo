@@ -544,10 +544,6 @@ def _current_aeat_fence_counts() -> dict[str, int]:
     return counts
 
 
-# A whole fenced block (code, CLI output, or a cli-sequence directive body):
-# stripped before the inline-span scan so only reader-facing prose is measured.
-_FENCE_BLOCK_RE = re.compile(r"```.*?```", re.DOTALL)
-
 _INLINE_AEAT_SPAN_BASELINE_PATH = PROJECT_ROOT / "src/cadrumo/entrypoints/cli/tests/inline_aeat_span_baseline.json"
 
 
@@ -596,13 +592,58 @@ def _inline_command_complexity(span: str) -> int | None:
 #: wraps are joined only WITHIN a paragraph, never across a paragraph break.
 _PARAGRAPH_BOUNDARY_RE = re.compile(r"\n[ \t]*\n")
 
+#: An opening/closing fenced-code line: an optionally-indented run of three or
+#: more backticks or tildes. Matches a fence at ANY indentation (a cli-sequence
+#: directive nested inside a list item is indented) and either fence character.
+_FENCE_LINE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})")
+
+
+def _strip_fenced_blocks(text: str) -> str:
+    """Return the text with every fenced block replaced by a paragraph break.
+
+    A line-based stripper (not the ``.*?`` regex): it tracks the open fence's
+    character and length, so a fenced block — code, CLI output, or a
+    ``{cli-sequence}`` directive body — is excluded in FULL regardless of its
+    indentation (a directive nested in a list item), its fence character
+    (``` ``` ``` or ``~~~``), or a longer fence run (```` ```` ````). A block that is
+    never closed drops to end of input rather than mis-pairing with a later
+    fence (the ``.*?`` regex's failure mode), so a directive body can never leak
+    a bare ``@result``/``@static`` command line into the inline-span scan. Each
+    stripped block becomes a blank line, i.e. a paragraph boundary, so a soft-wrap
+    join never bridges across it.
+    """
+    out: list[str] = []
+    fence_char: str | None = None
+    fence_len = 0
+    for line in text.split("\n"):
+        match = _FENCE_LINE_RE.match(line)
+        run = match.group(1) if match else ""
+        if fence_char is None:
+            if match:
+                fence_char = run[0]
+                fence_len = len(run)
+                out.append("")
+            else:
+                out.append(line)
+            continue
+        # Inside a fence: a close is the same character, at least as long, and
+        # carries no trailing info string. Everything else inside is dropped.
+        if match and run[0] == fence_char and len(run) >= fence_len and line.strip()[len(run) :].strip() == "":
+            fence_char = None
+            out.append("")
+        # else: still inside the fence — drop the line.
+    return "\n".join(out)
+
 
 def _inline_aeat_command_spans(text: str) -> list[str]:
     """Return inline code spans in prose that are ``aeat`` commands with 2+ option/arg tokens.
 
-    Fenced blocks (code, CLI output, cli-sequence directives) are stripped first,
-    so only reader-facing inline ``code`` spans are scanned. Because markdown joins
-    a code span wrapped across source lines into ONE rendered span — and
+    Fenced blocks (code, CLI output, ``{cli-sequence}`` directive bodies) are
+    stripped first via :func:`_strip_fenced_blocks` — a line-based strip that
+    excludes a directive body in full regardless of indentation (nested in a list
+    item), fence character, or fence length — so only reader-facing inline ``code``
+    spans are scanned and a directive frame line never leaks in. Because markdown
+    joins a code span wrapped across source lines into ONE rendered span — and
     ``_INLINE_CODE_RE`` deliberately does not match across a newline — each
     blank-line-delimited paragraph has its soft line wraps collapsed to spaces
     before span extraction, so a command dissolved into an inline span and then
@@ -611,7 +652,7 @@ def _inline_aeat_command_spans(text: str) -> list[str]:
     mentions legal while flagging a full command moved inline (the fence-ratchet
     loophole).
     """
-    prose = _FENCE_BLOCK_RE.sub("\n\n", text)
+    prose = _strip_fenced_blocks(text)
     offending: list[str] = []
     for paragraph in _PARAGRAPH_BOUNDARY_RE.split(prose):
         joined = " ".join(line.strip() for line in paragraph.split("\n"))
@@ -1072,6 +1113,42 @@ def test_inline_span_detector_catches_line_wrapped_commands() -> None:
         "A single flag `aeat config auth configure --file` there.\n"
     )
     assert _inline_aeat_command_spans(with_fence) == []
+
+
+def test_inline_span_detector_excludes_indented_and_alternate_fenced_directives() -> None:
+    """A cli-sequence directive body never leaks a command line as an inline span.
+
+    The directive-strip is line-based, so a directive nested inside a list item
+    (indented), a tilde-fenced block, and a longer-run fence are all excluded in
+    full — a multi-option ``@result`` / ``@static`` command line inside them
+    contributes zero inline spans. Only a genuine inline ``code`` span in prose is
+    flagged.
+    """
+    indented_in_list = (
+        "- Prepare the draft:\n"
+        "\n"
+        "  ```{cli-sequence} demo\n"
+        "  :verify: check\n"
+        "  @setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T\n"
+        "  @result aeat --format json app modelo export --modelo 130 --output ./x.boe\n"
+        "  @expect exit_code == 0\n"
+        "  ```\n"
+    )
+    assert _inline_aeat_command_spans(indented_in_list) == []
+
+    tilde_fenced = (
+        "Intro paragraph.\n\n"
+        "~~~{cli-sequence} demo\n"
+        "@static aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A\n"
+        "~~~\n\n"
+        "Outro.\n"
+    )
+    assert _inline_aeat_command_spans(tilde_fenced) == []
+
+    # A genuine inline prose span in the same document is still flagged, so the
+    # strip excludes only directive bodies, not real inline commands.
+    mixed = indented_in_list + "\nExport with `aeat app modelo export --modelo 130 --output ./x.boe` yourself.\n"
+    assert _inline_aeat_command_spans(mixed) == ["aeat app modelo export --modelo 130 --output ./x.boe"]
 
 
 def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface() -> None:
