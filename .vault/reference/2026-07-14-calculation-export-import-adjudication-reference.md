@@ -33,20 +33,55 @@ remains evidence-gated.
 - **Submitted file** means an AEAT fichero payload interpreted by the generic export-layout parser.
 - **Extraction profile** means reviewed registry data describing fields in a declaration PDF. It is interpreted by the generic declaration parser; it is not a Modelo-specific parser class.
 - **Sealed archive** means the encrypted local persistence envelope written and read by the bucket storage adapter. It preserves application evidence and recovery material; it is not an AEAT export, import, or filing format.
-- **Delivered-equivalent** means the required behavior is already provided by a generic implementation even if an older plan named it as candidate work.
-- **Mandated current gap** means an accepted decision or explicit product goal requires the capability, applicable authority exists, and the generic engine lacks only reviewed registry data and real-behavior coverage.
-- **Conditional current gap** means authority exists, but the product requirement was explicitly conditional. A product decision is required before registry work begins.
-- **Evidence-gated** means the capability cannot be claimed or implemented honestly until an applicable official or filed artefact is available and bundled.
-- **Not mandated** means neither source availability nor a generic filing link creates a requirement to implement the capability.
-- **Retired** means the Modelo must not receive new active implementation.
 
-Apply the following gate in order:
+### Disposition taxonomy
 
-1. Identify an accepted decision or explicit product goal. A source, application link, parity reference, or absent layout is not a mandate.
-2. Identify official authority applicable to the exact Modelo revision, event, and period. Never extend a later record design backwards.
-3. Check the existing generic path before proposing code. A provider façade or registry projection is not a missing engine.
-4. Require a real generic round trip or real declaration artefact appropriate to the claim. Schema self-consistency alone is insufficient.
-5. Add reviewed registry data and tests only. Do not add per-Modelo renderers, submitted-file parsers, or PDF parser classes.
+Every completed candidate record uses exactly one disposition from this table.
+Apply the rows in order. If no row applies, the record is incomplete and has no
+disposition.
+
+| Disposition | Selection rule | Backlog effect |
+|---|---|---|
+| `retired` | The retirement field is true. | Close the candidate. Do not create active registry or implementation work. |
+| `not-mandated` | Retirement is false and the mandate status is `absent`. | Close the candidate unless an accepted decision or explicit product goal establishes a mandate. |
+| `mandate-gated` | The mandate status is `conditional` or `unproven`. | Keep the candidate out of implementation until the named product decision exists. |
+| `delivered-equivalent` | A proven mandate exists and the canonical implementation already provides the required behavior for the evidenced window. | Close duplicate implementation work. Record only any narrower authority or evidence limitation. |
+| `authority-gated` | A proven mandate and genuine canonical gap exist, but official authority does not cover the exact candidate window. | Wait for, acquire, or register exact-window authority. Never extrapolate another window. |
+| `evidence-gated` | Mandate, exact authority, and a canonical gap are proven, but the required real golden payload or sanitized filed specimen is unavailable. | Wait for the named real artefact. Schema-only tests cannot clear this disposition. |
+| `implementation-admitted` | All four gate booleans are true. | Permit a successor plan limited to reviewed registry data and real-behavior coverage through the canonical engine. |
+
+### Candidate evidence-field contract
+
+Each candidate is one surface and one applicability window. Do not combine an
+outbound file, submitted file, declaration PDF, regime variant, or distinct
+authority window in one record.
+
+| Field | Required content |
+|---|---|
+| Candidate | Modelo, surface, regime or event when applicable, and the exact filing or revision window under review. |
+| Mandate | `proven`, `conditional`, `unproven`, or `absent`; cite the accepted decision or explicit product goal and state the required behavior. Source availability is not a mandate. |
+| Exact authority window | Official source identifier, registry revision, regime or event, inclusive start, inclusive end or open end, and whether the source covers that exact window. |
+| Canonical implementation state | `delivered` or `gap`; name the canonical authority, renderer, parser, or archive path inspected and the real test evidence for the state. An absent layout does not prove a missing engine. |
+| Real evidence or specimen | Evidence kind, identifier, evidenced window, and `available`, `missing`, or `not-required`. Export claims require a real golden payload; declaration-PDF claims require sanitized filed bytes. |
+| Retirement | Boolean plus the accepted retirement or supersession basis. Keep this separate from evidence availability. |
+| Evidence block | Boolean plus the exact missing golden payload, filed specimen, or other real artefact. Keep this separate from retirement and authority coverage. |
+| Four-condition gate | Record `mandate_met`, `exact_authority_met`, `canonical_gap_met`, and `eligible_met` as explicit booleans. `eligible_met` is true only when the candidate is neither retired nor evidence-blocked. |
+| Gate result | `pass` only when all four booleans are true; otherwise `fail`. Missing proof is false, not unknown or assumed. |
+| Disposition | One taxonomy value selected by the precedence table. Do not embed the next action in this field. |
+| Next action | One bounded action, named external prerequisite, or `none`. It must not authorize production work when the gate result is `fail`. |
+
+The four-condition gate is authoritative:
+
+1. `mandate_met`: an accepted decision or explicit current product goal requires the capability.
+2. `exact_authority_met`: official authority covers the exact revision, event, regime, and filing window.
+3. `canonical_gap_met`: the required capability is absent from the canonical current implementation, not merely absent from optional registry data.
+4. `eligible_met`: the candidate is neither retired nor blocked on unavailable real evidence.
+
+A source, application link, parity reference, unchecked legacy row, or absent
+layout cannot make a gate true. Any admitted implementation adds reviewed
+registry data and real-behavior coverage only. It must not add per-Modelo
+renderers, submitted-file parsers, declaration-PDF parsers, registry
+authorities, schema stores, or archive formats.
 
 ## Canonical implementation map
 

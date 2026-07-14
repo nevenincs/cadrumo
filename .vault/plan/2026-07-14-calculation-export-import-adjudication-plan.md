@@ -70,7 +70,7 @@ must not become implementation work.
 Freeze the mandate, authority, current-implementation, evidence, and non-duplication gate before any candidate can become implementation work.
 
 - [x] `P01.S01` - Reconfirm the canonical registry, export renderer/parser, declaration parser, and sealed-archive boundaries against current source and tests; `src/cadrumo/, .vault/reference/`.
-- [ ] `P01.S02` - Publish the shared disposition taxonomy, evidence-field contract, and four-condition gate for the individual candidate Steps; `.vault/reference/, .vault/audit/`.
+- [x] `P01.S02` - Publish the shared disposition taxonomy, evidence-field contract, and four-condition gate for the individual candidate Steps; `.vault/reference/, .vault/audit/`.
 
 ### Phase `P02` - Outbound export-layout candidates
 
