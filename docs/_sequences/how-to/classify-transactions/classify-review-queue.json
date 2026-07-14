@@ -1,0 +1,88 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "review",
+        "queue"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "review.queue",
+        "notices": [],
+        "result": {
+          "operation": "review.queue",
+          "rows": [
+            {
+              "affected_object_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "blocking": false,
+              "bucket_id": "<bucket-id>",
+              "canonical_next_command": "aeat app ledger review 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "current_owner_surface": "app ledger",
+              "item_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "kind": "ledger_transaction",
+              "legal_refs": [],
+              "modelo": null,
+              "period": "2026-02",
+              "reason": "Transaction pending classification",
+              "severity": "normal",
+              "since": "2026-02-10T00:00:00+00:00",
+              "source_kind": "ledger_transaction",
+              "state": "pending",
+              "summary": "Transaction pending classification"
+            },
+            {
+              "affected_object_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+              "blocking": false,
+              "bucket_id": "<bucket-id>",
+              "canonical_next_command": "aeat app ledger review e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+              "current_owner_surface": "app ledger",
+              "item_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+              "kind": "ledger_transaction",
+              "legal_refs": [],
+              "modelo": null,
+              "period": "2026-02",
+              "reason": "Transaction pending classification",
+              "severity": "normal",
+              "since": "2026-02-11T00:00:00+00:00",
+              "source_kind": "ledger_transaction",
+              "state": "pending",
+              "summary": "Transaction pending classification"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "classify-review-queue"
+}
