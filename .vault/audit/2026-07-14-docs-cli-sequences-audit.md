@@ -159,6 +159,33 @@ state is safe. The lesson is that a ratchet baseline is a shared mutable file
 and concurrent regenerate-versus-tighten writes must be serialized, exactly as
 concurrent index writes are serialized by explicit-pathspec commits.
 
+### production-gap-idempotency-cluster | medium | Two single-subject creating mutations violate the idempotency-guarded rule; surfaced by a docs seed
+
+Building the executed sequences exercised two single-subject creating mutations
+that contradict the `single-subject-mutation-is-idempotent-guarded` rule
+(reported by `conv-b` while repairing the `intracomunitario-2026` seed the
+`modelo-349` and `iva-lifecycle` pages depend on). First, `aeat app ledger
+invoice add` (the slim invoice record) accepts no `--idempotency-key` and
+carries no content-identity guard: two adds with the same `--invoice-number`
+both succeed and create separate records with distinct `bucket_event_ids`,
+verified empirically in a hermetic sandbox. The same command family is
+inconsistent about this: `ledger invoice catalogue create` is content-addressed
+but refuses a duplicate (exit 2, "an invoice with the same identity already
+exists in the catalogue"), and `ledger invoice catalogue wizard` is
+content-addressed and returns the rule-compliant guarded idempotent no-op
+(`already_existed=True`, exit 0). The gap surfaced as a real docs defect: a seed
+using `invoice add` doubled its recorded operations when re-applied across a
+page's coherence run (Modelo 349 `importe-operaciones` went 8000 to 16000). It
+was worked around by switching the seed to `catalogue wizard`. Second, a related
+gap in the same rule family: `aeat app modelo work verify` refuses
+re-verification of an already-verified revision instead of returning an
+idempotent no-op (this also broke a docs coherence run, where a page's second
+sequence re-verified a revision the first had already verified). The
+`exec-deploy-knobs` owner is fixing the verify case. Record both as an
+invoice-and-verify idempotency cluster: neither is display-doctrine work, but
+both were surfaced by driving real commands through the sequence engine, which
+is the campaign's stated value beyond prose review.
+
 ## Recommendations
 
 - Convert every remaining inline `aeat` command span on the batch-D pages to a
@@ -179,3 +206,9 @@ concurrent index writes are serialized by explicit-pathspec commits.
   when a concrete sandbox refusal class proves it cannot execute, and never as
   inline prose or a plain fence. Defer to the retired-codification directive if
   it still stands.
+- File the invoice-and-verify idempotency cluster as a production fix outside
+  this docs campaign: give `ledger invoice add` a content-identity guard and an
+  `--idempotency-key` matching the `catalogue wizard` behaviour, and make `work
+  verify` return an idempotent no-op on an already-verified revision. Until then,
+  docs seeds must use `catalogue wizard`, not `invoice add`, and must not
+  re-verify a revision a prior sequence already verified.
