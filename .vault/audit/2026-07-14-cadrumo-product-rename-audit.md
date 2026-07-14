@@ -8,24 +8,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cadrumo-product-rename` audit: `W05.P13 documentation-workflow approval gate sign-off`
 
@@ -67,6 +50,21 @@ lawful CLI executable name or a genuine tax-authority referent; `Cadrumo`
 prose casing and `CADRUMO` identity contexts conform to the
 `cadrumo-cli-executable` decision. The apidocs drift gate reported a
 conformant stub tree. No naming-law or content defect found.
+
+### releasing-helper-warnings | low | The corrected release-helper warning blocks are approved as accurate against the live tooling
+
+Commit `04552a7b52` additionally corrected two stale RELEASING.md warning
+blocks that the S69 review had separately flagged as a content defect: the
+release-apply and rollback helper descriptions claimed the `just` recipes
+omitted companion versions, exact pins, and lockfile regeneration and printed
+a broad tag push. The principal-writer session verified the rewritten blocks
+against the live `justfile` recipes: the release-apply checklist enumerates
+all seven release authorities including both companion versions and exact
+pins, mandates `uv lock` / `uv lock --check` regeneration, and prints separate
+named-tag pushes; the rollback recipe prints named rollback-tag pushes and all
+three PyPI yank locations and executes nothing itself. The corrected wording
+is accurate and is approved under the same Phase 8 authority as the rest of
+the phase's content set.
 
 ## Recommendations
 
