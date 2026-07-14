@@ -1,5 +1,13 @@
 @step Record when the activity started so every 2025 quarter is a valid obligation.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
+@step Record a first-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-02-10 --amount 2420 --direction INCOMING --description "Servicio de consultoria primer trimestre" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420 --iva-category domestic_general_21 --idempotency-key venta-1t-2025
+@step Record a second-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-05-12 --amount 1815 --direction INCOMING --description "Servicio de consultoria segundo trimestre" --classification BUSINESS --taxable-base 1500 --iva-rate 0.21 --iva-amount 315 --iva-category domestic_general_21 --idempotency-key venta-2t-2025
+@step Record a third-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-08-15 --amount 1210 --direction INCOMING --description "Servicio de consultoria tercer trimestre" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --iva-category domestic_general_21 --idempotency-key venta-3t-2025
+@step Record a fourth-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-11-20 --amount 3025 --direction INCOMING --description "Servicio de consultoria cuarto trimestre" --classification BUSINESS --taxable-base 2500 --iva-rate 0.21 --iva-amount 525 --iva-category domestic_general_21 --idempotency-key venta-4t-2025
 @step Open the first-quarter Modelo 303 work unit.
 @setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 1T
 @capture wu1 result.work_unit_id
