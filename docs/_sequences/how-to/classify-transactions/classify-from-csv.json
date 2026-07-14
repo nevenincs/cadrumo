@@ -1,0 +1,148 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "list",
+        "--filter",
+        "period=1T",
+        "--filter",
+        "year=2026",
+        "--filter",
+        "classification=NOT_YET_PROCESSED"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\n71a5db2b\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\t2026-02-10\t1210\tCobro factura F-2026-001 servicios de consultoria\t\tpending\ne3eeac5e\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\t2026-02-11\t605\tCompra de material de oficina proveedor local\t\tpending\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "export",
+        "--output",
+        "./ledger-2026-q1.csv",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nExport ID\t43892fa5a11089b1770c689d4e3a96d24fb53d61fb899414a3c65dc7a9cd9950\nRows\t2\nSHA-256\t6aac89c113e83ea14bb8268062d66bd0881208a6969c503c2220b44b9e18438f\nOutput\tledger-2026-q1.csv\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "--from-csv",
+        "fixtures/classifications-2026-1t.csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bulk classify: 2 rows, 2 applied, 0 skipped, 0 failed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "e3eeac5e"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.view",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "605",
+            "attachment_ids": [],
+            "booked_date": "2026-02-11",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": "material_oficina",
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger classify --from-csv",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-02-11",
+            "description": "Compra de material de oficina proveedor local",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": null,
+            "taxable_base": null,
+            "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+            "usage_ratio_id": null,
+            "value_date": "2026-02-11",
+            "value_in_eur": null
+          },
+          "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "classify-from-csv"
+}
