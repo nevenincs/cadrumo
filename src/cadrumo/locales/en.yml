@@ -2797,6 +2797,7 @@ cli:
       errors:
         missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
+        non_interactive_passphrase_required: 'This command needs an interactive terminal to prompt for the new passphrase. Provide it non-interactively with --new-passphrase and --confirm-new-passphrase.'
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
       new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     errors:

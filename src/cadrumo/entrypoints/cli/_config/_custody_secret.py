@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import getpass
+import sys
 
 import typer
 
@@ -26,10 +27,25 @@ def _resolve_confirmed_new_passphrase(value: str | None, confirmation: str | Non
             )
         return value
 
-    first = getpass.getpass(tr("cli.config.custody.new_passphrase_prompt"))
-    second = confirmation
-    if second is None:
-        second = getpass.getpass(tr("cli.config.custody.confirm_new_passphrase_prompt"))
+    # No --new-passphrase supplied: the hidden prompts below require an
+    # interactive terminal. Without a TTY, getpass raises a bare EOFError that
+    # would escape to the generic INTERNAL boundary (exit 6, logged traceback).
+    # Refuse cleanly instead (REFUSED, exit 2), naming the non-interactive path.
+    if not sys.stdin.isatty():
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.non_interactive_passphrase_required",
+        )
+    try:
+        first = getpass.getpass(tr("cli.config.custody.new_passphrase_prompt"))
+        second = confirmation
+        if second is None:
+            second = getpass.getpass(tr("cli.config.custody.confirm_new_passphrase_prompt"))
+    except EOFError as exc:
+        # Defence in depth: a closed/redirected stdin that reports a TTY (rare)
+        # still raises EOFError from getpass; refuse identically.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.non_interactive_passphrase_required",
+        ) from exc
     if first != second:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.new_passphrase_mismatch",
