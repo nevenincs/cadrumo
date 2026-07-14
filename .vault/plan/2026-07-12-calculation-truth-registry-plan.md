@@ -29,14 +29,14 @@ related:
 
 Turn the legacy checklist into a current, source-grounded disposition ledger before any further registry implementation is scheduled.
 
-- [ ] `P01.S01` - Classify each legacy unchecked item against current source, accepted decisions, and recorded execution evidence; `.vault/plan/, .vault/exec/, .vault/audit/, .vault/research/`.
-- [ ] `P01.S02` - Publish the disposition ledger distinguishing delivered, superseded, blocked, and genuinely actionable registry work; `.vault/audit/`.
+- [x] `P01.S01` - Classify each legacy unchecked item against current source, accepted decisions, and recorded execution evidence; `.vault/plan/, .vault/exec/, .vault/audit/, .vault/research/`.
+- [x] `P01.S02` - Publish the disposition ledger distinguishing delivered, superseded, blocked, and genuinely actionable registry work; `.vault/audit/`.
 
 ### Phase `P02` - current execution backlog
 
 Convert only the genuinely actionable ledger entries into a separately approved implementation plan with precise ownership and verification.
 
-- [ ] `P02.S03` - Write the canonical registry implementation backlog from the classified residual ledger; `.vault/plan/`.
+- [x] `P02.S03` - Write the canonical registry implementation backlog from the classified residual ledger; `.vault/plan/`.
 
 ## Description
 

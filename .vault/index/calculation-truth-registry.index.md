@@ -241,10 +241,12 @@ related:
   - '[[2026-07-12-calculation-truth-registry-P01-S01]]'
   - '[[2026-07-12-calculation-truth-registry-P01-S02]]'
   - '[[2026-07-12-calculation-truth-registry-P01-summary]]'
+  - '[[2026-07-12-calculation-truth-registry-P02-S03]]'
   - '[[2026-07-12-calculation-truth-registry-audit]]'
   - '[[2026-07-12-calculation-truth-registry-plan]]'
   - '[[2026-07-12-calculation-truth-registry-reference]]'
   - '[[2026-07-14-calculation-truth-registry-audit]]'
+  - '[[2026-07-14-calculation-truth-registry-plan]]'
 ---
 
 # `calculation-truth-registry` feature index
@@ -494,11 +496,13 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-07-12-calculation-truth-registry-P01-S01` - Classify each legacy unchecked item against current source, accepted decisions, and recorded execution evidence
 - `2026-07-12-calculation-truth-registry-P01-S02` - Publish the disposition ledger distinguishing delivered, superseded, blocked, and genuinely actionable registry work
 - `2026-07-12-calculation-truth-registry-P01-summary` - `calculation-truth-registry` `P01` summary
+- `2026-07-12-calculation-truth-registry-P02-S03` - Write the canonical registry implementation backlog from the classified residual ledger
 
 ### plan
 
 - `2026-05-03-calculation-truth-registry-rebuild-plan` - `calculation-truth-registry` `teardown-rebuild` plan
 - `2026-07-12-calculation-truth-registry-plan` - `calculation-truth-registry` `legacy-backlog reconciliation` plan
+- `2026-07-14-calculation-truth-registry-plan` - `calculation-truth-registry` plan
 
 ### reference
 

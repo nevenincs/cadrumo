@@ -59,3 +59,19 @@ DPA/activity-detail schema gap, confirmed against the registry TOML tree).
 `Teardown Replacement Contract`, `VAT Centralization Roll-Out Ledger`) still
 carry no evidence-backed disposition; the audit recommends two further bounded
 adjudication plans for that remainder.
+
+## Closure (2026-07-14): full 705-row disposition ledger published
+
+Per coordinator ruling, the residual 399 rows were classified inside this plan
+rather than a successor: two read-only verifier agents covered the Teardown
+Replacement Contract and Tasks families with file:line evidence per row; this
+record's author spot-checked their findings against `src/cadrumo` directly,
+resolved their overlap/disagreement zone (Modelo 190/193/347/369/840 export-
+directory presence, the Modelo 036 censo-retirement reclassification), and
+independently verified the VAT Centralization Roll-Out Ledger's 5 rows (not
+assigned to either verifier). `2026-07-14-calculation-truth-registry-audit.md`
+is now the published, complete disposition ledger for all 705 legacy rows —
+delivered (~403), superseded (~75), blocked-external (~50), blocked-derivative
+(~25), inherited from the completed `calculation-export-import-adjudication`
+plan (~17), genuinely actionable (~91), and explicitly named unverified (~15).
+No row is silently unaccounted for. `P01.S02` is complete.

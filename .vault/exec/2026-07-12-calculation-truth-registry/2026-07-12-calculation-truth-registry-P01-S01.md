@@ -78,3 +78,22 @@ real technical verification for that bounded family. `Tasks` (35),
 Ledger` (5) — 399 of 705 rows — remain unclassified and require the two
 follow-up bounded adjudication passes the audit recommends. `P01.S01` still
 does not cover all 705 rows and stays open.
+
+## Closure (2026-07-14): all 705 rows classified
+
+Per coordinator ruling, the remaining 399 rows were classified inside this
+plan by two read-only verifier agents (Teardown Replacement Contract source
+lines ~2605-4165 and ~3831-5064 plus Tasks), spot-checked and reconciled by
+direct `find`/`rg` re-verification against `src/cadrumo` where the two
+verifiers disagreed (Waves 6-8 export-directory presence for Modelo
+190/193/347/369/840, the Modelo 036 censo reclassification, and the VAT
+Centralization Roll-Out Ledger's 5 rows, independently verified — neither
+verifier was assigned that section). The consolidated findings and full
+705-row disposition table are recorded in
+`2026-07-14-calculation-truth-registry-audit.md` (`teardown-tasks-vat-ledger-consolidated`,
+`full-705-row-accounting`). Every unchecked legacy row now carries exactly one
+of: delivered, superseded, blocked-external, blocked-derivative, inherited
+from the completed `calculation-export-import-adjudication` plan (25/25 steps,
+zero candidates passed its implementation gate), genuinely actionable, or
+explicitly named unverified. `P01.S01` is complete: no row is silently
+unaccounted for.
