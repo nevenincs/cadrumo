@@ -94,6 +94,87 @@
         "--format",
         "json",
         "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "9a075f52dad08e80"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.evidence.add",
+        "notices": [],
+        "result": {
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
+          ],
+          "bucket_id": "<bucket-id>",
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "9a075f52dad08e80",
+          "invoice_date": "2026-02-11",
+          "invoice_number": "C-2026-0087",
+          "iva_amount": "105",
+          "iva_rate": "0.21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures/factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "500",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "attach",
+        "e3eeac5e",
+        "--purchase-invoice-evidence-id",
+        "9a075f52dad08e80"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
         "modelo",
         "work",
         "create",
@@ -3262,18 +3343,6 @@
             "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification."
           },
           {
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
-              "severity": "warning",
-              "source_refs": "aeat-dr-303-2025, aeat-modelo-303-procedure, boe-modelo-303-2008-form, boe-orden-hac-1347-2024-iva-authority"
-            },
-            "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-            "severity": "warning",
-            "suggestion": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification."
-          },
-          {
             "code": "modelo.work.verify.next_action_granted",
             "context": null,
             "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
@@ -3334,24 +3403,6 @@
                 "boe-modelo-303-2008-form",
                 "boe-orden-hac-1347-2024-iva-authority"
               ]
-            },
-            {
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "ley-37-1992:art-97",
-                "rd-1619-2012:art-2"
-              ],
-              "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-303-2025",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form",
-                "boe-orden-hac-1347-2024-iva-authority"
-              ]
             }
           ],
           "granted_verificado_completo": true,
@@ -3359,8 +3410,123 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "937bff434c537e2c9523cbeecd70199038929cbaf4d339db62347cfcdd52f011",
+          "verification_report_id": "de24c59b484a17c40f1a5f95136faf5ba0bb3c5d0bc263755e938a8ebc3965df",
           "verified_by": "docs-sequence-sandbox"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "file",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.file",
+        "notices": [],
+        "result": {
+          "aeat_accepted": false,
+          "amends_filing_record_id": null,
+          "bucket_id": "<bucket-id>",
+          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "external_evidence": null,
+          "filed_at": "2026-04-01T09:00:00+00:00",
+          "filed_by": "docs-sequence-sandbox",
+          "filing_record_id": "d3aba9a63f88b624c7f8483921985a37366c57258ec6dc383c8c8da5488b60a4",
+          "filing_year": 2026,
+          "kind": "internal_filing",
+          "live_submission": false,
+          "modelo": "303",
+          "notes": null,
+          "operation": "modelo.work.file",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "status": "vigente",
+          "superseded_at": null,
+          "superseded_by_filing_record_id": null,
+          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "export",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--output",
+        "modelo-303-1t.boe"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.export",
+        "notices": [
+          {
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T"
+            },
+            "message": "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, or CSV cotejo.",
+            "severity": "warning",
+            "suggestion": "After filing through AEAT, capture official evidence with `aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T`, or `aeat app live justificante pull --modelo 303 --year 2026 --period 1T` when live read access is available; otherwise import AEAT justificante/CSV evidence with `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE`."
+          }
+        ],
+        "result": {
+          "bucket_event_id": "d2d228225132e242ab202e881cde5f0d0e11bab4a471ee269eb3de9194718844",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 7365,
+          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "file_sha256": "c3286914c69801bab03607c0ed9718c3e39c031d9bd50b02f2e772aeceb13259",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "modelo": "303",
+          "operation": "modelo.export",
+          "output_path": "modelo-303-1t.boe",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
         },
         "schema_version": "2",
         "status": "warning"

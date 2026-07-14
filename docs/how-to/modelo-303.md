@@ -19,14 +19,16 @@ profile](profile-setup.md) walks through it step by step.
 
 ## The complete first-quarter chain
 
-This is the full path from an empty store to a verified draft for a first-period
-filer. The preparation below sets up a self-employed profile and a classified
-ledger, then creates the draft, calculates it, and verifies it. Each
-load-bearing detail is explained under the sequence.
+This is the full path from a classified, evidenced ledger to an exported fichero
+for a first-period filer. The preparation below sets up a self-employed profile,
+classifies the quarter's income and expense rows, and attaches the supplier's
+purchase invoice as encrypted evidence. The sequence then creates the draft,
+calculates it, verifies it, records the local filed marker, and exports the
+fichero-BOE. Each load-bearing detail is explained under the sequence.
 
 ```{cli-sequence} modelo-303-first-quarter
-:seed: autonomo-irpf-2026
-:verify: Confirm the draft passed verification before you export it.
+:seed: iva-evidence-2026
+:verify: Confirm the draft verifies, files locally, and exports a stable fichero.
 @step Open a Modelo 303 draft for the first quarter.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
@@ -34,9 +36,15 @@ aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values.71 == "105.00"
-@step Verify the draft before you export it.
-@result aeat --format json app modelo work verify {calculation_revision_id}
+@step Verify the draft; verification captures the evidence over the contributing rows.
+aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
+@step Record the local filed marker after you upload through AEAT yourself.
+aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+@step Export the filed revision to a local fichero-BOE.
+@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303-1t.boe
+@expect result.file_sha256 == "c3286914c69801bab03607c0ed9718c3e39c031d9bd50b02f2e772aeceb13259"
+@expect result.byte_size == 7365
 @expect exit_code == 0
 ```
 
@@ -55,9 +63,18 @@ Load-bearing details:
   `aeat app ledger categories`. The example uses `material_oficina`.
 - Calculation charges 210.00 of IVA on the sale (`IVA repercutido`) and deducts
   105.00 on the purchase (`IVA soportado`), so casilla 71 (Resultado final) is
-  105.00 — the IVA due for the quarter.
-- `verify` reports `completeness complete` and `granted true`. Export then writes
-  the `.boe` and reports its path, byte size, and SHA-256 checksum.
+  105.00 — the IVA due for the quarter. The deductible IVA counts at calculate
+  time; the attached invoice evidence is what lets the row be *filed*, not what
+  changes the figure.
+- Attach the purchase invoice as evidence *before* you verify. Verification
+  finalizes the revision and captures a snapshot over the contributing rows, so
+  the evidence must already be on the expense row — a locked row cannot take a
+  late attachment.
+- `verify` reports `completeness complete` and `granted true`. `work file` then
+  writes the local filed marker, and `export` writes the `.boe` and reports its
+  path, byte size, and SHA-256 checksum. The exported fichero is byte-stable:
+  the same classified, evidenced quarter always produces the same 7365-byte file
+  with the same checksum.
 - Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
   automatically for a común-territory profile, so casilla 66 and the headline
   casilla 71 (Resultado final) carry the full régimen-general result. This tool
