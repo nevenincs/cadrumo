@@ -794,7 +794,9 @@ def execute_page_sequences(
         fixtures_root: Optional override of the committed fixtures tree.
 
     Returns:
-        One :class:`SequenceTranscript` per sequence, in page order.
+        One :class:`SequenceTranscript` per EXECUTABLE sequence, in page order;
+        an all-``@static`` sequence runs nothing and yields no transcript, so the
+        caller aligns transcripts with the executable sequences.
     """
     for sequence in sequences:
         _refuse_live_frames(sequence)
@@ -812,7 +814,12 @@ def _execute_page_in_root(
     sandbox_root: Path,
     fixtures_root: Path | None,
 ) -> tuple[SequenceTranscript, ...]:
-    """Open one sandbox under ``sandbox_root`` and run every sequence in order."""
+    """Open one sandbox under ``sandbox_root`` and run every EXECUTABLE sequence in order.
+
+    An all-``@static`` sequence runs nothing, so it produces no transcript (the
+    same skip :func:`execute_sequence` applies at the golden tier); the returned
+    tuple therefore carries one transcript per executable sequence, in page order.
+    """
     transcripts: list[SequenceTranscript] = []
     with sequence_sandbox(
         sequence_id=label,
@@ -820,6 +827,8 @@ def _execute_page_in_root(
         fixtures_root=fixtures_root,
     ) as sandbox:
         for sequence in sequences:
+            if not sequence.executed_frames:
+                continue  # all-@static: nothing runs, so no transcript
             captures: dict[str, CapturedScalar] = {}
             frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.executed_frames)
             transcripts.append(

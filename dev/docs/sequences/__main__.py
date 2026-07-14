@@ -410,14 +410,18 @@ def check_page_coherence(
         by_page.setdefault(item.page, []).append(item)
 
     for docname, items in by_page.items():
+        # An all-@static sequence runs nothing, so it produces no transcript;
+        # only executable sequences take part in the cumulative page run and the
+        # transcript alignment below.
+        executable = [item for item in items if item.sequence.executed_frames]
         try:
             with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
                 transcripts = execute_page_sequences(
-                    [item.sequence for item in items],
+                    [item.sequence for item in executable],
                     label=docname,
                     sandbox_root=Path(tmp),
                 )
-                for item, transcript in zip(items, transcripts, strict=True):
+                for item, transcript in zip(executable, transcripts, strict=True):
                     all_problems.extend(
                         f"{COHERENCE_TIER_PREFIX}: {problem}"
                         for problem in evaluate_expectations(item.sequence, transcript, page=docname)
