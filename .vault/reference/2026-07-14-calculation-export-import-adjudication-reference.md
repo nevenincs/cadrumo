@@ -9,6 +9,7 @@ related:
   - "[[2026-07-12-calculation-truth-registry-plan]]"
   - "[[2026-07-12-calculation-truth-registry-classification-review-audit]]"
   - '[[2026-07-14-calculation-export-import-adjudication-plan]]'
+  - '[[2026-07-14-calculation-export-import-adjudication-adr]]'
 ---
 
 # `calculation-export-import-adjudication` reference: `Export and import adjudication implementation map`
