@@ -1,6 +1,6 @@
 # Manage business invoices
 
-Record the invoices your business issues and receives — the money a customer
+Record the invoices your business issues and receives: the money a customer
 owes you and the money you owe a supplier. This guide covers both kinds and
 shows which records feed your tax calculations.
 
@@ -33,7 +33,7 @@ Cadrumo keeps invoices in two separate places, for two different jobs.
   modelo calculation.
 - **The reconciliation catalogue** (`aeat app ledger invoice catalogue ...`) is
   the linkable copy. A catalogue invoice can be matched to a bank transaction
-  and is the copy a calculation reads — for example, the Modelo 349
+  and is the copy a calculation reads, for example the Modelo 349
   recapitulative declaration of intra-community operations.
 
 Record everyday invoices with `invoice add`. When an invoice must drive a
@@ -157,7 +157,7 @@ stamps the classification the Modelo 349 calculation reads. Use `E`, `H`, `M`,
 for received catalogue invoices. In Modelo 349, `R` is the call-off-stock
 transfer key; rectification rows use separate rectified-period and base fields.
 
-An invoice is counted only in the period its invoice date falls in — Modelo 349
+An invoice is counted only in the period its invoice date falls in. Modelo 349
 reads invoices strictly by date, with no carry-forward from earlier periods.
 
 ## Link a catalogue invoice to a transaction
@@ -199,8 +199,8 @@ invoice that no longer exists:
 
 ## Which modelos read your invoices
 
-Catalogue invoices feed **Modelo 349** — the recapitulative declaration of
-intra-community operations — through the operation type you stamp on them
+Catalogue invoices feed **Modelo 349** (the recapitulative declaration of
+intra-community operations) through the operation type you stamp on them
 when you create them. This is the modelo your issued and received invoices
 drive directly.
 
