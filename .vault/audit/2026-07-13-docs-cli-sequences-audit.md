@@ -118,3 +118,7 @@ Fixes this campaign's gates and sweeps surfaced and landed (shas recorded for th
 
 - **Certificate/bundle as-given path-keyed events (accepted):** a different class from the evidence-identity fix above — certificate and bundle events are keyed on the as-given path by design; accepted, not a regression.
 - **M390 deducible/evidence coupling (resolving):** the M390 deducible-versus-evidence coupling is resolving via seed 5b; tracked to that resolution.
+
+### Wave C ruling — profile-setup enrollment (coordinator, 2026-07-14)
+
+Probe-proven that `profile create` on an existing name refuses deterministically (`REFUSED_PROFILE_ALREADY_REGISTERED`), so no guarded-no-op enrollment path exists. The alternative — deterministic name-derived profile ids — was REJECTED at design level because identity reuse after profile deletion could re-associate orphaned encrypted state; random profile ids are correct by design. `profile-setup` therefore remains unenrollable BY DESIGN, not by gap: its executed subject is inherently nondeterministic identity minting. The enrollment goal saturates at: every runnable-narrative page enrolled; technique references and year run-throughs static by doctrine; live/`pull` and external-provider pages excluded by the safety sandbox; `profile-setup` excluded by identity design.
