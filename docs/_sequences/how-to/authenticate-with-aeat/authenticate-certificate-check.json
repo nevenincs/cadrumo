@@ -3,18 +3,30 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "auth",
         "certificate",
         "check"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.certificate.check",
+        "notices": [],
+        "result": {
+          "entries": [],
+          "has_warnings": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "sources\t<none>\nnext_action\taeat config auth certificate register --name NAME --file PATH\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,

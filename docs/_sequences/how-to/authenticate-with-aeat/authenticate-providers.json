@@ -3,17 +3,59 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
         "auth",
         "providers"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.providers",
+        "notices": [],
+        "result": {
+          "providers": [
+            {
+              "description": "auth.catalogue.certificate_description",
+              "id": "certificate",
+              "implemented": true,
+              "label": "auth.catalogue.certificate_label"
+            },
+            {
+              "description": "auth.catalogue.clave_movil_description",
+              "id": "clave_movil",
+              "implemented": true,
+              "label": "auth.catalogue.clave_movil_label"
+            },
+            {
+              "description": "auth.catalogue.clave_pin_description",
+              "id": "clave_pin",
+              "implemented": false,
+              "label": "auth.catalogue.clave_pin_label"
+            },
+            {
+              "description": "auth.catalogue.clave_permanente_description",
+              "id": "clave_permanente",
+              "implemented": true,
+              "label": "auth.catalogue.clave_permanente_label"
+            },
+            {
+              "description": "auth.catalogue.dnie_pkcs_description",
+              "id": "dnie_pkcs",
+              "implemented": false,
+              "label": "auth.catalogue.dnie_pkcs_label"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
-      "text": "certificate\tavailable\tDigital certificate\nclave_movil\tavailable\tCl@ve Móvil\nclave_pin\treserved (not available yet)\tCl@ve PIN\nclave_permanente\tavailable\tCl@ve Permanente\ndnie_pkcs\treserved (not available yet)\tDNI-e PKCS\n"
+      "text": null
     }
   ],
   "golden_schema_version": 1,
