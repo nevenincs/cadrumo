@@ -1,0 +1,234 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-15",
+        "--amount",
+        "121.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "History example",
+        "--idempotency-key",
+        "correct-history"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "121",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "History example",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "split",
+        "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+        "--child-amount",
+        "100.00",
+        "--child-description",
+        "part one",
+        "--child-amount",
+        "21.00",
+        "--child-description",
+        "part two",
+        "--reason",
+        "mixed receipt",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.split",
+        "notices": [],
+        "result": {
+          "bucket_event_id": "3bb972b4ba9b83278983bcf4de07f729ea526421c6a2b12a4faaf35e725ea7dc",
+          "bucket_id": "<bucket-id>",
+          "child_transaction_ids": [
+            "1b0fd2c9fafa252d7171b1eb52b04e07e5502ee839c6312f52b5915826fecd26",
+            "10d57b2761019c6163df9458af1558ec576bf67884a64b25328b9affc93c1274"
+          ],
+          "child_transactions": [
+            {
+              "display_id": "1b0fd2c9",
+              "full_id": "1b0fd2c9fafa252d7171b1eb52b04e07e5502ee839c6312f52b5915826fecd26"
+            },
+            {
+              "display_id": "10d57b27",
+              "full_id": "10d57b2761019c6163df9458af1558ec576bf67884a64b25328b9affc93c1274"
+            }
+          ],
+          "classified_child_count": null,
+          "llm": null,
+          "parent_amount": null,
+          "parent_transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+          "persisted": null,
+          "proposed_children": null,
+          "provenance": null,
+          "provider": null,
+          "reason": null,
+          "split_group_id": "4d2d96d6579ac45716e2561a4bc5e7c73876e0a76843db90f5045ebc6dc7a026"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "history",
+        "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t3bb972b4ba9b83278983bcf4de07f729ea526421c6a2b12a4faaf35e725ea7dc\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "history",
+        "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+        "--include-split-siblings"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.history",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "event_count": 2,
+          "events": [
+            {
+              "actor": "<profile-id>",
+              "bucket_id": "<bucket-id>",
+              "event_id": "808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388",
+              "event_type": "ledger.transaction.created",
+              "object_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+              "object_type": "ledger_transaction",
+              "occurred_at": "2026-04-01T09:00:00Z",
+              "payload": {
+                "amount": "121.00",
+                "currency": "EUR",
+                "direction": "OUTGOING",
+                "source_command": "aeat app ledger add"
+              },
+              "payload_version": 1
+            },
+            {
+              "actor": "<profile-id>",
+              "bucket_id": "<bucket-id>",
+              "event_id": "3bb972b4ba9b83278983bcf4de07f729ea526421c6a2b12a4faaf35e725ea7dc",
+              "event_type": "ledger.transaction.split",
+              "object_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+              "object_type": "ledger_transaction",
+              "occurred_at": "2026-04-01T09:00:00Z",
+              "payload": {
+                "child_count": "2",
+                "child_transaction_ids": "1b0fd2c9fafa252d7171b1eb52b04e07e5502ee839c6312f52b5915826fecd26,10d57b2761019c6163df9458af1558ec576bf67884a64b25328b9affc93c1274",
+                "parent_transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+                "reason": "mixed receipt",
+                "source_command": "aeat app ledger split",
+                "split_group_id": "4d2d96d6579ac45716e2561a4bc5e7c73876e0a76843db90f5045ebc6dc7a026"
+              },
+              "payload_version": 1
+            }
+          ],
+          "transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "correct-review-history"
+}
