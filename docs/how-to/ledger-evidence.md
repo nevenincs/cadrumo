@@ -113,7 +113,14 @@ aeat app ledger evidence update {evidence_id} --supplier "Papelería Central SL"
 @expect result.supplier == "Papelería Central SL"
 ```
 
-Remove an evidence record with `aeat app ledger evidence remove <evidence-id> --yes`. Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
+Remove an evidence record you no longer need, addressing it by id:
+
+```{cli-sequence} ledger-evidence-remove
+@step Remove an evidence record by id, confirming with --yes.
+@static aeat app ledger evidence remove <evidence-id> --yes
+```
+
+Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
 
 ## After you correct a row
 
