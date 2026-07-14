@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterator
 from io import StringIO
 from pathlib import Path
 
 import pytest
 from sphinx.application import Sphinx
 
+from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.sequence_directive import (
     build_sequence_payload,
     parse_shells,
@@ -280,12 +282,15 @@ def _build(root: Path, *, warningiserror: bool) -> tuple[str, str]:
 
 
 @pytest.fixture
-def _isolated_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def _isolated_storage(tmp_path: Path) -> Iterator[None]:
     """Pin an isolated Cadrumo storage root and English output for the CLI-tree walk."""
     root = tmp_path / "cadrumo-store"
     root.mkdir()
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
-    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "en")
+    with (
+        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
+        scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
+    ):
+        yield
 
 
 _INDEX_WITH_DIRECTIVE = "# Modelo 303\n\n```{cli-sequence} " + _SEQUENCE_ID + "\n" + _DIRECTIVE_BODY + "\n```\n"
@@ -355,11 +360,12 @@ _INDEX_LIVE_AEAT = (
 )
 
 
-def test_directive_refuses_live_aeat_frame_statically(tmp_path: Path, _isolated_storage: None) -> None:
-    """A directive whose frame reads live AEAT is refused at build time.
+def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isolated_storage: None) -> None:
+    """A live-AEAT command in an EXECUTED frame is refused at build time.
 
-    The refusal fires statically — before any golden is read — so a ``pull`` verb
-    or an ``app live`` frame cannot be enrolled even if a golden were fabricated.
+    The refusal fires statically, before any golden is read, so an ``app live``
+    or ``pull`` command in an executed (@result) frame cannot be enrolled. The
+    error points the author at the @static carve-out.
     """
     site = tmp_path / "site"
     site.mkdir()
@@ -369,7 +375,8 @@ def test_directive_refuses_live_aeat_frame_statically(tmp_path: Path, _isolated_
 
     html, warnings = _build(site, warningiserror=False)
 
-    assert "unenrollable" in warnings
+    assert "cannot be executed" in warnings
+    assert "@static" in warnings  # the remediation is named
     assert "no committed golden" not in warnings  # refused before the golden lookup
     assert "cadrumo-sequence" not in html
 
@@ -597,3 +604,115 @@ def test_setup_frames_render_unfolded_with_headers() -> None:
     assert html.index('data-frame-kind="setup"') < html.index("cadrumo-frame-header") + len(html)
     # The step badge numbering is 1-based across all frames, setup included.
     assert '<span class="cadrumo-frame-step">1</span>' in html
+
+
+# ---------------------------------------------------------------------------
+# @static non-executed display frames (mandatory-display doctrine)
+# ---------------------------------------------------------------------------
+
+_INDEX_ALL_STATIC = (
+    "# Pull live data\n\n```{cli-sequence} live-all-static\n"
+    "@step Pull the justificante from AEAT.\n"
+    "@static aeat app live justificante pull\n"
+    "@step View the stored justificante.\n"
+    "@static aeat app live justificante latest\n"
+    "```\n"
+)
+
+
+def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, _isolated_storage: None) -> None:
+    """An all-@static sequence renders from the parse alone: no golden, no verify caption.
+
+    A live-AEAT page shows its commands as @static frames (execution is
+    impossible in the hermetic sandbox). Nothing runs, so there is no golden and
+    no :verify:; the build still succeeds under -n -W and the frames render as
+    command cards with no output.
+    """
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    goldens_root.mkdir()  # deliberately empty — an all-static sequence has no golden
+    _write_site(site, index_body=_INDEX_ALL_STATIC, goldens_root=goldens_root)
+
+    # The build succeeds under warningiserror (a real directive fault would raise,
+    # e.g. a missing-golden error); the benign cross-build "already registered"
+    # setup noise is not a directive fault, so the content assertions below are
+    # the real check that the all-static sequence rendered from the parse alone.
+    html, _warnings = _build(site, warningiserror=True)
+
+    assert 'class="cadrumo-sequence"' in html
+    assert html.count('data-frame-kind="static"') == 2
+    # No output blocks (nothing executed) and no verification caption.
+    assert "cadrumo-frame-output" not in html
+    assert "cadrumo-verify" not in html
+    # The @static live commands are shown (not refused) and carry their copy handle.
+    assert 'data-command-line="aeat app live justificante pull"' in html
+    # The inline payload carries verify=null and static frames with empty output.
+    match = re.search(
+        r'<script type="application/json" class="cadrumo-sequence-payload">(.*?)</script>',
+        html,
+        re.DOTALL,
+    )
+    assert match is not None
+    payload = json.loads(match.group(1).replace(r"<\/", "</"))
+    assert payload["verify"] is None
+    assert [frame["kind"] for frame in payload["frames"]] == ["static", "static"]
+    assert all(frame["output"]["format"] == "empty" and frame["exit_code"] is None for frame in payload["frames"])
+
+
+def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
+    """A @static frame after the @result renders output-less and aligns the golden 1:1.
+
+    The golden carries only the executed frames; the parsed body's static frame
+    is rendered from the parse alone (no golden), and the two executed frames
+    align with the two golden frames.
+    """
+    sequence = parse_sequence(
+        sequence_id="file-303",
+        options={"verify": "Confirm the draft is verified before uploading."},
+        body=(
+            "aeat app modelo work create 303 --year 2026 --period 1T\n"
+            "@result aeat app modelo work verify wu\n"
+            "@expect result.status == \"ok\"\n"
+            "@step Upload the exported file at the AEAT portal yourself.\n"
+            "@static aeat app live justificante pull"
+        ),
+    )
+    golden = SequenceGolden(
+        sequence_id="file-303",
+        frames=(
+            GoldenFrame(
+                kind=FrameKind.COMMAND,
+                argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
+                exit_code=0,
+                envelope={"schema_version": 1, "command": "c", "status": "ok", "notices": [], "result": {}},
+                envelope_source="stdout",
+            ),
+            GoldenFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "app", "modelo", "work", "verify", "wu"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "c",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"status": "ok"},
+                },
+                envelope_source="stdout",
+            ),
+        ),
+    )
+    payload = build_sequence_payload(sequence, golden)
+    assert [frame["kind"] for frame in payload["frames"]] == ["command", "result", "static"]
+    static_frame = payload["frames"][-1]
+    assert static_frame["exit_code"] is None
+    assert static_frame["output"] == {"format": "empty", "body": ""}
+    assert static_frame["expects"] == []
+    # The executed frames still carry their golden output.
+    assert payload["frames"][0]["output"]["format"] == "json"
+
+    html = render_sequence_html(payload)
+    assert 'data-frame-kind="static"' in html
+    # Two executed frames render output; the static frame does not.
+    assert html.count("cadrumo-frame-output") == 2
