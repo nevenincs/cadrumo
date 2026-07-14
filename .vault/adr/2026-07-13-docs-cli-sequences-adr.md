@@ -334,6 +334,30 @@ plain fences are ordinary documented commands), not an exclusionary gate. The
 sequence-grammar frame validation and the enrolled-surface non-vacuity tripwire
 remain; only the plain-fence refusal and its shipped-page scan are retired.
 
+**Amendment 2 (2026-07-14, operator-driven — mandatory display):** the plain-fence
+*tolerance* of Amendment 1 was a remediation of inline cramming, not the end
+state. The operator's end state is that EVERY `aeat` CLI command shown in user
+docs renders through the implemented cli-sequence display (a step header, a
+tokenised command card with the shell switcher and copy control, and — for
+executed frames — its output), never a plain ` ```bash ` fence. To render a
+command whose hermetic execution is impossible, a new non-executed display frame
+`@static` renders the SAME unified step card but with NO output section and NO
+golden (output is never fabricated — the honesty rules hold). `@static` is the
+carve-out and is admissible ONLY where the hermetic sandbox genuinely cannot run
+the command: a live-AEAT read (`pull` / the `app live` group), a Google OAuth or
+other interactive-consent flow, an interactive wizard, or an operator-machine-
+specific path. Non-`aeat` commands (`pip`, `playwright`, `ollama`, `python -m`,
+`/plugin`) remain ordinary plain fences — the mandate is scoped to the `aeat`
+executable. Enforcement is a ratcheting gate: a plain shell fence carrying an
+`aeat` invocation in a user-docs page is a violation, governed by a checked-in
+per-page baseline that only ratchets down (no page may exceed its baseline; an
+empty baseline means the doctrine is fully applied), so the parallel page-by-page
+conversion never reds the tree. This supersedes the plain-fence *tolerance* of
+Amendment 1 while keeping its factual point that plain fences still receive the
+base verb-path/option-name checks; the executed-vs-`@static` distinction stays
+visual and golden-backed (executed frames carry a verified transcript; `@static`
+frames a command card without output).
+
 *Rejected:* flag-day migration of all how-tos (35 pages of goldens landing
 at once is unreviewable and blocks every doc change on the new machinery);
 directive-level opt-in with no page gate (pages drift into a mix of executed
