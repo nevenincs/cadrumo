@@ -98,6 +98,24 @@ with exec records on disk. No vague "will do later" language was found
 outside the three named rows and the durable-cadence rows (`S192`-`S194`,
 already correctly treated as ongoing, not one-shot, obligations).
 
+### commit-3fbc3adb87-carries-inert-foreign-hunks | low | pathspec commit swept a peer's uncommitted plan-file edits under this session's SHA
+
+While landing this checkpoint's two plan-file checkbox closures, an
+apply-cached patch correctly staged only those two edits (plus the `modified`
+date bump) into the index, verified clean via `git diff --cached`. The
+subsequent `git commit -- <paths>` (including the plan file in its pathspec)
+committed the plan file's WORKING-TREE content rather than the verified
+index, sweeping three small unrelated foreign hunks already present in the
+working tree from a peer's in-flight edit: a `LINK RULES` frontmatter comment
+block, a backtick correction near the `S422` row text, and a blank line
+inserted before the `W09.P40` phase heading. Commit `3fbc3adb87` therefore
+carries those three inert cosmetic hunks in addition to the intended S337/S197
+checkbox closures. No content was lost or altered — the peer's edit is fully
+preserved, merely mis-attributed to this commit instead of the peer's own —
+and no corrective history rewrite (revert/reset/rebase) is warranted for
+cosmetic drift of this size. Recorded here per full disclosure; no further
+action required.
+
 ## Recommendations
 
 - Declare the `W11.P60.S196`/`S197` checkpoint AT-REST, not terminated. The
