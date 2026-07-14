@@ -8,7 +8,9 @@ files and real pdfplumber.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
+import re
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -178,6 +180,37 @@ def _real_corpus_pdfs() -> list[Path]:
     return pdfs
 
 
+# Spanish tax-identifier shape (NIF / NIE / CIF): an optional leading letter,
+# 7-8 digits, and a trailing control character. Distinguishes the sanitiser's
+# redacted tax-id replacement (Y0000001S / B00000001 / 00000000T) from the same
+# sidecar's redacted date (01-01-1900) and presentation-id (SANITIZED...) values.
+_SANITISED_TAX_ID_PATTERN = re.compile(r"^[A-Z]?\d{7,8}[A-Z0-9]$")
+
+
+def _expected_tax_id_from_sidecar(fixture: Path) -> str:
+    """Return the redacted tax id the fixture-provenance sidecar declares.
+
+    The sidecar is the authoritative declaration of the synthetic values the
+    sanitiser substituted, so the parser must reproduce the declared tax id
+    exactly. A personal filer's redaction is a NIE/NIF; a sociedad's (Impuesto
+    sobre Sociedades modelos such as Modelo 202) is a CIF -- both are declared
+    per-fixture, so the expectation is derived here rather than hardcoded.
+    """
+    sidecar = json.loads(fixture.with_suffix(".json").read_text(encoding="utf-8"))
+    # The sanitiser substitutes the same redacted tax id at every surface it
+    # appears, so the tokens repeat; dedupe to the DISTINCT tax-id values and
+    # require exactly one (the filer's).
+    tax_ids = {
+        str(replacement["synthetic"])
+        for replacement in sidecar.get("replacements_applied", [])
+        if _SANITISED_TAX_ID_PATTERN.match(str(replacement.get("synthetic", "")))
+    }
+    assert len(tax_ids) == 1, (
+        f"expected exactly one distinct redacted tax-id in the {fixture.name} sidecar, found {sorted(tax_ids)!r}"
+    )
+    return next(iter(tax_ids))
+
+
 class TestRealCorpusParses:
     """Every committed sanitised fixture parses cleanly end-to-end.
 
@@ -208,8 +241,15 @@ class TestRealCorpusParses:
         assert record.modelo == modelo_expected, f"modelo mismatch for {fixture}: got {record.modelo}"
         assert record.period == expected_period, f"period mismatch for {fixture}: got {record.period}"
         assert record.ejercicio == ejercicio_expected, f"ejercicio mismatch for {fixture}: got {record.ejercicio}"
-        # Redacted NIE/NIF survives the round-trip.
-        assert record.tax_id == "Y0000001S", f"tax_id mismatch for {fixture}: got {record.tax_id}"
+        # The redacted identifier declared by the sidecar survives the round-trip.
+        # It is a NIE/NIF for a personal filer (Y0000001S) but a CIF for a
+        # sociedad's Impuesto sobre Sociedades modelo (e.g. Modelo 202 -> B00000001),
+        # so the expectation is derived per-fixture from the authoritative
+        # fixture-provenance sidecar rather than hardcoded to one shape.
+        expected_tax_id = _expected_tax_id_from_sidecar(fixture)
+        assert record.tax_id == expected_tax_id, (
+            f"tax_id mismatch for {fixture}: got {record.tax_id}, sidecar declares {expected_tax_id}"
+        )
         # CSV shape always conforms to AEAT's 8-24 uppercase alphanum.
         assert record.csv.isalnum() and record.csv.isupper()
         assert 8 <= len(record.csv) <= 24, f"csv shape failure for {fixture}: got {record.csv!r}"
