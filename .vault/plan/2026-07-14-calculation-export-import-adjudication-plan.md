@@ -100,7 +100,7 @@ Adjudicate each inbound candidate against real filed-artifact evidence and the e
 - [x] `P03.S19` - Gate Modelo 309 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/309/, .vault/reference/`.
 - [x] `P03.S20` - Gate Modelo 322 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/322/, .vault/reference/`.
 - [x] `P03.S21` - Gate Modelo 353 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/353/, .vault/reference/`.
-- [x] `P03.S22` - Gate Modelo 360 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/360/, .vault/reference/`.
+- [ ] `P03.S22` - Gate Modelo 360 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring; `src/cadrumo/_data/registry/aeat/modelos/360/, .vault/reference/`.
 
 ### Phase `P04` - Time gates and successor handoff
 
