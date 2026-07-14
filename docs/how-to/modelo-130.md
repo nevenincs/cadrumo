@@ -104,6 +104,7 @@ complementary results). Inspect what is bound, missing, or manual:
 aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
 @step Show the modelo's casilla definitions for the period.
 @result aeat --format json app modelo casillas 130 --period 1T
+@expect result.casilla_count == 20
 @expect exit_code == 0
 ```
 

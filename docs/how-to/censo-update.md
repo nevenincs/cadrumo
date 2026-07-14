@@ -80,6 +80,7 @@ place of `docs-sequence-sandbox`:
 aeat --format json config profile edit docs-sequence-sandbox --quiet --activity "consultoria"
 @step Confirm the edited profile still validates.
 @result aeat --format json config profile validate
+@expect result.valid == true
 @expect exit_code == 0
 ```
 
