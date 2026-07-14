@@ -23,16 +23,18 @@ The CLI help and error text render in Spanish, even though this guide is in Engl
 
 ## Review the row first
 
-Find the transaction id:
+Find the transaction id, then inspect the row before you classify it. The
+sequence imports the standard quarter and inspects the unclassified expense:
 
-```bash
+```{cli-sequence} classify-review-row
+:verify: Confirm the row is still unclassified before you decide.
+@step Import the quarter's movements so there is a row to classify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step List the rows that still need a decision.
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
-```
-
-Inspect the row:
-
-```bash
-aeat app ledger view <transaction-id>
+@step Inspect the row before changing it.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.business_classification == "NOT_YET_PROCESSED"
 ```
 
 Use the description, amount, counterparty, source document, and business context
@@ -50,17 +52,21 @@ Use only these three values. Cadrumo sets the others automatically.
 
 ## Pick a category for expenses
 
-List accepted category ids:
+List the accepted category ids, then classify an expense row with one. Expense
+rows normally need a category id before a modelo can calculate from them:
 
-```bash
+```{cli-sequence} classify-expense-category
+:verify: Confirm the expense is classified as business with a category.
+@step Import the quarter's movements so there is an expense to classify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step List the accepted category ids.
 aeat app ledger categories
-```
-
-Expense rows normally need a category id before a modelo can calculate from
-them:
-
-```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+@step Classify the expense as business with a category.
+aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
+@step Confirm the row now carries the business classification and category.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.business_classification == "BUSINESS"
+@expect result.transaction.category_id == "material_oficina"
 ```
 
 For money you received (income), Cadrumo does not usually need a category. It
@@ -74,10 +80,19 @@ use `aeat app ledger invoice` with `--kind received` for supplier invoices and
 
 ## Add tax fields when needed
 
-If a row needs regulated tax fields, add only the fields that apply:
+If a row needs regulated tax fields, add only the fields that apply. The
+sequence classifies the expense with its taxable base, rate, and IVA amount:
 
-```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+```{cli-sequence} classify-tax-fields
+:verify: Confirm the taxable base and IVA fields were recorded on the row.
+@step Import the quarter's movements so there is an expense to classify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Classify the expense with the IVA breakdown from the invoice.
+aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500.00 --iva-rate 0.21 --iva-amount 105.00
+@step Confirm the taxable base and IVA fields were recorded.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.taxable_base == "500"
+@expect result.transaction.iva_amount == "105"
 ```
 
 Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
@@ -112,38 +127,46 @@ until the row carries `--usage-ratio-id`.
 
 For one-row commands, `--usage-ratio-id` lives on the `allocate` verb (and on
 `add`), not on `classify`. Its value is the spending-category id, and the same
-category must already have a saved ratio. Record a mixed-use share in three
-steps.
+category must already have a saved ratio. The sequence checks the eligible
+categories, saves a ratio, and allocates the share on a row:
 
-Check which categories accept a ratio:
-
-```bash
+```{cli-sequence} classify-mixed-use
+:verify: Confirm the mixed-use row carries the allocated business share.
+@step Record a phone bill you use partly for business.
+@setup aeat --format json app ledger add --date 2026-03-15 --amount 60.50 --direction OUTGOING --description "Factura movil" --idempotency-key classify-mixed
+@capture transaction_id result.transaction_id
+@step Check which categories accept a ratio.
 aeat app ledger ratios eligible
+@step Save the ratio for the category, as a percentage from 0 to 1.
+aeat app ledger ratios set telefonia_movil 0.5
+@step Allocate the share on the row, naming the same category for both flags.
+aeat app ledger allocate {transaction_id} --business-pct 0.5 --usage-ratio-id telefonia_movil --category-id telefonia_movil
+@step Confirm the row is now mixed with the allocated share.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.business_classification == "MIXED"
+@expect result.transaction.business_pct == "0.5"
 ```
 
-Save the ratio for the category, as a percentage from `0` to `1`:
-
-```bash
-aeat app ledger ratios set <category-id> 0.5
-```
-
-Allocate the share on the row, naming the same category id for both
-`--usage-ratio-id` and `--category-id`:
-
-```bash
-aeat app ledger allocate <transaction-id> --business-pct 0.5 --usage-ratio-id <category-id> --category-id <category-id>
-```
-
-The `--business-pct` value must match the saved ratio for that category. The
+A row's `--usage-ratio-id` must name a ratio-eligible category (the ones
+`ratios eligible` lists, such as `telefonia_movil` or a home-office suministros
+category), and the same category is passed as `--category-id`. The
+`--business-pct` value must match the saved ratio for that category. The
 classification follows the share automatically: a `0.5` allocation becomes
 `MIXED`, a `1` allocation becomes `BUSINESS`, and a `0` allocation becomes
 `PERSONAL`.
 
-List or check the saved ratios at any time:
+List or check the saved ratios at any time. The sequence saves a ratio, lists
+the saved ratios, and validates them:
 
-```bash
+```{cli-sequence} classify-ratios-manage
+:verify: Confirm the saved ratios validate cleanly.
+@step Save a ratio for a ratio-eligible category.
+aeat app ledger ratios set telefonia_movil 0.5
+@step List the saved ratios.
 aeat app ledger ratios list
-aeat app ledger ratios validate
+@step Confirm the saved ratios are internally consistent.
+@result aeat --format json app ledger ratios validate
+@expect exit_code == 0
 ```
 
 Remove a category ratio you no longer want with
@@ -205,16 +228,27 @@ period if you are later asked to justify your return. This path does not batch-u
 descriptions, IVA values, notes, attachments, or split/merge state; use the
 transaction workflow for those row-level edits.
 
+The commands in this section use example ids and a CSV you supply, so they are
+shown as plain commands rather than executed sequences. Fill in your own
+transaction ids and category ids before running them.
+
 ## Apply stored rules automatically
 
 Rules automatically classify transactions whose description contains a word or
-phrase you specify. Matching ignores uppercase and lowercase differences:
+phrase you specify. Matching ignores uppercase and lowercase differences. The
+sequence adds a rule, lists the rules, previews the effect, then applies it:
 
-```bash
-aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
+```{cli-sequence} classify-rules
+:verify: Confirm the stored rule is registered and applies cleanly.
+@step Add a rule that classifies matching descriptions.
+aeat app ledger rule add --description-pattern "material" --classification BUSINESS --category-id material_oficina
+@step List the stored rules.
 aeat app ledger rule list
+@step Preview the effect without changing any rows.
 aeat app ledger rule apply --dry-run
-aeat app ledger rule apply
+@step Apply the rule to matching rows.
+@result aeat --format json app ledger rule apply
+@expect exit_code == 0
 ```
 
 Run `--dry-run` first. Add `--reaffirm` only if you want the rule to overwrite
@@ -236,20 +270,33 @@ attention before a filing: transactions without a classification, invoice
 records that are unmatched or disputed, and verification findings on modelo
 drafts. Each row names the exact command that resolves it, so the queue is a
 to-do list you can work through top to bottom. The queue is read-only; items
-clear when you fix the underlying record with the command the row names.
+clear when you fix the underlying record with the command the row names. The
+sequence imports the quarter, then reads the queue:
 
-```bash
-aeat app review queue
+```{cli-sequence} classify-review-queue
+:verify: Confirm the review queue lists the pending work.
+@step Import the quarter's movements so there is pending work to surface.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Read the profile-wide review queue.
+@result aeat --format json app review queue
+@expect exit_code == 0
 ```
 
 Each row shows the item id, its kind, the affected record, the period, a
 severity (`critical`, `high`, `normal`, or `info`), and a final column with
 the command to run next. Narrow the list by kind, modelo, or state:
 
-```bash
+```{cli-sequence} classify-review-queue-filter
+:verify: Confirm the queue can be narrowed by kind.
+@step Import the quarter's movements so there is pending work to surface.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Narrow the queue to ledger-transaction items.
 aeat app review queue --kind ledger_transaction
+@step Narrow the queue to modelo findings for one modelo.
 aeat app review queue --kind modelo_finding --modelo 303
-aeat app review queue --state all
+@step Show every state, not only pending items.
+@result aeat --format json app review queue --state all
+@expect exit_code == 0
 ```
 
 Accepted `--kind` tokens are `ledger_transaction`, `purchase_invoice_evidence`,
@@ -268,11 +315,21 @@ you fix the reported values and verify again - see
 
 ## Confirm readiness
 
-Run preflight after classification:
+Run preflight after classification. The sequence imports and classifies the
+quarter, then runs preflight and reads the ledger status:
 
-```bash
+```{cli-sequence} classify-confirm-readiness
+:verify: Confirm preflight reports the classified quarter's readiness.
+@step Import the quarter's movements.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Classify the income and expense rows.
+@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@step Run preflight for the target period.
 aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status --year 2026 --period 1T
+@step Read the overall ledger state for the period.
+@result aeat --format json app ledger status --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
 Preflight names rows that still need category, taxable base, IVA amount, IVA
@@ -280,14 +337,23 @@ rate, currency, or proportionality reference.
 
 ## Correct a classification
 
-Re-run `classify` on the same transaction id:
+Re-run `classify` on the same transaction id. A manual decision replaces the
+previous classification. The sequence classifies a row as business, then
+corrects it to personal:
 
-```bash
-aeat app ledger classify <transaction-id> --classification PERSONAL
+```{cli-sequence} classify-correct
+:verify: Confirm the re-classification replaced the previous decision.
+@step Import the quarter's movements so there is a row to reclassify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
+@step Re-classify the same row as personal.
+aeat app ledger classify e3eeac5e --classification PERSONAL
+@step Confirm the row now reads personal.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.business_classification == "PERSONAL"
 ```
 
-A manual decision replaces the previous classification. Inspect the row again
-with `ledger view` before calculating.
+Inspect the row again with `ledger view` before calculating.
 
 ## Next steps
 
