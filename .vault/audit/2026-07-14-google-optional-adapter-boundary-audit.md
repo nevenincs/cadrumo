@@ -250,6 +250,24 @@ The other ten incoming references are:
 
 The current boundary plan and master Google audit point to the legacy plan as the historical subject being reconciled, not as decision authority. The accepted `2026-07-12-google-oauth-adr` is self-contained and retains the edge as the provenance of the plan it corrected; the current optional-adapter ADR remains the successor authority. The superseded May ADR, execution records, older audits, reference, research, and index likewise use the edge only for historical traceability. Classification totals are therefore 63 preserve, 0 rewrite, and 0 block.
 
+### ledger-google-live-export-archive-preview | low | four historical records and four provenance edges
+
+The canonical `ledger-google-live-export` archive preview reported `status: unchanged`, `dry_run: true`, and `archived_count: 4`. The proposed destinations are exactly:
+
+- `.vault/_archive/adr/2026-06-04-ledger-google-live-export-adr.md`;
+- `.vault/_archive/index/ledger-google-live-export.index.md`;
+- `.vault/_archive/plan/2026-06-03-ledger-google-live-export-plan.md`; and
+- `.vault/_archive/research/2026-06-04-ledger-google-live-export-research.md`.
+
+The preview reported four incoming references:
+
+- `2026-07-14-google-optional-adapter-boundary-plan` to `2026-06-04-ledger-google-live-export-adr`: **preserve**. The current plan names the superseded curation ADR as an archive subject, not as authority.
+- `2026-07-14-google-optional-adapter-boundary-plan` to `2026-06-03-ledger-google-live-export-plan`: **preserve**. The current plan names the reconciled historical plan as an archive subject.
+- `2026-07-14-google-optional-adapter-boundary-plan` to `2026-06-04-ledger-google-live-export-research`: **preserve**. The current plan names the research bridge as an archive subject.
+- `2026-06-03-modelo-export-evidence-parity-plan` to `2026-06-03-ledger-google-live-export-plan`: **preserve**. Its checked `W05.P06.S24` records the historical handoff of live network push scope. The target now states that it is historical evidence and names the accepted optional-adapter boundary as successor, so the edge is provenance rather than an active implementation dependency.
+
+The feature index has no incoming cross-feature reference. The unchanged bare stems remain archive-aware provenance after the proposed move. Classification totals are 4 preserve, 0 rewrite, and 0 block. No applying archive command ran during this Step.
+
 ## Recommendations
 
 1. Reconcile and close the legacy plan from this row-level ledger; do not execute it as a backlog.
