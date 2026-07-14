@@ -16,16 +16,20 @@ import ast
 import inspect
 import json
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import JsonValue
 
 from cadrumo.core.observability import MASK_SENTINEL
 
 from .. import (
     SANDBOX_STORAGE_ROOT_TOKEN,
     SANDBOX_WORKDIR_TOKEN,
+    FrameExecution,
+    FrameKind,
     ParsedSequence,
     SequenceGolden,
     SequenceGoldenError,
@@ -368,6 +372,67 @@ class TestExpectEvaluation:
         problems = evaluate_expectations(variant, json_run, page=_PAGE)
         assert len(problems) == 1
         assert "result.no_such_field" in problems[0]
+
+    def test_bracket_quoted_path_expectation_evaluates_against_the_envelope(self) -> None:
+        """An @expect with a bracket-quoted object key evaluates end to end.
+
+        No simple real command emits a casilla dict keyed with a literal dot, so
+        this constructs the transcript directly (a unit input to the pure
+        ``evaluate_expectations``, not a committed golden) to exercise the
+        bracket-quoted path against a genuine envelope shape — M349's declarante
+        casillas keyed ``decl.importe-operaciones`` / ``decl.numero-operadores``.
+        """
+        envelope: dict[str, JsonValue] = {
+            "schema_version": "2",
+            "status": "success",
+            "result": {
+                "casilla_values": {
+                    "decl.importe-operaciones": "12345.00",
+                    "decl.numero-operadores": "3",
+                },
+            },
+        }
+        execution = FrameExecution(
+            kind=FrameKind.RESULT,
+            command_line="aeat --format json app modelo verify wu",
+            argv=("aeat", "--format", "json", "app", "modelo", "verify", "wu"),
+            exit_code=0,
+            output=json.dumps(envelope),
+            envelope=envelope,
+            envelope_source="stdout",
+        )
+        transcript = SequenceTranscript(
+            sequence_id="compare-quoted-key",
+            profile_id="docs-sequence-sandbox",
+            frozen_instant=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            storage_root="/sandbox",
+            workdir="/sandbox/workdir",
+            frames=(execution,),
+        )
+
+        passing = parse_sequence(
+            sequence_id="compare-quoted-key",
+            options={"verify": "Confirm the declarante figures."},
+            body=(
+                "@result aeat --format json app modelo verify wu\n"
+                '@expect result.casilla_values["decl.importe-operaciones"] == "12345.00"\n'
+                '@expect result.casilla_values["decl.numero-operadores"] == "3"\n'
+            ),
+        )
+        assert evaluate_expectations(passing, transcript, page=_PAGE) == ()
+
+        failing = parse_sequence(
+            sequence_id="compare-quoted-key",
+            options={"verify": "Confirm the declarante figures."},
+            body=(
+                "@result aeat --format json app modelo verify wu\n"
+                '@expect result.casilla_values["decl.numero-operadores"] == "9"\n'
+            ),
+        )
+        problems = evaluate_expectations(failing, transcript, page=_PAGE)
+        assert len(problems) == 1
+        assert "decl.numero-operadores" in problems[0]
+        assert '"3"' in problems[0]  # the live value is named
 
 
 class TestMaskAuthorityIsCentral:
