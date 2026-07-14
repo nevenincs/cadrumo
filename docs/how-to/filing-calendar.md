@@ -70,8 +70,9 @@ profile facts used for the decision.
 Calendar commands do not read AEAT mailboxes. For DEHu notification snapshots,
 use the live notification workflow:
 
-```bash
-aeat app live notifications latest
+```{cli-sequence} filing-calendar-live-notifications
+@step Read the latest DEHu notification snapshot from AEAT.
+@static aeat app live notifications latest
 ```
 
 If you have not captured notifications yet, use
@@ -103,8 +104,9 @@ see [The filing workflow](filing-spine.md).
 
 Generate a calendar window:
 
-```bash
-aeat app overview calendar --from 2026-01-01 --to 2026-12-31
+```{cli-sequence} filing-calendar-strict
+@step Generate a strict calendar window (refuses while a profile check is unresolved).
+@static aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
 Both dates are required in `YYYY-MM-DD` format. The calendar applies national
@@ -143,8 +145,12 @@ Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as shown
 above. Modelo work commands instead separate the filing year from the registry
 period:
 
-```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
+```{cli-sequence} filing-calendar-work-status
+:verify: Confirm the work unit status reads back for the visible target.
+@setup aeat app modelo work create --modelo 303 --year 2026 --period 1T
+@step Show the work unit status for the visible target, separating year and period.
+@result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@expect exit_code == 0
 ```
 
 The period tokens are:
