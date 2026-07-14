@@ -15,5 +15,5 @@ The accepted `2026-06-10-docs-terminology-search-adr` identifies four unsynchron
 
 ## How
 
-- Good: Add or update a concept fragment under `src/aeat/_data/terminology/concepts/`, then use `:term:` references in docs prose.
+- Good: Add or update a concept fragment under `src/cadrumo/_data/terminology/concepts/`, then use `:term:` references in docs prose.
 - Bad: Define "prorrata" in a how-to paragraph while also keeping a Handbook concept and generated glossary entry for `prorrata`.

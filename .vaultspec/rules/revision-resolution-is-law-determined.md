@@ -9,9 +9,9 @@ name: revision-resolution-is-law-determined
 Every production calculation, verification, filing, export, or projection path
 MUST resolve its registry revision from `(modelo, filing_year, period)` through
 `ValidatedRegistryAuthority.snapshot` / `select_revision`
-(`src/aeat/domain/calculations/registry/_temporal.py`) or
+(`src/cadrumo/domain/calculations/registry/_temporal.py`) or
 `resolve_registry_revision_for_work_target`
-(`src/aeat/application/modelo/_work_addressing.py`); a stored, literal, or
+(`src/cadrumo/application/modelo/_work_addressing.py`); a stored, literal, or
 operator-supplied `revision_id` may only be *asserted equal* to that resolution,
 never injected as the selector.
 

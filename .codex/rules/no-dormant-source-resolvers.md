@@ -9,7 +9,7 @@ trigger: always_on
 
 Every `ModeloSourceResolver` merged to main MUST be enrolled in the live calculate
 mesh (`merge_source_resolutions` in
-`src/aeat/application/modelo/_calculation_actions.py`) or deleted; every registry
+`src/cadrumo/application/modelo/_calculation_actions.py`) or deleted; every registry
 binding `source` kind MUST be a member of the enrolled-or-explicitly-deferred set
 (`_BUCKET_AGGREGATION_OWNED_SOURCES` ∪ `DEFERRED_SOURCE_KINDS`, enforced by
 `assert_no_novel_source_kinds`); and `collect_unhandled_source_diagnostics` MUST
