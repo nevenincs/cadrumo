@@ -11,16 +11,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S94, S95 -->
 
 # `cli-authority-verb-conformance` plan
@@ -81,7 +71,7 @@ Create one atomic pointer boundary and make profile logout close every session, 
 - [x] `W02.P04.S27` - Route repository pointer reads, selection, rollback, and deletion clear through the same reentrant active-profile pointer transaction, preserve whole-create-span ownership and pointer-first test lock order, and remove the retired text-rollback persistence exemption; `src/cadrumo/application/user_profile/_profile_repository.py, src/cadrumo/application/user_profile/tests/test_profile_repository.py, src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [x] `W02.P04.S28` - Route profile-health repair mutation through the shared reentrant active-profile pointer transaction with locked reassessment, bounded fail-closed contention, and the health result's repairable flag as the sole eligibility authority, correct the three lifecycle CLI integration pointer setup calls to use the isolated backend root, then prove pointer-sourced unreadable-manifest repair, cold no-op behavior, and real CLI pointer repair, absence, and dangling-pointer outcomes; `src/cadrumo/application/workflow/_profile_health.py, src/cadrumo/application/workflow/tests/test_profile_health.py, src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`.
 - [x] `W02.P04.S29` - Prove byte-exact failed-create rollback through the repository transaction nested under outer pointer ownership, then prove dangling-pointer repair fails closed under real thread contention and succeeds after lock release against real files; `src/cadrumo/application/user_profile/tests/test_orchestration_pointer.py`.
-- [ ] `W02.P04.S30` - Canonicalize active-profile labels to immutable bucket UUIDs at the WorkflowState and profile-health boundaries by composing the core precedence resolver with the existing manifest resolver without adding resolver authority, then prove a real lifecycle-repository-backed label override resolves its encrypted record and keeps a lower-priority dangling pointer ineligible until the override is cleared, after which the pointer becomes authoritative and repairable; `src/cadrumo/application/workflow/_models.py, src/cadrumo/application/workflow/_profile_health.py, src/cadrumo/application/workflow/tests/test_active_profile_resolution.py`.
+- [x] `W02.P04.S30` - Canonicalize active-profile labels to immutable bucket UUIDs at the WorkflowState and profile-health boundaries by composing the core precedence resolver with the existing manifest resolver without adding resolver authority, then prove a real lifecycle-repository-backed label override resolves its encrypted record and keeps a lower-priority dangling pointer ineligible until the override is cleared, after which the pointer becomes authoritative and repairable; `src/cadrumo/application/workflow/_models.py, src/cadrumo/application/workflow/_profile_health.py, src/cadrumo/application/workflow/tests/test_active_profile_resolution.py`.
 - [ ] `W02.P04.S31` - Add idempotent active BucketSession close after key zeroization and engine disposal; `src/cadrumo/adapters/persistence/storage/master_key/_active_session.py`.
 - [ ] `W02.P04.S32` - Add provider-session eviction that clears the OS-keystore cache and closes its BucketSession; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `W02.P04.S33` - Prove repeated close zeroizes keys, seals the session, disposes engines, and removes active-session visibility; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_session.py`.
