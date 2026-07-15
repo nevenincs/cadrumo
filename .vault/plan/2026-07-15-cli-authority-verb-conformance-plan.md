@@ -11,6 +11,16 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: S94, S95 -->
 
 # `cli-authority-verb-conformance` plan
@@ -24,7 +34,7 @@ Repair the import graph and its count ratchets first; every later Wave depends o
 Correct the package root, remove stale ledger entries, and eliminate the three exposed dependency paths without weakening a contract.
 
 - [x] `W01.P01.S01` - Change the configured root package from aeat to cadrumo; `.importlinter`.
-- [ ] `W01.P01.S02` - Remove the stale live censo adapter ignore entry; `.importlinter`.
+- [x] `W01.P01.S02` - Remove the stale live censo adapter ignore entry; `.importlinter`.
 - [ ] `W01.P01.S03` - Remove the stale user-profile censo-sync adapter ignore entry; `.importlinter`.
 - [ ] `W01.P01.S04` - Add only the exact core state-root test helper route to the reporting contract; `.importlinter`.
 - [ ] `W01.P01.S05` - Narrow diagnostics run-health adapter access to the outbound LLM package; `.importlinter`.

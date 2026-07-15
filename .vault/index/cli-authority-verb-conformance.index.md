@@ -7,6 +7,7 @@ date: '2026-07-15'
 modified: '2026-07-15'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S06]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S09]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -33,6 +34,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 ### exec
 
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S01` - Change the configured root package from aeat to cadrumo
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S02` - Remove the stale live censo adapter ignore entry
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S06` - Remove the concrete transaction-repository fallback and require TransactionCatalogueRepositoryProtocol
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S09` - Replace verification's concrete invoice-repository boundary with InvoiceCatalogueRepositoryProtocol
 

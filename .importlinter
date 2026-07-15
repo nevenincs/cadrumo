@@ -344,7 +344,6 @@ ignore_imports =
     cadrumo.application.ledger._vision_classifier -> cadrumo.adapters.**
     cadrumo.application.live -> cadrumo.adapters.**
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.**
-    cadrumo.application.live._censo -> cadrumo.adapters.**
     cadrumo.application.live._errors -> cadrumo.adapters.**
     cadrumo.application.live._expedientes -> cadrumo.adapters.**
     cadrumo.application.live._filed_data -> cadrumo.adapters.**
