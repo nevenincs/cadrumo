@@ -8,25 +8,6 @@ related:
   - "[[2026-07-15-docs-terminology-search-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace docs-terminology-search with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `docs-terminology-search` audit: `D7/D8 controller iconography and re-ranking honesty review`
 
 ## Scope
@@ -38,6 +19,10 @@ Fresh-context honesty review of the accepted ADR `2026-07-15-docs-terminology-se
 ### per-ruling-verdicts | low | D1-D7 delivered; D8 partial (full-text-page split is the disclosed residual)
 
 Per-ruling verdicts. D1 DELIVERED: every shipped record target is renderer-derived (glossary anchor, `cli_reference_page_for_command`, casilla slug authority, built page), with zero query-string record targets. D2 DELIVERED and coordinator-CONFIRMED green: the reviewer marked the kind-agnostic built-site resolvability sweep PLAUSIBLE because they did not pay the expensive full build, but the coordinator ran `test_built_site_resolvability_sweep.py` to completion — `1 passed in 582s` — confirming every projected target resolves to a real page and anchor in the built tree with no query-string targets. D3 and D6 DELIVERED for casilla: the per-modelo generated pages render from the same projection the cards use through one slug authority, and destination grounding-coverage is gated. D4 DELIVERED: CLI targets route through `cli_reference_page_for_command`, the renderer's own routing authority. D5 DELIVERED: one shared search controller drives both the Ctrl-K modal and the inline `search.html`, and the stock PagefindUI drop is retired. D7 DELIVERED: the display class is derived once at the injection seam, shipped in the Pagefind meta, read verbatim by the JS renderer (no re-derivation), and rendered as five licence-clean hand-authored inline-SVG icons. D8 PARTIAL: the single per-display-class weight table plus the JS consumption of it are done, and the casilla-above-cli ordering is delivered and gated; the second ordering (a user-documentation full-text page above an api/dev stub) is unmet because full-text page hits are Pagefind directory-indexed and carry no `display_class`/`weight`, so the split cannot be expressed in JS without the URL heuristic the ADR forbids (Axis-6 O6b). This is the one honest residual of the campaign, carried forward as a tracked step with a verification gate.
+
+### d8-residual-closed | low | D8 now FULLY delivered — full-text page ranking landed
+
+Resolution of the D8 PARTIAL above. The disclosed residual (the user-documentation-above-technical ordering for directory-indexed full-text page hits) has landed on commit `71071ddee6` (plan step `W05.P06.S17`): the build-side index pass stamps `data-pagefind-meta="display_class:<class>"` reusing the one `derive_display_class` authority, so full-text pages now carry the closed class and the shipped weight ladder orders a user-`doc` page above a `technical` (api/dev) page. Gated green by `test_search_page_fulltext_class_ranking.py::test_fulltext_user_doc_ranks_above_dev_machinery` (`3 passed`, alongside the retained `iva`-leads and casilla-above-cli assertions). Subtlety recorded on the S17 exec: the card-vs-page coarse separation depends index-globally on at least one weight-sort-keyed record existing — production always satisfies this via the injected concept/casilla/cli records; the gate injects a weighted anchor to reproduce the production invariant. D8 is delivered end to end; the residual is closed.
 
 ### bookkeeping-lag | medium | plan/exec state did not reflect the landed JS work
 

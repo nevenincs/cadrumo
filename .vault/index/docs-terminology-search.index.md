@@ -67,6 +67,7 @@ related:
   - '[[2026-07-13-docs-terminology-search-W05-P06-S14]]'
   - '[[2026-07-13-docs-terminology-search-W05-P06-S15]]'
   - '[[2026-07-13-docs-terminology-search-W05-P06-S16]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S17]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-13-docs-terminology-search-audit]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
@@ -151,6 +152,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-07-13-docs-terminology-search-W05-P06-S14` - Render one hand-authored inline-SVG icon and class-scoped styling per display class in the shared search controller card row (box, document, terminal, code, question mark), reading the shipped display_class meta only, never re-deriving it in JS
 - `2026-07-13-docs-terminology-search-W05-P06-S15` - Consume the shipped per-class weights in the compose ladder unchanged and extend the Playwright palette-ranking gate with the two new ordering assertions: casilla above cli on a mixed query, and how-to page above api stub on a mixed query
 - `2026-07-13-docs-terminology-search-W05-P06-S16` - Coordinate the controller edits with the in-flight palette-host extraction owner: diff cadrumo-docs.js before editing, land via explicit-pathspec commits, and verify icons render on both hosts (Ctrl-K dialog and search page) once the extraction lands
+- `2026-07-13-docs-terminology-search-W05-P06-S17` - Emit display_class as data-pagefind-meta on the generated and built pages so directory-indexed full-text page hits carry a ranking weight, completing the D8 user-documentation-above-technical ordering for full-text results, gated by a browser assertion that a how-to page outranks an api stub on a mixed query
 
 ### plan
 
