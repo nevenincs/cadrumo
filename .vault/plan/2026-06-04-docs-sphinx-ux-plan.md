@@ -94,7 +94,7 @@ Pause after route and reference wrapper changes until a human reviewer accepts t
 - [x] `W02.P07.S20` - prepare the route and reference review packet from a fresh local site build (docs/_build/html is a gitignored, re-derivable artifact, not a persisted deliverable); `docs/_build/html`.
 - [x] `W02.P07.S21` - obtain explicit human approval for navigation readability; `human navigation review gate`.
 - [x] `W02.P07.S22` - incorporate approved route feedback; `docs/index.md`.
-- [ ] `W02.P07.S23` - incorporate approved reference feedback; `dev/docs/cli_reference.py`.
+- [x] `W02.P07.S23` - incorporate approved reference feedback; `dev/docs/cli_reference.py`.
 
 ## Wave `W03` - rendered-site approval
 
