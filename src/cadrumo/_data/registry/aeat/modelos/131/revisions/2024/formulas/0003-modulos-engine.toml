@@ -1,0 +1,167 @@
+# M131 estimación-objetiva módulos engine formulas (tabled activities).
+#
+# Fase 1ª — rendimiento neto previo: dispatches the units×coefficient product
+# through the m131_resolve_modulos_previo op, which reads the epígrafe (text)
+# plus up to seven módulo unit-count casillas (the highest signo count among
+# the tabled activities, 644.1/644.2/644.3) and the registry-declared
+# keyed-bracket coefficient table (m131-modulos-coeficientes-2024). An
+# untabled epígrafe or a blank epígrafe resolves to zero (see the op's
+# docstring in _formula_runtime.py).
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-modulos-rendimiento-neto-previo"
+target_casilla_id = "modulos-rendimiento-neto-previo"
+expression = { op = "m131_resolve_modulos_previo", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-1-unidades" },
+    { casilla_id = "modulos-2-unidades" },
+    { casilla_id = "modulos-3-unidades" },
+    { casilla_id = "modulos-4-unidades" },
+    { casilla_id = "modulos-5-unidades" },
+    { casilla_id = "modulos-6-unidades" },
+    { casilla_id = "modulos-7-unidades" },
+    { parameter = "m131-modulos-coeficientes-2024" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+    "Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2024",
+]
+
+# Fase 2ª — rendimiento neto minorado: previo minus the sum of the minoración
+# por incentivos al empleo (Orden HFP/1359/2023 Anexo II, instrucción 2.2.a)
+# and the minoración por incentivos a la inversión (instrucción 2.2.b). The
+# empleo minoración dispatches through the m131_resolve_modulos_minoracion_
+# empleo op (epígrafe, current/prior módulo 1 unit counts, coefficient table,
+# tramos bracket table, incremento constant). The inversión minoración is the
+# operator-declared "modulos-minoracion-inversion" casilla (a euro amount) —
+# this first slice does not model a per-element libro registro de bienes de
+# inversión, so the amortization figure is supplied by the operator rather
+# than derived from an asset register the engine does not have; a blank
+# input simply omits this legitimate additional reduction (never over-states
+# the minorado, since omission only under-claims a reduction, never
+# fabricates one). Both minoraciones feed an internal advisory-support
+# casilla that never substitutes for the operator's manual casilla 01.
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-modulos-rendimiento-neto-minorado"
+target_casilla_id = "modulos-rendimiento-neto-minorado"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-previo" },
+    { op = "add", args = [
+        { op = "m131_resolve_modulos_minoracion_empleo", args = [
+            { casilla_id = "modulos-epigrafe" },
+            { casilla_id = "modulos-1-unidades" },
+            { casilla_id = "modulos-1-unidades-anterior" },
+            { parameter = "m131-modulos-coeficientes-2024" },
+            { parameter = "m131-modulos-coeficiente-tramos-asalariados-2024" },
+            { parameter = "m131-modulos-coeficiente-incremento-asalariados-2024" },
+        ] },
+        { casilla_id = "modulos-minoracion-inversion" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
+
+# Fase 3ª — rendimiento neto de módulos: minorado adjusted by the full
+# cascade of índices correctores generales (Orden HFP/1359/2023 Anexo II,
+# instrucción 2.3, letra b): b.1 pequeña dimensión, b.2 temporada / b.4
+# inicio de nuevas actividades (mutually exclusive), b.3 índice de exceso —
+# applied sequentially in the Orden's own enumeration order, respecting its
+# declared incompatibilidades (b.1 excludes b.3 outright; b.1 is itself
+# excluded from the two tabled epígrafes carrying an índice especial;
+# temporada excludes inicio de nuevas actividades). Dispatches through the
+# m131_resolve_modulos_indices_generales op. The índices correctores
+# especiales themselves (letra a) — autotaxis, transporte urbano, mercancías,
+# quioscos de prensa) remain out of scope: they are conditional on taxpayer
+# facts (población del municipio, número de vehículos) this engine does not
+# model as inputs, and the b.1/a.2/a.4 incompatibility they trigger is
+# already enforced structurally by the op via the epígrafe-especial
+# frozenset. Omitting the letra a) índices keeps this an internal
+# advisory-support figure, never a substitute for the operator's manual
+# casilla 01.
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-modulos-rendimiento-neto-modulos"
+target_casilla_id = "modulos-rendimiento-neto-modulos"
+expression = { op = "m131_resolve_modulos_indices_generales", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-rendimiento-neto-minorado" },
+    { casilla_id = "modulos-indice-pequena-dimension" },
+    { casilla_id = "modulos-indice-temporada" },
+    { casilla_id = "modulos-indice-inicio-actividad" },
+    { parameter = "m131-modulos-cuantia-exceso-2024" },
+    { parameter = "m131-modulos-indice-exceso-2024" },
+] }
+rounding = "money-2"
+legal_refs = [
+    "ley-35-2006:art-31",
+    "orden-hfp-1359-2023:instruccion-2-3-b-3",
+    "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1",
+    "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2",
+    "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4",
+    "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades",
+]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Fase 3ª: Determinación del rendimiento neto de módulos"]
+
+# Advisory-support flag: the declared índice de pequeña dimensión (b.1) was
+# ignored because the activity carries a documented índice especial
+# (Orden HFP/1359/2023 Anexo II, instrucción 2.3).
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-modulos-pequena-dimension-ignorado-flag"
+target_casilla_id = "modulos-pequena-dimension-ignorado-flag"
+expression = { op = "m131_resolve_modulos_pequena_dimension_ignorado_flag", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-indice-pequena-dimension" },
+] }
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+    "El índice corrector para empresas de pequeña dimensión no será aplicable a las",
+]
+
+# Advisory-support flag: both índice de temporada (b.2) and índice de inicio
+# de nuevas actividades (b.4) were declared simultaneously (mutually
+# exclusive per Orden HFP/1359/2023 Anexo II, instrucción 2.3).
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-modulos-temporada-inicio-actividad-conflicto-flag"
+target_casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag"
+expression = { op = "m131_resolve_modulos_temporada_inicio_conflicto_flag", args = [
+    { casilla_id = "modulos-indice-temporada" },
+    { casilla_id = "modulos-indice-inicio-actividad" },
+] }
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+    "Cuando resulte aplicable el índice corrector de temporada no se aplicará el índice",
+]
+
+# Fase 4ª — rendimiento neto de la actividad: módulos minus the 5 por 100
+# reducción general (Orden HFP/1359/2023 DA-1, apartados 1 y 3).
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-modulos-rendimiento-neto-actividad"
+target_casilla_id = "modulos-rendimiento-neto-actividad"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-modulos" },
+    { op = "percent", args = [
+        { casilla_id = "modulos-rendimiento-neto-modulos" },
+        { parameter = "m131-modulos-reduccion-general-2024" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:da-1"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["reducción general del 5 por 100"]
