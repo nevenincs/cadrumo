@@ -11,8 +11,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
 # `calculation-truth-registry` audit: `Modelo-wave family disposition ledger`
 
 ## Scope
@@ -230,6 +228,37 @@ disposition family and none are silently dropped. The ~15 UNVERIFIED rows are
 named explicitly above (Tasks: 2644, 3117, 3121, 3128; Teardown: Phase 4A
 workbook rows for 9 modelos, Phase 6 lines 5043-5063) and remain open pending
 a dedicated static-discovery/test-inventory/full-suite run.
+
+### m100-actionable-tally-correction | info | the Modelo 100 residual was a GROUNDING residual, not a BUILD residual; recorded 2026-07-15 on P02 closure
+
+Correction recorded on completion of `P02.S03`/`P02.S04`/`P02.S05` (2026-07-15).
+The `~90 genuinely ACTIONABLE (Modelo 100 / Wave 21)` characterization above
+(and the `~91` total-column figure) inherited the legacy plan's stale
+`2026-05-03` interleaved `[x]`/`[ ]` annotations, which described the Modelo 100
+calculation chain as `substantially unbuilt`. Independent verification against
+the current registry tree — loading the Modelo 100 2024 revision through the
+validated authority rather than reading the stale annotations — found the chain
+was already BUILT: 187 formulas span capital gains/losses (0083-0142), bases and
+reductions (0143-0147), minimos (0072-0077, 0166-0185), state and autonomic
+escala/brackets (0148-0165 plus per-Comunidad escala parameters), CCAA
+deductions, and the final-settlement chain (construct 0011), and four AEAT-manual
+worked-example parity tests already passed (0226 estimacion directa, 1826-1840
+ganancias-transmision, capital inmobiliario, rendimientos del trabajo).
+
+The genuine Modelo 100 residual was therefore a GROUNDING residual, not a BUILD
+residual: the downstream base/bracket/CCAA/settlement casillas computed correctly
+but were only engine-reconciled, not independently grounded against an AEAT
+authority (per verification-grounding-needs-oracle-evidence). `P02.S03`/`S04`
+closed that by adding manual-worked-example oracles reproduced verbatim through
+the live engine (gains/losses saldo netting Cap. 12; cuota-integra escala Cap. 15
+Aragon), enrolling fourteen additional casillas as `externally_grounded`. `P02.S05`
+grounded the final-settlement chain STRUCTURE against Cap. 18's definitional
+identities, deferring per-casilla numeric grounding of the full liquidation and
+per-Comunidad autonomic deductions WITH REASON (the bundled Manual corpus is
+Parte 1 only; those casos live in the unbundled Parte 2). A future reader should
+NOT re-open a phantom Modelo 100 build residual from the `substantially unbuilt`
+wording above; the build pre-existed and the grounding is now landed to the extent
+the bundled Parte 1 corpus permits.
 
 ## Recommendations
 
