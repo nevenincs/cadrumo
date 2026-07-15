@@ -13,6 +13,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S05]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S06]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S07]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S08]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S09]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
@@ -44,6 +45,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S05` - Narrow diagnostics run-health adapter access to the outbound LLM package
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S06` - Remove the concrete transaction-repository fallback and require TransactionCatalogueRepositoryProtocol
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S07` - Require a non-optional TransactionCatalogueRepositoryProtocol in the public IRNR source resolver
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S08` - Exercise M210 aggregation through the real injected transaction repository
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S09` - Replace verification's concrete invoice-repository boundary with InvoiceCatalogueRepositoryProtocol
 
 ### plan
