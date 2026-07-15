@@ -30,7 +30,7 @@ _SOURCE_ROOT = REPO_ROOT / "src"
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>cadrumo\.[\w.*]+)\s*->\s*(?P<target>cadrumo\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 840  # filing-amendment repository ports-inversion increment (+4)
+_APPLICATION_TO_ADAPTERS_BASELINE = 199  # reconciled live ceiling; this ratchet may decrease but not grow
 _APPLICATION_SOURCE_MODULE_BASELINE = 78  # prorrata register application adapter pin
 _DOMAIN_TO_ADAPTERS_BASELINE = 70  # filing-amendment repository domain roundtrip test increment (+1)
 

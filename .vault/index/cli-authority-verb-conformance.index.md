@@ -18,6 +18,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S10]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S11]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S12]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S13]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -53,6 +54,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S10` - Widen injected OSS and IOSS invoice-repository annotations while retaining the sole default composition path
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S11` - Exercise dormant Modelo 369 verification through the real invoice repository Protocol boundary
 - `2026-07-15-cli-authority-verb-conformance-W01-P02-S12` - Retarget the ignore-edge parser from aeat imports to cadrumo imports
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S13` - Freeze the application-edge ceiling at 199
 
 ### plan
 
