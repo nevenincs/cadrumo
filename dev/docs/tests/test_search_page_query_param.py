@@ -11,10 +11,12 @@ The gate is written against OBSERVABLE behaviour, not the surface internals:
 navigate to ``search.html?q=<term>``, assert the query is visible in an input
 and results for ``<term>`` are on screen without typing. It queries a plain
 ``input`` value and the page's own rendered text (the indexed page title), NOT
-any PagefindUI-specific class, so the assertions survive ADR D5's pending
-question of whether this page stays a ``PagefindUI`` drop or becomes a
-palette-hosted surface -- the ``?q=`` contract is the same either way. Only the
-build of the concrete surface under test (currently PagefindUI) would change.
+any surface-specific result class, so the assertions held across ADR D5's
+retirement of the stock ``PagefindUI`` drop in favour of the palette-hosted
+inline controller -- the ``?q=`` contract is the same either way. The page is
+now a bare ``#pagefind-search`` mount that the globally-loaded
+``cadrumo-docs.js`` (``initSearchPage``) renders the shared search controller
+into; this build wires that asset exactly as the production ``conf.py`` does.
 
 Both encodings that reach the page are locked: the palette emits ``%20`` for
 spaces via ``encodeURIComponent``, the casilla records emit ``+``.
@@ -79,13 +81,25 @@ def _build_search_site(out: Path) -> Path:
     src = out / "src"
     build = out / "html"
     src.mkdir(parents=True)
+    # The shipped search.html is a bare mount; the globally-loaded
+    # cadrumo-docs.js hosts the search controller inline (ADR D5). Copy the real
+    # shipped asset in and wire it exactly as production conf.py does
+    # (html_js_files / html_css_files), so the built page loads the same
+    # controller the real site does -- not a stub.
+    static = src / "_static"
+    static.mkdir(parents=True)
+    for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
+        (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
     # templates_path points at the REAL docs/_templates, so Sphinx renders the
     # shipped search.html override -- not a copy that could drift from it.
     (src / "conf.py").write_text(
         "project = 'cadrumo-search'\n"
         "extensions = []\n"
         "html_theme = 'furo'\n"
-        f"templates_path = [r'{_DOCS / '_templates'}']\n",
+        f"templates_path = [r'{_DOCS / '_templates'}']\n"
+        "html_static_path = ['_static']\n"
+        "html_js_files = ['cadrumo-docs.js']\n"
+        "html_css_files = ['cadrumo-docs.css']\n",
         encoding="utf-8",
     )
     (src / "index.rst").write_text(

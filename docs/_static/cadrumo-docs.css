@@ -1473,6 +1473,62 @@ a.sd-card:any-link,
   padding: 0.5rem 1.05rem;
 }
 
+/* Search page (inline host) ─────────────────────────────────────────────
+ * The shipped search.html mounts the same controller that drives the Ctrl-K
+ * modal (ADR 2026-07-15 D5). It reuses the `.cadrumo-palette-item*` result
+ * styling verbatim (those rules are unscoped) so cards look identical across
+ * the two hosts; only the frame differs — a bordered search box and a list
+ * that flows with the page instead of the modal's clamped scroll area. */
+.cadrumo-search-page {
+  margin-top: 1rem;
+  max-width: 42rem;
+}
+
+.cadrumo-search-page-head {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-l);
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+}
+
+.cadrumo-search-page-head svg {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+.cadrumo-search-page-input {
+  font-size: 1.05rem;
+}
+
+.cadrumo-search-page-list {
+  margin-top: 0.6rem;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+/* The busy signal reuses the shared spinner and dimmed-list treatment, keyed
+ * on the mount's own `is-busy` class (the controller toggles it on `root`). */
+.cadrumo-search-page.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+.cadrumo-search-page.is-busy .cadrumo-search-page-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-search-page.is-busy .cadrumo-search-page-list {
+    transition: none;
+  }
+}
+
 /* Responsive */
 
 @media (max-width: 67em) {
