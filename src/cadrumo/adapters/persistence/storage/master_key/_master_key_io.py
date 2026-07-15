@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import base64
 import getpass
-import os
-import secrets
 import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
-from .....core.locks import fsync_parent_dir
-from .....core.logging import get_logger
+from .....core.atomic_write import atomic_write_hardened_bytes
 from ..errors import SecretStoreError
 
 __all__ = [
@@ -24,8 +21,6 @@ __all__ = [
     "_zeroise",
     "atomic_write_secure_bytes",
 ]
-
-_log = get_logger(__name__)
 
 PASSPHRASE_ENV_VAR: Final[str] = "CADRUMO_SECRET_PASSPHRASE"  # noqa: S105 - env var name, not secret value
 """Environment variable consulted by the file backend before prompting."""
@@ -44,36 +39,7 @@ def _b64decode(text: str) -> bytes:
 
 def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
     """Atomically write ``payload`` to ``target`` with mode ``0o600``."""
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = target.with_name(f"{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    flags |= getattr(os, "O_NOINHERIT", 0)
-    flags |= getattr(os, "O_CLOEXEC", 0)
-    # O_BINARY is required on Windows: an fd opened without it is in text mode,
-    # so os.write() translates every 0x0A byte to CRLF and silently corrupts
-    # binary payloads (here the encrypted master-key bytes) that contain a
-    # newline byte. The flag is absent on POSIX, where getattr resolves to 0 (a
-    # no-op).
-    flags |= getattr(os, "O_BINARY", 0)
-    fd = os.open(tmp_path, flags, 0o600)
-    try:
-        try:
-            os.write(fd, payload)
-            os.fsync(fd)
-        finally:
-            os.close(fd)
-        os.replace(tmp_path, target)
-        fsync_parent_dir(target)
-    except BaseException:
-        _log.error("master_key: atomic write failed target=%s", target, exc_info=True)
-        try:
-            os.unlink(tmp_path)
-        except OSError as cleanup_exc:
-            _log.debug(
-                "master_key: atomic write tempfile cleanup failed error_type=%s",
-                type(cleanup_exc).__name__,
-            )
-        raise
+    atomic_write_hardened_bytes(target, payload)
 
 
 def _zeroise(buffer: bytearray | None) -> None:

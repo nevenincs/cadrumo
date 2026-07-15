@@ -12,11 +12,13 @@ from __future__ import annotations
 
 import os
 import stat
+import threading
 from pathlib import Path
 
 import pytest
 
 from ..atomic_write import (
+    _write_all,
     atomic_write_bytes,
     atomic_write_hardened_bytes,
     atomic_write_hardened_text,
@@ -91,6 +93,36 @@ class TestHardenedTier:
         target = tmp_path / "secret.bin"
         atomic_write_hardened_bytes(target, b"\x00\x01secret\xff")
         assert target.read_bytes() == b"\x00\x01secret\xff"
+
+    def test_write_all_completes_real_pipe_short_writes(self) -> None:
+        """A capacity-limited OS pipe must receive the complete payload."""
+        payload = bytes(range(256)) * 4096
+        read_fd, write_fd = os.pipe()
+        os.set_blocking(write_fd, False)
+        received = bytearray()
+        reader_errors: list[BaseException] = []
+
+        def _drain_pipe() -> None:
+            try:
+                while chunk := os.read(read_fd, 4096):
+                    received.extend(chunk)
+            except BaseException as exc:
+                reader_errors.append(exc)
+
+        reader = threading.Thread(target=_drain_pipe, daemon=True)
+        reader.start()
+        try:
+            _write_all(write_fd, payload)
+        finally:
+            os.close(write_fd)
+
+        reader.join(timeout=5.0)
+        try:
+            assert not reader.is_alive(), "real pipe reader did not finish"
+            assert reader_errors == []
+            assert bytes(received) == payload
+        finally:
+            os.close(read_fd)
 
     def test_bytes_roundtrip_preserves_newline_bytes(self, tmp_path: Path) -> None:
         """A 0x0A byte must survive verbatim (no Windows text-mode CRLF translation).

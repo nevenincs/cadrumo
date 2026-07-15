@@ -26,7 +26,8 @@ so a new writer picks one deliberately instead of inventing a fifth dialect:
   fsync/replace/parent-fsync sequence. Use this tier for secret-bearing
   targets or any target more than one process/thread could plausibly write
   concurrently; the ``O_EXCL`` open refuses to silently reuse or truncate an
-  unexpected pre-existing tempfile.
+  unexpected pre-existing tempfile. A memoryview-and-offset loop completes
+  short :func:`os.write` calls and refuses a write that makes no progress.
 
 Both tiers guarantee the tempfile is unlinked on ANY failure -- a bare
 ``try``/``finally`` around the whole sequence, not a narrow ``except
@@ -39,10 +40,8 @@ call-site-owns-its-error-type convention this module's callers already use.
 Payload content is never logged; only the target path and the exception
 type are.
 
-This module performs no migration of existing call sites -- see the
-``data-output-standardization`` campaign's later steps for that. It is a new,
-freestanding primitive at the ``core`` layer with no dependency beyond
-:func:`~cadrumo.core.locks.fsync_parent_dir`.
+The helpers are freestanding primitives at the ``core`` layer with no
+dependency beyond :func:`~cadrumo.core.locks.fsync_parent_dir`.
 """
 
 from __future__ import annotations
@@ -65,6 +64,29 @@ __all__ = [
 _log = get_logger(__name__)
 
 _HARDENED_DEFAULT_MODE = 0o600
+
+
+def _write_all(fd: int, data: bytes) -> None:
+    """Write ``data`` completely to an already-opened descriptor.
+
+    Args:
+        fd: Writable operating-system file descriptor.
+        data: Byte payload to write in full.
+
+    Raises:
+        OSError: If the descriptor reports no forward progress or another
+            operating-system write error occurs.
+    """
+    view = memoryview(data)
+    offset = 0
+    while offset < len(view):
+        try:
+            written = os.write(fd, view[offset:])
+        except BlockingIOError:
+            continue
+        if written <= 0:
+            raise OSError("atomic byte write made no progress")
+        offset += written
 
 
 def atomic_write_bytes(path: Path, data: bytes) -> None:
@@ -132,12 +154,13 @@ def atomic_write_hardened_bytes(path: Path, data: bytes, *, mode: int = _HARDENE
     Opens a collision-hardened ``{name}.{pid}.{token_hex}.tmp`` sibling with
     ``O_EXCL`` (refusing to reuse or truncate an unexpected pre-existing
     tempfile) plus ``O_NOINHERIT``/``O_CLOEXEC`` where the platform defines
-    them, at file mode ``mode``, writes and fsyncs it, then replaces
-    ``path`` with :func:`os.replace` and best-effort fsyncs the parent
-    directory. The tempfile is unlinked on any failure, including a
-    :class:`BaseException` raised mid-write. Use this tier for secret-bearing
-    targets or targets more than one process could plausibly write
-    concurrently.
+    them, at file mode ``mode``. A memoryview-and-offset loop completes short
+    :func:`os.write` calls and treats a non-positive write as an error. The
+    staged bytes are fsynced before :func:`os.replace`, followed by a
+    best-effort parent-directory fsync. The tempfile is unlinked on any
+    failure, including a :class:`BaseException` raised mid-write. Use this tier
+    for secret-bearing targets or targets more than one process could plausibly
+    write concurrently.
 
     Args:
         path: Destination file. Parent directory is created if absent.
@@ -166,7 +189,7 @@ def atomic_write_hardened_bytes(path: Path, data: bytes, *, mode: int = _HARDENE
         fd = os.open(tmp_path, flags, mode)
         created = True
         try:
-            os.write(fd, data)
+            _write_all(fd, data)
             os.fsync(fd)
         finally:
             os.close(fd)
