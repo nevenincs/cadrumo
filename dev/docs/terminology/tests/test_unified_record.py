@@ -201,7 +201,14 @@ def test_funnelled_records_are_json_serialisable() -> None:
 
 
 def test_base_weights_follow_the_declared_tier_ordering() -> None:
-    """Concept > CLI > casilla > page base weights (term, nav, nav, fulltext)."""
+    """Concept > casilla > CLI > page base weights (the D8 per-class ladder).
+
+    The per-kind view now projects the one declared per-display-class table
+    (ADR ``2026-07-15-docs-terminology-search-adr`` D8): CONCEPT collapses to
+    the general-fact ``DOC`` band, and D8 reverses the navigation-tier order to
+    casilla > cli (previously cli > casilla), while a full-text PAGE hit
+    collapses to the ``TECHNICAL`` floor.
+    """
     from dev.docs.terminology._search_record import SearchRecordKind
     from dev.docs.terminology._unified_record import kind_base_weight
 
@@ -209,7 +216,7 @@ def test_base_weights_follow_the_declared_tier_ordering() -> None:
     cli = kind_base_weight(SearchRecordKind.CLI)
     casilla = kind_base_weight(SearchRecordKind.CASILLA)
     page = kind_base_weight(SearchRecordKind.PAGE)
-    assert concept > cli > casilla > page
+    assert concept > casilla > cli > page
 
 
 def test_normalisation_preserves_tier_ordering_under_score() -> None:
