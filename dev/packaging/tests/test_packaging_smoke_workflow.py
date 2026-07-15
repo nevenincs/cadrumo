@@ -96,7 +96,7 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
     "surface",
     (
         "aeat --version",
-        "uv run --no-sync aeat app registry verify --json",
+        "uv run --no-sync aeat app registry verify",
         "echo 'AEAT is the Spanish tax authority'",
         "pip install cadrumo && aeat --version",
     ),

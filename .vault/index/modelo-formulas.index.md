@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-formulas'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-17-modelo-formula-ruleset-research]]'
   - '[[2026-04-17-modelo-formulas-adr]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#modelo-formulas`.
 
 ### adr
 
-- `2026-04-17-modelo-formulas-adr` - modelo-formulas adr: per-modelo calculation formula engine (**status:** `accepted`)
+- `2026-04-17-modelo-formulas-adr` - modelo-formulas adr: per-modelo calculation formula engine | (**status:** `accepted`)
 
 ### audit
 

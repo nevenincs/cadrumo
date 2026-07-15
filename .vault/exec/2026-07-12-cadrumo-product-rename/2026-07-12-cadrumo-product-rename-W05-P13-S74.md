@@ -9,9 +9,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-
-
-
 # Regenerate API references and documentation indexes from CADRUMO source authorities
 
 ## Scope

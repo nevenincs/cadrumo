@@ -120,10 +120,7 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
     cadrumo_log_file_max_bytes: int = Field(
         default=10 * 1024 * 1024,
         ge=1,
-        description=(
-            "Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; "
-            "default 10 MiB"
-        ),
+        description=("Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; default 10 MiB"),
     )
     cadrumo_log_file_backup_count: int = Field(
         default=5,

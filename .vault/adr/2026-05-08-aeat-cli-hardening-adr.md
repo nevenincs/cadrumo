@@ -6,8 +6,6 @@ date: '2026-05-08'
 modified: '2026-07-10'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
-  - '[[2026-04-24-aeat-cli-wireframe-research]]'
-  - '[[2026-05-02-aeat-cli-redesign-research]]'
   - '[[2026-05-12-cli-design-research]]'
   - '[[2026-06-04-aeat-cli-hardening-research]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-clave-movil-mark-fix'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-27-test-clave-movil-mark-fix-adr]]'
   - '[[2026-04-27-test-clave-movil-mark-fix-plan]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#test-clave-movil-mark-fix`.
 
 ### adr
 
-- `2026-04-27-test-clave-movil-mark-fix-adr` - `test-clave-movil-mark-fix` adr: Keep Cl@ve Movil tests protocol-level | (**status:** `supersedes earlier marker decision`)
+- `2026-04-27-test-clave-movil-mark-fix-adr` - `test-clave-movil-mark-fix` adr: Keep Cl@ve Movil tests protocol-level | (**status:** `accepted`)
 
 ### audit
 

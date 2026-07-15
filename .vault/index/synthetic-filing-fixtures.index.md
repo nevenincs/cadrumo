@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#synthetic-filing-fixtures'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-synthetic-filing-fixtures-adr]]'
   - '[[2026-04-12-synthetic-filing-fixtures-audit]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#synthetic-filing-fixtures`.
 
 ### adr
 
-- `2026-04-12-synthetic-filing-fixtures-adr` - adr — synthetic-filing-fixtures
+- `2026-04-12-synthetic-filing-fixtures-adr` - adr — synthetic-filing-fixtures | (**status:** `accepted`)
 
 ### audit
 

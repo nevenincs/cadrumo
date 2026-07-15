@@ -108,8 +108,8 @@ Define `StorageProvider` Protocol and ship both v1 implementations (`LocalFileSy
 
 Land the substrate amendments and per-domain registrations required by the export taxonomy. Reverse-merge services land as the fully-active v1 backend for the P08 CLI edit and CSV-corrections commands; no settings flag, no inert code, no deferred activation.
 
-- [ ] `P06.S01` - implement `SecureObjectRepository.iter_namespaces()`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P06.S02` - implement `SecureObjectRepository.iter_all_records_raw()` returning memory-bounded generator; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P06.S01` - implement `SecureObjectRepository.iter_namespaces()`; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P06.S02` - implement `SecureObjectRepository.iter_all_records_raw()` returning memory-bounded generator; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [ ] `P06.S03` - implement `PurchaseInvoiceEvidenceRepository.iter_evidence()`; `src/aeat/domain/purchase_invoice_evidence/_repository.py`.
 - [ ] `P06.S03a` - implement `PayableInvoiceRepository.iter_invoices()`; `src/aeat/domain/payable_invoice/_repository.py`.
 - [ ] `P06.S03b` - implement `CollectibleInvoiceRepository.iter_invoices()`; `src/aeat/domain/collectible_invoice/_repository.py`.
@@ -124,23 +124,23 @@ Land the substrate amendments and per-domain registrations required by the expor
 - [ ] `P06.S11` - implement `WorkflowResultRepository` with `save` / `iter_results` API; `src/aeat/application/workflow/_repository.py`.
 - [ ] `P06.S12` - implement `application/deadlines/_export.py::export_schedule(format='json')`; `src/aeat/application/deadlines/_export.py`.
 - [ ] `P06.S13` - implement `application/deadlines/_export.py::export_schedule(format='ical')`; `src/aeat/application/deadlines/_export.py`.
-- [ ] `P06.S14` - register transactions label deriver; `src/aeat/application/transactions/_label_deriver.py`.
-- [ ] `P06.S15` - register purchase-invoice-evidence label deriver; `src/aeat/application/purchase_invoice_evidence/_label_deriver.py`.
-- [ ] `P06.S15a` - register payable-invoice label deriver; `src/aeat/application/payable_invoice/_label_deriver.py`.
-- [ ] `P06.S15b` - register collectible-invoice label deriver; `src/aeat/application/collectible_invoice/_label_deriver.py`.
-- [ ] `P06.S16` - register each rental table label deriver; `src/aeat/application/rental/_label_deriver.py`.
-- [ ] `P06.S17` - register filing drafts label deriver; `src/aeat/application/filing/_label_deriver.py`.
-- [ ] `P06.S18` - register justificantes label deriver; `src/aeat/application/justificante/_label_deriver.py`.
-- [ ] `P06.S19` - register submissions label deriver; `src/aeat/application/filing/_submissions_label_deriver.py`.
-- [ ] `P06.S20` - register profile label deriver; `src/aeat/application/profile/_label_deriver.py`.
-- [ ] `P06.S21` - register usage-ratios label deriver; `src/aeat/application/usage_ratios/_label_deriver.py`.
-- [ ] `P06.S22` - register attachments-manifests label deriver; `src/aeat/application/attachments/_label_deriver.py`.
-- [ ] `P06.S23` - register deadlines label deriver; `src/aeat/application/deadlines/_label_deriver.py`.
-- [ ] `P06.S24` - register workflow-runs label deriver; `src/aeat/application/workflow/_label_deriver.py`.
-- [ ] `P06.S25` - implement `NamespaceAllowList` enforcing the never-export set; `src/aeat/application/storage/sync/_allow_list.py`.
+- [x] `P06.S14` - register transactions label deriver; `src/aeat/application/transactions/_label_deriver.py`.
+- [x] `P06.S15` - register purchase-invoice-evidence label deriver; `src/aeat/application/purchase_invoice_evidence/_label_deriver.py`.
+- [x] `P06.S15a` - register payable-invoice label deriver; `src/aeat/application/payable_invoice/_label_deriver.py`.
+- [x] `P06.S15b` - register collectible-invoice label deriver; `src/aeat/application/collectible_invoice/_label_deriver.py`.
+- [x] `P06.S16` - register each rental table label deriver; `src/aeat/application/rental/_label_deriver.py`.
+- [x] `P06.S17` - register filing drafts label deriver; `src/aeat/application/filing/_label_deriver.py`.
+- [x] `P06.S18` - register justificantes label deriver; `src/aeat/application/justificante/_label_deriver.py`.
+- [x] `P06.S19` - register submissions label deriver; `src/aeat/application/filing/_submissions_label_deriver.py`.
+- [x] `P06.S20` - register profile label deriver; `src/aeat/application/profile/_label_deriver.py`.
+- [x] `P06.S21` - register usage-ratios label deriver; `src/aeat/application/usage_ratios/_label_deriver.py`.
+- [x] `P06.S22` - register attachments-manifests label deriver; `src/aeat/application/attachments/_label_deriver.py`.
+- [x] `P06.S23` - register deadlines label deriver; `src/aeat/application/deadlines/_label_deriver.py`.
+- [x] `P06.S24` - register workflow-runs label deriver; `src/aeat/application/workflow/_label_deriver.py`.
+- [x] `P06.S25` - implement `NamespaceAllowList` enforcing the never-export set; `src/aeat/application/storage/sync/_allow_list.py`.
 - [ ] `P06.S26` - extend the sensitive-persistence policy test to govern every new substrate hook; `src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py`.
 - [ ] `P06.S27` - write colocated unit tests for each enumeration hook, reverse-merge gate, and label deriver; `src/aeat/<domain>/_test_*.py`.
-- [ ] `P06.S28` - define the canonical `SourceKind` enum carrying the four values from the cli-workflow-redesign invoice-domain-decoupling ADR (`ledger_transaction`, `purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`) plus the auxiliary kinds the v1 reverse-merge surfaces consume; every reverse-merge service, label deriver, prefix router, and bucket-event emitter consumes the enum from one location; `src/aeat/domain/source_kind/__init__.py`.
+- [x] `P06.S28` - define the canonical `SourceKind` enum carrying the four values from the cli-workflow-redesign invoice-domain-decoupling ADR (`ledger_transaction`, `purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`) plus the auxiliary kinds the v1 reverse-merge surfaces consume; every reverse-merge service, label deriver, prefix router, and bucket-event emitter consumes the enum from one location; `src/aeat/domain/source_kind/__init__.py`.
 - [ ] `P06.S29` - extend the existing closed `BucketEventType` enum in `src/aeat/domain/buckets/_event.py` with six new values (`LEDGER_TRANSACTION_CORRECTION_APPLIED`, `LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED`, `LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED`, `LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED`, `LEDGER_RENTAL_INCOME_CORRECTION_APPLIED`, `LEDGER_RENTAL_EXPENSE_CORRECTION_APPLIED`) with string values matching `ledger.<source-kind>.correction.applied`; wire each reverse-merge service to write through the existing `BucketEventHistoryRepository` (already mounted under `aeat config bucket history`); the event payload carries `source_kind`, `record_id`, `changed_fields`, `operator_actor`, `applied_at`; one event per applied row; failure to emit is a hard error, not a swallowed warning; `src/aeat/application/audit/_bucket_event_emitter.py`.
 - [ ] `P06.S30` - create the `src/aeat/entrypoints/cli/_app/` package skeleton (`__init__.py` + module-level Typer sub-app) consumed by P08 commands; the package mirrors `_config/` shape: no logic in `__init__.py`, one module per sub-CLI; `src/aeat/entrypoints/cli/_app/__init__.py`.
 
@@ -152,26 +152,26 @@ Every operator-visible CLI verb against the Drive backend. Lands the Drive bucke
 
 Land the operator-facing Drive layout and the local sync-state sidecar table; implement the sync coordinator and the refuse-on-conflict semantics.
 
-- [ ] `P03.S01` - add Alembic migration creating `secure_objects_sync_state` table per ADR-2 Â§5; `migrations/versions/0005_secure_objects_sync_state.py`.
-- [ ] `P03.S02` - define `SyncStateRow` pydantic record + `SyncStateStatus` enum; `src/aeat/application/storage/sync/_records.py`.
-- [ ] `P03.S03` - implement SQLAlchemy ORM mapping and repository for sync-state rows; `src/aeat/adapters/persistence/storage/sql/_sync_state.py`.
-- [ ] `P03.S04` - define `NamespaceLabelDeriver` Protocol; `src/aeat/adapters/outbound/storage/_labels.py`.
-- [ ] `P03.S05` - implement label-deriver registry with per-namespace registration API and strict refusal (`UnregisteredNamespaceLabelDeriverError`) at startup when an allow-listed namespace lacks a registered deriver; no silent default, no permissive fallback; `src/aeat/adapters/outbound/storage/_labels.py`.
-- [ ] `P03.S06` - implement startup verification that every allow-listed namespace from ADR-5 has a registered label deriver; raise `UnregisteredNamespaceLabelDeriverError` on first storage-provider instantiation if any namespace is unregistered; `src/aeat/adapters/outbound/storage/_labels.py`.
-- [ ] `P03.S07` - implement `DriveSync` coordinator full-enumeration algorithm classifying records into unchanged / drift / conflict / fresh / tombstone / ghost / orphan; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P03.S08` - implement `aeat config google sync push` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S09` - implement `aeat config google sync pull` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S10` - implement `aeat config google sync status [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S11` - implement `aeat config google sync orphans [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S12` - implement `aeat config google sync claim --file-id <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S13` - implement `--force --resolve {local,remote,fork} --keys <hmac_prefix_list>` conflict-resolution flag matrix; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P03.S14` - implement Drive `appProperties` writes carrying the commit log on every push; `src/aeat/adapters/outbound/storage/_google_drive.py`.
-- [ ] `P03.S15` - implement filename surface form `<hmac_prefix_8>--<label>.<ext>` on push; rename detection on label drift; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P03.S16` - write operator-facing `aeat-vault/README.md` content as a string constant and arrange one-time upload on first push; `src/aeat/application/storage/sync/_bucket_readme.py`.
-- [ ] `P03.S17` - write colocated unit tests for the diff classifier, conflict refusal, and `--resolve` flags using the in-memory backend; `src/aeat/application/storage/sync/_test_coordinator.py`.
-- [ ] `P03.S18` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive for full push / pull / status round-trips; `src/aeat/application/storage/sync/_test_coordinator_live.py`.
-- [ ] `P03.S19` - implement underscore-prefixed operator bucket initialization (`_probe/`, `_sync-state/`, `_workspace/`, `_inbound/{pending,processed,rejected}`) on first push if any subfolder is absent; idempotent; emit a `storage.bucket.initialised` log line per created folder; `src/aeat/application/storage/sync/_bucket_init.py`.
-- [ ] `P03.S20` - implement `_sync-state/` per-namespace sidecar writer so the local sync-state table is mirrored to Drive on every successful push (one JSON object per namespace, ciphertext-wrapped); `src/aeat/application/storage/sync/_sync_state_mirror.py`.
+- [x] `P03.S01` - add Alembic migration creating `secure_objects_sync_state` table per ADR-2 Â§5; `migrations/versions/0005_secure_objects_sync_state.py`.
+- [x] `P03.S02` - define `SyncStateRow` pydantic record + `SyncStateStatus` enum; `src/aeat/application/storage/sync/_records.py`.
+- [x] `P03.S03` - implement SQLAlchemy ORM mapping and repository for sync-state rows; `src/aeat/adapters/persistence/storage/sql/_sync_state.py`.
+- [x] `P03.S04` - define `NamespaceLabelDeriver` Protocol; `src/aeat/adapters/outbound/storage/_labels.py`.
+- [x] `P03.S05` - implement label-deriver registry with per-namespace registration API and strict refusal (`UnregisteredNamespaceLabelDeriverError`) at startup when an allow-listed namespace lacks a registered deriver; no silent default, no permissive fallback; `src/aeat/adapters/outbound/storage/_labels.py`.
+- [x] `P03.S06` - implement startup verification that every allow-listed namespace from ADR-5 has a registered label deriver; raise `UnregisteredNamespaceLabelDeriverError` on first storage-provider instantiation if any namespace is unregistered; `src/aeat/adapters/outbound/storage/_labels.py`.
+- [x] `P03.S07` - implement `DriveSync` coordinator full-enumeration algorithm classifying records into unchanged / drift / conflict / fresh / tombstone / ghost / orphan; `src/aeat/application/storage/sync/_coordinator.py`.
+- [x] `P03.S08` - implement `aeat config google sync push` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P03.S09` - implement `aeat config google sync pull` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P03.S10` - implement `aeat config google sync status [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P03.S11` - implement `aeat config google sync orphans [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P03.S12` - implement `aeat config google sync claim --file-id <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P03.S13` - implement `--force --resolve {local,remote,fork} --keys <hmac_prefix_list>` conflict-resolution flag matrix; `src/aeat/application/storage/sync/_coordinator.py`.
+- [x] `P03.S14` - implement Drive `appProperties` writes carrying the commit log on every push; `src/aeat/adapters/outbound/storage/_google_drive.py`.
+- [x] `P03.S15` - implement filename surface form `<hmac_prefix_8>--<label>.<ext>` on push; rename detection on label drift; `src/aeat/application/storage/sync/_coordinator.py`.
+- [x] `P03.S16` - write operator-facing `aeat-vault/README.md` content as a string constant and arrange one-time upload on first push; `src/aeat/application/storage/sync/_bucket_readme.py`.
+- [x] `P03.S17` - write colocated unit tests for the diff classifier, conflict refusal, and `--resolve` flags using the in-memory backend; `src/aeat/application/storage/sync/_test_coordinator.py`.
+- [x] `P03.S18` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive for full push / pull / status round-trips; `src/aeat/application/storage/sync/_test_coordinator_live.py`.
+- [x] `P03.S19` - implement underscore-prefixed operator bucket initialization (`_probe/`, `_sync-state/`, `_workspace/`, `_inbound/{pending,processed,rejected}`) on first push if any subfolder is absent; idempotent; emit a `storage.bucket.initialised` log line per created folder; `src/aeat/application/storage/sync/_bucket_init.py`.
+- [x] `P03.S20` - implement `_sync-state/` per-namespace sidecar writer so the local sync-state table is mirrored to Drive on every successful push (one JSON object per namespace, ciphertext-wrapped); `src/aeat/application/storage/sync/_sync_state_mirror.py`.
 
 #### Phase `P04` - snapshot encryption boundary and cross-machine restore (ADR-3)
 
@@ -234,7 +234,7 @@ Ship the v1 CLI edit and CSV-corrections commands that operators use to correct 
 - [ ] `P08.S11` - implement audit logging on every CSV import row emitting both a `reverse_merge_audit` row and a `BucketEventType.LEDGER_<SOURCE_KIND>_CORRECTION_APPLIED` event through the existing `BucketEventHistoryRepository` (enum values extended in P06.S29); `src/aeat/application/audit/_reverse_merge_audit.py`.
 - [ ] `P08.S12` - document the four safety properties and the future-amendment surface in a contributor-facing README under the audit subpackage; `src/aeat/application/audit/README.md`.
 - [ ] `P08.S13` - write colocated unit tests for edit commands and CSV round-trips; `src/aeat/entrypoints/cli/_app/_test_ledger_*.py`.
-- [ ] `P08.S14` - write a forbidden-import test asserting no `sync pull --workspace-edits` (or any Sheets-pull) verb is registered under `aeat config google sync` in v1; the test introspects the Typer command tree and fails if any matching command exists; defends ADR-7's deferral invariant against future drift; `tests/import_contract/google/test_no_sheets_pull_verb.py`.
+- [x] `P08.S14` - write a forbidden-import test asserting no `sync pull --workspace-edits` (or any Sheets-pull) verb is registered under `aeat config google sync` in v1; the test introspects the Typer command tree and fails if any matching command exists; defends ADR-7's deferral invariant against future drift; `tests/import_contract/google/test_no_sheets_pull_verb.py`.
 - [ ] `P08.S15` - add Spanish CLI localisation strings for every new `aeat config google ...` and `aeat app ledger ...` command (help text, prompts, error messages) keyed off the existing `_i18n` resource module; coverage test asserts no untranslated key for any new command; `src/aeat/entrypoints/cli/_i18n/google.po` + `tests/entrypoints/cli/test_i18n_coverage.py`.
 
 ### Wave `W03` - Visualisation
@@ -245,7 +245,7 @@ Stand-alone Sheets-v4 surface that consumes both `W01` (provider, substrate hook
 
 Land the four-sheet visualisation Spreadsheet per (modelo, period); hybrid formula translation; Spanish UX; protected ranges.
 
-- [ ] `P07.S01` - define `CalcSheetExportPlan` pydantic record + per-sheet layout descriptors; `src/aeat/application/storage/calc_sheets/_records.py`.
+- [x] `P07.S01` - define `CalcSheetExportPlan` pydantic record + per-sheet layout descriptors; `src/aeat/application/storage/calc_sheets/_records.py`.
 - [ ] `P07.S02` - implement the Entradas sheet writer with operator-editable cells + data validation; `src/aeat/application/storage/calc_sheets/_entradas.py`.
 - [ ] `P07.S03` - implement the CÃ¡lculos sheet writer with hybrid formula translation; `src/aeat/application/storage/calc_sheets/_calculos.py`.
 - [ ] `P07.S04` - implement the Resultado sheet writer; `src/aeat/application/storage/calc_sheets/_resultado.py`.

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-tooling-separation'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-14-docs-tooling-separation-S01]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#docs-tooling-separation`.
 
 ### adr
 
-- `2026-06-14-docs-tooling-separation-adr` - `docs-tooling-separation` ADR: `terminology package separation from production`
+- `2026-06-14-docs-tooling-separation-adr` - `docs-tooling-separation` ADR: `terminology package separation from production` | (**status:** `accepted`)
 
 ### exec
 

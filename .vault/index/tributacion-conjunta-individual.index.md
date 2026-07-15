@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#tributacion-conjunta-individual'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-30-tributacion-conjunta-individual-research]]'
   - '[[2026-07-01-tributacion-conjunta-individual-adr]]'

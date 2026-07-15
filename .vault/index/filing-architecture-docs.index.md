@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#filing-architecture-docs'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-08-filing-architecture-docs-adr]]'
   - '[[2026-06-08-filing-architecture-docs-audit]]'

@@ -229,7 +229,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             try:
                 context = await session_like.create_context(storage_state=persisted.storage_state)
                 session = AeatSession(
-                    provider_kind=self.kind,
                     authenticated_at=metadata.authenticated_at,
                     idle_deadline=metadata.idle_deadline,
                     storage_state_path=storage_state_path,
@@ -395,7 +394,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         return AeatLoginAssertion(
             target_url=probe_url,
             is_valid=is_valid,
-            provider_kind=self.kind,
             identity_nif=session.identity_nif,
             status_code=status_code,
             elapsed_ms=elapsed_ms,
@@ -783,7 +781,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         landing_url: str | None,
     ) -> AeatSession:
         return AeatSession(
-            provider_kind=self.kind,
             authenticated_at=authenticated_at,
             idle_deadline=idle_deadline,
             storage_state_path=storage_state_path,
@@ -1006,7 +1003,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 storage_state=persisted.storage_state,
             )
             session = AeatSession(
-                provider_kind=self.kind,
                 authenticated_at=metadata.authenticated_at,
                 idle_deadline=metadata.idle_deadline,
                 storage_state_path=storage_state_path,

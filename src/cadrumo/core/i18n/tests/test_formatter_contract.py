@@ -6,7 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from cadrumo.core.i18n import UnmatchedPlaceholderError, extract_placeholders, tr
+from .. import UnmatchedPlaceholderError, extract_placeholders
+from .. import tr as render_translation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -25,7 +26,7 @@ def test_extract_placeholders_recovers_named_fields_around_malformed_braces() ->
 
 def test_strict_render_supports_attribute_index_and_nested_format_fields() -> None:
     """A complete runtime kwarg set renders every supported field form."""
-    rendered = tr(
+    rendered = render_translation(
         "formatter_complete",
         locale="en",
         default="{user.name} {items[0]} {amount:{width}.{precision}f}",
@@ -52,7 +53,7 @@ def test_strict_render_rejects_each_missing_root_or_nested_kwarg(missing: str) -
     del values[missing]
 
     with pytest.raises(UnmatchedPlaceholderError) as exc_info:
-        tr(
+        render_translation(
             "formatter_missing",
             locale="en",
             default="{user.name} {items[0]} {amount:{width}.{precision}f}",
@@ -69,7 +70,7 @@ def test_strict_render_rejects_each_missing_root_or_nested_kwarg(missing: str) -
 def test_strict_render_rejects_named_survivor_when_format_pass_fails(invalid_fragment: str) -> None:
     """An unrelated format error cannot return a supplied named token unresolved."""
     with pytest.raises(UnmatchedPlaceholderError) as exc_info:
-        tr(
+        render_translation(
             "formatter_failed_pass",
             locale="en",
             default=f"{{name}} {invalid_fragment}",
@@ -83,7 +84,7 @@ def test_strict_render_rejects_named_survivor_when_format_pass_fails(invalid_fra
 def test_strict_render_recovers_named_survivor_after_malformed_open_brace() -> None:
     """Malformed syntax before a named field cannot conceal its strict failure."""
     with pytest.raises(UnmatchedPlaceholderError) as exc_info:
-        tr(
+        render_translation(
             "formatter_malformed_prefix",
             locale="en",
             default="broken { before {name}",
@@ -97,7 +98,7 @@ def test_strict_render_recovers_named_survivor_after_malformed_open_brace() -> N
 def test_strict_render_accepts_escaped_literal_braces() -> None:
     """Escaped braces remain literal after a successful named format pass."""
     assert (
-        tr(
+        render_translation(
             "formatter_escaped",
             locale="en",
             default="{{literal}} {name}",

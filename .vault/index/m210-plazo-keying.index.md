@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m210-plazo-keying'
-date: '2026-07-09'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-09-m210-plazo-keying-adr]]'
 ---

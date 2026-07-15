@@ -11,9 +11,6 @@ related:
   - "[[2026-07-14-cross-domain-continuity-persona-cadence-audit]]"
 ---
 
-
-
-
 # until a valid checkpoint declaration is on record any claim of campaign complete or done is premature
 
 ## Scope

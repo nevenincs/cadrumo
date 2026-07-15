@@ -4,7 +4,7 @@ Asserts end-to-end that the operator's configured PKCS#12 bundle, when
 fed through :class:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator`,
 produces a valid :class:`cadrumo.adapters.outbound.aeat.auth.AeatSession`
 and that
-:meth:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
+:meth:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator.verify`
 returns ``is_valid=True`` against the configured verify URL.
 
 The test uses the configured certificate and live verification URL directly.
@@ -104,7 +104,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
         assert isinstance(aeat_session, AeatSession)
         assert aeat_session.is_stale() is False
         assert aeat_session.identity_nif
-        assertion = await auth.verify_login(aeat_session)
+        assertion = await auth.verify(aeat_session)
         assert isinstance(assertion, AeatLoginAssertion)
         assert assertion.is_valid is True, (
             f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"

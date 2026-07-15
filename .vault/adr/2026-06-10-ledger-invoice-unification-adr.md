@@ -1,14 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#ledger-invoice-unification'
+  - "#adr"
+  - "#ledger-invoice-unification"
 date: '2026-06-10'
-modified: '2026-07-03'
 related:
   - "[[2026-06-10-ledger-invoice-unification-research]]"
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
+supersedes:
+  - '2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr'
+modified: '2026-07-15'
 ---
-
 # `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `accepted`)
 
 ## Supersession

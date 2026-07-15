@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Sweep docs, locales, error-registry suggestions, and the agent harness for every renamed variable
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Adjudicate Modelo 308 export only for the 2019-and-following authority window and gate earlier revisions
 
 ## Scope

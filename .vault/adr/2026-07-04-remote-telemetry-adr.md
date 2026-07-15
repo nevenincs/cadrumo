@@ -3,10 +3,10 @@ tags:
   - '#adr'
   - '#remote-telemetry'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-15'
 related:
-  - "[[2026-04-24-aeat-cli-wireframe-reference]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
+  - '[[2026-07-10-remote-telemetry-research]]'
 ---
 
 # `remote-telemetry` adr: `Default-off consent-gated remote telemetry payload allowlist` | (**status:** `accepted`)
@@ -49,7 +49,8 @@ transport itself is deliberately NOT part of this first slice.
   default-off deployment flag, gestor-mode absolute bar, per-invocation
   (never-sticky) acknowledgement, single resolver function — is the template this ADR
   reuses rather than re-inventing a second off-host gate with different semantics.
-- **The `2026-04-24-aeat-cli-wireframe-reference` design** already worked out most of
+- **The preserved telemetry design evidence** in
+  `2026-07-10-remote-telemetry-research` already worked out most of
   the shape Kent needs: a closed `MetricSchema` registry (`counters` /
   `timings_ms`, each entry declaring `remote_allowed: bool`), a `telemetry_tier`
   (`off` / `crash_only` / `full`), an explicit `telemetry_endpoint`, dual-pass
@@ -184,10 +185,11 @@ follow-up slice per this session's scope note; this slice is core-only.
 
 ## Rationale
 
-The wireframe reference (`2026-04-24-aeat-cli-wireframe-reference`) already designed
-the target shape in detail (Kent's roleplay walk, the `MetricSchema` registry, the
-dual-pass-scrub hardening rules). Re-deriving the design from scratch would ignore
-existing, reviewed intent. What that reference did not resolve — and what caused #407
+The companion research (`2026-07-10-remote-telemetry-research`) preserves the target
+shape evidence (the `MetricSchema` registry, the consent posture, and the
+dual-pass-scrub hardening rules) without retaining the superseded CLI wireframe.
+Re-deriving the design from scratch would ignore existing, reviewed intent. What that
+earlier exploration did not resolve — and what caused #407
 to stay open through five local-only slices without ever reaching the remote tier — is
 sequencing: the remote tier is the one part of the whole issue where a mistake ships
 data off the operator's machine, and the project's own safety rules

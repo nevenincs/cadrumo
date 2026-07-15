@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -13,14 +14,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    SecureObjectRepository,
-    create_engine_from_settings,
-)
-from ....adapters.persistence.storage.sql import Base
+from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import BindingSourceKind, Period
-from ....core.config import Settings
 from ....domain.calculations.registry import CasillaId
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
@@ -39,7 +34,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     upsert_work_unit,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
     OssIossLedgerCandidate,
@@ -259,23 +254,17 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
     tmp_path: Path,
 ) -> None:
     """Live M369 calculate and legacy verification use the injected store."""
-    injected_engine = create_engine_from_settings(
-        Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / 'injected' / 'm369-injected.db').as_posix()}"),
-    )
-    Base.metadata.create_all(injected_engine)
-    try:
-        with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_M369_BUCKET) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_M369_BUCKET) as runtime:  # noqa: SIM117
+        with isolated_injected_secure_object_repository(
+            tmp_path=tmp_path / "injected",
+            bucket_id=_M369_BUCKET,
+            database_name="m369-injected.db",
+        ) as injected_objects:
             _seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
             wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
             cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
             tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
             ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
-            injected_objects = SecureObjectRepository(
-                engine=injected_engine,
-                namespace_registry=STORAGE_NAMESPACE_REGISTRY,
-                active_session_bucket_id=_M369_BUCKET,
-                require_secure_active_session=True,
-            )
             invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
             invoice_repo.save(
                 InvoiceCatalogue.from_invoices(
@@ -391,8 +380,6 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
                 recalculated.revision.calculation_revision_id
             )
-    finally:
-        injected_engine.dispose()
 
 
 def test_m369_unresolved_oss_source_refuses_verification_and_export(
@@ -444,7 +431,8 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
         (
             candidate
             for candidate in report.findings
-            if candidate.kind.value == "blocking_rule" and "unresolved OSS/IOSS aggregation sources" in candidate.message
+            if candidate.kind.value == "blocking_rule"
+            and "unresolved OSS/IOSS aggregation sources" in candidate.message
         ),
         None,
     )
@@ -523,13 +511,14 @@ def test_m369_recalculate_existing_unrouted_draft_refuses_verification_and_expor
         calculation_repository=cr_repo,
     )
 
+    retired_keyword: dict[str, Any] = {"source_provenance": initial.revision.source_provenance}
     with pytest.raises(TypeError, match="source_provenance"):
         calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs={},
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
-            source_provenance=initial.revision.source_provenance,  # type: ignore[call-arg]
+            **retired_keyword,
         )
     assert cr_repo.load().get(legacy.calculation_revision_id) == legacy
     assert (
@@ -549,8 +538,7 @@ def test_m369_recalculate_existing_unrouted_draft_refuses_verification_and_expor
     )
     assert legacy_report.granted_verificado_completo is False
     assert any(
-        "legacy OSS/IOSS source resolution cannot be confirmed" in finding.message
-        for finding in legacy_report.findings
+        "legacy OSS/IOSS source resolution cannot be confirmed" in finding.message for finding in legacy_report.findings
     ), legacy_report.findings
     legacy_persisted = cr_repo.load().get(legacy.calculation_revision_id)
     assert legacy_persisted is not None
@@ -586,13 +574,12 @@ def test_m369_recalculate_existing_unrouted_draft_refuses_verification_and_expor
         for diagnostic in result.source_diagnostics
     ), result.source_diagnostics
     assert any(
-        issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
-        and issue.reason == "unrouted_observation"
+        issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
         for issue in result.revision.source_issues
     ), result.revision.source_issues
-    assert any(
-        ref.source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance
-    ), result.revision.source_provenance
+    assert any(ref.source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
+        result.revision.source_provenance
+    )
 
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
@@ -610,7 +597,8 @@ def test_m369_recalculate_existing_unrouted_draft_refuses_verification_and_expor
         (
             candidate
             for candidate in report.findings
-            if candidate.kind.value == "blocking_rule" and "no declared aggregation binding consumes" in candidate.message
+            if candidate.kind.value == "blocking_rule"
+            and "no declared aggregation binding consumes" in candidate.message
         ),
         None,
     )
@@ -688,9 +676,9 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
     ), result.source_diagnostics
     assert result.revision.source_issues == ()
     assert result.revision.source_resolution_assessed is True
-    assert any(
-        ref.source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance
-    ), result.revision.source_provenance
+    assert any(ref.source_kind == "ledger_oss_aggregation" for ref in result.revision.source_provenance), (
+        result.revision.source_provenance
+    )
     legacy = _legacy_revision_without_source_assessment(result.revision)
     assert legacy.calculation_revision_id != result.revision.calculation_revision_id
     _persist_legacy_current_revision(

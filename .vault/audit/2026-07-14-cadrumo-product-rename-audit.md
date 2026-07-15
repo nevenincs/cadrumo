@@ -8,8 +8,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-
-
 # `cadrumo-product-rename` audit: `W05.P13 documentation-workflow approval gate sign-off`
 
 ## Scope

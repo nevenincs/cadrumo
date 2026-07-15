@@ -372,7 +372,7 @@ def test_app_filing_source_kind_is_not_official_evidence() -> None:
 
 
 def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) -> None:
-    """Decision B (same-year): a same-year locally-filed 1T lets 2T FILE with a disclosing advisory.
+    """Same-year admission: a same-year locally-filed 1T lets 2T FILE with a disclosing advisory.
 
     Filing 1T persists an ``app_filing`` carry observation. A SAME-FILING-YEAR dependent
     period (2T) is admitted: the clean-state guard clears the official-evidence-delta
@@ -436,7 +436,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), verificado_2t))
     revision_2t = verificado_2t
 
-    # Decision B (same-year scope): the same-year 1T (M130/2026) previous_filing
+    # Same-year scope: the same-year 1T (M130/2026) previous_filing
     # dependency is admitted - its official-evidence-delta blockers are cleared (the row
     # is clean) and it carries the disclosing non-official-local-chain advisory. A
     # cross-YEAR dependency (the M100 prior-year minoración evidence) is NOT relaxed, so
@@ -663,10 +663,10 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
 
     Adversarial check of the end-to-end reachability claim. The M130 minoración binding
     (``irpf.previous_year_economic_activity_net_income``, source_modelo 100,
-    filing_year_delta -1) creates a CROSS-YEAR M100 prior-year dependency that Decision B
-    deliberately does NOT relax. For a first-year autónomo (activity-start in the filing
+    filing_year_delta -1) creates a CROSS-YEAR M100 prior-year dependency that same-year
+    admission deliberately does NOT relax. For a first-year autónomo (activity-start in the filing
     year) that cross-year M100 dep is strictly pre-activity, so the first-filer suppression
-    scopes it out; the same-year 1T dep is admitted by Decision B. Both handled => the
+    scopes it out; the same-year 1T dep is admitted under same-year scope. Both handled => the
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#developer-leak-cycle1-domain'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-18-developer-leak-cycle1-domain-audit]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#developer-leak-cycle1-domain
 
 ### audit
 
-- `2026-05-18-developer-leak-cycle1-domain-audit` - `developer-leak-cycle1-domain` audit: `{title}`
+- `2026-05-18-developer-leak-cycle1-domain-audit` - `developer-leak-cycle1-domain` audit: `domain-layer developer-leak cycle 1 review`

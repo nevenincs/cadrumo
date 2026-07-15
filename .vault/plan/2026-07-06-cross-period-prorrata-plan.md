@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-15'
 tier: L3
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
@@ -15,6 +15,13 @@ related:
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
 # `cross-period-prorrata` plan
+
+> **Completed-plan reconciliation (2026-07-15).** This plan records the executed
+> rollout; it is not current authority for the retired missing-stamp bridge.
+> Persisted observation stamps are required: missing or invalid payloads refuse
+> at strict load before prorrata seeding, and divergent or unreconfirmable
+> populated stamps block. The checked historical step wording below is retained
+> as execution provenance, not as a compatibility mandate.
 
 ## Wave `W01` - Register foundation (the carry home)
 

@@ -3,11 +3,13 @@ tags:
   - '#research'
   - '#first-filer-attestation'
 date: '2026-06-12'
-modified: '2026-07-03'
+modified: '2026-07-15'
 related:
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
   - "[[2026-06-05-cross-period-calculation-guards-adr]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
+  - '[[2026-06-13-first-filer-attestation-adr]]'
+  - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
 ---
 
 # `first-filer-attestation` research: `first-period filer dead end: censo-grounded vs attested no-prior-obligation`
@@ -81,9 +83,17 @@ Evaluated against `no-silent-under-declaration`, `aeat-safety-legal-gates`, `loc
 
 The `local-filed-observations-are-non-official-evidence` and `no-silent-under-declaration` rules are the load-bearing guardrails: the fix must scope which periods are owed without laundering a local chain into official evidence and without silently granting a zero; the suppressed dependency must be explained, not blanked.
 
-## Recommended option and open questions
+## Historical recommendation and final disposition
 
-Recommended: Option A (censo-grounded activity-start scoping), with the existing absent-by-design value path of Option C materialising the zero. Option A is the only sketch whose no-prior-obligation determination is grounded in AEAT-sourced authority (the G313 censo activity_start_date) rather than a forgeable operator claim, so it satisfies `aeat-safety-legal-gates` and resists the dishonesty that sinks Option B; it reuses the registry existing absent-by-design vocabulary; and it preserves `local-filed-observations-are-non-official-evidence` untouched because it never touches the evidence gate for in-scope periods. It removes pre-activity periods from the requirement graph before evidence is demanded, and records the removal as declared, audited provenance rather than a silent blank.
+This research originally recommended Option A, a G313/Censo-grounded activity-start
+scope. That recommendation is rejected by the later accepted decisions. G313 was
+not the assumed data surface, and the discovered Censo data path is an AEAT
+modification tool that cannot be made a structurally safe read. Current authority
+is `2026-06-13-first-filer-attestation-adr`: operator-declared activity-start
+scoping with explicit non-AEAT provenance, using the absent-by-design value path.
+`2026-07-11-censo-operator-manual-enrolment-adr` permanently retires the automatic
+Censo reader unless a future genuine consulta-only endpoint is accepted through a
+new ADR. The options below are retained only as historical analysis, not backlog.
 
 Which refusal points the fix unblocks — and which it deliberately leaves blocking:
 

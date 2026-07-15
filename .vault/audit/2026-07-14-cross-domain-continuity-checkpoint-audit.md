@@ -13,8 +13,6 @@ related:
   - "[[2026-07-14-cross-domain-continuity-persona-cadence-audit]]"
 ---
 
-
-
 # `cross-domain-continuity` audit: `checkpoint declaration and honesty review`
 
 ## Scope

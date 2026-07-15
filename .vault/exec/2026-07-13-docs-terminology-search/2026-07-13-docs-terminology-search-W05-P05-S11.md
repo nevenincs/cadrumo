@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-terminology-search-plan]]"
 ---
 
-
-
-
 # Declare the closed ResultDisplayClass StrEnum and the single derivation function (record kind + concept domain + page path prefix to class) beside the unified record, with a unit gate proving every projected record maps to exactly one class
 
 ## Scope

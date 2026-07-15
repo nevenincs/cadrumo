@@ -1,9 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#google-oauth'
+  - "#adr"
+  - "#google-oauth"
 date: '2026-05-13'
-modified: '2026-07-10'
 related:
   - "[[2026-05-13-google-oauth-adr]]"
   - "[[2026-05-13-google-oauth-snapshot-adr]]"
@@ -11,9 +10,10 @@ related:
   - "[[2026-05-12-google-oauth-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
   - "[[2026-05-06-google-oauth-research]]"
+superseded_by: '2026-07-14-google-optional-adapter-boundary-adr'
+modified: '2026-07-14'
 ---
-
-# `google-oauth` adr: `Per-domain export taxonomy` | (**status:** `accepted`)
+# `google-oauth` adr: `Per-domain export taxonomy` | (**status:** `superseded`)
 
 ## Problem Statement
 

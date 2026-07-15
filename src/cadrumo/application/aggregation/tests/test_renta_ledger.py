@@ -704,7 +704,7 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
 def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_is_in_window_but_own_date_is_not(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Regression test (issue #599): a transaction whose OWN filing date falls outside the
+    """Regression test: a transaction whose OWN filing date falls outside the
     requested annual window but whose LINKED INVOICE's issue date falls inside it must not
     be silently dropped before the classifier ever runs.
 
@@ -766,7 +766,7 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
 ) -> None:
     """A catalogue transaction from a different year must surface as an OUTSIDE_PERIOD issue.
 
-    Regression test (issue #599): the repository-backed entry point must NOT pre-filter the
+    Regression test: the repository-backed entry point must NOT pre-filter the
     loaded catalogue by date range for a multi-year catalogue. ``OUTSIDE_PERIOD`` is a genuine
     no-silent-under-declaration-class diagnostic -- an operator running a 10-year ledger history
     against the 2025 annual window needs to see that a 2023-dated catalogue transaction exists
@@ -865,8 +865,8 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     falls back to ``operation_date`` = ``value_date or booked_date`` — a CASH
     (caja) basis. There is no accrual/devengo basis selector.
 
-    This pins the current behaviour as the regression anchor for the future
-    devengo follow-on (#58): the row whose VALUE_DATE lands in the tax year is
+    This pins the current behaviour as the regression anchor for a future
+    devengo addition: the row whose VALUE_DATE lands in the tax year is
     aggregated; the mirror row whose value_date is outside (but booked_date
     inside) is excluded. A devengo basis would invert both outcomes.
 

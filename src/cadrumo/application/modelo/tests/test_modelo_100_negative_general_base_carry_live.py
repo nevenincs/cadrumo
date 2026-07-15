@@ -289,6 +289,8 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     assert art_50 not in formulas["renta-2025-base-imponible-general"].legal_refs
     prior_snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period=_PERIOD)
     prior_binding = next(
-        item for item in prior_snapshot.revision.bindings if item.id == "renta-2024-base-liquidable-negativa-general-anterior"
+        item
+        for item in prior_snapshot.revision.bindings
+        if item.id == "renta-2024-base-liquidable-negativa-general-anterior"
     )
     assert prior_binding.legal_refs == (art_50,)

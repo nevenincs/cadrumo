@@ -658,14 +658,12 @@ def _whitespace_nif_session() -> AeatSession:
 
     from ...auth import (
         AeatSession,
-        AuthProviderKind,
         CertificateSessionDetail,
         HandshakeResult,
     )
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(
-        provider_kind=AuthProviderKind.CERTIFICATE,
         authenticated_at=now,
         idle_deadline=now + timedelta(hours=8),
         storage_state_path=Path("/synthetic/does_not_exist.json"),

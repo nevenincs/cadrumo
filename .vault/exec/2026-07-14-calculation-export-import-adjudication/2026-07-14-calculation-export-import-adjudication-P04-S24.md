@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Publish the final adjudication audit with dispositions, evidence windows, duplicate-code guards, and unresolved external gates
 
 ## Scope

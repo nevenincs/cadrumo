@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Gate Modelo 322 declaration extraction on a sanitized filed specimen and prohibit speculative profile authoring
 
 ## Scope

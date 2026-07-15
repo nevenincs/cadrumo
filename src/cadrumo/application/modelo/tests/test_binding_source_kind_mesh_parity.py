@@ -10,9 +10,8 @@ It lives in the application layer (not beside the domain gate) because the mesh 
 (``BUCKET_AGGREGATION_OWNED_SOURCES``, ``DEFERRED_SOURCE_KINDS``) are application
 symbols, and a domain test importing them would violate the hexagonal direction
 (domain → application is forbidden). Together the two halves close the
-"neither set contains the other" defect the decision record
-(``2026-06-26-binding-source-kind-taxonomy-unification``) eliminates: every mesh
-source is a :class:`BindingSourceKind` member, and every member is accounted for as
+"neither set contains the other" defect: every mesh source is a
+:class:`BindingSourceKind` member, and every member is accounted for as
 enrolled, pre-mesh-handled, deferred, or explicitly reserved-undeclared.
 """
 
@@ -82,8 +81,7 @@ def test_every_enum_member_is_routed_deferred_or_reserved() -> None:
     pre-mesh resolver (``BUCKET_AGGREGATION_OWNED_SOURCES``), explicitly deferred
     (``DEFERRED_SOURCE_KINDS``), or one of the documented reserved-undeclared
     counterpart/invoice sources. A member that drifts out of all three is an
-    unaccounted source kind — exactly the "neither set contains the other" gap the
-    decision record eliminates.
+    unaccounted source kind — exactly the "neither set contains the other" gap.
     """
     accounted = (
         BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS | {member.value for member in _MESH_UNROUTED_RESERVED}
@@ -100,7 +98,7 @@ def test_borrador_and_iva_wallet_decision_are_routed_owned_sources() -> None:
 
     They carry no registry binding (the domain gate exempts them via
     ``_MESH_ONLY_SOURCE_KINDS``), so this is the gate that proves they ARE accounted
-    for on the mesh half — closing the union the decision record opened.
+    for on the mesh half.
     """
     assert BindingSourceKind.BORRADOR.value in BUCKET_AGGREGATION_OWNED_SOURCES
     assert BindingSourceKind.IVA_WALLET_DECISION.value in BUCKET_AGGREGATION_OWNED_SOURCES
@@ -140,8 +138,8 @@ def test_disposition_registry_covers_every_enum_member() -> None:
 def test_disposition_enrolled_partition_equals_owned_mesh_set() -> None:
     """The ENROLLED disposition partition equals the owned mesh set EXACTLY.
 
-    This is the union the decision record mandates: the disposition registry's enrolled members
-    are precisely the live enrolled resolver / pre-mesh / manual owned_sources. A
+    The disposition registry's enrolled members must be precisely the live
+    enrolled resolver / pre-mesh / manual owned_sources. A
     drift between the registry and the owned set (a newly-enrolled source not
     reflected, or an owned source not enrolled) fails here.
     """

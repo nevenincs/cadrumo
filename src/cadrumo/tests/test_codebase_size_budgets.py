@@ -124,7 +124,10 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     # Extracted LLM ledger CLI verb; SPLIT-CANDIDATE.
     ("src/cadrumo/entrypoints/cli/_ledger_llm_cli.py", "ledger_saturate_llm"): 187,
     ("src/cadrumo/application/modelo/_quickfile.py", "run_modelo_quickfile"): 216,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/modelo/_verification_actions.py", "verify_modelo_revision"): 231,  # SPLIT-CANDIDATE (regrew past prior pin)
+    (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "verify_modelo_revision",
+    ): 231,  # SPLIT-CANDIDATE (regrew past prior pin)
     ("src/cadrumo/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/user_profile/_custody_carry.py", "_natural_key_resolvers"): 310,  # SPLIT-CANDIDATE
     ("src/cadrumo/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE

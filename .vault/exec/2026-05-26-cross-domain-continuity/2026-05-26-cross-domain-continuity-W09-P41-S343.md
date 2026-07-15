@@ -2,49 +2,12 @@
 tags:
   - '#exec'
   - '#cross-domain-continuity'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-05-26'
+modified: '2026-07-11'
 step_id: 'S343'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cross-domain-continuity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S343 and 2026-05-26-cross-domain-continuity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The R9-ANDREA-HIGH Article 27 LGT late-filing recargo + intereses de demora computation entirely absent from CLI and ## Scope
-
-- `closed by existing deadline/plazo implementation and reverified on 2026-07-01: domain deadlines _recargo resolves Art. 27 LGT completed-month bands using the current post-Ley 11/2021 scale (1 percent plus 1 percent per completed month`
-- `15 percent plus intereses after 12 months) rather than the obsolete 5/10/15/20 percent bracket named in the original row`
-- `modelo work plazo summaries attach the recargo band and CLI calculate emits a warning notice plus structured deadline.recargo payload for overdue work units`
-- `verified by 35 focused recargo/deadline/CLI tests after registry-source blockers were cleared`
-- `src/aeat/domain/deadlines/ src/aeat/application/modelo/_work_plazo.py src/aeat/entrypoints/cli/_modelo_rendering.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # R9-ANDREA-HIGH Article 27 LGT late-filing recargo + intereses de demora computation entirely absent from CLI
 

@@ -7,8 +7,6 @@ modified: '2026-07-13'
 related: []
 ---
 
-
-
 # `data-output-standardization` audit: `financial catalogue dir liveness`
 
 ## Scope

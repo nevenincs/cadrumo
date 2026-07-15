@@ -3,14 +3,13 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-15'
 step_id: 'W13..W19'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
-  - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]"

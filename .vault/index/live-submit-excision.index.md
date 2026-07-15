@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-submit-excision'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-18-live-submit-cli-excision-adr]]'
   - '[[2026-04-27-live-submit-excision-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#live-submit-excision`.
 
 ### adr
 
-- `2026-04-18-live-submit-cli-excision-adr` - adr — excise the live-submit CLI surface
+- `2026-04-18-live-submit-cli-excision-adr` - adr — excise the live-submit CLI surface | (**status:** `accepted`)
 
 ### research
 

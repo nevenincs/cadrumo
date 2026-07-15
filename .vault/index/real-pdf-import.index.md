@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#real-pdf-import'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-21-real-pdf-import-execution-wave-1-audit]]'
   - '[[2026-04-21-real-pdf-import-execution-wave-234-audit]]'
@@ -39,9 +39,9 @@ Auto-generated index of all documents tagged with `#real-pdf-import`.
 
 ### adr
 
-- `2026-04-22-aeat-fichero-boe-export-adr` - aeat-fichero-boe-export-adr
-- `2026-04-22-citation-blocklist-adr` - citation-blocklist-adr
-- `2026-04-22-ruleset-architecture-adr` - ruleset-architecture-adr
+- `2026-04-22-aeat-fichero-boe-export-adr` - aeat-fichero-boe-export-adr | (**status:** `accepted`)
+- `2026-04-22-citation-blocklist-adr` - citation-blocklist-adr | (**status:** `accepted`)
+- `2026-04-22-ruleset-architecture-adr` - ruleset-architecture-adr | (**status:** `superseded`)
 
 ### audit
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#notifications-inbox'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-notifications-inbox-adr]]'
   - '[[2026-04-12-notifications-inbox-phase1-summary-exec]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#notifications-inbox`.
 
 ### adr
 
-- `2026-04-12-notifications-inbox-adr` - adr: aeat notifications inbox
+- `2026-04-12-notifications-inbox-adr` - adr: aeat notifications inbox | (**status:** `superseded`)
 
 ### exec
 

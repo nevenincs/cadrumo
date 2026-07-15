@@ -1,20 +1,20 @@
 ---
-name: docs-rewrite-adr
-description: Architecture decision for the public-facing documentation rewrite (README + getting-started + architecture diagram + project-meta smoke test)
-type: adr
 tags:
   - "#adr"
   - "#docs-rewrite"
-date: 2026-04-12
-modified: '2026-07-10'
+date: '2026-04-12'
 related:
   - "[[2026-04-12-docs-rewrite-research]]"
   - "[[2026-04-12-docs-rewrite-plan]]"
   - "[[2026-05-30-docs-architecture-adr]]"
+superseded_by: '2026-05-30-docs-architecture-adr'
+name: docs-rewrite-adr
+description: Architecture decision for the public-facing documentation rewrite (README + getting-started + architecture diagram + project-meta smoke test)
+type: adr
+modified: '2026-07-15'
 issue: wgergely/aeat#67
 status: superseded
 ---
-
 # adr: docs-rewrite | (**status:** `superseded`)
 
 > **Superseded (2026-05-30) by the `docs-architecture` documentation

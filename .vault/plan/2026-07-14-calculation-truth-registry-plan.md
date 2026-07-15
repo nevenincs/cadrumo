@@ -13,16 +13,6 @@ related:
   - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `calculation-truth-registry` plan
 
 ### Phase `P01` - Modelo 131 2024 revision completion

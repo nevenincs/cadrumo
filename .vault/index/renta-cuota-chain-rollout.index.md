@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-cuota-chain-rollout'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-06-renta-cuota-chain-rollout-adr]]'
   - '[[2026-05-06-renta-cuota-chain-rollout-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#renta-cuota-chain-rollout`.
 
 ### adr
 
-- `2026-05-06-renta-cuota-chain-rollout-adr` - `renta-cuota-chain-rollout` adr
+- `2026-05-06-renta-cuota-chain-rollout-adr` - `renta-cuota-chain-rollout` adr | (**status:** `accepted`)
 
 ### plan
 

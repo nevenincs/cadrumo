@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-console-review'
-date: '2026-07-08'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-08-mcp-console-review-audit]]'
 ---

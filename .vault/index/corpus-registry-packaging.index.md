@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-registry-packaging'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-05-15-corpus-registry-packaging-plan]]'

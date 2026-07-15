@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-cert-auth'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-16-live-cert-auth-adr]]'
   - '[[2026-04-16-live-cert-auth-research]]'
@@ -20,8 +20,8 @@ Auto-generated index of all documents tagged with `#live-cert-auth`.
 
 ### adr
 
-- `2026-04-16-live-cert-auth-adr` - `live-cert-auth` adr: `issue-141 live certificate auth stabilization and verification` | (**status:** `superseded` *(originally `accepted`; superseded 2026-04-21 by AuthProvider abstraction)*)
-- `2026-04-21-live-cert-auth-supersession-adr` - `live-cert-auth` adr: `issue-141 pr-148 superseded by certificateauthprovider` | (**status:** `accepted`)
+- `2026-04-16-live-cert-auth-adr` - `live-cert-auth` adr: `issue-141 live certificate auth stabilization and verification` | (**status:** `superseded`)
+- `2026-04-21-live-cert-auth-supersession-adr` - `live-cert-auth` adr: `issue-141 pr-148 superseded by the landed AuthProvider implementation` | (**status:** `accepted`)
 
 ### research
 

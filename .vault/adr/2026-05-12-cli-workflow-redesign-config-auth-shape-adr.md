@@ -1,9 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-workflow-redesign'
+  - "#adr"
+  - "#cli-workflow-redesign"
 date: '2026-05-12'
-modified: '2026-07-03'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-research]]"
@@ -11,10 +10,11 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-04-18-auth-protocol-adr]]"
-  - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-05-08-google-oauth-adr]]"
+supersedes:
+  - '2026-04-21-auth-cli-adr'
+modified: '2026-07-15'
 ---
-
 # `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
 
 ## CLI Backend Boundary
@@ -38,11 +38,10 @@ or live submission semantics.
 
 ## Considerations
 
-- Implemented AEAT Sede auth providers are `certificate` and `clave_movil`.
-- `clave_pin`, `clave_permanente`, and `dnie_pkcs` are recognized as future
-  provider slots but have no auth provider implementation.
-- Portal catalogue entries for Cl@ve PIN, Cl@ve Permanente, and DNIe are not
-  provider implementations.
+- Implemented AEAT Sede auth providers are `certificate`, `clave_movil`, and
+  `clave_permanente`.
+- `clave_pin` and `dnie_pkcs` are reserved catalogue slots with no runtime
+  provider implementation. A reserved slot is not an engineering commitment.
 - Google OAuth is not AEAT Sede authentication; the Google OAuth ADR places it
   under `aeat config google`.
 - Apoderado and representative identity selection are assigned to the
@@ -73,9 +72,11 @@ Place AEAT Sede auth configuration and session maintenance under:
 aeat config auth
 ```
 
-Implementation mandate: expose the subcommand grammar below, keep certificate
-and Cl@ve Móvil as implemented providers, make reserved providers fail closed,
-and remove setup-auth command paths without aliases or shims.
+Implementation mandate: expose the subcommand grammar below; keep certificate,
+Cl@ve Móvil, and Cl@ve Permanente as implemented providers; make reserved
+providers fail closed; and remove setup-auth command paths without aliases or
+shims. `AUTH_PROVIDER_CATALOGUE` is the single operator-facing inventory for
+implemented and reserved provider ids.
 
 The command tree is:
 

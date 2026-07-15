@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#gate-drift-reconciliation'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-08-gate-drift-reconciliation-audit]]'
   - '[[2026-07-08-gate-drift-reconciliation-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#gate-drift-reconciliation`.
 
 ### adr
 
-- `2026-07-10-gate-drift-reconciliation-adr` - gate-drift-reconciliation adr: retrospective reconciliation closeout | (**status:** accepted)
+- `2026-07-10-gate-drift-reconciliation-adr` - gate-drift-reconciliation adr: retrospective reconciliation closeout | (**status:** `accepted`)
 
 ### audit
 

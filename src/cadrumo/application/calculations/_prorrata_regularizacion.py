@@ -704,7 +704,7 @@ def _stamped_prior_year_definitiva(
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
-        )
+        ).refused
         if refused:
             continue
         candidates.append(
@@ -746,7 +746,7 @@ def _source_period_feed_from_observations(
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
-        )
+        ).refused
         if refused:
             missing_periods.append(period)
             continue

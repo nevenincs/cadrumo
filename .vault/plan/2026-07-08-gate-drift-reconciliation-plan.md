@@ -11,8 +11,9 @@ related:
   - '[[2026-06-09-docstring-google-style-plan]]'
   - '[[2026-07-08-mcp-protocol-hardening-plan]]'
   - '[[2026-07-02-arch-remediation-engine-lifecycle-plan]]'
+  - '[[2026-07-10-gate-drift-reconciliation-adr]]'
+  - '[[2026-07-10-gate-drift-reconciliation-research]]'
 ---
-
 # `gate-drift-reconciliation` plan
 
 Burn down only the genuinely untracked drift the 2026-07-08 full-gate health snapshot surfaced, priority-ordered from the architectural inversion outward.

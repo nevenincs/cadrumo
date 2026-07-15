@@ -111,7 +111,9 @@ Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax concepts,
 casillas, commands, and guides; exact term matches appear first. Use the
 [command-line reference](cli/index.rst) for commands and options, and
 [how it works](explanation/index.md) for how records become modelo figures and
-what checks run.
+what checks run. Use [Import, export, and evidence](reference/import-export-and-evidence.md)
+to distinguish source data, review outputs, AEAT upload files, official filing
+proof, and audit packages.
 
 ```{toctree}
 :hidden:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mutation-harness-extension'
-date: '2026-07-12'
-modified: '2026-07-12'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-25-mutation-harness-extension-adr]]'
   - '[[2026-04-25-mutation-harness-extension-plan]]'

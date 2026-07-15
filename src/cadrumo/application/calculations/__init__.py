@@ -155,6 +155,7 @@ from ._relation_prefill import (
     relation_prefill_period_zero_default_binding_ids,
     resolve_relations_from_local_store,
 )
+from ._revision_carry_gate import RevisionCarryOutcome, revision_carry_outcome
 from ._row_set_assembly import (
     AssembledObservations,
     assemble_atribucion_observations,
@@ -208,6 +209,7 @@ __all__ = [
     "ProrrataRegularizacionFeedProjection",
     "ProrrataRegularizacionSourceResolver",
     "RelationPrefillSourceResolver",
+    "RevisionCarryOutcome",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",
     "assemble_observations_for_grouping",
@@ -248,5 +250,6 @@ __all__ = [
     "resolve_iva_compensation_annual_partition_binding_values",
     "resolve_maritime_exemption",
     "resolve_relations_from_local_store",
+    "revision_carry_outcome",
     "seed_iva_compensation_period",
 ]

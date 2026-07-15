@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-hardening'
-date: '2026-07-12'
-modified: '2026-07-12'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-08-aeat-cli-hardening-adr]]'
   - '[[2026-05-08-aeat-cli-hardening-inventory-audit]]'

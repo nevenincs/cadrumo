@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bare-invocation-bucket-session-gate'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'
   - '[[2026-06-04-bare-invocation-bucket-session-gate-research]]'

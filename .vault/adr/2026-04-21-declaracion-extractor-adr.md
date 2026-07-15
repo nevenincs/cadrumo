@@ -2,15 +2,15 @@
 tags:
   - "#adr"
   - "#declaracion-extractor"
-date: "2026-04-21"
-modified: '2026-07-10'
+date: '2026-04-21'
 related:
   - "[[2026-04-21-declaracion-extractor-research]]"
   - "[[2026-04-21-pdf-taxonomy-adr]]"
   - "[[2026-04-21-casilla-schema-completeness-adr]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"
+superseded_by: '2026-05-21-declaracion-extraction-architecture-adr'
+modified: '2026-07-15'
 ---
-
 # `declaracion-extractor` adr: `label-first-bbox-fallback-acroform-opportunistic-per-modelo-registry` | (**status:** `superseded`)
 
 ## Superseded (2026-05-21)

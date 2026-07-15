@@ -154,7 +154,7 @@ def _gather_observations_for_snapshot(
                 source_modelo=obs.modelo,
                 source_filing_year=obs.filing_year,
                 source_period=obs.period,
-            )
+            ).refused
             if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)

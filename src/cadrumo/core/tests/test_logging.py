@@ -15,7 +15,7 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import cast, override
+from typing import Any, cast, override
 
 import pydantic
 import pytest
@@ -569,8 +569,9 @@ def test_log_extra_for_logging_materialises_a_plain_dict() -> None:
 
 def test_log_extra_rejects_a_non_scalar_value() -> None:
     """A nested mapping is not a loggable scalar; construction must fail loudly."""
+    invalid_nested_value: Any = {"inner": "value"}
     with pytest.raises(pydantic.ValidationError):
-        LogExtra({"nested": {"inner": "value"}})  # type: ignore[dict-item]
+        LogExtra({"nested": invalid_nested_value})
 
 
 class _RecordCapturingHandler(logging.Handler):
@@ -604,6 +605,7 @@ def test_log_extra_materialised_extra_survives_the_real_logging_pipeline() -> No
     assert len(handler.records) == 1
     record = handler.records[0]
     assert record.getMessage() == "ran aggregation"
-    assert record.modelo == "303"  # type: ignore[attr-defined]
-    assert record.period == "1T"  # type: ignore[attr-defined]
-    assert record.observation_count == 5  # type: ignore[attr-defined]
+    record_attributes = vars(record)
+    assert record_attributes["modelo"] == "303"
+    assert record_attributes["period"] == "1T"
+    assert record_attributes["observation_count"] == 5

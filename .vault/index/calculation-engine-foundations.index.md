@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-engine-foundations'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-10-calculation-engine-foundations-W04-P10-S16]]'
   - '[[2026-06-10-calculation-engine-foundations-W04-P11-S35]]'

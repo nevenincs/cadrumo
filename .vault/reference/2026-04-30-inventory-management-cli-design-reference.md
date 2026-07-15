@@ -3,15 +3,14 @@ tags:
   - "#reference"
   - "#inventory-management"
 date: 2026-04-30
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-04-29-inventory-management-research]]"
   - "[[2026-04-29-inventory-management-adr]]"
   - "[[2026-04-30-inventory-management-hardening-plan]]"
-  - "[[2026-04-24-aeat-cli-wireframe-adr]]"
-  - "[[2026-04-24-aeat-cli-wireframe-reference]]"
   - "[[2026-04-25-json-output-contract-adr]]"
   - "[[2026-04-25-error-code-registry-adr]]"
+  - '[[2026-05-12-cli-workflow-redesign-inventory-placement-adr]]'
 ---
 
 # Inventory and Amortization CLI Design Contract

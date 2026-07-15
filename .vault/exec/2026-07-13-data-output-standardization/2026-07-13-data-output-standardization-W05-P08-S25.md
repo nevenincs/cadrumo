@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Migrate the remaining stem-sibling atomic-write sites onto the helper
 
 ## Scope

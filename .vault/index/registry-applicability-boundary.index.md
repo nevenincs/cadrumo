@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-applicability-boundary'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-02-registry-applicability-boundary-audit]]'
   - '[[2026-06-02-registry-applicability-boundary-code-review-audit]]'

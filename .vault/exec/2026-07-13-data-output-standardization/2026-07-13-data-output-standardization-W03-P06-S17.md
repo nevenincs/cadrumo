@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Author the per-field ownership adjudication table for AEAT-prefixed app-owned settings
 
 ## Scope

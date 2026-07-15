@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mandatory-citations'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-25-mandatory-citations-adr]]'
   - '[[2026-04-25-mandatory-citations-phase1-step1-exec]]'
@@ -22,7 +22,7 @@ Auto-generated index of all documents tagged with `#mandatory-citations`.
 
 ### adr
 
-- `2026-04-25-mandatory-citations-adr` - `mandatory-citations` adr (**status:** `accepted`)
+- `2026-04-25-mandatory-citations-adr` - `mandatory-citations` adr | (**status:** `accepted`)
 
 ### audit
 

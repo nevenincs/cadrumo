@@ -77,14 +77,14 @@ jobs:
         run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
 
       - name: Registry verify
-        run: uv run --no-sync aeat app registry verify --json
+        run: uv run --no-sync aeat app registry verify
 
       - name: Audit oracle bindings
         # Fails the workflow if any cross-reference declares an
         # oracle_id that doesn't match the registered oracle's
         # surface_kind. To fix locally, run:
         #   uv run --no-sync aeat app registry audit-oracles
-        run: uv run --no-sync aeat app registry audit-oracles --json
+        run: uv run --no-sync aeat app registry audit-oracles
 
       - name: Test (unit)
         run: uv run pytest --junitxml=junit.xml
@@ -107,7 +107,7 @@ jobs:
         # locally, append --ignore-vuln <GHSA-/PYSEC-id>.
         if: matrix.os == 'ubuntu-latest'
         run: |
-          uv export --frozen --no-emit-project --no-hashes > /tmp/audit-reqs.txt
+          uv export --frozen --no-dev --no-emit-project --no-hashes > /tmp/audit-reqs.txt
           uvx pip-audit --strict -r /tmp/audit-reqs.txt
 
       - name: Hooks

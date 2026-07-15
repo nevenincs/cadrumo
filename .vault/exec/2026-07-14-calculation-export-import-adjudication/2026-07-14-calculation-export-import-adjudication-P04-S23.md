@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Record Modelo 100 exercise-2026 export authority as unavailable until an official current-year design is published and bundled
 
 ## Scope

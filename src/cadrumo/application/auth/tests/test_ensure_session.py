@@ -151,7 +151,6 @@ def _settings(tmp_path: Path) -> Settings:
 
 def _session() -> AeatSession:
     return AeatSession(
-        provider_kind=AuthProviderKind.CLAVE_MOVIL,
         authenticated_at=_T0,
         idle_deadline=_T0 + timedelta(minutes=20),
         storage_state_path=None,
@@ -169,7 +168,6 @@ def _assertion(valid: bool = True) -> AeatLoginAssertion:
     return AeatLoginAssertion(
         target_url=_SEDE_URL,
         is_valid=valid,
-        provider_kind=AuthProviderKind.CLAVE_MOVIL,
         identity_nif="12345678Z",
         status_code=200,
         elapsed_ms=1,

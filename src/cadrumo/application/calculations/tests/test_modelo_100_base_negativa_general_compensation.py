@@ -197,7 +197,9 @@ def _v(revision: CalculationRevision, casilla: CasillaId) -> Decimal:
 def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_art49() -> None:
     revision = _snapshot().revision
     cap_formula = next(formula for formula in revision.formulas if formula.id == _APLICADA_MAXIMA_FORMULA_ID)
-    compensation_formula = next(formula for formula in revision.formulas if formula.id == _COMPENSACION_TOTAL_FORMULA_ID)
+    compensation_formula = next(
+        formula for formula in revision.formulas if formula.id == _COMPENSACION_TOTAL_FORMULA_ID
+    )
     opening_pending = next(casilla for casilla in revision.casillas if casilla.id == _PENDIENTE_INICIO)
     compensation = next(casilla for casilla in revision.casillas if casilla.id == _casilla_id("0501"))
     casilla = next(casilla for casilla in revision.casillas if casilla.id == _APLICADA_MAXIMA)

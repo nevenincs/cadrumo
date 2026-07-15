@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-source-connectivity'
-date: '2026-07-05'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-20-calculation-source-connectivity-W01-P01-S01]]'
   - '[[2026-05-20-calculation-source-connectivity-W01-P01-S02]]'

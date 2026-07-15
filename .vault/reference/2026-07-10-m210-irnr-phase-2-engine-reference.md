@@ -8,10 +8,7 @@ related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-research]]"
 ---
 
-
-
 # `m210-irnr-phase-2-engine` reference: `M210 aggregation and grouped-row implementation blueprint`
-
 
 ## Summary
 

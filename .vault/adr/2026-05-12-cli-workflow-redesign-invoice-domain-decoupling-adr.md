@@ -1,9 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-workflow-redesign'
+  - "#adr"
+  - "#cli-workflow-redesign"
 date: '2026-05-12'
-modified: '2026-07-03'
 related:
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
@@ -14,8 +13,9 @@ related:
   - "[[2026-05-08-ledger-renta-pipeline-phase2-contract-decisions-adr]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
+superseded_by: '2026-06-10-ledger-invoice-unification-adr'
+modified: '2026-07-15'
 ---
-
 # `cli-workflow-redesign` adr: `Invoice domain decoupling` | (**status:** `superseded`)
 
 > **Superseded (2026-06-10)** on the single point of the operator-facing invoice

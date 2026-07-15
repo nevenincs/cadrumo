@@ -11,8 +11,6 @@ related:
   - "[[2026-07-12-cross-domain-continuity-audit]]"
 ---
 
-
-
 # `cross-domain-continuity` audit: `quarterly persona cadence establishment`
 
 ## Scope

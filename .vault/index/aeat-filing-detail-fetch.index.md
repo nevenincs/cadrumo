@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-filing-detail-fetch'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-18-aeat-filing-detail-fetch-adr]]'
   - '[[2026-04-18-aeat-filing-detail-fetch-phase1-summary-exec]]'
@@ -24,7 +24,7 @@ Auto-generated index of all documents tagged with `#aeat-filing-detail-fetch`.
 
 ### adr
 
-- `2026-04-18-aeat-filing-detail-fetch-adr` - adr — StatusReader.fetch_filing_detail (#227)
+- `2026-04-18-aeat-filing-detail-fetch-adr` - adr — StatusReader.fetch_filing_detail (#227) | (**status:** `accepted`)
 
 ### exec
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bindings-interface-hardening'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-14-bindings-interface-hardening-reference]]'
@@ -25,7 +25,6 @@ related:
   - '[[2026-06-15-bindings-interface-hardening-W03-P05-S14]]'
   - '[[2026-06-15-bindings-interface-hardening-W03-P05-S15]]'
   - '[[2026-06-15-bindings-interface-hardening-W03-P05-S16]]'
-  - '[[2026-06-15-bindings-interface-hardening-W03-P06-S17]]'
   - '[[2026-06-15-bindings-interface-hardening-W03-P06-S18]]'
   - '[[2026-06-15-bindings-interface-hardening-W03-P06-S19]]'
   - '[[2026-06-15-bindings-interface-hardening-W04-P07-S20]]'
@@ -78,7 +77,6 @@ Auto-generated index of all documents tagged with `#bindings-interface-hardening
 - `2026-06-15-bindings-interface-hardening-W03-P05-S14` - generalise the IVA unsupported-observation screen into a per-family unrouted-observation screen that flags an unrouted declarable observation for every aggregation family
 - `2026-06-15-bindings-interface-hardening-W03-P05-S15` - wire the per-family unrouted-observation advisory diagnostics on the live calculate path so a resolver surfaces an advisory instead of a silent Decimal(0)
 - `2026-06-15-bindings-interface-hardening-W03-P05-S16` - add silent-zero refusal tests per family asserting a positive unrouted observation raises an advisory rather than resolving to zero
-- `2026-06-15-bindings-interface-hardening-W03-P06-S17` - unify the three ADR-R2 revision-carry gate copies onto one shared path consumed by the binding-prefill, cross-period clean-state, and relation-prefill callers
 - `2026-06-15-bindings-interface-hardening-W03-P06-S18` - emit a diagnostic for an unresolved non-formula relation that today produces neither value nor warning at calculate time
 - `2026-06-15-bindings-interface-hardening-W03-P06-S19` - add carry-gate parity and relation-diagnostic tests asserting one gate path and a surfaced diagnostic for an unresolved non-formula relation
 - `2026-06-15-bindings-interface-hardening-W04-P07-S20` - add legal_refs, source_refs and a typed source kind to ModeloBindingValue at parity with the casilla provenance model, re-reading HEAD and git diff before editing the encrypted boundary

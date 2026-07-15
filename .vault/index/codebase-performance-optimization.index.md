@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#codebase-performance-optimization'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-09-codebase-performance-optimization-W01-P01-S01]]'
   - '[[2026-06-09-codebase-performance-optimization-W01-P01-S02]]'
@@ -28,7 +28,7 @@ Auto-generated index of all documents tagged with `#codebase-performance-optimiz
 
 ### adr
 
-- `2026-06-09-codebase-performance-optimization-adr` - `codebase-performance-optimization` adr: `Codebase Performance Optimization and Nested Parsing` | (**status:** `{accepted|rejected|deprecated}`)
+- `2026-06-09-codebase-performance-optimization-adr` - `codebase-performance-optimization` adr: `Codebase Performance Optimization and Nested Parsing` | (**status:** `accepted`)
 
 ### exec
 

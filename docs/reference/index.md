@@ -5,7 +5,7 @@ technical surfaces while you work. For installation and first use, start with
 the [installation guide](../workstation-setup.md) and
 [quickstart](../how-to/quickstart.md). For a task, choose a
 [how-to guide](../how-to/index.md). For the relationships between stages, read
-[how Cadrumo turns records into a filing-ready tax file](../explanation/index.md).
+[how imports, exports, and evidence differ](import-export-and-evidence.md).
 
 The Agencia Estatal de Administración Tributaria (AEAT) is the external tax
 authority. The command-line interface (CLI), Model Context Protocol (MCP), and
@@ -13,6 +13,9 @@ application programming interface (API) are Cadrumo product surfaces.
 
 ## Lookup map
 
+- [Import, export, and evidence](import-export-and-evidence.md) - supported
+  source material, authority boundaries, export purposes, and the evidence
+  required for filing review or audit.
 - [Identity and naming](identity-and-naming.md) - canonical product identifiers
   and the Cadrumo-versus-AEAT vocabulary.
 - [Commands and configuration](commands-and-configuration.md) - CLI,
@@ -37,6 +40,7 @@ its fallback when private reporting is unavailable.
 :hidden:
 
 identity-and-naming
+import-export-and-evidence
 commands-and-configuration
 filesystem-state-and-safety
 registry-legal-api

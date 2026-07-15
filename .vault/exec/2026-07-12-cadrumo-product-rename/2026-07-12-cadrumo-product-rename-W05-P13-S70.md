@@ -10,9 +10,6 @@ related:
   - "[[2026-07-14-cadrumo-product-rename-audit]]"
 ---
 
-
-
-
 # Rewrite active user guides with `aeat` invocations, CADRUMO product prose, and preserved AEAT authority language
 
 ## Scope

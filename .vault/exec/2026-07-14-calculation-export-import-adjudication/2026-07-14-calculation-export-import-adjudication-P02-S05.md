@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Adjudicate Modelo 184 export only for the 2025-and-following authority window and gate earlier revisions
 
 ## Scope

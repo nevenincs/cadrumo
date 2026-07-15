@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-history-fetch'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-16-aeat-history-fetch-adr]]'
   - '[[2026-04-16-aeat-history-fetch-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#aeat-history-fetch`.
 
 ### adr
 
-- `2026-04-16-aeat-history-fetch-adr` - adr: aeat filing-history read surface
+- `2026-04-16-aeat-history-fetch-adr` - adr: aeat filing-history read surface | (**status:** `accepted`)
 
 ### plan
 

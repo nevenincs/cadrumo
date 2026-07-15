@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-latency-budget'
-date: '2026-07-06'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-07-06-ledger-latency-budget-W01-P01-S01]]'

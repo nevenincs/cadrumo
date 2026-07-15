@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#data-storage'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-data-storage-adr]]'
   - '[[2026-04-12-data-storage-phase1-summary-exec]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#data-storage`.
 
 ### adr
 
-- `2026-04-12-data-storage-adr` - data-storage adr
+- `2026-04-12-data-storage-adr` - data-storage adr | (**status:** `accepted`)
 
 ### exec
 

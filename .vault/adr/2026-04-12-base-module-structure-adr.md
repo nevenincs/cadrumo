@@ -2,12 +2,12 @@
 tags:
   - "#adr"
   - "#base-module-structure"
-date: 2026-04-12
-modified: '2026-07-10'
-superseded_by: "[[2026-04-30-aeat-restructure-adr]]"
+date: '2026-04-12'
 related:
   - "[[2026-04-12-base-module-structure-research]]"
   - "[[2026-04-30-aeat-restructure-adr]]"
+superseded_by: '2026-04-30-aeat-restructure-adr'
+modified: '2026-07-15'
 ---
 # Base Module Structure ADR | (**status:** `superseded`)
 Date: 2026-04-12

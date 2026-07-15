@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#workflow-cli-surface-swarm'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-16-workflow-cli-surface-swarm-audit]]'
 ---

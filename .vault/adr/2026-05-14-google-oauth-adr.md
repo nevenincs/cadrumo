@@ -1,9 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#google-oauth'
+  - "#adr"
+  - "#google-oauth"
 date: '2026-05-14'
-modified: '2026-07-10'
 related:
   - "[[2026-05-14-google-oauth-reference]]"
   - "[[2026-05-14-google-oauth-research]]"
@@ -12,9 +11,10 @@ related:
   - "[[2026-05-13-google-oauth-taxonomy-adr]]"
   - "[[2026-05-13-google-oauth-adr]]"
   - "[[2026-05-13-google-oauth-plan]]"
+superseded_by: '2026-07-14-google-optional-adapter-boundary-adr'
+modified: '2026-07-14'
 ---
-
-# `google-oauth` adr: `schema-to-sheet engine and parity guarantee for bidirectional modelo sheets` | (**status:** `accepted`)
+# `google-oauth` adr: `schema-to-sheet engine and parity guarantee for bidirectional modelo sheets` | (**status:** `superseded`)
 
 ## Problem Statement
 

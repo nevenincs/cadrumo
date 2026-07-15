@@ -38,8 +38,6 @@ Submodules
    cadrumo.application.aggregation._retenciones
    cadrumo.application.aggregation._service
    cadrumo.application.aggregation._shared_issue_reasons
-   cadrumo.application.aggregation._source_fincas
-   cadrumo.application.aggregation._source_inventory
    cadrumo.application.aggregation._source_mesh
    cadrumo.application.aggregation._source_profile
    cadrumo.application.aggregation._withholding_source

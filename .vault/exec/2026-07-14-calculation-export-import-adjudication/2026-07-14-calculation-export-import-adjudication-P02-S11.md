@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Adjudicate Modelo 347 export by registered authority window and gate uncatalogued 2008-to-2010 layouts
 
 ## Scope

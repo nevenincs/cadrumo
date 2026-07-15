@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#self-healing-sync'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-self-healing-sync-adr]]'
   - '[[2026-04-12-self-healing-sync-audit]]'
@@ -30,7 +30,7 @@ Auto-generated index of all documents tagged with `#self-healing-sync`.
 
 ### adr
 
-- `2026-04-12-self-healing-sync-adr` - architecture decision record: self-healing sync
+- `2026-04-12-self-healing-sync-adr` - architecture decision record: self-healing sync | (**status:** `superseded`)
 
 ### audit
 

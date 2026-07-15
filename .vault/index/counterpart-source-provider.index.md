@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#counterpart-source-provider'
-date: '2026-07-04'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-04-counterpart-source-provider-adr]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#counterpart-source-provider`
 
 ### adr
 
-- `2026-07-04-counterpart-source-provider-adr` - `counterpart-source-provider` adr: `counterpart source provider design and enrollment` | (**status:** `proposed`)
+- `2026-07-04-counterpart-source-provider-adr` - `counterpart-source-provider` adr: `counterpart source provider design and enrollment` | (**status:** `accepted`)

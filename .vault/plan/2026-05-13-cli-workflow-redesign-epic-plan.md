@@ -3,13 +3,11 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-07-03'
+modified: '2026-07-15'
 tier: L4
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-08-cli-backend-boundary-adr]]'
-  - '[[2026-04-24-aeat-cli-wireframe-adr]]'
-  - '[[2026-05-02-aeat-cli-redesign-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-root-help-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr]]'
@@ -23,7 +21,6 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-research]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]'
-  - '[[2026-04-21-auth-cli-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
@@ -204,15 +201,15 @@ This Phase delivers thin cli exposure for central backend boundary enforcement a
 - [x] `W02.P010.S0059` - Handle central backend boundary enforcement failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W02.P010.S0060` - Validate help text for central backend boundary enforcement uses accepted vocabulary only; `tests/entrypoints/cli`.
 
-## Wave `W03` - aeat cli wireframe
+## Wave `W03` - historical operator-journey consolidation
 
-This Wave implements the `2026-04-24-aeat-cli-wireframe-adr` decision for operator command journey wireframe. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This completed Wave is execution provenance for the early operator-journey consolidation. The superseded wireframe is not current authority; the accepted `2026-05-12-cli-workflow-redesign-adr` apex and its child ADRs govern the live surface.
 
 ### Phase `W03.P011` - backend implementation
 
-This Phase delivers backend implementation for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
+This Phase records the completed backend implementation tranche now governed by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [x] `W03.P011.S0061` - Map the `2026-04-24-aeat-cli-wireframe-adr` decision into non-CLI service ownership for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0061` - Map the operator-journey requirements into non-CLI service ownership; current authority is `2026-05-12-cli-workflow-redesign-adr`; `src/aeat/application`.
 - [x] `W03.P011.S0062` - Implement Pydantic command and result contracts for operator command journey wireframe; `src/aeat/application`.
 - [x] `W03.P011.S0063` - Wire application or domain services required by operator command journey wireframe; `src/aeat/application`.
 - [x] `W03.P011.S0064` - Connect persistence, bucket events, registry data, or provider adapters required by operator command journey wireframe; `src/aeat/application`.
@@ -221,7 +218,7 @@ This Phase delivers backend implementation for operator command journey wirefram
 
 ### Phase `W03.P012` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
+This Phase records shadow duplicate removal for the operator journey under the current CLI apex.
 
 - [x] `W03.P012.S0067` - Audit duplicate implementations that overlap operator command journey wireframe; `src/aeat/application`.
 - [x] `W03.P012.S0068` - Delete duplicate backend branches that compete with operator command journey wireframe; `src/aeat/application`.
@@ -232,7 +229,7 @@ This Phase delivers shadow duplicate removal for operator command journey wirefr
 
 ### Phase `W03.P013` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
+This Phase records de-shim and de-stub cleanup for the operator journey under the current CLI apex.
 
 - [x] `W03.P013.S0073` - Delete compatibility shims that preserve rejected behavior for operator command journey wireframe; `src/aeat/application`.
 - [x] `W03.P013.S0074` - Delete placeholder stubs that claim support for operator command journey wireframe; `src/aeat/application`.
@@ -243,7 +240,7 @@ This Phase delivers de-shim and de-stub cleanup for operator command journey wir
 
 ### Phase `W03.P014` - real behavior verification
 
-This Phase delivers real behavior verification for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
+This Phase records real-behavior verification for the operator journey under the current CLI apex.
 
 - [x] `W03.P014.S0079` - Add service contract tests for operator command journey wireframe; `tests/entrypoints/cli`.
 - [x] `W03.P014.S0080` - Add persistence or registry integration tests for operator command journey wireframe; `tests/entrypoints/cli`.
@@ -254,7 +251,7 @@ This Phase delivers real behavior verification for operator command journey wire
 
 ### Phase `W03.P015` - thin cli exposure
 
-This Phase delivers thin cli exposure for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
+This Phase records thin CLI exposure for the operator journey under the current CLI apex.
 
 - [x] `W03.P015.S0085` - Expose accepted command handlers for operator command journey wireframe under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W03.P015.S0086` - Keep argument parsing for operator command journey wireframe separate from backend behavior; `src/aeat/entrypoints/cli`.
@@ -263,15 +260,15 @@ This Phase delivers thin cli exposure for operator command journey wireframe as 
 - [x] `W03.P015.S0089` - Handle operator command journey wireframe failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W03.P015.S0090` - Validate help text for operator command journey wireframe uses accepted vocabulary only; `tests/entrypoints/cli`.
 
-## Wave `W04` - aeat cli redesign
+## Wave `W04` - historical CLI consolidation
 
-This Wave implements the `2026-05-02-aeat-cli-redesign-adr` decision for historical cli redesign consolidation. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This completed Wave is execution provenance for the early CLI consolidation. The superseded redesign is not current authority; the accepted `2026-05-12-cli-workflow-redesign-adr` apex and its child ADRs govern the live surface.
 
 ### Phase `W04.P016` - backend implementation
 
-This Phase delivers backend implementation for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
+This Phase records the completed backend implementation tranche now governed by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [x] `W04.P016.S0091` - Map the `2026-05-02-aeat-cli-redesign-adr` decision into non-CLI service ownership for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0091` - Map the CLI consolidation requirements into non-CLI service ownership; current authority is `2026-05-12-cli-workflow-redesign-adr`; `src/aeat/application`.
 - [x] `W04.P016.S0092` - Implement Pydantic command and result contracts for historical cli redesign consolidation; `src/aeat/application`.
 - [x] `W04.P016.S0093` - Wire application or domain services required by historical cli redesign consolidation; `src/aeat/application`.
 - [x] `W04.P016.S0094` - Connect persistence, bucket events, registry data, or provider adapters required by historical cli redesign consolidation; `src/aeat/application`.
@@ -280,7 +277,7 @@ This Phase delivers backend implementation for historical cli redesign consolida
 
 ### Phase `W04.P017` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
+This Phase records shadow duplicate removal for the CLI consolidation under the current CLI apex.
 
 - [x] `W04.P017.S0097` - Audit duplicate implementations that overlap historical cli redesign consolidation; `src/aeat/application`.
 - [x] `W04.P017.S0098` - Delete duplicate backend branches that compete with historical cli redesign consolidation; `src/aeat/application`.
@@ -291,7 +288,7 @@ This Phase delivers shadow duplicate removal for historical cli redesign consoli
 
 ### Phase `W04.P018` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
+This Phase records de-shim and de-stub cleanup for the CLI consolidation under the current CLI apex.
 
 - [x] `W04.P018.S0103` - Delete compatibility shims that preserve rejected behavior for historical cli redesign consolidation; `src/aeat/application`.
 - [x] `W04.P018.S0104` - Delete placeholder stubs that claim support for historical cli redesign consolidation; `src/aeat/application`.
@@ -302,7 +299,7 @@ This Phase delivers de-shim and de-stub cleanup for historical cli redesign cons
 
 ### Phase `W04.P019` - real behavior verification
 
-This Phase delivers real behavior verification for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
+This Phase records real-behavior verification for the CLI consolidation under the current CLI apex.
 
 - [x] `W04.P019.S0109` - Add service contract tests for historical cli redesign consolidation; `tests/entrypoints/cli`.
 - [x] `W04.P019.S0110` - Add persistence or registry integration tests for historical cli redesign consolidation; `tests/entrypoints/cli`.
@@ -313,7 +310,7 @@ This Phase delivers real behavior verification for historical cli redesign conso
 
 ### Phase `W04.P020` - thin cli exposure
 
-This Phase delivers thin cli exposure for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
+This Phase records thin CLI exposure for the CLI consolidation under the current CLI apex.
 
 - [x] `W04.P020.S0115` - Expose accepted command handlers for historical cli redesign consolidation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W04.P020.S0116` - Keep argument parsing for historical cli redesign consolidation separate from backend behavior; `src/aeat/entrypoints/cli`.
@@ -975,15 +972,15 @@ This Phase delivers thin cli exposure for first run configuration initialization
 - [x] `W15.P075.S0449` - Handle first run configuration initialization failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W15.P075.S0450` - Validate help text for first run configuration initialization uses accepted vocabulary only; `tests/entrypoints/cli`.
 
-## Wave `W16` - auth cli
+## Wave `W16` - authentication CLI consolidation
 
-This Wave implements the `2026-04-21-auth-cli-adr` decision for authentication cli migration. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This completed Wave is execution provenance for authentication CLI consolidation. The superseded top-level auth CLI is not current authority; `2026-05-12-cli-workflow-redesign-config-auth-shape-adr` governs the live surface.
 
 ### Phase `W16.P076` - backend implementation
 
-This Phase delivers backend implementation for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
+This Phase records the completed backend implementation tranche now governed by `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`.
 
-- [x] `W16.P076.S0451` - Map the `2026-04-21-auth-cli-adr` decision into non-CLI service ownership for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0451` - Map authentication requirements into non-CLI service ownership; current authority is `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`; `src/aeat/application/auth`.
 - [x] `W16.P076.S0452` - Implement Pydantic command and result contracts for authentication cli migration; `src/aeat/application/auth`.
 - [x] `W16.P076.S0453` - Wire application or domain services required by authentication cli migration; `src/aeat/application/auth`.
 - [x] `W16.P076.S0454` - Connect persistence, bucket events, registry data, or provider adapters required by authentication cli migration; `src/aeat/application/auth`.
@@ -992,7 +989,7 @@ This Phase delivers backend implementation for authentication cli migration as r
 
 ### Phase `W16.P077` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
+This Phase records shadow duplicate removal for authentication under the current config-auth authority.
 
 - [x] `W16.P077.S0457` - Audit duplicate implementations that overlap authentication cli migration; `src/aeat/application/auth`.
 - [x] `W16.P077.S0458` - Delete duplicate backend branches that compete with authentication cli migration; `src/aeat/application/auth`.
@@ -1003,7 +1000,7 @@ This Phase delivers shadow duplicate removal for authentication cli migration as
 
 ### Phase `W16.P078` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
+This Phase records de-shim and de-stub cleanup for authentication under the current config-auth authority.
 
 - [x] `W16.P078.S0463` - Delete compatibility shims that preserve rejected behavior for authentication cli migration; `src/aeat/application/auth`.
 - [x] `W16.P078.S0464` - Delete placeholder stubs that claim support for authentication cli migration; `src/aeat/application/auth`.
@@ -1014,7 +1011,7 @@ This Phase delivers de-shim and de-stub cleanup for authentication cli migration
 
 ### Phase `W16.P079` - real behavior verification
 
-This Phase delivers real behavior verification for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
+This Phase records real-behavior verification for authentication under the current config-auth authority.
 
 - [x] `W16.P079.S0469` - Add service contract tests for authentication cli migration; `tests/application/auth`.
 - [x] `W16.P079.S0470` - Add persistence or registry integration tests for authentication cli migration; `tests/application/auth`.
@@ -1025,7 +1022,7 @@ This Phase delivers real behavior verification for authentication cli migration 
 
 ### Phase `W16.P080` - thin cli exposure
 
-This Phase delivers thin cli exposure for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
+This Phase records thin CLI exposure for authentication under the current config-auth authority.
 
 - [x] `W16.P080.S0475` - Expose accepted command handlers for authentication cli migration under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W16.P080.S0476` - Keep argument parsing for authentication cli migration separate from backend behavior; `src/aeat/entrypoints/cli`.

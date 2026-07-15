@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#crossperiod-filing-deadlock'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'
   - '[[2026-06-19-crossperiod-filing-deadlock-research]]'
@@ -32,7 +32,7 @@ Auto-generated index of all documents tagged with `#crossperiod-filing-deadlock`
 
 ### adr
 
-- `2026-06-19-crossperiod-filing-deadlock-adr` - `crossperiod-filing-deadlock` adr: `Cross-period filing deadlock: late local work file and local-chain export` | (**status:** `accepted` — Decision A implemented; Decision B implemented in a refined same-year scope)
+- `2026-06-19-crossperiod-filing-deadlock-adr` - `crossperiod-filing-deadlock` adr: `Cross-period filing deadlock: late local work file and local-chain export` | (**status:** `accepted`)
 
 ### audit
 

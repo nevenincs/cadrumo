@@ -1093,10 +1093,7 @@ def test_inline_span_detector_catches_line_wrapped_commands() -> None:
     joins each paragraph's wraps before extraction. A paragraph break (which a
     code span cannot cross) and a stripped fenced block never bridge two spans.
     """
-    wrapped = (
-        "Export the draft with `aeat app modelo export --modelo 130\n"
-        "--output ./x.boe`; upload it yourself.\n"
-    )
+    wrapped = "Export the draft with `aeat app modelo export --modelo 130\n--output ./x.boe`; upload it yourself.\n"
     spans = _inline_aeat_command_spans(wrapped)
     assert spans == ["aeat app modelo export --modelo 130 --output ./x.boe"]
 

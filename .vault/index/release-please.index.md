@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#release-please'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-release-please-adr]]'
   - '[[2026-04-12-release-please-audit]]'
@@ -25,7 +25,7 @@ Auto-generated index of all documents tagged with `#release-please`.
 
 ### adr
 
-- `2026-04-12-release-please-adr` - adr: release-please local-only autorelease
+- `2026-04-12-release-please-adr` - adr: release-please local-only autorelease | (**status:** `accepted`)
 
 ### audit
 

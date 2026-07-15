@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calculation-engine-foundations'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-15'
 tier: L4
 related:
   - '[[2026-06-10-calculation-engine-foundations-research]]'
@@ -12,6 +12,14 @@ related:
 ---
 
 # `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
+
+> **Completed-plan reconciliation (2026-07-15).** This plan records the executed
+> rollout; it is not current authority for the retired missing-stamp bridge.
+> The accepted period-revision ADR and always-on rule now require every
+> persisted observation stamp: missing or invalid payloads refuse at strict
+> load, and divergent or unreconfirmable populated stamps block carry. The
+> checked historical step wording below is retained as execution provenance,
+> not as a compatibility mandate.
 
 ## Epic intent
 

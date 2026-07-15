@@ -280,9 +280,7 @@ class TestAbortReasons:
         assert last.details is not None
         assert last.details["error_type"] == "ModeloBuilderError"
         assert last.details["error_message"] == "unresolved registry input"
-        assert (
-            last.details["next_action"] == "Repair the cited draft input and rerun aeat app modelo work calculate."
-        )
+        assert last.details["next_action"] == "Repair the cited draft input and rerun aeat app modelo work calculate."
 
     def test_preflight_failed(self) -> None:
         fx = _fixtures()

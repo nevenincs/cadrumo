@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-especial'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-07-prorrata-especial-adr]]'
   - '[[2026-07-10-prorrata-especial-research]]'

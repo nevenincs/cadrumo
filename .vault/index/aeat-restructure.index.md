@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-restructure'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-30-aeat-restructure-adr]]'
   - '[[2026-04-30-aeat-restructure-plan]]'
@@ -61,7 +61,7 @@ Auto-generated index of all documents tagged with `#aeat-restructure`.
 
 ### adr
 
-- `2026-04-30-aeat-restructure-adr` - `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted — execution-ready`)
+- `2026-04-30-aeat-restructure-adr` - `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted`)
 
 ### audit
 

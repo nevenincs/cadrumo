@@ -10,9 +10,6 @@ related:
   - "[[2026-07-14-cross-domain-continuity-persona-cadence-audit]]"
 ---
 
-
-
-
 # durable maintenance gate three  -  scheduled quarterly persona re-run of 3+ shapes (not ad-hoc)
 
 ## Scope

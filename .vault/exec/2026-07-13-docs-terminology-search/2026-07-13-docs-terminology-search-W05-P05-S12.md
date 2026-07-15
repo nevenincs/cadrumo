@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-terminology-search-plan]]"
 ---
 
-
-
-
 # Ship display_class in the injected Pagefind meta and replace the per-kind base-weight table with the one declared per-class user-first table (facts, modelo, casilla, cli, user docs, technical last), updating kind_base_weight consumers and tests
 
 ## Scope

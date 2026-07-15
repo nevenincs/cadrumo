@@ -42,5 +42,11 @@ def test_m303_annual_settlement_order_key_prioritises_legal_form_then_capture_ti
     quarterly = Period.from_year_and_code(2025, "4T")
     annual = Period.from_year_and_code(2025, "0A")
 
-    assert m303_annual_settlement_order_key(annual, earlier) > m303_annual_settlement_order_key(quarterly, later)
-    assert m303_annual_settlement_order_key(quarterly, later) > m303_annual_settlement_order_key(quarterly, earlier)
+    annual_earlier = m303_annual_settlement_order_key(annual, earlier)
+    quarterly_later = m303_annual_settlement_order_key(quarterly, later)
+    quarterly_earlier = m303_annual_settlement_order_key(quarterly, earlier)
+    assert annual_earlier is not None
+    assert quarterly_later is not None
+    assert quarterly_earlier is not None
+    assert annual_earlier > quarterly_later
+    assert quarterly_later > quarterly_earlier

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#usage-ratios'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-21-usage-ratios-adr]]'
   - '[[2026-04-21-usage-ratios-code-review-exec]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#usage-ratios`.
 
 ### adr
 
-- `2026-04-21-usage-ratios-adr` - `usage-ratios` adr: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `implemented`)
+- `2026-04-21-usage-ratios-adr` - `usage-ratios` adr: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `accepted`)
 
 ### exec
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#obligation-coverage-completeness'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-30-obligation-coverage-completeness-P01-S01]]'
   - '[[2026-06-30-obligation-coverage-completeness-P01-S02]]'

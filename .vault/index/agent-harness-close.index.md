@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness-close'
-date: '2026-07-02'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-02-agent-harness-close-audit]]'
 ---

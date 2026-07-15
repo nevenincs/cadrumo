@@ -74,6 +74,7 @@ rather than a constant returned.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
@@ -146,27 +147,31 @@ _REL_2024: dict[str, Decimal] = {
 
 
 def _scenario(*, ccaa: str, scenario_id: str, grounded: bool) -> RegistryCalculationScenario:
-    expected_outputs = tuple(
-        RegistryScenarioExpectedOutput(
-            target_casilla_id=validated_casilla_id(casilla_id, surface=casilla_id),
-            value=Decimal(value),
-            legal_refs=legal_refs,
-            source_refs=source_refs,
+    expected_outputs = (
+        tuple(
+            RegistryScenarioExpectedOutput(
+                target_casilla_id=validated_casilla_id(casilla_id, surface=casilla_id),
+                value=Decimal(value),
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            )
+            for casilla_id, value, legal_refs, source_refs in _GROUNDED_OUTPUTS
         )
-        for casilla_id, value, legal_refs, source_refs in _GROUNDED_OUTPUTS
-    ) if grounded else (
-        # The comparison harness requires at least one expected output; the
-        # non-grounded (Madrid) scenario in the anti-tautology check is never
-        # asserted via assert_registry_scenario_matches, its values are only
-        # read for the cross-residence divergence comparison. Use the
-        # CCAA-invariant base liquidable general (0500 = 23.900) as a harmless,
-        # true placeholder.
-        RegistryScenarioExpectedOutput(
-            target_casilla_id=validated_casilla_id("0500", surface="0500"),
-            value=Decimal("23900.00"),
-            legal_refs=("ley-35-2006:art-50", "ley-35-2006:art-52"),
-            source_refs=("lirpf-cuota-chain-authority",),
-        ),
+        if grounded
+        else (
+            # The comparison harness requires at least one expected output; the
+            # non-grounded (Madrid) scenario in the anti-tautology check is never
+            # asserted via assert_registry_scenario_matches, its values are only
+            # read for the cross-residence divergence comparison. Use the
+            # CCAA-invariant base liquidable general (0500 = 23.900) as a harmless,
+            # true placeholder.
+            RegistryScenarioExpectedOutput(
+                target_casilla_id=validated_casilla_id("0500", surface="0500"),
+                value=Decimal("23900.00"),
+                legal_refs=("ley-35-2006:art-50", "ley-35-2006:art-52"),
+                source_refs=("lirpf-cuota-chain-authority",),
+            ),
+        )
     )
     return RegistryCalculationScenario(
         id=scenario_id,
@@ -226,8 +231,8 @@ def test_cuotas_integras_anti_tautology_autonomic_tariff_changes_value() -> None
     aragon_values = aragon_report.calculation.values
     madrid_values = madrid_report.calculation.values
 
-    def _value(values: object, casilla_id: str) -> Decimal | None:
-        return values.get(validated_casilla_id(casilla_id, surface=casilla_id))  # type: ignore[attr-defined]
+    def _value(values: Mapping[CasillaId, Decimal | None], casilla_id: str) -> Decimal | None:
+        return values.get(validated_casilla_id(casilla_id, surface=casilla_id))
 
     for autonomic_casilla in ("0529", "0533", "0546"):
         assert _value(aragon_values, autonomic_casilla) != _value(madrid_values, autonomic_casilla), (

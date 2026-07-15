@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-
-
-
 # Run the full docs gate suite (nitpicky -n -W build, Pagefind, documented-command conformance, sequence goldens) and bring it green
 
 ## Scope
@@ -35,10 +32,6 @@ related:
 - Sweep logs: the per-run logs live at `_sweep_logs/S37_*.log` at the repo root. They are NOT committed; they should migrate to a gitignored/scratch home or be deleted post-close.
 - S37 was originally scoped to a separate baseline sweep; the coordinator forwarded the definitive GREEN verdict and directed this executor to close the step and land the plan-close commit.
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
-
 ## Outcome
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
