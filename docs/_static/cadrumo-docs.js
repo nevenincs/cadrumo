@@ -335,10 +335,52 @@
       return pagefindPromise;
     }
 
-    /* Per-kind ranking tier (ADR D5: term cards first, navigation second,
-     * full text third). Higher sorts first. The injected `weight` meta is the
-     * fine axis within a kind. */
-    var KIND_TIER = { concept: 4, cli: 3, casilla: 2, page: 1 };
+    /* Result iconography + ranking authority (ADR 2026-07-15 D7/D8). The Python
+     * injection seam ships a closed `display_class` on every injected record
+     * (`casilla`/`modelo`/`cli`/`technical`/`doc`) plus a `weight` already
+     * placed on the one user-first ladder (doc 1.0 > modelo 0.9 > casilla 0.8 >
+     * cli 0.7 > technical 0.5). This renderer READS that class verbatim for the
+     * icon and RANKS on that shipped weight; it NEVER re-derives the class from
+     * kind/URL heuristics (the exact duplicated-structural-fact failure that
+     * silently rotted the CLI targets — ADR Axis-6 O6b/O6c).
+     *
+     * Hand-authored inline SVG, one per display class, matching the file's
+     * existing 16×16 stroke/viewBox idiom (magnifier, chevron, copy). No
+     * icon-font, no external asset (`shipped-search-licence-clean`). A record
+     * with no shipped class (a full-text page hit, or an older index) degrades
+     * to no icon rather than a guessed one. */
+    var DISPLAY_CLASS_ICONS = {
+      casilla:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<rect x="2.5" y="2.5" width="11" height="11" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<path d="M5.4 8.2l1.9 1.9 3.3-3.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      modelo:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<path d="M4 2.2h5l3 3v8.6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3.2a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>' +
+        '<path d="M9 2.4v3h3M5.6 8.6h4.8M5.6 10.8h4.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+      cli:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<rect x="2.3" y="3" width="11.4" height="10" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<path d="M4.8 6.6l2 1.7-2 1.7M8.6 10.4h3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      technical:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<path d="M6 4.5L2.6 8 6 11.5M10 4.5L13.4 8 10 11.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      doc:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<path d="M6.4 6.4a1.7 1.7 0 0 1 3.2.6c0 1.1-1.5 1.4-1.6 2.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<circle cx="8" cy="11.3" r="0.65" fill="currentColor"/></svg>',
+    };
+
+    /* Crumb category label, keyed on the shipped display class where present,
+     * falling back to the record kind for a full-text page hit (no class). */
+    var DISPLAY_CLASS_LABEL = {
+      casilla: "Casilla",
+      modelo: "Modelo",
+      cli: "Command",
+      technical: "Reference",
+      doc: "Docs",
+    };
     var KIND_LABEL = {
       concept: "Term",
       cli: "Command",
@@ -348,17 +390,32 @@
 
     function cardFromPagefind(meta, fallbackTitle, url, excerpt) {
       var kind = (meta && meta.kind) || "page";
+      var displayClass = (meta && meta.display_class) || "";
       var title = (meta && meta.title) || fallbackTitle || url;
-      var crumbParts = [KIND_LABEL[kind] || "Result"];
+      var crumbParts = [DISPLAY_CLASS_LABEL[displayClass] || KIND_LABEL[kind] || "Result"];
       if (meta && meta.modelo && meta.number) {
-        crumbParts.push("Modelo " + meta.modelo + " · " + meta.number);
+        /* Casilla crumb: modelo + official number, plus the segmento the Python
+         * seam now ships so sibling casillas of a segmented modelo (M200
+         * `DP200014:00562`) read apart at a glance (ADR D6). */
+        var casillaCrumb = "Modelo " + meta.modelo + " · " + meta.number;
+        if (meta.segmento) casillaCrumb += " · " + meta.segmento;
+        crumbParts.push(casillaCrumb);
       } else if (meta && meta.command_path) {
         crumbParts.push(meta.command_path);
       } else if (meta && meta.domain) {
         crumbParts.push(meta.domain);
       }
+      /* Rank on the shipped user-first weight (D8): the Python ladder already
+       * encodes doc>modelo>casilla>cli>technical, so consuming `weight` keeps a
+       * single ranking authority instead of the retired local KIND_TIER (which
+       * re-keyed on kind and still ordered cli above casilla). An injected card
+       * carries a weight (0.7–1.0); a full-text page hit carries none, so it
+       * sits below every card — the retained RankingTier coarse axis (term/nav
+       * cards first, full text last) is the +1 card band; PERF-003's relevance
+       * tie-break within a band is preserved in compose(). */
       var weight = meta && meta.weight ? parseFloat(meta.weight) : 0;
       if (isNaN(weight)) weight = 0;
+      var isCard = displayClass !== "";
       /* Injected term/casilla/CLI records carry a clean single-language
        * `summary`; show that, never Pagefind's auto-excerpt of the record,
        * which is the cross-lingual token blob (title + every alias + all four
@@ -371,7 +428,8 @@
         crumb: crumbParts.join(" · "),
         excerpt: summary || excerpt || "",
         kind: kind,
-        tierRank: (KIND_TIER[kind] || 1) * 10 + weight,
+        displayClass: displayClass,
+        tierRank: (isCard ? 1 : 0) + weight,
       };
     }
 
@@ -399,8 +457,9 @@
      * ADR-D5 ladder reliably:
      *   1. a search SORTED by `weight` returns ONLY the injected records (the
      *      docs pages carry no `weight` key, so Pagefind drops them) ordered by
-     *      tier weight (concept 1.0 > cli 0.8 > casilla 0.7) - these are the
-     *      term-card tiers, guaranteed above the full text;
+     *      the D8 display-class ladder (doc 1.0 > modelo 0.9 > casilla 0.8 > cli
+     *      0.7) - these are the term/navigation card tiers, guaranteed above the
+     *      full text;
      *   2. a normal relevance search yields the full-text page hits (third
      *      tier). A page that is also a card is deduped away in compose(). */
     function searchPagefind(query) {
@@ -501,12 +560,14 @@
       var seenHref = {};
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
-        /* Primary axis: the tier rank (concept > cli > casilla > page), so cards
-         * always sit above full-text pages. Secondary: an exact/prefix title
-         * match, so the concept the operator literally typed leads its tier (the
-         * IVA concept for "iva", not VIES). Tertiary: the relevance rank, which
-         * orders the remaining within-tier ties and the cross-lingual matches
-         * (e.g. "pro rata" -> prorrata) whose title is in another language. */
+        /* Primary axis: the shipped-weight tier rank (D8 ladder doc > modelo >
+         * casilla > cli, every card above full-text pages), so cards always sit
+         * above full-text pages and casilla now outranks cli. Secondary: an
+         * exact/prefix title match, so the concept the operator literally typed
+         * leads its band (the IVA concept for "iva", not VIES). Tertiary: the
+         * PERF-003 relevance rank, which orders the remaining within-band ties
+         * and cross-lingual matches (e.g. "pro rata" -> prorrata) whose title is
+         * in another language. */
         if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
         var ma = titleMatch(a.title, query);
         var mb = titleMatch(b.title, query);
@@ -536,22 +597,37 @@
         item.setAttribute("role", "option");
         var link = document.createElement("a");
         link.href = entry.href;
+        /* Per-class result icon (ADR D7): the shipped `display_class`, read
+         * verbatim, selects one hand-authored inline SVG. A row with no shipped
+         * class (nav title, full-text page, handoff) gets no icon rather than a
+         * guessed one — never re-derive the class here. */
+        if (entry.displayClass && DISPLAY_CLASS_ICONS[entry.displayClass]) {
+          var icon = document.createElement("span");
+          icon.className =
+            "cadrumo-palette-item-icon cadrumo-palette-item-icon--" + entry.displayClass;
+          icon.setAttribute("aria-hidden", "true");
+          icon.innerHTML = DISPLAY_CLASS_ICONS[entry.displayClass]; // static SVG markup, no user data
+          link.appendChild(icon);
+        }
+        var body = document.createElement("span");
+        body.className = "cadrumo-palette-item-body";
         var title = document.createElement("span");
         title.className = "cadrumo-palette-item-title";
         title.textContent = entry.title;
-        link.appendChild(title);
+        body.appendChild(title);
         if (entry.crumb) {
           var crumb = document.createElement("span");
           crumb.className = "cadrumo-palette-item-crumb";
           crumb.textContent = entry.crumb;
-          link.appendChild(crumb);
+          body.appendChild(crumb);
         }
         if (entry.excerpt) {
           var ex = document.createElement("span");
           ex.className = "cadrumo-palette-item-excerpt";
           ex.textContent = entry.excerpt;
-          link.appendChild(ex);
+          body.appendChild(ex);
         }
+        link.appendChild(body);
         item.appendChild(link);
         item.addEventListener("mousemove", function () {
           select(index);

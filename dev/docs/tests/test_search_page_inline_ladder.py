@@ -149,6 +149,15 @@ def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
                 _ANY_TITLE,
                 "els => els.length ? els[0].textContent.trim() : ''",
             )
+            # The per-class D7 icon must render on the inline host too: the
+            # general-fact IVA concept ships display_class `doc`, so its row
+            # carries the doc icon SVG -- read verbatim from the shipped meta,
+            # never re-derived. Proves the icon lands on BOTH hosts (the shared
+            # controller renders it once for the modal and the page).
+            doc_icon_svgs = page.eval_on_selector_all(
+                f"{_MOUNT} .cadrumo-palette-item--concept .cadrumo-palette-item-icon--doc svg",
+                "els => els.length",
+            )
             browser.close()
     finally:
         httpd.shutdown()
@@ -161,3 +170,5 @@ def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
     # And the PERF-003 tie-break floats the exact-term concept ahead of VIES.
     if "VIES" in concept_titles:
         assert concept_titles.index("IVA") < concept_titles.index("VIES"), concept_titles
+    # D7: the doc-class icon rendered on the inline host's concept rows.
+    assert doc_icon_svgs > 0, "the doc class icon did not render on the search page"
