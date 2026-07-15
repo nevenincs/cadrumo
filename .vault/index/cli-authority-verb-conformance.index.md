@@ -35,6 +35,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S27]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S28]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S29]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S30]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -87,6 +88,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S27` - Route repository pointer reads, selection, rollback, and deletion clear through the same reentrant active-profile pointer transaction, preserve whole-create-span ownership and pointer-first test lock order, and remove the retired text-rollback persistence exemption
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S28` - Route profile-health repair mutation through the shared reentrant active-profile pointer transaction with locked reassessment, bounded fail-closed contention, and the health result's repairable flag as the sole eligibility authority, correct the three lifecycle CLI integration pointer setup calls to use the isolated backend root, then prove pointer-sourced unreadable-manifest repair, cold no-op behavior, and real CLI pointer repair, absence, and dangling-pointer outcomes
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S29` - Prove byte-exact failed-create rollback through the repository transaction nested under outer pointer ownership, then prove dangling-pointer repair fails closed under real thread contention and succeeds after lock release against real files
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S30` - Canonicalize active-profile labels to immutable bucket UUIDs at the WorkflowState and profile-health boundaries by composing the core precedence resolver with the existing manifest resolver without adding resolver authority, then prove a real lifecycle-repository-backed label override resolves its encrypted record and keeps a lower-priority dangling pointer ineligible until the override is cleared, after which the pointer becomes authoritative and repairable
 
 ### plan
 
