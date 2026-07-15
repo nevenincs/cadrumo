@@ -110,6 +110,75 @@ def _heading_char_for_depth(depth: int) -> str:
     return _HEADING_CHARS_BY_DEPTH[min(depth, len(_HEADING_CHARS_BY_DEPTH) - 1)]
 
 
+# ---------------------------------------------------------------------------
+# Page-routing authority — the single source of "which page renders a command"
+# ---------------------------------------------------------------------------
+#
+# The reference is organised into per-family and per-verb-group pages. Both the
+# page-writing loop in :func:`_generate_cli_reference_loaded` and the search
+# projection (``dev/docs/terminology/_cli_projection.py``, which deep-links each
+# command record) must agree on the exact page a given command lands on. These
+# two helpers plus :func:`cli_reference_page_for_command` are that one authority:
+# a layout change (family page -> group page, as happened once and stranded every
+# projected deep link on a bare landing page) is made here and both consumers
+# follow. Do not re-derive the mapping in a consumer.
+
+
+def _family_index_page_stem(family: str) -> str:
+    """Return the doc-page stem for a family's landing page, e.g. ``cli/config``.
+
+    A command mounted directly on the family root (no intervening verb group)
+    renders inline on this page.
+    """
+    return f"cli/{family}"
+
+
+def _verb_group_page_stem(family: str, group: str) -> str:
+    """Return the doc-page stem for a verb group's page, e.g. ``cli/app/ledger``.
+
+    The whole subtree of ``group`` (its leaf commands and any nested subgroups,
+    recursively) renders on this single page.
+    """
+    return f"cli/{family}/{group}"
+
+
+def cli_reference_page_for_command(command_path: tuple[str, ...]) -> str:
+    """Return the doc-page stem that renders the leaf command at ``command_path``.
+
+    This is the routing authority :func:`_generate_cli_reference_loaded` renders
+    against, shared with the search-index projection so a deep link always lands
+    on the page that actually carries the command's section. It mirrors the
+    generator's split exactly: a leaf mounted directly on a family (path length
+    3, e.g. ``aeat config lock``) renders on the family index page
+    (``cli/config``); a leaf under a verb group (length >= 4, e.g.
+    ``aeat app ledger add`` or the deeper ``aeat app ledger evidence add``)
+    renders on that group's own page (``cli/app/ledger``), keyed on the group
+    segment ``command_path[2]`` — because a group page renders its entire
+    subtree, however deep.
+
+    Args:
+        command_path: The full command path tuple including the leading
+            executable token, e.g. ``("aeat", "app", "ledger", "add")``.
+
+    Returns:
+        The ``.html``-less doc-page stem (e.g. ``cli/app/ledger``), with no
+        leading slash and no anchor fragment.
+
+    Raises:
+        ValueError: When ``command_path`` is too short to name a leaf command
+            (fewer than three tokens: executable, family, command).
+    """
+    if len(command_path) < 3:
+        raise ValueError(
+            f"command_path {command_path!r} is too short to name a leaf command "
+            "(expected at least ('aeat', <family>, <command>))",
+        )
+    family = command_path[1]
+    if len(command_path) == 3:
+        return _family_index_page_stem(family)
+    return _verb_group_page_stem(family, command_path[2])
+
+
 def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     """Return a clean environment for an ``aeat`` CLI-reference subprocess.
 
@@ -119,11 +188,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     Args:
         storage_root: Isolated Cadrumo local-storage root for the subprocess.
     """
-    environment = {
-        key: value
-        for key, value in os.environ.items()
-        if not key.upper().startswith(("CADRUMO_", "AEAT_"))
-    }
+    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
     return environment
@@ -638,8 +703,7 @@ def _render_family_index_page(
         parts.append(_rst_heading("Direct commands", "-"))
         parts.append("\n")
         parts.append(
-            f"These commands are mounted directly on ``aeat {family_name}``, with no"
-            f" intervening verb group.\n\n",
+            f"These commands are mounted directly on ``aeat {family_name}``, with no intervening verb group.\n\n",
         )
         for path in direct_leaf_paths:
             cmd = all_commands.get(path)
@@ -1029,7 +1093,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
             group_path = (*family_path, group_name)
             group_cmd = all_nodes[group_path]
             group_content = _render_verb_group_page(group_path, group_cmd, SCHEMA_REGISTRY)
-            rel_path = f"cli/{family}/{group_name}.rst"
+            rel_path = f"{_verb_group_page_stem(family, group_name)}.rst"
             rendered[rel_path] = group_content
             _write_text_if_changed(group_dir / f"{group_name}.rst", group_content)
 
@@ -1040,7 +1104,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
             SCHEMA_REGISTRY,
             all_nodes,
         )
-        rel_path = f"cli/{family}.rst"
+        rel_path = f"{_family_index_page_stem(family)}.rst"
         rendered[rel_path] = index_page_content
         _write_text_if_changed(output_dir / f"{family}.rst", index_page_content)
 
@@ -1169,6 +1233,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
 
 
 __all__ = [
+    "cli_reference_page_for_command",
     "collect_live_leaf_paths_in_subprocess",
     "generate_cli_reference",
     "generate_cli_reference_in_subprocess",
