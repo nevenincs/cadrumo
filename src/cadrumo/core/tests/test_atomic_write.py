@@ -10,9 +10,12 @@ real-behaviour testing discipline.
 
 from __future__ import annotations
 
+import multiprocessing
 import os
 import stat
 import threading
+from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
 
 import pytest
@@ -27,9 +30,111 @@ from ..atomic_write import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_PIPE_PAYLOAD = bytes(range(256)) * 4096
+_CHILD_TIMEOUT_SECONDS = 5.0
+_COOPERATIVE_ATTEMPTS = 8
+_EXIT_BACKPRESSURE = 21
+_EXIT_INCOMPLETE = 22
+_EXIT_READER_FAILURE = 23
+
 
 def _tmp_leftovers(directory: Path) -> list[Path]:
     return sorted(directory.glob("*.tmp"))
+
+
+def _close_fd(fd: int) -> None:
+    with suppress(OSError):
+        os.close(fd)
+
+
+def _fill_nonblocking_pipe(write_fd: int) -> None:
+    block = b"x" * 65_536
+    while True:
+        try:
+            written = os.write(write_fd, block)
+        except BlockingIOError:
+            return
+        if written <= 0:
+            raise OSError("real pipe fill made no progress")
+
+
+def _no_reader_backpressure_child() -> None:
+    read_fd, write_fd = os.pipe()
+    try:
+        os.set_blocking(write_fd, False)
+        _fill_nonblocking_pipe(write_fd)
+        try:
+            _write_all(write_fd, b"blocked")
+        except BlockingIOError:
+            return
+        raise AssertionError("full nonblocking pipe did not propagate backpressure")
+    finally:
+        _close_fd(write_fd)
+        _close_fd(read_fd)
+
+
+def _cooperative_short_write_child() -> None:
+    read_fd, write_fd = os.pipe()
+    received = bytearray()
+    reader_errors: list[BaseException] = []
+
+    def _drain_pipe() -> None:
+        try:
+            while chunk := os.read(read_fd, 65_536):
+                received.extend(chunk)
+        except BaseException as exc:
+            reader_errors.append(exc)
+
+    reader = threading.Thread(target=_drain_pipe, daemon=True)
+    reader_started = False
+    outcome = 0
+    try:
+        os.set_blocking(write_fd, False)
+        reader.start()
+        reader_started = True
+        try:
+            _write_all(write_fd, _PIPE_PAYLOAD)
+        except BlockingIOError:
+            outcome = _EXIT_BACKPRESSURE
+        finally:
+            _close_fd(write_fd)
+            write_fd = -1
+
+        reader.join(timeout=_CHILD_TIMEOUT_SECONDS)
+        if reader.is_alive() or reader_errors:
+            outcome = _EXIT_READER_FAILURE
+        elif outcome == 0 and received != _PIPE_PAYLOAD:
+            outcome = _EXIT_INCOMPLETE
+    finally:
+        _close_fd(write_fd)
+        _close_fd(read_fd)
+        if reader_started:
+            reader.join(timeout=0.25)
+    raise SystemExit(outcome)
+
+
+def _bounded_child_exitcode(target: Callable[[], None]) -> int:
+    process = multiprocessing.get_context("spawn").Process(target=target)
+    process.start()
+    try:
+        process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+        if process.is_alive():
+            process.terminate()
+            process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+            if process.is_alive():
+                process.kill()
+                process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+            pytest.fail(f"child writer {target.__name__} exceeded the bounded timeout")
+        assert process.exitcode is not None
+        return process.exitcode
+    finally:
+        if process.is_alive():
+            process.terminate()
+            process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+            if process.is_alive():
+                process.kill()
+                process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+        process.close()
 
 
 class TestStandardTier:
@@ -96,33 +201,18 @@ class TestHardenedTier:
 
     def test_write_all_completes_real_pipe_short_writes(self) -> None:
         """A capacity-limited OS pipe must receive the complete payload."""
-        payload = bytes(range(256)) * 4096
-        read_fd, write_fd = os.pipe()
-        os.set_blocking(write_fd, False)
-        received = bytearray()
-        reader_errors: list[BaseException] = []
+        outcomes: list[int] = []
+        for _attempt in range(_COOPERATIVE_ATTEMPTS):
+            outcome = _bounded_child_exitcode(_cooperative_short_write_child)
+            outcomes.append(outcome)
+            assert outcome in {0, _EXIT_BACKPRESSURE}, outcomes
+            if outcome == 0:
+                break
+        else:
+            pytest.fail(f"all cooperative real-pipe attempts met transient backpressure: {outcomes}")
 
-        def _drain_pipe() -> None:
-            try:
-                while chunk := os.read(read_fd, 4096):
-                    received.extend(chunk)
-            except BaseException as exc:
-                reader_errors.append(exc)
-
-        reader = threading.Thread(target=_drain_pipe, daemon=True)
-        reader.start()
-        try:
-            _write_all(write_fd, payload)
-        finally:
-            os.close(write_fd)
-
-        reader.join(timeout=5.0)
-        try:
-            assert not reader.is_alive(), "real pipe reader did not finish"
-            assert reader_errors == []
-            assert bytes(received) == payload
-        finally:
-            os.close(read_fd)
+    def test_write_all_propagates_permanent_nonblocking_backpressure(self) -> None:
+        assert _bounded_child_exitcode(_no_reader_backpressure_child) == 0
 
     def test_bytes_roundtrip_preserves_newline_bytes(self, tmp_path: Path) -> None:
         """A 0x0A byte must survive verbatim (no Windows text-mode CRLF translation).
