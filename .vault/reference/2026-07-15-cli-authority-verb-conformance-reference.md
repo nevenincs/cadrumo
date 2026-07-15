@@ -65,6 +65,94 @@ one application profile-pointer transaction service backed only by core atomic
 read/write/restore/clear primitives.  Repository and cold-start orchestration
 delegate to it, preserving byte-exact failed-create rollback.
 
+#### S24 active-profile pointer authority
+
+Scope: S24 makes core pointer mutation byte-preserving and crash-resistant. It
+defines core filesystem primitives, completes the hardened byte writer, and
+adds public exports. Caller routing, lifecycle policy, creation ordering, and
+rollback concurrency policy remain later work.
+
+The current text capture and restore paths can't capture arbitrary bytes.
+Payloads that aren't valid Unicode Transformation Format 8-bit (UTF-8) raise
+`UnicodeDecodeError`. Universal-newline decoding can also normalize exact line
+endings. Direct text restore can leave a partially written pointer file after
+an interruption. Direct unlink without a parent-directory sync can leave
+pointer removal non-durable after a crash.
+
+The *active-profile pointer* is the file resolved by `pointer_path(root)`. A
+*captured pointer* is its complete byte payload, or `None` when the file is
+absent. Parsed pointer content remains the domain of `read_pointer(root)`.
+Filesystem ownership belongs in `core/_bucket_pointer_io.py`; hardened write
+machinery remains in `core/atomic_write.py` and `core/locks.py`.
+
+The current core application programming interface (API) is in
+`core/_bucket_pointer_io.py`:
+
+- `pointer_path` occupies lines 37-46.
+- `read_pointer`, which performs strict parsing, occupies lines 49-76.
+- `resolve_active_bucket_id` occupies lines 79-120.
+- `require_active_bucket_id` occupies lines 123-153.
+- Deterministic atomic `write_pointer` occupies lines 155-186.
+
+The API has no byte capture, restore, or clear primitive. Existing read
+semantics remain unchanged for `config.py`, profile health, `ProfileRepository`,
+storage write policy, and authentication scope.
+
+Duplicate mutation owners remain outside core:
+
+- `_orchestration.py` owns `_clear_active_profile_pointer`, text capture, and
+  direct text restore or unlink.
+- `_profile_repository.py` owns text capture, direct text restore or
+  unlink, and direct clear.
+- `_profile_health.py` owns another direct unlink path.
+- `ProfileRepository` invokes these paths during create, delete, and select.
+- Command-line interface (CLI) tests import private orchestration helpers. The
+  imports remain recorded in `dev/import_hygiene_test_debt.json` at lines
+  273-289.
+
+S24 adds this minimal API:
+
+```python
+capture_pointer(root) -> bytes | None
+restore_pointer(root, captured: bytes | None) -> None
+clear_pointer(root) -> None
+```
+
+`capture_pointer` uses `read_bytes`. It preserves the complete payload byte for
+byte. `capture_pointer` returns `None` when the pointer is absent.
+
+When `captured` is `None`, `restore_pointer` calls `clear_pointer`. When
+`captured` contains bytes, `restore_pointer` calls
+`atomic_write_hardened_bytes`. S24 first makes that writer loop over a
+`memoryview` until every byte is written instead of assuming one `os.write`
+call consumes the full payload.
+
+The hardened path uses `O_EXCL`. On Portable Operating System Interface (POSIX)
+systems, it creates staging files with mode `0o600`. Where the operating system
+exposes `O_NOINHERIT` or `O_CLOEXEC`, the writer also marks file descriptors
+non-inheritable. It syncs the staged bytes, replaces the destination, and
+requests a parent-directory sync.
+
+`clear_pointer` treats an absent file as success. After a successful unlink,
+it calls `fsync_parent_dir`. `write_pointer` uses the same hardened byte path,
+while retaining its existing deterministic serialization. S24 exports the new
+functions from `_bucket_pointer_io.py` and the lazy `cadrumo.core` facade.
+Imports stay deferred to avoid the `Settings` bootstrap cycle.
+
+S25 adds interruption and exact-byte tests. S26 changes orchestration to use the
+S24 pointer API and defines rollback concurrency policy. S27 changes
+`ProfileRepository` to use the API. S28 changes profile health to use it. S29
+tests repository concurrency, and S30 tests active-profile resolution. S24
+doesn't reorder profile creation.
+
+Atomic replacement isn't compare-and-swap. Until S26 defines rollback race
+semantics, an unconditional restore can overwrite a concurrent selection.
+`fsync_parent_dir` never raises an exception. If `os.O_DIRECTORY` is
+unavailable, it returns without syncing. If opening, syncing, or closing the
+directory fails, it logs and suppresses the error. Python on Windows doesn't
+expose `os.O_DIRECTORY`, so S24 doesn't claim cross-platform directory
+durability.
+
 `reset_config(PROFILE|ALL)` at
 `src/cadrumo/application/config_reset.py:165-218` deletes profile lifecycle rows
 and bucket directories without clearing the active pointer and without using
