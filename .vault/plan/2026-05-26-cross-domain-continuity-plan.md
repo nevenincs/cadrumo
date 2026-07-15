@@ -414,7 +414,7 @@ Code-reviewer and Pere Marc re-run confirming IRPF tarifa applied, 130 to 100 pr
 
 Provide a legally grounded Modelo 100 2026 registry revision so a valid 2026 Modelo 130 annual projection can be discovered and calculated instead of failing before the calculation path.
 
-- [ ] `W07.P71.S422` - Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated; `campaign-2026 tax-year-2025 material is not a substitute; `src/cadrumo/_data/registry/aeat/modelos/100/, src/cadrumo/_data/corpus/, src/cadrumo/application/modelo/, src/cadrumo/**/tests/`.
+- [x] `W07.P71.S422` - Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated; `campaign-2026 tax-year-2025 material is not a substitute; `src/cadrumo/_data/registry/aeat/modelos/100/, src/cadrumo/_data/corpus/, src/cadrumo/application/modelo/, src/cadrumo/**/tests/`.
 
 ## Wave `W08` - localisation parity and hygiene
 
