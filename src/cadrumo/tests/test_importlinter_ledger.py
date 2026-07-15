@@ -33,6 +33,12 @@ _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>cadrumo\.[\w.*]+)\s*->\s*(?P<targe
 _APPLICATION_TO_ADAPTERS_BASELINE = 199  # reconciled live ceiling; this ratchet may decrease but not grow
 _APPLICATION_SOURCE_WILDCARD_BASELINE = 78  # reconciled live ceiling for application edges targeting cadrumo.adapters.**; may only decrease
 _DOMAIN_TO_ADAPTERS_BASELINE = 2  # reconciled live ceiling for test-only carveouts; may only decrease
+_SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS = frozenset(
+    {
+        ("cadrumo.domain.tests.**", "cadrumo.adapters.**"),
+        ("cadrumo.domain.**.tests.**", "cadrumo.adapters.**"),
+    },
+)
 
 
 @dataclass(frozen=True)
@@ -131,7 +137,10 @@ def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreE
         for edge in layered_edges
         if edge.source.startswith("cadrumo.domain.") and edge.target.startswith("cadrumo.adapters")
     )
+    observed_pairs = {(edge.source, edge.target) for edge in domain_adapter_edges}
+    unexpected_pairs = observed_pairs - _SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS
 
+    assert not unexpected_pairs, f"unexpected layered domain -> adapters ignore pairs: {sorted(unexpected_pairs)}"
     assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
 
 
