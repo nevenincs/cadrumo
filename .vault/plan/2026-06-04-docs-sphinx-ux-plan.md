@@ -114,7 +114,7 @@ Close the UX pass only after a human reviewer accepts the actual desktop and mob
 
 - [x] `W03.P08.S24` - prepare the final rendered approval packet; `docs/_build/html`.
 - [x] `W03.P08.S25` - obtain explicit human approval for rendered experience; `human final review gate`.
-- [ ] `W03.P08.S26` - record approved follow-up UX issues; `.vault/exec/2026-06-04-docs-sphinx-ux`.
+- [x] `W03.P08.S26` - record approved follow-up UX issues; `.vault/exec/2026-06-04-docs-sphinx-ux`.
 
 ## Parallelization
 
