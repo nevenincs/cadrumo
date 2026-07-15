@@ -80,10 +80,7 @@ def _write_all(fd: int, data: bytes) -> None:
     view = memoryview(data)
     offset = 0
     while offset < len(view):
-        try:
-            written = os.write(fd, view[offset:])
-        except BlockingIOError:
-            continue
+        written = os.write(fd, view[offset:])
         if written <= 0:
             raise OSError("atomic byte write made no progress")
         offset += written

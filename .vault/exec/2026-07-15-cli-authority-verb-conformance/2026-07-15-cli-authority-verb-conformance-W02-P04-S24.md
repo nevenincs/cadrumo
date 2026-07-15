@@ -27,6 +27,7 @@ related:
 - Export the new pointer operations through the cycle-safe lazy core facade.
 - Complete short descriptor writes with the established memoryview-and-offset loop and reject non-positive progress.
 - Prove the write-all behavior through a capacity-limited real operating-system pipe with a bounded reader and byte-exact payload assertion.
+- Remediate the independent review's permanent-backpressure reproduction by propagating `BlockingIOError`, bounding the writer itself in spawned child processes, and guaranteeing descriptor, thread, and process cleanup on every test path.
 - Detect the master-key writer's duplicated hardened filesystem mechanics, re-ground the expanded scope with a fresh explicit-port code search, and preserve its semantic facade while delegating all bytes to the core authority.
 - Remove the retired direct `os.open` and `os.write` policy exemptions and attribute the surviving core descriptor write to the complete-write helper.
 - Run focused Ruff, the complete atomic, pointer, sensitive-persistence policy, and master-key roundtrip suites, a fresh facade-import probe, and the uncached five-contract import graph.
@@ -42,8 +43,8 @@ PASS. Core now owns byte-exact active-profile pointer capture, restore, clear, a
 - `atomic_write_secure_bytes` remains the stable master-key semantic facade but now delegates to the sole hardened core filesystem writer; its duplicated descriptor implementation and policy exemptions are gone.
 - The lazy `cadrumo.core` facade resolves all three new operations without recreating the Settings bootstrap cycle.
 - Focused Ruff passed all six owned Python paths.
-- The expanded focused unit lane passed 58 tests across atomic writes, pointer IO, the pointer model, sensitive-persistence policy, and master-key roundtrips.
-- The real-pipe short-write test passed ten consecutive bounded executions; each run transferred a 1 MiB payload completely without a hang.
+- The remediated focused unit lane passed 59 tests across atomic writes, pointer IO, the pointer model, sensitive-persistence policy, and master-key roundtrips.
+- Both real-pipe nodes passed ten consecutive runs. Cooperative attempts require one byte-exact 1 MiB completion while permitting correctly propagated transient backpressure; the separate full-pipe/no-reader child requires permanent backpressure to propagate within the five-second process bound.
 - The fresh uncached import graph analyzed 3,418 files and 16,136 dependencies; all five contracts were kept and zero were broken.
 
 ## Notes
@@ -51,5 +52,7 @@ PASS. Core now owns byte-exact active-profile pointer capture, restore, clear, a
 Post-implementation RAG and exact searches found the expected direct text capture, direct restore, and unlink owners in profile orchestration, the profile repository, and profile health. They remain intentionally unchanged for Steps S26-S28. The searches also found separate complete-write loops for lockfiles and secure materialisation, whose descriptor-level policies are distinct from target-level hardened atomic replacement. The only master-key secure-write declaration now delegates directly to the core hardened writer, and exact caller search found no remaining master-key `os.open`, `os.write`, replacement, sync, or cleanup dialect.
 
 The docstring workflow used an independently RAG-grounded Researcher, an isolated RAG-grounded Author, and an Editor pass. It changed only the owned source docstrings and made no user-document claim that later caller routing is complete.
+
+The independent `s24-write-all-blocking-spin` MEDIUM finding is remediated. The review's full nonblocking pipe with no reader can no longer enter the former catch-and-retry loop: the operating-system `BlockingIOError` propagates unchanged. The memoryview offset loop remains responsible only for positive short-write completion. Spawned-process regression coverage bounds the writer before any join, terminates and kills on timeout, closes both pipe descriptors in the child, and rejects a one-write mutation as an incomplete payload rather than mistaking it for success.
 
 The broad feature Vault check's campaign-owned checks were clean. Its failed status came only from the same 29 pre-existing `feature-rename-integrity` diagnostics in unrelated historical execution folders recorded by the W01 prerequisite, plus one informational fresh-clone mtime skip. No unrelated Vault artifact was changed.
