@@ -1393,11 +1393,45 @@ a.sd-card:any-link,
 }
 
 .cadrumo-palette-item a:any-link {
+  align-items: flex-start;
   border-radius: var(--cadrumo-radius-s);
   color: var(--color-foreground-secondary);
-  display: block;
+  display: flex;
+  gap: 0.55rem;
   padding: 0.5rem 0.7rem;
   text-decoration: none;
+}
+
+/* Per-class result icon (ADR 2026-07-15 D7): a fixed leading column carrying the
+ * hand-authored inline SVG selected by the shipped `display_class`. The text
+ * column (`--body`) flexes beside it; `min-width: 0` lets the excerpt ellipsis
+ * clip inside the flex row. Rows with no shipped class render no icon and the
+ * body simply takes the full width. */
+.cadrumo-palette-item-icon {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  line-height: 0;
+  margin-top: 0.12rem;
+}
+
+.cadrumo-palette-item-icon svg {
+  display: block;
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+.cadrumo-palette-item-icon--doc,
+.cadrumo-palette-item-icon--modelo {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-palette-item-icon--casilla {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-palette-item-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .cadrumo-palette-item-title {
@@ -1422,9 +1456,9 @@ a.sd-card:any-link,
   color: var(--color-brand-content);
 }
 
-/* Pagefind term-card tiers: a kind badge on the crumb and a one-line excerpt
- * of the matched description. The badge colour distinguishes the surface
- * (term / casilla / command) at a glance. */
+/* Pagefind term-card tiers: a one-line excerpt of the matched description. The
+ * surface is distinguished by the leading per-class icon (D7) rather than the
+ * former crumb dot the icon supersedes. */
 .cadrumo-palette-item-excerpt {
   color: var(--color-foreground-muted);
   display: block;
@@ -1433,29 +1467,6 @@ a.sd-card:any-link,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cadrumo-palette-item--concept .cadrumo-palette-item-crumb::before,
-.cadrumo-palette-item--casilla .cadrumo-palette-item-crumb::before,
-.cadrumo-palette-item--cli .cadrumo-palette-item-crumb::before {
-  border-radius: var(--cadrumo-radius-s);
-  content: "";
-  display: inline-block;
-  height: 0.5rem;
-  margin-right: 0.4rem;
-  width: 0.5rem;
-}
-
-.cadrumo-palette-item--concept .cadrumo-palette-item-crumb::before {
-  background: var(--color-brand-content);
-}
-
-.cadrumo-palette-item--casilla .cadrumo-palette-item-crumb::before {
-  background: var(--color-foreground-secondary);
-}
-
-.cadrumo-palette-item--cli .cadrumo-palette-item-crumb::before {
-  background: var(--color-foreground-muted);
 }
 
 .cadrumo-palette-empty {
