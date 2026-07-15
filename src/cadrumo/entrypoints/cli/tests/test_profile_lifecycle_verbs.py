@@ -240,17 +240,17 @@ def test_config_profile_create_refuses_manifest_only_profile() -> None:
     assert "already exists" in result.output
 
 
-def test_repair_profile_named_active_clear_active_clears_pointer(tmp_path: Path) -> None:
+def test_repair_profile_named_active_clear_active_clears_pointer(_isolated_backend: Path) -> None:
     from ....core import BucketPointer, read_pointer, write_pointer
 
     stage_bucket_manifest("operator", label="operator")
-    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+    write_pointer(_isolated_backend, BucketPointer(bucket_id="operator", schema_version=1))
 
     result = _invoke_repair(("profile", "--profile", "operator", "--clear-active", "--yes"))
 
     assert result.exit_code == 0, result.output
     assert "cleared_pointer\tTrue" in result.output
-    assert read_pointer(tmp_path) is None
+    assert read_pointer(_isolated_backend) is None
 
 
 def test_config_profile_create_refuses_existing_profile() -> None:
@@ -649,13 +649,13 @@ def test_show_and_status_do_not_contradict_on_a_freshly_created_profile() -> Non
     assert "readiness\tready" not in status_result.output
 
 
-def test_config_profile_show_refuses_when_no_active_profile(tmp_path: Path) -> None:
+def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
     from ....core import clear_pointer
     from ....core.config import override_settings
 
-    clear_pointer(tmp_path)
+    clear_pointer(_isolated_backend)
     with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("show",))
     assert result.exit_code != 0
@@ -752,14 +752,14 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
 # --- Fix 3: degraded profile status exits non-zero ---
 
 
-def test_config_profile_status_exits_nonzero_for_dangling_pointer(tmp_path: Path) -> None:
+def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_backend: Path) -> None:
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
     from ....core import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
-    write_pointer(tmp_path, BucketPointer(bucket_id="phantom", schema_version=1))
+    write_pointer(_isolated_backend, BucketPointer(bucket_id="phantom", schema_version=1))
 
     result = _invoke_profile(("status",))
 
