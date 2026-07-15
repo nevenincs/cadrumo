@@ -429,7 +429,7 @@ html_context = {
         {"label": "Getting started", "doc": "how-to/index"},
         {"label": "CLI reference", "doc": "cli/index"},
         {"label": "How it works", "doc": "explanation/index"},
-        {"label": "API", "doc": "api/cadrumo"},
+        {"label": "API", "doc": "api/index"},
     ],
     "cadrumo_broadcasts": [
         {
@@ -478,10 +478,10 @@ html_context = {
     ),
 }
 if _USER_SCOPE:
-    # The header nav carries an "API" entry pointing at the excluded api/cadrumo
-    # page; drop it so the user-scope preview nav has no dead API link.
+    # The header nav carries an "API" entry pointing at the excluded api/index
+    # overview; drop it so the user-scope preview nav has no dead API link.
     html_context["cadrumo_nav"] = [
-        entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/cadrumo"
+        entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"
     ]
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
