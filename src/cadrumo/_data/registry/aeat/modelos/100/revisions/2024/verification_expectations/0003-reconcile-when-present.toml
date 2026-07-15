@@ -51,9 +51,18 @@ computed_casilla_ids = []
 # don A.B.C. residente en Aragon (see
 # corpus/manual_oracles/modelo-100-2024-cuotas-integras-escala-aragon.json and
 # test_m100_2024_cuotas_integras_escala_aragon_manual_worked_example.py).
+# 0418/0419 ("Ganancias/Perdidas patrimoniales base general (suma)"), 0421
+# ("Saldo neto negativo base general"), 0422/0423 ("Ganancias/Perdidas
+# patrimoniales base del ahorro (suma)") and 0424 ("Saldo neto positivo base del
+# ahorro") reproduce 4.500 / 9.600 / 5.100 / 5.600 / 1.600 / 4.000
+# respectively, the current-year gains/losses integration-and-compensation
+# subtotals the same manual (Parte 1, Cap. 12) states verbatim in its own "Caso
+# practico" de don A.P.G. (see
+# corpus/manual_oracles/modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json
+# and test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py).
 # The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
 # both declarations symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",
