@@ -38,7 +38,7 @@ Complete the Modelo 100 (Renta) capital gains/losses, base reductions, minimums 
 
 - [x] `P02.S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [x] `P02.S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
-- [ ] `P02.S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P02.S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ## Description
 

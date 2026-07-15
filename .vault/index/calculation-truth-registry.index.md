@@ -249,6 +249,7 @@ related:
   - '[[2026-07-14-calculation-truth-registry-P01-S02]]'
   - '[[2026-07-14-calculation-truth-registry-P02-S03]]'
   - '[[2026-07-14-calculation-truth-registry-P02-S04]]'
+  - '[[2026-07-14-calculation-truth-registry-P02-S05]]'
   - '[[2026-07-14-calculation-truth-registry-audit]]'
   - '[[2026-07-14-calculation-truth-registry-plan]]'
 ---
@@ -505,6 +506,7 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-07-14-calculation-truth-registry-P01-S02` - Land the Modelo 131 2024 export-roundtrip, historical date-axis, and live-filed-data-parser behaviour tests the legacy plan's own sub-bullets still list open
 - `2026-07-14-calculation-truth-registry-P02-S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples
 - `2026-07-14-calculation-truth-registry-P02-S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples
+- `2026-07-14-calculation-truth-registry-P02-S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope
 
 ### plan
 
