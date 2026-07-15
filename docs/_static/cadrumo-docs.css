@@ -1317,6 +1317,66 @@ a.sd-card:any-link,
   color: var(--color-foreground-muted);
 }
 
+/* In-flight search signal. Pagefind resolves async and the list deliberately
+ * keeps the previous results painted meanwhile, so the head carries the "a
+ * newer answer is coming" signal instead. The spinner keeps its slot at all
+ * times and only fades in, so appearing never shifts the esc key beside it. */
+.cadrumo-palette-spin {
+  animation: cadrumo-palette-spin 0.7s linear infinite;
+  border: 2px solid var(--color-background-border);
+  border-radius: 50%;
+  border-top-color: var(--color-brand-content);
+  flex: 0 0 auto;
+  height: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.12s ease-in;
+  width: 0.85rem;
+}
+
+.cadrumo-palette.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+/* The stale rows the list is still showing are dimmed while a newer query is
+ * in flight: they are a real answer, just not the one being typed. */
+.cadrumo-palette.is-busy .cadrumo-palette-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@keyframes cadrumo-palette-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-palette-spin {
+    animation: none;
+    /* A frozen ring reads as a broken spinner, so drop the moving part and let
+     * the ring stand as a static "busy" mark; the polite live region carries
+     * the same state in words. */
+    border-color: var(--color-brand-content);
+    transition: none;
+  }
+
+  .cadrumo-palette.is-busy .cadrumo-palette-list {
+    transition: none;
+  }
+}
+
+/* Announced to assistive tech, never shown: the visible signal is the spinner
+ * plus the dimmed list. */
+.cadrumo-palette-status {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .cadrumo-palette-esc {
   flex: 0 0 auto;
 }
