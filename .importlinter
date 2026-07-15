@@ -1,5 +1,5 @@
 [importlinter]
-root_package = aeat
+root_package = cadrumo
 include_external_packages = False
 # Exclude TYPE_CHECKING-guarded imports from the import graph so that
 # type-annotation-only imports do not trigger layer-direction contracts.
