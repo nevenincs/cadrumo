@@ -22,6 +22,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S14]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S15]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S16]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S17]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -61,6 +62,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P02-S14` - Freeze the application-source wildcard ceiling at 78
 - `2026-07-15-cli-authority-verb-conformance-W01-P02-S15` - Freeze the domain test-edge ceiling at 2
 - `2026-07-15-cli-authority-verb-conformance-W01-P02-S16` - Assert the parsed Cadrumo ignore inventory and layered-contract inventory are non-empty
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S17` - Preserve the zero production-domain-to-adapters assertion and identify both test-only carveouts
 
 ### plan
 
