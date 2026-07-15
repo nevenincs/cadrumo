@@ -143,7 +143,7 @@ class AeatAuthenticator:
 
         async with AeatAuthenticator(settings) as auth:
             session = await auth.authenticate()
-            assertion = await auth.verify_login(session)
+            assertion = await auth.verify(session)
 
     Returned sessions use :class:`CertificateSessionDetail`, login probes use
     :class:`CertificateLoginAssertionDetail`, and persisted resume state is
@@ -206,11 +206,11 @@ class AeatAuthenticator:
         self._context: BrowserContextLike | None = None
         self._active_session: AeatSession | None = None
         # _closing is a one-way latch that, once set under the lock,
-        # prevents new verify_login() calls from registering in-flight
+        # prevents new verify() calls from registering in-flight
         # pages. Together with _inflight_drained it forms a strict
         # barrier: close() first latches _closing, then waits for
         # the drain event, then tears down the context. Any
-        # verify_login() call that arrives after the latch is set
+        # verify() call that arrives after the latch is set
         # raises rather than starting a navigation.
         self._closing = False
         self._inflight_pages = 0
@@ -345,7 +345,6 @@ class AeatAuthenticator:
             storage_state_path = self._resolve_storage_state_path(session_like)
             provisional_at = now()
             provisional_session = AeatSession(
-                provider_kind=self.kind,
                 authenticated_at=provisional_at,
                 idle_deadline=provisional_at + AEAT_SESSION_IDLE_TTL,
                 storage_state_path=storage_state_path,
@@ -403,7 +402,7 @@ class AeatAuthenticator:
         **Single-shot.** The method itself does not retry; callers
         cap retries at one per downstream call-site. A second
         consecutive failure — whether the cert load fails, the
-        handshake fails, or ``verify_login`` still returns
+        handshake fails, or ``verify`` still returns
         ``certificate_recognised=False`` — MUST raise
         :class:`AeatSessionExpiredError` upwards rather than loop.
 
@@ -437,7 +436,7 @@ class AeatAuthenticator:
         await self.close()
         return await self.authenticate()
 
-    async def verify_login(
+    async def verify(
         self,
         session: AeatSession,
         *,
@@ -493,7 +492,7 @@ class AeatAuthenticator:
         async with self._lock:
             if self._closing:
                 raise AeatLoginAssertionError(
-                    "authenticator is closing; no new verify_login allowed",
+                    "authenticator is closing; no new verify allowed",
                     translated_message="adapters.auth.authenticator.errors.closing",
                 )
             context = self._context
@@ -514,19 +513,6 @@ class AeatAuthenticator:
                 if self._inflight_pages <= 0:
                     self._inflight_pages = 0
                     self._inflight_drained.set()
-
-    async def verify(
-        self,
-        session: AeatSession,
-        *,
-        target_url: str | None = None,
-    ) -> AeatLoginAssertion:
-        """Provider-protocol alias for :meth:`verify_login`.
-
-        Returns:
-            A :class:`AeatLoginAssertion` describing the verification outcome.
-        """
-        return await self.verify_login(session, target_url=target_url)
 
     async def capture_storage_state(self, session: AeatSession) -> Path:
         """Persist the active Playwright state and :class:`PersistedSessionMetadata`."""
@@ -691,11 +677,11 @@ class AeatAuthenticator:
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.
 
-        Waits for any in-flight :meth:`verify_login` call to finish
+        Waits for any in-flight :meth:`verify` call to finish
         its navigation before tearing down the browser context, so a
         page cannot be closed out from under a running probe. A
         one-way ``_closing`` latch is set under the lock before the
-        drain wait so that a new ``verify_login`` cannot slip in
+        drain wait so that a new ``verify`` cannot slip in
         between the wait returning and the teardown acquiring the
         lock — the latch forces any arriving probe to raise.
 
@@ -705,10 +691,10 @@ class AeatAuthenticator:
         re-use path.
         """
         # Step 1: latch _closing under the lock so subsequent
-        # verify_login() calls raise before they register.
+        # verify() calls raise before they register.
         async with self._lock:
             self._closing = True
-        # Step 2: wait for any already-registered verify_login() to
+        # Step 2: wait for any already-registered verify() to
         # finish. No new registrations can clear the event because
         # the latch blocks them at their own lock acquisition.
         await self._inflight_drained.wait()
@@ -764,7 +750,6 @@ class AeatAuthenticator:
         return AeatLoginAssertion(
             target_url=target,
             is_valid=is_valid,
-            provider_kind=session.provider_kind,
             identity_nif=session.identity_nif,
             status_code=status_code,
             elapsed_ms=elapsed_ms,
@@ -854,7 +839,6 @@ class AeatAuthenticator:
             )
             self._assert_context_marker(context, cert)
             session = AeatSession(
-                provider_kind=self.kind,
                 authenticated_at=metadata.authenticated_at,
                 idle_deadline=metadata.idle_deadline,
                 storage_state_path=storage_state_path,

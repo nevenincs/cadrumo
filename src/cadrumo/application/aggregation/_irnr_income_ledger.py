@@ -216,8 +216,11 @@ def aggregate_irnr_income_ledger(
     declared_codes = _declared_m210_tipo_renta_codes(revision, period)
     if selected_official_tipo_renta_code not in declared_codes:
         raise AggregationValidationError(
-            "selected M210 official tipo-renta code is not declared by the calculation revision: "
-            f"{selected_official_tipo_renta_code!r}",
+            t("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),
+            context={
+                "tipo_renta_code": selected_official_tipo_renta_code,
+                "period": str(period),
+            },
         )
 
     observations: list[IrnrIncomeObservation] = []
@@ -257,7 +260,8 @@ def _declared_m210_tipo_renta_codes(revision: ModeloRevision, period: Period) ->
     )
     if len(parameters) != 1:
         raise AggregationValidationError(
-            f"Modelo 210 revision {revision.id!r} must declare exactly one official tipo-renta code parameter",
+            t("aggregation.irnr_income_ledger.errors.official_tipo_renta_parameter_count"),
+            context={"revision_id": str(revision.id)},
         )
     return frozenset(
         entry.key
@@ -368,10 +372,13 @@ def _irnr_gross_income_casilla_aggregation(
     totals: dict[CasillaId, Decimal] = {}
     grouped: dict[CasillaId, list[IrnrIncomeObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla_id] = totals.get(
-            observation.target_casilla_id,
-            Decimal("0"),
-        ) + observation.gross_income_amount
+        totals[observation.target_casilla_id] = (
+            totals.get(
+                observation.target_casilla_id,
+                Decimal("0"),
+            )
+            + observation.gross_income_amount
+        )
         grouped.setdefault(observation.target_casilla_id, []).append(observation)
     provenance = tuple(
         CasillaProvenance(

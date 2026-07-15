@@ -24,8 +24,7 @@ and is refused; a version at or above :data:`BUNDLE_DURABILITY_FLOOR` is
 readable exactly when the per-hop chain in
 :data:`BUNDLE_PAYLOAD_UPGRADERS` reaches the current version. The floor
 starts at the current version (no released bundles exist below it) and
-moves forward only through a superseding accepted ADR
-(``2026-07-08-released-data-durability-adr``). Callers must provision and
+only ever moves forward, never back. Callers must provision and
 collision-check the target bucket and hold the appropriate bucket
 session before deserialising; this module performs schema-version
 validation and typed repository writes.
@@ -52,8 +51,8 @@ if TYPE_CHECKING:
 BUNDLE_SCHEMA_VERSION: Final[int] = 3
 
 #: Oldest bundle version the import path keeps readable. Starts at the
-#: current version (no released bundles exist below it); moves forward only
-#: through a superseding accepted ADR.
+#: current version (no released bundles exist below it); only ever moves
+#: forward, never back.
 BUNDLE_DURABILITY_FLOOR: Final[int] = 3
 
 #: One-hop raw-payload upgraders keyed by ``from_version``: each transforms

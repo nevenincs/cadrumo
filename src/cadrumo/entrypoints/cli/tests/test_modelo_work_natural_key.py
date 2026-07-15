@@ -215,9 +215,9 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
     )  # fmt: skip
     assert revision_addressed.exit_code == 0, revision_addressed.output
     assert _payload(revision_addressed.output)["verification_report_id"] == report_id, revision_addressed.output
-    assert "modelo.work.verify.idempotent_noop" in [
-        n["code"] for n in _notices(revision_addressed.output)
-    ], revision_addressed.output
+    assert "modelo.work.verify.idempotent_noop" in [n["code"] for n in _notices(revision_addressed.output)], (
+        revision_addressed.output
+    )
 
 
 def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state() -> None:

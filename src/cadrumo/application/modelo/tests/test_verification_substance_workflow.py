@@ -76,10 +76,10 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repos) -> None:
     """M130 casilla 02 (Gastos) is ledger-bound, so an absent manual value never blocks.
 
-    Regression for finding M4: casilla 02 used to be ``input_kind = manual``,
+    Regression: casilla 02 used to be ``input_kind = manual``,
     so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA finding
     until they hand-entered ``--casilla 02=0``. Casilla 02 is now bound to the
-    ``ledger_renta_gasto_aggregation`` source (the H1 fix): the gasto resolver
+    ``ledger_renta_gasto_aggregation`` source: the gasto resolver
     populates it from the ledger (0 when there are no expenses), so the
     missing-required gate — which fires only for MANUAL required casillas — never
     flags it. The required=true flag is retained but is inert for a bound casilla.
@@ -160,8 +160,8 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     regex registered in _verification_actions._PREDICATE_<NAME_UPPER>. The probe
     map below names the expected module-level regex variable per
     operator; the test asserts (a) the regex exists, (b) it matches
-    the canonical probe expression for the operator. If the parallel
-    campaign that owns advisory_when_ratio_ge ever renames or
+    the canonical probe expression for the operator. If a future change
+    to the module that owns ``advisory_when_ratio_ge`` ever renames or
     removes that regex without updating the canonical set, this
     test fires.
     """
@@ -236,7 +236,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         assert regex.match(probe) is not None, (
             f"Runtime evaluator regex {regex_attr!r} does not match the canonical "
             f"probe expression for {operator_name!r}: probe={probe!r}; pattern="
-            f"{regex.pattern!r}. A probe-shape change in the parallel campaign "
+            f"{regex.pattern!r}. A probe-shape change elsewhere "
             "must be reflected here so the gate catches the next drift."
         )
 

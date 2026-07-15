@@ -53,6 +53,7 @@ from ._profile_readiness import (
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
 from ._sandbox import register_sandbox_commands
+from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 _log = _get_logger(__name__)
 
@@ -1020,30 +1021,25 @@ def config_status(
         )
         raise typer.Exit(code=2)
     if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
-        result = ConfigStatusResult(
+        result, lines = _unavailable_profile_record_status(
             active_profile=active_profile,
-            registered_profile=True,
-            profile_record_present=False,
-            configured=False,
+            status=profile_health.status,
             profile_record_error=profile_health.profile_record_error,
+            next_action=profile_health.next_action,
         )
-        lines = [
-            f"profile\t{active_profile}",
-            f"readiness\t{profile_health.status}",
-            "registered_profile\tpresent",
-            (
-                "profile_record\tunreadable"
-                if profile_health.status == "profile_record_unreadable"
-                else "profile_record\tmissing"
-            ),
-        ]
-        if profile_health.profile_record_error:
-            lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
-        lines.append(f"next_action\t{profile_health.next_action}")
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
     state = workflow_state_repository().load()
     record = state.active_profile_record()
+    if record is None:
+        result, lines = _unavailable_profile_record_status(
+            active_profile=active_profile,
+            status="missing_profile_record",
+            profile_record_error=None,
+            next_action=profile_health.next_action,
+        )
+        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        raise typer.Exit(code=2)
     values = record_to_path_values(record)
     if profile_health.status == "incomplete":
         result = ConfigStatusResult(

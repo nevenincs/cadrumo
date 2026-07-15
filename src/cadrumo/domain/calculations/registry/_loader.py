@@ -154,9 +154,7 @@ def _compute_loader_code_fingerprint() -> str:
     try:
         package_dir = Path(__file__).resolve().parent
         source_files = sorted(
-            path
-            for path in package_dir.rglob("*.py")
-            if "tests" not in path.relative_to(package_dir).parts
+            path for path in package_dir.rglob("*.py") if "tests" not in path.relative_to(package_dir).parts
         )
         for path in source_files:
             hasher.update(path.relative_to(package_dir).as_posix().encode("utf-8"))

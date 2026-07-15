@@ -340,6 +340,9 @@ aggregation:
       unsupported_modelo: No hay contrato de agregación registrado para el modelo
         solicitado.
   irnr_income_ledger:
+    errors:
+      official_tipo_renta_parameter_count: La revisión %{revision_id} del Modelo
+        210 debe declarar exactamente un parámetro de código oficial de tipo de renta.
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} es de
         fuente extranjera; el art. 13 del TRLIRNR la excluye de la proyección de rendimientos
@@ -5722,6 +5725,8 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
+    internal_active_profile_pointer_transaction: 'Error interno: la propiedad de la
+      transacción del puntero de perfil activo no es válida.'
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
       para ver qué falló.
@@ -6234,7 +6239,7 @@ mcp:
         presenta por sí mismo.'
       no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
         la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando aeat CLI equivalente directamente
+        hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI (`aeat`) directamente
         en un terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]

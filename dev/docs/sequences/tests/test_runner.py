@@ -312,12 +312,8 @@ class TestNumericJsonPathResolution:
                 },
             },
         }
-        assert _resolve_json_path(
-            document, 'result.casilla_values["decl.importe-operaciones"]'
-        ) == (True, "12345.00")
-        assert _resolve_json_path(
-            document, 'result.casilla_values["decl.numero-operadores"]'
-        ) == (True, "3")
+        assert _resolve_json_path(document, 'result.casilla_values["decl.importe-operaciones"]') == (True, "12345.00")
+        assert _resolve_json_path(document, 'result.casilla_values["decl.numero-operadores"]') == (True, "3")
         # An absent quoted key misses cleanly.
         assert _resolve_json_path(document, 'result.casilla_values["decl.nope"]') == (False, None)
 

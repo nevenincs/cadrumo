@@ -13,7 +13,11 @@ import pytest
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
-from ..adapters.persistence.storage import EphemeralMasterKeyProvider
+from ..adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    EphemeralMasterKeyProvider,
+    create_engine_from_settings,
+)
 from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketLifecycleStatus,
@@ -31,6 +35,7 @@ from ..adapters.persistence.storage.master_key import (
 )
 from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..adapters.persistence.storage.sql import Base
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
@@ -182,6 +187,35 @@ def reset_secure_object_store(repository: SecureObjectRepository) -> None:
         connection.execute(sa_text("DELETE FROM secure_objects"))
         if sa_inspect(engine).has_table("secure_objects_quarantine"):
             connection.execute(sa_text("DELETE FROM secure_objects_quarantine"))
+
+
+@contextmanager
+def isolated_injected_secure_object_repository(
+    *,
+    tmp_path: Path,
+    bucket_id: str,
+    database_name: str,
+) -> Iterator[SecureObjectRepository]:
+    """Yield a second real secure-object store under the active bucket session.
+
+    The repository uses its own SQLite engine and production schema while row
+    encryption remains bound to the caller's genuine active bucket session.
+    This supports source-injection proofs that must keep the injected catalogue
+    physically distinct from the ambient runtime catalogue.
+    """
+
+    settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / database_name).as_posix()}")
+    engine = create_engine_from_settings(settings)
+    Base.metadata.create_all(engine)
+    try:
+        yield SecureObjectRepository(
+            engine=engine,
+            namespace_registry=STORAGE_NAMESPACE_REGISTRY,
+            active_session_bucket_id=bucket_id,
+            require_secure_active_session=True,
+        )
+    finally:
+        dispose_engine(settings)
 
 
 @contextmanager

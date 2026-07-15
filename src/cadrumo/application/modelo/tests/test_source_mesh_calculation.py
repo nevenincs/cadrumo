@@ -262,7 +262,11 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
     assert exc_info.value.context is not None
     assert exc_info.value.context["period"] == "03"
     assert exc_info.value.context["transaction_count"] == 1
-    assert intracom_sale.transaction_id in exc_info.value.context["sample_transaction_ids"]
+    raw_sample_transaction_ids = exc_info.value.context["sample_transaction_ids"]
+    assert isinstance(raw_sample_transaction_ids, tuple)
+    sample_transaction_ids = tuple(value for value in raw_sample_transaction_ids if isinstance(value, str))
+    assert len(sample_transaction_ids) == len(raw_sample_transaction_ids)
+    assert intracom_sale.transaction_id in sample_transaction_ids
     assert cr_repo.load().revisions == {}
 
 

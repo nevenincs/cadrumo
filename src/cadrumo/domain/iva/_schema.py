@@ -188,8 +188,6 @@ class IvaExemptionArticle(StrEnum):
     The discriminator's legal grounding follows Ley 37/1992
     (BOE-A-1992-28740). Each retained member identifies the matching
     article as classification evidence; it is not an official-form binding.
-
-    Authority: ``2026-07-11-article-20-uno-26-correction-adr``.
     """
 
     ART_20_UNO_8 = "art_20_uno_8"

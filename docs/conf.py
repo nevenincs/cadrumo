@@ -480,9 +480,7 @@ html_context = {
 if _USER_SCOPE:
     # The header nav carries an "API" entry pointing at the excluded api/index
     # overview; drop it so the user-scope preview nav has no dead API link.
-    html_context["cadrumo_nav"] = [
-        entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"
-    ]
+    html_context["cadrumo_nav"] = [entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"]
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
 ogp_site_name = f"{PRODUCT_IDENTITY.prose_name} documentation"

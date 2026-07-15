@@ -216,7 +216,7 @@ if TYPE_CHECKING:
 
 # An explicit register call replaces a side-effect import so the
 # registration point is greppable rather than hidden behind a
-# noqa-protected import. Runs after all module-level imports settle so
+# suppression-protected import. Runs after all module-level imports settle so
 # the call sits in a clear initialiser slot. The resolver implementation
 # defers its workflow / orchestration imports inside its body so this
 # call does not trigger a heavy cascade.

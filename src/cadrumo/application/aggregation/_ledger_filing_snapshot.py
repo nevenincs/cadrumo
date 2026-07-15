@@ -223,13 +223,9 @@ def _evidence_row(
         m210_official_tipo_renta_code=(
             m210_classification.official_tipo_renta_code if m210_classification is not None else None
         ),
-        m210_gross_income_amount=(
-            m210_classification.gross_income_amount if m210_classification is not None else None
-        ),
+        m210_gross_income_amount=(m210_classification.gross_income_amount if m210_classification is not None else None),
         m210_applicable_rate=(m210_classification.applicable_rate if m210_classification is not None else None),
-        m210_payer_mode=(
-            _enum_value(m210_classification.payer_mode) if m210_classification is not None else None
-        ),
+        m210_payer_mode=(_enum_value(m210_classification.payer_mode) if m210_classification is not None else None),
         m210_payer_id=m210_classification.payer_id if m210_classification is not None else None,
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_eu_member_state=_enum_value(transaction.counterparty_eu_member_state),

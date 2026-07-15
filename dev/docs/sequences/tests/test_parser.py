@@ -102,13 +102,13 @@ def test_bracket_quoted_object_key_path_parses() -> None:
 
 
 def test_unterminated_quoted_key_path_is_refused() -> None:
-    body = "@result aeat app modelo verify\n@expect result.x[\"abc == 1\n"
+    body = '@result aeat app modelo verify\n@expect result.x["abc == 1\n'
     problems = _problems(body)
     assert any("is not a valid dotted path" in problem for problem in problems)
 
 
 def test_embedded_double_quote_in_key_path_is_refused() -> None:
-    body = "@result aeat app modelo verify\n@expect result.x[\"a\"b\"] == 1\n"
+    body = '@result aeat app modelo verify\n@expect result.x["a"b"] == 1\n'
     problems = _problems(body)
     assert any("is not a valid dotted path" in problem for problem in problems)
 
@@ -552,9 +552,7 @@ def test_static_frame_is_classified_and_excluded_from_executed_frames() -> None:
 def test_static_frame_may_follow_the_result_frame() -> None:
     """A @static frame is allowed after the terminal @result (it is display-only)."""
     sequence = _parse(
-        "@result aeat app modelo verify wu\n"
-        '@expect exit_code == 0\n'
-        "@static aeat app live justificante pull",
+        "@result aeat app modelo verify wu\n@expect exit_code == 0\n@static aeat app live justificante pull",
     )
     assert sequence.result_frame is not None
     assert sequence.frames[-1].kind is FrameKind.STATIC
@@ -585,9 +583,9 @@ def test_expect_on_static_frame_is_refused() -> None:
     """@expect cannot annotate a @static frame (nothing runs to assert)."""
     problems = _problems(
         "@result aeat app modelo verify wu\n"
-        '@expect exit_code == 0\n'
+        "@expect exit_code == 0\n"
         "@static aeat app live justificante pull\n"
-        '@expect exit_code == 0',
+        "@expect exit_code == 0",
     )
     assert any("@expect cannot annotate a @static frame" in problem for problem in problems)
 
@@ -596,7 +594,7 @@ def test_capture_on_static_frame_is_refused() -> None:
     """@capture cannot annotate a @static frame (it produces no output to capture)."""
     problems = _problems(
         "@result aeat app modelo verify wu\n"
-        '@expect exit_code == 0\n'
+        "@expect exit_code == 0\n"
         "@static aeat app live justificante pull\n"
         "@capture ref result.reference",
     )
@@ -606,8 +604,6 @@ def test_capture_on_static_frame_is_refused() -> None:
 def test_executed_frame_after_result_is_refused() -> None:
     """An executed frame after the @result is refused; only @static may follow it."""
     problems = _problems(
-        "@result aeat app modelo verify wu\n"
-        '@expect exit_code == 0\n'
-        "aeat app modelo create 303 --year 2026 --period 1T",
+        "@result aeat app modelo verify wu\n@expect exit_code == 0\naeat app modelo create 303 --year 2026 --period 1T",
     )
     assert any("must be the last EXECUTED frame" in problem for problem in problems)

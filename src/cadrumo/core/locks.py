@@ -83,50 +83,6 @@ def _lock_path_for(target: Path) -> Path:
     return target.with_name(target.name + ".lock")
 
 
-def fsync_parent_dir(target: Path) -> None:
-    """Best-effort fsync of the directory containing ``target``.
-
-    POSIX-only — Windows does not support fsync against a directory
-    handle (``os.O_DIRECTORY`` is not defined), and on Windows the
-    directory entry is updated atomically with ``os.replace`` anyway.
-
-    Used after an ``os.replace`` swap-in to ensure the directory entry
-    update is durable across power loss. Without this, a crash between
-    ``os.replace`` and the next directory flush could leave the entry
-    in an inconsistent state on POSIX filesystems where file fsync
-    does not imply directory fsync (ext4, xfs, etc.).
-
-    The function never raises — directory fsync is a best-effort
-    durability hardening, not a correctness gate. Callers that hit
-    a sandboxed-/read-only-/non-directory FD path should not see a
-    spurious failure on top of an otherwise-successful atomic
-    replace.
-
-    This helper hardens file-system durability after callers perform
-    their own atomic write/replace sequence. It does not acquire a lock,
-    validate payload contents, or convert a plaintext file into secure
-    storage.
-    """
-    if not hasattr(os, "O_DIRECTORY"):
-        return
-    parent = target.parent
-    try:
-        fd = os.open(parent, os.O_DIRECTORY | os.O_RDONLY)
-    except OSError:
-        _log.debug("fsync_parent_dir: could not open parent directory %s", parent, exc_info=True)
-        return
-    try:
-        try:
-            os.fsync(fd)
-        except OSError:
-            _log.debug("fsync_parent_dir: could not fsync parent directory %s", parent, exc_info=True)
-    finally:
-        try:
-            os.close(fd)
-        except OSError:
-            _log.debug("fsync_parent_dir: could not close parent directory fd for %s", parent, exc_info=True)
-
-
 if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
     import msvcrt
 

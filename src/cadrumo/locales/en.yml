@@ -302,6 +302,9 @@ aggregation:
       unsupported_modelo: No aggregation contract is registered for the requested
         modelo.
   irnr_income_ledger:
+    errors:
+      official_tipo_renta_parameter_count: Modelo 210 revision %{revision_id} must
+        declare exactly one official tipo-renta code parameter.
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is foreign-source;
         TRLIRNR Art. 13 excludes it from the Modelo 210 Spanish-source gross-income
@@ -5311,6 +5314,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
+    internal_active_profile_pointer_transaction: 'Internal error: active-profile
+      pointer transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -5790,7 +5795,7 @@ mcp:
         by design. Export locally; the taxpayer files themselves.'
       no_channel: '''{command}'' needs a human confirmation, and this client does
         not support elicitation. Run it from a client that can ask you questions,
-        or run the equivalent aeat CLI command directly in a terminal.'
+        or run the equivalent Cadrumo CLI (`aeat`) command directly in a terminal.'
   faithfulness:
     advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
       that no tool result in this session produced. Verify the figure against a calculate/revision

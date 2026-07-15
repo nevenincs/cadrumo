@@ -382,6 +382,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._profile_pointer_transaction.ActiveProfilePointerTransactionError",
+        ErrorCode(
+            code="INTERNAL_ACTIVE_PROFILE_POINTER_TRANSACTION",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_active_profile_pointer_transaction",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_REGISTERED",

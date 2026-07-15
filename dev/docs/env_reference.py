@@ -106,9 +106,7 @@ def render_environment_reference() -> str:
     rows = []
     for name, field in sorted(Settings.model_fields.items()):
         description = field.description or ""
-        rows.append(
-            f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field)} | {_escape(description)} |"
-        )
+        rows.append(f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field)} | {_escape(description)} |")
     return _HEADER + "\n".join(rows) + "\n" + _FOOTER
 
 

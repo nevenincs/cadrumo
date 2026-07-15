@@ -22,10 +22,10 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
-from pydantic_settings import DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import BaseSettings, DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
 
 from . import _config_live_tests as _live_test_config
 from ._config_integration_fields import (
@@ -152,6 +152,7 @@ the normal settings model.
 class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
     """Ignore former product dotenv keys without relaxing unknown-key checks."""
 
+    @override
     def __call__(self) -> dict[str, Any]:
         original_env_vars = self.env_vars
         self.env_vars = {
@@ -186,9 +187,10 @@ class Settings(AeatIntegrationSettings):
     )
 
     @classmethod
+    @override
     def settings_customise_sources(
         cls,
-        settings_cls: type[Settings],
+        settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
         env_settings: PydanticBaseSettingsSource,
         dotenv_settings: PydanticBaseSettingsSource,
@@ -1014,7 +1016,8 @@ class Settings(AeatIntegrationSettings):
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
         if self.cadrumo_live_iva_declaration_capture_timeout_ms >= self.cadrumo_live_iva_surface_timeout_ms:
             raise ValueError(
-                "cadrumo_live_iva_declaration_capture_timeout_ms must be lower than cadrumo_live_iva_surface_timeout_ms",
+                "cadrumo_live_iva_declaration_capture_timeout_ms must be lower than "
+                "cadrumo_live_iva_surface_timeout_ms",
             )
         return self
 

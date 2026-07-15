@@ -158,7 +158,7 @@ def _current_year_prorrata_from_m303_observation(
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
-        )
+        ).refused
         if refused:
             continue
         percentage = observation.casilla_values.get(_CURRENT_YEAR_PRORRATA_ID)

@@ -35,6 +35,7 @@ _PROSE_KEYS = {
         "cli.config.google.profile_help",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
+        "mcp.elicitation.refusal.no_channel",
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
@@ -45,18 +46,21 @@ _PROSE_KEYS = {
         "cli.config.custody.confirm_new_passphrase_prompt",
         "cli.config.custody.new_passphrase_prompt",
         "cli.config.google.profile_help",
+        "mcp.elicitation.refusal.no_channel",
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
+        "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
+        "mcp.elicitation.refusal.no_channel",
     },
 }
 _CLI_KEYS = {

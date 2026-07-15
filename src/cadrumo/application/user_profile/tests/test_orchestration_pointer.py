@@ -132,9 +132,7 @@ def test_repository_failed_create_restores_exact_pointer_bytes_under_outer_owner
             status=BucketLifecycleStatus.ACTIVE,
         ),
     )
-    survivor_pointer_bytes = (
-        f'# retained survivor\r\nschema_version = 1\r\nbucket_id = "{survivor_id}"\r\n'.encode()
-    )
+    survivor_pointer_bytes = f'# retained survivor\r\nschema_version = 1\r\nbucket_id = "{survivor_id}"\r\n'.encode()
     restore_pointer(root, survivor_pointer_bytes)
     assert capture_pointer(root) == survivor_pointer_bytes
     assert read_pointer(root) == BucketPointer(bucket_id=survivor_id, schema_version=1)

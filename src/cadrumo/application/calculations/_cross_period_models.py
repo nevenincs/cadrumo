@@ -65,19 +65,19 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     REGISTRY_REVISION_DIVERGENCE = "registry_revision_divergence"
     """Stamped revision id does not re-confirm against the law-determined revision for the source.
 
-    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: a prior
-    observation captured under a revision that is no longer the law-determined
-    revision for its source context, or whose source context cannot be resolved
-    for re-confirmation, must not silently propagate its norms. The carry is
-    refused until the operator re-files and re-stamps under the current revision.
+    A prior observation captured under a revision that is no longer the
+    law-determined revision for its source context, or whose source context
+    cannot be resolved for re-confirmation, must not silently propagate its
+    norms. The carry is refused until the operator re-files and re-stamps
+    under the current revision.
     """
 
 
 class NoPriorObligationProvenanceKind(StrEnum):
     """Provenance family for a no-prior-obligation pre-activity suppression.
 
-    ADR 2026-06-13-first-filer-attestation-adr: a cross-period dependency anchor
-    whose period falls strictly before the taxpayer's recorded activity-start
+    A cross-period dependency anchor whose period falls strictly before the
+    taxpayer's recorded activity-start
     date is scoped out of the requirement graph. The scoping is stamped with the
     provenance of the activity-start date that justified it.
 
@@ -117,8 +117,8 @@ class NoPriorObligationProvenanceKind(StrEnum):
 class NoPriorObligationProvenance(BaseModel):
     """Typed marker that a dependency was scoped out as no-prior-obligation.
 
-    ADR 2026-06-13-first-filer-attestation-adr: records the activity-start date
-    that scoped a pre-activity dependency out of the requirement graph and the
+    Records the activity-start date that scoped a pre-activity dependency out
+    of the requirement graph and the
     provenance kind of that date. The date is operator-declared — censal facts
     are operator-supplied through ``config profile edit`` since the live Modelo
     036 censo read was retired — so ``OPERATOR_DECLARED`` is the sole provenance
@@ -149,7 +149,7 @@ class NoPriorObligationProvenance(BaseModel):
 def _period_strictly_before_activity_start(period: Period, activity_start_date: date) -> bool:
     """Return whether ``period`` falls STRICTLY before the activity-start date.
 
-    ADR 2026-06-13-first-filer-attestation-adr, ratified boundary semantics: the
+    The ratified boundary semantics: the
     alta-CONTAINING period IS the first obligation; only STRICTLY-prior periods
     are suppressed. A period is strictly-prior when its entire inclusive span ends
     before the activity-start date - mirroring the deadline engine's pre-start
@@ -284,7 +284,7 @@ class CrossPeriodDependencyEvidence(BaseModel):
     no_prior_obligation: NoPriorObligationProvenance | None = None
     """Typed marker that this dependency was scoped out as no-prior-obligation.
 
-    ADR 2026-06-13-first-filer-attestation-adr: when the requirement's period
+    When the requirement's period
     falls strictly before the taxpayer's recorded activity-start date, the
     dependency is suppressed (no prior obligation could have legally existed) and
     this facet records the activity-start date and provenance that justified it.
@@ -339,7 +339,7 @@ class CrossPeriodDependencyEvidence(BaseModel):
     def suppressed_first_year_fractional(self) -> bool:
         """True when this dependency was scoped out as a first-year Modelo 202 modalidad-cuota.
 
-        ADR 2026-06-19-m202-first-period-attestation-adr: a first-year IS filer
+        A first-year IS filer
         under modalidad cuota (LIS art. 40.2) has no Modelo 202 pago-fraccionado
         obligation, so the cross-period dependency demanding evidence of a prior
         Modelo 200/202 that never existed is scoped out under the
@@ -355,9 +355,9 @@ class CrossPeriodDependencyEvidence(BaseModel):
     def operator_declared_suppression_advisory(self) -> bool:
         """True when the PRE-ACTIVITY suppression rests on an operator-declared (uncorroborated) date.
 
-        The verification caller raises a NON-BLOCKING advisory for this case per
-        the accepted ADR (operator-declared now, censo-corroborated when the live
-        censo surface is fixed). Scoped to the pre-activity facet only: the
+        The verification caller raises a NON-BLOCKING advisory for this case
+        (operator-declared now, censo-corroborated when the live censo surface
+        is fixed). Scoped to the pre-activity facet only: the
         first-year Modelo 202 modalidad-cuota suppression carries its own distinct
         advisory (:attr:`suppressed_first_year_fractional`) and must not cross-fire
         this one.
@@ -440,8 +440,6 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def suppressed_first_year_fractional_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
         """Return dependencies scoped out as first-year Modelo 202 modalidad-cuota.
 
-        ADR 2026-06-19-m202-first-period-attestation-adr.
-
         Returns:
             The :class:`CrossPeriodDependencyEvidence` entries suppressed as a
             first-year no-fractional-payment obligation (LIS art. 40.2).
@@ -452,8 +450,8 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def has_first_year_fractional_suppression_advisory(self) -> bool:
         """True when any dependency was scoped out as a first-year Modelo 202 modalidad-cuota.
 
-        The verification caller raises a NON-BLOCKING advisory for this case
-        (ADR 2026-06-19-m202-first-period-attestation-adr): a first-year IS filer
+        The verification caller raises a NON-BLOCKING advisory for this case:
+        a first-year IS filer
         under modalidad cuota (LIS art. 40.2) has no Modelo 202 obligation, but if
         the entity elected modalidad base (art. 40.3) it IS obligated; the operator
         bears legal responsibility for the modality, so the suppression is surfaced

@@ -28,7 +28,6 @@ from ......core import Period
 from ......core.i18n import tr
 from ...auth import (
     AeatSession,
-    AuthProviderKind,
     CertificateSessionDetail,
     HandshakeResult,
 )
@@ -48,7 +47,6 @@ _DEADLINE = _NOW + timedelta(hours=8)
 def _minimal_session(*, storage_state_path: Path | None, identity_nif: str = "12345678Z") -> AeatSession:
     """Build the smallest valid AeatSession for offline raises."""
     return AeatSession(
-        provider_kind=AuthProviderKind.CERTIFICATE,
         authenticated_at=_NOW,
         idle_deadline=_DEADLINE,
         storage_state_path=storage_state_path,

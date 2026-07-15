@@ -1,16 +1,12 @@
 """Bucket-event audit-tag emission for the accountant/gestor collaboration surface.
 
-This module closes the "``collab_event`` / ``privacy_event`` audit-tag
-enrolment" item left open on issue #421
-(`2026-07-04-recipient-encryption-adr` and its follow-up slices): every
-trust-boundary crossing on the review-package recipient-encryption surface
--- registering or removing a trusted recipient, sealing a package for a
-recipient, decrypting a sealed package, opening a review-only workspace, and
-counter-signing a received package -- now emits a typed
+Every trust-boundary crossing on the review-package recipient-encryption
+surface -- registering or removing a trusted recipient, sealing a package for
+a recipient, decrypting a sealed package, opening a review-only workspace,
+and counter-signing a received package -- emits a typed
 :class:`~domain.buckets.BucketEvent` so an operator can reconstruct the
 collaboration timeline from the bucket-event-history catalogue, mirroring
-every other material workflow transition in the codebase
-(``aeat-swarm-audit-cadence``'s persistence-identity axis; the pattern
+every other material workflow transition in the codebase (the pattern
 established by ``_iva_wallet_seed.py`` and ``_revision_persistence.py``).
 
 Two distinct event-name prefixes are used, per the enum's own grouping
@@ -18,9 +14,9 @@ comment: ``collab_event.*`` marks a TRUST/TRANSPORT-boundary action (adding a
 recipient, sealing a package for them) that does not itself expose decrypted
 material to the caller emitting the event; ``privacy_event.*`` marks a
 DISCLOSURE-relevant action where decrypted or otherwise sensitive material
-was read (decrypting a package, opening a review-only workspace). This
-mirrors the ADR's own vocabulary and lets a future audit query distinguish
-"who was trusted / what was sealed" from "what was actually read".
+was read (decrypting a package, opening a review-only workspace). This lets
+a future audit query distinguish "who was trusted / what was sealed" from
+"what was actually read".
 
 Every function in this module is a thin, pure composition over
 :func:`~application.modelo._revision_persistence.emit_bucket_event`
@@ -35,8 +31,7 @@ identifiers (recipient id, public-key fingerprint, revision id, bucket id)
 and small disposition flags (``review_only``), matching the existing
 bucket-event payload convention (short strings, no credentials).
 
-This module ALSO closes the "countersign-attach-to-journal" item left open on
-issue #421: :func:`emit_collab_feedback_countersign_attached_event` records,
+:func:`emit_collab_feedback_countersign_attached_event` records,
 on the ORIGINATOR's own bucket, that a recipient's counter-signed receipt
 (recovered from an imported
 :class:`~application.modelo.FeedbackPackage`, see

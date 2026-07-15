@@ -14,7 +14,7 @@ import json
 import os
 import stat
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import pytest
 
@@ -90,8 +90,9 @@ def test_put_sidecar_write_is_atomic_and_preserves_prior_content_on_failure(
     sidecar = target.with_name(target.stem + ".meta.json")
     original_sidecar_bytes = sidecar.read_bytes()
 
+    invalid_text: Any = None
     with pytest.raises(AttributeError):
-        atomic_write_text(sidecar, None, encoding="utf-8")  # type: ignore[arg-type]
+        atomic_write_text(sidecar, invalid_text, encoding="utf-8")
 
     assert sidecar.read_bytes() == original_sidecar_bytes
     assert list(sidecar.parent.glob("*.tmp")) == []

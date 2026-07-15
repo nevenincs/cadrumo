@@ -174,6 +174,8 @@ DNI, NIE, or NII.
 
 ## Next steps
 
+- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
+  distinguish the local upload file from official AEAT filing proof.
 - [Reconcile a filing](reconcile.md) - read verdicts and resolve mismatches.
 - [Verification reports](verification-reports.md) - understand what "verified"
   means before you export.

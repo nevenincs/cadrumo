@@ -66,6 +66,7 @@ InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 #: ``data-pagefind-ignore`` on the ``<body>`` of each page drops it from the
 #: index (the page's anchors stay in the DOM for the deep links to resolve).
 _PAGEFIND_EXCLUDED_SUBDIRS: Final[tuple[str, ...]] = ("_generated/casillas",)
+_UTF_8: Final[str] = "utf-8"
 
 _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)")
 
@@ -95,10 +96,10 @@ def _mark_excluded_pages(html_root: Path) -> int:
         if not root.is_dir():
             continue
         for page in root.rglob("*.html"):
-            html = page.read_text(encoding="utf-8")
+            html = page.read_text(encoding=_UTF_8)
             new_html, count = _BODY_TAG_RE.subn("<body data-pagefind-ignore", html, count=1)
             if count:
-                page.write_text(new_html, encoding="utf-8", newline="\n")
+                page.write_text(new_html, encoding=_UTF_8, newline="\n")
                 tagged += 1
     return tagged
 
@@ -160,7 +161,7 @@ def _mark_page_display_classes(html_root: Path) -> int:
     tagged = 0
     for page in html_root.rglob("*.html"):
         rel_path = page.relative_to(html_root).as_posix()
-        html = page.read_text(encoding="utf-8")
+        html = page.read_text(encoding=_UTF_8)
         if not _BODY_UNSTAMPED_RE.search(html):
             continue
         display_class = _page_display_class(rel_path)
@@ -170,7 +171,7 @@ def _mark_page_display_classes(html_root: Path) -> int:
             count=1,
         )
         if count:
-            page.write_text(new_html, encoding="utf-8", newline="\n")
+            page.write_text(new_html, encoding=_UTF_8, newline="\n")
             tagged += 1
     return tagged
 

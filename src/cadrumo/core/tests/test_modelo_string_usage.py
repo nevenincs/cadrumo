@@ -150,7 +150,9 @@ def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: 
             if key in _ALLOWLIST:
                 stale_allowlist.discard(key)
                 continue
-            offenders.append(f'src/cadrumo/{rel}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}')
+            offenders.append(
+                f'src/cadrumo/{rel}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}'
+            )
 
     assert not offenders, (
         "Bare modelo-code string literals found in production identifier positions; "

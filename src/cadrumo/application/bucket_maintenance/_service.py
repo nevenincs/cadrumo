@@ -1,8 +1,7 @@
 """``BucketMaintenanceService`` composition implementation.
 
 The service delegates every cross-store mutation to its existing
-single-writer primitive (see the ADR
-``2026-06-03-cli-workflow-redesign-adr``). It contributes the
+single-writer primitive. It contributes the
 bucket-maintenance audit-event emission that the inner primitives do
 not own; the inner primitives keep emitting their lifecycle events
 (``PROFILE_RENAMED`` etc.) so each operator action surfaces both
@@ -105,8 +104,7 @@ _ARCHIVE_SCHEMA_VERSION = 3
 
 #: Oldest sealed-archive schema version the import path keeps readable.
 #: Starts at the current version (no released archives exist below it);
-#: moves forward only through a superseding accepted ADR
-#: (``2026-07-08-released-data-durability-adr``).
+#: moves forward only through a deliberate, superseding decision.
 _ARCHIVE_DURABILITY_FLOOR = 3
 _RECOVERY_WRAP_SALT_BYTES = 16
 
@@ -281,8 +279,7 @@ class BucketMaintenanceService:
 
         Refuses unless ``command.confirmed`` is ``True``; refuses if
         the target bucket is the active profile (the operator must
-        switch profiles first, per the 2026-05-15 amendment to the
-        bucket ADR). Both refusals are service-boundary contracts,
+        switch profiles first). Both refusals are service-boundary contracts,
         not CLI ergonomics — a programmatic caller observes the same
         guarantees.
 
@@ -553,8 +550,7 @@ class BucketMaintenanceService:
 
         Key-level browse (returning operator-readable keys + classification
         per row) requires decryption and a ``SensitivityClass`` redaction
-        policy; deferred to a follow-up Step per the composition-pattern
-        ADR.
+        policy; not yet implemented.
         """
         from ...adapters.persistence.storage.runtime_repository import (
             secure_object_repository_for_active_bucket,

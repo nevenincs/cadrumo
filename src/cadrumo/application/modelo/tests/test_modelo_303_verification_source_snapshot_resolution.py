@@ -116,9 +116,7 @@ def test_m303_public_registry_validation_still_refuses_the_partial_shape() -> No
             )
         }
     )
-    partial_modelo = modelo.model_copy(
-        update={"revisions": {**modelo.revisions, revision_id: partial_revision}}
-    )
+    partial_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision_id: partial_revision}})
 
     with pytest.raises(RegistryValidationError, match="verification_source is not set"):
         RegistryValidator(authority.catalogues, source_root=authority.source_root).validate_modelo(partial_modelo)

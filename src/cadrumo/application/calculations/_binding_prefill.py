@@ -137,16 +137,7 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
         source_modelo=obs.modelo,
         source_filing_year=obs.filing_year,
         source_period=obs.period,
-    )
-
-
-def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:
-    """Return True when the payload's stamped revision cannot be re-confirmed.
-
-    See :func:`_revision_carry_outcome` — a divergent or unreconfirmable stamp
-    means the carry must be refused (the caller drops the observation).
-    """
-    return _revision_carry_outcome(payload)
+    ).refused
 
 
 class _GatheredObservation(BaseModel):

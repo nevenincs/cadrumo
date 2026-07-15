@@ -274,7 +274,6 @@ class _Fixtures:
 
 
 _WORKFLOW_SESSION = AeatSession(
-    provider_kind=AuthProviderKind.CLAVE_MOVIL,
     authenticated_at=datetime(2026, 4, 12, 8, 0, tzinfo=UTC),
     idle_deadline=datetime(2026, 4, 12, 8, 20, tzinfo=UTC),
     storage_state_path=None,

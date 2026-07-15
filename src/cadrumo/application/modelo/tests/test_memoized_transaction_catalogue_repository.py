@@ -1,5 +1,5 @@
 """Real-repository coverage for
-:class:`~application.modelo._calculation_actions._MemoizedTransactionCatalogueRepository`.
+:class:`~application.modelo._transaction_catalogue_cache.MemoizedTransactionCatalogueRepository`.
 
 The wrapper is exercised against the encrypted SQL-backed
 :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
@@ -39,7 +39,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
-from .._calculation_actions import _MemoizedTransactionCatalogueRepository
+from .._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -119,7 +119,7 @@ def test_load_cache_keeps_initial_catalogue_after_storage_changes(
     first_transaction = _transaction("provider-row-1", date(2024, 1, 15))
     added_transaction = _transaction("provider-row-2", date(2024, 2, 15))
     repository.save(_catalogue(first_transaction))
-    memoized = _MemoizedTransactionCatalogueRepository(repository)
+    memoized = MemoizedTransactionCatalogueRepository(repository)
 
     first_load = memoized.load()
     _repository(runtime_profile).save(_catalogue(first_transaction, added_transaction))
@@ -141,7 +141,7 @@ def test_date_range_cache_is_keyed_by_exact_window(
     added_january_transaction = _transaction("provider-row-2", date(2024, 1, 25))
     april_transaction = _transaction("provider-row-3", date(2024, 4, 10))
     repository.save(_catalogue(january_transaction, april_transaction))
-    memoized = _MemoizedTransactionCatalogueRepository(repository)
+    memoized = MemoizedTransactionCatalogueRepository(repository)
     january_window = (date(2024, 1, 1), date(2024, 1, 31))
 
     first_january_load = memoized.load_for_date_range(*january_window)
@@ -167,7 +167,7 @@ def test_full_load_and_date_range_caches_are_independent(
     january_transaction = _transaction("provider-row-1", date(2024, 1, 15))
     february_transaction = _transaction("provider-row-2", date(2024, 2, 15))
     repository.save(_catalogue(january_transaction))
-    memoized = _MemoizedTransactionCatalogueRepository(repository)
+    memoized = MemoizedTransactionCatalogueRepository(repository)
 
     full_load = memoized.load()
     _repository(runtime_profile).save(_catalogue(january_transaction, february_transaction))
@@ -186,7 +186,7 @@ def test_partition_cache_is_keyed_by_exact_window(
 
     Regression coverage for #408 Path A / O2: the M130 income and gasto
     resolvers request the IDENTICAL cumulative window via
-    :meth:`~_MemoizedTransactionCatalogueRepository.partition_by_date_range`
+    :meth:`~MemoizedTransactionCatalogueRepository.partition_by_date_range`
     in one calculate invocation, so this cache is load-bearing, not
     incidental.
     """
@@ -194,7 +194,7 @@ def test_partition_cache_is_keyed_by_exact_window(
     added_january_transaction = _transaction("provider-row-2", date(2024, 1, 25))
     april_transaction = _transaction("provider-row-3", date(2024, 4, 10))
     repository.save(_catalogue(january_transaction, april_transaction))
-    memoized = _MemoizedTransactionCatalogueRepository(repository)
+    memoized = MemoizedTransactionCatalogueRepository(repository)
     january_window = (date(2024, 1, 1), date(2024, 1, 31))
 
     first_january_partition = memoized.partition_by_date_range(*january_window)
@@ -218,7 +218,7 @@ def test_exists_save_and_bucket_id_delegate_to_concrete_repository(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,
 ) -> None:
-    memoized = _MemoizedTransactionCatalogueRepository(repository)
+    memoized = MemoizedTransactionCatalogueRepository(repository)
     first_transaction = _transaction("provider-row-1", date(2024, 1, 15))
     replacement_transaction = _transaction("provider-row-2", date(2024, 3, 15))
 

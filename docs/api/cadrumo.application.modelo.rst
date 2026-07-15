@@ -91,6 +91,7 @@ Submodules
    cadrumo.application.modelo._semantic_role_resolution
    cadrumo.application.modelo._settlement_grade_advisory
    cadrumo.application.modelo._taxation_comparison
+   cadrumo.application.modelo._transaction_catalogue_cache
    cadrumo.application.modelo._verification_actions
    cadrumo.application.modelo._verification_cross_period
    cadrumo.application.modelo._verification_predicates

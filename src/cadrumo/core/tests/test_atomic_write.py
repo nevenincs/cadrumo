@@ -17,6 +17,7 @@ import threading
 from collections.abc import Callable
 from contextlib import suppress
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -124,7 +125,8 @@ def _bounded_child_exitcode(target: Callable[[], None]) -> int:
             if process.is_alive():
                 process.kill()
                 process.join(timeout=_CHILD_TIMEOUT_SECONDS)
-            pytest.fail(f"child writer {target.__name__} exceeded the bounded timeout")
+            target_name = getattr(target, "__name__", type(target).__name__)
+            pytest.fail(f"child writer {target_name} exceeded the bounded timeout")
         assert process.exitcode is not None
         return process.exitcode
     finally:
@@ -184,8 +186,9 @@ class TestStandardTier:
         target = tmp_path / "payload.bin"
         atomic_write_bytes(target, b"OLD-CONTENT")
 
+        invalid_payload: Any = "not-bytes"
         with pytest.raises(TypeError):
-            atomic_write_bytes(target, "not-bytes")  # type: ignore[arg-type]
+            atomic_write_bytes(target, invalid_payload)
 
         assert target.read_bytes() == b"OLD-CONTENT"
         assert _tmp_leftovers(tmp_path) == []
@@ -284,8 +287,9 @@ class TestHardenedTier:
         target = tmp_path / "secret.bin"
         atomic_write_hardened_bytes(target, b"OLD-SECRET")
 
+        invalid_payload: Any = "not-bytes"
         with pytest.raises(TypeError):
-            atomic_write_hardened_bytes(target, "not-bytes")  # type: ignore[arg-type]
+            atomic_write_hardened_bytes(target, invalid_payload)
 
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []

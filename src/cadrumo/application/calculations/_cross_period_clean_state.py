@@ -77,7 +77,7 @@ _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
         # A live-captured justificante is the authentic AEAT-signed receipt
         # pulled read-only from the sede (the same PDF an operator would
         # download and import as aeat_justificante_pdf), so it satisfies the
-        # justificante-verification gate. See the live-justificante-reconcile ADR.
+        # justificante-verification gate.
         "aeat_live_capture",
     },
 )
@@ -128,13 +128,12 @@ def partition_cross_period_requirements_by_activity_start(
 ) -> _RequirementPartition:
     """Split registry-derived requirements into in-scope and pre-activity-suppressed.
 
-    ADR 2026-06-13-first-filer-attestation-adr: a dependency anchor whose period
-    falls strictly before ``activity_start_date`` is no-prior-obligation
-    (absent-by-design) and is scoped out of the evaluated graph. The scoping is an
-    application-layer filter over the registry-derived requirements - the registry
-    stays pure and the declared date is a grounded input (the same field the
-    deadline engine consumes), not a per-call ad hoc shrink
-    (``2026-06-05-cross-period-calculation-guards-adr``).
+    A dependency anchor whose period falls strictly before
+    ``activity_start_date`` is no-prior-obligation (absent-by-design) and is
+    scoped out of the evaluated graph. The scoping is an application-layer
+    filter over the registry-derived requirements - the registry stays pure
+    and the declared date is a grounded input (the same field the deadline
+    engine consumes), not a per-call ad hoc shrink.
 
     The suppression is uniform across BOTH ``previous_filing`` bindings and
     ``relation_source_requirements`` origins (the requirement carries its
@@ -223,9 +222,9 @@ def _suppressed_pre_activity_evidence(
 ) -> CrossPeriodDependencyEvidence:
     """Build the clean, facet-stamped evidence row for a pre-activity dependency.
 
-    ADR 2026-06-13-first-filer-attestation-adr: the requirement's period is
-    strictly before the recorded activity-start date, so no prior obligation could
-    have legally existed. There is no observation to load and nothing to stamp; the
+    The requirement's period is strictly before the recorded activity-start
+    date, so no prior obligation could have legally existed. There is no
+    observation to load and nothing to stamp; the
     binding value resolves to a provenance-marked ``Decimal`` zero through the
     existing absent-by-design path, recorded here as an explicit, auditable
     no-prior-obligation outcome with NO blockers (the row is :attr:`clean`).
@@ -309,8 +308,8 @@ def _suppressed_first_year_fractional_evidence(
 ) -> CrossPeriodDependencyEvidence:
     """Build the clean, facet-stamped evidence row for a first-year Modelo 202 modalidad-cuota dependency.
 
-    ADR 2026-06-19-m202-first-period-attestation-adr: the taxpayer is a first-year
-    Impuesto sobre Sociedades filer under modalidad cuota (LIS art. 40.2), whose
+    The taxpayer is a first-year Impuesto sobre Sociedades filer under
+    modalidad cuota (LIS art. 40.2), whose
     pago fraccionado is a percentage of the cuota íntegra of the LAST IS return
     whose deadline has elapsed. A first-year IS company has no such prior return,
     so the art. 40.2 modality produces no Modelo 202 obligation. There is no
@@ -344,8 +343,8 @@ def _qualifies_for_first_year_fractional_suppression(
 ) -> bool:
     """Return whether ``requirement`` is a first-year Modelo 202 modalidad-cuota obligation to scope out.
 
-    ADR 2026-06-19-m202-first-period-attestation-adr. A requirement qualifies IFF
-    ALL hold (fail-closed — any unmet condition keeps the requirement in scope):
+    A requirement qualifies IFF ALL hold (fail-closed — any unmet condition
+    keeps the requirement in scope):
 
     * the cross-period source is Modelo 202 (``source_modelo == "202"``);
     * the derived Modelo 202 modality is ``ART_40_2_OPTIONAL`` (modalidad cuota,
@@ -426,8 +425,7 @@ def evaluate_cross_period_clean_state(
     ``activity_start_date`` is the operator-declared activity-start date carried on
     the profile (the same field the deadline engine consumes for pre-start
     suppression). When supplied, a dependency whose period falls strictly before it
-    is scoped out as no-prior-obligation
-    (ADR 2026-06-13-first-filer-attestation-adr): it produces a clean,
+    is scoped out as no-prior-obligation: it produces a clean,
     facet-stamped evidence row instead of an evaluated blocker, and is NOT loaded
     from storage. When ``None`` every dependency is evaluated as before - the
     caller decides whether a missing declared date should fail closed.
@@ -437,8 +435,7 @@ def evaluate_cross_period_clean_state(
     is ``ART_40_2_OPTIONAL`` (modalidad cuota) AND the recorded
     ``activity_start_date`` places the taxpayer's first IS year at or after the
     target filing year, the Modelo 202 cross-period dependency is scoped out as a
-    first-year no-fractional-payment obligation
-    (ADR 2026-06-19-m202-first-period-attestation-adr): a first-year IS filer in
+    first-year no-fractional-payment obligation: a first-year IS filer in
     modalidad cuota has no prior IS return to provide the art. 40.2 cuota basis, so
     no pago fraccionado is owed. It is fail-closed everywhere else: under
     ``ART_40_3_MANDATORY`` / ``INCOMPLETE`` / ``None`` modality, when no
@@ -482,9 +479,8 @@ def evaluate_cross_period_clean_state(
         activity_start_date=activity_start_date,
     )
     # Among the activity-start-in-scope requirements, scope out the first-year
-    # Modelo 202 modalidad-cuota obligations (ADR 2026-06-19-m202-first-period-
-    # attestation-adr). Everything that does not qualify stays in scope and is
-    # evaluated normally (fail-closed).
+    # Modelo 202 modalidad-cuota obligations. Everything that does not qualify
+    # stays in scope and is evaluated normally (fail-closed).
     first_year_fractional_requirements = tuple(
         requirement
         for requirement in partition.in_scope
@@ -690,7 +686,7 @@ def _revision_carry_check(
         source_modelo=source_modelo,
         source_filing_year=source_filing_year,
         source_period=source_period.registry_token,
-    )
+    ).refused
     if refused:
         return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE]
     return []

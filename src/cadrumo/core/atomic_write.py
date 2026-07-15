@@ -15,7 +15,7 @@ so a new writer picks one deliberately instead of inventing a fifth dialect:
   a :func:`tempfile.NamedTemporaryFile` sibling in the target's own parent
   directory (``{stem}.`` prefix, ``.tmp`` suffix), write, flush, ``fsync``,
   :func:`os.replace`, then a best-effort parent-directory ``fsync`` via
-  :func:`~cadrumo.core.locks.fsync_parent_dir`. Suitable for ordinary durable
+  :func:`~cadrumo.core._fsync.fsync_parent_dir`. Suitable for ordinary durable
   application data with a single writer.
 
 - **Hardened tier** (:func:`atomic_write_hardened_bytes`,
@@ -41,7 +41,7 @@ Payload content is never logged; only the target path and the exception
 type are.
 
 The helpers are freestanding primitives at the ``core`` layer with no
-dependency beyond :func:`~cadrumo.core.locks.fsync_parent_dir`.
+dependency beyond :func:`~cadrumo.core._fsync.fsync_parent_dir`.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ import secrets
 import tempfile
 from pathlib import Path
 
-from .locks import fsync_parent_dir
+from ._fsync import fsync_parent_dir
 from .logging import get_logger
 
 __all__ = [

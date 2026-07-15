@@ -99,8 +99,7 @@ _UTF_8: Final[str] = "utf-8"
 _IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = Path(__file__).resolve().parents[1] / "import_hygiene_baseline.json"
 _PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
 _PRODUCTION_EXCLUDE: Final[str] = (
-    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,"
-    "src/cadrumo/tests/*,src/cadrumo/_data/*"
+    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"
 )
 
 

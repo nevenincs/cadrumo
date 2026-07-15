@@ -507,11 +507,7 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     the former-product refusal inside ``conf.py``'s settings construction and
     kills every rebuild.
     """
-    environment = {
-        key: value
-        for key, value in os.environ.items()
-        if not key.upper().startswith(("CADRUMO_", "AEAT_"))
-    }
+    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     environment.update(
         {
             "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),

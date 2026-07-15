@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import os
 from collections.abc import Coroutine
+from typing import TypedDict
 
 import mcp.types as mcp_types
 import pytest
@@ -26,6 +27,15 @@ from .._server import build_server
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+class _HandshakeObservation(TypedDict):
+    server_name: str
+    resource_uris: tuple[str, ...]
+    template_uris: tuple[str, ...]
+    prompt_names: tuple[str, ...]
+    tool_names: tuple[str, ...]
+    call: mcp_types.CallToolResult
 
 
 def _run[T](coro: Coroutine[object, object, T]) -> T:
@@ -54,7 +64,7 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
     assert result.content
 
 
-async def _stdio_handshake() -> dict[str, object]:
+async def _stdio_handshake() -> _HandshakeObservation:
     params = StdioServerParameters(
         command="cadrumo-mcp",
         env={**os.environ, "CADRUMO_MCP_PERSONA": "verifier"},

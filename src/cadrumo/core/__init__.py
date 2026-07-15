@@ -174,6 +174,7 @@ if TYPE_CHECKING:
         foreign_asset_declaration_threshold,
         foreign_asset_obligation_group,
     )
+    from ._fsync import fsync_parent_dir
     from .aggregation import BindingSourceKind, IntracomOperationType
     from .locks import exclusive_file_lock
 
@@ -258,6 +259,7 @@ __all__: list[str] = [
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
+    "fsync_parent_dir",
     "iban_mod_97",
     "lineage_obligations",
     "modelo_has_codified_amendment_regime",
@@ -298,6 +300,10 @@ def __getattr__(name: str) -> object:
         from .locks import exclusive_file_lock
 
         return exclusive_file_lock
+    if name == "fsync_parent_dir":
+        from ._fsync import fsync_parent_dir
+
+        return fsync_parent_dir
     if name in (
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "FOREIGN_ASSET_DECLARATION_THRESHOLDS",

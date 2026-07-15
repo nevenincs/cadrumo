@@ -57,9 +57,7 @@ def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp
             expected_class=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
             max_supported_version=AEAT_BROWSER_SESSION_NAMESPACE.schema_version,
         )
-        session_namespaces = {
-            record.namespace for record in repository.iter_all_records_raw()
-        }
+        session_namespaces = {record.namespace for record in repository.iter_all_records_raw()}
 
     archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
     header = ExportArchiveHeader(

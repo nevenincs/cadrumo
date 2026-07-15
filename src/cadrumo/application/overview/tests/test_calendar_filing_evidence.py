@@ -15,7 +15,7 @@ from ....domain.calculations.registry import (
     ApplicabilityVerdict,
 )
 from ....domain.deadlines import ObligationStatus
-from ....domain.modelos import ExternalEvidenceKind, ModeloRecord
+from ....domain.modelos import ExternalEvidenceKind
 from ...live import JustificanteCaptureSnapshot, PersistedExpedientesSnapshot, SnapshotLifecycleState
 from .. import (
     OverviewAeatSubmissionState,
@@ -414,46 +414,6 @@ def test_live_capture_external_evidence_without_metadata_is_not_justificante_ver
     assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
     assert row.aeat_submitted_at is None
     assert row.aeat_evidence_kind == "aeat_live_capture"
-    assert row.justificante_verified is False
-
-
-def test_bare_aeat_accepted_flag_without_external_evidence_is_not_submission_evidence() -> None:
-    base = _modelo_record()
-    legacy_payload = base.model_dump(mode="python")
-    legacy_payload["aeat_accepted"] = True
-    legacy_torn_record = ModeloRecord.model_construct(**legacy_payload)
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(legacy_torn_record,),
-        expected_tax_id="X1234567L",
-    )
-
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
-    assert row.aeat_reference_id is None
-    assert row.justificante_verified is False
-
-
-def test_external_evidence_without_acceptance_does_not_upgrade_submission_state() -> None:
-    csv = "CSVLIVE303TORN"
-    base = _modelo_record()
-    legacy_payload = base.model_dump(mode="python")
-    legacy_payload["external_evidence"] = _external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, csv)
-    legacy_payload["aeat_accepted"] = False
-    legacy_torn_record = ModeloRecord.model_construct(**legacy_payload)
-
-    evidence = calendar_filing_evidence_from_sources(
-        filing_records=(legacy_torn_record,),
-        justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
-    )
-
-    assert len(evidence) == 1
-    row = evidence[0]
-    assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
-    assert row.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
-    assert row.aeat_reference_id == csv
     assert row.justificante_verified is False
 
 

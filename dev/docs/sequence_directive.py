@@ -375,9 +375,7 @@ def _render_frame_html(frame: dict[str, Any], verify: str | None, shells: list[s
     single-line authored command in ``data-command-line`` so the widget's copy
     control works from the static DOM without parsing the payload.
     """
-    variants = "".join(
-        _render_command_variant(frame["tokens"], frame["wrapped"][shell], shell) for shell in shells
-    )
+    variants = "".join(_render_command_variant(frame["tokens"], frame["wrapped"][shell], shell) for shell in shells)
     header = (
         '<div class="cadrumo-frame-header">'
         f'<span class="cadrumo-frame-step">{frame["index"] + 1}</span>'
@@ -400,9 +398,7 @@ def _render_frame_html(frame: dict[str, Any], verify: str | None, shells: list[s
     if frame["kind"] == "result" and verify is not None:
         parts.append(f'<p class="cadrumo-verify">{html.escape(verify)}</p>')
         if frame["expects"]:
-            checks = "".join(
-                f'<li>{html.escape(expect["narration"])}</li>' for expect in frame["expects"]
-            )
+            checks = "".join(f"<li>{html.escape(expect['narration'])}</li>" for expect in frame["expects"])
             parts.append(f'<ul class="cadrumo-expects">{checks}</ul>')
     parts.append("</div>")
     return "".join(parts)
@@ -428,7 +424,7 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
     return (
         f'<div class="cadrumo-sequence" data-cadrumo-sequence="1" data-sequence-id="{sequence_id}" '
         f'data-cadrumo-shell="{default_shell}">'
-        f'{frames_html}'
+        f"{frames_html}"
         f'<script type="application/json" class="cadrumo-sequence-payload">{payload_json}</script>'
         "</div>"
     )

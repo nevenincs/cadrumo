@@ -69,7 +69,7 @@ from ._errors import DiagnosticModelError
 # fast path imports this module only for ``build_cli_version_report`` /
 # ``render_cli_version_text``, neither of which needs any of them.
 # Importing them lazily inside the functions that actually run keeps the
-# version surface off the heavy graph (disaster ADR Ruling 4 fast-path).
+# version surface off the heavy import graph.
 if TYPE_CHECKING:
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
     from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
@@ -285,10 +285,10 @@ def _ensure_models_rebuilt() -> None:
 class RegistryIntegrityReport(BaseModel):
     """Result of the opt-in full registry-validation probe.
 
-    Disaster ADR Ruling 4 moves the full registry TOML parse +
-    cross-domain referential-integrity gate off the ``--version`` and
-    bare-invocation surfaces into the explicit
-    ``aeat config repair integrity registry`` verb. This typed
+    The full registry TOML parse and cross-domain referential-integrity
+    gate stay off the ``--version`` and bare-invocation surfaces and run
+    only from the explicit ``aeat config repair integrity registry``
+    verb. This typed
     report is what that verb renders: a :class:`RegistryVersionSummary` plus
     the aggregate :class:`DiagnosticCheck` from
     :func:`_registry_cross_domain_integrity_check`.
@@ -310,8 +310,8 @@ def build_cli_version_report(
     The ``with_registry`` flag controls whether the full registry
     TOML load fires. The CLI root callback passes
     ``with_registry=False`` for bare ``aeat --version`` invocations
-    (the fast-path mandated by disaster ADR Ruling 4 — the operator
-    must see name + version in under a second on cold start). When
+    (the operator must see name + version in under a second on cold
+    start). When
     ``--detail`` is on, the caller re-invokes with
     ``with_registry=True`` to populate the registry summary.
 
@@ -785,8 +785,8 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
     Backs the ``aeat config repair integrity registry`` verb. Bundles
     the registry version summary with the cross-domain
     referential-integrity check so the engineer-facing verb can render
-    both the registry's identity and its validation verdict. Disaster
-    ADR Ruling 4 keeps this off every fast-path surface.
+    both the registry's identity and its validation verdict. This stays
+    off every fast-path surface.
     """
     root = registry_root or bundled_path("registry", "aeat")
     return RegistryIntegrityReport(

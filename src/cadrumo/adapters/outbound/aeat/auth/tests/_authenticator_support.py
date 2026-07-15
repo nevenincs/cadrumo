@@ -25,9 +25,7 @@ from ......application.auth import (
 from ......application.auth import (
     AuthProviderDescription as AuthProviderDescription,
 )
-from ......application.auth import (
-    AuthProviderKind,
-)
+from ......application.auth import AuthProviderKind as AuthProviderKind
 from ......core.config import CertificateBackend, Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
@@ -345,7 +343,6 @@ def _certificate_session(
     storage_state_path: Path | None = None,
 ) -> AeatSession:
     return AeatSession(
-        provider_kind=AuthProviderKind.CERTIFICATE,
         authenticated_at=authenticated_at,
         idle_deadline=idle_deadline,
         storage_state_path=storage_state_path,
@@ -362,7 +359,6 @@ def _certificate_assertion() -> AeatLoginAssertion:
     return AeatLoginAssertion(
         target_url="https://sede/",
         is_valid=True,
-        provider_kind=AuthProviderKind.CERTIFICATE,
         identity_nif="12345678Z",
         status_code=200,
         elapsed_ms=123,
@@ -794,7 +790,7 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_facto
 
 
 @pytest.mark.asyncio
-async def test_verify_login_raises_on_stale_session(tmp_path: Path, _settings_factory) -> None:
+async def test_verify_raises_on_stale_session(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
@@ -806,11 +802,11 @@ async def test_verify_login_raises_on_stale_session(tmp_path: Path, _settings_fa
             subject="CN=x",
         )
         with pytest.raises(AeatSessionExpiredError, match=r"aeat|session|expired"):
-            await auth.verify_login(stale)
+            await auth.verify(stale)
 
 
 @pytest.mark.asyncio
-async def test_verify_login_raises_without_context(tmp_path: Path, _settings_factory) -> None:
+async def test_verify_raises_without_context(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
@@ -822,7 +818,7 @@ async def test_verify_login_raises_without_context(tmp_path: Path, _settings_fac
             subject="CN=x",
         )
         with pytest.raises(AeatLoginAssertionError, match=r"browser context|authenticate"):
-            await auth.verify_login(session)
+            await auth.verify(session)
 
 
 @pytest.mark.asyncio
@@ -867,19 +863,19 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
 
 
 @pytest.mark.asyncio
-async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _settings_factory) -> None:
-    """Regression test for the close()/verify_login TOCTOU race.
+async def test_close_latch_blocks_concurrent_verify(tmp_path: Path, _settings_factory) -> None:
+    """Regression test for the close()/verify TOCTOU race.
 
     The fix uses a one-way ``_closing`` latch checked inside
-    ``verify_login`` under the lock. Once ``close()`` sets the
-    latch, any subsequent ``verify_login`` — even one that arrives
+    ``verify`` under the lock. Once ``close()`` sets the
+    latch, any subsequent ``verify`` — even one that arrives
     between the drain-wait returning and the teardown acquiring
     the lock — must raise rather than start a navigation on a
     stale context.
 
     The test simulates the race by directly toggling the latch
     (no true concurrency needed to exercise the guard) and
-    confirms ``verify_login`` refuses.
+    confirms ``verify`` refuses.
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
@@ -905,7 +901,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _setti
         subject=cert.subject,
     )
     with pytest.raises(AeatLoginAssertionError, match="closing"):
-        await authenticator.verify_login(session)
+        await authenticator.verify(session)
 
     # Reset + confirm post-close the latch is clear again (so that
     # reauthenticate can re-use the authenticator).
@@ -915,8 +911,8 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _setti
 
 
 @pytest.mark.asyncio
-async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_factory) -> None:
-    """True interleaved race: start verify_login + close concurrently.
+async def test_concurrent_close_and_verify_race(tmp_path: Path, _settings_factory) -> None:
+    """True interleaved race: start verify + close concurrently.
 
     Uses an ``asyncio.Event`` inside the recording page's ``goto`` to
     deterministically suspend mid-navigation, letting ``close()``
@@ -963,9 +959,9 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
         subject=cert.subject,
     )
 
-    # Start verify_login; it will suspend inside goto until proceed.set().
-    verify_task = asyncio.create_task(authenticator.verify_login(session))
-    # Yield so verify_login enters the lock, bumps _inflight_pages, clears
+    # Start verify; it will suspend inside goto until proceed.set().
+    verify_task = asyncio.create_task(authenticator.verify(session))
+    # Yield so verify enters the lock, bumps _inflight_pages, clears
     # _inflight_drained, and begins the suspended goto.
     await asyncio.sleep(0)
     await asyncio.sleep(0)
@@ -973,13 +969,13 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_
     close_task = asyncio.create_task(authenticator.close())
     # Give close a tick to reach drain-wait.
     await asyncio.sleep(0.05)
-    # close must still be pending — verify_login is holding a page.
-    assert not close_task.done(), "close() returned before verify_login finished"
+    # close must still be pending — verify is holding a page.
+    assert not close_task.done(), "close() returned before verify finished"
     # Release the navigation; both tasks should now complete.
     proceed.set()
     assertion = await asyncio.wait_for(verify_task, timeout=5.0)
     await asyncio.wait_for(close_task, timeout=5.0)
-    # verify_login saw a live context and a successful goto.
+    # verify saw a live context and a successful goto.
     assert assertion.certificate_recognised is True
     # close() cleanly reset state.
     assert authenticator._closing is False

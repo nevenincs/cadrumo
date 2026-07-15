@@ -76,11 +76,10 @@ _PREDICATE_IMPLIES_ANY_NONZERO = _re.compile(r"^implies_any_nonzero\(\[(?P<ids>[
 _PREDICATE_EQUALS = _re.compile(r"^equals\(\[(?P<ids>[^\]]*)\]\)$")
 # profile_field_required("field_name", "applicability_filter") —
 # profile-state-aware conditional non-zero requirement; sibling of
-# implies_nonzero per the dsl-conditional-predicate ADR. The
-# applicability filter is dispatched via _evaluate_applicability_filter
-# against the TaxpayerProfile threaded through the verification pipeline.
-# First use site: M210 representante-fiscal gate per
-# m210-irnr-full-engine ADR §D2.5 (TRLIRNR Art 10).
+# implies_nonzero. The applicability filter is dispatched via
+# _evaluate_applicability_filter against the TaxpayerProfile threaded
+# through the verification pipeline. First use site: M210
+# representante-fiscal gate (TRLIRNR Art 10).
 _PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
 _M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = "decl.numero-rectificaciones"
 _M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones"
@@ -153,7 +152,7 @@ _PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<i
 # the literal AND the consequent (Decimal) casilla is zero. ADVISORY-only
 # (no BLOCKING_RULE branch); see the casilla_equals_implies_nonzero branch in
 # _evaluate_advisory_predicate_fires and the
-# m210-categorical-conditional-predicate ADR. Authored for the M210
+# Authored for the M210
 # inmobiliaria branch (tipo_renta == "inmobiliaria" implies a non-zero
 # base_imponible), the no-silent-under-declaration shape implies_nonzero
 # cannot express because its trigger is a categorical equality, not a
@@ -186,8 +185,7 @@ _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG = _re.compile(
 # casilla_equals_implies_nonzero (whose consequent test is "== 0" rather
 # than a cross-casilla divergence). See the
 # casilla_equals_implies_diverges branch in
-# _evaluate_advisory_predicate_fires and the
-# 2026-07-01-modelo-131-eo-modulos-engine-adr. Authored for the M131/M100
+# _evaluate_advisory_predicate_fires. Authored for the M131/M100
 # estimación-objetiva índice corrector de exceso (b.3), which Orden
 # HAC/1347/2024 Anexo II instrucción 2.3 declares incompatible with the
 # índices correctores especiales (a.2 transporte por autotaxis, a.4
@@ -217,10 +215,10 @@ _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE = _re.compile(
 # COMPUTED reference casilla resolves strictly > 0 (the engine has table
 # coverage for the declared activity) AND it differs from the named
 # operator-declared casilla by more than one cent. ADVISORY-only; see the
-# advisory_when_computed_diverges branch in _evaluate_advisory_predicate_fires
-# and the 2026-07-01-modelo-131-eo-modulos-engine-adr. Authored for the M131
+# advisory_when_computed_diverges branch in _evaluate_advisory_predicate_fires.
+# Authored for the M131
 # estimación-objetiva módulos engine: casilla 01 ("Suma de rendimientos
-# netos") stays a manual operator input (Phase 1 does not wire fases 2ª/3ª),
+# netos") stays a manual operator input (fases 2ª/3ª are not yet wired),
 # but a tabled first-slice activity now has a computed reference figure
 # (modulos-rendimiento-neto-actividad) the operator can be prompted to
 # reconcile against.
@@ -302,8 +300,8 @@ def _roll_forward_balance_reconciles(
     tolerance to absorb per-year-detail rounding. Returns ``None`` on a malformed
     arity (the caller treats that as "not applicable"); a missing casilla reads as
     ``Decimal(0)`` via ``.get`` so an absent closing/opening does not crash the
-    gate. Authored for the Modelo 200 BIN total-pendiente roll-forward
-    (modelo-200-bin-continuity ADR); general to any carry-forward stock.
+    gate. Authored for the Modelo 200 BIN total-pendiente roll-forward;
+    general to any carry-forward stock.
     """
     if len(ids) != 4:
         return None
@@ -361,7 +359,7 @@ def _evaluate_predicate_expression(
       listed consequent != 0 (M303 official-Diseño under-declaration shape).
     - ``profile_field_required("field_name", "applicability_filter")`` —
       profile-state-aware conditional non-zero requirement; sibling of
-      ``implies_nonzero`` per the dsl-conditional-predicate ADR.
+      ``implies_nonzero``.
 
     An expression that does not match any registered pattern is treated as
     holding (i.e. unknown predicates do not block the operator). The

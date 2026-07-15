@@ -15,19 +15,19 @@ session is diagnosable without leaving the host:
 Nothing here performs a network call or a live AEAT read: the LLM run records
 are read from encrypted local secure-object storage and the auth probe reads
 only the locally persisted session token's metadata. This backs the
-``aeat app diagnostics run-health`` operator surface (GitHub issue #407).
+``aeat app diagnostics run-health`` operator surface.
 
 :func:`list_recent_runs` projects the same recorded :class:`LLMRunRecord` rows
 individually (most-recent-first, optionally limited) rather than aggregated
-per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb
-(also GitHub issue #407). It reuses
+per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb.
+It reuses
 :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here.
 
 :func:`build_latency_report` and :func:`build_error_breakdown` project the
 *same* recorded rows into a percentile-latency view and a failed-run
 error-kind breakdown, backing the ``aeat app diagnostics latency`` and
-``aeat app diagnostics errors`` verbs (also GitHub issue #407). Neither
+``aeat app diagnostics errors`` verbs. Neither
 introduces a new capture or storage path -- both read
 :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 exactly as ``run-health`` and ``runs`` do, honouring
@@ -35,7 +35,7 @@ exactly as ``run-health`` and ``runs`` do, honouring
 
 :func:`build_llm_usage_report` projects the same recorded rows into a
 run-count/duration/success-rate summary grouped by provider AND by model,
-backing the ``aeat app diagnostics llm-usage`` verb (also GitHub issue #407).
+backing the ``aeat app diagnostics llm-usage`` verb.
 :class:`~adapters.outbound.llm.LLMRunRecord` carries only timing and
 outcome metadata -- no token counts are recorded on this store -- so the
 usage summary reports run counts, durations, and success rate rather than

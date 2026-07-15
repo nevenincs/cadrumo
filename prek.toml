@@ -52,7 +52,7 @@ repo = "local"
 id = "ty"
 name = "ty type check"
 language = "system"
-entry = "uv run --no-sync ty check src/"
+entry = "uv run --no-sync python -m dev.quality.types"
 pass_filenames = false
 types = ["python"]
 

@@ -2,8 +2,7 @@
 
 See Also:
     :func:`~application.prorrata_register._seed.evaluate_carried_prior_definitiva_seed`
-        Seed evaluator under test for happy-path, divergent-revision, and
-        legacy-missing-stamp outcomes.
+        Seed evaluator under test for happy-path and divergent-revision outcomes.
     :class:`~application.calculations.CalculationObservationRepository`
         Real encrypted observation repository that stores the prior Modelo 303
         settlement observation.
@@ -16,28 +15,18 @@ See Also:
 
 from __future__ import annotations
 
-import json as _json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import select
 
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
-from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.engine import get_engine
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Modelo, ProrrataProvisionalProvenance
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.registry_observations import registry_grounded_modelo_observation
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker, observation_key_for_token
+from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker
 from .. import evaluate_carried_prior_definitiva_seed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -75,25 +64,6 @@ def _save_prior_prorrata_observation(
         captured_at=_CLOCK,
         stamped_revision_id=stamped_revision_id,
     )
-
-
-def _remove_stamped_revision_id_from_saved_observation(profile: TestRuntimeProfile) -> None:
-    namespace = CalculationObservationRepository.namespace
-    object_key = observation_key_for_token(Modelo.M303.value, _PRIOR_YEAR, _SETTLEMENT_PERIOD)
-
-    with session_scope(get_engine(profile.settings)) as session:
-        row = session.execute(
-            select(SecureObjectRow).where(
-                SecureObjectRow.namespace == namespace,
-                SecureObjectRow.object_key == object_key,
-            ),
-        ).scalar_one()
-        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
-        envelope = _json.loads(plain.decode("utf-8"))
-        assert envelope["payload"]["stamped_revision_id"] == _prior_revision_id()
-        del envelope["payload"]["stamped_revision_id"]
-        row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=aad)
 
 
 def test_seed_happy_path_uses_prior_settlement_observation(tmp_path: Path) -> None:
@@ -147,29 +117,3 @@ def test_seed_divergent_revision_stamp_blocks(tmp_path: Path) -> None:
     assert finding.source_period == _SETTLEMENT_PERIOD
     assert finding.stamped_revision_id == _DIVERGENT_REVISION_ID
     assert finding.selected_revision_id == _prior_revision_id()
-
-
-def test_seed_missing_legacy_revision_stamp_advises_without_blocking(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        repo = CalculationObservationRepository(objects=profile.repository)
-        _save_prior_prorrata_observation(repo, percentage=Decimal("73"), stamped_revision_id=_prior_revision_id())
-        _remove_stamped_revision_id_from_saved_observation(profile)
-
-        evaluation = evaluate_carried_prior_definitiva_seed(
-            ejercicio=_CURRENT_YEAR,
-            observation_repository=repo,
-        )
-
-    assert not evaluation.blocked
-    assert len(evaluation.findings) == 1
-    finding = evaluation.findings[0]
-    assert finding.code == "missing_legacy_revision_stamp"
-    assert finding.advisory
-    assert not finding.blocking
-    assert finding.stamped_revision_id is None
-    assert finding.selected_revision_id == _prior_revision_id()
-    seed = evaluation.seed
-    assert seed is not None
-    assert seed.stamped_revision_id is None
-    assert seed.entry.provisional_percentage == Decimal("73")
-    assert seed.entry.source_observation_ref == "303:2025:4T"

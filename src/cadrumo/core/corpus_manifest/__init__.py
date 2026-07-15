@@ -556,11 +556,9 @@ def build_corpus_bundle(
         archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
         for entry in manifest.entries:
             archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
-    # Deferred import: core.atomic_write transitively imports core.locks,
-    # which configures logging at module level (mirroring the existing
-    # deferred `from ..locks import fsync_parent_dir` above in
-    # save_corpus_manifest) -- kept local to avoid widening this module's
-    # eager import surface.
+    # Deferred import: core.atomic_write imports core.logging, whose runtime
+    # configuration depends on settings. Keep it local to avoid widening this
+    # module's eager import surface during settings bootstrap.
     from ..atomic_write import atomic_write_bytes
 
     atomic_write_bytes(resolved_output, buffer.getvalue())

@@ -480,9 +480,7 @@ def prune_run_traces(*, retention_days: int | None = None, settings: Settings | 
         Number of run directories removed.
     """
     cfg = settings or load_settings()
-    effective_retention_days = (
-        retention_days if retention_days is not None else cfg.cadrumo_runs_retention_days
-    )
+    effective_retention_days = retention_days if retention_days is not None else cfg.cadrumo_runs_retention_days
     cutoff = now() - timedelta(days=effective_retention_days)
     base = runs_dir(cfg)
     removed = 0

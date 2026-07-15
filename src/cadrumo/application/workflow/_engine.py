@@ -577,7 +577,7 @@ class WorkflowEngine:
         """Record the filing-window state for a verify run without aborting.
 
         Verification of a calculation is independent of the AEAT filing
-        calendar (see the work-verify deadline-independence ADR). This
+        calendar. This
         helper turns the ``COMPUTING_DEADLINES`` stage into a purely
         informational step for :attr:`WorkflowPurpose.VERIFY`: it never
         raises ``NO_PENDING_OBLIGATION`` or ``DEADLINE_PASSED``.
@@ -1128,10 +1128,9 @@ class WorkflowEngine:
 
         try:
             # The AEAT filing-window preflight gate is skipped for BOTH local
-            # purposes. VERIFY is calendar-independent (work-verify
-            # deadline-independence ADR). FILE is a LOCAL mark-as-filed that
-            # contacts AEAT zero times (cross-period filing deadlock ADR,
-            # Decision A): its obligation existence is already enforced at the
+            # purposes. VERIFY is calendar-independent. FILE is a LOCAL
+            # mark-as-filed that contacts AEAT zero times: its obligation
+            # existence is already enforced at the
             # deadline stage (NO_PENDING_OBLIGATION still refuses a never-existing
             # obligation; an existing-but-overdue one is admitted late, con
             # recargo). Re-applying the submission filing-window gate here would

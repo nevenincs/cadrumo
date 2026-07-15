@@ -243,7 +243,7 @@ def _filing_axes_from_modelo_record(
     aeat_submitted_at = None
     justificante_verified = False
     verified_justificante_csv = None
-    aeat_accepted = bool(getattr(record, "aeat_accepted", False))
+    aeat_accepted = record.aeat_accepted
     if aeat_accepted and external_evidence is not None:
         aeat_state = OverviewAeatSubmissionState.ACCEPTED
     if external_evidence is not None:
@@ -338,7 +338,7 @@ def _local_filing_state_from_modelo_record(record: ModeloRecord) -> OverviewLoca
     AEAT evidence remains ``ready_to_file``; only records created through the
     external baseline import command use the imported-baseline state.
     """
-    filed_by = str(getattr(record, "filed_by", "")).strip().lower()
+    filed_by = record.filed_by.strip().lower()
     if filed_by == "aeat-import" or filed_by.startswith("aeat-import:"):
         return OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
     return OverviewLocalFilingState.READY_TO_FILE

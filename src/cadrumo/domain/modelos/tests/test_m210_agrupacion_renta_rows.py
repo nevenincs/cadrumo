@@ -133,11 +133,7 @@ def test_row_contract_refuses_negative_offset_and_code_35_without_explicit_mode(
 def test_annual_group_refuses_non_lease_code_and_duplicate_source_identity() -> None:
     """0A is lease/sublease-only and each persisted component has stable identity."""
     with pytest.raises(Modelo210AgrupacionRentaRowsError) as code_exc:
-        validate_m210_agrupacion_renta_rows(
-            (
-                _lease_row("manual-renta-jan", tipo_renta_code="03"),
-            )
-        )
+        validate_m210_agrupacion_renta_rows((_lease_row("manual-renta-jan", tipo_renta_code="03"),))
     assert code_exc.value.reason == "annual_code_not_lease_or_sublease"
 
     with pytest.raises(Modelo210AgrupacionRentaRowsError) as identity_exc:

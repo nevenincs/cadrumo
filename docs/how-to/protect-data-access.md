@@ -158,6 +158,8 @@ Before any reset, export profiles you want to keep with
 
 ## Next steps
 
+- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
+  see where encrypted custody ends and deliberate plaintext handoffs begin.
 - [Set up your taxpayer profile](profile-setup.md) - create, export, and
   import profiles.
 - [Diagnose and repair your local setup](troubleshooting.md) - for storage

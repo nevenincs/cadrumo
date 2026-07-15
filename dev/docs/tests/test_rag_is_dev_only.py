@@ -74,9 +74,7 @@ def test_docs_work_modules_import_without_vaultspec_rag() -> None:
         cwd=_REPO_ROOT,
         env=None,
     )
-    assert result.returncode == 0, (
-        f"docs-work import failed under the vaultspec_rag blocker:\n{result.stderr[-2000:]}"
-    )
+    assert result.returncode == 0, f"docs-work import failed under the vaultspec_rag blocker:\n{result.stderr[-2000:]}"
     assert "DOCS-WORK-RAG-FREE" in result.stdout
 
 

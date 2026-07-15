@@ -10,8 +10,7 @@ unlike ``sign``/``counter-sign``, which leave the archive itself in
 plaintext ZIP form.
 
 Construction (ECIES over the primitives already vetted and already
-shipped by this project -- no new dependency, see
-``2026-07-04-recipient-encryption-adr``):
+shipped by this project -- no new dependency):
 
 1. A fresh EPHEMERAL X25519 keypair is generated for this one message
    (``cryptography.hazmat.primitives.asymmetric.x25519.X25519PrivateKey.generate()``).
@@ -47,8 +46,7 @@ public key carries no secrecy requirement (it is looked up from
 the ephemeral sender private key exists only for the duration of one
 call and is never persisted.
 
-Expiry and replay defence (``2026-07-04-recipient-encryption-adr``, the
-review-only/expiry/replay follow-up slice): every envelope carries an
+Expiry and replay defence: every envelope carries an
 ``issued_at`` timestamp, an optional ``valid_until`` deadline, a random
 ``envelope_nonce_hex`` (independent of the AEAD nonce embedded in
 ``ciphertext``, minted purely as a replay-detection token), and a
@@ -107,8 +105,8 @@ See Also:
         The Ed25519 signing-keypair primitive this module's
         :func:`ensure_recipient_encryption_keypair` mirrors exactly (mint-once,
         persist-as-ciphertext, idempotent-reuse), for a distinct purpose
-        (encryption, never signing -- see the ADR's rejection of key reuse
-        across purposes).
+        (encryption, never signing -- a key is never reused across
+        purposes).
 """
 
 from __future__ import annotations
@@ -505,8 +503,8 @@ class RecipientPackageExpiredError(RecipientDecryptionError):
     A subclass of :class:`RecipientDecryptionError` (rather than a sibling)
     so an existing ``except RecipientDecryptionError`` catch-all keeps
     working verbatim; callers that need to distinguish expiry from a
-    cryptographic failure may catch this subclass specifically, though the
-    ADR's undifferentiated-failure posture means the rendered message is
+    cryptographic failure may catch this subclass specifically, though
+    failures are deliberately undifferentiated: the rendered message is
     identical either way.
     """
 

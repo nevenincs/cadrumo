@@ -54,13 +54,17 @@ class AeatLoginAssertion(BaseModel):
 
     target_url: str
     is_valid: bool
-    provider_kind: AuthProviderKind
     identity_nif: str | None
     status_code: int
     elapsed_ms: int
     attempted_at: datetime
     error_message: str | None = None
     assertion_detail: AuthLoginAssertionDetail = Field(discriminator="kind")
+
+    @property
+    def provider_kind(self) -> AuthProviderKind:
+        """Return the provider kind declared by the assertion detail."""
+        return self.assertion_detail.kind
 
     @property
     def handshake_success(self) -> bool | None:
@@ -102,12 +106,16 @@ class AeatSession(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    provider_kind: AuthProviderKind
     authenticated_at: datetime
     idle_deadline: datetime
     storage_state_path: Path | None
     identity_nif: str = Field(min_length=1)
     provider_detail: AuthSessionDetail = Field(discriminator="kind")
+
+    @property
+    def provider_kind(self) -> AuthProviderKind:
+        """Return the provider kind declared by the session detail."""
+        return self.provider_detail.kind
 
     @property
     def certificate_thumbprint(self) -> str | None:

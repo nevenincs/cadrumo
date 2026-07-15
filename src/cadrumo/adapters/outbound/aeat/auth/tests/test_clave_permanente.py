@@ -460,7 +460,6 @@ class TestVerify:
 
             attempted_at = now()
             session_without_context = AeatSession(
-                provider_kind=AuthProviderKind.CLAVE_PERMANENTE,
                 authenticated_at=attempted_at,
                 idle_deadline=attempted_at,
                 storage_state_path=None,

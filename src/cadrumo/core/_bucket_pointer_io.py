@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from . import BucketPointer
+from ._fsync import fsync_parent_dir
 
 if TYPE_CHECKING:  # pragma: no cover — annotation-only import
     from .errors import AeatError
@@ -113,10 +114,6 @@ def clear_pointer(root: Path) -> None:
         target.unlink()
     except FileNotFoundError:
         return
-
-    # Deferred for the same Settings bootstrap reason documented by
-    # ``write_pointer`` below.
-    from .locks import fsync_parent_dir
 
     fsync_parent_dir(target)
 

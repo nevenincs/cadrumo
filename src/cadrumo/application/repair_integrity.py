@@ -657,6 +657,8 @@ _LEDGER_POLICY = RepairPolicyNamespacePolicy(
     recovery_policy="reimport_authoritative_ledger_source",
     mutation_authority="operator_requested_import_or_export_only",
 )
+
+
 def _secure_object_policy(
     definition: SecureObjectNamespaceDefinition,
     *,

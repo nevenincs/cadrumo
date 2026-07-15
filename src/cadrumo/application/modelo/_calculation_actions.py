@@ -145,10 +145,10 @@ from ._m349_ledger_guard import (
 )
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._revision_persistence import persist_calculation_revision
+from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
-    from ...domain.transactions import LedgerDatePartition, TransactionCatalogue, TransactionCatalogueRepositoryProtocol
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceResolution,
@@ -212,9 +212,34 @@ def calculate_modelo_revision(
     OSS/IOSS source-assessment record used by verification and export.
 
     Args:
+        work_unit_id: Identifier of the filing work unit to calculate.
+        actor: Audit actor recorded on the persisted calculation revision.
+        casilla_inputs: Operator-supplied numeric values keyed by casilla.
+        text_casilla_inputs: Optional operator-supplied text values keyed by casilla.
+        binding_values: Optional numeric overrides for registry bindings.
+        enum_binding_values: Optional enumerated registry-binding values.
+        backend_binding_values: Optional binding values resolved by backend authorities.
+        row_binding_values: Optional detail-row binding values keyed by binding and row.
+        backend_casilla_inputs: Optional casilla values resolved by backend authorities.
+        iva_compensation_decision: Optional IVA compensation election for this calculation.
+        iva_compensation_decision_repository: Repository used to persist the IVA election.
         ledger_preflight_transaction_repository: Optional
             :class:`TransactionCatalogueRepository` used for the ledger
             preflight check before calculation.
+        borrador_snapshot_id: Optional Modelo 100 draft snapshot selected as input.
+        relation_values: Optional numeric overrides for declared registry relations.
+        unresolved_relation_ids: Relations that source resolution could not satisfy.
+        unresolved_binding_ids: Bindings that source resolution could not satisfy.
+        source_transaction_ids: Ledger transactions contributing to the calculation.
+        m210_official_tipo_renta_code: Optional official Modelo 210 income-type code.
+        m210_gross_income_source_mode: Selected Modelo 210 gross-income source authority.
+        filing_period_date: Date used to resolve the applicable filing period.
+        work_unit_repository: Repository from which the calculation work unit is loaded.
+        calculation_repository: Repository used to persist the resulting revision.
+        bucket_event_repository: Repository used to persist bucket lifecycle events.
+        borrador_snapshot_repository: Repository used to load Modelo 100 draft snapshots.
+        detail_rows: Repeating detail rows supplied to the registry engine.
+        clock: Optional deterministic timestamp for the persisted revision.
 
     """
     return _calculate_modelo_revision_with_trusted_mesh_sources(
@@ -512,103 +537,6 @@ def calculate_modelo_revision_from_bucket_aggregation(
     ).revision
 
 
-class _MemoizedTransactionCatalogueRepository:
-    """Read-through cache over one :class:`TransactionCatalogueRepositoryProtocol` load.
-
-    The bucket-aggregation source mesh (:func:`_resolve_bucket_source_mesh`)
-    constructs up to five independent ledger resolvers
-    (``LedgerIvaAggregationSourceResolver``,
-    ``LedgerRentaExpenseAggregationSourceResolver``,
-    ``LedgerRentaIncomeAggregationSourceResolver``,
-    ``LedgerImpatriadoIncomeAggregationSourceResolver``,
-    ``LedgerRentaGastoAggregationSourceResolver``) against the SAME
-    transaction repository, and every enrolled resolver independently calls
-    :meth:`~TransactionCatalogueRepositoryProtocol.load` when its binding
-    source is declared on the target revision. At 30k-row ledger scale this
-    repeats a full per-row decrypt-and-validate scan (~0.3-0.4s) once per
-    enrolled resolver within a SINGLE calculate invocation — a real,
-    measured P95 contributor (issue #408) with no behavioural benefit, since
-    :class:`~domain.transactions.TransactionCatalogue` is frozen and the
-    mesh never writes between resolver calls.
-
-    This wrapper loads the underlying repository at most once per instance
-    and returns the identical frozen :class:`TransactionCatalogue` to every
-    caller. ``save`` is not memoized (it is never called during source-mesh
-    resolution; see the module docstring) and delegates straight through so
-    the wrapper stays a strict read-through cache, not a write cache.
-
-    :meth:`load_for_date_range` and :meth:`partition_by_date_range` are ALSO
-    memoized, each keyed by the exact ``(start, end)`` window, so two
-    resolvers that request the identical window in one calculate invocation
-    share one targeted scan instead of each independently re-scanning. A
-    resolver requesting a distinct window gets its own cache entry rather
-    than colliding with an unrelated one.
-
-    As of issue #408 Path A / O2 (``2026-07-05-ledger-latency-budget-adr``),
-    four of the five ledger resolvers (IVA, M130/M100 income, M130 gasto,
-    impatriado) call :meth:`partition_by_date_range`, which decrypts only the
-    in-window subset and reports the out-of-window remainder as plaintext
-    index entries -- the M130 income and gasto resolvers request the IDENTICAL
-    cumulative window in one calculate invocation, so
-    ``_partition_catalogues`` memoization is load-bearing here, not
-    incidental. :class:`LedgerRentaExpenseAggregationSourceResolver` (the
-    #599 first-slice path) still calls ``load`` and reads the FULL catalogue,
-    because its effective filing date prefers the linked invoice's issue
-    date over the transaction's own date, so the transaction-date index is
-    the wrong pre-filter key for it (excluded from Path A pending #599).
-    ``load_for_date_range`` itself has no current caller; its cache branch is
-    retained alongside the method for any future direct caller.
-    """
-
-    __slots__ = ("_catalogue", "_date_range_catalogues", "_partition_catalogues", "_repository")
-
-    def __init__(self, repository: TransactionCatalogueRepositoryProtocol) -> None:
-        self._repository = repository
-        self._catalogue: TransactionCatalogue | None = None
-        self._date_range_catalogues: dict[tuple[date, date], TransactionCatalogue] = {}
-        self._partition_catalogues: dict[tuple[date, date], LedgerDatePartition] = {}
-
-    @property
-    def bucket_id(self) -> str:
-        """Return the wrapped repository's bound bucket id."""
-        return self._repository.bucket_id
-
-    def exists(self) -> bool:
-        """Delegate straight through; not memoized (cheap index-only read)."""
-        return self._repository.exists()
-
-    def load(self) -> TransactionCatalogue:
-        """Return the cached catalogue, loading it from storage at most once."""
-        if self._catalogue is None:
-            self._catalogue = self._repository.load()
-        return self._catalogue
-
-    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
-        """Return the cached window catalogue, loading it from storage at most once per exact window."""
-        key = (start, end)
-        cached = self._date_range_catalogues.get(key)
-        if cached is None:
-            cached = self._repository.load_for_date_range(start, end)
-            self._date_range_catalogues[key] = cached
-        return cached
-
-    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        """Return the cached partition, computing it from storage at most once per exact window."""
-        key = (start, end)
-        cached = self._partition_catalogues.get(key)
-        if cached is None:
-            cached = self._repository.partition_by_date_range(start, end)
-            self._partition_catalogues[key] = cached
-        return cached
-
-    def save(self, catalogue: TransactionCatalogue) -> None:
-        """Delegate the :class:`~domain.transactions.TransactionCatalogue` save to the wrapped repository.
-
-        This method is never called during mesh resolution.
-        """
-        self._repository.save(catalogue)
-
-
 def _resolve_bucket_source_mesh(
     snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
@@ -635,15 +563,15 @@ def _resolve_bucket_source_mesh(
     source with no enrolled resolver. Returns the merged
     :class:`~application.aggregation.CalculationSourceResolution`.
 
-    The transaction repository is wrapped in :class:`_MemoizedTransactionCatalogueRepository`
+    The transaction repository is wrapped in :class:`MemoizedTransactionCatalogueRepository`
     so every enrolled ledger resolver shares one ``load()`` of the bucket's
     transaction catalogue instead of each resolver independently re-scanning
-    and re-decrypting it (see that class's docstring; issue #408).
+    and re-decrypting it (see that class's docstring).
     """
     resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
         bucket_id=work_unit.bucket_id,
     )
-    memoized_transaction_repository = _MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     from ..aggregation import (
         AtribucionMemberSourceResolver,
         CalculationSourceContext,
@@ -911,8 +839,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         relation_values=relation_values,
         filing_period_date=filing_period_date,
     )
-    # Precedence ladder step 4 (ADR ruling D2, extended): re-run the guard against
-    # the merged owned-sources, but EXCLUDE the caller-overridable CARRY sources
+    # Re-run the guard against the merged owned-sources, but EXCLUDE the
+    # caller-overridable CARRY sources
     # (previous_filing, relation_prefill, iva_compensation_annual_partition). A
     # caller --binding override of an automatically-carried prior value is
     # legitimate and must reach the engine, where the casilla-lift no-ops on the

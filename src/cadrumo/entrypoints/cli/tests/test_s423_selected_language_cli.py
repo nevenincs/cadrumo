@@ -418,15 +418,34 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
 
     persisted = _persisted_report(storage_root, catalan_id.group(1))
     assert persisted["report_count"] == 1
-    report = persisted["report"]
-    assert isinstance(report, dict)
-    finding = next(
-        finding
-        for finding in report["findings"]
-        if finding["message"].startswith("cross-period dependency scoped out as no-prior-obligation")
-    )
-    assert "modelo=100 year=2025 period=0A origin=previous_filing_binding" in finding["message"]
-    assert finding["next_action"].startswith("Confirm the recorded activity-start date is correct.")
+    raw_report = persisted["report"]
+    assert isinstance(raw_report, dict)
+    report: dict[str, object] = {key: value for key, value in raw_report.items() if isinstance(key, str)}
+    assert len(report) == len(raw_report)
+    raw_findings = report["findings"]
+    assert isinstance(raw_findings, list)
+    typed_findings: list[dict[str, object]] = []
+    for raw_finding in raw_findings:
+        assert isinstance(raw_finding, dict)
+        finding_values = {key: value for key, value in raw_finding.items() if isinstance(key, str)}
+        assert len(finding_values) == len(raw_finding)
+        typed_findings.append(finding_values)
+
+    finding: dict[str, object] | None = None
+    for candidate in typed_findings:
+        candidate_message = candidate.get("message")
+        if isinstance(candidate_message, str) and candidate_message.startswith(
+            "cross-period dependency scoped out as no-prior-obligation",
+        ):
+            finding = candidate
+            break
+    assert finding is not None
+    message = finding["message"]
+    next_action = finding["next_action"]
+    assert isinstance(message, str)
+    assert isinstance(next_action, str)
+    assert "modelo=100 year=2025 period=0A origin=previous_filing_binding" in message
+    assert next_action.startswith("Confirm the recorded activity-start date is correct.")
 
 
 def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tmp_path: Path) -> None:

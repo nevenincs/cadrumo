@@ -215,7 +215,7 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     # and the panel NEVER borrows the docs' `.highlight` code-block class (its
     # box chrome would out-specify the panel's own layout rules).
     assert 'class="cadrumo-frame-output" data-format="json">' in html
-    assert 'cadrumo-frame-output highlight' not in html
+    assert "cadrumo-frame-output highlight" not in html
     assert '<span class="nt">' in html, "JSON output must carry Pygments key highlighting"
     assert "&quot;{" not in html, "JSON output must never render double-encoded"
     assert "Verify the calculation before exporting." in html
@@ -396,9 +396,19 @@ def test_short_command_is_not_wrapped() -> None:
 def test_long_command_wraps_at_token_boundaries_and_reassembles() -> None:
     """Wrapping packs whole tokens; reassembling the lines reproduces the token stream."""
     tokens = [
-        "aeat", "app", "ledger", "import",
-        "--file", "fixtures/2026-first-quarter-bank-statement.csv",
-        "--provider", "caixabank", "--year", "2026", "--period", "1T", "--verbose",
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "--file",
+        "fixtures/2026-first-quarter-bank-statement.csv",
+        "--provider",
+        "caixabank",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--verbose",
     ]
     lines = wrap_token_lines(tokens)
     assert len(lines) > 1, "a command past the budget must wrap onto multiple lines"
@@ -448,7 +458,7 @@ def _wrapping_golden(sequence_id: str) -> SequenceGolden:
 _LONG_BODY = (
     "@result aeat app ledger import --file fixtures/2026-first-quarter-bank-statement.csv "
     "--provider caixabank --year 2026 --period 1T --verbose\n"
-    '@expect exit_code == 0'
+    "@expect exit_code == 0"
 )
 
 
@@ -556,11 +566,7 @@ def test_authored_step_header_flows_to_payload() -> None:
     sequence = parse_sequence(
         sequence_id="step-demo",
         options={"verify": "Confirm the verification."},
-        body=(
-            "@step Create the quarterly draft.\n"
-            "@result aeat app modelo work verify wu\n"
-            '@expect exit_code == 0'
-        ),
+        body=("@step Create the quarterly draft.\n@result aeat app modelo work verify wu\n@expect exit_code == 0"),
     )
     golden = SequenceGolden(
         sequence_id="step-demo",
@@ -673,7 +679,7 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
         body=(
             "aeat app modelo work create 303 --year 2026 --period 1T\n"
             "@result aeat app modelo work verify wu\n"
-            "@expect result.status == \"ok\"\n"
+            '@expect result.status == "ok"\n'
             "@step Upload the exported file at the AEAT portal yourself.\n"
             "@static aeat app live justificante pull"
         ),

@@ -22,7 +22,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Protocol, cast
 
 import typer
 
@@ -64,6 +64,13 @@ from ._language_argv import apply_language_argv_to_environment as _apply_languag
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
+
+
+class _TyperExceptionsState(Protocol):
+    """Local marker for Cadrumo's idempotent Typer localisation state."""
+
+    _cadrumo_parse_errors_localised: bool
+
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
@@ -920,7 +927,10 @@ def _localise_typer_parse_error_messages() -> None:
     _typer_exceptions.MissingParameter.format_message = localised_missing_parameter_format_message
     _typer_exceptions.BadParameter.format_message = localised_bad_parameter_format_message
     _typer_formatting.HelpFormatter.write_usage = localised_write_usage
-    _typer_exceptions._cadrumo_parse_errors_localised = True
+    typer_exceptions_state = cast(  # CAST-RATIONALE-TYPER-EXCEPTIONS-STATE: module attribute is Cadrumo-owned.
+        "_TyperExceptionsState", _typer_exceptions
+    )
+    typer_exceptions_state._cadrumo_parse_errors_localised = True
 
 
 def main() -> None:

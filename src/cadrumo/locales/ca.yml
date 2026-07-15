@@ -337,6 +337,9 @@ aggregation:
       unsupported_modelo: No hi ha cap contracte d'agregació registrat per al model
         sol·licitat.
   irnr_income_ledger:
+    errors:
+      official_tipo_renta_parameter_count: La revisió %{revision_id} del Model 210
+        ha de declarar exactament un paràmetre de codi oficial de tipus de renda.
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} és de
         font estrangera; l'art. 13 del TRLIRNR l'exclou de la projecció de rendiments
@@ -5674,6 +5677,8 @@ errors:
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
   internal:
+    internal_active_profile_pointer_transaction: 'Error intern: la propietat de la
+      transacció del punter de perfil actiu no és vàlida.'
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic
       per veure què ha fallat.
@@ -6182,7 +6187,7 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
         la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre aeat CLI equivalent directament en un
+        fer-te preguntes, o executa l''ordre equivalent de Cadrumo CLI (`aeat`) directament en un
         terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]

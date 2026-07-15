@@ -102,8 +102,10 @@ def load_manifest() -> dict[str, object]:
             f"the {_DISTRIBUTION}[agent] package from PyPI; got {mcp_config['command']!r}",
         )
     args = mcp_config.get("args")
-    if not isinstance(args, list) or _CONSOLE_SCRIPT not in args or f"{_DISTRIBUTION}[agent]==" not in "".join(
-        part for part in args if isinstance(part, str)
+    if (
+        not isinstance(args, list)
+        or _CONSOLE_SCRIPT not in args
+        or f"{_DISTRIBUTION}[agent]==" not in "".join(part for part in args if isinstance(part, str))
     ):
         raise ManifestError(
             f"manifest.json 'server.mcp_config.args' must be the uvx bootstrap "

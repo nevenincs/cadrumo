@@ -724,7 +724,7 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
     # The collapsed-setup disclosure styling is gone (setup frames are unfolded).
     assert "details.cadrumo-setup" not in css
     # The switcher and copy transitions join the reduced-motion opt-out.
-    reduced = css.split("prefers-reduced-motion")[1]
+    reduced = css.rsplit("prefers-reduced-motion", 1)[1]
     assert ".cadrumo-shell-btn" in reduced
     assert ".cadrumo-copy-btn" in reduced
 

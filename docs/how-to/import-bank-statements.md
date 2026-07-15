@@ -389,6 +389,9 @@ ledger is not ready, use
 
 ## Next steps
 
+- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
+  understand what imported rows mean and how they differ from tax facts and
+  filing evidence.
 - [Classify transactions](classify-transactions.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
 - [How your records become tax figures](../explanation/from-records-to-figures.md)

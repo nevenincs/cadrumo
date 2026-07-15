@@ -1,6 +1,6 @@
 # Attach invoices and receipts to ledger transactions
 
-Store an evidence record for each invoice or receipt and link it to the transaction it supports. Checks, exports, and year-end reviews can then point at the document behind every number. Everything happens on your computer - nothing is uploaded or sent anywhere.
+Store an evidence record for each invoice or receipt and link it to the transaction it supports. Checks, exports, and year-end reviews can then point at the document behind every number. Stored evidence remains under encrypted local custody. Google Drive pull commands reach your authorized account before storing the downloaded bytes locally.
 
 ## Before you start
 
@@ -131,6 +131,10 @@ If you merge or split transactions, check the new rows and re-attach evidence wh
 
 Ledger exports include the evidence link with each transaction. Ledger-derived calculations carry the evidence trail through to filing artifacts.
 
+Read [Import, export, and evidence](../reference/import-export-and-evidence.md)
+for the difference between linked ledger evidence, an AEAT upload file,
+official filing proof, and an audit bundle.
+
 ## Where to get help
 
 - If a command fails or refuses, see [Troubleshooting](troubleshooting.md).
@@ -139,6 +143,7 @@ Ledger exports include the evidence link with each transaction. Ledger-derived c
 
 ## Next steps
 
+- [Import, export, and evidence](../reference/import-export-and-evidence.md) - understand how evidence participates in calculation, filing, and audit.
 - [Import and manage transactions](import-bank-statements.md) - bring more transactions into the ledger.
 - [Correct mistakes in your ledger](correct-ledger-entries.md) - fix mistakes in transaction rows.
 - [Classify transactions](classify-transactions.md) - assign tax categories to your transactions.

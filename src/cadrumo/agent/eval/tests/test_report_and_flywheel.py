@@ -31,9 +31,7 @@ def _trajectory(session_id: str, *, command_keys: tuple[str, ...]) -> LiveTrajec
         scenario="cierre-trimestre",
         persona="modelo-preparer",
         session_id=session_id,
-        tool_calls=tuple(
-            LiveToolCallRecord(tool_name=key or "search", command_key=key) for key in command_keys
-        ),
+        tool_calls=tuple(LiveToolCallRecord(tool_name=key or "search", command_key=key) for key in command_keys),
     )
 
 
@@ -142,12 +140,8 @@ def test_write_promoted_scenario_is_idempotent(tmp_path: Path) -> None:
     score = _failing_score("s-fail")
     trajectory = _trajectory("s-fail", command_keys=("modelo.work.verify", "modelo.work.file"))
 
-    first = write_promoted_scenario(
-        score=score, trajectory=trajectory, scenario=scenario, scenarios_dir=tmp_path
-    )
-    second = write_promoted_scenario(
-        score=score, trajectory=trajectory, scenario=scenario, scenarios_dir=tmp_path
-    )
+    first = write_promoted_scenario(score=score, trajectory=trajectory, scenario=scenario, scenarios_dir=tmp_path)
+    second = write_promoted_scenario(score=score, trajectory=trajectory, scenario=scenario, scenarios_dir=tmp_path)
 
     assert first == second
     assert first.parent == tmp_path

@@ -157,9 +157,7 @@ def test_ledger_help_enumerates_every_registered_verb() -> None:
     result = _invoke(["app", "ledger", "--help"])
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name and cmd.name not in result.output)
-    assert not missing, (
-        f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
-    )
+    assert not missing, f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
 def test_ledger_attach_help_names_purchase_evidence_creation_path() -> None:
@@ -180,9 +178,7 @@ def test_modelo_help_enumerates_every_registered_verb() -> None:
     result = _invoke(["app", "modelo", "--help"])
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in modelo_app.registered_commands if cmd.name and cmd.name not in result.output)
-    assert not missing, (
-        f"`aeat app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
-    )
+    assert not missing, f"`aeat app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
 # Canonical modelo top-level verb roster. The verbs are the registry/work

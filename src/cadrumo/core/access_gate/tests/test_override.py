@@ -46,7 +46,10 @@ def test_live_read_override_blocks_non_one_values_during_pytest() -> None:
         ("zero-hidden-env", "0", False),
         ("true-string", "true", True),
     ):
-        with override_settings(cadrumo_live_tests_enabled=enabled), pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
+        with (
+            override_settings(cadrumo_live_tests_enabled=enabled),
+            pytest.raises(AeatLiveReadNotEnabledError) as excinfo,
+        ):
             if use_default_current_test:
                 _build_gate().require_live_read()
             else:
