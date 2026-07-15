@@ -61,9 +61,19 @@ Pointer writes are split across:
 
 Selection uses the atomic core `write_pointer`; rollback restoration and clear
 have independent direct filesystem implementations.  The target authority is
-one application profile-pointer transaction service backed only by core atomic
-read/write/restore/clear primitives.  Repository and cold-start orchestration
-delegate to it, preserving byte-exact failed-create rollback.
+one reentrant application profile-pointer transaction service in
+`application/user_profile/_profile_pointer_transaction.py`, backed only by the
+core atomic pointer and lock facades.  Repository, cold-start orchestration,
+and profile health delegate to it, preserving byte-exact failed-create
+rollback without a repository-to-orchestration import.
+
+S26 exposes the core lock primitive through the lazy `cadrumo.core` facade and
+the transaction entry point through the `application.user_profile` facade, so
+profile health does not import the private implementation module.  It removes
+the orchestration-only write, clear, capture, and restore helpers.  Command-line
+interface tests seed exceptional pointer states through the public core facade;
+their three private-import debt records and the obsolete
+orchestration direct-write inventory exception are deleted in the same step.
 
 #### S24 active-profile pointer authority
 
@@ -139,14 +149,50 @@ while retaining its existing deterministic serialization. S24 exports the new
 functions from `_bucket_pointer_io.py` and the lazy `cadrumo.core` facade.
 Imports stay deferred to avoid the `Settings` bootstrap cycle.
 
-S25 adds interruption and exact-byte tests. S26 changes orchestration to use the
-S24 pointer API and defines rollback concurrency policy. S27 changes
-`ProfileRepository` to use the API. S28 changes profile health to use it. S29
-tests repository concurrency, and S30 tests active-profile resolution. S24
-doesn't reorder profile creation.
+S25 adds interruption and exact-byte tests. S26 adds the neutral pointer
+transaction service and routes orchestration through it. S27 changes
+`ProfileRepository` to use the same transaction, and S28 changes profile
+health to use it. S29 tests repository concurrency, and S30 tests
+active-profile resolution. S24 doesn't reorder profile creation.
 
-Atomic replacement isn't compare-and-swap. Until S26 defines rollback race
-semantics, an unconditional restore can overwrite a concurrent selection.
+#### S26-S28 reentrant pointer transaction policy
+
+The transaction locks the sidecar derived from `pointer_path(root)`.  Its
+in-process owner key is the resolved storage root plus process and thread
+identifiers.  Re-entry with that exact key increments a depth counter and does
+not reacquire the operating-system lock; another thread or process waits only
+for the configured bounded interval.  Failure to acquire the lock raises the
+typed contention failure and performs no pointer mutation.  There is no
+unlocked fallback.
+While the owning thread has a nonzero depth, a nested request for another
+canonical root is rejected rather than acquired.  An inherited ownership
+record whose process identifier does not match, including state observed after
+`fork`, fails closed instead of reusing the parent's ownership.
+
+`profile_create_storage_span` acquires this transaction before any
+bucket/session/repository lock and holds it continuously while it captures the
+prior bytes, writes the provisional profile, creates storage, registers the
+profile, and commits the selection.  Repository calls nested within that span
+reuse the same-root, same-process, same-thread ownership.  The fixed lock order
+is pointer transaction first, then bucket/session/repository; a caller holding
+a later lock must not acquire the pointer transaction.
+
+Both rollback and failed-create cleanup run inside the still-owned transaction
+for every `BaseException`, including interruption and process-exit exceptions
+that reach Python cleanup.  Rollback restores the captured bytes through the
+core atomic primitive before releasing the outermost transaction, then
+re-raises the original exception.  This removes the compare-before-restore
+race: every live repository, orchestration, and health writer must acquire the
+same sidecar before it can select, restore, or clear.
+
+The operating system releases the sidecar lock after a process crash, but a
+crash cannot execute rollback or artifact cleanup.  Atomic replacement still
+prevents a torn pointer file; a byte-complete provisional pointer can remain
+for health and repair to diagnose.  S26 alone establishes only orchestration
+conformance.  The global serialized-writer claim becomes true only after S27
+routes `ProfileRepository` and S28 routes profile-health repair through this
+same service.
+
 `fsync_parent_dir` never raises an exception. If `os.O_DIRECTORY` is
 unavailable, it returns without syncing. If opening, syncing, or closing the
 directory fails, it logs and suppresses the error. Python on Windows doesn't

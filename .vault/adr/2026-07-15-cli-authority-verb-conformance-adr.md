@@ -131,6 +131,9 @@ duplicates once DATA and AUTH move to their canonical doors.
   multi-step business transactions, schema policy, or recovery policy.
 - Active-profile pointer capture, restore, select, and clear use one atomic
   application/core boundary.  Failed create must restore prior bytes exactly.
+  Every participating writer uses the same bounded, fail-closed pointer
+  transaction; no timeout or contention path falls back to an unlocked core
+  mutation.
 - The single all-profile reset must preflight retention for the whole target
   set, then execute as an idempotent, durable, roll-forward state machine.
   Multi-bucket filesystem deletion is not falsely described as atomic.  A
@@ -211,6 +214,44 @@ that its parsed inventory is non-empty and within those ceilings.
 
 Introduce one atomic active-profile pointer boundary and route repository,
 orchestration rollback, logout, repair, delete, and reset through it.
+Implement that boundary once in the neutral
+`application/user_profile/_profile_pointer_transaction.py` module.  The module
+uses the core pointer and lock facades but imports neither orchestration nor the
+repository, so orchestration, repository, and profile health depend on it in
+one direction.  The core facade exposes the lock primitive required by the
+service, and the user-profile facade exposes the application transaction entry
+point to cross-package consumers without exposing its private module path.  The
+lock target is the sidecar derived from the configured root's active-pointer
+path.  Ownership is reentrant only for the same resolved root, process
+identifier, and thread identifier; a matching nested acquisition increments an
+in-process depth instead of reacquiring the non-reentrant operating-system
+lock.  A different thread or process contends for the sidecar for the
+configured bounded interval and fails closed when that interval expires.
+While a transaction is owned, a nested request from the owning thread for a
+different canonical root is rejected rather than acquired.  An inherited
+ownership record whose process identifier no longer matches, including after
+`fork`, also fails closed instead of reusing the parent's ownership.
+
+Cold-start profile creation acquires the pointer transaction before any
+bucket, session, or repository lock and retains it continuously across pointer
+capture, provisional selection, storage creation, registration, and final
+commit.  Nested repository pointer calls for the same root execute under the
+reentrant ownership.  Code that already holds a bucket or storage lock must
+not enter the pointer transaction, which fixes the lock order as pointer first,
+then bucket/session/repository.  On any `BaseException`, rollback restores the
+captured bytes exactly and performs failed-create artifact cleanup before the
+outer pointer transaction releases; the original exception is then re-raised.
+Successful completion leaves the committed selection in place and releases
+the transaction once its reentrancy depth returns to zero.
+
+The transaction serializes cooperating live writers but cannot roll back a
+process crash because no Python cleanup handler runs.  The core atomic writer
+still prevents torn pointer bytes; a crash may leave a complete provisional
+pointer for the existing health and repair path to diagnose.  S26 establishes
+the service and routes orchestration, but the single-writer claim is not global
+until S27 routes `ProfileRepository` and S28 routes profile-health repair
+through the same reentrant transaction.
+
 Profile logout becomes the strong session-close operation: close and zeroise
 the active `BucketSession`, clear any OS-keystore session cache entry, release
 its lockfile, and clear the pointer.  Idle-timeout auto-lock remains an internal
