@@ -270,27 +270,6 @@
         "reason": "White-box unit test instantiating the concrete local-filesystem StorageProvider backend directly to exercise push/manifest behaviour. The package docstring explicitly documents _local and _google_drive as private implementation details behind the StorageProvider Protocol; promoting the concrete class to the public facade would contradict that documented boundary."
       },
       {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
-        "lineno": 244,
-        "target_mod": "cadrumo.application.user_profile._orchestration",
-        "imported_names": ["_write_active_profile_pointer"],
-        "reason": "White-box test seeding a stale/phantom active-profile pointer to exercise a lifecycle-verb error path. Internal pointer-write primitive; the public surface is register_active_profile / select_profile, not a raw pointer write."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
-        "lineno": 653,
-        "target_mod": "cadrumo.application.user_profile._orchestration",
-        "imported_names": ["_clear_active_profile_pointer"],
-        "reason": "White-box test clearing the active-profile pointer directly to set up a no-active-profile scenario. Internal pointer-clear primitive; the public surface is logout_active_profile / remove_active_profile."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
-        "lineno": 757,
-        "target_mod": "cadrumo.application.user_profile._orchestration",
-        "imported_names": ["_write_active_profile_pointer"],
-        "reason": "Same private pointer-write primitive reach as line 244 in the same file, seeding a different phantom-pointer scenario."
-      },
-      {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
         "lineno": 65,
         "target_mod": "cadrumo.core.i18n._render",

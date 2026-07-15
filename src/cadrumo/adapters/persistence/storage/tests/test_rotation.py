@@ -677,7 +677,8 @@ class TestRotationLockTargetAlignment:
         # byte target ``<draft_id>.lock.lock``). The rotation must
         # contend on the SAME ``<draft_id>.lock.lock`` so concurrent
         # writers cannot stomp the rotation mid-run.
-        from .. import LockAcquisitionError, exclusive_file_lock
+        from .....core import exclusive_file_lock
+        from .. import LockAcquisitionError
 
         store = tmp_path / "drafts"
         store.mkdir()
@@ -709,7 +710,7 @@ class TestRotationLockTargetAlignment:
         # ``target.with_suffix('.lock')`` for ``target = usage-ratios.json``.
         # The rotation plan entry for the usage-ratios profile must
         # produce the same lock target.
-        from .. import exclusive_file_lock
+        from .....core import exclusive_file_lock
 
         store = tmp_path / "financial"
         store.mkdir()

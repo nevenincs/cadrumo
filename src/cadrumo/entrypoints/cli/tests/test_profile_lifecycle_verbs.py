@@ -241,11 +241,10 @@ def test_config_profile_create_refuses_manifest_only_profile() -> None:
 
 
 def test_repair_profile_named_active_clear_active_clears_pointer(tmp_path: Path) -> None:
-    from ....application.user_profile._orchestration import _write_active_profile_pointer
-    from ....core import read_pointer
+    from ....core import BucketPointer, read_pointer, write_pointer
 
     stage_bucket_manifest("operator", label="operator")
-    _write_active_profile_pointer("operator")
+    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
 
     result = _invoke_repair(("profile", "--profile", "operator", "--clear-active", "--yes"))
 
@@ -650,13 +649,13 @@ def test_show_and_status_do_not_contradict_on_a_freshly_created_profile() -> Non
     assert "readiness\tready" not in status_result.output
 
 
-def test_config_profile_show_refuses_when_no_active_profile() -> None:
+def test_config_profile_show_refuses_when_no_active_profile(tmp_path: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
-    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+    from ....core import clear_pointer
     from ....core.config import override_settings
 
-    _clear_active_profile_pointer()
+    clear_pointer(tmp_path)
     with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("show",))
     assert result.exit_code != 0
@@ -753,14 +752,14 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
 # --- Fix 3: degraded profile status exits non-zero ---
 
 
-def test_config_profile_status_exits_nonzero_for_dangling_pointer() -> None:
+def test_config_profile_status_exits_nonzero_for_dangling_pointer(tmp_path: Path) -> None:
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
-    from ....application.user_profile._orchestration import _write_active_profile_pointer
+    from ....core import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
-    _write_active_profile_pointer("phantom")
+    write_pointer(tmp_path, BucketPointer(bucket_id="phantom", schema_version=1))
 
     result = _invoke_profile(("status",))
 

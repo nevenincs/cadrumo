@@ -217,11 +217,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "target.write_text",
     ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) during a failed-create rollback",
     (
-        "src/cadrumo/application/user_profile/_orchestration.py",
-        "restore_active_profile_pointer",
-        "target.write_text",
-    ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) when a cold-start create span fails",
-    (
         "src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",
         "write_text",

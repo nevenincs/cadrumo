@@ -16,6 +16,7 @@ coverage report reads to distinguish product-scope exclusions from
 registry gaps. Active-bucket context uses the plaintext :class:`BucketPointer` value object
 plus :func:`pointer_path`, :func:`read_pointer`, :func:`capture_pointer`,
 :func:`restore_pointer`, :func:`clear_pointer`, :func:`write_pointer`,
+:func:`exclusive_file_lock`,
 :func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
 :func:`resolve_repository_bucket_id`. TOML and option utilities expose
 :func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
@@ -174,6 +175,7 @@ if TYPE_CHECKING:
         foreign_asset_obligation_group,
     )
     from .aggregation import BindingSourceKind, IntracomOperationType
+    from .locks import exclusive_file_lock
 
 __all__: list[str] = [
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
@@ -249,6 +251,7 @@ __all__: list[str] = [
     "classify_post_filing_event_kind",
     "clear_pointer",
     "derive_result_disposition",
+    "exclusive_file_lock",
     "expected_floor",
     "foreign_asset_class_declaration_threshold",
     "foreign_asset_declaration_threshold",
@@ -291,6 +294,10 @@ def __getattr__(name: str) -> object:
         from .aggregation import IntracomOperationType
 
         return IntracomOperationType
+    if name == "exclusive_file_lock":
+        from .locks import exclusive_file_lock
+
+        return exclusive_file_lock
     if name in (
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
