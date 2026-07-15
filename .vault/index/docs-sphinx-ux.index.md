@@ -17,9 +17,12 @@ related:
   - '[[2026-06-04-docs-sphinx-ux-W02-P03-S07]]'
   - '[[2026-06-04-docs-sphinx-ux-W02-P03-S08]]'
   - '[[2026-06-04-docs-sphinx-ux-W02-P03-S09]]'
+  - '[[2026-06-04-docs-sphinx-ux-W02-P04-S10]]'
+  - '[[2026-06-04-docs-sphinx-ux-W02-P04-S11]]'
   - '[[2026-06-04-docs-sphinx-ux-W02-P04-S12]]'
   - '[[2026-06-04-docs-sphinx-ux-W02-P04-S13]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P05-S14]]'
+  - '[[2026-06-04-docs-sphinx-ux-W03-P05-S15]]'
   - '[[2026-06-04-docs-sphinx-ux-adr]]'
   - '[[2026-06-04-docs-sphinx-ux-code-review-audit]]'
   - '[[2026-06-04-docs-sphinx-ux-plan]]'
@@ -53,9 +56,12 @@ Auto-generated index of all documents tagged with `#docs-sphinx-ux`.
 - `2026-06-04-docs-sphinx-ux-W02-P03-S07` - replace the first-page route list with a scannable task grid
 - `2026-06-04-docs-sphinx-ux-W02-P03-S08` - make safety and responsibility routes visually persistent
 - `2026-06-04-docs-sphinx-ux-W02-P03-S09` - preserve hidden toctrees while exposing visible route labels
+- `2026-06-04-docs-sphinx-ux-W02-P04-S10` - add a curated API boundary overview
+- `2026-06-04-docs-sphinx-ux-W02-P04-S11` - retarget the API toctree entry to the curated overview
 - `2026-06-04-docs-sphinx-ux-W02-P04-S12` - separate operator CLI routes from schema registry detail
 - `2026-06-04-docs-sphinx-ux-W02-P04-S13` - update CLI reference conformance expectations
 - `2026-06-04-docs-sphinx-ux-W03-P05-S14` - run docs dependency and stub drift gates
+- `2026-06-04-docs-sphinx-ux-W03-P05-S15` - build the rendered HTML documentation
 
 ### plan
 
