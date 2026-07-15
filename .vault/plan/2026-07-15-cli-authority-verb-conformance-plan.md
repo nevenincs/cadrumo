@@ -30,7 +30,7 @@ Correct the package root, remove stale ledger entries, and eliminate the three e
 - [x] `W01.P01.S05` - Narrow diagnostics run-health adapter access to the outbound LLM package; `.importlinter`.
 - [x] `W01.P01.S06` - Remove the concrete transaction-repository fallback and require TransactionCatalogueRepositoryProtocol; `src/cadrumo/application/aggregation/_irnr_income_ledger.py`.
 - [x] `W01.P01.S07` - Require a non-optional TransactionCatalogueRepositoryProtocol in the public IRNR source resolver; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
-- [ ] `W01.P01.S08` - Exercise M210 aggregation through the real injected transaction repository; `src/cadrumo/application/aggregation/tests/test_m210_irnr_income_ledger.py`.
+- [x] `W01.P01.S08` - Exercise M210 aggregation through the real injected transaction repository; `src/cadrumo/application/aggregation/tests/test_m210_irnr_income_ledger.py`.
 - [x] `W01.P01.S09` - Replace verification's concrete invoice-repository boundary with InvoiceCatalogueRepositoryProtocol; `src/cadrumo/application/modelo/_verification_actions.py`.
 - [ ] `W01.P01.S10` - Widen injected OSS and IOSS invoice-repository annotations while retaining the sole default composition path; `src/cadrumo/application/aggregation/_oss_ioss.py`.
 - [ ] `W01.P01.S11` - Exercise dormant Modelo 369 verification through the real invoice repository Protocol boundary; `src/cadrumo/application/modelo/tests/test_dormant_m369_oss_resolver_live.py`.
