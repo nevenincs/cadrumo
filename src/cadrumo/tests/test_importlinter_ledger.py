@@ -28,7 +28,7 @@ _IMPORTLINTER = REPO_ROOT / ".importlinter"
 _SOURCE_ROOT = REPO_ROOT / "src"
 
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
-_IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>aeat\.[\w.*]+)\s*->\s*(?P<target>aeat\.[\w.*]+)\s*$")
+_IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>cadrumo\.[\w.*]+)\s*->\s*(?P<target>cadrumo\.[\w.*]+)\s*$")
 
 _APPLICATION_TO_ADAPTERS_BASELINE = 840  # filing-amendment repository ports-inversion increment (+4)
 _APPLICATION_SOURCE_MODULE_BASELINE = 78  # prorrata register application adapter pin

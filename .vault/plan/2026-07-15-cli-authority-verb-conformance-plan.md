@@ -39,7 +39,7 @@ Correct the package root, remove stale ledger entries, and eliminate the three e
 
 Make the ledger parser consume Cadrumo edges, narrow the remaining wildcard, and freeze the reconciled live ceilings.
 
-- [ ] `W01.P02.S12` - Retarget the ignore-edge parser from aeat imports to cadrumo imports; `src/cadrumo/tests/test_importlinter_ledger.py`.
+- [x] `W01.P02.S12` - Retarget the ignore-edge parser from aeat imports to cadrumo imports; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [ ] `W01.P02.S13` - Freeze the application-edge ceiling at 199; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [ ] `W01.P02.S14` - Freeze the application-source wildcard ceiling at 78; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [ ] `W01.P02.S15` - Freeze the domain test-edge ceiling at 2; `src/cadrumo/tests/test_importlinter_ledger.py`.
