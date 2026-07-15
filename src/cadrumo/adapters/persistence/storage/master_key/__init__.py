@@ -8,9 +8,9 @@ Public surface for at-rest key custody. Re-exports the provider family
 :func:`get_master_key_provider` resolver, and the
 :func:`activate_master_key_provider` / :func:`activate_session`
 context managers that bind unlocked key material to the active bucket
-session. :class:`NoActiveBucketSessionError` and
-:func:`suspend_active_session` expose the same session boundary to
-tests and bootstrap flows.
+session. :class:`NoActiveBucketSessionError`,
+:func:`close_active_bucket_session`, and :func:`suspend_active_session`
+expose the same session boundary to callers, tests, and bootstrap flows.
 
 KDF and file-custody helpers are exported through :class:`KdfParams`,
 :func:`derive_kek_with_params`, the Argon2id cost constants, the
@@ -39,6 +39,7 @@ from __future__ import annotations
 from ._active_session import (
     NoActiveBucketSessionError,
     activate_session,
+    close_active_bucket_session,
     current_active_bucket_session,
     get_active_master_key,
     has_active_bucket_session,
@@ -115,6 +116,7 @@ __all__ = [
     "activate_session",
     "atomic_write_secure_bytes",
     "bucket_dek_path",
+    "close_active_bucket_session",
     "current_active_bucket_session",
     "decode_mnemonic",
     "derive_kek_with_params",
