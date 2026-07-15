@@ -86,13 +86,22 @@ must prove that both companion versions match the core distribution.
 ### Former-name package cleanup
 
 The pre-rename companion projects `aeat-data-manuals` and `aeat-data-official`
-are live on PyPI with unyanked 0.1.0 and 0.1.1 releases. Before publishing the
-`cadrumo` cohort, yank every former release and remove their Trusted Publishers
-so nothing can publish under the former identity.
+were removed from PyPI on 2026-07-14: the operator deleted both projects and
+their 0.1.0 and 0.1.1 releases outright and removed their Trusted Publishers,
+so nothing can publish under the former identity. Both project endpoints now
+return not-found.
 
-Preserve both project pages as tombstones; don't delete the projects or
-artifacts. Also remove any account-level pending publishers still registered
-for former `aeat*` names. Record the action and evidence under S61.
+This runbook originally prescribed the weaker action: yank every release and
+preserve both project pages as tombstones. The operator chose deletion instead
+and recorded the deviation on the reservation evidence issue as strictly
+stronger for the cleanup goal. Accept that record as the completed state; the
+one property tombstones would have added, holding the former names against
+third-party re-registration, is covered instead by monitoring the former-name
+endpoints for reappearance during the publication window.
+
+If a former `aeat*` name resurfaces anywhere else, remove any account-level
+pending publisher registered for it and record the action and evidence under
+S61.
 
 ### External reservation evidence
 
