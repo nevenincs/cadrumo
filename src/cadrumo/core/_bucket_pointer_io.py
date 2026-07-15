@@ -8,7 +8,8 @@ path uses the write-then-rename pattern so a crashed switch never produces a
 truncated pointer; the read path returns ``None`` only when the pointer is
 absent.
 
-The IO helpers serialise :class:`BucketPointer` records and feed
+The IO helpers serialise :class:`BucketPointer` records, capture and restore
+the pointer's exact bytes without parsing them, and feed
 :func:`resolve_active_bucket_id`, the central core resolver consumed by storage
 and CLI startup flows. The resolver returns the selected bucket id string; it
 does not prove a ``buckets/<id>/manifest.toml`` exists, scan profile display
@@ -74,6 +75,74 @@ def read_pointer(root: Path) -> BucketPointer | None:
         return None
     text = target.read_text(encoding="utf-8")
     return BucketPointer.from_toml(text)
+
+
+def capture_pointer(root: Path) -> bytes | None:
+    """Capture the active-profile pointer as exact bytes.
+
+    Args:
+        root: Cadrumo local storage root containing ``active-profile``.
+
+    Returns:
+        The file's unmodified bytes, or ``None`` when the pointer is absent.
+
+    Raises:
+        OSError: If the pointer exists but cannot be read.
+    """
+    target = pointer_path(root)
+    try:
+        return target.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def clear_pointer(root: Path) -> None:
+    """Clear the active-profile pointer idempotently.
+
+    An absent pointer is already clear. After a successful unlink, the parent
+    directory is synchronised on a best-effort basis where supported.
+
+    Args:
+        root: Cadrumo local storage root containing ``active-profile``.
+
+    Raises:
+        OSError: If an existing pointer cannot be removed.
+    """
+    target = pointer_path(root)
+    try:
+        target.unlink()
+    except FileNotFoundError:
+        return
+
+    # Deferred for the same Settings bootstrap reason documented by
+    # ``write_pointer`` below.
+    from .locks import fsync_parent_dir
+
+    fsync_parent_dir(target)
+
+
+def restore_pointer(root: Path, captured: bytes | None) -> None:
+    """Restore an exact-byte active-profile pointer capture.
+
+    A ``None`` capture clears the pointer. A byte capture is written through
+    the hardened atomic byte path without parsing, decoding, or normalisation.
+
+    Args:
+        root: Cadrumo local storage root containing ``active-profile``.
+        captured: Exact captured bytes, or ``None`` for an absent pointer.
+
+    Raises:
+        OSError: If clearing or atomically restoring the pointer fails.
+    """
+    if captured is None:
+        clear_pointer(root)
+        return
+
+    # Deferred to avoid recreating the Settings bootstrap cycle described by
+    # ``write_pointer`` below.
+    from .atomic_write import atomic_write_hardened_bytes
+
+    atomic_write_hardened_bytes(pointer_path(root), captured)
 
 
 def resolve_active_bucket_id() -> str | None:
@@ -153,15 +222,11 @@ def require_active_bucket_id() -> str:
 
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
-    """Atomically write the pointer file via the standard-tier atomic-write helper.
+    """Serialise and atomically persist an active-profile pointer.
 
-    The payload is staged at a tempfile sibling, fsynced, and renamed via
-    :func:`os.replace` (with a best-effort parent-directory fsync) by
-    :func:`~core.atomic_write.atomic_write_text`; a crashed process therefore
-    leaves either the previous good pointer or the new good pointer on disk,
-    never a torn intermediate. The payload comes from
-    :meth:`~core._bucket_pointer.BucketPointer.to_toml`, and the Cadrumo root
-    is created lazily if absent.
+    Uses deterministic :class:`BucketPointer` TOML serialisation and the
+    hardened atomic byte path. Persisting the selection does not validate the
+    selected profile's manifest, registration, or lifecycle state.
 
     Args:
         root: Cadrumo local storage root that will contain the pointer file.
@@ -171,7 +236,8 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
         OSError: If the parent directory cannot be created, the temporary file
             cannot be written, or the atomic replacement fails.
     """
-    # Deferred import: this module is read during Settings() bootstrap
+    # ``restore_pointer`` defers the atomic-writer import: this module is read
+    # during Settings() bootstrap
     # (core.config._resolve_database_url_for_active_profile imports
     # pointer_path/read_pointer from here before Settings exists), and
     # core.atomic_write transitively imports core.logging.get_logger,
@@ -180,10 +246,7 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     # pointer_path/read_pointer exist to avoid. Deferring to call time
     # (after Settings is already constructed in every real invocation)
     # breaks the cycle without reintroducing it.
-    from .atomic_write import atomic_write_text
-
-    target = pointer_path(root)
-    atomic_write_text(target, pointer.to_toml(), encoding="utf-8")
+    restore_pointer(root, pointer.to_toml().encode("utf-8"))
 
 
 def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[AeatError]) -> str:
@@ -229,10 +292,13 @@ def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[Aeat
 
 
 __all__ = [
+    "capture_pointer",
+    "clear_pointer",
     "pointer_path",
     "read_pointer",
     "require_active_bucket_id",
     "resolve_active_bucket_id",
     "resolve_repository_bucket_id",
+    "restore_pointer",
     "write_pointer",
 ]

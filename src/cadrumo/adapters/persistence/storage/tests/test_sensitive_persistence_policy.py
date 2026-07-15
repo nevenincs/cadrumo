@@ -68,9 +68,9 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "shared hardened-tier atomic-write primitive; mirrors the master-key O_EXCL/0o600 pattern",
     (
         "src/cadrumo/core/atomic_write.py",
-        "atomic_write_hardened_bytes",
+        "_write_all",
         "os.write",
-    ): "shared hardened-tier atomic-write primitive; writes caller-supplied bytes through a private fd",
+    ): "shared complete-write primitive for the hardened atomic writer's private fd",
     (
         "src/cadrumo/adapters/persistence/storage/bucket/_output_language_hint.py",
         "_atomic_write_text",
@@ -116,16 +116,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "write_sealed_archive",
         "tarfile.open",
     ): "sealed bucket archive writer emits encrypted archive payloads",
-    (
-        "src/cadrumo/adapters/persistence/storage/master_key/_master_key_io.py",
-        "atomic_write_secure_bytes",
-        "os.open",
-    ): "master-key backend writes key material with restrictive file modes",
-    (
-        "src/cadrumo/adapters/persistence/storage/master_key/_master_key_io.py",
-        "atomic_write_secure_bytes",
-        "os.write",
-    ): "master-key backend writes key material through a private fd",
     (
         "src/cadrumo/application/auth/_acquisition_lock.py",
         "acquire_auth_acquisition_lock",

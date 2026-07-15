@@ -1,11 +1,11 @@
-"""Core cross-cutting infrastructure shared by every ``aeat`` layer.
+"""Core cross-cutting infrastructure shared by every Cadrumo layer.
 
 The core layer is the innermost package in the hexagonal architecture. It
 exports typed primitives, configuration-adjacent helpers, parsing utilities,
 and layer-neutral policies that domain, application, adapter, and entrypoint
 modules can import without depending outward.
 
-The public facade groups four stable surfaces. Immutable modelling primitives
+The public facade groups stable surfaces. Immutable modelling primitives
 include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
 :class:`Period`, :class:`StandardPeriodCode`, ``PeriodKind``,
 :class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`, and
@@ -14,7 +14,8 @@ Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
 :data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
 coverage report reads to distinguish product-scope exclusions from
 registry gaps. Active-bucket context uses the plaintext :class:`BucketPointer` value object
-plus :func:`pointer_path`, :func:`read_pointer`, :func:`write_pointer`,
+plus :func:`pointer_path`, :func:`read_pointer`, :func:`capture_pointer`,
+:func:`restore_pointer`, :func:`clear_pointer`, :func:`write_pointer`,
 :func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
 :func:`resolve_repository_bucket_id`. TOML and option utilities expose
 :func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
@@ -151,11 +152,14 @@ if TYPE_CHECKING:
     # real callable signatures here.
     from ._bucket_pointer import BucketPointer
     from ._bucket_pointer_io import (
+        capture_pointer,
+        clear_pointer,
         pointer_path,
         read_pointer,
         require_active_bucket_id,
         resolve_active_bucket_id,
         resolve_repository_bucket_id,
+        restore_pointer,
         write_pointer,
     )
     from ._foreign_asset_obligation import (
@@ -240,8 +244,10 @@ __all__: list[str] = [
     "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "capture_pointer",
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
+    "clear_pointer",
     "derive_result_disposition",
     "expected_floor",
     "foreign_asset_class_declaration_threshold",
@@ -266,6 +272,7 @@ __all__: list[str] = [
     "resolve_active_bucket_id",
     "resolve_amendment_kind_regime",
     "resolve_repository_bucket_id",
+    "restore_pointer",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "to_str_keyed_dict",
@@ -303,11 +310,14 @@ def __getattr__(name: str) -> object:
 
         return BucketPointer
     if name in (
+        "capture_pointer",
+        "clear_pointer",
         "pointer_path",
         "read_pointer",
         "resolve_active_bucket_id",
         "resolve_repository_bucket_id",
         "require_active_bucket_id",
+        "restore_pointer",
         "write_pointer",
     ):
         from . import _bucket_pointer_io
