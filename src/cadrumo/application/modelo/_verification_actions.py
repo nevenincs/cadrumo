@@ -38,7 +38,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -59,6 +58,7 @@ from ...domain.calculations.registry import (
     derive_modelo_202_modality,
 )
 from ...domain.deadlines import TaxpayerProfile
+from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -433,7 +433,7 @@ def _collect_verification_gate_findings(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepository | None,
-    invoice_repository: InvoiceCatalogueRepository | None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
@@ -519,7 +519,7 @@ def verify_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -562,9 +562,10 @@ def verify_modelo_revision(
         transaction_repository: Optional
             :class:`TransactionCatalogueRepository` used for transaction-evidence
             advisories.
-        invoice_repository: Optional :class:`InvoiceCatalogueRepository` used
-            to reconstruct legacy Modelo 369 OSS source resolution before the
-            revision can be treated as filing-grade.
+        invoice_repository: Optional
+            :class:`~cadrumo.domain.invoices.InvoiceCatalogueRepositoryProtocol`
+            used to reconstruct legacy Modelo 369 OSS source resolution before
+            the revision can be treated as filing-grade.
         verification_repository: Optional verification-report repository port.
         bucket_event_repository: Optional bucket-event history repository port.
         iva_compensation_decision_repository: Optional IVA-wallet decision
@@ -958,7 +959,7 @@ def _m369_unresolved_oss_source_finding(
     work_unit: WorkUnit,
     target: CalculationRevision,
     snapshot: RegistrySnapshot,
-    invoice_repository: InvoiceCatalogueRepository | None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> ModeloVerificationFinding | None:
     """Block Modelo 369 verification when its OSS source remained unresolved.
 
@@ -1073,7 +1074,7 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepository | None,
-    invoice_repository: InvoiceCatalogueRepository | None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
     """Build the verification finding list for one calculation revision.
 
