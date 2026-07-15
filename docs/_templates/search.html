@@ -1,63 +1,36 @@
 {% extends "!page.html" %}
 {#
-  Pagefind-backed search page (replaces the stock Sphinx search surface).
+  Palette-hosted search page (ADR 2026-07-15 D5).
 
-  The post-build index pass (dev/docs/pagefind_index.py) writes the chunked,
-  per-language Pagefind index into _build/html/pagefind/ after Sphinx runs.
-  This page loads the Pagefind UI bundle from that directory and renders the
-  default search box; the Ctrl-K command palette's full-text tier hands off
-  here (that palette wiring is a separate step, not this template).
+  This page is a bare `#pagefind-search` mount. The globally-loaded
+  docs/_static/cadrumo-docs.js (html_js_files in conf.py) detects the mount and
+  renders the SAME search controller that drives the Ctrl-K command palette
+  inline here -- one implementation, two hosts. The page therefore inherits the
+  D5 tier ladder (term/casilla/CLI cards above full-text pages), the PERF-003
+  relevance tie-break, and result dedupe, instead of the stock PagefindUI drop's
+  divergent ranking that this replaces (the second, unowned search
+  implementation that shipped broken; retired per no-legacy-compatibility).
 
-  Pagefind's own ranking and per-language stemming (es/ca/hu/en) serve the
-  full-text results; the injected concept / casilla / CLI custom records ride
-  the same index and surface here too once the custom-record injection lands.
+  The controller lazy-loads the chunked Pagefind index written by the post-build
+  pass (dev/docs/pagefind_index.py) into _build/html/pagefind/ after Sphinx runs.
+  No PagefindUI bundle CSS/JS is loaded here -- the controller imports the raw
+  pagefind.js module itself.
 
-  The ?q= contract: callers hand off to this page with the reader's query in
-  the `q` parameter (the palette's full-text row emits %20-encoded spaces, the
-  casilla records emit +-encoded ones). URLSearchParams decodes both forms;
-  decodeURIComponent does NOT decode `+` and must not be used here. The query
-  seeds the search so results render on load with the input left populated for
-  refinement. The contract is surface-independent: it survives whatever renders
-  the results (the current PagefindUI drop, or a future palette-hosted surface
-  per ADR D5). Gate: dev/docs/tests/test_search_page_query_param.py.
+  The ?q= contract: callers hand off here with the reader's query in the `q`
+  parameter (the palette's full-text row emits %20-encoded spaces, the casilla
+  records emit +-encoded ones). initSearchPage reads it with URLSearchParams
+  (decodes both forms), seeds the input, renders results on load, and rewrites
+  the URL as the query changes for shareable searches.
+  Gate: dev/docs/tests/test_search_page_query_param.py.
 #}
 {% block content %}
 <article role="main" id="furo-main-content">
   <h1>Search</h1>
-  <div id="pagefind-search" class="aeat-pagefind-search"
-       data-pagefind-base="{{ pathto('pagefind/pagefind-ui.js', 1) }}">
+  <div id="pagefind-search" class="aeat-pagefind-search">
     <noscript>
       <p>Search requires JavaScript. Browse the documentation from the
       navigation sidebar, or use the glossary for terminology.</p>
     </noscript>
   </div>
-  <link href="{{ pathto('pagefind/pagefind-ui.css', 1) }}" rel="stylesheet" />
-  <script src="{{ pathto('pagefind/pagefind-ui.js', 1) }}"></script>
-  <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      if (typeof PagefindUI === 'undefined') { return; }
-      var ui = new PagefindUI({
-        element: '#pagefind-search',
-        /* Resolved to an absolute URL against the document. The UI reaches the
-         * index with a dynamic import(), and search.html sits at the build
-         * root, so the raw pathto() output is `pagefind/` -- a BARE module
-         * specifier the browser refuses to resolve ("Failed to resolve module
-         * specifier"), which broke every search on this page. A relative URL
-         * must be explicitly relative; new URL() makes it unambiguous. */
-        bundlePath: new URL('{{ pathto('pagefind/', 1) }}', window.location.href).href,
-        showImages: false,
-        showSubResults: true,
-      });
-
-      /* Seed the query from ?q= so a full-text handoff renders results on
-       * load with the input populated for refinement. URLSearchParams decodes
-       * both `+` and %20 to a space; the two encodings both reach this page
-       * (the palette emits %20, the casilla records emit +). triggerSearch
-       * fills the input and runs the search, and no-ops on an empty term, so a
-       * bare search.html stays the plain "open search page" path. */
-      var initial = new URLSearchParams(window.location.search).get('q');
-      if (initial) { ui.triggerSearch(initial); }
-    });
-  </script>
 </article>
 {% endblock %}
