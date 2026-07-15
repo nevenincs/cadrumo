@@ -9,25 +9,6 @@ related:
   - "[[2026-07-14-cadrumo-product-rename-s76-residue-audit]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `cadrumo-product-rename` audit: `W06.P15.S81 formal code review of the product-rename change set`
 
 ## Scope
@@ -115,18 +96,3 @@ re-run obligation is correspondingly scoped to gates affected by remediation
 gates (S61 Trusted Publisher confirmation, S85 issue closure) plus the S84
 shared-worktree delivery audit. Schedule the `Aeat*Settings` mixin rename as
 a follow-up Step gated on the peer edit to `core/config.py` landing.
-
-## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### W06.P15.S81 formal code review of the product-rename change set | {level} | {summary}
-
-     followed by a paragraph carrying the detail. W06.P15.S81 formal code review of the product-rename change set is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
-
-## Recommendations
-
-<!-- Actionable recommendations -->
