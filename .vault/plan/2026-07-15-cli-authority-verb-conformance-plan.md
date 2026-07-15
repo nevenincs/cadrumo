@@ -36,7 +36,7 @@ Correct the package root, remove stale ledger entries, and eliminate the three e
 - [x] `W01.P01.S01` - Change the configured root package from aeat to cadrumo; `.importlinter`.
 - [x] `W01.P01.S02` - Remove the stale live censo adapter ignore entry; `.importlinter`.
 - [x] `W01.P01.S03` - Remove the stale user-profile censo-sync adapter ignore entry; `.importlinter`.
-- [ ] `W01.P01.S04` - Add only the exact core state-root test helper route to the reporting contract; `.importlinter`.
+- [x] `W01.P01.S04` - Add only the exact core state-root test helper route to the reporting contract; `.importlinter`.
 - [ ] `W01.P01.S05` - Narrow diagnostics run-health adapter access to the outbound LLM package; `.importlinter`.
 - [x] `W01.P01.S06` - Remove the concrete transaction-repository fallback and require TransactionCatalogueRepositoryProtocol; `src/cadrumo/application/aggregation/_irnr_income_ledger.py`.
 - [ ] `W01.P01.S07` - Require a non-optional TransactionCatalogueRepositoryProtocol in the public IRNR source resolver; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
