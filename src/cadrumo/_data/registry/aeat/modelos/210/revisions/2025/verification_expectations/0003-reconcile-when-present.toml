@@ -10,6 +10,10 @@
 id = "modelo-210-2025-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
+    "base_imponible_ganancias_h",
+    "cuota_integra_reducida",
+    "cuota_ley_irnr",
+    "reduccion_convenio",
     "tipo_gravamen",
 ]
 tolerance = "0.01"
