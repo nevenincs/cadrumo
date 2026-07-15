@@ -90,6 +90,8 @@ Focused Ruff passed. The exact evidence set—two real-storage M210 tests, five 
 
 The feature-scoped annotations check reports exactly three retained HTML scaffold blocks in `2026-07-15-cli-authority-verb-conformance-W01-P01-S07.md`. They do not change runtime behavior or invalidate the authored outcome, so S08 remains non-blocked, but the owning executor must remove them before Phase closure. The separate single annotation warning on the plan predates S07 and is not attributed to this commit.
 
+Resolution: **CLOSED** by commit `e17890366ed8f95193da19c9efdbccddd8de7ee3`. Commit comparison proves it removed exactly the three S07 HTML scaffold blocks and no evidence prose or metadata: `step_id: S07`, the parent-plan relationship, scope, Description, Outcome, Notes, the recorded 11-test evidence, and the S08 boundary remain intact. The feature annotation and Markdown checks both report zero diagnostics. No runtime, test, plan, index, or other execution artifact changed in the remediation, so the LOW finding is fully resolved.
+
 ## Recommendations
 
 Proceed to S02 with the atomic gate intact: remove only the stale live-censo ignore, preserve the corrected `cadrumo` root, and do not weaken unmatched-ignore alerting or any contract. S03 must remove the separate censo-sync ignore, and S04 must add only the exact test-to-helper route in the reporting core contract. Keep later Waves blocked until W01 reaches the planned uncached five-contract pass and non-vacuous `199/78/2` ratchet proof.
