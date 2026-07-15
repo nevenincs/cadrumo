@@ -27,6 +27,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S19]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S20]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S21]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S22]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -71,6 +72,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S19` - Run the core state-root isolation test against real isolated secure storage
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S20` - Run the focused M210 IRNR real-storage suite after making both injection points required
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S21` - Run the focused Modelo 369 verification suite after widening the invoice boundary
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S22` - Run an uncached fresh-process import graph and require all five contracts with no unmatched ignore
 
 ### plan
 
