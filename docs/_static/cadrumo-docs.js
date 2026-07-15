@@ -227,18 +227,79 @@
       '<div class="cadrumo-palette-head">' +
       '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
       '<input class="cadrumo-palette-input" type="text" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
+      '<span class="cadrumo-palette-spin" aria-hidden="true"></span>' +
       '<kbd class="cadrumo-palette-esc">esc</kbd>' +
       "</div>" +
-      '<ul class="cadrumo-palette-list" role="listbox"></ul>' +
+      '<ul class="cadrumo-palette-list" role="listbox" aria-busy="false"></ul>' +
+      '<p class="cadrumo-palette-status" role="status" aria-live="polite"></p>' +
       '<div class="cadrumo-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>';
     document.body.appendChild(dialog);
 
     var input = dialog.querySelector(".cadrumo-palette-input");
     var list = dialog.querySelector(".cadrumo-palette-list");
+    var status = dialog.querySelector(".cadrumo-palette-status");
     var entries = null;
     var rows = [];
     var selected = 0;
     var queryToken = 0;
+
+    /* ── Busy state ───────────────────────────────────────────────────────
+     * Pagefind resolves asynchronously (a lazy index import on first open,
+     * then two sequential passes), and render() deliberately keeps the
+     * PREVIOUS results painted until the new query resolves. Without a busy
+     * signal that combination is indistinguishable from a dead palette: the
+     * reader types and nothing changes. The signal is therefore additive -
+     * the stale rows stay, and the head says a newer answer is coming.
+     *
+     * Shown only after BUSY_DELAY_MS still pending: a steady-state Pagefind
+     * hit resolves in a few ms, and flashing a spinner for one frame reads as
+     * jank, not as progress. The first open (which pays the index import) is
+     * the slow case this exists for.
+     *
+     * Ownership follows the queryToken supersede guard: only the resolve of
+     * the LATEST query clears the state. A superseded resolve returns before
+     * clearing, so it cannot switch off a signal that a newer in-flight query
+     * still owns. Every search path settles (searchPagefind swallows failure
+     * and resolves []), so the degraded no-index path clears too and never
+     * spins forever. */
+    var BUSY_DELAY_MS = 120;
+    var busyTimer = null;
+    var isBusy = false;
+
+    function setBusy(on) {
+      if (isBusy === on) return;
+      isBusy = on;
+      dialog.classList.toggle("is-busy", on);
+      list.setAttribute("aria-busy", on ? "true" : "false");
+      /* A screen reader gets told the search is working rather than sitting in
+       * silence on unchanged (stale) rows; the settled count replaces it. */
+      if (on) status.textContent = "Searching…";
+    }
+
+    function beginBusy() {
+      if (busyTimer) clearTimeout(busyTimer);
+      busyTimer = setTimeout(function () {
+        busyTimer = null;
+        setBusy(true);
+      }, BUSY_DELAY_MS);
+    }
+
+    function endBusy(resultCount) {
+      if (busyTimer) {
+        clearTimeout(busyTimer);
+        busyTimer = null;
+      }
+      setBusy(false);
+      /* No count means there was no search to report (the empty-query reset, or
+       * a reopen): drop any stale announcement rather than leave the live region
+       * asserting a count for results the reader is no longer looking at. */
+      status.textContent =
+        typeof resultCount !== "number"
+          ? ""
+          : resultCount === 1
+            ? "1 result"
+            : String(resultCount) + " results";
+    }
 
     /* ── Pagefind tier (term cards / full text) ───────────────────────── */
     /* Pagefind ships a chunked index under <site>/pagefind/ when the docs
@@ -502,21 +563,30 @@
     function render(query) {
       var token = ++queryToken;
       if (!query) {
+        /* An empty query is answered synchronously from the nav index - there
+         * is nothing in flight to report. */
+        endBusy();
         paint(compose("", []));
         return;
       }
       /* Keep the current results painted until the new query resolves, then
        * swap - so a keystroke never blanks the palette to the bare fallback
        * (the old eager repaint did, and on a transiently-empty Pagefind pass it
-       * stuck there). */
+       * stuck there). The busy signal is what tells the reader those rows are
+       * the OLD answer and a newer one is on its way. */
+      beginBusy();
       searchPagefind(query)
         .then(function (cards) {
           if (token !== queryToken) return; /* a newer keystroke superseded this */
-          paint(compose(query, cards));
+          var items = compose(query, cards);
+          endBusy(items.length);
+          paint(items);
         })
         .catch(function () {
           if (token !== queryToken) return;
-          paint(compose(query, []));
+          var items = compose(query, []);
+          endBusy(items.length);
+          paint(items);
         });
     }
 
