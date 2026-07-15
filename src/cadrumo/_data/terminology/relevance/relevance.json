@@ -587,84 +587,84 @@
         },
         {
           "record_id": "casilla-record:1cb89f65247831f1e5ee3e50",
-          "target": "search.html?q=592+decl.ejercicio",
+          "target": "_generated/casillas/592.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.64174
         },
         {
           "record_id": "casilla-record:155bd4ea77776cfe2f1fded6",
-          "target": "search.html?q=490+decl.ejercicio",
+          "target": "_generated/casillas/490.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.641336
         },
         {
           "record_id": "casilla-record:dc7f3cd9a2df09f96dd0792b",
-          "target": "search.html?q=604+decl.ejercicio",
+          "target": "_generated/casillas/604.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.640344
         },
         {
           "record_id": "casilla-record:b4dadc65c5b0cd6ff99f8a37",
-          "target": "search.html?q=238+decl.ejercicio",
+          "target": "_generated/casillas/238.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.637585
         },
         {
           "record_id": "casilla-record:79fcbfecf859eb144f8283a3",
-          "target": "search.html?q=576+decl.ejercicio",
+          "target": "_generated/casillas/576.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.636004
         },
         {
           "record_id": "casilla-record:dc845d98f14afcdd4479e1e0",
-          "target": "search.html?q=848+decl.ejercicio",
+          "target": "_generated/casillas/848.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.635606
         },
         {
           "record_id": "casilla-record:9c6e08a086ef956bab4e7c3f",
-          "target": "search.html?q=234+decl.ejercicio",
+          "target": "_generated/casillas/234.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.633473
         },
         {
           "record_id": "casilla-record:86e0e5c15e6910b498d26a9e",
-          "target": "search.html?q=763+decl.ejercicio",
+          "target": "_generated/casillas/763.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.632559
         },
         {
           "record_id": "casilla-record:d7580bb604530bc6133289e9",
-          "target": "search.html?q=341+decl.ejercicio",
+          "target": "_generated/casillas/341.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.632366
         },
         {
           "record_id": "casilla-record:a84c1f0c77f6403aea82285e",
-          "target": "search.html?q=121+decl.ejercicio",
+          "target": "_generated/casillas/121.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.631089
         },
         {
           "record_id": "casilla-record:0902cf37a5cc3f24d7fe887e",
-          "target": "search.html?q=140+decl.ejercicio",
+          "target": "_generated/casillas/140.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.630456
         },
         {
           "record_id": "casilla-record:d7681a17db5e7184c9ea2cc1",
-          "target": "search.html?q=179+decl.ejercicio",
+          "target": "_generated/casillas/179.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.629501
@@ -1898,7 +1898,7 @@
         },
         {
           "record_id": "casilla-record:a4ae8b87e8e2ed0721c248d0",
-          "target": "search.html?q=131+01",
+          "target": "_generated/casillas/131.html#casilla-01",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.611169
@@ -1943,7 +1943,7 @@
         },
         {
           "record_id": "casilla-record:b1a49319223e8f881826e5da",
-          "target": "search.html?q=390+decl.ejercicio",
+          "target": "_generated/casillas/390.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.6738
@@ -3040,7 +3040,7 @@
         },
         {
           "record_id": "casilla-record:aedb2c69ba29b91d942a66f0",
-          "target": "search.html?q=200+00001",
+          "target": "_generated/casillas/200.html#casilla-00001",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.685418
@@ -3144,21 +3144,21 @@
         },
         {
           "record_id": "casilla-record:aedb2c69ba29b91d942a66f0",
-          "target": "search.html?q=200+00001",
+          "target": "_generated/casillas/200.html#casilla-00001",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.668354
         },
         {
           "record_id": "casilla-record:1995d8a986c98402acafcf9a",
-          "target": "search.html?q=202+01",
+          "target": "_generated/casillas/202.html#casilla-01",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.655572
         },
         {
           "record_id": "casilla-record:a4ae8b87e8e2ed0721c248d0",
-          "target": "search.html?q=131+01",
+          "target": "_generated/casillas/131.html#casilla-01",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.654789
@@ -3900,7 +3900,7 @@
         },
         {
           "record_id": "casilla-record:7dfe7c5ec04764d7ba80ae48",
-          "target": "search.html?q=210+base_imponible",
+          "target": "_generated/casillas/210.html#casilla-base-imponible",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.662066
@@ -3969,14 +3969,14 @@
         },
         {
           "record_id": "casilla-record:63fdcae30303994c56a8c5aa",
-          "target": "search.html?q=232+decl.cnae",
+          "target": "_generated/casillas/232.html#casilla-decl-cnae",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.684252
         },
         {
           "record_id": "casilla-record:aedb2c69ba29b91d942a66f0",
-          "target": "search.html?q=200+00001",
+          "target": "_generated/casillas/200.html#casilla-00001",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.665202
@@ -4153,7 +4153,7 @@
         },
         {
           "record_id": "casilla-record:a6efe73caa1143d25aee76ac",
-          "target": "search.html?q=309+decl.ejercicio",
+          "target": "_generated/casillas/309.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.607944
@@ -4333,7 +4333,7 @@
         },
         {
           "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
-          "target": "search.html?q=347+contraparte.clave-operacion",
+          "target": "_generated/casillas/347.html#casilla-contraparte-clave-operacion",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.688366
@@ -4548,7 +4548,7 @@
         },
         {
           "record_id": "casilla-record:4b687453ab294521439c3ac5",
-          "target": "search.html?q=353+decl.ejercicio",
+          "target": "_generated/casillas/353.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.632524
@@ -4586,7 +4586,7 @@
         },
         {
           "record_id": "casilla-record:4b687453ab294521439c3ac5",
-          "target": "search.html?q=353+decl.ejercicio",
+          "target": "_generated/casillas/353.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.692046
@@ -4773,7 +4773,7 @@
         },
         {
           "record_id": "casilla-record:b1a49319223e8f881826e5da",
-          "target": "search.html?q=390+decl.ejercicio",
+          "target": "_generated/casillas/390.html#casilla-decl-ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.625396
@@ -5082,7 +5082,7 @@
         },
         {
           "record_id": "casilla-record:da25057bbc486233eee20b3d",
-          "target": "search.html?q=100+0001",
+          "target": "_generated/casillas/100.html#casilla-0001",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.663136
@@ -5176,7 +5176,7 @@
         },
         {
           "record_id": "casilla-record:da25057bbc486233eee20b3d",
-          "target": "search.html?q=100+0001",
+          "target": "_generated/casillas/100.html#casilla-0001",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.672785

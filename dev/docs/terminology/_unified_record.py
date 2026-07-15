@@ -27,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import CasillaId, ModeloId
 
+from ._casilla_anchor import casilla_reference_target
 from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
 from ._concept_cards import ConceptCardRecord
@@ -264,7 +265,13 @@ def _from_casilla(record: CasillaSearchRecord, sweep_score: float | None) -> Sea
         tier=RankingTier.NAVIGATION,
         title=title,
         descriptions=dict(record.descriptions),
-        target=f"search.html?q={record.modelo.value}+{record.casilla_id}",
+        # Deep-link to the per-modelo casilla reference page and the casilla's
+        # anchor, both derived from the ONE slug authority the generator renders
+        # against (casilla_reference_target -> casilla_page_anchor), so card and
+        # landing page can never disagree. The former search.html?q= hand-off (a
+        # search-for-itself, forbidden as a record target by the destination
+        # contract) is gone entirely - no dual-target bridge.
+        target=casilla_reference_target(record.modelo, record.casilla_id),
         ranking_weight=normalise_ranking_weight(SearchRecordKind.CASILLA, sweep_score),
         metadata=SearchRecordMetadata(
             modelo=record.modelo.value,

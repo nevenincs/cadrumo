@@ -254,6 +254,12 @@ def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
         meta["modelo"] = md.modelo
     if md.number:
         meta["number"] = md.number
+    if md.segmento:
+        # The casilla card crumb: a segmented modelo (M200 ``DP200014:00562``)
+        # shows its segmento beside the modelo/number so the operator can tell
+        # sibling casillas apart at a glance. Grounding (legal/source refs) stays
+        # off the index meta and renders at the destination (D6).
+        meta["segmento"] = md.segmento
     if md.command_path:
         meta["command_path"] = md.command_path
     return meta
