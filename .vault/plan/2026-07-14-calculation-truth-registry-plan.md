@@ -9,6 +9,8 @@ related:
   - '[[2026-07-12-calculation-truth-registry-plan]]'
   - '[[2026-07-14-calculation-truth-registry-audit]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
+  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
+  - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
 ---
 
 <!-- LINK RULES:
@@ -21,101 +23,20 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace calculation-truth-registry with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
-
 # `calculation-truth-registry` plan
 
 ### Phase `P01` - Modelo 131 2024 revision completion
 
 Close the confirmed gap where the Modelo 131 2024 revision lacks the modulos-engine formula, parameter, and casilla fragments that the 2025 and 2026 revisions already carry.
 
-
-<!-- One-line headline summary plan. -->
-
-- [ ] `P01.S01` - Author the Modelo 131 2024 modulos-engine formula, parameter, and casilla fragments mirroring the 2025 and 2026 revisions; `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/`.
-- [ ] `P01.S02` - Land the Modelo 131 2024 export-roundtrip, historical date-axis, and live-filed-data-parser behaviour tests the legacy plan's own sub-bullets still list open; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `P01.S01` - Author the Modelo 131 2024 modulos-engine formula, parameter, and casilla fragments mirroring the 2025 and 2026 revisions; `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/`.
+- [x] `P01.S02` - Land the Modelo 131 2024 export-roundtrip, historical date-axis, and live-filed-data-parser behaviour tests the legacy plan's own sub-bullets still list open; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `P02` - Modelo 100 Renta residual calculation build
 
 Complete the Modelo 100 (Renta) capital gains/losses, base reductions, minimums and brackets, CCAA deductions, and final-settlement calculation chain that the legacy plan's own annotations show substantially unbuilt.
 
-- [ ] `P02.S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P02.S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [x] `P02.S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P02.S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 

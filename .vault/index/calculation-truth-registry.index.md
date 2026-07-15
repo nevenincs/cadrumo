@@ -245,6 +245,9 @@ related:
   - '[[2026-07-12-calculation-truth-registry-audit]]'
   - '[[2026-07-12-calculation-truth-registry-plan]]'
   - '[[2026-07-12-calculation-truth-registry-reference]]'
+  - '[[2026-07-14-calculation-truth-registry-P01-S01]]'
+  - '[[2026-07-14-calculation-truth-registry-P01-S02]]'
+  - '[[2026-07-14-calculation-truth-registry-P02-S03]]'
   - '[[2026-07-14-calculation-truth-registry-P02-S04]]'
   - '[[2026-07-14-calculation-truth-registry-audit]]'
   - '[[2026-07-14-calculation-truth-registry-plan]]'
@@ -498,6 +501,9 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-07-12-calculation-truth-registry-P01-S02` - Publish the disposition ledger distinguishing delivered, superseded, blocked, and genuinely actionable registry work
 - `2026-07-12-calculation-truth-registry-P01-summary` - `calculation-truth-registry` `P01` summary
 - `2026-07-12-calculation-truth-registry-P02-S03` - Write the canonical registry implementation backlog from the classified residual ledger
+- `2026-07-14-calculation-truth-registry-P01-S01` - Author the Modelo 131 2024 modulos-engine formula, parameter, and casilla fragments mirroring the 2025 and 2026 revisions
+- `2026-07-14-calculation-truth-registry-P01-S02` - Land the Modelo 131 2024 export-roundtrip, historical date-axis, and live-filed-data-parser behaviour tests the legacy plan's own sub-bullets still list open
+- `2026-07-14-calculation-truth-registry-P02-S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples
 - `2026-07-14-calculation-truth-registry-P02-S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples
 
 ### plan
