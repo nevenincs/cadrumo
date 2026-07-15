@@ -11,10 +11,14 @@ URL/anchor a palette card jumps to, a normalised ``ranking_weight``, and typed
 
 :func:`to_search_record` is the uniform serialisation funnel: it projects any
 of the four kind records into a :class:`SearchRecord`, deriving the per-kind
-``id`` / ``title`` / ``target`` and the base ranking weight. The weight
-normalisation ("term cards first, nav second, full text third") lives in
-:data:`_KIND_BASE_WEIGHT` so a casilla hit, a concept hit, a BOE-article hit,
-and a code hit rank comparably in the unified index.
+``id`` / ``title`` / ``target`` and the base ranking weight. The ranking
+authority is the user-first per-display-class ladder
+:data:`_DISPLAY_CLASS_BASE_WEIGHT` (user documentation first, then modelo,
+casilla, CLI, and dev-machinery pages last; ADR D8), so an injected record
+ranks by the display class :func:`derive_display_class` assigns it.
+:data:`_KIND_BASE_WEIGHT` is a derived legacy per-kind projection of that one
+table, retained only for the sweep-relevance reweight path that keys on record
+kind rather than the fully-derived display class.
 """
 
 from __future__ import annotations
