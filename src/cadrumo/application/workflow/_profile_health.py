@@ -32,8 +32,8 @@ from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.storage import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import read_pointer
-from ...core.config import load_settings
+from ...core import resolve_active_bucket_id
+from ...core.config import load_settings, override_settings
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ..user_profile import (
@@ -44,7 +44,7 @@ from ..user_profile import (
 )
 from ._models import WorkflowState
 from ._persistence import workflow_state_repository
-from ._profile_bucket_scan import read_profile_bucket_by_id
+from ._profile_bucket_scan import resolve_profile_bucket
 
 ProfileHealthStatus = Literal[
     "none",
@@ -104,9 +104,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     """Return a redacted, non-secret :class:`ActiveProfileHealth` projection for the active profile."""
     settings = load_settings()
     override = (settings.cadrumo_active_profile or "").strip()
-    pointer = None if override else read_pointer(settings.cadrumo_local_storage_root)
-    active_profile = override or (pointer.bucket_id if pointer is not None else None)
-    source: ProfileSource = "env_override" if override else ("pointer" if pointer is not None else "none")
+    active_profile = resolve_active_bucket_id()
+    source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
     total_keys = len(list_profile_key_records())
     if active_profile is None:
         return ActiveProfileHealth(
@@ -118,7 +117,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
 
     try:
-        registered_pointer = read_profile_bucket_by_id(active_profile)
+        registered_pointer = resolve_profile_bucket(active_profile)
     except _MANIFEST_HEALTH_EXCEPTIONS as exc:
         _log.debug(
             "active profile manifest unreadable bucket_id=%s",
@@ -154,9 +153,11 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 else "unset CADRUMO_ACTIVE_PROFILE or set it to a registered profile"
             ),
         )
+    active_profile = registered_pointer.bucket_id
 
     try:
-        resolved_state = state or workflow_state_repository().load()
+        with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
+            resolved_state = state or workflow_state_repository().load()
     except (AeatError, OSError) as exc:
         # AeatError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.
@@ -175,7 +176,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ),
         )
     try:
-        record = resolved_state.active_profile_record()
+        with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
+            record = resolved_state.active_profile_record()
     except (AeatError, ValueError) as exc:
         # AeatError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.
@@ -266,7 +268,13 @@ def _assess_with_best_effort_session() -> ActiveProfileHealth:
 
         if has_active_bucket_session():
             return before
-        with get_master_key_provider():
+        registered_pointer = resolve_profile_bucket(before.active_profile or "")
+        if registered_pointer is None:
+            return before
+        with (
+            override_settings(cadrumo_active_profile=registered_pointer.bucket_id),
+            get_master_key_provider(),
+        ):
             return assess_active_profile_health()
     except (AeatError, OSError, ImportError) as exc:
         # AeatError: keyring/master-key domain failures.
