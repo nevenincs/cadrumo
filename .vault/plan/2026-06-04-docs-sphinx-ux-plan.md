@@ -91,7 +91,7 @@ Reduce generated API and CLI mental load through curated wrappers and generator 
 
 Pause after route and reference wrapper changes until a human reviewer accepts the cognitive-load and readability tradeoffs.
 
-- [ ] `W02.P07.S20` - prepare the route and reference review packet from a fresh local site build (docs/_build/html is a gitignored, re-derivable artifact, not a persisted deliverable); `docs/_build/html`.
+- [x] `W02.P07.S20` - prepare the route and reference review packet from a fresh local site build (docs/_build/html is a gitignored, re-derivable artifact, not a persisted deliverable); `docs/_build/html`.
 - [ ] `W02.P07.S21` - obtain explicit human approval for navigation readability; `human navigation review gate`.
 - [ ] `W02.P07.S22` - incorporate approved route feedback; `docs/index.md`.
 - [ ] `W02.P07.S23` - incorporate approved reference feedback; `dev/docs/cli_reference.py`.
@@ -112,7 +112,7 @@ Build and inspect the real HTML output so the decision is validated against the 
 
 Close the UX pass only after a human reviewer accepts the actual desktop and mobile rendered documentation.
 
-- [ ] `W03.P08.S24` - prepare the final rendered approval packet; `docs/_build/html`.
+- [x] `W03.P08.S24` - prepare the final rendered approval packet; `docs/_build/html`.
 - [ ] `W03.P08.S25` - obtain explicit human approval for rendered experience; `human final review gate`.
 - [ ] `W03.P08.S26` - record approved follow-up UX issues; `.vault/exec/2026-06-04-docs-sphinx-ux`.
 
