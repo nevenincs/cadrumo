@@ -250,32 +250,46 @@ class WorkflowState(BaseModel):
     ) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
-        The active bucket id resolves via the precedence chain in
+        The active selector resolves via the precedence chain in
         :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
-        fallback). The bucket id and profile name are 1:1 by orchestration
-        convention, so the resolved id is the lifecycle-service read key.
+        fallback), then the manifest resolver canonicalizes a display label to
+        its immutable bucket UUID before secure storage is addressed.
 
         ``secure_objects`` (a :class:`SecureObjectRepository` override) and
         ``schema`` are optional overrides forwarded to
         :func:`~cadrumo.application.user_profile.build_lifecycle_service`; a
         per-bucket store and the bundled schema are resolved when ``None``.
         """
-        bucket_id = _resolve_active_bucket_id()
+        bucket_id = self.active_profile_bucket_id()
         if bucket_id is None:
             return None
+        from ...core.config import override_settings
         from ...domain.user_profile import ProfileNotFoundError
         from ..user_profile import build_lifecycle_service
 
-        service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
-        try:
-            return service.read(bucket_id)
-        except ProfileNotFoundError as exc:
-            _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
-            return None
+        with override_settings(cadrumo_active_profile=bucket_id):
+            service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
+            try:
+                return service.read(bucket_id)
+            except ProfileNotFoundError as exc:
+                _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
+                return None
 
     def active_profile_bucket_id(self) -> str | None:
-        """Return the active profile's secure bucket id via the precedence chain."""
-        return _resolve_active_bucket_id()
+        """Return the selected profile's canonical secure bucket UUID.
+
+        Core owns active-selector precedence. The workflow manifest resolver
+        then maps an operator-facing label to the existing immutable bucket
+        UUID. A selector without a live manifest has no secure bucket and
+        returns ``None``; health diagnostics retain the raw selector separately.
+        """
+        identifier = _resolve_active_bucket_id()
+        if identifier is None:
+            return None
+        from ._profile_bucket_scan import resolve_profile_bucket
+
+        pointer = resolve_profile_bucket(identifier)
+        return pointer.bucket_id if pointer is not None else None
 
 
 def active_transaction_catalogue_repository(
