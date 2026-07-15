@@ -36,7 +36,7 @@ sandbox provisions its own profile, so this create is shown as a display frame:
 
 ```{cli-sequence} irpf-lifecycle-profile
 @step Create the taxpayer profile with the identity and activity-start facts.
-@static aeat config profile create ana --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+@static aeat config profile create ana --quiet --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
 ```
 
 The `--name` and `--surnames` are required: the export step refuses without
