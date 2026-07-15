@@ -207,5 +207,5 @@ Overview <explanation/index>
 Updates and downloads <updates>
 Architecture <architecture/index>
 Authoring guide <authoring-guide>
-API <api/cadrumo>
+API <api/index>
 ```

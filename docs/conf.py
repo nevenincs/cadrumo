@@ -165,7 +165,7 @@ if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
 if _USER_SCOPE:
-    # The root toctree carries one ``API <api/cadrumo>`` entry (docs/index.md);
+    # The root toctree carries one ``API <api/index>`` entry (docs/index.md);
     # under user scope that target is excluded, so the toctree reference to it is
     # a benign ``toc.excluded`` — the entry simply drops from the nav. This is the
     # only excluded toctree target in the user set, so the suppression is scoped
