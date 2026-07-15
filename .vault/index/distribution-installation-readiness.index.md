@@ -7,6 +7,7 @@ date: '2026-07-15'
 modified: '2026-07-15'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
+  - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
   - '[[2026-07-15-distribution-installation-readiness-research]]'
 ---
@@ -19,7 +20,11 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 
 ### adr
 
-- `2026-07-15-distribution-installation-readiness-adr` - `distribution-installation-readiness` adr: `Immutable tested-cohort promotion and executable acquisition proof` | (**status:** `proposed`)
+- `2026-07-15-distribution-installation-readiness-adr` - `distribution-installation-readiness` adr: `Immutable tested-cohort promotion and executable acquisition proof` | (**status:** `accepted`)
+
+### plan
+
+- `2026-07-15-distribution-installation-readiness-plan` - `distribution-installation-readiness` plan
 
 ### reference
 

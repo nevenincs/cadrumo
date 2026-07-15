@@ -155,6 +155,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W07-P34-S120]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P34-S121]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P34-S122]]'
+  - '[[2026-05-26-cross-domain-continuity-W07-P71-S422]]'
   - '[[2026-05-26-cross-domain-continuity-W08-P35-S123]]'
   - '[[2026-05-26-cross-domain-continuity-W08-P35-S124]]'
   - '[[2026-05-26-cross-domain-continuity-W08-P35-S125]]'
@@ -1054,6 +1055,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W10-P50-S443` - Refresh the stale Modelo 100 annual deadline explanatory prose to describe the tax-year registry key and following-year campaign dates, using the required documentation workflow.
 - `2026-05-26-cross-domain-continuity-W11-P59-S337` - durable maintenance gate three  -  scheduled quarterly persona re-run of 3+ shapes (not ad-hoc)
 - `2026-05-26-cross-domain-continuity-W11-P60-S197` - until a valid checkpoint declaration is on record any claim of campaign complete or done is premature
+- `2026-05-26-cross-domain-continuity-W07-P71-S422` - Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated
 
 ### plan
 

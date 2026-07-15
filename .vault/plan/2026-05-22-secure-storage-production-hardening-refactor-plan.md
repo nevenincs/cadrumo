@@ -28,6 +28,7 @@ related:
   - '[[2026-05-26-secure-storage-migration-review-audit]]'
   - '[[2026-05-26-secure-storage-convention-regrounding-audit]]'
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-research]]'
   - '[[2026-06-10-cli-operator-surface-adr]]'
 ---
 
