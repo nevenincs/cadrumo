@@ -106,7 +106,7 @@ Build and inspect the real HTML output so the decision is validated against the 
 
 - [x] `W03.P05.S14` - run docs dependency and stub drift gates; `docs conformance lane`.
 - [x] `W03.P05.S15` - build the rendered HTML documentation; `docs/_build/html`.
-- [ ] `W03.P05.S16` - inspect desktop and mobile rendered UX; `docs/_build/html`.
+- [x] `W03.P05.S16` - inspect desktop and mobile rendered UX; `docs/_build/html`.
 
 ### Phase `W03.P08` - approve rendered experience
 
