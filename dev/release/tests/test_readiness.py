@@ -288,6 +288,21 @@ def test_packaging_smoke_evidence_reads_the_most_recent_real_manifest(tmp_path: 
     assert "core-20260702T000000Z" in check.detail
 
 
+def test_packaging_smoke_evidence_reads_a_pruned_checkpoint(tmp_path: Path) -> None:
+    """Release readiness retains the evidence signal after ephemeral runtime pruning."""
+    root = _make_repo_root(tmp_path)
+    evidence_dir = root / "var" / "packaging-smoke-evidence"
+    evidence_dir.mkdir(parents=True)
+    checkpoint = evidence_dir / "docker-core-20260715T214242Z.json"
+    checkpoint.write_text(json.dumps({"ok": True, "lane": "docker-core"}), encoding="utf-8")
+
+    check = readiness.check_latest_packaging_smoke_evidence(root)
+
+    assert check.passed is True
+    assert "docker-core-20260715T214242Z" in check.detail
+    assert "lane=docker-core" in check.detail
+
+
 def _write_probe_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Path:
     """Write a real executable `gh` script that emits fixed real process output."""
     bin_dir.mkdir(parents=True, exist_ok=True)

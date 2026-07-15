@@ -63,6 +63,8 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         "just packaging-smoke-linux",
         "just packaging-smoke-split",
         "just packaging-smoke-docker",
+        "uv run --no-sync python -m dev.packaging.evidence --prune-completed",
+        "uv run --no-sync python -m dev.packaging.evidence",
     } <= commands
 
 
@@ -71,10 +73,17 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     job = document["jobs"]["cadrumo-packaging-smoke"]
     upload = next(step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@"))
+    docker = next(step for step in job["steps"] if step.get("run") == "just packaging-smoke-docker")
+    checkpoint = next(
+        step for step in job["steps"] if step.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
+    )
 
     assert upload["name"] == "Upload Cadrumo packaging smoke evidence"
     assert upload["with"]["name"] == "cadrumo-packaging-smoke-evidence"
-    assert upload["with"]["path"] == "var/packaging-smoke/**/packaging-smoke-manifest.json"
+    assert upload["with"]["path"] == "var/packaging-smoke-evidence/*.json"
+    assert checkpoint["if"] == "always()"
+    assert upload["if"] == "always()"
+    assert job["steps"].index(docker) < job["steps"].index(checkpoint) < job["steps"].index(upload)
 
     label_surface = "\n".join(
         (

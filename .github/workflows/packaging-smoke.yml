@@ -58,14 +58,21 @@ jobs:
       - name: Cadrumo split-distribution packaging smoke
         run: just packaging-smoke-split
 
+      - name: Checkpoint host packaging evidence and release ephemeral disk
+        run: uv run --no-sync python -m dev.packaging.evidence --prune-completed
+
       - name: Cadrumo clean Docker image packaging smoke
         run: just packaging-smoke-docker
+
+      - name: Checkpoint Docker packaging evidence
+        if: always()
+        run: uv run --no-sync python -m dev.packaging.evidence
 
       - name: Upload Cadrumo packaging smoke evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: cadrumo-packaging-smoke-evidence
-          path: var/packaging-smoke/**/packaging-smoke-manifest.json
+          path: var/packaging-smoke-evidence/*.json
           if-no-files-found: warn
           retention-days: 14
