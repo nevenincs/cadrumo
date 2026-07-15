@@ -55,7 +55,7 @@ Run focused boundary tests and an uncached complete import graph before any back
 - [x] `W01.P03.S20` - Run the focused M210 IRNR real-storage suite after making both injection points required; `src/cadrumo/application/aggregation/tests/test_m210_irnr_income_ledger.py`.
 - [x] `W01.P03.S21` - Run the focused Modelo 369 verification suite after widening the invoice boundary; `src/cadrumo/application/modelo/tests/test_dormant_m369_oss_resolver_live.py`.
 - [x] `W01.P03.S22` - Run an uncached fresh-process import graph and require all five contracts with no unmatched ignore; `.importlinter`.
-- [ ] `W01.P03.S23` - Block every later Wave unless all architecture prerequisite Steps are green; `.vault/exec/`.
+- [x] `W01.P03.S23` - Block every later Wave unless all architecture prerequisite Steps are green; `.vault/exec/`.
 
 ## Wave `W02` - Consolidate profile, reset, auth, and certificate authorities
 
