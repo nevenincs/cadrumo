@@ -310,7 +310,7 @@ ignore_imports =
     cadrumo.application.calculations._observations_repository -> cadrumo.adapters.**
     cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.**
     cadrumo.application.diagnostics -> cadrumo.adapters.**
-    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.**
+    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
