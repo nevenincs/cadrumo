@@ -25,6 +25,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S17]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S18]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S19]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S20]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -67,6 +68,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P02-S17` - Preserve the zero production-domain-to-adapters assertion and identify both test-only carveouts
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S18` - Run the repaired ignore-ledger tests and record the parsed 199, 78, and 2 inventory
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S19` - Run the core state-root isolation test against real isolated secure storage
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S20` - Run the focused M210 IRNR real-storage suite after making both injection points required
 
 ### plan
 

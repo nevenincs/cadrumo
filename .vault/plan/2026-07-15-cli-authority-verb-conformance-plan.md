@@ -52,7 +52,7 @@ Run focused boundary tests and an uncached complete import graph before any back
 
 - [x] `W01.P03.S18` - Run the repaired ignore-ledger tests and record the parsed 199, 78, and 2 inventory; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [x] `W01.P03.S19` - Run the core state-root isolation test against real isolated secure storage; `src/cadrumo/core/tests/test_isolation_fixture_state_root_coverage.py`.
-- [ ] `W01.P03.S20` - Run the focused M210 IRNR real-storage suite after making both injection points required; `src/cadrumo/application/aggregation/tests/test_m210_irnr_income_ledger.py`.
+- [x] `W01.P03.S20` - Run the focused M210 IRNR real-storage suite after making both injection points required; `src/cadrumo/application/aggregation/tests/test_m210_irnr_income_ledger.py`.
 - [ ] `W01.P03.S21` - Run the focused Modelo 369 verification suite after widening the invoice boundary; `src/cadrumo/application/modelo/tests/test_dormant_m369_oss_resolver_live.py`.
 - [ ] `W01.P03.S22` - Run an uncached fresh-process import graph and require all five contracts with no unmatched ignore; `.importlinter`.
 - [ ] `W01.P03.S23` - Block every later Wave unless all architecture prerequisite Steps are green; `.vault/exec/`.
