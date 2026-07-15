@@ -16,6 +16,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S08]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S09]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S10]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S11]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S08` - Exercise M210 aggregation through the real injected transaction repository
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S09` - Replace verification's concrete invoice-repository boundary with InvoiceCatalogueRepositoryProtocol
 - `2026-07-15-cli-authority-verb-conformance-W01-P01-S10` - Widen injected OSS and IOSS invoice-repository annotations while retaining the sole default composition path
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S11` - Exercise dormant Modelo 369 verification through the real invoice repository Protocol boundary
 
 ### plan
 
