@@ -77,6 +77,14 @@ def layered_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> tuple[IgnoreEdge, ...
     return tuple(edge for edge in ignore_edges if edge.contract == "layered")
 
 
+def test_ignore_ledger_inventory_is_non_vacuous(
+    ignore_edges: tuple[IgnoreEdge, ...],
+    layered_edges: tuple[IgnoreEdge, ...],
+) -> None:
+    assert ignore_edges, "parsed ignore ledger is empty; parser/config prefix drift may have made ratchets vacuous"
+    assert layered_edges, "parsed layered ledger is empty; contract-name/config drift may have made ratchets vacuous"
+
+
 def _resolve_module_path(module: str) -> Path:
     wildcard_index = module.find(".*")
     if wildcard_index != -1:

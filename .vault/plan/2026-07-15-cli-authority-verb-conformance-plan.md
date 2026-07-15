@@ -43,7 +43,7 @@ Make the ledger parser consume Cadrumo edges, narrow the remaining wildcard, and
 - [x] `W01.P02.S13` - Freeze the application-edge ceiling at 199; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [x] `W01.P02.S14` - Freeze the application-source wildcard ceiling at 78; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [x] `W01.P02.S15` - Freeze the domain test-edge ceiling at 2; `src/cadrumo/tests/test_importlinter_ledger.py`.
-- [ ] `W01.P02.S16` - Assert the parsed Cadrumo ignore inventory and layered-contract inventory are non-empty; `src/cadrumo/tests/test_importlinter_ledger.py`.
+- [x] `W01.P02.S16` - Assert the parsed Cadrumo ignore inventory and layered-contract inventory are non-empty; `src/cadrumo/tests/test_importlinter_ledger.py`.
 - [ ] `W01.P02.S17` - Preserve the zero production-domain-to-adapters assertion and identify both test-only carveouts; `src/cadrumo/tests/test_importlinter_ledger.py`.
 
 ### Phase `W01.P03` - Prove the architecture prerequisite
