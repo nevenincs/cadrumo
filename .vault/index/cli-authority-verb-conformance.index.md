@@ -33,6 +33,8 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S25]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S26]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S27]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S28]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S29]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -83,6 +85,8 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S25` - Prove exact pointer bytes and atomic write and clear behavior through real child-process interruption
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S26` - Introduce one neutral reentrant active-profile pointer transaction service, retire the duplicate storage-adapter lock export, and route orchestration write, clear, capture, rollback, registration, and selection through the core-owned authority under a continuous whole-create-span lock with bounded fail-closed contention
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S27` - Route repository pointer reads, selection, rollback, and deletion clear through the same reentrant active-profile pointer transaction, preserve whole-create-span ownership and pointer-first test lock order, and remove the retired text-rollback persistence exemption
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S28` - Route profile-health repair mutation through the shared reentrant active-profile pointer transaction with locked reassessment, bounded fail-closed contention, and the health result's repairable flag as the sole eligibility authority, correct the three lifecycle CLI integration pointer setup calls to use the isolated backend root, then prove pointer-sourced unreadable-manifest repair, cold no-op behavior, and real CLI pointer repair, absence, and dangling-pointer outcomes
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S29` - Prove byte-exact failed-create rollback through the repository transaction nested under outer pointer ownership, then prove dangling-pointer repair fails closed under real thread contention and succeeds after lock release against real files
 
 ### plan
 
