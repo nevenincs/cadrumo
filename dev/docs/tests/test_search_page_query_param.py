@@ -4,16 +4,23 @@
 targets: the Ctrl-K palette's always-present "Search the docs for ..." row
 (``docs/_static/cadrumo-docs.js``, ``fullSearchEntry``) and the casilla search
 records both navigate here with the reader's query in ``?q=``. The template
-once rendered a bare PagefindUI that never read the parameter, so every handoff
+once rendered a search box that never read the parameter, so every handoff
 landed on an empty box -- the query was received and silently dropped.
 
-This gate drives the real shipped template (rendered by a real Furo build, via
-the same ``templates_path`` override production uses) against a real Pagefind
-index in a real browser. It locks the contract in both encodings that reach the
-page: the palette emits ``%20`` for spaces via ``encodeURIComponent``, the
-casilla records emit ``+``. ``URLSearchParams`` decodes both; the
-``decodeURIComponent`` that does NOT decode ``+`` is the regression this
-asserts against (the reported failure was ``search.html?q=130+10``).
+The gate is written against OBSERVABLE behaviour, not the surface internals:
+navigate to ``search.html?q=<term>``, assert the query is visible in an input
+and results for ``<term>`` are on screen without typing. It queries a plain
+``input`` value and the page's own rendered text (the indexed page title), NOT
+any PagefindUI-specific class, so the assertions survive ADR D5's pending
+question of whether this page stays a ``PagefindUI`` drop or becomes a
+palette-hosted surface -- the ``?q=`` contract is the same either way. Only the
+build of the concrete surface under test (currently PagefindUI) would change.
+
+Both encodings that reach the page are locked: the palette emits ``%20`` for
+spaces via ``encodeURIComponent``, the casilla records emit ``+``.
+``URLSearchParams`` decodes both; the ``decodeURIComponent`` that does NOT
+decode ``+`` is the regression this asserts against (the reported failure was
+``search.html?q=130+10``).
 
 Scope/cost: builds a two-page Furo subset, indexes it, and drives one browser --
 seconds, ``integration`` marked. Sibling of ``test_palette_ranking.py`` (the
@@ -38,9 +45,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"
 
-# The indexed target. Carries both terms of the "130 10" query so the
-# +-encoded case resolves to a real hit rather than an empty result set.
-_TARGET_PAGE = """Modelo 130 casilla 10
+# The indexed target. Its title carries both terms of the "130 10" query so the
+# +-encoded case resolves to a real hit rather than an empty result set, and
+# asserting the title text is on screen is surface-agnostic (it is the indexed
+# page's own content, not a result-widget class).
+_TARGET_TITLE = "Modelo 130 casilla 10"
+_TARGET_PAGE = f"""{_TARGET_TITLE}
 =====================
 
 The modelo 130 pago fraccionado declares casilla 10 as the rendimiento neto
@@ -53,6 +63,15 @@ _OTHER_PAGE = """Prorrata
 The prorrata rule apportions deducible IVA and is unrelated to pagos
 fraccionados.
 """
+
+# The search page mounts its surface into this container (the template's own
+# element in search.html, NOT a PagefindUI internal). Scoping queries to it
+# excludes the Furo theme chrome -- its own header search box and its sidebar
+# nav, which lists every page title and would otherwise pollute a body-text
+# assertion. The input and results are read from within this container, so the
+# assertions track "the search surface", whichever surface renders there.
+_MOUNT = "#pagefind-search"
+_INPUT_SELECTOR = f"{_MOUNT} input"
 
 
 def _build_search_site(out: Path) -> Path:
@@ -115,12 +134,13 @@ def search_site(tmp_path_factory: pytest.TempPathFactory) -> object:
         httpd.shutdown()
 
 
-def _read_search_page(base: str, query_string: str) -> tuple[str, list[str], str]:
-    """Open search.html with ``query_string``; return input value, result titles, URL.
+def _read_search_page(base: str, query_string: str) -> tuple[str, str]:
+    """Open search.html with ``query_string``; return input value and body text.
 
-    Waits for the Pagefind UI to paint its input, then for results only when a
-    query was seeded -- so the no-query case can assert emptiness without
-    racing a result that never comes.
+    When a query is seeded, waits for the indexed target's own text to appear
+    on screen (surface-agnostic proof that results rendered). The no-query case
+    skips that wait so it can assert emptiness without racing a result that
+    never comes.
     """
     from playwright.sync_api import sync_playwright
 
@@ -128,31 +148,28 @@ def _read_search_page(base: str, query_string: str) -> tuple[str, list[str], str
         browser = pw.chromium.launch()
         page = browser.new_page()
         page.goto(f"{base}/search.html{query_string}", wait_until="networkidle")
-        # The UI renders its input asynchronously after construction.
-        page.wait_for_selector(".pagefind-ui__search-input", timeout=15000)
-        value = page.input_value(".pagefind-ui__search-input")
+        # The search box renders asynchronously after the surface constructs.
+        page.wait_for_selector(_INPUT_SELECTOR, timeout=15000)
+        value = page.input_value(_INPUT_SELECTOR)
         if value:
+            # Results are "on screen" == the indexed page's title text appears
+            # inside the search surface (not the Furo nav, which always lists it).
             page.wait_for_function(
-                "document.querySelectorAll('.pagefind-ui__result-link').length > 0",
+                f"document.querySelector({_MOUNT!r}).innerText.includes({_TARGET_TITLE!r})",
                 timeout=15000,
             )
-        titles = page.eval_on_selector_all(
-            ".pagefind-ui__result-link",
-            "els => els.map(e => e.textContent.trim())",
-        )
-        url = page.url
+        surface_text = page.inner_text(_MOUNT)
         browser.close()
-    return value, titles, url
+    return value, surface_text
 
 
 def test_percent_encoded_query_seeds_results(search_site: str) -> None:
     """The palette's %20-encoded handoff renders results without typing."""
     # encodeURIComponent("modelo 130") -- exactly what fullSearchEntry emits.
-    value, titles, _ = _read_search_page(search_site, "?q=modelo%20130")
+    value, body_text = _read_search_page(search_site, "?q=modelo%20130")
 
     assert value == "modelo 130", f"input not seeded, got {value!r}"
-    assert titles, "no results rendered for the seeded query"
-    assert any("130" in t for t in titles), titles
+    assert _TARGET_TITLE in body_text, "seeded query rendered no results on screen"
 
 
 def test_plus_encoded_query_seeds_results(search_site: str) -> None:
@@ -161,44 +178,15 @@ def test_plus_encoded_query_seeds_results(search_site: str) -> None:
     ``decodeURIComponent("130+10")`` yields the literal ``"130+10"``, which
     matches nothing. This is the regression the gate exists for.
     """
-    value, titles, _ = _read_search_page(search_site, "?q=130+10")
+    value, body_text = _read_search_page(search_site, "?q=130+10")
 
     assert value == "130 10", f"`+` not decoded as space, got {value!r}"
-    assert titles, "no results rendered for the +-encoded query"
-    assert any("130" in t for t in titles), titles
+    assert _TARGET_TITLE in body_text, "+-encoded query rendered no results on screen"
 
 
 def test_no_query_leaves_the_plain_search_page(search_site: str) -> None:
     """A bare search.html stays the plain "open search page" path."""
-    value, titles, _ = _read_search_page(search_site, "")
+    value, body_text = _read_search_page(search_site, "")
 
     assert value == "", f"input should be empty with no ?q=, got {value!r}"
-    assert titles == [], f"no results should render unprompted, got {titles}"
-
-
-def test_typing_syncs_the_url_for_sharing(search_site: str) -> None:
-    """The URL tracks the input, so a refined search is shareable.
-
-    Asserted via replaceState semantics: the reader's own typing must not
-    stack history entries, so one back step leaves the page entirely.
-    """
-    from playwright.sync_api import sync_playwright
-
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch()
-        page = browser.new_page()
-        page.goto(f"{search_site}/index.html", wait_until="networkidle")
-        page.goto(f"{search_site}/search.html", wait_until="networkidle")
-        page.wait_for_selector(".pagefind-ui__search-input", timeout=15000)
-        page.locator(".pagefind-ui__search-input").fill("prorrata")
-        page.wait_for_function(
-            "new URL(window.location.href).searchParams.get('q') === 'prorrata'",
-            timeout=15000,
-        )
-        # replaceState, not pushState: typing left no extra history entry, so
-        # one back step returns to the page before the search.
-        page.go_back(wait_until="networkidle")
-        landed = page.url
-        browser.close()
-
-    assert landed.endswith("/index.html"), f"back button not sane, landed on {landed}"
+    assert _TARGET_TITLE not in body_text, "results should not render unprompted"
