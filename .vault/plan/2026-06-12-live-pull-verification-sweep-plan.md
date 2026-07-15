@@ -16,6 +16,16 @@ related:
   - '[[2026-06-05-live-auth-decomposition-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `live-pull-verification-sweep` `authenticated pull-only live verification sweep` plan
 
 ## Epic intent
@@ -58,7 +68,7 @@ Prove the live authentication substrate can create, persist, resume, and clean u
 
 Exercise each backend facade through the real implementation path, persisting only authorised local evidence and refusing ambiguous or synthetic data.
 
-- [x] `W02.P04.S10` - Prove censo pull and profile reconciliation fetch authenticated Modelo 036 or censo information and derive taxpayer facts without inventing missing obligations; `src/aeat/application/live/_censo.py src/aeat/application/user_profile/_censo_sync.py src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
+- [ ] `W02.P04.S10` - Prove censo pull and profile reconciliation fetch authenticated Modelo 036 or censo information and derive taxpayer facts without inventing missing obligations; `src/aeat/application/live/_censo.py src/aeat/application/user_profile/_censo_sync.py src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
 - [x] `W02.P04.S11` - Prove filed-declaration list, single pull, bulk pull, and source pull fetch authenticated AEAT register data and persist only stamped official evidence; `src/aeat/application/live/_filed_data.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/_filed_observation_persistence.py`.
 - [ ] `W02.P04.S12` - Prove expedientes pull fetches authenticated expediente rows with typed empty, timeout, and portal-drift outcomes; `src/aeat/application/live/_expedientes.py src/aeat/adapters/outbound/aeat/sede`.
 - [x] `W02.P04.S13` - Prove notifications pull fetches authenticated notification rows with read-only parsing and no acknowledgement or mutation path; `src/aeat/application/live src/aeat/adapters/outbound/aeat/sede src/aeat/entrypoints/cli/_app_live_notifications_cli.py`.
@@ -76,7 +86,7 @@ Every live command must have conformance tests, useful JSON/text output, typed f
 
 - [x] `W03.P05.S17` - Verify the live command tree exposes only allowed pull, list, view, verify, and portal-read commands; `bulk filed and expedientes acquisition must live under `pull` options only, with no submit, push, sync-write, or pull-all aliases; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 - [x] `W03.P05.S18` - Exercise filed CLI commands for list, pull, and pull-sources with JSON and text output, proving backend evidence is required before success and that `pull` is the only acquisition verb (`pull-all` remains absent); `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
-- [x] `W03.P05.S19` - Exercise censo CLI commands for pull, show, compare, apply, and calendar projection, proving authenticated Modelo 036 facts drive obligations and typed `core.Period` identities connect those obligations to filed/justificante evidence; `src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py src/aeat/entrypoints/cli/_overview.py`.
+- [ ] `W03.P05.S19` - Exercise censo CLI commands for pull, show, compare, apply, and calendar projection, proving authenticated Modelo 036 facts drive obligations and typed `core.Period` identities connect those obligations to filed/justificante evidence; `src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W03.P05.S20` - Exercise expedientes CLI commands with authenticated results, typed empty-state output, and no local-only success masquerading as AEAT evidence; `src/aeat/entrypoints/cli/_app_live_expedientes_cli.py src/aeat/entrypoints/cli/tests`.
 - [x] `W03.P05.S21` - Exercise notifications CLI commands with authenticated results and prove no acknowledgement, dismissal, or remote mutation is reachable; `src/aeat/entrypoints/cli/_app_live_notifications_cli.py src/aeat/entrypoints/cli/tests/test_live_notifications_verbs.py`.
 - [x] `W03.P05.S22` - Exercise justificante CLI commands for pull, list, view, and reconcile-from-persisted evidence; `src/aeat/entrypoints/cli/_app_live_justificante_cli.py src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py`.
