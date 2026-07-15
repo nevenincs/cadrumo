@@ -27,19 +27,24 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import CasillaId, ModeloId
 
+from ..terminology_handbook import ConceptDomain
 from ._casilla_anchor import casilla_reference_target
 from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
 from ._concept_cards import ConceptCardRecord
 from ._glossary_anchor import glossary_term_anchor
-from ._search_record import SearchRecordKind
+from ._search_record import ResultDisplayClass, SearchRecordKind
 
 __all__ = [
     "RankingTier",
+    "ResultDisplayClass",
     "SearchRecord",
     "SearchRecordMetadata",
     "casilla_search_record_id",
+    "derive_display_class",
+    "display_class_base_weight",
     "kind_base_weight",
+    "normalise_display_class_weight",
     "normalise_ranking_weight",
     "to_search_record",
 ]
@@ -67,49 +72,152 @@ class RankingTier(StrEnum):
     FULLTEXT = "fulltext"
 
 
-#: Per-kind base ranking weight (ordering: term cards first, navigation
-#: second, full text third). A concept card outranks a CLI/casilla namespace
-#: entry, which outranks a full-text page, for the same textual relevance. The
-#: sweep score (when present) modulates within this base via
-#: :func:`normalise_ranking_weight`.
+#: The single declared user-first base-weight ladder, keyed by display class
+#: (ADR ``2026-07-15-docs-terminology-search-adr`` D8). Highest sorts first:
+#: general-fact concept cards (``DOC``) lead, then modelo document cards, then
+#: casilla rows, then CLI records, and full-text ``TECHNICAL`` (api / dev
+#: machinery) pages rank last. This amends the parent ADR's per-kind D5 ladder
+#: in two ways only -- casilla now outranks cli, and the full-text tier splits
+#: so dev-machinery pages sink below user documentation (a user-doc page is
+#: ``DOC`` and shares the top band, but the retained :class:`RankingTier`
+#: coarse axis keeps full-text pages below the term/navigation cards, so term
+#: cards still lead). The sweep score, when present, modulates within a class's
+#: band via :func:`normalise_display_class_weight`.
+_DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
+    ResultDisplayClass.DOC: 1.0,
+    ResultDisplayClass.MODELO: 0.9,
+    ResultDisplayClass.CASILLA: 0.8,
+    ResultDisplayClass.CLI: 0.7,
+    ResultDisplayClass.TECHNICAL: 0.5,
+}
+
+#: Legacy per-kind projection of the one class table, for the sweep-relevance
+#: reweight path (``_resolution._reweight``) that keys on record kind rather
+#: than the fully-derived display class. CONCEPT collapses to the general-fact
+#: ``DOC`` band (a per-hit reweight has no Handbook domain to split on), and a
+#: full-text PAGE hit collapses to the ``TECHNICAL`` floor. Derived so the
+#: per-kind values can never drift from the one declared table.
+_KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
+    SearchRecordKind.CONCEPT: ResultDisplayClass.DOC,
+    SearchRecordKind.CASILLA: ResultDisplayClass.CASILLA,
+    SearchRecordKind.CLI: ResultDisplayClass.CLI,
+    SearchRecordKind.PAGE: ResultDisplayClass.TECHNICAL,
+}
+
 _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
-    SearchRecordKind.CONCEPT: 1.0,
-    SearchRecordKind.CLI: 0.8,
-    SearchRecordKind.CASILLA: 0.7,
-    SearchRecordKind.PAGE: 0.5,
+    kind: _DISPLAY_CLASS_BASE_WEIGHT[display_class] for kind, display_class in _KIND_TO_DISPLAY_CLASS.items()
 }
 
 
+def display_class_base_weight(display_class: ResultDisplayClass) -> float:
+    """Return the declared base ranking weight for a display class."""
+    return _DISPLAY_CLASS_BASE_WEIGHT[display_class]
+
+
 def kind_base_weight(kind: SearchRecordKind) -> float:
-    """Return the base ranking weight for a record kind."""
+    """Return the base ranking weight for a record kind (legacy per-kind view).
+
+    A thin projection of the one declared per-display-class table via
+    :data:`_KIND_TO_DISPLAY_CLASS`; retained for the sweep-relevance reweight
+    path that keys on record kind. Injected records rank through the fully
+    derived display class instead (:func:`derive_display_class`).
+    """
     return _KIND_BASE_WEIGHT[kind]
 
 
-def normalise_ranking_weight(kind: SearchRecordKind, sweep_score: float | None = None) -> float:
-    """Normalise a record's ranking weight onto a comparable cross-kind scale.
+def _modulate(base: float, sweep_score: float | None) -> float:
+    """Modulate a base weight by an optional sweep score within ``[base*0.5, base]``.
 
-    The base weight encodes the tier ordering (concept > nav > page).
-    When a build-time RAG sweep produced a relevance ``sweep_score`` for the
-    record (in ``[0, 1]``), it modulates the base multiplicatively but never
-    lets a lower tier overtake a higher one: the modulated weight stays within
-    ``[base * 0.5, base]`` so a weakly-scored concept never drops below a
-    strongly-scored page. A record with no sweep score keeps its base weight.
+    The score scales the upper half of the class band so the declared ladder
+    ordering is preserved (a weakly-scored higher band never drops below a
+    strongly-scored lower band) while relevance still sorts within a band. A
+    ``None`` score keeps the base weight; an out-of-range score clamps.
+    """
+    if sweep_score is None:
+        return base
+    clamped = min(1.0, max(0.0, sweep_score))
+    return round(base * (0.5 + 0.5 * clamped), 6)
+
+
+def normalise_display_class_weight(
+    display_class: ResultDisplayClass,
+    sweep_score: float | None = None,
+) -> float:
+    """Normalise a record's ranking weight onto the one user-first ladder.
+
+    The base weight is the declared per-display-class ladder value; the sweep
+    score (when present) modulates it within the class band. This is the base
+    weight every injected search record carries.
 
     Args:
-        kind: The record kind (selects the base weight / tier).
+        display_class: The record's display class (selects the base weight).
+        sweep_score: Optional RAG relevance score in ``[0, 1]``; clamped.
+
+    Returns:
+        A ranking weight in ``[0, 1]``, comparable across all display classes.
+    """
+    return _modulate(_DISPLAY_CLASS_BASE_WEIGHT[display_class], sweep_score)
+
+
+def normalise_ranking_weight(kind: SearchRecordKind, sweep_score: float | None = None) -> float:
+    """Normalise a record's ranking weight from its record kind (legacy view).
+
+    Projects the record kind onto the one declared per-display-class ladder
+    (:func:`kind_base_weight`) and modulates by the sweep score. Retained for
+    the sweep-relevance reweight path; injected records normalise through the
+    fully derived display class (:func:`normalise_display_class_weight`).
+
+    Args:
+        kind: The record kind (projects to a display-class band).
         sweep_score: Optional RAG relevance score in ``[0, 1]``; clamped.
 
     Returns:
         A ranking weight in ``[0, 1]``, comparable across all kinds.
     """
-    base = _KIND_BASE_WEIGHT[kind]
-    if sweep_score is None:
-        return base
-    clamped = min(1.0, max(0.0, sweep_score))
-    # Modulate within [base*0.5, base]: the score scales the upper half of the
-    # kind's band so tier ordering is preserved while relevance still sorts
-    # within a kind.
-    return round(base * (0.5 + 0.5 * clamped), 6)
+    return _modulate(_KIND_BASE_WEIGHT[kind], sweep_score)
+
+
+def _display_class_for(
+    kind: SearchRecordKind,
+    domain: str | None,
+    target: str,
+) -> ResultDisplayClass:
+    """Derive the display class from a record's kind, concept domain, and target.
+
+    The single derivation authority (ADR D7): CASILLA records are ``CASILLA``;
+    CLI records are ``CLI``; a CONCEPT card splits by Handbook domain -- a
+    modelo-domain card is a ``MODELO`` document, every other domain (a
+    general-fact concept: régimen, período, legal, concepto, ...) is a ``DOC``;
+    a full-text PAGE hit splits by path -- under ``cli/`` it is ``CLI``, under
+    ``api/`` (or any dev-machinery surface) it is ``TECHNICAL``, everything else
+    user-facing is ``DOC``.
+    """
+    if kind is SearchRecordKind.CASILLA:
+        return ResultDisplayClass.CASILLA
+    if kind is SearchRecordKind.CLI:
+        return ResultDisplayClass.CLI
+    if kind is SearchRecordKind.CONCEPT:
+        if domain == ConceptDomain.MODELO.value:
+            return ResultDisplayClass.MODELO
+        return ResultDisplayClass.DOC
+    path = target.split("#", 1)[0].lstrip("/")
+    if path.startswith("cli/"):
+        return ResultDisplayClass.CLI
+    if path.startswith("api/"):
+        return ResultDisplayClass.TECHNICAL
+    return ResultDisplayClass.DOC
+
+
+def derive_display_class(record: SearchRecord) -> ResultDisplayClass:
+    """Derive the closed display class for a finished unified search record.
+
+    The public seam over :func:`_display_class_for`: reads the record's kind,
+    its concept ``metadata.domain`` (``None`` for non-concept kinds), and its
+    ``target`` path. Total over every kind -- no record falls through to a null
+    class -- so the injection seam can ship exactly one class per record and the
+    coverage gate can prove it.
+    """
+    return _display_class_for(record.kind, record.metadata.domain, record.target)
 
 
 class SearchRecordMetadata(BaseModel):
@@ -235,6 +343,7 @@ def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> Searc
             if form and form != title and form not in seen:
                 seen.add(form)
                 aliases.append(form)
+    target = f"{GLOSSARY_PAGE}#{glossary_term_anchor(title)}"
     return SearchRecord(
         id=f"concept:{record.concept_id}",
         kind=SearchRecordKind.CONCEPT,
@@ -245,8 +354,14 @@ def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> Searc
         # generates (e.g. "VIES" -> term-VIES), NOT the concept id (term-vies),
         # which only coincides when the id equals the headword slug. The
         # glossary-anchor-parity gate keeps the two in lock-step.
-        target=f"{GLOSSARY_PAGE}#{glossary_term_anchor(title)}",
-        ranking_weight=normalise_ranking_weight(SearchRecordKind.CONCEPT, sweep_score),
+        target=target,
+        # A modelo-domain card ranks in the ``MODELO`` document band; every
+        # general-fact card (régimen, período, legal, concepto, ...) ranks in
+        # the top general-fact ``DOC`` band.
+        ranking_weight=normalise_display_class_weight(
+            _display_class_for(SearchRecordKind.CONCEPT, record.domain.value, target),
+            sweep_score,
+        ),
         search_aliases=tuple(aliases),
         metadata=SearchRecordMetadata(
             concept_id=record.concept_id,
@@ -272,7 +387,7 @@ def _from_casilla(record: CasillaSearchRecord, sweep_score: float | None) -> Sea
         # search-for-itself, forbidden as a record target by the destination
         # contract) is gone entirely - no dual-target bridge.
         target=casilla_reference_target(record.modelo, record.casilla_id),
-        ranking_weight=normalise_ranking_weight(SearchRecordKind.CASILLA, sweep_score),
+        ranking_weight=normalise_display_class_weight(ResultDisplayClass.CASILLA, sweep_score),
         metadata=SearchRecordMetadata(
             modelo=record.modelo.value,
             casilla_id=record.casilla_id,
@@ -293,7 +408,7 @@ def _from_cli_command(record: CliSurfaceRecord, sweep_score: float | None) -> Se
         title=record.command_path,
         descriptions=dict(record.descriptions),
         target=record.target,
-        ranking_weight=normalise_ranking_weight(SearchRecordKind.CLI, sweep_score),
+        ranking_weight=normalise_display_class_weight(ResultDisplayClass.CLI, sweep_score),
         metadata=SearchRecordMetadata(
             command_path=record.command_path,
             registry_key=record.registry_key,
@@ -310,7 +425,7 @@ def _from_cli_option(record: CliOptionRecord, sweep_score: float | None) -> Sear
         title=f"{record.command_path} {option_token}",
         descriptions=dict(record.descriptions),
         target=record.target,
-        ranking_weight=normalise_ranking_weight(SearchRecordKind.CLI, sweep_score),
+        ranking_weight=normalise_display_class_weight(ResultDisplayClass.CLI, sweep_score),
         metadata=SearchRecordMetadata(
             command_path=record.command_path,
             option_names=record.option_names,

@@ -43,7 +43,7 @@ from pydantic import ValidationError
 from cadrumo.core.external_constants import OutputLanguage
 
 from .terminology._sweep import SweepResult
-from .terminology._unified_record import SearchRecord, to_search_record
+from .terminology._unified_record import SearchRecord, derive_display_class, to_search_record
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -241,6 +241,11 @@ def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
     meta: dict[str, str] = {
         "kind": record.kind.value,
         "tier": record.tier.value,
+        # The closed display class the JS renderer reads verbatim for the
+        # result icon and class-scoped style (ADR D7). Derived once here at the
+        # injection seam -- the single derivation authority -- and shipped as a
+        # display/crumb axis, never re-derived heuristically in the renderer.
+        "display_class": derive_display_class(record).value,
         "title": record.title,
         "summary": _summary_for(record),
         "weight": f"{weight:.6f}",
