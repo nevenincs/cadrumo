@@ -64,11 +64,15 @@ related:
   - '[[2026-07-13-docs-terminology-search-W05-P05-S11]]'
   - '[[2026-07-13-docs-terminology-search-W05-P05-S12]]'
   - '[[2026-07-13-docs-terminology-search-W05-P05-S13]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S14]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S15]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S16]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-13-docs-terminology-search-audit]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
   - '[[2026-07-15-docs-terminology-search-adr]]'
+  - '[[2026-07-15-docs-terminology-search-audit]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -95,6 +99,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-14-docs-terminology-search-audit` - `docs-terminology-search` audit: `RAG corpus completion and Ctrl-K backend wiring`
 - `2026-06-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `search corpus performance and result-quality drive`
 - `2026-07-13-docs-terminology-search-audit` - `docs-terminology-search` audit: `campaign close honesty review`
+- `2026-07-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `D7/D8 controller iconography and re-ranking honesty review`
 
 ### exec
 
@@ -143,6 +148,9 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-07-13-docs-terminology-search-W05-P05-S11` - Declare the closed ResultDisplayClass StrEnum and the single derivation function (record kind + concept domain + page path prefix to class) beside the unified record, with a unit gate proving every projected record maps to exactly one class
 - `2026-07-13-docs-terminology-search-W05-P05-S12` - Ship display_class in the injected Pagefind meta and replace the per-kind base-weight table with the one declared per-class user-first table (facts, modelo, casilla, cli, user docs, technical last), updating kind_base_weight consumers and tests
 - `2026-07-13-docs-terminology-search-W05-P05-S13` - Gate the weight table: its ordering matches the ADR D8 ladder verbatim and every display class carries exactly one weight, failing on any unmapped class
+- `2026-07-13-docs-terminology-search-W05-P06-S14` - Render one hand-authored inline-SVG icon and class-scoped styling per display class in the shared search controller card row (box, document, terminal, code, question mark), reading the shipped display_class meta only, never re-deriving it in JS
+- `2026-07-13-docs-terminology-search-W05-P06-S15` - Consume the shipped per-class weights in the compose ladder unchanged and extend the Playwright palette-ranking gate with the two new ordering assertions: casilla above cli on a mixed query, and how-to page above api stub on a mixed query
+- `2026-07-13-docs-terminology-search-W05-P06-S16` - Coordinate the controller edits with the in-flight palette-host extraction owner: diff cadrumo-docs.js before editing, land via explicit-pathspec commits, and verify icons render on both hosts (Ctrl-K dialog and search page) once the extraction lands
 
 ### plan
 
