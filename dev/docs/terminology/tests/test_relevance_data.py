@@ -162,8 +162,12 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     if api_match:
         return _module_exists(api_match.group("dotted"))
 
-    # CLI reference family page: cli/<family>.html(#anchor)?
-    cli_match = re.fullmatch(r"cli/(?P<family>[a-z0-9-]+)\.html(?:#[a-z0-9-]+)?", target)
+    # CLI reference page: the family landing page (cli/<family>.html) for a leaf
+    # mounted directly on the family, or the verb-group page
+    # (cli/<family>/<group>.html) for a grouped command — the two page shapes
+    # cli_reference_page_for_command emits (D4 per-group split), each with an
+    # optional #anchor deep-linking to the command's section.
+    cli_match = re.fullmatch(r"cli/(?P<family>[a-z0-9-]+)(?:/[a-z0-9-]+)?\.html(?:#[a-z0-9-]+)?", target)
     if cli_match:
         return cli_match.group("family") in {"app", "config"}
 
