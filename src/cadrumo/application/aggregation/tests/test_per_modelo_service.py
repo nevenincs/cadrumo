@@ -243,7 +243,7 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
     assert isinstance(result.aggregation, RetencionesAggregation)
     assert result.aggregation.total_retencion == Decimal("150.00")
     assert result.source_kinds == (BindingSourceKind.LEDGER_TRANSACTION,)
-    assert result.log_fields.as_extra() == {
+    assert result.log_fields.as_extra().for_logging() == {
         "service_name": "per_modelo_aggregation",
         "modelo": "111",
         "period": "1T",

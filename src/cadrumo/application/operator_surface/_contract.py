@@ -510,7 +510,7 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
         log_fields=log_fields,
         error_codes=OperatorSurfaceErrorCodes,
     )
-    LOGGER.debug("built operator surface contract", extra=log_fields.as_extra())
+    LOGGER.debug("built operator surface contract", extra=log_fields.as_extra().for_logging())
     return contract
 
 
