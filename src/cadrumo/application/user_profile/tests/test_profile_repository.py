@@ -1,9 +1,9 @@
 """Cross-store roundtrip and unit-of-work tests for :class:`ProfileRepository`.
 
-The repository is the single, sole writer of a logical profile's
-physical stores. These tests exercise it against the shared secure-SQL
-test helper: a real master-key session, a real per-bucket SQLite
-engine, and the real filesystem — never a mock.
+The repository sequences a logical profile's cross-store aggregate changes.
+These tests exercise it against the shared secure-SQL test helper: a real
+master-key session, a real per-bucket SQLite engine, and the real filesystem —
+never a mock.
 
 Three contracts are pinned:
 
@@ -41,6 +41,7 @@ from ...workflow import (
     read_profile_bucket,
     read_profile_bucket_by_id,
 )
+from .. import active_profile_pointer_transaction
 from .._integrity import ProfileIntegrityError
 from .._orchestration import ProfileAlreadyRegisteredError, profile_create_storage_span, profile_storage_session
 from .._profile_repository import ProfileRepository
@@ -106,8 +107,8 @@ def _load(repository: ProfileRepository, profile_id: str):
 
 
 def _delete(repository: ProfileRepository, profile_id: str):
-    """Wrap ``repository.delete`` in a ``profile_storage_session``."""
-    with profile_storage_session(profile_id):
+    """Acquire pointer ownership before the session, then re-enter on delete."""
+    with active_profile_pointer_transaction(repository.root), profile_storage_session(profile_id):
         return repository.delete(profile_id)
 
 
@@ -118,8 +119,8 @@ def _reactivate(repository: ProfileRepository, profile_id: str):
 
 
 def _select(repository: ProfileRepository, profile_id: str):
-    """Wrap ``repository.select`` in a ``profile_storage_session``."""
-    with profile_storage_session(profile_id):
+    """Acquire pointer ownership before the session, then re-enter on select."""
+    with active_profile_pointer_transaction(repository.root), profile_storage_session(profile_id):
         return repository.select(profile_id)
 
 

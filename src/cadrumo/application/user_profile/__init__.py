@@ -194,6 +194,7 @@ if TYPE_CHECKING:
         set_active_fields,
     )
     from ._preflight import ProfilePreflightService
+    from ._profile_pointer_transaction import active_profile_pointer_transaction
     from ._profile_repository import ProfileRepository
     from ._projections import (
         facts_to_values,
@@ -350,6 +351,10 @@ def __getattr__(name: str):
         from ._language_resolver import resolve_profile_output_language_hint
 
         return resolve_profile_output_language_hint
+    if name == "active_profile_pointer_transaction":
+        from ._profile_pointer_transaction import active_profile_pointer_transaction
+
+        return active_profile_pointer_transaction
     if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
@@ -466,6 +471,7 @@ __all__ = [
     "UserProfileRecord",
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
+    "active_profile_pointer_transaction",
     "build_lifecycle_service",
     "carried_namespace_definitions",
     "decrypt_profile_bundle_with_passphrase",

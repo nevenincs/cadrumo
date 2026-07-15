@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import exclusive_file_lock
 from .....tests.secure_sql import dev_test_database_password
 from .. import (
     EncryptedBlobStore,
@@ -27,7 +28,6 @@ from .. import (
     SecretStore,
     SensitivityClass,
     default_rules_for_class,
-    exclusive_file_lock,
     load_envelope,
     redact,
     safe_subpath,
@@ -159,7 +159,7 @@ import sys
 import time
 from pathlib import Path
 
-from cadrumo.core.locks import exclusive_file_lock
+from cadrumo.core import exclusive_file_lock
 
 target = Path(sys.argv[1])
 hold_seconds = float(sys.argv[2])

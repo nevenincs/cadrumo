@@ -212,16 +212,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
     (
-        "src/cadrumo/application/user_profile/_profile_repository.py",
-        "_restore_pointer_text",
-        "target.write_text",
-    ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) during a failed-create rollback",
-    (
-        "src/cadrumo/application/user_profile/_orchestration.py",
-        "restore_active_profile_pointer",
-        "target.write_text",
-    ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) when a cold-start create span fails",
-    (
         "src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",
         "write_text",

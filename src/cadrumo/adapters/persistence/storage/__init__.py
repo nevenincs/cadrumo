@@ -67,7 +67,7 @@ from ....core.corpus_manifest import (
     save_corpus_manifest,
     verify_corpus_manifest,
 )
-from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from ....core.locks import DEFAULT_LOCK_TIMEOUT
 from ....core.locks_errors import LockAcquisitionError
 from ....core.redaction import (
     default_rules,
@@ -510,7 +510,6 @@ __all__ = [
     "dispose_engines_for_bucket",
     "encode_mnemonic",
     "encrypt_record",
-    "exclusive_file_lock",
     "export_to_temp_path",
     "generate_recovery_key",
     "get_active_master_key",

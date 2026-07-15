@@ -3,6 +3,8 @@
 :func:`assess_active_profile_health` reads the persisted
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
+Confirmed pointer repairs coordinate mutation through the public
+:func:`~application.user_profile.active_profile_pointer_transaction` boundary.
 
 See Also:
     :class:`~application.workflow.ProfileBucketPointer`
@@ -30,11 +32,12 @@ from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.storage import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import pointer_path, read_pointer
+from ...core import read_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ..user_profile import (
+    active_profile_pointer_transaction,
     list_profile_key_records,
     record_to_path_values,
     validate_profile_values,
@@ -226,28 +229,33 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
 
 
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
-    """Clear a degraded pointer-file active profile when explicitly confirmed.
+    """Clear an eligible degraded pointer-file active profile after locked reassessment.
 
-    Returns an :class:`ActiveProfileRepairResult`.
+    The preliminary best-effort probe keeps cold, unconfirmed, and ineligible
+    calls read-only. A confirmed repair candidate acquires the bounded pointer
+    transaction, then performs an authoritative locked reassessment whose
+    ``repairable_by_clearing_pointer`` flag is the sole eligibility authority.
+    The returned ``before`` is that locked reassessment, and ``after`` is
+    measured before releasing the transaction. Lock contention propagates
+    without pointer mutation.
     """
     before = _assess_with_best_effort_session()
-    should_clear = before.repairable_by_clearing_pointer and before.status in {
-        "dangling_pointer",
-        "missing_profile_record",
-        "profile_record_unreadable",
-    }
-    if not clear_active or not confirmed or not should_clear:
+    if not clear_active or not confirmed or not before.repairable_by_clearing_pointer:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
-    target = pointer_path(load_settings().cadrumo_local_storage_root)
-    if target.is_file():
-        target.unlink()
-    return ActiveProfileRepairResult(
-        dry_run=False,
-        cleared_pointer=True,
-        before=before,
-        after=_assess_with_best_effort_session(),
-    )
+    root = load_settings().cadrumo_local_storage_root
+    with active_profile_pointer_transaction(root) as pointer_transaction:
+        before = _assess_with_best_effort_session()
+        if not before.repairable_by_clearing_pointer:
+            return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
+        pointer_transaction.clear()
+        after = _assess_with_best_effort_session()
+        return ActiveProfileRepairResult(
+            dry_run=False,
+            cleared_pointer=True,
+            before=before,
+            after=after,
+        )
 
 
 def _assess_with_best_effort_session() -> ActiveProfileHealth:
