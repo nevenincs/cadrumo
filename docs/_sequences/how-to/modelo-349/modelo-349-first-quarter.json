@@ -6,7 +6,8 @@
         "app",
         "ledger",
         "invoice",
-        "add",
+        "catalogue",
+        "wizard",
         "--kind",
         "issued",
         "--counterparty-nif",
@@ -21,14 +22,8 @@
         "5000",
         "--iva-rate",
         "0",
-        "--iva-amount",
-        "0",
-        "--total-amount",
-        "5000",
         "--country-code",
         "DE",
-        "--eu-iva-id",
-        "DE811569869",
         "--operation-type",
         "E"
       ],
@@ -38,7 +33,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "invoice_id\t1f7d7844f1da0d45\nsource_kind\tcollectible_invoice\nbucket\t<profile-id>\ncounterparty_nif\tDE811569869\ncounterparty_name\tMuenchner Handels GmbH\ninvoice_number\tF-2026-IC-01\ninvoice_date\t2026-02-10\ncurrency\tEUR\ntaxable_base\t5000\niva_rate\t0\niva_amount\t0\ntotal_amount\t5000\nbucket_event_ids\t8dbb4ea4fc4275862c25bcfb8db4cceabcc8c255a677ac89487db75e10d04e57\n"
+      "text": "invoice_id\t86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b\nkind\tissued\ncounterparty_name\tMuenchner Handels GmbH\ncounterparty_tax_id\tDE811569869\ninvoice_number\tF-2026-IC-01\nissued_at\t2026-02-10\ngrand_total\t5000.00\ncurrency\tEUR\noperation_type\tE\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
     },
     {
       "argv": [
@@ -46,7 +41,8 @@
         "app",
         "ledger",
         "invoice",
-        "add",
+        "catalogue",
+        "wizard",
         "--kind",
         "issued",
         "--counterparty-nif",
@@ -61,14 +57,8 @@
         "3000",
         "--iva-rate",
         "0",
-        "--iva-amount",
-        "0",
-        "--total-amount",
-        "3000",
         "--country-code",
         "FR",
-        "--eu-iva-id",
-        "FR40123456824",
         "--operation-type",
         "S"
       ],
@@ -78,7 +68,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "invoice_id\ta5b65e889a97dca3\nsource_kind\tcollectible_invoice\nbucket\t<profile-id>\ncounterparty_nif\tFR40123456824\ncounterparty_name\tLyon Services SARL\ninvoice_number\tF-2026-IC-02\ninvoice_date\t2026-03-05\ncurrency\tEUR\ntaxable_base\t3000\niva_rate\t0\niva_amount\t0\ntotal_amount\t3000\nbucket_event_ids\td033373d4f93167ec963f00240a53add673081041b4b1e4058245e22bfc53408\n"
+      "text": "invoice_id\t0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209\nkind\tissued\ncounterparty_name\tLyon Services SARL\ncounterparty_tax_id\tFR40123456824\ninvoice_number\tF-2026-IC-02\nissued_at\t2026-03-05\ngrand_total\t3000.00\ncurrency\tEUR\noperation_type\tS\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
     },
     {
       "argv": [
@@ -182,7 +172,7 @@
           },
           "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
           "casilla_values": {
-            "decl.importe-operaciones": "8000",
+            "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
             "decl.numero-operadores": "2",
             "decl.numero-rectificaciones": "0"
@@ -199,7 +189,7 @@
               "fields": {
                 "clave_operacion": "E",
                 "codigo_pais": "DE",
-                "importe": "5000",
+                "importe": "5000.00",
                 "nif_comunitario": "DE811569869",
                 "razon_social": "Muenchner Handels GmbH"
               },
@@ -210,7 +200,7 @@
               "fields": {
                 "clave_operacion": "S",
                 "codigo_pais": "FR",
-                "importe": "3000",
+                "importe": "3000.00",
                 "nif_comunitario": "FR40123456824",
                 "razon_social": "Lyon Services SARL"
               },
@@ -245,7 +235,7 @@
                 "aeat-dr-349-2020-current",
                 "aeat-modelo-349-procedure"
               ],
-              "value": "8000"
+              "value": "8000.00"
             },
             {
               "casilla_id": "decl.importe-rectificaciones",

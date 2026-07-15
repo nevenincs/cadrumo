@@ -27,7 +27,6 @@ from ...application.modelo import (
     Modelo349RectificacionRow,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
-    ModeloCalculationRevisionSelectorStateError,
     ModeloDetailRow,
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
@@ -51,7 +50,7 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
 from ._errors import CliRefusedBoundaryError
-from ._modelo_rendering import calculation_revision_state_label, short_id
+from ._modelo_rendering import short_id
 
 if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, WorkUnit
@@ -85,11 +84,6 @@ OutputLanguageOpt = Annotated[
 
 _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 """SHA-256 hex digest expected as the canonical work-unit identifier."""
-
-_VERIFIED_REVISION_VERIFY_REFUSAL_RE = re.compile(
-    r"^selected revision '(?P<calculation_revision_id>[0-9a-f]{64})' is in state "
-    r"'(?P<state>verificado_completo)'; verification requires borrador$",
-)
 
 _BINDING_MAX_LEN = 128
 _CASILLA_MAX_LEN = 64
@@ -723,20 +717,6 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
                 candidates=candidates,
             ),
         )
-    if isinstance(exc, ModeloCalculationRevisionSelectorStateError):
-        match = _VERIFIED_REVISION_VERIFY_REFUSAL_RE.fullmatch(str(exc))
-        if match is not None:
-            return typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.verify_already_verified_refused",
-                    default=(
-                        "Calculation revision %{calculation_revision_id} is already %{state} and cannot be "
-                        "verified again. Verification accepts only a draft revision."
-                    ),
-                    calculation_revision_id=match.group("calculation_revision_id"),
-                    state=calculation_revision_state_label(match.group("state")),
-                ),
-            )
     if isinstance(exc, ModeloWorkAddressNotFoundError):
         return typer.BadParameter(
             tr(

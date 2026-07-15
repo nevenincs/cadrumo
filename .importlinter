@@ -1,5 +1,5 @@
 [importlinter]
-root_package = aeat
+root_package = cadrumo
 include_external_packages = False
 # Exclude TYPE_CHECKING-guarded imports from the import graph so that
 # type-annotation-only imports do not trigger layer-direction contracts.
@@ -192,6 +192,7 @@ ignore_imports =
     cadrumo.core.tests.** -> cadrumo.application.**
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
+    cadrumo.core.tests.test_isolation_fixture_state_root_coverage -> cadrumo.tests.secure_sql
     cadrumo.core.tests.** -> cadrumo.entrypoints.**
     # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
     cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos
@@ -309,7 +310,7 @@ ignore_imports =
     cadrumo.application.calculations._observations_repository -> cadrumo.adapters.**
     cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.**
     cadrumo.application.diagnostics -> cadrumo.adapters.**
-    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.**
+    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
@@ -344,7 +345,6 @@ ignore_imports =
     cadrumo.application.ledger._vision_classifier -> cadrumo.adapters.**
     cadrumo.application.live -> cadrumo.adapters.**
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.**
-    cadrumo.application.live._censo -> cadrumo.adapters.**
     cadrumo.application.live._errors -> cadrumo.adapters.**
     cadrumo.application.live._expedientes -> cadrumo.adapters.**
     cadrumo.application.live._filed_data -> cadrumo.adapters.**
@@ -368,7 +368,6 @@ ignore_imports =
     cadrumo.application.user_profile._bundle -> cadrumo.adapters.**
     cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.**
     cadrumo.application.user_profile._capabilities -> cadrumo.adapters.**
-    cadrumo.application.user_profile._censo_sync -> cadrumo.adapters.**
     cadrumo.application.user_profile._custody -> cadrumo.adapters.**
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.**
     cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.**

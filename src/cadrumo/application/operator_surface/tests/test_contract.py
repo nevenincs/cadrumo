@@ -194,7 +194,7 @@ def test_operator_surface_application_package_has_no_typer_dependency() -> None:
 def test_log_fields_and_error_codes_are_backend_owned() -> None:
     contract = get_operator_surface_contract()
 
-    assert contract.log_fields.as_extra() == {
+    assert contract.log_fields.as_extra().for_logging() == {
         "contract_name": "operator_surface",
         "root_count": 2,
         "lifecycle": "calculate -> verify -> file",

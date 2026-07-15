@@ -1,6 +1,6 @@
 [revisions."2024".completeness_manifest]
 source_ref = "aeat-dr-131-2024"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95", "ley-35-2006:art-31", "orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-1", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b", "orden-hfp-1359-2023:instruccion-2-3-b-3", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
 source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
 
 [[revisions."2024".completeness_manifest.casillas]]
@@ -62,3 +62,55 @@ number = "15"
 [[revisions."2024".completeness_manifest.casillas]]
 casilla_id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-epigrafe"
+number = "modulos-epigrafe"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-1-unidades"
+number = "modulos-1-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-1-unidades-anterior"
+number = "modulos-1-unidades-anterior"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-2-unidades"
+number = "modulos-2-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-3-unidades"
+number = "modulos-3-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-4-unidades"
+number = "modulos-4-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-5-unidades"
+number = "modulos-5-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-6-unidades"
+number = "modulos-6-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-7-unidades"
+number = "modulos-7-unidades"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-minoracion-inversion"
+number = "modulos-minoracion-inversion"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-indice-pequena-dimension"
+number = "modulos-indice-pequena-dimension"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-indice-temporada"
+number = "modulos-indice-temporada"
+
+[[revisions."2024".completeness_manifest.casillas]]
+casilla_id = "modulos-indice-inicio-actividad"
+number = "modulos-indice-inicio-actividad"

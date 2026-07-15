@@ -1317,6 +1317,66 @@ a.sd-card:any-link,
   color: var(--color-foreground-muted);
 }
 
+/* In-flight search signal. Pagefind resolves async and the list deliberately
+ * keeps the previous results painted meanwhile, so the head carries the "a
+ * newer answer is coming" signal instead. The spinner keeps its slot at all
+ * times and only fades in, so appearing never shifts the esc key beside it. */
+.cadrumo-palette-spin {
+  animation: cadrumo-palette-spin 0.7s linear infinite;
+  border: 2px solid var(--color-background-border);
+  border-radius: 50%;
+  border-top-color: var(--color-brand-content);
+  flex: 0 0 auto;
+  height: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.12s ease-in;
+  width: 0.85rem;
+}
+
+.cadrumo-palette.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+/* The stale rows the list is still showing are dimmed while a newer query is
+ * in flight: they are a real answer, just not the one being typed. */
+.cadrumo-palette.is-busy .cadrumo-palette-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@keyframes cadrumo-palette-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-palette-spin {
+    animation: none;
+    /* A frozen ring reads as a broken spinner, so drop the moving part and let
+     * the ring stand as a static "busy" mark; the polite live region carries
+     * the same state in words. */
+    border-color: var(--color-brand-content);
+    transition: none;
+  }
+
+  .cadrumo-palette.is-busy .cadrumo-palette-list {
+    transition: none;
+  }
+}
+
+/* Announced to assistive tech, never shown: the visible signal is the spinner
+ * plus the dimmed list. */
+.cadrumo-palette-status {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .cadrumo-palette-esc {
   flex: 0 0 auto;
 }
@@ -1333,11 +1393,45 @@ a.sd-card:any-link,
 }
 
 .cadrumo-palette-item a:any-link {
+  align-items: flex-start;
   border-radius: var(--cadrumo-radius-s);
   color: var(--color-foreground-secondary);
-  display: block;
+  display: flex;
+  gap: 0.55rem;
   padding: 0.5rem 0.7rem;
   text-decoration: none;
+}
+
+/* Per-class result icon (ADR 2026-07-15 D7): a fixed leading column carrying the
+ * hand-authored inline SVG selected by the shipped `display_class`. The text
+ * column (`--body`) flexes beside it; `min-width: 0` lets the excerpt ellipsis
+ * clip inside the flex row. Rows with no shipped class render no icon and the
+ * body simply takes the full width. */
+.cadrumo-palette-item-icon {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  line-height: 0;
+  margin-top: 0.12rem;
+}
+
+.cadrumo-palette-item-icon svg {
+  display: block;
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+.cadrumo-palette-item-icon--doc,
+.cadrumo-palette-item-icon--modelo {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-palette-item-icon--casilla {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-palette-item-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .cadrumo-palette-item-title {
@@ -1362,9 +1456,9 @@ a.sd-card:any-link,
   color: var(--color-brand-content);
 }
 
-/* Pagefind term-card tiers: a kind badge on the crumb and a one-line excerpt
- * of the matched description. The badge colour distinguishes the surface
- * (term / casilla / command) at a glance. */
+/* Pagefind term-card tiers: a one-line excerpt of the matched description. The
+ * surface is distinguished by the leading per-class icon (D7) rather than the
+ * former crumb dot the icon supersedes. */
 .cadrumo-palette-item-excerpt {
   color: var(--color-foreground-muted);
   display: block;
@@ -1373,29 +1467,6 @@ a.sd-card:any-link,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cadrumo-palette-item--concept .cadrumo-palette-item-crumb::before,
-.cadrumo-palette-item--casilla .cadrumo-palette-item-crumb::before,
-.cadrumo-palette-item--cli .cadrumo-palette-item-crumb::before {
-  border-radius: var(--cadrumo-radius-s);
-  content: "";
-  display: inline-block;
-  height: 0.5rem;
-  margin-right: 0.4rem;
-  width: 0.5rem;
-}
-
-.cadrumo-palette-item--concept .cadrumo-palette-item-crumb::before {
-  background: var(--color-brand-content);
-}
-
-.cadrumo-palette-item--casilla .cadrumo-palette-item-crumb::before {
-  background: var(--color-foreground-secondary);
-}
-
-.cadrumo-palette-item--cli .cadrumo-palette-item-crumb::before {
-  background: var(--color-foreground-muted);
 }
 
 .cadrumo-palette-empty {
@@ -1411,6 +1482,62 @@ a.sd-card:any-link,
   font-size: 0.68rem;
   gap: 1rem;
   padding: 0.5rem 1.05rem;
+}
+
+/* Search page (inline host) ─────────────────────────────────────────────
+ * The shipped search.html mounts the same controller that drives the Ctrl-K
+ * modal (ADR 2026-07-15 D5). It reuses the `.cadrumo-palette-item*` result
+ * styling verbatim (those rules are unscoped) so cards look identical across
+ * the two hosts; only the frame differs — a bordered search box and a list
+ * that flows with the page instead of the modal's clamped scroll area. */
+.cadrumo-search-page {
+  margin-top: 1rem;
+  max-width: 42rem;
+}
+
+.cadrumo-search-page-head {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-l);
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+}
+
+.cadrumo-search-page-head svg {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+.cadrumo-search-page-input {
+  font-size: 1.05rem;
+}
+
+.cadrumo-search-page-list {
+  margin-top: 0.6rem;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+/* The busy signal reuses the shared spinner and dimmed-list treatment, keyed
+ * on the mount's own `is-busy` class (the controller toggles it on `root`). */
+.cadrumo-search-page.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+.cadrumo-search-page.is-busy .cadrumo-search-page-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-search-page.is-busy .cadrumo-search-page-list {
+    transition: none;
+  }
 }
 
 /* Responsive */

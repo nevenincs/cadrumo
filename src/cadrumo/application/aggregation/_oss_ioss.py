@@ -1,10 +1,10 @@
 """Modelo 369 OSS/IOSS source-mesh resolver and candidate validator.
 
-The ``ledger_oss_aggregation`` source projects OSS/IOSS-tagged issued invoices
-from the bucket's :class:`~domain.invoices.InvoiceCatalogueRepository` into
-substrate-classified :class:`OssIossLedgerCandidate` rows. Pre-classified callers
-can also pass candidates directly. Each candidate is validated against the
-destination Member State's published IVA rate through
+The ``ledger_oss_aggregation`` source reads OSS/IOSS-tagged issued invoices
+through the bucket's :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`
+and projects them into substrate-classified :class:`OssIossLedgerCandidate`
+rows. Pre-classified callers can also pass candidates directly. Each candidate
+is validated against the destination Member State's published IVA rate through
 :func:`domain.iva.lookup_rate` and becomes a registry-ready
 :class:`~domain.calculations.registry.OssIossLedgerObservation`.
 
@@ -40,7 +40,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,
 )
-from ...domain.invoices import Invoice, InvoiceLine, iva_rate_kind
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceLine, iva_rate_kind
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
@@ -269,15 +269,16 @@ def oss_ioss_candidates_from_repositories(
     *,
     bucket_id: str,
     period: Period,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> tuple[OssIossLedgerCandidate, ...]:
     """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
 
     Args:
         bucket_id: Active bucket id for the default invoice repository.
         period: Filing period whose date span filters issued invoices.
-        invoice_repository: Optional :class:`InvoiceCatalogueRepository`
-            used instead of the active bucket repository.
+        invoice_repository: Optional
+            :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol` used
+            instead of the active bucket repository.
 
     Returns:
         A tuple of :class:`OssIossLedgerCandidate` rows projected from issued
@@ -304,7 +305,7 @@ def aggregate_oss_ioss_from_repositories(
     *,
     bucket_id: str,
     period: Period,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> dict[BindingId, Decimal]:
     """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue.
 
@@ -312,8 +313,9 @@ def aggregate_oss_ioss_from_repositories(
         revision: The :class:`ModeloRevision` whose OSS/IOSS bindings are resolved.
         bucket_id: Active bucket id for the default invoice repository.
         period: Filing period whose date span filters issued invoices.
-        invoice_repository: Optional :class:`InvoiceCatalogueRepository`
-            used instead of the active bucket repository.
+        invoice_repository: Optional
+            :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol` used
+            instead of the active bucket repository.
     """
     return aggregate_oss_ioss_bindings(
         revision,
@@ -335,7 +337,7 @@ class OssIossLedgerSourceResolver:
         self,
         *,
         candidates: Sequence[OssIossLedgerCandidate] | None = None,
-        invoice_repository: InvoiceCatalogueRepository | None = None,
+        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     ) -> None:
         """Construct the resolver with a pre-classified ledger candidate sequence.
 
@@ -343,9 +345,9 @@ class OssIossLedgerSourceResolver:
             candidates: The substrate-classified ledger lines for the
                 current period. The resolver validates and aggregates
                 these on each :meth:`resolve` call.
-            invoice_repository: Optional live invoice repository used to
-                project OSS/IOSS-tagged invoices when ``candidates`` is
-                not supplied.
+            invoice_repository: Optional live invoice repository port used to
+                project OSS/IOSS-tagged invoices when ``candidates`` is not
+                supplied.
         """
         self._candidates = tuple(candidates) if candidates is not None else None
         self._invoice_repository = invoice_repository

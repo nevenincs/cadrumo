@@ -703,17 +703,22 @@ def resolve_verifiable_modelo_calculation_revision_address(
     calculation_revision_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
-    """Resolve the draft :class:`CalculationRevision` that ``work verify`` may consume."""
-    revision = resolve_modelo_calculation_revision_address(
+    """Resolve the :class:`CalculationRevision` that ``work verify`` addresses.
+
+    Returns the resolved revision in ANY lifecycle state; no draft gate is
+    applied here. Verification-state policy is owned by
+    :func:`~cadrumo.application.modelo.verify_modelo_revision` under
+    ``single-subject-mutation-is-idempotent-guarded``: a revision already out of
+    ``BORRADOR`` that carries a granting :class:`VerificationReport` collapses to
+    that existing report as an idempotent no-op, and the hard refusal is reserved
+    for the inconsistent non-draft/no-granting-report state. Gating ``BORRADOR``
+    here would refuse the idempotent retry before the collapse could fire.
+    """
+    return resolve_modelo_calculation_revision_address(
         address=address,
         calculation_revision_id=calculation_revision_id,
         selector=selector,
         default_for="verify",
-    )
-    return _require_revision_state(
-        revision,
-        allowed=(CalculationRevisionState.BORRADOR,),
-        purpose="verification",
     )
 
 

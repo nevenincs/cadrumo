@@ -1,0 +1,16 @@
+{
+  "modelo": "100",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2024-integracion-compensacion-ganancias-patrimoniales",
+  "raw_evidence_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L43871-L43946",
+  "notes": "AEAT Manual practico de Renta 2024, Parte 1, Capitulo 12 (Integracion y compensacion de rentas), 'Caso practico' de don A.P.G. This grounds the capital-gains-and-losses integration and INTRA-YEAR compensation (netting ganancias against perdidas within the 2024 exercise), separately for the base imponible general and the base imponible del ahorro. Raw 2024 ganancias/perdidas patrimoniales quoted verbatim (L43876-43881): base general ganancia 4.500 / perdida 9.600; base ahorro ganancia 5.600 / perdida 1.600. The manual states each netting subtotal verbatim in its solucion: 'Ganancias: 4.500 / Perdidas: 9.600 / Saldo neto negativo de ganancias y perdidas del ejercicio 2024 (4.500 -9.600) = -5.100' (L43907-43910 -> casillas 0418/0419/0421) and 'Ganancias: 5.600 / Perdidas: 1.600 / Saldo neto positivo de ganancias y perdidas del ejercicio 2024: (5.600 - 1.600) = 4.000' (L43925-43928 -> casillas 0422/0423/0424). Reproduced by the registry's own gains/losses aggregation and saldo chain (0135->0418, 0136->0419, 0140->0421, 0137->0422, 0138->0423, 0141->0424; 0421/0424 are the max(subtract) saldo casillas). Scoped to the current-year netting only: the manual's downstream base imponible general 39.600 and base del ahorro 200 fold in prior-year (2020/2021) and capital-mobiliario compensations not supplied by this scenario; see test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py.",
+  "expected_by_casilla_id": {
+    "0418": "4500.00",
+    "0419": "9600.00",
+    "0421": "5100.00",
+    "0422": "5600.00",
+    "0423": "1600.00",
+    "0424": "4000.00"
+  }
+}

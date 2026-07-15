@@ -18,7 +18,6 @@ Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart``
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
 
@@ -27,7 +26,7 @@ from pydantic import BaseModel, Field, computed_field, field_validator, model_va
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
-from ...core.logging import get_logger
+from ...core.logging import LogExtra, get_logger
 from ...domain.calculations.registry import WithholdingObservation
 from ._counterpart import (
     CounterpartAggregation,
@@ -110,17 +109,19 @@ class PerModeloAggregationLogFields(BaseModel):
     source_kind_count: int = Field(ge=0)
     result_row_count: int = Field(ge=0)
 
-    def as_extra(self) -> Mapping[str, object]:
-        """Return a logging ``extra`` payload with stable field names."""
-        return {
-            "service_name": self.service_name,
-            "modelo": self.modelo,
-            "period": self.period.registry_token,
-            "provider": self.provider.value,
-            "observation_count": self.observation_count,
-            "source_kind_count": self.source_kind_count,
-            "result_row_count": self.result_row_count,
-        }
+    def as_extra(self) -> LogExtra:
+        """Return a typed logging ``extra`` payload with stable field names."""
+        return LogExtra(
+            {
+                "service_name": self.service_name,
+                "modelo": self.modelo,
+                "period": self.period.registry_token,
+                "provider": self.provider.value,
+                "observation_count": self.observation_count,
+                "source_kind_count": self.source_kind_count,
+                "result_row_count": self.result_row_count,
+            }
+        )
 
 
 class PerModeloAggregationContract(BaseModel):
@@ -366,7 +367,7 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
             result_row_count=len(aggregation.rollups),
         ),
     )
-    LOGGER.debug("ran per-modelo aggregation", extra=result.log_fields.as_extra())
+    LOGGER.debug("ran per-modelo aggregation", extra=result.log_fields.as_extra().for_logging())
     return result
 
 

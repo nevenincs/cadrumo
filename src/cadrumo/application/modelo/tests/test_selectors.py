@@ -40,9 +40,9 @@ from .._selectors import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     ModeloWorkVisibleTargetAmbiguousError,
+    resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_bucket,
     resolve_modelo_work_unit,
-    select_current_draft_revision,
     select_current_verified_revision,
     select_exportable_revision,
     select_modelo_calculation_revision,
@@ -436,9 +436,27 @@ def test_current_command_specific_revision_selectors_enforce_state(
         update={"current_calculation_revision_id": verified.calculation_revision_id},
     )
 
-    assert select_current_draft_revision(draft_current, calculation_repository=cr_repo).revision == draft
-    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="verification requires a draft"):
-        select_current_draft_revision(verified_current, calculation_repository=cr_repo)
+    # The verify pick no longer gates draft at the selector layer: it returns the
+    # current revision in ANY state so an already-verified revision reaches
+    # verify_modelo_revision's idempotent collapse
+    # (single-subject-mutation-is-idempotent-guarded) instead of being refused
+    # upstream. State policy for verify lives in the application action.
+    assert (
+        resolve_modelo_calculation_revision_pick(
+            draft_current,
+            default_for="verify",
+            calculation_repository=cr_repo,
+        ).revision
+        == draft
+    )
+    assert (
+        resolve_modelo_calculation_revision_pick(
+            verified_current,
+            default_for="verify",
+            calculation_repository=cr_repo,
+        ).revision
+        == verified
+    )
 
     assert select_current_verified_revision(verified_current, calculation_repository=cr_repo).revision == verified
     with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="filing requires a verified"):
@@ -559,11 +577,16 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
     )
     assert resolve_exportable_modelo_calculation_revision_address(address=address) == filed
 
-    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="verification requires borrador"):
+    # The verify resolver no longer gates state: an explicitly-addressed verified
+    # revision is returned (not refused) so verify_modelo_revision can collapse it
+    # to its existing granting report (single-subject-mutation-is-idempotent-guarded).
+    assert (
         resolve_verifiable_modelo_calculation_revision_address(
             address=ModeloWorkAddress(),
             calculation_revision_id=verified.calculation_revision_id,
         )
+        == verified
+    )
     with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="filing requires verificado_completo"):
         resolve_fileable_modelo_calculation_revision_address(
             address=address,

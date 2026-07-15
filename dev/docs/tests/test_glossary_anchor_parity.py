@@ -14,10 +14,16 @@ definition rather than the glossary top:
 - :func:`test_injected_concept_anchors_resolve_in_glossary` proves every
   approved concept's injected anchor matches a real glossary term line, so a
   concept whose headword and id diverge can never again ship a dead deep link.
+- :func:`test_glossary_renders_concept_legal_grounding` proves the D6
+  destination-grounding contract for the concept kind (the analogue of the
+  casilla ``test_destination_renders_record_grounding`` gate): a concept card
+  carrying ``legal_refs`` whose glossary entry renders none of them is a
+  failure.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -75,6 +81,92 @@ def _glossary_term_anchors() -> set[str]:
 def test_anchor_matches_sphinx_ground_truth(headword: str, anchor: str) -> None:
     """The slug helper reproduces the ids Sphinx renders in the live glossary."""
     assert glossary_term_anchor(headword) == anchor
+
+
+_LEGAL_BASIS_RE = re.compile(r"\* Legal basis: `(?P<ref>[^<]+?) <")
+
+
+def _rendered_legal_refs_by_anchor() -> dict[str, set[str]]:
+    """Map each glossary entry's term anchor to the legal refs its entry renders.
+
+    Parses the generated glossary RST into entries -- a run of three-space term
+    lines followed by their six-space body / grounding lines -- and records, per
+    entry, the ``Legal basis`` refs it renders against every term anchor the
+    entry claims. This is the concept-kind analogue of the casilla reference's
+    ``rendered_legal_refs`` map, read from the real generator output.
+    """
+    rst, _ = render_glossary(_REPO_ROOT, _load_handbook())
+    by_anchor: dict[str, set[str]] = {}
+    entry_anchors: list[str] = []
+    entry_refs: set[str] = set()
+    prev_was_term = False
+    started = False
+
+    def _flush() -> None:
+        for anchor in entry_anchors:
+            by_anchor.setdefault(anchor, set()).update(entry_refs)
+
+    for line in rst.splitlines():
+        if not started:
+            # Skip the RST header block; entries begin after the directive.
+            if line.strip() == ":sorted:":
+                started = True
+            continue
+        is_term = line.startswith("   ") and not line.startswith("      ")
+        if is_term:
+            if not prev_was_term:
+                _flush()
+                entry_anchors = []
+                entry_refs = set()
+            entry_anchors.append(glossary_term_anchor(line.strip()))
+            prev_was_term = True
+            continue
+        prev_was_term = False
+        match = _LEGAL_BASIS_RE.search(line)
+        if match:
+            entry_refs.add(match.group("ref").strip())
+    _flush()
+    return by_anchor
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_glossary_renders_concept_legal_grounding() -> None:
+    """D6: every concept's ``legal_refs`` render on its glossary entry.
+
+    The concept-kind analogue of the casilla
+    ``test_destination_renders_record_grounding`` gate. A concept card carrying
+    ``legal_refs`` whose glossary entry renders none of them is a
+    destination-grounding breach. The glossary renders each resolvable ref as a
+    ``Legal basis`` BOE permalink line on the concept's own entry, so the
+    destination is at parity with what the card carries. The assertion runs
+    against the real generator output and the real registry-resolved refs -- no
+    injected text -- so it cannot pass tautologically.
+    """
+    rendered_by_anchor = _rendered_legal_refs_by_anchor()
+    assert rendered_by_anchor, "glossary rendered no legal grounding"
+
+    cards, _ = project_concept_cards()
+    approved = [card for card in cards if card.is_approved]
+    assert approved, "no approved concept cards to inject"
+
+    ungrounded: list[str] = []
+    grounded = 0
+    for card in approved:
+        record = to_search_record(card)
+        if record.kind is not SearchRecordKind.CONCEPT or not record.metadata.legal_refs:
+            continue
+        anchor = record.target.split("#", 1)[1]
+        rendered = rendered_by_anchor.get(anchor)
+        if rendered is None or not set(record.metadata.legal_refs).issubset(rendered):
+            ungrounded.append(f"{record.title} ({anchor}): refs {record.metadata.legal_refs} not rendered")
+        else:
+            grounded += 1
+
+    assert grounded > 0, "no grounded concept entries — the projection carries no legal_refs?"
+    assert not ungrounded, "concept entries dropping their legal grounding (D6 breach):\n" + "\n".join(
+        f"  - {u}" for u in ungrounded[:40]
+    )
 
 
 @pytest.mark.integration

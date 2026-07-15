@@ -13,8 +13,14 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    SecureObjectRepository,
+    create_engine_from_settings,
+)
+from ....adapters.persistence.storage.sql import Base
 from ....core import BindingSourceKind, Period
+from ....core.config import Settings
 from ....domain.calculations.registry import CasillaId
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
@@ -250,125 +256,143 @@ def _m369_invoice(
 
 
 def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
-    m369_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
-    """Live M369 calculate projects real OSS-tagged invoices into cuotas."""
-    wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
-    invoice_repo.save(
-        InvoiceCatalogue.from_invoices(
-            (
-                _m369_invoice(
-                    invoice_number="OSS-DE-SERV-001",
-                    issued_at=date(2026, 2, 15),
-                    counterparty_name="DE Consumer",
-                    counterparty_tax_id="DE123456789",
-                    counterparty_country="DE",
-                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
-                    base_amount=Decimal("100.00"),
-                    iva_amount=Decimal("19.00"),
+    """Live M369 calculate and legacy verification use the injected store."""
+    injected_engine = create_engine_from_settings(
+        Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / 'injected' / 'm369-injected.db').as_posix()}"),
+    )
+    Base.metadata.create_all(injected_engine)
+    try:
+        with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_M369_BUCKET) as runtime:
+            _seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
+            wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
+            cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
+            tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
+            ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
+            injected_objects = SecureObjectRepository(
+                engine=injected_engine,
+                namespace_registry=STORAGE_NAMESPACE_REGISTRY,
+                active_session_bucket_id=_M369_BUCKET,
+                require_secure_active_session=True,
+            )
+            invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
+            invoice_repo.save(
+                InvoiceCatalogue.from_invoices(
+                    (
+                        _m369_invoice(
+                            invoice_number="OSS-DE-SERV-001",
+                            issued_at=date(2026, 2, 15),
+                            counterparty_name="DE Consumer",
+                            counterparty_tax_id="DE123456789",
+                            counterparty_country="DE",
+                            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                            base_amount=Decimal("100.00"),
+                            iva_amount=Decimal("19.00"),
+                        ),
+                        _m369_invoice(
+                            invoice_number="OSS-FR-SERV-001",
+                            issued_at=date(2026, 2, 16),
+                            counterparty_name="FR Consumer",
+                            counterparty_tax_id="FR12345678901",
+                            counterparty_country="FR",
+                            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                            base_amount=Decimal("200.00"),
+                            iva_amount=Decimal("40.00"),
+                        ),
+                        _m369_invoice(
+                            invoice_number="OSS-DE-GOODS-001",
+                            issued_at=date(2026, 2, 17),
+                            counterparty_name="DE Consumer Goods",
+                            counterparty_tax_id="DE987654321",
+                            counterparty_country="DE",
+                            transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+                            base_amount=Decimal("300.00"),
+                            iva_amount=Decimal("57.00"),
+                        ),
+                    ),
                 ),
-                _m369_invoice(
-                    invoice_number="OSS-FR-SERV-001",
-                    issued_at=date(2026, 2, 16),
-                    counterparty_name="FR Consumer",
-                    counterparty_tax_id="FR12345678901",
-                    counterparty_country="FR",
-                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
-                    base_amount=Decimal("200.00"),
-                    iva_amount=Decimal("40.00"),
-                ),
-                _m369_invoice(
-                    invoice_number="OSS-DE-GOODS-001",
-                    issued_at=date(2026, 2, 17),
-                    counterparty_name="DE Consumer Goods",
-                    counterparty_tax_id="DE987654321",
-                    counterparty_country="DE",
-                    transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
-                    base_amount=Decimal("300.00"),
-                    iva_amount=Decimal("57.00"),
-                ),
-            ),
-        ),
-    )
+            )
+            assert ambient_invoice_repo.exists() is False
 
-    work_unit = create_work_unit(
-        bucket_id=_M369_BUCKET,
-        modelo="369",
-        filing_year=_M369_YEAR,
-        period=Period.from_year_and_code(_M369_YEAR, "1T"),
-        revision_id=_M369_REVISION,
-        repository=wu_repo,
-        clock=_T0,
-    )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
+            work_unit = create_work_unit(
+                bucket_id=_M369_BUCKET,
+                modelo="369",
+                filing_year=_M369_YEAR,
+                period=Period.from_year_and_code(_M369_YEAR, "1T"),
+                revision_id=_M369_REVISION,
+                repository=wu_repo,
+                clock=_T0,
+            )
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+                clock=_T1,
+            )
 
-    assert isinstance(result, BucketAggregationCalculationResult)
-    casilla_values = result.revision.casilla_values
-    component_cuotas = (
-        Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
-        Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
-        Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
-    )
-    assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
-    assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
-    assert not any(
-        diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
-        for diag in result.source_diagnostics
-    )
-    assert not any(
-        diag.source_kind == "ledger_oss_aggregation" and diag.reason == "unhandled_binding_source"
-        for diag in result.source_diagnostics
-    )
+            assert isinstance(result, BucketAggregationCalculationResult)
+            casilla_values = result.revision.casilla_values
+            component_cuotas = (
+                Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
+                Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
+                Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
+            )
+            assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
+            assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
+            assert not any(
+                diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
+                for diag in result.source_diagnostics
+            )
+            assert not any(
+                diag.source_kind == "ledger_oss_aggregation" and diag.reason == "unhandled_binding_source"
+                for diag in result.source_diagnostics
+            )
 
-    legacy = _legacy_revision_without_source_assessment(result.revision)
-    assert legacy.calculation_revision_id != result.revision.calculation_revision_id
-    assert legacy.source_resolution_assessed is False
-    _persist_legacy_current_revision(
-        work_unit=work_unit,
-        legacy=legacy,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-    )
-    report = verify_modelo_revision(
-        legacy.calculation_revision_id,
-        actor="m369-live-operator",
-        workflow_profile=_workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
-    assert any(
-        ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
-        for ref in result.revision.source_provenance
-    ), result.revision.source_provenance
-    assert legacy.source_issues == ()
-    assert result.revision.source_resolution_assessed is True
-    assert report.granted_verificado_completo is True, report.findings
-    recalculated = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
-    )
-    assert recalculated.revision.calculation_revision_id != legacy.calculation_revision_id
-    assert recalculated.revision.source_resolution_assessed is True
-    assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
-        recalculated.revision.calculation_revision_id
-    )
+            legacy = _legacy_revision_without_source_assessment(result.revision)
+            assert legacy.calculation_revision_id != result.revision.calculation_revision_id
+            assert legacy.source_resolution_assessed is False
+            _persist_legacy_current_revision(
+                work_unit=work_unit,
+                legacy=legacy,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+            )
+            report = verify_modelo_revision(
+                legacy.calculation_revision_id,
+                actor="m369-live-operator",
+                workflow_profile=_workflow_profile(),
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+                clock=_T1,
+            )
+            assert ambient_invoice_repo.exists() is False
+            assert any(
+                ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+                for ref in result.revision.source_provenance
+            ), result.revision.source_provenance
+            assert legacy.source_issues == ()
+            assert result.revision.source_resolution_assessed is True
+            assert report.granted_verificado_completo is True, report.findings
+            recalculated = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+                clock=_T1,
+            )
+            assert recalculated.revision.calculation_revision_id != legacy.calculation_revision_id
+            assert recalculated.revision.source_resolution_assessed is True
+            assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
+                recalculated.revision.calculation_revision_id
+            )
+    finally:
+        injected_engine.dispose()
 
 
 def test_m369_unresolved_oss_source_refuses_verification_and_export(

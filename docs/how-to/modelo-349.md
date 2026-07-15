@@ -61,7 +61,7 @@ aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
 aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values["decl.numero-operadores"] == "2"
-@expect result.casilla_values["decl.importe-operaciones"] == "8000"
+@expect result.casilla_values["decl.importe-operaciones"] == "8000.00"
 @step Verify the draft before you export it.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
@@ -86,6 +86,7 @@ aeat --format json app modelo bindings list --modelo 349 --year 2026 --period 1T
 @step Show the saved revision with its per-operator detail rows.
 @result aeat --format json app modelo work revision --modelo 349 --year 2026 --period 1T
 @expect result.casilla_values["decl.numero-operadores"] == "2"
+@expect result.casilla_values["decl.importe-operaciones"] == "8000.00"
 @expect exit_code == 0
 ```
 
@@ -115,6 +116,7 @@ Export the verified declaration:
 @step Export the verified declaration to a local fichero-BOE file.
 @result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
 @expect result.filing_year == 2026
+@expect result.byte_size == 1500
 @expect exit_code == 0
 ```
 

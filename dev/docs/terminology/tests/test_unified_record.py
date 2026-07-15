@@ -116,7 +116,11 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
     assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
     assert "DP200014:00562" not in record.id
     assert record.title == "Modelo 200 · casilla DP200014:00562"
-    assert record.target == "search.html?q=200+DP200014:00562"
+    # The target deep-links to the per-modelo casilla reference page and the
+    # casilla's page-local anchor (the id-folding slug), never the retired
+    # search-for-itself query string. Both come from the ONE slug authority the
+    # generator renders against.
+    assert record.target == "_generated/casillas/200.html#casilla-dp200014-00562"
     assert record.metadata.modelo == "200"
     assert record.metadata.casilla_id == "DP200014:00562"
     assert record.metadata.number == "00562"
@@ -197,7 +201,14 @@ def test_funnelled_records_are_json_serialisable() -> None:
 
 
 def test_base_weights_follow_the_declared_tier_ordering() -> None:
-    """Concept > CLI > casilla > page base weights (term, nav, nav, fulltext)."""
+    """Concept > casilla > CLI > page base weights (the D8 per-class ladder).
+
+    The per-kind view now projects the one declared per-display-class table
+    (ADR ``2026-07-15-docs-terminology-search-adr`` D8): CONCEPT collapses to
+    the general-fact ``DOC`` band, and D8 reverses the navigation-tier order to
+    casilla > cli (previously cli > casilla), while a full-text PAGE hit
+    collapses to the ``TECHNICAL`` floor.
+    """
     from dev.docs.terminology._search_record import SearchRecordKind
     from dev.docs.terminology._unified_record import kind_base_weight
 
@@ -205,7 +216,7 @@ def test_base_weights_follow_the_declared_tier_ordering() -> None:
     cli = kind_base_weight(SearchRecordKind.CLI)
     casilla = kind_base_weight(SearchRecordKind.CASILLA)
     page = kind_base_weight(SearchRecordKind.PAGE)
-    assert concept > cli > casilla > page
+    assert concept > casilla > cli > page
 
 
 def test_normalisation_preserves_tier_ordering_under_score() -> None:

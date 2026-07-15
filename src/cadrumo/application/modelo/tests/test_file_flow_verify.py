@@ -573,12 +573,20 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
 
-def test_verify_rejects_non_borrador_revision_real_registry(repos: Repos) -> None:
-    """Real e2e: a verificado-completo revision cannot be re-verified.
-    The operator must produce a fresh draft (which lands as BORRADOR)
-    to verify again."""
+def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos) -> None:
+    """Real e2e: re-verifying an already-verified revision is a guarded no-op.
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    Per single-subject-mutation-is-idempotent-guarded, verify is a creating
+    mutation keyed on the clock-free derived report id
+    (``derive_verification_report_id`` folds the outcome, not ``run_at``). A retry
+    against a locked ``VERIFICADO_COMPLETO`` revision — whose content, and thus
+    verification outcome, cannot change — collapses to the EXISTING granting
+    report: same report id, ``run_at`` unchanged (NOT re-stamped to the retry
+    clock), no second verification lifecycle event, revision still verified. It
+    must never refuse. Mirrors the re-file no-op.
+    """
+
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -589,19 +597,129 @@ def test_verify_rejects_non_borrador_revision_real_registry(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
         clock=T1,
     )
-    verify_revision(
+    seed_clean_cross_period_sources(
+        work_unit,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+    )
+    first = verify_modelo_revision(
         revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
         actor="operator-A",
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
         clock=T2,
     )
+    assert first.granted_verificado_completo is True
+    assert (
+        get_calculation_revision(revision.calculation_revision_id, calculation_repository=cr_repo).state
+        is CalculationRevisionState.VERIFICADO_COMPLETO
+    )
 
-    with pytest.raises(CalculationRevisionStateError, match=r"state|verify|verified|already"):
+    def _verification_event_ids() -> tuple[str, ...]:
+        events = bv_repo.load().for_bucket(
+            work_unit.bucket_id,
+            event_types=(
+                BucketEventType.MODELO_VERIFICATION_PASSED,
+                BucketEventType.MODELO_VERIFICATION_REFUSED,
+            ),
+        )
+        return tuple(event.event_id for event in events)
+
+    event_ids_after_first = _verification_event_ids()
+    reports_after_first = tuple(
+        r.verification_report_id
+        for r in list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=vr_repo,
+        )
+    )
+
+    # Re-verify at a LATER clock (T3): must collapse, not refuse.
+    second = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        workflow_profile=workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T3,
+    )
+
+    # Same content-addressed report; anti-tautology — run_at stays T2, NOT re-stamped to T3.
+    assert second.verification_report_id == first.verification_report_id
+    assert second.run_at == first.run_at == T2
+    assert second.granted_verificado_completo is True
+    # No second lifecycle event, and the report catalogue is unchanged.
+    assert _verification_event_ids() == event_ids_after_first
+    reports_after_second = tuple(
+        r.verification_report_id
+        for r in list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=vr_repo,
+        )
+    )
+    assert reports_after_second == reports_after_first
+    assert (
+        get_calculation_revision(revision.calculation_revision_id, calculation_repository=cr_repo).state
+        is CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+
+
+def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos) -> None:
+    """The idempotent collapse stays guarded: a non-draft revision with NO granting
+    report is an inconsistent state that still refuses.
+
+    This is the anti-tautology proof for the collapse — the fix does not blanket-
+    accept every non-draft revision; it collapses ONLY when a granting report
+    actually exists, and otherwise keeps the hard state refusal.
+    """
+
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    # Modelo 111 has no cross-period dependencies, so mark can transition it to
+    # VERIFICADO_COMPLETO without seeding cross-period evidence.
+    work_unit = seed_work_unit(
+        wu_repo,
+        modelo="111",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+    )
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={
+            M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+            M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+            M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+            M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+            M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+            M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+            M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+            M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+            M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+            M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    # Transition the revision to VERIFICADO_COMPLETO WITHOUT persisting a report,
+    # producing the inconsistent state the guard must refuse.
+    verified = mark_revision_verificado_completo(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=T2,
+    )
+    assert verified.state is CalculationRevisionState.VERIFICADO_COMPLETO
+
+    with pytest.raises(CalculationRevisionStateError, match=r"state|DRAFT|draft"):
         verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",

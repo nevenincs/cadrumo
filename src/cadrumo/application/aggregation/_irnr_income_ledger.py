@@ -25,7 +25,6 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import M210PayerMode, Modelo, Period
 from ...core.i18n import tr
@@ -147,18 +146,20 @@ def aggregate_irnr_income_ledger_from_repositories(
     period: Period,
     revision: ModeloRevision,
     selected_official_tipo_renta_code: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> IrnrIncomeLedgerAggregation:
-    """Load the bucket's secure :class:`TransactionCatalogueRepository` catalogue and aggregate one selected M210 code.
+    """Load an injected secure transaction catalogue and aggregate one selected M210 code.
 
     ``revision`` is the :class:`ModeloRevision` that declares the binding.
+    ``transaction_repository`` is the composition-root-owned
+    :class:`TransactionCatalogueRepositoryProtocol` for ``bucket_id``.
 
     The repository date partition limits decryption/classification to the
     filing span and returns a compact, provenance-free summary for the other
     dates.  Full-catalogue callers retain the per-row ``OUTSIDE_PERIOD`` issues
     instead.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),

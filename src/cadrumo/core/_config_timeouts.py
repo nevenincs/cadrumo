@@ -2,7 +2,7 @@
 
 Split from :mod:`core.config` to keep that module within the line budget.
 :class:`~core.config.Settings` inherits these fields, so every timeout
-still reads the same ``AEAT_*`` environment variable by field name and is
+still reads the same ``CADRUMO_*`` environment variable by field name and is
 unchanged at runtime.
 
 The browser cleanup and Cl@ve approval budgets are consumed by

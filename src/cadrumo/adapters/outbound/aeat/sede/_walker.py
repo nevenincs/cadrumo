@@ -337,10 +337,16 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
 
     Two strategies, selected by ``modelo``:
 
-    * When ``modelo`` is set (e.g. ``"100"``), target the leaf
+    * When ``modelo`` is set (e.g. ``"100"``), target every leaf
       ``mostrarListado`` anchor whose visible text contains
-      ``Modelo <N>``. Clicking that anchor lazy-loads the full
-      expediente subtree beneath it in one AJAX round-trip.
+      ``Modelo <N>``. AEAT's procedure tree can list the same modelo
+      under more than one category branch (e.g. distinct
+      autoliquidación / declaración-informativa / recargo procedure
+      entries for the same modelo code); clicking only the first match
+      would lazy-load one branch's subtree while leaving a sibling
+      branch — and any expediente rows nested only under it — never
+      expanded. Every matching anchor is clicked, deduplicated the same
+      way as the ``modelo=None`` branch below.
     * When ``modelo`` is ``None``, click every ``mostrarListado``
       anchor in document order — this expands the whole corpus. The
       JS dedup guards against clicking a category header twice.
@@ -352,25 +358,34 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
         return
 
     if modelo is not None:
-        clicked = await evaluate(
+        clicked_count = await evaluate(
             """
             (modelo) => {
                 const wanted = 'Modelo ' + modelo;
-                const anchor = Array.from(document.querySelectorAll('a'))
-                    .find(a =>
-                        (a.textContent || '').includes(wanted) &&
-                        ((a.getAttribute('onclick') || '').includes('mostrarListado'))
-                    );
-                if (!anchor) return false;
-                anchor.click();
-                return true;
+                const seen = new Set();
+                let clickedCount = 0;
+                Array.from(document.querySelectorAll('a')).forEach(a => {
+                    const onc = a.getAttribute('onclick') || '';
+                    if (!onc.includes('mostrarListado')) return;
+                    if (!(a.textContent || '').includes(wanted)) return;
+                    const key = a.id || onc;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    try { a.click(); clickedCount += 1; } catch (e) {}
+                });
+                return clickedCount;
             }
             """,
             modelo,
         )
-        if not clicked:
+        if not clicked_count:
             log.debug("_expand_matching_branches: no mostrarListado anchor found for modelo=%s", modelo)
             return
+        log.debug(
+            "_expand_matching_branches: expanded %d matching branch(es) for modelo=%s",
+            clicked_count,
+            modelo,
+        )
     else:
         await evaluate(
             """

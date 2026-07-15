@@ -2750,9 +2750,6 @@ cli:
         status_next_action: Készítse el vagy számolja újra ezt az egységet a `aeat
           app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `aeat
           app modelo work verify` paranccsal.
-        verify_already_verified_refused: A(z) %{calculation_revision_id} számítási
-          revízió már %{state} állapotú, ezért nem ellenőrizhető újra. Az ellenőrzés
-          csak piszkozat állapotú revíziót fogad el.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási
@@ -2787,6 +2784,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id} számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul lett visszaadva.'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít

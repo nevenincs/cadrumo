@@ -109,18 +109,28 @@ def test_prorrata_relevant_command_is_fully_translated(
 def test_every_target_anchor_resolves_to_the_cli_reference_shape(
     projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
-    """Every command target is ``cli/<family>.html#<docutils-slug-of-path>``.
+    """Every command target is ``<page-stem>.html#<docutils-slug-of-path>``.
 
-    The anchor is verified against ``docutils.nodes.make_id`` -- the slugger
-    Sphinx itself uses to build the section ids in the generated CLI-reference
-    pages -- so a target either matches the real built anchor or fails. This
-    is the non-tautological proof: the oracle is independent of the emitter's
-    slug code.
+    Two independent oracles compose the expected target: the page stem comes
+    from :func:`cli_reference_page_for_command` (the routing authority the CLI
+    reference generator itself renders against — a grouped command lands on its
+    group page ``cli/app/ledger.html``, a leaf mounted directly on a family on
+    that family's landing page ``cli/config.html``), and the anchor from
+    ``docutils.nodes.make_id``, the slugger Sphinx itself uses to build the
+    section ids. Neither oracle reuses the emitter's own target code, so a
+    target either matches the real built page+anchor or fails. This replaces the
+    prior family-page-only assertion, which encoded the very defect that stranded
+    every grouped command's deep link on a bare landing page; the live
+    resolution against rendered pages is proven by
+    ``dev/docs/tests/test_cli_anchor_parity.py``.
     """
+    from dev.docs.cli_reference import cli_reference_page_for_command
+
     commands, _options, _stats = projection
     for record in commands:
-        expected_anchor = make_id(record.command_path)
-        expected_target = f"cli/{record.family}.html#{expected_anchor}"
+        command_tuple = tuple(record.command_path.split(" "))
+        expected_page = cli_reference_page_for_command(command_tuple)
+        expected_target = f"{expected_page}.html#{make_id(record.command_path)}"
         assert record.target == expected_target, (
             f"{record.command_path}: target {record.target!r} != expected {expected_target!r}"
         )

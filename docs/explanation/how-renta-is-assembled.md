@@ -27,6 +27,7 @@ filing year:
 :verify: Confirm the declaration's bindings list with their four source kinds.
 @step List every data source the declaration binds for the filing year.
 @result aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A
+@expect result.binding_count == 64
 @expect exit_code == 0
 ```
 
@@ -56,6 +57,8 @@ you. The full inventory for your year:
 :verify: Confirm the declaration's requirement inventory reads back.
 @step List everything the declaration requires for the filing year.
 @result aeat --format json app modelo requires 100 --year 2025 --period 0A
+@expect result.modelo == "100"
+@expect result.filing_year == 2025
 @expect exit_code == 0
 ```
 
@@ -76,6 +79,7 @@ record. See what the declaration expects and what currently blocks it:
 :verify: Confirm each dependency reports whether its evidence is satisfied.
 @step Show each source filing the declaration folds in and its current blockers.
 @result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
+@expect result.clean_state.requires_clean_state == true
 @expect exit_code == 0
 ```
 
@@ -116,6 +120,8 @@ aeat --format json app modelo work observations --modelo 100 --year 2025 --perio
 aeat --format json app modelo work revision --modelo 100 --year 2025 --period 0A
 @step Look up one box's definition, with its legal references.
 @result aeat --format json app modelo casilla 100 0003 --period 0A
+@expect result.casilla_id == "0003"
+@expect result.legal_refs[0] == "ley-35-2006:art-17"
 @expect exit_code == 0
 ```
 

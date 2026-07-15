@@ -211,34 +211,97 @@
     return total - Math.min(entry.title.length, 40) / 10;
   }
 
-  function initPalette() {
-    var triggers = document.querySelectorAll("[data-cadrumo-search]");
-    if (!triggers.length || typeof HTMLDialogElement === "undefined") return;
-    var searchUrl = triggers[0].getAttribute("data-cadrumo-search-url") || "search.html";
+  /* ── Search controller ─────────────────────────────────────────────────
+   * The full search behaviour (Pagefind loading, the two-pass card/page
+   * search, the ADR-D5 compose ladder, the PERF-003 relevance tie-break,
+   * dedupe, painting, keyboard selection, and the busy-state machine) is
+   * host-agnostic. It is parameterised on a node set — a `root` for the busy
+   * class, an `input`, a result `list`, and a screen-reader `status` node —
+   * plus small behavioural flags, so the exact same core drives two surfaces:
+   * the Ctrl-K modal palette (`initPalette`) and the inline search page
+   * (`initSearchPage`). Nothing here reaches for a dialog-scoped variable;
+   * every host node arrives through `opts` (ADR D5).
+   *
+   * opts:
+   *   root          element the busy `is-busy` class toggles on
+   *   input, list, status  the surface's three inner nodes
+   *   searchUrl     page-relative path used to resolve the pagefind bundle
+   *                 and, when `handoffRow` is on, the full-text escape row
+   *   handoffRow    append the "Search the docs for …" navigation row
+   *                 (modal only; the inline page already shows full text)
+   *   navOnEmpty    an empty query paints the nav index (modal) vs clears
+   *                 to nothing (the inline page is a pure search surface) */
+  function createSearchController(opts) {
+    var root = opts.root;
+    var input = opts.input;
+    var list = opts.list;
+    var status = opts.status;
+    var searchUrl = opts.searchUrl || "search.html";
+    var handoffRow = opts.handoffRow !== false;
+    var navOnEmpty = opts.navOnEmpty === true;
 
-    document.querySelectorAll("[data-cadrumo-search-kbd]").forEach(function (kbd) {
-      kbd.textContent = IS_MAC ? "⌘ K" : "Ctrl K";
-    });
-
-    var dialog = document.createElement("dialog");
-    dialog.className = "cadrumo-palette";
-    dialog.setAttribute("aria-label", "Search documentation");
-    dialog.innerHTML =
-      '<div class="cadrumo-palette-head">' +
-      '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
-      '<input class="cadrumo-palette-input" type="text" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
-      '<kbd class="cadrumo-palette-esc">esc</kbd>' +
-      "</div>" +
-      '<ul class="cadrumo-palette-list" role="listbox"></ul>' +
-      '<div class="cadrumo-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>';
-    document.body.appendChild(dialog);
-
-    var input = dialog.querySelector(".cadrumo-palette-input");
-    var list = dialog.querySelector(".cadrumo-palette-list");
     var entries = null;
     var rows = [];
     var selected = 0;
     var queryToken = 0;
+
+    /* ── Busy state ───────────────────────────────────────────────────────
+     * Pagefind resolves asynchronously (a lazy index import on first open,
+     * then two sequential passes), and render() deliberately keeps the
+     * PREVIOUS results painted until the new query resolves. Without a busy
+     * signal that combination is indistinguishable from a dead palette: the
+     * reader types and nothing changes. The signal is therefore additive -
+     * the stale rows stay, and the head says a newer answer is coming.
+     *
+     * Shown only after BUSY_DELAY_MS still pending: a steady-state Pagefind
+     * hit resolves in a few ms, and flashing a spinner for one frame reads as
+     * jank, not as progress. The first open (which pays the index import) is
+     * the slow case this exists for.
+     *
+     * Ownership follows the queryToken supersede guard: only the resolve of
+     * the LATEST query clears the state. A superseded resolve returns before
+     * clearing, so it cannot switch off a signal that a newer in-flight query
+     * still owns. Every search path settles (searchPagefind swallows failure
+     * and resolves []), so the degraded no-index path clears too and never
+     * spins forever. */
+    var BUSY_DELAY_MS = 120;
+    var busyTimer = null;
+    var isBusy = false;
+
+    function setBusy(on) {
+      if (isBusy === on) return;
+      isBusy = on;
+      root.classList.toggle("is-busy", on);
+      list.setAttribute("aria-busy", on ? "true" : "false");
+      /* A screen reader gets told the search is working rather than sitting in
+       * silence on unchanged (stale) rows; the settled count replaces it. */
+      if (on) status.textContent = "Searching…";
+    }
+
+    function beginBusy() {
+      if (busyTimer) clearTimeout(busyTimer);
+      busyTimer = setTimeout(function () {
+        busyTimer = null;
+        setBusy(true);
+      }, BUSY_DELAY_MS);
+    }
+
+    function endBusy(resultCount) {
+      if (busyTimer) {
+        clearTimeout(busyTimer);
+        busyTimer = null;
+      }
+      setBusy(false);
+      /* No count means there was no search to report (the empty-query reset, or
+       * a reopen): drop any stale announcement rather than leave the live region
+       * asserting a count for results the reader is no longer looking at. */
+      status.textContent =
+        typeof resultCount !== "number"
+          ? ""
+          : resultCount === 1
+            ? "1 result"
+            : String(resultCount) + " results";
+    }
 
     /* ── Pagefind tier (term cards / full text) ───────────────────────── */
     /* Pagefind ships a chunked index under <site>/pagefind/ when the docs
@@ -272,10 +335,53 @@
       return pagefindPromise;
     }
 
-    /* Per-kind ranking tier (ADR D5: term cards first, navigation second,
-     * full text third). Higher sorts first. The injected `weight` meta is the
-     * fine axis within a kind. */
-    var KIND_TIER = { concept: 4, cli: 3, casilla: 2, page: 1 };
+    /* Result iconography + ranking authority (ADR 2026-07-15 D7/D8). The Python
+     * injection seam ships a closed `display_class` on every injected record
+     * (`casilla`/`modelo`/`cli`/`technical`/`doc`) plus a `weight` already
+     * placed on the one user-first ladder (doc 1.0 > modelo 0.9 > casilla 0.8 >
+     * cli 0.7 > technical 0.5). This renderer READS that class verbatim for the
+     * icon and RANKS on that shipped weight; it NEVER re-derives the class from
+     * kind/URL heuristics (the exact duplicated-structural-fact failure that
+     * silently rotted the CLI targets — ADR Axis-6 O6b/O6c).
+     *
+     * Hand-authored inline SVG, one per display class, matching the file's
+     * existing 16×16 stroke/viewBox idiom (magnifier, chevron, copy). No
+     * icon-font, no external asset (`shipped-search-licence-clean`). Full-text
+     * page hits carry a path-derived class too (build-side page-meta stamping,
+     * ADR D8); a record with no shipped class (a nav title, or an older index)
+     * degrades to no icon rather than a guessed one. */
+    var DISPLAY_CLASS_ICONS = {
+      casilla:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<rect x="2.5" y="2.5" width="11" height="11" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<path d="M5.4 8.2l1.9 1.9 3.3-3.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      modelo:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<path d="M4 2.2h5l3 3v8.6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3.2a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>' +
+        '<path d="M9 2.4v3h3M5.6 8.6h4.8M5.6 10.8h4.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+      cli:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<rect x="2.3" y="3" width="11.4" height="10" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<path d="M4.8 6.6l2 1.7-2 1.7M8.6 10.4h3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      technical:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<path d="M6 4.5L2.6 8 6 11.5M10 4.5L13.4 8 10 11.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      doc:
+        '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+        '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<path d="M6.4 6.4a1.7 1.7 0 0 1 3.2.6c0 1.1-1.5 1.4-1.6 2.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<circle cx="8" cy="11.3" r="0.65" fill="currentColor"/></svg>',
+    };
+
+    /* Crumb category label, keyed on the shipped display class where present,
+     * falling back to the record kind for a full-text page hit (no class). */
+    var DISPLAY_CLASS_LABEL = {
+      casilla: "Casilla",
+      modelo: "Modelo",
+      cli: "Command",
+      technical: "Reference",
+      doc: "Docs",
+    };
     var KIND_LABEL = {
       concept: "Term",
       cli: "Command",
@@ -283,19 +389,56 @@
       page: "Page",
     };
 
-    function cardFromPagefind(meta, fallbackTitle, url, excerpt) {
+    /* Intra-band rank for a full-text PAGE hit, keyed on its shipped
+     * `display_class` (ADR D8). A page carries NO `weight` meta (Trap 1: that
+     * would pollute the weight-sorted card pass), so this JS-side map is how a
+     * user-doc page (`doc`) floats above a dev-machinery page (`technical`)
+     * WITHIN the full-text band. Every value sits in (0, 1) — comfortably below
+     * the card band (tierRank 1 + weight, ≥ 1.7) — so cards always lead; the
+     * order mirrors the shipped weight ladder (doc > modelo > casilla > cli >
+     * technical). This CONSUMES the shipped class; it never re-derives it. */
+    var PAGE_BAND_RANK = {
+      doc: 0.4,
+      modelo: 0.35,
+      casilla: 0.3,
+      cli: 0.25,
+      technical: 0.2,
+    };
+
+    function cardFromPagefind(meta, fallbackTitle, url, excerpt, fromCardPass) {
       var kind = (meta && meta.kind) || "page";
+      var displayClass = (meta && meta.display_class) || "";
       var title = (meta && meta.title) || fallbackTitle || url;
-      var crumbParts = [KIND_LABEL[kind] || "Result"];
+      var crumbParts = [DISPLAY_CLASS_LABEL[displayClass] || KIND_LABEL[kind] || "Result"];
       if (meta && meta.modelo && meta.number) {
-        crumbParts.push("Modelo " + meta.modelo + " · " + meta.number);
+        /* Casilla crumb: modelo + official number, plus the segmento the Python
+         * seam now ships so sibling casillas of a segmented modelo (M200
+         * `DP200014:00562`) read apart at a glance (ADR D6). */
+        var casillaCrumb = "Modelo " + meta.modelo + " · " + meta.number;
+        if (meta.segmento) casillaCrumb += " · " + meta.segmento;
+        crumbParts.push(casillaCrumb);
       } else if (meta && meta.command_path) {
         crumbParts.push(meta.command_path);
       } else if (meta && meta.domain) {
         crumbParts.push(meta.domain);
       }
+      /* Rank on the shipped user-first weight (D8): the Python ladder already
+       * encodes doc>modelo>casilla>cli>technical, so consuming `weight` keeps a
+       * single ranking authority instead of the retired local KIND_TIER (which
+       * re-keyed on kind and still ordered cli above casilla). An injected card
+       * carries a weight (0.7–1.0); a full-text page hit carries none, so it
+       * sits below every card — the retained RankingTier coarse axis (term/nav
+       * cards first, full text last) is the +1 card band; PERF-003's relevance
+       * tie-break within a band is preserved in compose(). */
       var weight = meta && meta.weight ? parseFloat(meta.weight) : 0;
       if (isNaN(weight)) weight = 0;
+      /* `isCard` is PASS-ORIGIN, not class-presence (Trap 2): the weight-sorted
+       * card pass yields only injected records, the relevance pass yields
+       * full-text pages. Since pages now ALSO carry a `display_class`, keying
+       * `isCard` on `displayClass !== ""` would wrongly promote every page into
+       * the card band. Threading which pass produced the row keeps cards above
+       * pages while pages still carry a class for their intra-band order + icon. */
+      var isCard = !!fromCardPass;
       /* Injected term/casilla/CLI records carry a clean single-language
        * `summary`; show that, never Pagefind's auto-excerpt of the record,
        * which is the cross-lingual token blob (title + every alias + all four
@@ -308,11 +451,15 @@
         crumb: crumbParts.join(" · "),
         excerpt: summary || excerpt || "",
         kind: kind,
-        tierRank: (KIND_TIER[kind] || 1) * 10 + weight,
+        displayClass: displayClass,
+        /* Card band: 1 + shipped weight (≥ 1.7). Full-text band: the class's
+         * intra-band rank in (0, 1), so a `doc` page outranks a `technical`
+         * page while every page stays below every card. */
+        tierRank: isCard ? 1 + weight : PAGE_BAND_RANK[displayClass] || 0,
       };
     }
 
-    function dataToCards(results, limit) {
+    function dataToCards(results, limit, fromCardPass) {
       return Promise.all(
         results.slice(0, limit).map(function (result) {
           return result.data();
@@ -323,7 +470,8 @@
             data.meta,
             data.meta && data.meta.title,
             data.url,
-            data.excerpt
+            data.excerpt,
+            fromCardPass
           );
         });
       });
@@ -336,10 +484,14 @@
      * ADR-D5 ladder reliably:
      *   1. a search SORTED by `weight` returns ONLY the injected records (the
      *      docs pages carry no `weight` key, so Pagefind drops them) ordered by
-     *      tier weight (concept 1.0 > cli 0.8 > casilla 0.7) - these are the
-     *      term-card tiers, guaranteed above the full text;
+     *      the D8 display-class ladder (doc 1.0 > modelo 0.9 > casilla 0.8 > cli
+     *      0.7) - these are the term/navigation card tiers, guaranteed above the
+     *      full text;
      *   2. a normal relevance search yields the full-text page hits (third
-     *      tier). A page that is also a card is deduped away in compose(). */
+     *      tier). Each page carries a path-derived `display_class` (but NO
+     *      `weight` key, so pass 1 still drops it), which orders pages within
+     *      the full-text band (user docs above dev machinery; ADR D8). A page
+     *      that is also a card is deduped away in compose(). */
     function searchPagefind(query) {
       return loadPagefind()
         .then(function (pf) {
@@ -365,8 +517,8 @@
               pageResults.forEach(function (r, i) {
                 if (relRank[r.url] === undefined) relRank[r.url] = i;
               });
-              return dataToCards(cardResults, 12).then(function (cards) {
-                return dataToCards(pageResults, 6).then(function (pages) {
+              return dataToCards(cardResults, 12, true).then(function (cards) {
+                return dataToCards(pageResults, 6, false).then(function (pages) {
                   var all = cards.concat(pages);
                   all.forEach(function (item) {
                     item.relRank =
@@ -438,12 +590,14 @@
       var seenHref = {};
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
-        /* Primary axis: the tier rank (concept > cli > casilla > page), so cards
-         * always sit above full-text pages. Secondary: an exact/prefix title
-         * match, so the concept the operator literally typed leads its tier (the
-         * IVA concept for "iva", not VIES). Tertiary: the relevance rank, which
-         * orders the remaining within-tier ties and the cross-lingual matches
-         * (e.g. "pro rata" -> prorrata) whose title is in another language. */
+        /* Primary axis: the shipped-weight tier rank (D8 ladder doc > modelo >
+         * casilla > cli, every card above full-text pages), so cards always sit
+         * above full-text pages and casilla now outranks cli. Secondary: an
+         * exact/prefix title match, so the concept the operator literally typed
+         * leads its band (the IVA concept for "iva", not VIES). Tertiary: the
+         * PERF-003 relevance rank, which orders the remaining within-band ties
+         * and cross-lingual matches (e.g. "pro rata" -> prorrata) whose title is
+         * in another language. */
         if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
         var ma = titleMatch(a.title, query);
         var mb = titleMatch(b.title, query);
@@ -460,7 +614,7 @@
         seenHref[entry.href] = true;
         ordered.push(entry);
       });
-      ordered.push(fullSearchEntry(query));
+      if (handoffRow) ordered.push(fullSearchEntry(query));
       return ordered.slice(0, 18);
     }
 
@@ -473,22 +627,38 @@
         item.setAttribute("role", "option");
         var link = document.createElement("a");
         link.href = entry.href;
+        /* Per-class result icon (ADR D7/D8): the shipped `display_class`, read
+         * verbatim, selects one hand-authored inline SVG. Full-text page hits
+         * now also ship a class (build-side page-meta stamping), so they render
+         * an icon too; a row with no shipped class (nav title, handoff) gets no
+         * icon rather than a guessed one — never re-derive the class here. */
+        if (entry.displayClass && DISPLAY_CLASS_ICONS[entry.displayClass]) {
+          var icon = document.createElement("span");
+          icon.className =
+            "cadrumo-palette-item-icon cadrumo-palette-item-icon--" + entry.displayClass;
+          icon.setAttribute("aria-hidden", "true");
+          icon.innerHTML = DISPLAY_CLASS_ICONS[entry.displayClass]; // static SVG markup, no user data
+          link.appendChild(icon);
+        }
+        var body = document.createElement("span");
+        body.className = "cadrumo-palette-item-body";
         var title = document.createElement("span");
         title.className = "cadrumo-palette-item-title";
         title.textContent = entry.title;
-        link.appendChild(title);
+        body.appendChild(title);
         if (entry.crumb) {
           var crumb = document.createElement("span");
           crumb.className = "cadrumo-palette-item-crumb";
           crumb.textContent = entry.crumb;
-          link.appendChild(crumb);
+          body.appendChild(crumb);
         }
         if (entry.excerpt) {
           var ex = document.createElement("span");
           ex.className = "cadrumo-palette-item-excerpt";
           ex.textContent = entry.excerpt;
-          link.appendChild(ex);
+          body.appendChild(ex);
         }
+        link.appendChild(body);
         item.appendChild(link);
         item.addEventListener("mousemove", function () {
           select(index);
@@ -502,21 +672,38 @@
     function render(query) {
       var token = ++queryToken;
       if (!query) {
-        paint(compose("", []));
+        /* An empty query settles synchronously - there is nothing in flight to
+         * report. The modal answers it from the nav index (a launcher shows
+         * suggestions on open); the inline search page is a pure query surface,
+         * so it clears to nothing rather than list every nav title unprompted. */
+        endBusy();
+        if (navOnEmpty) {
+          paint(compose("", []));
+        } else {
+          list.textContent = "";
+          rows = [];
+          selected = 0;
+        }
         return;
       }
       /* Keep the current results painted until the new query resolves, then
        * swap - so a keystroke never blanks the palette to the bare fallback
        * (the old eager repaint did, and on a transiently-empty Pagefind pass it
-       * stuck there). */
+       * stuck there). The busy signal is what tells the reader those rows are
+       * the OLD answer and a newer one is on its way. */
+      beginBusy();
       searchPagefind(query)
         .then(function (cards) {
           if (token !== queryToken) return; /* a newer keystroke superseded this */
-          paint(compose(query, cards));
+          var items = compose(query, cards);
+          endBusy(items.length);
+          paint(items);
         })
         .catch(function () {
           if (token !== queryToken) return;
-          paint(compose(query, []));
+          var items = compose(query, []);
+          endBusy(items.length);
+          paint(items);
         });
     }
 
@@ -530,11 +717,73 @@
       rows[selected].scrollIntoView({ block: "nearest" });
     }
 
+    function select(index) {
+      if (!rows.length) return;
+      selected = Math.max(0, Math.min(index, rows.length - 1));
+      rows.forEach(function (row, i) {
+        row.classList.toggle("is-selected", i === selected);
+        row.setAttribute("aria-selected", i === selected ? "true" : "false");
+      });
+      rows[selected].scrollIntoView({ block: "nearest" });
+    }
+
+    return {
+      render: render,
+      moveSelection: function (delta) {
+        select(selected + delta);
+      },
+      /* The href of the currently-selected row, or null when nothing is
+       * selectable — the host decides whether to preventDefault and navigate. */
+      selectedHref: function () {
+        var row = rows[selected];
+        var link = row && row.querySelector("a");
+        return link ? link.href : null;
+      },
+    };
+  }
+
+  /* ── Command palette (modal host) ──────────────────────────────────────── */
+
+  function initPalette() {
+    var triggers = document.querySelectorAll("[data-cadrumo-search]");
+    if (!triggers.length || typeof HTMLDialogElement === "undefined") return;
+    var searchUrl = triggers[0].getAttribute("data-cadrumo-search-url") || "search.html";
+
+    document.querySelectorAll("[data-cadrumo-search-kbd]").forEach(function (kbd) {
+      kbd.textContent = IS_MAC ? "⌘ K" : "Ctrl K";
+    });
+
+    var dialog = document.createElement("dialog");
+    dialog.className = "cadrumo-palette";
+    dialog.setAttribute("aria-label", "Search documentation");
+    dialog.innerHTML =
+      '<div class="cadrumo-palette-head">' +
+      '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
+      '<input class="cadrumo-palette-input" type="text" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
+      '<span class="cadrumo-palette-spin" aria-hidden="true"></span>' +
+      '<kbd class="cadrumo-palette-esc">esc</kbd>' +
+      "</div>" +
+      '<ul class="cadrumo-palette-list" role="listbox" aria-busy="false"></ul>' +
+      '<p class="cadrumo-palette-status" role="status" aria-live="polite"></p>' +
+      '<div class="cadrumo-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>';
+    document.body.appendChild(dialog);
+
+    var input = dialog.querySelector(".cadrumo-palette-input");
+    var controller = createSearchController({
+      root: dialog,
+      input: input,
+      list: dialog.querySelector(".cadrumo-palette-list"),
+      status: dialog.querySelector(".cadrumo-palette-status"),
+      searchUrl: searchUrl,
+      handoffRow: true,
+      navOnEmpty: true,
+    });
+
     function open() {
       if (dialog.open) return;
       dialog.showModal();
       input.value = "";
-      render("");
+      controller.render("");
       input.focus();
     }
 
@@ -563,23 +812,22 @@
       /* Coalesce fast typing into one search: firing a Pagefind pass per
        * keystroke is what raced them into the supersede-empty state. */
       searchDebounce = setTimeout(function () {
-        render(q);
+        controller.render(q);
       }, 130);
     });
 
     dialog.addEventListener("keydown", function (event) {
       if (event.key === "ArrowDown") {
         event.preventDefault();
-        select(selected + 1);
+        controller.moveSelection(1);
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
-        select(selected - 1);
+        controller.moveSelection(-1);
       } else if (event.key === "Enter") {
-        var row = rows[selected];
-        var link = row && row.querySelector("a");
-        if (link) {
+        var href = controller.selectedHref();
+        if (href) {
           event.preventDefault();
-          window.location.assign(link.href);
+          window.location.assign(href);
         }
       }
     });
@@ -587,6 +835,106 @@
     dialog.addEventListener("click", function (event) {
       if (event.target === dialog) dialog.close();
     });
+  }
+
+  /* ── Search page (inline host) ─────────────────────────────────────────
+   * The shipped search page (docs/_templates/search.html) is a bare
+   * `#pagefind-search` mount; the same controller that drives the Ctrl-K modal
+   * renders inline here so the page inherits the D5 tier ladder, the PERF-003
+   * tie-break, and dedupe instead of a second, divergent implementation (the
+   * retired PagefindUI drop). The page reads `?q=` to seed a shareable search
+   * and rewrites the URL as the query changes. */
+
+  function initSearchPage() {
+    var mount = document.getElementById("pagefind-search");
+    if (!mount) return;
+
+    mount.classList.add("cadrumo-search-page");
+    var head = document.createElement("div");
+    head.className = "cadrumo-search-page-head";
+    head.innerHTML =
+      '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
+      '<input class="cadrumo-palette-input cadrumo-search-page-input" type="search" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
+      '<span class="cadrumo-palette-spin" aria-hidden="true"></span>';
+    var list = document.createElement("ul");
+    list.className = "cadrumo-palette-list cadrumo-search-page-list";
+    list.setAttribute("role", "listbox");
+    list.setAttribute("aria-busy", "false");
+    var status = document.createElement("p");
+    status.className = "cadrumo-palette-status";
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    mount.appendChild(head);
+    mount.appendChild(list);
+    mount.appendChild(status);
+
+    var input = head.querySelector(".cadrumo-search-page-input");
+    var controller = createSearchController({
+      root: mount,
+      input: input,
+      list: list,
+      status: status,
+      /* The page IS search.html, so the pagefind bundle resolves against this
+       * document's own directory; the full-text handoff row is dropped because
+       * the page already renders full-text results inline. */
+      searchUrl: "",
+      handoffRow: false,
+      navOnEmpty: false,
+    });
+
+    function queryFromUrl() {
+      /* URLSearchParams decodes BOTH `+` and %20 to a space; the two encodings
+       * both reach this page (the palette emits %20 via encodeURIComponent, the
+       * casilla records emit `+`). decodeURIComponent would leave `+` literal —
+       * the reported `?q=130+10` failure — so it must not be used here. */
+      return new URLSearchParams(window.location.search).get("q") || "";
+    }
+
+    function syncUrl(query) {
+      var url = new URL(window.location.href);
+      if (query) {
+        url.searchParams.set("q", query);
+      } else {
+        url.searchParams.delete("q");
+      }
+      /* replaceState, not pushState: a shareable URL per settled query without
+       * flooding the back button with one entry per keystroke. */
+      window.history.replaceState(null, "", url.toString());
+    }
+
+    var initial = queryFromUrl();
+    if (initial) {
+      input.value = initial;
+      controller.render(initial);
+    }
+
+    var searchDebounce = null;
+    input.addEventListener("input", function () {
+      var q = input.value.trim();
+      if (searchDebounce) clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(function () {
+        syncUrl(q);
+        controller.render(q);
+      }, 130);
+    });
+
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        controller.moveSelection(1);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        controller.moveSelection(-1);
+      } else if (event.key === "Enter") {
+        var href = controller.selectedHref();
+        if (href) {
+          event.preventDefault();
+          window.location.assign(href);
+        }
+      }
+    });
+
+    input.focus();
   }
 
   /* ── CLI sequence playhead ─────────────────────────────────────────────
@@ -1180,6 +1528,7 @@
     initNavActive();
     initCommandBlocks();
     initPalette();
+    initSearchPage();
     initSequences();
     initHoverHelp();
   });

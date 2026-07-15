@@ -54,6 +54,7 @@ aeat --version
 aeat config check
 @step Run the same check with machine-readable output for scripted setups.
 @result aeat --format json config check
+@expect result.ok == true
 @expect exit_code == 0
 ```
 
@@ -174,6 +175,8 @@ one-click plugin form of the same content:
 :verify: Confirm the operator harness materializes as a native Claude workspace.
 @step Write the operator harness into a workspace directory.
 @result aeat --format json app agent --output ./operator-workspace
+@expect result.layout == "workspace"
+@expect result.skills_written == 34
 @expect exit_code == 0
 ```
 

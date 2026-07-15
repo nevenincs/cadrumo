@@ -514,8 +514,6 @@ def resolve_modelo_calculation_revision_pick(
             calculation_revision_id=calculation_revision_id,
             calculation_repository=calculation_repository,
         )
-    if default_for == "verify" and selector is ModeloCalculationRevisionSelector.CURRENT:
-        return select_current_draft_revision(work_unit, calculation_repository=calculation_repository)
     if default_for == "file" and selector is ModeloCalculationRevisionSelector.CURRENT:
         return select_current_verified_revision(work_unit, calculation_repository=calculation_repository)
     if default_for == "export" and selector is ModeloCalculationRevisionSelector.CURRENT:
@@ -525,25 +523,6 @@ def resolve_modelo_calculation_revision_pick(
         selector=selector,
         calculation_repository=calculation_repository,
     )
-
-
-def select_current_draft_revision(
-    work_unit: WorkUnit,
-    *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-) -> ModeloCalculationRevisionSelection:
-    """Select the current draft revision as a :class:`ModeloCalculationRevisionSelection` for verification."""
-    selection = select_modelo_calculation_revision(
-        work_unit,
-        selector=ModeloCalculationRevisionSelector.CURRENT,
-        calculation_repository=calculation_repository,
-    )
-    if selection.revision.state is not CalculationRevisionState.BORRADOR:
-        raise ModeloCalculationRevisionSelectorStateError(
-            f"current revision {selection.revision.calculation_revision_id!r} is in state "
-            f"{selection.revision.state.value!r}; verification requires a draft revision",
-        )
-    return selection
 
 
 def select_current_verified_revision(
@@ -726,7 +705,6 @@ __all__ = [
     "resolve_modelo_calculation_revision_pick",
     "resolve_modelo_work_bucket",
     "resolve_modelo_work_unit",
-    "select_current_draft_revision",
     "select_current_verified_revision",
     "select_exportable_revision",
     "select_modelo_calculation_revision",
