@@ -43,3 +43,98 @@ predicate_id = "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"
 legal_refs = ["rd-439-2007:art-110"]
+
+# Table-driven-engine-vs-operator-declared discrepancy (M131 estimación-
+# objetiva módulos engine). Casilla 01 ("Suma de rendimientos netos") stays a
+# manual operator input;
+# for a tabled IAE activity (see 0002-modulos-coeficientes.toml for the
+# current phased coverage) the units×coefficient engine now produces a
+# computed reference figure (modulos-rendimiento-neto-actividad, Fase 1ª +
+# Fase 4ª: previo − 5 por ciento reducción general). When the engine has
+# coverage (computed casilla > 0) and the operator's declared casilla 01
+# differs from it by more than one cent, this ADVISORY prompts a review — it
+# does not assume the engine is authoritative over the operator's declared
+# figure (Fases 2ª/3ª correcting factors, which the taxpayer may legitimately
+# claim, are intentionally not modelled yet), so it stays a prompt, never a
+# BLOCKING_RULE.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-modulos-computed-diverges-de-c01"
+expression = 'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-1"]
+
+# Índice-exceso (b.3) / índices-especiales incompatibility ADVISORY (mirrors
+# the M100 EO-agraria índice-incompatibility advisory, and the 2025 M131
+# engine's own pair of the same predicates). Orden HFP/1359/2023 Anexo II,
+# instrucción 2.3 declares (see
+# orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades):
+#
+#   "En ningún caso será aplicable el índice corrector para empresas de
+#   pequeña dimensión (b.1) a las actividades para las que están previstos
+#   los índices correctores especiales enumerados en las letras a.2), a.3),
+#   a.4) y a.5)."
+#   "Cuando resulte aplicable el índice corrector para empresas de pequeña
+#   dimensión (b.1) no se aplicará el índice corrector de exceso (b.3)."
+#
+# The 2024 engine (Fase 3ª, m131_resolve_modulos_indices_generales,
+# 0003-modulos-engine.toml) applies the full b.1 -> b.2 -> b.3 -> b.4 cascade
+# in the Orden's own literal enumeration order and already MODELS both
+# incompatibilities structurally: a declared índice de pequeña dimensión
+# (b.1) is IGNORED (never applied) for the two tabled epígrafes carrying a
+# documented índice especial ("721.2" transporte por autotaxis, letra a.2;
+# "722" transporte de mercancías por carretera / servicios de mudanzas, letra
+# a.4 — see the "modelo-131-2024-modulos-pequena-dimension-ignorado-especial"
+# ADVISORY below), and when a (non-ignored) b.1 índice applies, b.3 is skipped
+# outright for that activity. This pair of predicates is therefore
+# defence-in-depth confirmation, not a gap-filler for an unmodelled
+# incompatibility: they surface a residual divergence between the declared
+# epígrafe (721.2 / 722) and the computed reference figure so an operator can
+# confirm the engine's structural handling matches their own reading of the
+# Orden, even though the engine already applies the correct índice.
+#
+# Fires iff the índice-exceso path activated (módulos differs from minorado
+# by more than a cent — the índice 1,30 only applies when the rendimiento
+# (rectificado by b.1/b.2, if declared) exceeds the tabled cuantía) AND the
+# declared epígrafe is one of the two tabled activities carrying a documented
+# índice especial. "757" (servicios de mudanzas, also letra a.4) is excluded:
+# it has no cuantía row in m131-modulos-cuantia-exceso-2024, so the
+# índice-exceso path can never activate for it (see
+# 0002-modulos-coeficientes.toml) — a ["modulos-epigrafe", "757", ...]
+# predicate would be silently dead, which no-silent-under-declaration itself
+# forbids.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-modulos-indice-exceso-incompatible-autotaxi"
+expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "721.2", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-modulos-indice-exceso-incompatible-mercancias"
+expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "722", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+# Índices correctores generales incompatibility ADVISORY guards
+# (Fase 3ª, m131_resolve_modulos_indices_generales,
+# 0003-modulos-engine.toml). Orden HFP/1359/2023 Anexo II, instrucción 2.3
+# declares two further binding exclusivity rules the cascade formula
+# structurally enforces (never silently applies both sides): the índice de
+# pequeña dimensión (b.1) is IGNORED for the two tabled epígrafes carrying a
+# documented índice especial (721.2, 722), and the índice de temporada (b.2)
+# and el índice de inicio de nuevas actividades (b.4) are mutually exclusive
+# (temporada wins per the Orden's own enumeration order). Both non-blocking
+# ADVISORY findings surface the ignored declaration to the operator — the
+# engine already applies the correct (non-ignored) índice, so these are
+# review prompts confirming the operator's declaration was not silently
+# dropped, per no-silent-under-declaration.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-modulos-pequena-dimension-ignorado-especial"
+expression = 'advisory_when_positive(["modulos-pequena-dimension-ignorado-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-modulos-temporada-inicio-actividad-incompatibles"
+expression = 'advisory_when_positive(["modulos-temporada-inicio-actividad-conflicto-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
