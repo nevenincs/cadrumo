@@ -94,7 +94,7 @@ class LogExtra(RootModel[dict[str, LogExtraValue]]):
 
     Use :meth:`for_logging` to materialise the plain ``dict`` the stdlib
     ``logging`` module's ``extra=`` parameter expects; the model itself is not
-    iterable the way :func:`logging.Logger.makeRecord` requires.
+    iterable the way :meth:`logging.Logger.makeRecord` requires.
     """
 
     model_config = ConfigDict(frozen=True)
