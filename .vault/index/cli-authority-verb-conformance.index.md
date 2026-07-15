@@ -30,6 +30,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S22]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S23]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S24]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S25]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -77,6 +78,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S22` - Run an uncached fresh-process import graph and require all five contracts with no unmatched ignore
 - `2026-07-15-cli-authority-verb-conformance-W01-P03-S23` - Block every later Wave unless all architecture prerequisite Steps are green
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S24` - Add byte-exact pointer capture, atomic restore, idempotent clear with restrictive temporary permissions and fsync, complete short writes in the hardened byte writer, prove complete writes against a real operating-system descriptor, delegate master-key secure writes to the canonical hardened writer, remove the duplicated sensitive-persistence exemption, and expose the core pointer API
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S25` - Prove exact pointer bytes and atomic write and clear behavior through real child-process interruption
 
 ### plan
 
