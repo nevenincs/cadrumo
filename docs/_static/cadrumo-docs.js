@@ -346,9 +346,10 @@
      *
      * Hand-authored inline SVG, one per display class, matching the file's
      * existing 16×16 stroke/viewBox idiom (magnifier, chevron, copy). No
-     * icon-font, no external asset (`shipped-search-licence-clean`). A record
-     * with no shipped class (a full-text page hit, or an older index) degrades
-     * to no icon rather than a guessed one. */
+     * icon-font, no external asset (`shipped-search-licence-clean`). Full-text
+     * page hits carry a path-derived class too (build-side page-meta stamping,
+     * ADR D8); a record with no shipped class (a nav title, or an older index)
+     * degrades to no icon rather than a guessed one. */
     var DISPLAY_CLASS_ICONS = {
       casilla:
         '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
@@ -388,7 +389,23 @@
       page: "Page",
     };
 
-    function cardFromPagefind(meta, fallbackTitle, url, excerpt) {
+    /* Intra-band rank for a full-text PAGE hit, keyed on its shipped
+     * `display_class` (ADR D8). A page carries NO `weight` meta (Trap 1: that
+     * would pollute the weight-sorted card pass), so this JS-side map is how a
+     * user-doc page (`doc`) floats above a dev-machinery page (`technical`)
+     * WITHIN the full-text band. Every value sits in (0, 1) — comfortably below
+     * the card band (tierRank 1 + weight, ≥ 1.7) — so cards always lead; the
+     * order mirrors the shipped weight ladder (doc > modelo > casilla > cli >
+     * technical). This CONSUMES the shipped class; it never re-derives it. */
+    var PAGE_BAND_RANK = {
+      doc: 0.4,
+      modelo: 0.35,
+      casilla: 0.3,
+      cli: 0.25,
+      technical: 0.2,
+    };
+
+    function cardFromPagefind(meta, fallbackTitle, url, excerpt, fromCardPass) {
       var kind = (meta && meta.kind) || "page";
       var displayClass = (meta && meta.display_class) || "";
       var title = (meta && meta.title) || fallbackTitle || url;
@@ -415,7 +432,13 @@
        * tie-break within a band is preserved in compose(). */
       var weight = meta && meta.weight ? parseFloat(meta.weight) : 0;
       if (isNaN(weight)) weight = 0;
-      var isCard = displayClass !== "";
+      /* `isCard` is PASS-ORIGIN, not class-presence (Trap 2): the weight-sorted
+       * card pass yields only injected records, the relevance pass yields
+       * full-text pages. Since pages now ALSO carry a `display_class`, keying
+       * `isCard` on `displayClass !== ""` would wrongly promote every page into
+       * the card band. Threading which pass produced the row keeps cards above
+       * pages while pages still carry a class for their intra-band order + icon. */
+      var isCard = !!fromCardPass;
       /* Injected term/casilla/CLI records carry a clean single-language
        * `summary`; show that, never Pagefind's auto-excerpt of the record,
        * which is the cross-lingual token blob (title + every alias + all four
@@ -429,11 +452,14 @@
         excerpt: summary || excerpt || "",
         kind: kind,
         displayClass: displayClass,
-        tierRank: (isCard ? 1 : 0) + weight,
+        /* Card band: 1 + shipped weight (≥ 1.7). Full-text band: the class's
+         * intra-band rank in (0, 1), so a `doc` page outranks a `technical`
+         * page while every page stays below every card. */
+        tierRank: isCard ? 1 + weight : PAGE_BAND_RANK[displayClass] || 0,
       };
     }
 
-    function dataToCards(results, limit) {
+    function dataToCards(results, limit, fromCardPass) {
       return Promise.all(
         results.slice(0, limit).map(function (result) {
           return result.data();
@@ -444,7 +470,8 @@
             data.meta,
             data.meta && data.meta.title,
             data.url,
-            data.excerpt
+            data.excerpt,
+            fromCardPass
           );
         });
       });
@@ -461,7 +488,10 @@
      *      0.7) - these are the term/navigation card tiers, guaranteed above the
      *      full text;
      *   2. a normal relevance search yields the full-text page hits (third
-     *      tier). A page that is also a card is deduped away in compose(). */
+     *      tier). Each page carries a path-derived `display_class` (but NO
+     *      `weight` key, so pass 1 still drops it), which orders pages within
+     *      the full-text band (user docs above dev machinery; ADR D8). A page
+     *      that is also a card is deduped away in compose(). */
     function searchPagefind(query) {
       return loadPagefind()
         .then(function (pf) {
@@ -487,8 +517,8 @@
               pageResults.forEach(function (r, i) {
                 if (relRank[r.url] === undefined) relRank[r.url] = i;
               });
-              return dataToCards(cardResults, 12).then(function (cards) {
-                return dataToCards(pageResults, 6).then(function (pages) {
+              return dataToCards(cardResults, 12, true).then(function (cards) {
+                return dataToCards(pageResults, 6, false).then(function (pages) {
                   var all = cards.concat(pages);
                   all.forEach(function (item) {
                     item.relRank =
@@ -597,10 +627,11 @@
         item.setAttribute("role", "option");
         var link = document.createElement("a");
         link.href = entry.href;
-        /* Per-class result icon (ADR D7): the shipped `display_class`, read
-         * verbatim, selects one hand-authored inline SVG. A row with no shipped
-         * class (nav title, full-text page, handoff) gets no icon rather than a
-         * guessed one — never re-derive the class here. */
+        /* Per-class result icon (ADR D7/D8): the shipped `display_class`, read
+         * verbatim, selects one hand-authored inline SVG. Full-text page hits
+         * now also ship a class (build-side page-meta stamping), so they render
+         * an icon too; a row with no shipped class (nav title, handoff) gets no
+         * icon rather than a guessed one — never re-derive the class here. */
         if (entry.displayClass && DISPLAY_CLASS_ICONS[entry.displayClass]) {
           var icon = document.createElement("span");
           icon.className =
