@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calculation-truth-registry'
 date: '2026-07-14'
-modified: '2026-07-14'
+modified: '2026-07-15'
 tier: L2
 related:
   - '[[2026-07-12-calculation-truth-registry-plan]]'
@@ -116,7 +116,7 @@ Close the confirmed gap where the Modelo 131 2024 revision lacks the modulos-eng
 Complete the Modelo 100 (Renta) capital gains/losses, base reductions, minimums and brackets, CCAA deductions, and final-settlement calculation chain that the legacy plan's own annotations show substantially unbuilt.
 
 - [ ] `P02.S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
-- [ ] `P02.S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P02.S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P02.S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ## Description
