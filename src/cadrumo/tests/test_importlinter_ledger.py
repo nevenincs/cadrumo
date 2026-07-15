@@ -31,7 +31,7 @@ _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>cadrumo\.[\w.*]+)\s*->\s*(?P<target>cadrumo\.[\w.*]+)\s*$")
 
 _APPLICATION_TO_ADAPTERS_BASELINE = 199  # reconciled live ceiling; this ratchet may decrease but not grow
-_APPLICATION_SOURCE_MODULE_BASELINE = 78  # prorrata register application adapter pin
+_APPLICATION_SOURCE_WILDCARD_BASELINE = 78  # reconciled live ceiling for application edges targeting cadrumo.adapters.**; may only decrease
 _DOMAIN_TO_ADAPTERS_BASELINE = 70  # filing-amendment repository domain roundtrip test increment (+1)
 
 
@@ -110,11 +110,11 @@ def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[Ig
         for edge in application_adapter_edges
         if edge.source == "cadrumo.application.**" and edge.target == "cadrumo.adapters.**"
     )
-    source_module_edges = tuple(edge for edge in application_adapter_edges if edge.target == "cadrumo.adapters.**")
+    source_wildcard_edges = tuple(edge for edge in application_adapter_edges if edge.target == "cadrumo.adapters.**")
 
     assert not blanket_edges
     assert len(application_adapter_edges) <= _APPLICATION_TO_ADAPTERS_BASELINE
-    assert len(source_module_edges) <= _APPLICATION_SOURCE_MODULE_BASELINE
+    assert len(source_wildcard_edges) <= _APPLICATION_SOURCE_WILDCARD_BASELINE
 
 
 def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
