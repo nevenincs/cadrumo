@@ -16,9 +16,10 @@
   the `q` parameter (the palette's full-text row emits %20-encoded spaces, the
   casilla records emit +-encoded ones). URLSearchParams decodes both forms;
   decodeURIComponent does NOT decode `+` and must not be used here. The query
-  seeds the UI so results render on load with the input left populated for
-  refinement, and the URL tracks the input thereafter so a search is
-  shareable. Gate: dev/docs/tests/test_search_page_query_param.py.
+  seeds the search so results render on load with the input left populated for
+  refinement. The contract is surface-independent: it survives whatever renders
+  the results (the current PagefindUI drop, or a future palette-hosted surface
+  per ADR D5). Gate: dev/docs/tests/test_search_page_query_param.py.
 #}
 {% block content %}
 <article role="main" id="furo-main-content">
@@ -48,30 +49,14 @@
         showSubResults: true,
       });
 
-      /* URLSearchParams decodes both `+` and %20 to a space; the two encodings
-       * both reach this page. triggerSearch fills the input and runs the
-       * search; it no-ops on an empty term, so a bare search.html is the plain
-       * "open search page" path. */
+      /* Seed the query from ?q= so a full-text handoff renders results on
+       * load with the input populated for refinement. URLSearchParams decodes
+       * both `+` and %20 to a space; the two encodings both reach this page
+       * (the palette emits %20, the casilla records emit +). triggerSearch
+       * fills the input and runs the search, and no-ops on an empty term, so a
+       * bare search.html stays the plain "open search page" path. */
       var initial = new URLSearchParams(window.location.search).get('q');
       if (initial) { ui.triggerSearch(initial); }
-
-      /* Keep the URL in step with the input so a search is shareable and
-       * bookmarkable. replaceState, not pushState: one history entry per
-       * keystroke would make the back button useless. Debounced because
-       * browsers rate-limit history writes. The listener is delegated to the
-       * container: Pagefind renders the input asynchronously. */
-      var pending = null;
-      document.getElementById('pagefind-search').addEventListener('input', function (event) {
-        if (!event.target.classList.contains('pagefind-ui__search-input')) { return; }
-        var term = event.target.value;
-        window.clearTimeout(pending);
-        pending = window.setTimeout(function () {
-          var url = new URL(window.location.href);
-          if (term) { url.searchParams.set('q', term); }
-          else { url.searchParams.delete('q'); }
-          window.history.replaceState(null, '', url);
-        }, 300);
-      });
     });
   </script>
 </article>
