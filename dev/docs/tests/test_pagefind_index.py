@@ -137,12 +137,24 @@ def test_pagefind_yml_scopes_to_article_body() -> None:
 
 @pytest.mark.unit
 @pytest.mark.hex_core
-def test_search_template_references_pagefind_bundle() -> None:
-    """The Furo search override loads the Pagefind UI from the index output."""
+def test_search_template_hosts_the_shared_controller() -> None:
+    """The search page is a bare mount for the shared controller (ADR D5).
+
+    The stock ``PagefindUI`` drop was retired: the page no longer loads a
+    per-page UI bundle. It exposes the ``#pagefind-search`` mount that the
+    globally-loaded ``cadrumo-docs.js`` (``initSearchPage``, wired through
+    ``html_js_files`` in ``conf.py``) renders the same search controller as the
+    Ctrl-K palette into -- one implementation, two hosts. Asserting the retired
+    bundle is absent keeps the divergent second surface from creeping back in.
+    """
     template = (_DOCS / "_templates" / "search.html").read_text(encoding="utf-8")
-    assert "pagefind/pagefind-ui.js" in template
-    assert "pagefind/pagefind-ui.css" in template
-    assert "PagefindUI" in template
+    assert 'id="pagefind-search"' in template
+    # The retired PagefindUI bundle path is gone, and the page loads no per-page
+    # script/link at all -- the controller arrives via the global cadrumo-docs.js
+    # (asserting the raw wiring, not the comment prose that names the retirement).
+    assert "pagefind-ui" not in template
+    assert "<script" not in template
+    assert "<link" not in template
 
 
 @pytest.mark.unit
