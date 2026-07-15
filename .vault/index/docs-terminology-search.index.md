@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-terminology-search'
-date: '2026-07-13'
-modified: '2026-07-13'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-10-docs-terminology-search-W01-P01-S01]]'
   - '[[2026-06-10-docs-terminology-search-W01-P01-S02]]'
@@ -61,10 +61,14 @@ related:
   - '[[2026-07-13-docs-terminology-search-W03-P03-S08]]'
   - '[[2026-07-13-docs-terminology-search-W03-P03-S09]]'
   - '[[2026-07-13-docs-terminology-search-W04-P04-S10]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P05-S11]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P05-S12]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P05-S13]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
   - '[[2026-07-13-docs-terminology-search-audit]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
+  - '[[2026-07-15-docs-terminology-search-adr]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -78,6 +82,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-10-docs-terminology-search-adr` - `docs-terminology-search` adr: `terminology handbook and precompiled docs search` | (**status:** `accepted`)
 - `2026-06-15-docs-terminology-search-adr` - `docs-terminology-search` adr: `glossary enrolment policy and committed-artifact boundary` | (**status:** `accepted`)
 - `2026-07-13-docs-terminology-search-adr` - `docs-terminology-search` adr: `next wave: upstream hook wiring, corpus coverage, and the rung-2 gate` | (**status:** `accepted`)
+- `2026-07-15-docs-terminology-search-adr` - `docs-terminology-search` adr: `precompiled search-result contract: destinations and representation` | (**status:** `accepted`)
 
 ### audit
 
@@ -135,6 +140,9 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-07-13-docs-terminology-search-W03-P03-S08` - Author the widened query vocabulary from the coverage report through the Handbook enrolment surfaces, keeping the synonym ratification ratchet
 - `2026-07-13-docs-terminology-search-W03-P03-S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff
 - `2026-07-13-docs-terminology-search-W04-P04-S10` - Re-run the held-out miss-rate over the widened mapping, commit the measurement, and apply the ADR D3 gate: implement rung 2 only above the ten-percent top-five miss line, else record the standing baseline
+- `2026-07-13-docs-terminology-search-W05-P05-S11` - Declare the closed ResultDisplayClass StrEnum and the single derivation function (record kind + concept domain + page path prefix to class) beside the unified record, with a unit gate proving every projected record maps to exactly one class
+- `2026-07-13-docs-terminology-search-W05-P05-S12` - Ship display_class in the injected Pagefind meta and replace the per-kind base-weight table with the one declared per-class user-first table (facts, modelo, casilla, cli, user docs, technical last), updating kind_base_weight consumers and tests
+- `2026-07-13-docs-terminology-search-W05-P05-S13` - Gate the weight table: its ordering matches the ADR D8 ladder verbatim and every display class carries exactly one weight, failing on any unmapped class
 
 ### plan
 
