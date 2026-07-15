@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#audits-resolution'
-date: '2026-06-15'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-13-audits-resolution-adr]]'
   - '[[2026-05-13-audits-resolution-groupa-step1-exec]]'
@@ -48,7 +48,7 @@ Auto-generated index of all documents tagged with `#audits-resolution`.
 
 ### adr
 
-- `2026-05-13-audits-resolution-adr` - `audits-resolution` adr
+- `2026-05-13-audits-resolution-adr` - `audits-resolution` adr | (**status:** `accepted`)
 
 ### exec
 

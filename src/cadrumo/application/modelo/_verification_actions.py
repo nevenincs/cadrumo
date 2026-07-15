@@ -510,6 +510,58 @@ def _existing_granting_verification_report(
     return None
 
 
+def _build_verification_report(
+    *,
+    calculation_revision_id: str,
+    findings: Iterable[ModeloVerificationFinding],
+    resolved_casilla_ids: Iterable[CasillaId],
+    missing_required_casilla_ids: Iterable[CasillaId],
+    completeness: VerificationCompletenessStatus,
+    granted: bool,
+    actor: str,
+    run_at: datetime,
+) -> VerificationReport:
+    """Build the immutable, content-addressed verification report."""
+    frozen_findings = tuple(findings)
+    verified_by = actor.strip()
+    return VerificationReport(
+        verification_report_id=derive_verification_report_id(
+            calculation_revision_id=calculation_revision_id,
+            completeness_status=completeness,
+            findings=frozen_findings,
+            verified_by=verified_by,
+        ),
+        calculation_revision_id=calculation_revision_id,
+        completeness_status=completeness,
+        findings=frozen_findings,
+        resolved_casilla_ids=tuple(resolved_casilla_ids),
+        missing_required_casilla_ids=tuple(missing_required_casilla_ids),
+        run_at=run_at,
+        verified_by=verified_by,
+        granted_verificado_completo=granted,
+    )
+
+
+def _append_model_specific_findings(
+    findings: list[ModeloVerificationFinding],
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+) -> None:
+    """Append cross-model and detail-row verification findings in one place."""
+    findings.extend(
+        m303_m349_intracom_reconcile_findings(
+            work_unit=work_unit,
+            target=target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        ),
+    )
+    findings.extend(m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target))
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -604,7 +656,6 @@ def verify_modelo_revision(
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     _secure_objects = bv_repo.secure_object_repository if isinstance(bv_repo, BucketEventHistoryRepository) else None
     run_repo = WorkflowRunRepository(objects=_secure_objects)
-
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
@@ -662,19 +713,12 @@ def verify_modelo_revision(
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
-    findings.extend(
-        m303_m349_intracom_reconcile_findings(
-            work_unit=work_unit,
-            target=target,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-        ),
-    )
-    findings.extend(
-        m210_agrupacion_renta_verification_findings(
-            work_unit=work_unit,
-            revision=target,
-        ),
+    _append_model_specific_findings(
+        findings,
+        work_unit=work_unit,
+        target=target,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
@@ -682,22 +726,15 @@ def verify_modelo_revision(
     )
 
     now = clock or _utc_now()
-    report_id = derive_verification_report_id(
+    report = _build_verification_report(
         calculation_revision_id=calculation_revision_id,
-        completeness_status=completeness,
-        findings=tuple(findings),
-        verified_by=actor.strip(),
-    )
-    report = VerificationReport(
-        verification_report_id=report_id,
-        calculation_revision_id=calculation_revision_id,
-        completeness_status=completeness,
-        findings=tuple(findings),
-        resolved_casilla_ids=tuple(resolved_casilla_ids),
-        missing_required_casilla_ids=tuple(missing_required_casilla_ids),
+        findings=findings,
+        resolved_casilla_ids=resolved_casilla_ids,
+        missing_required_casilla_ids=missing_required_casilla_ids,
+        completeness=completeness,
+        granted=granted,
+        actor=actor,
         run_at=now,
-        verified_by=actor.strip(),
-        granted_verificado_completo=granted,
     )
 
     if granted:
@@ -745,7 +782,7 @@ def verify_modelo_revision(
         repository=bv_repo,
         work_unit=work_unit,
         target=target,
-        report_id=report_id,
+        report_id=report.verification_report_id,
         calculation_revision_id=calculation_revision_id,
         completeness=completeness,
         granted=granted,

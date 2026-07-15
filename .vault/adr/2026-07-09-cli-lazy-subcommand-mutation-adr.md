@@ -4,7 +4,8 @@ tags:
   - '#cli-lazy-subcommand-mutation'
 date: '2026-07-09'
 modified: '2026-07-10'
-related: []
+related:
+  - '[[2026-07-10-cli-lazy-subcommand-mutation-research]]'
 ---
 
 # `cli-lazy-subcommand-mutation` adr: `Lazy sub-command loader must not mutate the shared Typer object` | (**status:** `proposed`)

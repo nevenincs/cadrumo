@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#filing-draft-engine'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-filing-draft-engine-adr]]'
   - '[[2026-04-12-filing-draft-engine-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#filing-draft-engine`.
 
 ### adr
 
-- `2026-04-12-filing-draft-engine-adr` - ADR — Filing draft generation engine (#39)
+- `2026-04-12-filing-draft-engine-adr` - ADR — Filing draft generation engine (#39) | (**status:** `accepted`)
 
 ### exec
 

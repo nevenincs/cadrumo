@@ -3,14 +3,11 @@ tags:
   - '#research'
   - '#live-cert-auth'
 date: '2026-04-27'
-modified: '2026-07-03'
+modified: '2026-07-15'
 related:
-  - "[[2026-04-12-cert-auth-research]]"
-  - "[[2026-04-18-auth-protocol-research]]"
-  - "[[2026-04-18-cert-provider-migration-research]]"
-  - "[[2026-04-18-auth-provider-pending-items-audit]]"
-  - "[[2026-04-18-cert-provider-migration-review-audit]]"
-  - "[[2026-04-21-live-cert-auth-supersession-adr]]"
+  - '[[2026-04-12-cert-auth-research]]'
+  - '[[2026-04-18-auth-protocol-research]]'
+  - '[[2026-04-21-live-cert-auth-supersession-adr]]'
 ---
 
 # `live-cert-auth` research: supersession of issue-141 pr-148 by merged auth protocol work
@@ -37,21 +34,30 @@ The following documents form the evidence base consolidated here:
   context tag. This research made clear that the pre-protocol approach in PR #148 was
   targeting a facade that no longer existed on `main`.
 
-- `2026-04-18-cert-provider-migration-research` — surveyed PR #297's migration of
-  certificate auth into `CertificateAuthProvider` with full `authenticate / resume /
-  verify` implementations, a real async handshake worker, and Playwright
-  `build_client_certificates_kwarg` wiring. Confirmed that every substantive artifact
-  from PR #148's diff was already delivered on `main` by this migration.
+- `2026-04-18-cert-provider-migration-research` — documented a proposed
+  `CertificateAuthProvider` extraction target, not a completed migration. The
+  standalone class was a rejected proposal and never decoupled certificate
+  authentication from `AeatAuthenticator`.
 
-- `2026-04-18-auth-provider-pending-items-audit` — enumerated open items after the
-  cert-provider migration, including the thread-safety concern (`setattr` on Playwright
-  `BrowserContext`) flagged in PR #148's review and confirmed still present on `main`
-  via the `AEAT_CERTIFICATE_THUMBPRINT_MARKER` pattern.
+- `2026-04-18-cert-provider-migration-review-audit` — findings `AUTH-001` and
+  `AUTH-002` established that `CertificateAuthProvider.authenticate()` and
+  `CertificateAuthProvider.verify()` remained a hollow shell of
+  `NotImplementedError` methods. The class was removed. The current certificate
+  `AuthProvider` implementation is `AeatAuthenticator`, exposing the canonical
+  `authenticate()`, `verify()`, and `describe()` operations. `AuthProvider` has
+  no `resume()` operation; `verify_handshake()` is a separate lower-level mTLS
+  probe, not a provider verification alias.
 
-- `2026-04-18-cert-provider-migration-review-audit` — code-review audit of PR #297,
-  confirming the `os.environ`-mutation smell in PR #148's `load_certificate_from_settings`
-  helper was absent from the merged implementation, validating the decision not to port
-  that helper.
+- `2026-04-18-auth-provider-pending-items-audit` — records deferred follow-up
+  work after the protocol change. It is not evidence that the certificate
+  marker concern remained in the delivered implementation.
+
+- `2026-04-21-live-cert-auth-supersession-adr` and the current source establish
+  the execution comparison: the environment-mutating helper proposed by PR
+  #148 was not retained, while PRs #295 and #297 delivered the protocol,
+  Playwright certificate wiring, authentication flow, and gated live-test
+  surface through `AeatAuthenticator`. PR #148 was therefore closed without
+  porting the rejected standalone provider extraction.
 
 ## Consolidated finding
 

@@ -13,12 +13,11 @@ related:
 
 ## Problem Statement
 
-The product has zero user-facing distribution. Nothing is published to any
-package index (the `aeat` PyPI name is unclaimed), the only install path is a
-developer checkout with `uv sync`, and the shipped `.mcpb` Desktop Extension is
-a manifest-only zip whose `server.type = "binary"` entry assumes `aeat-mcp` is
-already on the user's PATH — installed on a clean machine it is a dead
-extension. The harness-userdocs kickoff exposed this as the blocker for any
+Cadrumo has zero user-facing distribution. Nothing is published to a package
+index, the only install path is a developer checkout with `uv sync`, and the
+shipped `.mcpb` Desktop Extension is a manifest-only zip whose
+`server.type = "binary"` entry assumes `cadrumo-mcp` is already on the user's
+PATH — installed on a clean machine it is a dead extension. The harness-userdocs kickoff exposed this as the blocker for any
 truly user-facing documentation: there is no honest "install it" sentence to
 write. Operator directive (2026-07-03): make the Claude ecosystem the first
 packaged destination and deliver the Cowork/Desktop plugin after rigorous
@@ -61,16 +60,17 @@ installable consumer artifact is, and which prior decisions it supersedes.
   `"see repository"` field is a cosmetic alignment.
 - **Dependency hygiene.** `vaultspec-rag[mcp]` rides the base dependency set
   today; it is developer tooling and must be demoted before first release.
-  The `agent` extra (`mcp>=1.12,<2`) gates the `aeat-mcp` runtime.
-- **Installed-run user-data defect (blocking).** `Settings.aeat_local_storage_root`
+  The `agent` extra (`mcp>=1.12,<2`) gates the `cadrumo-mcp` runtime.
+- **Installed-run user-data defect (blocking).** `Settings.cadrumo_local_storage_root`
   defaults to `PROJECT_ROOT / "var" / "storage"` where `PROJECT_ROOT` walks up
   from the installed module — inside the virtualenv, and under `uvx` inside
   uv's ephemeral cache, where the taxpayer's encrypted store could be wiped by
   a cache prune. The installed default must become a platform user-data
   directory; the checkout default stays for the dev loop.
 - **Bootstrap reality.** Claude Desktop/Cowork ship Node.js, not Python or
-  `uv`. Candidate bootstraps: `uvx aeat@X.Y.Z` (one-time cached download,
-  range-request metadata; requires `uv` on the machine), a bundled-deps
+  `uv`. Candidate bootstraps: `uvx --from cadrumo[agent]==X.Y.Z cadrumo-mcp`
+  (one-time cached download, range-request metadata; requires `uv` on the
+  machine), a bundled-deps
   `.mcpb` (`server.type = "python"`; official Python path, compiled-extension
   portability cautioned), or a platform executable (heaviest engineering).
 
@@ -87,19 +87,19 @@ Four decision axes, each with its alternatives.
   dependency.* Keeps the integrity gate untouched (binaries always present)
   but chains every install — and therefore the plugin delivery — to the
   companion's SLA-less size grant. Rejected.
-- *D1c (chosen): slim `aeat` wheel (~36 MB, every runtime surface: extracted
-  text, normative html, registry, terminology, agent data) + `aeat-data`
-  companion wheel carrying the corpus source binaries (~139-165 MB,
-  routine-grant territory), consumed as an OPTIONAL extra
-  (`aeat[corpus-sources]`), with principled integrity-gate tolerance.* Code
-  inspection (research F10) proved the binaries are production-runtime
+- *D1c (chosen): slim `cadrumo` wheel (~36 MB, every runtime surface:
+  extracted text, normative html, registry, terminology, agent data) plus the
+  `cadrumo-data-manuals` and `cadrumo-data-official` companion wheels carrying
+  the corpus source binaries, consumed through the OPTIONAL
+  `cadrumo[corpus-sources]` extra, with principled integrity-gate tolerance.*
+  Code inspection (research F10) proved the binaries are production-runtime
   inputs today — the always-on registry gate SHA-256-hashes all 56 cited
   binaries at first load and hard-fails on absence — so this option REQUIRES
   the gate change: every PRESENT binary stays byte-exact hash-enforced
   (semantics unchanged); a binary declared as companion-shipped but absent
   yields a loud advisory naming the missing set and the install hint, never
   silence; the four `aeat app registry` verification verbs refuse
-  instructively without the companion; with the companion installed,
+  instructively without the companions; with both companions installed,
   behaviour is byte-identical to today. Dev/CI keeps the full tree and the
   full byte-exact proof.
 - In every variant the surfaces the grounding search and legal gates read
@@ -107,10 +107,11 @@ Four decision axes, each with its alternatives.
   introduces install-time fetching.
 
 **D2 — Runtime bootstrap for machines without Python.**
-- *D2a: `uvx aeat@X.Y.Z` declared in the plugin's MCP server config.* Cleanest
-  update story (pin per plugin release), one-time cached download, no
-  per-platform builds; requires `uv` on the machine — the plugin/docs carry a
-  one-line `uv` install step. Preferred with the ~36 MB wheel.
+- *D2a: `uvx --from cadrumo[agent]==X.Y.Z cadrumo-mcp` declared in the
+  plugin's MCP server config.* Cleanest update story (pin per plugin release),
+  one-time cached download, no per-platform builds; requires `uv` on the
+  machine — the plugin/docs carry a one-line `uv` install step. Preferred with
+  the ~36 MB wheel.
 - *D2b: `.mcpb` with `server.type = "python"` and bundled `lib/` deps.*
   Officially the primary Python path but compiled-extension portability is
   cautioned, per-platform bundles multiply artifacts, and Cowork's `.mcpb`
@@ -128,7 +129,7 @@ Four decision axes, each with its alternatives.
 - *D3b: keep `.mcpb` primary (status quo R8).* The bundle is currently a
   dead pointer, Cowork support unconfirmed, and it reaches only classic
   Desktop; rejected as primary.
-- Any-MCP-client power users remain served by the same published `aeat-mcp`
+- Any-MCP-client power users remain served by the same published `cadrumo-mcp`
   server regardless of vehicle (R8's intent, preserved).
 
 **D4 — Publication flow.**
@@ -177,22 +178,24 @@ Four decision axes, each with its alternatives.
 High-level layering (the plan owns steps and sequencing):
 
 - **Product-run foundations.** Move the installed-run storage default off
-  `PROJECT_ROOT`: `Settings.aeat_local_storage_root` (and the derived
+  `PROJECT_ROOT`: `Settings.cadrumo_local_storage_root` (and the derived
   tokens/logs roots) defaults to a platform user-data directory when running
   from an installed distribution, keeping the checkout default for the dev
   loop. Demote `vaultspec-rag[mcp]` out of the base dependency set. Align the
   stale mcpb-manifest license field.
-- **Wheel split.** Two distributions built from the ONE source tree (no
+- **Wheel split.** Three distributions built from the ONE source tree (no
   source moves, the 550 MB `_data` budget gate keeps guarding the tree):
-  `aeat` excludes `_data/corpus/**/*.{pdf,xls,xlsx}`; `aeat-data` packages
-  exactly those under an `aeat_data` package with mirrored relative paths.
-  A resolution seam in the corpus locator tries the `aeat` tree first, then
-  `aeat_data`, so authoring/dev (full checkout) and installed (split) reads
+  `cadrumo` excludes `_data/corpus/**/*.{pdf,xls,xlsx}`;
+  `cadrumo-data-manuals` packages `corpus/manuals`; and
+  `cadrumo-data-official` packages `corpus/aeat_official` plus
+  `corpus/normatives`, both under the mirrored `cadrumo_data` namespace. A
+  resolution seam in the corpus locator tries the `cadrumo` tree first, then
+  `cadrumo_data`, so authoring/dev (full checkout) and installed (split) reads
   are uniform.
 - **Integrity-gate tolerance.** `verify_source_file`/`verify_source_catalogue`
   gain the companion-aware absent branch: present → byte-exact hash (today's
   semantics); absent-but-companion-declared → accumulate into one loud
-  advisory with the `aeat[corpus-sources]` install hint; the registry
+  advisory with the `cadrumo[corpus-sources]` install hint; the registry
   verification verbs refuse instructively when the companion is required and
   absent. Anti-tautology tests prove a corrupted PRESENT binary still
   hard-fails.
@@ -202,8 +205,8 @@ High-level layering (the plan owns steps and sequencing):
   object), `skills/` and `agents/` from the same authored source (agent
   frontmatter mapped to Claude fields — `tools`/`disallowedTools`, never the
   non-Claude `mode:`), `.mcp.json` declaring the stdio server as
-  `uvx aeat@<pinned>`-launched `aeat-mcp` with
-  `"env": {"AEAT_MCP_PERSONA": "${user_config.persona}"}`, and a `userConfig`
+  `uvx --from cadrumo[agent]==<pinned> cadrumo-mcp` with
+  `"env": {"CADRUMO_MCP_PERSONA": "${user_config.persona}"}`, and a `userConfig`
   persona string option (server-side validation remains the refusal
   surface). `claude plugin validate --strict` becomes a packaging gate.
 - **Marketplace.** A dedicated marketplace git repository carrying
@@ -217,8 +220,8 @@ High-level layering (the plan owns steps and sequencing):
   Claude clients.
 - **Release lane.** Extend the LOCAL-ONLY, HUMAN-GATED release discipline
   with `just` publish recipes over `uv publish` + scoped token: claim the
-  name with the slim wheel (no grant needed), file the `aeat-data` file-size
-  grant from the same lane, publish the companion when granted. The existing
+  `cadrumo` name with the slim wheel (no grant needed), then publish the
+  two sub-cap companion distributions from the same lane. The existing
   packaging-smoke lanes gain a split-install lane (core without companion →
   advisory path; with companion → byte-identical path).
 - **Verification (acceptance gate).** A real-client install proof: plugin
@@ -254,7 +257,8 @@ team already runs.
 
 **Gains.** A real product install path for the first time: a taxpayer
 installs one plugin and gets the assistant, the skills, and the safety gates;
-power users get `uvx aeat` / `pip install aeat` for any MCP client. The
+power users get `uvx --from cadrumo aeat` / `pip install cadrumo`; MCP clients
+install `cadrumo[agent]` and launch `cadrumo-mcp`. The
 userdocs initiative unblocks with an honest connect story. The wheel drops
 171.8 → ~36 MB, PyPI publication needs no grant on the critical path, and the
 release lane stays within existing policy. The CONFIRM gate gains a
@@ -269,8 +273,9 @@ Option B). Cowork's local-MCP execution is unverified (MEDIUM-confidence
 conflict in official material): if Cowork runs connectors in the cloud, the
 delivered matrix is Claude Code + Desktop for the server with skills-only in
 Cowork/web until Anthropic's surface changes — the live install test decides
-what the docs may claim. The `aeat-data` grant timeline is unbounded; until
-granted, the registry verification verbs and byte-provenance verbs degrade
+what the docs may claim. The Cadrumo companion-publication timeline is
+unbounded; until both companions are available, the registry verification verbs
+and byte-provenance verbs degrade
 with advisories for end users (dev/CI unaffected). Plugin-content updates are
 coupled to marketplace repo pushes — a new release surface to keep in the
 release checklist.

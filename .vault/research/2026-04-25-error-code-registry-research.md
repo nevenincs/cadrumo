@@ -5,8 +5,6 @@ tags:
 date: '2026-04-25'
 modified: '2026-07-03'
 related:
-  - "[[2026-04-24-aeat-cli-wireframe-reference]]"
-  - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-18-live-submit-cli-excision-adr]]"
 ---
 

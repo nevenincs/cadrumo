@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#google-sa-impersonation'
 date: '2026-07-04'
-modified: '2026-07-04'
-related: []
+modified: '2026-07-10'
+related:
+  - '[[2026-07-10-google-sa-impersonation-research]]'
 ---
 
 # `google-sa-impersonation` adr: `Google service-account impersonation credential source` | (**status:** `accepted`)

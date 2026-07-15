@@ -121,7 +121,9 @@ def test_execute_request_returns_dict_typed_as_google_api_response_body() -> Non
 def test_execute_request_passes_nested_dict_payload_intact() -> None:
     """Nested dicts in the response survive the execute_request boundary."""
 
-    payload: GoogleApiResponseBody = {"developerMetadata": [{"metadataKey": "cadrumo_vault_app", "metadataValue": "cadrumo"}]}
+    payload: GoogleApiResponseBody = {
+        "developerMetadata": [{"metadataKey": "cadrumo_vault_app", "metadataValue": "cadrumo"}]
+    }
     with _local_google_request((200, _json_body(payload))) as (req, _paths):
         result = execute_request(req, action="sheets.spreadsheets.get")
 

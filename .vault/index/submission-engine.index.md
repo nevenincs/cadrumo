@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#submission-engine'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-submission-engine-adr]]'
   - '[[2026-04-12-submission-engine-phase1-schema-exec]]'
@@ -27,7 +27,7 @@ Auto-generated index of all documents tagged with `#submission-engine`.
 
 ### adr
 
-- `2026-04-12-submission-engine-adr` - adr: filing submission engine
+- `2026-04-12-submission-engine-adr` - adr: filing submission engine | (**status:** `accepted`)
 
 ### exec
 

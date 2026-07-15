@@ -9,7 +9,6 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-
 # Record the three codification candidates from the ADR as post-cycle rule-promotion notes in the feature close audit
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Rename the CWD-anchored dot-aeat ledger provenance literals to cadrumo marker forms
 
 ## Scope

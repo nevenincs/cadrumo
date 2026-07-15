@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#auth-protocol"
 date: "2026-04-18"
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-04-18-auth-protocol-research]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
@@ -34,9 +34,9 @@ Issue `#281` is the prerequisite refactor for EPIC `#279`. The current AEAT auth
 ## Implementation
 
 - Introduce `AuthProviderKind`, `AuthProvider`, and provider-description/detail models in `src/aeat/auth`.
-- Reframe the current certificate implementation as the concrete certificate provider behind that protocol.
-- Split `AeatSession` into provider-agnostic fields plus a discriminated `provider_detail` payload. The core fields are `provider_kind`, `identity_nif`, `authenticated_at`, `idle_deadline`, and `storage_state_path`.
-- Split `AeatLoginAssertion` the same way: provider-agnostic validity and timing fields plus a discriminated assertion-detail payload. Certificate-specific handshake and subject material move into the certificate detail record instead of staying at the top level.
+- Keep `AeatAuthenticator` as the concrete certificate provider behind that protocol.
+- Split `AeatSession` into provider-agnostic fields plus a discriminated `provider_detail` payload. The stored core fields are `identity_nif`, `authenticated_at`, `idle_deadline`, and `storage_state_path`; `provider_detail.kind` is the sole stored provider-kind authority and `provider_kind` is a read-only projection.
+- Split `AeatLoginAssertion` the same way: provider-agnostic validity and timing fields plus a discriminated assertion-detail payload whose `kind` is authoritative. Certificate-specific handshake and subject material move into the certificate detail record instead of staying at the top level.
 - Replace `BrowserSessionLike.create_context(cert=...)` with a provisioner-based seam. The browser layer will accept an optional provisioner that can contribute `new_context()` kwargs and context markers. The certificate provider will supply the current `client_certificates` behavior through that seam.
 - Rebase-swap downstream protocol stubs in `submission`, `workflow`, and related helpers away from `LoadedCertificate` so they depend on provider-agnostic contracts.
 - Keep `AeatAccessGate` as the env-policy layer and continue using it for audit snapshots and doctor output. The gate remains orthogonal to provider selection.
@@ -48,6 +48,6 @@ This is the smallest architectural change that unlocks pluggable auth providers 
 ## Consequences
 
 - `src/aeat/auth`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py`, `src/aeat/adapters/outbound/aeat/export/_protocols.py`, `src/aeat/application/workflow/_protocols.py`, and their tests will all need coordinated edits.
-- The certificate provider becomes the first concrete implementation of the new protocol, so some current names and exports will shift even though the observable behavior should remain unchanged.
-- Transitional translation code may exist briefly while downstream modules move from `LoadedCertificate`-based seams to provider-agnostic contracts.
+- `AeatAuthenticator` is the certificate implementation of the protocol; no `CertificateAuthProvider` alias or extraction remains.
+- The pre-release contract has no transitional alias or duplicated provider-kind field.
 - The issue will leave follow-on work for the concrete Cl@ve providers, doctor/provider UX, and any status/sync surfaces that still assume certificate preloading as the only authenticated path.

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-inventory'
-date: '2026-07-12'
-modified: '2026-07-12'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-audit]]'

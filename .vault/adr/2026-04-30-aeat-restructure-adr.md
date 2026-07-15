@@ -7,7 +7,8 @@ related:
   - "[[2026-04-30-aeat-restructure-research]]"
 supersedes:
   - '2026-04-25-operator-workflows-expansion-adr'
-modified: '2026-07-10'
+  - '2026-04-12-base-module-structure-adr'
+modified: '2026-07-15'
 ---
 # `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted`)
 

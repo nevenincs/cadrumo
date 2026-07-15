@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-
-
-
 # Verify no-JS content-identical degradation, keyboard and reduced-motion accessibility, and the nitpicky offline -n -W gate green on a rendered sequence page
 
 ## Scope

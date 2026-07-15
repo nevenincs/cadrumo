@@ -3,11 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#multilang-externalization'
-date: '2026-07-12'
-modified: '2026-07-12'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-04-multilang-externalization-phase1-adr]]'
-  - '[[2026-05-04-multilang-externalization-phase1-plan]]'
   - '[[2026-05-04-multilang-externalization-phase1-research]]'
   - '[[2026-07-12-multilang-externalization-adr]]'
   - '[[2026-07-12-multilang-externalization-research]]'
@@ -23,10 +22,6 @@ Auto-generated index of all documents tagged with `#multilang-externalization`.
 
 - `2026-05-04-multilang-externalization-phase1-adr` - Architecture Decision Record: Multilang Externalization | (**status:** `superseded`)
 - `2026-07-12-multilang-externalization-adr` - `multilang-externalization` adr: `runtime localization authority and externalization boundary` | (**status:** `accepted`)
-
-### plan
-
-- `2026-05-04-multilang-externalization-phase1-plan` - Multilang Externalization Phase 1 Plan
 
 ### research
 

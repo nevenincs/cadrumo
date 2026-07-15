@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-persistence-foundation'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-27-secure-persistence-foundation-adr]]'
   - '[[2026-04-27-secure-persistence-foundation-exec]]'
@@ -58,7 +58,7 @@ Auto-generated index of all documents tagged with `#secure-persistence-foundatio
 
 - `2026-04-27-secure-persistence-foundation-adr` - `secure-persistence-foundation` adr: `secure-persistence-foundation-wave-1-adr` | (**status:** `accepted`)
 - `2026-04-29-secure-persistence-foundation-adr` - `secure-persistence-foundation` wave-3 adr | (**status:** `accepted`)
-- `2026-04-29-secure-persistence-foundation-wave18-adr` - `secure-persistence-foundation` wave-18 ADR: rotation-correctness fixes
+- `2026-04-29-secure-persistence-foundation-wave18-adr` - `secure-persistence-foundation` wave-18 ADR: rotation-correctness fixes | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-adr` - `secure-persistence-foundation` wave-4 adr | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-wave11-adr` - `secure-persistence-foundation` wave-11 adr — corpus integrity manifest | (**status:** `accepted`)
 - `2026-04-30-secure-persistence-foundation-wave12-adr` - `secure-persistence-foundation` adr: wave-12 Argon2id KDF migration | (**status:** `accepted`)

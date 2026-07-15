@@ -1,16 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#docs-architecture'
+  - "#adr"
+  - "#docs-architecture"
 date: '2026-05-30'
-modified: '2026-07-03'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-04-12-docs-rewrite-adr]]"
   - "[[2026-04-17-relative-imports-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
+supersedes:
+  - '2026-04-12-docs-rewrite-adr'
+modified: '2026-07-15'
 ---
-
 # `docs-architecture` adr: `documentation surface taxonomy and conventions` | (**status:** `accepted`)
 
 This is the first of three ADRs in the documentation epic. It sets the

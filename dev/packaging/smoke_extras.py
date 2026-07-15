@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .smoke_core import (
+    _assert_cadrumo_version_output,
     _assert_installed_data,
     _assert_wheel_metadata_matches_pyproject,
     _build_wheel,
@@ -64,8 +65,7 @@ def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
     }
     executable = "aeat.exe" if sys.platform == "win32" else "aeat"
     version = _run([str(_venv_bin(venv_path) / executable), "--version"], cwd=work_dir, env=env)
-    if "cadrumo " not in version.stdout:
-        raise SystemExit(f"unexpected aeat --version output in all-extras venv: {version.stdout!r}")
+    _assert_cadrumo_version_output(version, context="in all-extras venv")
 
 
 def main(argv: list[str] | None = None) -> int:

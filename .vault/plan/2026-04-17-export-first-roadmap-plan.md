@@ -3,12 +3,11 @@ tags:
   - "#plan"
   - "#export-first"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-04-17-export-first-adr]]"
-  - "[[2026-04-18-auth-provider-ecosystem-research]]"
+  - '[[2026-04-27-export-first-research]]'
 ---
-
 # export-first-roadmap-plan
 
 Concrete GitHub operations to execute the export-first ADR. Each row is a single atomic operation against the `wgergely/aeat` repository. Execution is gated on explicit user approval for each group.

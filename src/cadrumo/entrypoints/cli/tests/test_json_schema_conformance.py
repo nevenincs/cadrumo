@@ -1,6 +1,6 @@
-"""Conformance gate for the CLI ``--json`` envelope contract.
+"""Conformance gate for the CLI schema-envelope contract.
 
-Every leaf command exposed by the ``cadrumo`` CLI MUST emit its result
+Every leaf command exposed by the Cadrumo CLI MUST emit its result
 through :class:`SchemaEnvelope`, which means its payload model MUST
 be registered under a stable command-path string in
 :data:`SCHEMA_REGISTRY` via :func:`register_schema`.
@@ -29,6 +29,7 @@ from ....application.ledger import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
 )
+from ....core import PRODUCT_IDENTITY
 from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
 
 # Import the per-package payload modules so their @register_schema
@@ -44,9 +45,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # ---------------------------------------------------------------------
 #
 # A leaf-command Typer path is a tuple of group/command names walked
-# from the ``cadrumo`` root, e.g. ``("cadrumo", "app", "modelo", "work",
+# from the executable root, e.g. ``("aeat", "app", "modelo", "work",
 # "calculate")``. Registry keys are dot-joined strings without the
-# ``cadrumo`` root, e.g. ``"modelo.work.calculate"``.
+# executable root, e.g. ``"modelo.work.calculate"``.
 #
 # Most registry keys also drop the ``app`` group segment that owns the
 # operational subtrees (``modelo``, ``ledger``, ``review``, ...). The
@@ -57,7 +58,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # The normaliser below applies the same rule the live ``_emit_envelope``
 # call sites use:
 #
-#  * Strip the leading ``cadrumo`` token.
+#  * Strip the leading canonical executable token.
 #  * Replace dashes with underscores so Typer command names with hyphens
 #    (e.g. ``iva-wallet``) align with the registry key
 #    (``iva_wallet``).
@@ -102,7 +103,7 @@ _PATH_KEY_OVERRIDES: dict[str, str] = {
 def _normalise_command_path(path: tuple[str, ...]) -> str:
     """Project a Typer leaf-command path onto the registry key convention."""
     tokens = [token.replace("-", "_") for token in path]
-    if tokens and tokens[0] == "cadrumo":
+    if tokens and tokens[0] == PRODUCT_IDENTITY.cli_executable:
         tokens = tokens[1:]
     if len(tokens) >= 2 and tokens[0] == "app":
         head = tokens[1]
@@ -237,7 +238,7 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
     """
     _force_load_lazy_subcommands(app)
     root = _typer_get_command(app)
-    root.name = app.info.name or "cadrumo"
+    root.name = app.info.name or PRODUCT_IDENTITY.cli_executable
     # typer.main.get_command is typed to return typer's vendored
     # ``typer._click.core.Command``; it is the same click runtime object the
     # walk consumes as a top-level ``click.Command``. Bridge the vendored→real

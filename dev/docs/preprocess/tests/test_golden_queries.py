@@ -73,9 +73,7 @@ def test_extraction_sidecars_are_deduplicated_out_of_the_index() -> None:
         max_results=15,
     )
     sidecars = extraction_sidecar_hits(hits)
-    sources = [
-        h for h in hits if "/corpus/normatives/html/" in h.path and h.path.endswith(".html")
-    ]
+    sources = [h for h in hits if "/corpus/normatives/html/" in h.path and h.path.endswith(".html")]
     sidecar_paths = [h.path[-55:] for h in sidecars]
     assert not sidecars, (
         f"{len(sidecars)} sidecar hits survived the dedup exclusion "

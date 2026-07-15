@@ -31,6 +31,7 @@ related:
   - '[[2026-06-04-docs-sphinx-ux-W03-P05-S16]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P08-S24]]'
   - '[[2026-06-04-docs-sphinx-ux-W03-P08-S25]]'
+  - '[[2026-06-04-docs-sphinx-ux-W03-P08-S26]]'
   - '[[2026-06-04-docs-sphinx-ux-adr]]'
   - '[[2026-06-04-docs-sphinx-ux-code-review-audit]]'
   - '[[2026-06-04-docs-sphinx-ux-plan]]'
@@ -78,6 +79,7 @@ Auto-generated index of all documents tagged with `#docs-sphinx-ux`.
 - `2026-06-04-docs-sphinx-ux-W03-P05-S16` - inspect desktop and mobile rendered UX
 - `2026-06-04-docs-sphinx-ux-W03-P08-S24` - prepare the final rendered approval packet
 - `2026-06-04-docs-sphinx-ux-W03-P08-S25` - obtain explicit human approval for rendered experience
+- `2026-06-04-docs-sphinx-ux-W03-P08-S26` - record approved follow-up UX issues
 
 ### plan
 

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Record Modelo 037 outbound support as retired and prohibit new registry or export work
 
 ## Scope

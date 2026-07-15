@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Adjudicate Modelo 353 export only for the 2026-and-following authority window and gate earlier revisions
 
 ## Scope

@@ -340,14 +340,14 @@ class LedgerTransactionPayload(BaseModel):
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
-    # Decision-provenance fields (#231): the "why" behind the active
+    # Decision-provenance fields: the "why" behind the active
     # classification decision, surfaced alongside `classified_by` so an
     # operator can answer "why was this classified as X" from one read.
     classified_at: str | None = None
     classification_reason: str = ""
     classification_confidence: str | None = None
     source_jurisdiction: str | None = None
-    # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
+    # FX provenance for foreign-currency rows: the
     # EUR-equivalent and the applied CCY->EUR rate, so list/review/export surface
     # the converted value rather than only the native amount. None for EUR rows.
     value_in_eur: str | None = None
@@ -859,7 +859,7 @@ class LedgerExportRow(BaseModel):
     created_by: str = ""
     created_source_command: str = ""
     source_jurisdiction: str = ""
-    # FX provenance on the export hand-off (ledger-fx-conversion ADR): EUR
+    # FX provenance on the export hand-off: EUR
     # magnitude + applied CCY->EUR rate for foreign rows; "" for EUR-native rows.
     value_in_eur: str = ""
     fx_rate: str = ""

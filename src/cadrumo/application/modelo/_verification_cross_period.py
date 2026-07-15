@@ -191,13 +191,13 @@ def _cross_period_clean_state_verdict_for_work_unit(
     :attr:`TaxpayerProfile.activity_start_date` - the exact field the deadline
     engine consumes for pre-start obligation suppression. When supplied, a
     dependency whose period falls strictly before it is scoped out as
-    no-prior-obligation (ADR 2026-06-13-first-filer-attestation-adr).
+    no-prior-obligation.
 
     ``modelo_202_modality`` is the derived Modelo 202 pago-fraccionado modality.
     When it is ``ART_40_2_OPTIONAL`` and the recorded ``activity_start_date`` places
     the first IS year at or after the target year, the Modelo 202 cross-period
-    dependency is scoped out as a first-year no-fractional-payment obligation
-    (ADR 2026-06-19-m202-first-period-attestation-adr); fail-closed otherwise.
+    dependency is scoped out as a first-year no-fractional-payment obligation;
+    fail-closed otherwise.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -350,7 +350,7 @@ def _cross_period_clean_state_findings(
     not a legacy advisory: current carry data must resolve against the
     law-determined revision before it can feed a downstream filing.
 
-    ADR 2026-06-13-first-filer-attestation-adr adds two outcomes:
+    Two additional outcomes are surfaced:
 
     * A dependency scoped out as no-prior-obligation pre-activity on an
       operator-declared (uncorroborated) date emits a NON-BLOCKING ``ADVISORY``
@@ -415,7 +415,7 @@ def _cross_period_operator_declared_suppression_advisory_finding(
 ) -> ModeloVerificationFinding:
     """Build the NON-BLOCKING advisory for an operator-declared pre-activity suppression.
 
-    ADR 2026-06-13-first-filer-attestation-adr: a dependency was scoped out as
+    A dependency was scoped out as
     no-prior-obligation because its period falls strictly before the
     operator-declared activity-start date. Censal facts are operator-supplied
     (the live Modelo 036 censo read was retired), so the date is never
@@ -460,7 +460,7 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
 ) -> ModeloVerificationFinding:
     """Build the NON-BLOCKING advisory for a first-year Modelo 202 modalidad-cuota suppression.
 
-    ADR 2026-06-19-m202-first-period-attestation-adr: the Modelo 202 cross-period
+    The Modelo 202 cross-period
     dependency was scoped out because the taxpayer is a first-year Impuesto sobre
     Sociedades filer under modalidad cuota (LIS art. 40.2), which has no pago
     fraccionado obligation in the first IS year (no prior IS return provides the
@@ -501,7 +501,7 @@ def _cross_period_missing_activity_start_finding(
 ) -> ModeloVerificationFinding:
     """Build the BLOCKING fail-closed finding when no activity-start date is recorded.
 
-    ADR 2026-06-13-first-filer-attestation-adr: a dependency blocks with an
+    A dependency blocks with an
     evidence-missing reason a genuine first filer would hit, but the profile
     records no ``activity_start_date`` at all, so the gate cannot decide whether
     the dependency is pre-activity (no prior obligation) or a genuinely missing
@@ -714,11 +714,10 @@ def _cross_period_clean_state_next_action(
         "--evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE"
     )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
-        # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
-        # filing's stamped revision no longer re-confirms against the law-determined
-        # revision for its source context. Re-file and re-stamp the source period
-        # under the current revision rather than carrying a stale or unverifiable
-        # value forward.
+        # The prior filing's stamped revision no longer re-confirms against the
+        # law-determined revision for its source context. Re-file and re-stamp
+        # the source period under the current revision rather than carrying a
+        # stale or unverifiable value forward.
         return (
             f"The prior filing for {source_hint} does not re-confirm against the law-determined registry "
             "revision for that period; its values may follow superseded or unverifiable rules. Re-file and "
@@ -819,8 +818,7 @@ def _require_cross_period_clean_state(
     )
     # Only BLOCKING findings gate the file/export path. NON-BLOCKING WARNING
     # advisories (e.g. indeterminate revision-stamp re-confirmation) surface
-    # in the verification report but must never brick the file/export gate —
-    # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2.
+    # in the verification report but must never brick the file/export gate.
     blocking_findings = [f for f in findings if f.severity is ModeloVerificationFindingSeverity.BLOCKING]
     if not blocking_findings:
         return

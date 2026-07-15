@@ -127,7 +127,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output_path.write_bytes",
     ): "explicit user-directed declaration export",
     (
-        "src/cadrumo/core/locks.py",
+        "src/cadrumo/core/_fsync.py",
         "fsync_parent_dir",
         "os.open",
     ): "lock maintenance opens directories, not sensitive data files",
@@ -293,7 +293,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "review_package_encrypt_for_recipient",
         "output.write_text",
     ): "explicit operator-directed recipient-encrypted envelope export to a caller-chosen path; AEAD ciphertext only, "
-        "never the plaintext review package",
+    "never the plaintext review package",
     (
         "src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py",
         "review_package_encrypt_feedback",

@@ -10,9 +10,6 @@ related:
   - "[[2026-07-14-cadrumo-product-rename-audit]]"
 ---
 
-
-
-
 # Rewrite active explanation and reference pages with the product-authority boundary
 
 ## Scope

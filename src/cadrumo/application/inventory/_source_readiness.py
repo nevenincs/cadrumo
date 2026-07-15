@@ -1,27 +1,15 @@
-"""Inventory calculation-source readiness.
+"""Readiness facts for the inventory calculation source.
 
-Declares whether inventory may act as a calculation source that feeds registry
-bindings. Inventory is currently an application service
-(:class:`~application.inventory.InventoryService`) over the profile inventory;
-its movements and valuations are not yet persisted through the canonical
-secure-storage revision boundary, so enrolling inventory as a live calculation
-source would resolve bindings against non-canonical state. Until that persistence
-is hardened, inventory readiness is NOT ready and the aggregation resolver must
-refuse visibly (a blocked-readiness diagnostic) rather than resolve a silent
-blank.
-
-The readiness is a pure, context-independent fact: inventory is unready regardless
-of the modelo or period being calculated.
+The strict-frozen record and context-independent readiness check describe only
+whether inventory state crosses the canonical secure-storage revision boundary.
+They do not resolve calculation values, adapt or enroll a source, participate
+in the source mesh, or emit diagnostics. The raw ``inventory`` source token is
+not a :class:`~core.BindingSourceKind` member.
 
 See Also:
     :class:`~application.inventory.InventoryService`
-        Application service whose current persistence boundary keeps inventory
-        out of the live calculation-source mesh.
-    :mod:`~application.aggregation._source_inventory`
-        Blocked resolver adapter that turns this readiness fact into a
-        source-mesh diagnostic.
-    :class:`~application.aggregation.CalculationSourceDiagnostic`
-        Shared diagnostic carrier emitted while the source remains blocked.
+        Application service for the inventory state whose persistence is not
+        yet canonical calculation-source state.
 """
 
 from __future__ import annotations
@@ -44,18 +32,14 @@ class InventorySourceReadiness(BaseModel):
 
 
 def inventory_source_readiness() -> InventorySourceReadiness:
-    """Return the current inventory calculation-source readiness.
+    """Return the context-independent inventory-source readiness fact.
 
-    Inventory is not yet a calculation source: its movements and valuations are
-    served by an application service over profile inventory and are not persisted
-    through the canonical secure-storage revision boundary, so a resolver enrolled
-    today would read non-canonical state. The surface is provisioned but blocked
-    until inventory persistence is hardened.
+    The result remains not ready because inventory movements and valuations are
+    not persisted through the canonical secure-storage revision boundary.
 
     Returns:
         An :class:`~application.inventory.InventorySourceReadiness` with
-        ``ready = False`` and the blocking reason, until inventory persistence is
-        canonical.
+        ``ready = False`` plus the raw source token and reason.
     """
     return InventorySourceReadiness(
         ready=False,

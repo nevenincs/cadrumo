@@ -74,7 +74,7 @@ class _StoredPriorObservation(Protocol):
     @property
     def member_nif(self) -> str | None: ...
     @property
-    def stamped_revision_id(self) -> str | None: ...
+    def stamped_revision_id(self) -> str: ...
 
 
 _logger = get_logger(__name__)
@@ -665,7 +665,7 @@ def _normalize_prior_filing_observation(payload: _StoredPriorObservation) -> lis
         str(observation.period),
         payload.source_kind,
         payload.member_nif or "",
-        payload.stamped_revision_id or "",
+        payload.stamped_revision_id,
         casilla_values,
     ]
 

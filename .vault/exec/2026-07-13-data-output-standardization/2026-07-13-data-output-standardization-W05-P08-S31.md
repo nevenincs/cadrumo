@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Migrate the outbound local store sidecar write onto the atomic-write helper closing the torn object-plus-sidecar crash window
 
 ## Scope

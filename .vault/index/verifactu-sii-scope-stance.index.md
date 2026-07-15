@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#verifactu-sii-scope-stance'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-02-verifactu-sii-scope-stance-adr]]'
   - '[[2026-07-10-verifactu-sii-scope-stance-research]]'

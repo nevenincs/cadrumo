@@ -134,15 +134,19 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
                 source_refs=("lirpf-cuota-chain-authority",),
             ),
         ),
-        notes=(
-            "raw_evidence_locator: corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L58455-L58460",
-        ),
+        notes=("raw_evidence_locator: corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L58455-L58460",),
     )
 
 
 def _values(scenario: RegistryCalculationScenario) -> dict[CasillaId, Decimal | None]:
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
     return dict(report.calculation.values)
+
+
+def _required_value(values: dict[CasillaId, Decimal | None], casilla_id: CasillaId) -> Decimal:
+    value = values[casilla_id]
+    assert value is not None, f"scenario left required casilla {casilla_id} unresolved"
+    return value
 
 
 def test_final_settlement_chain_composes_manual_definitional_identities() -> None:
@@ -157,8 +161,8 @@ def test_final_settlement_chain_composes_manual_definitional_identities() -> Non
     """
     values = _values(_scenario(retencion="0", scenario_id="m100-2024-final-settlement-no-pagos"))
 
-    cuota_integra_estatal = values[_CUOTA_INTEGRA_ESTATAL]
-    cuota_integra_autonomica = values[_CUOTA_INTEGRA_AUTONOMICA]
+    cuota_integra_estatal = _required_value(values, _CUOTA_INTEGRA_ESTATAL)
+    cuota_integra_autonomica = _required_value(values, _CUOTA_INTEGRA_AUTONOMICA)
     assert cuota_integra_estatal == Decimal("2406.50")
     assert cuota_integra_autonomica == Decimal("2360.64")
 
@@ -167,14 +171,20 @@ def test_final_settlement_chain_composes_manual_definitional_identities() -> Non
     assert values[_CUOTA_LIQUIDA_AUTONOMICA] == cuota_integra_autonomica
 
     # cuota liquida total = estatal + autonomica
-    assert values[_CUOTA_LIQUIDA_TOTAL] == values[_CUOTA_LIQUIDA_ESTATAL] + values[_CUOTA_LIQUIDA_AUTONOMICA]
+    assert values[_CUOTA_LIQUIDA_TOTAL] == _required_value(values, _CUOTA_LIQUIDA_ESTATAL) + _required_value(
+        values,
+        _CUOTA_LIQUIDA_AUTONOMICA,
+    )
 
     # cuota resultante de la autoliquidacion = cuota liquida total (no further deductions)
     assert values[_CUOTA_RESULTANTE] == values[_CUOTA_LIQUIDA_TOTAL]
 
     # cuota diferencial = cuota resultante - total pagos a cuenta (pagos = 0)
     assert values[_TOTAL_PAGOS_A_CUENTA] == Decimal("0.00")
-    assert values[_CUOTA_DIFERENCIAL] == values[_CUOTA_RESULTANTE] - values[_TOTAL_PAGOS_A_CUENTA]
+    assert values[_CUOTA_DIFERENCIAL] == _required_value(values, _CUOTA_RESULTANTE) - _required_value(
+        values,
+        _TOTAL_PAGOS_A_CUENTA,
+    )
 
     # resultado de la declaracion = cuota diferencial (no impuestos negativos)
     assert values[_RESULTADO_DECLARACION] == values[_CUOTA_DIFERENCIAL]
@@ -199,5 +209,11 @@ def test_final_settlement_pagos_a_cuenta_subtraction_is_wired() -> None:
     assert cuota_resultante is not None
     assert with_retencion[_CUOTA_RESULTANTE] == cuota_resultante  # resultante is upstream of pagos a cuenta
 
-    assert with_retencion[_CUOTA_DIFERENCIAL] == baseline[_CUOTA_DIFERENCIAL] - Decimal("1000.00")
-    assert with_retencion[_RESULTADO_DECLARACION] == baseline[_RESULTADO_DECLARACION] - Decimal("1000.00")
+    assert with_retencion[_CUOTA_DIFERENCIAL] == _required_value(
+        baseline,
+        _CUOTA_DIFERENCIAL,
+    ) - Decimal("1000.00")
+    assert with_retencion[_RESULTADO_DECLARACION] == _required_value(
+        baseline,
+        _RESULTADO_DECLARACION,
+    ) - Decimal("1000.00")

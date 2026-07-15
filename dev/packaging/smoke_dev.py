@@ -8,12 +8,13 @@ import sys
 from pathlib import Path
 
 from .smoke_core import (
+    _assert_cadrumo_version_output,
     _assert_installed_data,
     _executable,
     _manifest_path,
     _run,
-    _venv_aeat,
     _venv_bin,
+    _venv_cadrumo,
     _venv_python,
     _work_dir,
     _write_smoke_manifest,
@@ -104,9 +105,8 @@ print("dev-imports-ok")
 
 def _assert_dev_cli(work_dir: Path, venv: Path) -> None:
     """Verify the non-editable project install exposes the AEAT console script."""
-    version = _run([str(_venv_aeat(venv)), "--version"], cwd=work_dir)
-    if "cadrumo " not in version.stdout:
-        raise SystemExit(f"unexpected aeat --version output in dev venv: {version.stdout!r}")
+    version = _run([str(_venv_cadrumo(venv)), "--version"], cwd=work_dir)
+    _assert_cadrumo_version_output(version, context="in dev venv")
 
 
 def main(argv: list[str] | None = None) -> int:

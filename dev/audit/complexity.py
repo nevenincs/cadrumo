@@ -72,12 +72,10 @@ else:
 _UTF_8: Final[str] = "utf-8"
 _TARGET = "src/cadrumo"
 _PROD_EXCLUDE = (
-    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,"
-    "src/cadrumo/tests/*,src/cadrumo/_data/*"
+    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"
 )
 _TEST_EXCLUDE = (
-    "src/cadrumo/application/*,src/cadrumo/domain/*,src/cadrumo/adapters/*,"
-    "src/cadrumo/core/*,src/cadrumo/_data/*"
+    "src/cadrumo/application/*,src/cadrumo/domain/*,src/cadrumo/adapters/*,src/cadrumo/core/*,src/cadrumo/_data/*"
 )
 _CC_CAP = 20
 _MI_CAP = 15

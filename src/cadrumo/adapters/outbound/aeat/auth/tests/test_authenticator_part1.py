@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timezone
 
 import pytest
+from pydantic import ValidationError
 
 from ......core.i18n import tr
 from .. import AuthConfigurationError
@@ -15,7 +16,9 @@ from ._authenticator_support import (
     SECRET_PASSPHRASE,
     UTC,
     AeatAuthenticator,
+    AeatLoginAssertion,
     AeatLoginAssertionError,
+    AeatSession,
     AuthProvider,
     AuthProviderKind,
     AuthValidationError,
@@ -129,6 +132,40 @@ def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
     dumped = session.model_dump_json()
     assert SECRET_PASSPHRASE not in dumped
     assert "_pkcs12_bytes" not in dumped
+
+
+def test_aeat_session_provider_kind_is_derived_not_stored() -> None:
+    """Session detail is the sole provider-kind authority across roundtrip."""
+    authenticated_at = datetime.now(UTC)
+    session = _certificate_session(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
+    )
+
+    payload = session.model_dump()
+
+    assert session.provider_kind is AuthProviderKind.CERTIFICATE
+    assert "provider_kind" not in AeatSession.model_fields
+    assert "provider_kind" not in payload
+    assert AeatSession.model_validate(payload) == session
+    assert AeatSession.model_validate_json(session.model_dump_json()) == session
+    with pytest.raises(ValidationError, match="provider_kind"):
+        AeatSession.model_validate({**payload, "provider_kind": AuthProviderKind.CERTIFICATE})
+
+
+def test_aeat_login_assertion_provider_kind_is_derived_not_stored() -> None:
+    """Assertion detail is the sole provider-kind authority across roundtrip."""
+    assertion = _certificate_assertion()
+
+    payload = assertion.model_dump()
+
+    assert assertion.provider_kind is AuthProviderKind.CERTIFICATE
+    assert "provider_kind" not in AeatLoginAssertion.model_fields
+    assert "provider_kind" not in payload
+    assert AeatLoginAssertion.model_validate(payload) == assertion
+    assert AeatLoginAssertion.model_validate_json(assertion.model_dump_json()) == assertion
+    with pytest.raises(ValidationError, match="provider_kind"):
+        AeatLoginAssertion.model_validate({**payload, "provider_kind": AuthProviderKind.CERTIFICATE})
 
 
 def test_aeat_login_assertion_is_valid_composite() -> None:
@@ -465,3 +502,5 @@ def test_select_provider_returns_certificate_provider(tmp_path: Path, _settings_
 
     assert isinstance(provider, AeatAuthenticator)
     assert isinstance(provider, AuthProvider)
+    assert callable(provider.verify)
+    assert not hasattr(provider, "verify_login")

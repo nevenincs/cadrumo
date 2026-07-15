@@ -604,6 +604,12 @@ def _venv_cadrumo(venv: Path) -> Path:
     return _venv_bin(venv) / executable
 
 
+def _assert_cadrumo_version_output(version: CommandResult, *, context: str) -> None:
+    """Require the installed CLI to project the canonical product identity."""
+    if not version.stdout.startswith("CADRUMO "):
+        raise SystemExit(f"unexpected aeat --version output {context}: {version.stdout!r}")
+
+
 def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
     """Build the Cadrumo wheel into the smoke work directory."""
     expected_data_paths = _expected_wheel_data_paths(repo_root)
@@ -786,8 +792,7 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
         cwd=work_dir,
         env=_isolated_product_env(work_dir / "version-state"),
     )
-    if "CADRUMO " not in version.stdout:
-        raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
+    _assert_cadrumo_version_output(version, context="in core venv")
 
     default_root = work_dir / "default-check-state"
     default_env = _isolated_product_env(default_root)

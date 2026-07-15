@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#tax-domain-taxonomy-extension'
-date: '2026-07-04'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-04-tax-domain-taxonomy-extension-adr]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#tax-domain-taxonomy-extensio
 
 ### adr
 
-- `2026-07-04-tax-domain-taxonomy-extension-adr` - `tax-domain-taxonomy-extension` adr: `per-tax Spanish-stem TaxDomain members for the new-tax modelos` | (**status:** `proposed`)
+- `2026-07-04-tax-domain-taxonomy-extension-adr` - `tax-domain-taxonomy-extension` adr: `per-tax Spanish-stem TaxDomain members for the new-tax modelos` | (**status:** `accepted`)

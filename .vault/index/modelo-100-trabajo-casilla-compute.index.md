@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-trabajo-casilla-compute'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-research]]'

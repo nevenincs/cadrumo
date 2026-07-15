@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Author the shared two-tier atomic-write helper with the hardened master-key pattern as the strong tier
 
 ## Scope

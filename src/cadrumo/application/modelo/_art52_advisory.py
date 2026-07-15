@@ -6,16 +6,14 @@ input in the 2021-2023 revisions, so nothing in those revisions enforces the art
 with no plan-de-empleo worker contribution (casilla 0426), no contribución
 empresarial (casilla 0427), and no autónomo/empresario-individual aportación
 (casilla 0499) backing an art. 52.1 increment — is bound by the lower EUR 1.500
-general limit, not a higher combined ceiling. This module implements the ADR's
-Phase-1 choice: emit a non-blocking
+general limit, not a higher combined ceiling. This module emits a non-blocking
 :class:`~domain.modelos.ModeloVerificationFinding` when the granted reducción
-exceeds the individual sub-limit with no backing casilla declared, but do not
+exceeds the individual sub-limit with no backing casilla declared, but does not
 block a legitimate employer-backed, plan-de-empleo-backed, or autónomo-backed
 reducción above EUR 1.500.
 
 On the 2024/2025 revisions, casilla 0468 is COMPUTED directly by the tiered art.
-52.1 formula (Phase 2b of the
-``2026-07-01-modelo-100-trabajo-casilla-compute-adr``), so this advisory's firing
+52.1 formula, so this advisory's firing
 predicate is structurally unreachable there: the formula itself enforces the
 individual/1º/2º sub-limits, and the resolved reducción can never exceed what the
 declared backing casillas legitimately unlock.

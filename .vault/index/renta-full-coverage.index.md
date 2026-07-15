@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-full-coverage'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-07-renta-full-coverage-adr]]'
   - '[[2026-05-07-renta-full-coverage-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#renta-full-coverage`.
 
 ### adr
 
-- `2026-05-07-renta-full-coverage-adr` - `renta-full-coverage` adr
+- `2026-05-07-renta-full-coverage-adr` - `renta-full-coverage` adr | (**status:** `accepted`)
 
 ### plan
 

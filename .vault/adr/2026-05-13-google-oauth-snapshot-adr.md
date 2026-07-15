@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#google-oauth'
+  - "#adr"
+  - "#google-oauth"
 date: '2026-05-13'
-modified: '2026-07-10'
 related:
   - "[[2026-05-13-google-oauth-adr]]"
   - "[[2026-05-12-google-oauth-adr]]"
   - "[[2026-05-08-google-oauth-adr]]"
   - "[[2026-05-06-google-oauth-research]]"
   - "[[2026-05-06-secure-persistence-enforcement-adr]]"
+superseded_by: '2026-07-14-google-optional-adapter-boundary-adr'
+modified: '2026-07-14'
 ---
-
-# `google-oauth` adr: `Snapshot, backup, and restore with encryption boundary` | (**status:** `accepted`)
+# `google-oauth` adr: `Snapshot, backup, and restore with encryption boundary` | (**status:** `superseded`)
 
 ## Problem Statement
 

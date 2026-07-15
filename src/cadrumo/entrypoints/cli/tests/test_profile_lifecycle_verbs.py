@@ -296,9 +296,7 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths() -> 
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    advertised_command = "aeat config profile create NAME " + " ".join(
-        _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
-    )
+    advertised_command = "aeat config profile create NAME " + " ".join(_ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS)
     assert advertised_command in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output

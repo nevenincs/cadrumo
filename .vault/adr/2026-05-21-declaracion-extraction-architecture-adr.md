@@ -1,17 +1,19 @@
 ---
 tags:
-  - '#adr'
-  - '#declaracion-extraction-architecture'
+  - "#adr"
+  - "#declaracion-extraction-architecture"
 date: '2026-05-21'
-modified: '2026-07-10'
 related:
-  - '[[2026-05-21-declaracion-extraction-architecture-research]]'
-  - '[[2026-04-21-declaracion-extractor-adr]]'
-  - '[[2026-05-20-branch-reconciliation-audit]]'
-  - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'
-  - '[[2026-05-28-borrador-extraction-architecture-research]]'
-  - '[[2026-05-28-declaracion-extraction-architecture-research]]'
-  - '[[2026-05-30-declaracion-extraction-architecture-research]]'
+  - "[[2026-05-21-declaracion-extraction-architecture-research]]"
+  - "[[2026-04-21-declaracion-extractor-adr]]"
+  - "[[2026-05-20-branch-reconciliation-audit]]"
+  - "[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]"
+  - "[[2026-05-28-borrador-extraction-architecture-research]]"
+  - "[[2026-05-28-declaracion-extraction-architecture-research]]"
+  - "[[2026-05-30-declaracion-extraction-architecture-research]]"
+supersedes:
+  - '2026-04-21-declaracion-extractor-adr'
+modified: '2026-07-15'
 ---
 # `declaracion-extraction-architecture` adr: `registry-driven declaración extraction supersedes per-modelo extractor classes` | (**status:** `accepted`)
 

@@ -699,8 +699,7 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
         assert "model=303" in blocking_notice["message"]
         assert blocking_notice["suggestion"] is not None
         assert (
-            "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A"
-            in (blocking_notice["suggestion"])
+            "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in (blocking_notice["suggestion"])
         )
         assert "la dependència entre períodes no està neta" in blocking_payload["message"]
         assert blocking_payload["next_action"] == blocking_notice["suggestion"]

@@ -10,16 +10,6 @@ related:
   - '[[2026-07-12-censo-operator-manual-enrolment-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `censo-operator-manual-enrolment` plan
 
 ### Phase `P01` - retire the scrape chain

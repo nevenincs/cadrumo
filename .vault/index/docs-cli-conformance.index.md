@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-cli-conformance'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-30-docs-cli-conformance-adr]]'
   - '[[2026-06-04-docs-cli-conformance-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#docs-cli-conformance`.
 
 ### adr
 
-- `2026-05-30-docs-cli-conformance-adr` - `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `partially superseded`)
+- `2026-05-30-docs-cli-conformance-adr` - `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `superseded`)
 
 ### research
 

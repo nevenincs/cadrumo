@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#status-reader'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-status-reader-adr]]'
   - '[[2026-04-12-status-reader-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#status-reader`.
 
 ### adr
 
-- `2026-04-12-status-reader-adr` - ADR: AEAT status reader (#43)
+- `2026-04-12-status-reader-adr` - ADR: AEAT status reader (#43) | (**status:** `accepted`)
 
 ### exec
 

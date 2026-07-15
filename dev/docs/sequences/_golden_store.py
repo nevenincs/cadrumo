@@ -118,6 +118,7 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
             replacements.append((posix, token))
     return sorted(replacements, key=lambda pair: len(pair[0]), reverse=True)
 
+
 #: A page identifier: the docname-style path of the enrolled docs page relative
 #: to ``docs/`` (e.g. ``how-to/irpf-lifecycle`` or ``how-to/modelo-303``),
 #: forward slashes, no suffix, no traversal.

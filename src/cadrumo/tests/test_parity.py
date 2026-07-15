@@ -107,8 +107,8 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
 
     assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
         "'{command}' needs a human confirmation, and this client does not support elicitation. "
-        "Run it from a client that can ask you questions, or run the equivalent aeat CLI command directly "
-        "in a terminal."
+        "Run it from a client that can ask you questions, or run the equivalent Cadrumo CLI (`aeat`) command "
+        "directly in a terminal."
     )
     assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
         "CADRUMO - local-first workflow for Spanish tax work with AEAT"
@@ -140,7 +140,8 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     )
     assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
         "'{command}' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). "
-        "Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando aeat CLI equivalente "
+        "Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI "
+        "(`aeat`) "
         "directamente en un terminal."
     )
     assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
@@ -191,8 +192,8 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
     )
     assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
         "'{command}' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). "
-        "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre aeat CLI equivalent directament "
-        "en un terminal."
+        "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre equivalent de Cadrumo CLI "
+        "(`aeat`) directament en un terminal."
     )
     assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
         "CADRUMO, eina de declaracions fiscals amb l'AEAT."
@@ -222,7 +223,7 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
     assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
         "A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés "
         "(elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő "
-        "aeat CLI parancsot közvetlenül a terminálban."
+        "Cadrumo CLI (`aeat`) parancsot közvetlenül a terminálban."
     )
     assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
         "CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal"
@@ -617,10 +618,7 @@ def test_ast_scanner_resolves_aliased_translator_import(tmp_path: Path) -> None:
     """
 
     (tmp_path / "aliased_surface.py").write_text(
-        "from cadrumo.core.i18n import tr as _tr\n"
-        "\n"
-        "def render() -> str:\n"
-        "    return _tr('cli.root.verbose_help')\n",
+        "from cadrumo.core.i18n import tr as _tr\n\ndef render() -> str:\n    return _tr('cli.root.verbose_help')\n",
         encoding="utf-8",
     )
 

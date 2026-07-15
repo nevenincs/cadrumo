@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-rewrite'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-docs-rewrite-adr]]'
   - '[[2026-04-12-docs-rewrite-phase1-step1-exec]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#docs-rewrite`.
 
 ### adr
 
-- `2026-04-12-docs-rewrite-adr` - adr: docs-rewrite
+- `2026-04-12-docs-rewrite-adr` - adr: docs-rewrite | (**status:** `superseded`)
 
 ### exec
 

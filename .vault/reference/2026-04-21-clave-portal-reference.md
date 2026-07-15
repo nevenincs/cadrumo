@@ -1,13 +1,12 @@
 ---
 tags:
-  - "#reference"
-  - "#auth-cli"
+  - '#reference'
+  - '#aeat-auth-providers'
 date: "2026-04-21"
-modified: '2026-07-03'
+modified: '2026-07-15'
 related:
-  - "[[2026-04-21-auth-cli-adr]]"
-  - "[[2026-04-18-aeat-auth-providers-research]]"
-  - "[[2026-04-18-auth-provider-abstraction-adr]]"
+  - '[[2026-04-18-aeat-auth-providers-research]]'
+  - '[[2026-04-18-auth-provider-abstraction-adr]]'
 ---
 
 # Cl@ve portal reference — live capture 2026-04-21

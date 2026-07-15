@@ -3,10 +3,9 @@ tags:
   - "#audit"
   - "#branch-hygiene"
 date: "2026-04-22"
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-04-21-google-auth-ux-adr]]"
-  - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-21-n26-data-source-implementation-adr]]"
 ---
 

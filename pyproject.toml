@@ -40,7 +40,7 @@ dependencies = [
   # declares click, so the dependency must be explicit here.
   "click>=8.1,<9",
   # PKCS#12 parsing for client-certificate auth.
-  "cryptography>=47.0.0,<48",
+  "cryptography>=48.0.1,<49",
   # XML parsing.
   "defusedxml>=0.7.1,<1",
   # HTTP client
@@ -886,6 +886,7 @@ skips = ["*/test_*.py", "**/conftest.py"]
 [tool.doc8]
 ignore-path = [
   "docs/_build",
+  "docs/_generated",
   "docs/_inventories",
   "docs/api",
   "docs/cli",

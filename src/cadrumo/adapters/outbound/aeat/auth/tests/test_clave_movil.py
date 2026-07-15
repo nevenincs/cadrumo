@@ -492,7 +492,6 @@ class TestPostAuthLanding:
         context = _SelectorDispatchContext(target_path=target_path)
         provider._context = context
         session = AeatSession(
-            provider_kind=AuthProviderKind.CLAVE_MOVIL,
             authenticated_at=_VERIFY_SESSION_AUTHENTICATED_AT,
             idle_deadline=_VERIFY_SESSION_AUTHENTICATED_AT + timedelta(minutes=18),
             storage_state_path=None,

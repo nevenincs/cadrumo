@@ -2,15 +2,15 @@
 tags:
   - "#adr"
   - "#live-cert-auth"
-date: 2026-04-16
-modified: '2026-07-10'
+date: '2026-04-16'
 related:
   - "[[2026-04-16-live-cert-auth-research]]"
   - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-status-reader-adr]]"
   - "[[2026-04-21-live-cert-auth-supersession-adr]]"
+superseded_by: '2026-04-21-live-cert-auth-supersession-adr'
+modified: '2026-07-15'
 ---
-
 > **PRESERVATION NOTE (apex-PM sweep, 2026-04-27):** This ADR was
 > originally authored in worktree `feature-117-live-cert` on 2026-04-16
 > for PR #148 (CLOSED unmerged 2026-04-21). The cert-auth design

@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#session-persistence"
 date: "2026-04-17"
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-04-16-session-persistence-research]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
@@ -55,7 +55,7 @@ The AEAT certificate handshake and login wall are expensive and make both local 
   - the storage-state SHA-256 does not match the sidecar
   - the persisted idle deadline has elapsed
   - the current loaded certificate thumbprint differs from the persisted thumbprint
-  - the resumed browser context fails `verify_login()`
+  - the resumed browser context fails `verify()`
 - After invalidation, re-run the fresh certificate-handshake path and capture a new persisted state from the resulting verified session.
 
 ## Rationale

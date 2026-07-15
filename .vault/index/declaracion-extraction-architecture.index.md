@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-extraction-architecture'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-W02-P02-S44]]'
   - '[[2026-05-21-declaracion-extraction-architecture-W02-P03-S46]]'
@@ -312,5 +312,5 @@ Auto-generated index of all documents tagged with `#declaracion-extraction-archi
 
 - `2026-05-21-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `registry-driven vs per-modelo Python extractors`
 - `2026-05-28-borrador-extraction-architecture-research` - `declaracion-extraction-architecture` research: `borrador-surface-architectural-audit`
-- `2026-05-28-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `{topic}`
+- `2026-05-28-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `declaración extraction architecture`
 - `2026-05-30-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `ocr-evidence-extraction-discipline`

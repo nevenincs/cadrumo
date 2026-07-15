@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-
-
-
 # Confirm the two-tier enrollment gate refuses a plain executable fence on an enrolled page while non-enrolled pages keep the verb-path and option-name checks
 
 ## Scope

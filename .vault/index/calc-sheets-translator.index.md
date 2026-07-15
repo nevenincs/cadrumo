@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calc-sheets-translator'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-14-calc-sheets-translator-audit]]'
 ---

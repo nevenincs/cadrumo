@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#data-output-standardization'
-date: '2026-07-14'
-modified: '2026-07-14'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-13-data-output-standardization-W01-P01-S01]]'
   - '[[2026-07-13-data-output-standardization-W01-P01-S02]]'
@@ -37,6 +37,8 @@ related:
   - '[[2026-07-13-data-output-standardization-W05-P09-S27]]'
   - '[[2026-07-13-data-output-standardization-W05-P09-S28]]'
   - '[[2026-07-13-data-output-standardization-W06-P10-S29]]'
+  - '[[2026-07-13-data-output-standardization-W06-P10-S30]]'
+  - '[[2026-07-13-data-output-standardization-W06-P10-summary]]'
   - '[[2026-07-13-data-output-standardization-adr]]'
   - '[[2026-07-13-data-output-standardization-audit]]'
   - '[[2026-07-13-data-output-standardization-env-var-ownership-audit]]'
@@ -94,6 +96,8 @@ Auto-generated index of all documents tagged with `#data-output-standardization`
 - `2026-07-13-data-output-standardization-W05-P09-S27` - Sweep the copy-pasted isolated-cli-backend fixture copies onto the canonical fixture
 - `2026-07-13-data-output-standardization-W05-P09-S28` - Sweep the isolated-storage fixture family and unify the two collection-time pytest storage roots into one cleanup-registered helper
 - `2026-07-13-data-output-standardization-W06-P10-S29` - Run collect-only, targeted suites, and lint gates with owner-triage of any shared-worktree failures
+- `2026-07-13-data-output-standardization-W06-P10-S30` - Run the fresh-context honesty review against the campaign closure summary and persist the audit record
+- `2026-07-13-data-output-standardization-W06-P10-summary` - `data-output-standardization` `W06.P10` summary
 
 ### plan
 

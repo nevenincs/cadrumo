@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-
-
-
 # Extend the vendored stylesheet with the terminal-framed visual language, the collapsed setup disclosure, and prefers-reduced-motion handling
 
 ## Scope

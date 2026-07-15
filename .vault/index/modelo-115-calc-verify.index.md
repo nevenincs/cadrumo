@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-115-calc-verify'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-27-modelo-115-calc-verify-adr]]'
   - '[[2026-04-27-modelo-115-calc-verify-phase1-step1-exec]]'
@@ -25,7 +25,7 @@ Auto-generated index of all documents tagged with `#modelo-115-calc-verify`.
 
 ### adr
 
-- `2026-04-27-modelo-115-calc-verify-adr` - `modelo-115-calc-verify` ADR — child of EPIC `#316`
+- `2026-04-27-modelo-115-calc-verify-adr` - `modelo-115-calc-verify` ADR — child of EPIC `#316` | (**status:** `superseded`)
 
 ### exec
 

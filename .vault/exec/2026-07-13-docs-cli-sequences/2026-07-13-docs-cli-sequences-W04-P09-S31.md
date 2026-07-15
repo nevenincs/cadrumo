@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
 
-
-
-
 # Implement the hover and focus help popover keyed into cli-tree.json via one same-origin per-page fetch, opening a verb token's live help by its command-path key
 
 ## Scope

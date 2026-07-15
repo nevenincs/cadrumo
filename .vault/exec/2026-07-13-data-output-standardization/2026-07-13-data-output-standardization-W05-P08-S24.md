@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Migrate the weak no-fsync atomic-write variants onto the helper
 
 ## Scope

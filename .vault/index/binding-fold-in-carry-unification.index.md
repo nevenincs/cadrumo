@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-fold-in-carry-unification'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-P01-S01]]'
   - '[[2026-06-26-binding-fold-in-carry-unification-P01-S02]]'

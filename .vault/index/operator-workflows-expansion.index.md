@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#operator-workflows-expansion'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-25-operator-workflows-expansion-adr]]'
   - '[[2026-04-25-operator-workflows-expansion-phase1-step1-exec]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#operator-workflows-expansion
 
 ### adr
 
-- `2026-04-25-operator-workflows-expansion-adr` - `operator-workflows-expansion` adr: cli-integration-coverage
+- `2026-04-25-operator-workflows-expansion-adr` - `operator-workflows-expansion` adr: cli-integration-coverage | (**status:** `superseded`)
 
 ### exec
 

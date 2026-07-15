@@ -21,7 +21,6 @@ from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
-from ....core.logging import get_logger
 from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
 from ._errors import LLMCacheError
@@ -29,7 +28,6 @@ from ._models import LLMResponse, UsageRecord, UsageSummary
 
 _USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
 _USAGE_VERSION = 1
-_log = get_logger(__name__)
 
 
 class UsageRecorder:
@@ -145,10 +143,10 @@ class UsageRecorder:
             expected_class=SensitivityClass.DIAGNOSTIC,
             max_supported_version=_USAGE_VERSION,
         ):
-            decoded = json.loads(stored.payload.decode("utf-8"))
-            if decoded.get("logical_root") != self._logical_root():
+            decoded = self._decode_record_payload(stored.payload)
+            if decoded is None:
                 continue
-            record = UsageRecord.model_validate_json(json.dumps(decoded["record"]))
+            record, _ = decoded
             record_date = record.created_at.date()
             if since is not None and record_date < since:
                 continue
@@ -157,34 +155,23 @@ class UsageRecorder:
             records.append(record)
         return tuple(sorted(records, key=lambda item: (item.created_at, item.request_id, item.prompt_id, item.caller)))
 
-    def _load_records_with_object_keys(self) -> tuple[tuple[UsageRecord, str | None], ...]:
+    def _load_records_with_object_keys(self) -> tuple[tuple[UsageRecord, str], ...]:
         """Load usage records paired with their reconstructed save-time object key.
 
-        Used only by :meth:`prune`. A record whose payload lacks its
-        ``object_key_uuid`` yields a ``None`` key (its save-time key cannot be
-        reconstructed) and is logged; :meth:`prune` decides how to treat that.
-        The public read path (:meth:`load_records`) does not reconstruct keys, so
-        a record missing its uuid stays fully readable rather than bricking the
-        usage view.
+        Used only by :meth:`prune`. Payload validation is shared with
+        :meth:`load_records`, so every read path rejects a record that does not
+        carry the canonical save-time ``object_key_uuid``.
         """
-        rows: list[tuple[UsageRecord, str | None]] = []
+        rows: list[tuple[UsageRecord, str]] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _USAGE_NAMESPACE,
             expected_class=SensitivityClass.DIAGNOSTIC,
             max_supported_version=_USAGE_VERSION,
         ):
-            decoded = json.loads(stored.payload.decode("utf-8"))
-            if decoded.get("logical_root") != self._logical_root():
+            decoded = self._decode_record_payload(stored.payload)
+            if decoded is None:
                 continue
-            record = UsageRecord.model_validate_json(json.dumps(decoded["record"]))
-            object_key_uuid = decoded.get("object_key_uuid")
-            if object_key_uuid is None:
-                _log.warning(
-                    "llm_usage: record %r has no object_key_uuid; its save-time key cannot be reconstructed for prune",
-                    record.request_id,
-                )
-                rows.append((record, None))
-                continue
+            record, object_key_uuid = decoded
             rows.append((record, self._object_key_for(record, object_key_uuid)))
         return tuple(
             sorted(rows, key=lambda item: (item[0].created_at, item[0].request_id, item[0].prompt_id, item[0].caller)),
@@ -201,10 +188,9 @@ class UsageRecorder:
         centralized ``cadrumo_llm_usage_retention_days`` and
         ``cadrumo_llm_usage_max_records`` settings.
 
-        Unlike the read path, ``prune`` hard-refuses (raises ``LLMCacheError``)
-        when any record lacks its ``object_key_uuid``: pruning must reconstruct
-        the exact save-time key to issue a matching delete, and a missing uuid
-        on a record this app wrote is storage corruption, not a legacy shape.
+        Like every usage-record read path, ``prune`` hard-refuses (raises
+        ``LLMCacheError``) when a record lacks its ``object_key_uuid``. Every
+        current writer emits that field, so absence is storage corruption.
         """
         settings = load_settings()
         effective_retention_days = (
@@ -214,23 +200,11 @@ class UsageRecorder:
 
         cutoff = now() - timedelta(days=effective_retention_days)
         rows = self._load_records_with_object_keys()
-        unreconstructable = [record.request_id for record, object_key in rows if object_key is None]
-        if unreconstructable:
-            msg = (
-                f"cannot prune LLM usage: {len(unreconstructable)} record(s) are missing their "
-                "object_key_uuid, so their save-time keys cannot be reconstructed for deletion"
-            )
-            raise LLMCacheError(msg)
-
-        to_remove: list[str] = [
-            object_key for record, object_key in rows if object_key is not None and record.created_at < cutoff
-        ]
+        to_remove = [object_key for record, object_key in rows if record.created_at < cutoff]
         remaining = [row for row in rows if row[0].created_at >= cutoff]
         if len(remaining) > effective_max_records:
             excess_count = len(remaining) - effective_max_records
-            to_remove.extend(
-                object_key for _, object_key in remaining[:excess_count] if object_key is not None
-            )
+            to_remove.extend(object_key for _, object_key in remaining[:excess_count])
 
         repository = secure_object_repository_for_active_bucket()
         removed = 0
@@ -264,6 +238,26 @@ class UsageRecorder:
     def _logical_root(self) -> str:
         """Return the stable logical usage partition."""
         return self.root_dir.resolve().as_posix()
+
+    def _decode_record_payload(self, payload: bytes) -> tuple[UsageRecord, str] | None:
+        """Decode one canonical usage payload for every read path.
+
+        Returns ``None`` when the record belongs to another logical root.
+
+        Raises:
+            LLMCacheError: When a matching record lacks the save-time UUID
+                emitted by every current writer.
+        """
+        decoded = json.loads(payload.decode("utf-8"))
+        if decoded.get("logical_root") != self._logical_root():
+            return None
+        object_key_uuid = decoded.get("object_key_uuid")
+        if not isinstance(object_key_uuid, str) or not object_key_uuid:
+            raise LLMCacheError(
+                "LLM usage payload is missing its object_key_uuid; cannot validate its canonical save-time key.",
+            )
+        record = UsageRecord.model_validate_json(json.dumps(decoded["record"]))
+        return record, object_key_uuid
 
     def _object_key_for(self, record: UsageRecord, object_key_uuid: str) -> str:
         """Return the unique natural key one usage record append was saved under.

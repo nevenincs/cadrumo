@@ -142,9 +142,7 @@ def _classify(path: str) -> set[GoldenSurface]:
     kinds: set[GoldenSurface] = set()
     lowered = path.lower()
     is_corpus_source = (
-        "/_data/corpus/" in path
-        and ".extracted." not in path
-        and lowered.endswith((".html", ".pdf", ".xlsx", ".xls"))
+        "/_data/corpus/" in path and ".extracted." not in path and lowered.endswith((".html", ".pdf", ".xlsx", ".xls"))
     )
     if is_corpus_source:
         kinds.add(GoldenSurface.ANY_CORPUS_SOURCE)

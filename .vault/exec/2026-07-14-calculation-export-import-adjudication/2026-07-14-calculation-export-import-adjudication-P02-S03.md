@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Adjudicate Modelo 036 outbound machine-file generation against the definitive current design and retire provisional-layout inferences
 
 ## Scope

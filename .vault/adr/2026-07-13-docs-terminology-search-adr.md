@@ -154,7 +154,6 @@ prove the equal-or-superset sweep target set. The stale
 `dev/docs/preprocess/__init__.py` docstring is corrected to describe the
 dual role. Plan step W02.P02.S07 is re-scoped to match.
 
-
 ## Update 2 (2026-07-13): the D3 gate, de-tautologized, fires implement-rung-2
 
 The close honesty review (the sibling audit) found the D3 gate could not

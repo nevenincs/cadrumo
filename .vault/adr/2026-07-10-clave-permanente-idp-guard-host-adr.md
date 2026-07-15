@@ -7,6 +7,7 @@ modified: '2026-07-10'
 related:
   - "[[2026-05-06-live-parity-oracle-backend-adr]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
+  - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'
 ---
 
 # `clave-permanente-idp-guard-host` adr: `Sanction the Cl@ve IdP host in the remote-state guard for auth browser-action policies` | (**status:** `accepted`)

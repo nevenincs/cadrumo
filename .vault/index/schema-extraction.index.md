@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-extraction'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-17-schema-extraction-adr]]'
   - '[[2026-04-17-schema-extraction-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#schema-extraction`.
 
 ### adr
 
-- `2026-04-17-schema-extraction-adr` - Architecture Decision Record: AEAT modelo schema extraction (#9)
+- `2026-04-17-schema-extraction-adr` - Architecture Decision Record: AEAT modelo schema extraction (#9) | (**status:** `accepted`)
 
 ### plan
 

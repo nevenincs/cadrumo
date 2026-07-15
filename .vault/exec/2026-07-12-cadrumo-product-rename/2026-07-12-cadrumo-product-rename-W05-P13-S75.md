@@ -10,9 +10,6 @@ related:
   - "[[2026-07-14-cadrumo-product-rename-audit]]"
 ---
 
-
-
-
 # Render and inspect the complete documentation site for stale product identity and broken references
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-docs-terminology-search-plan]]"
 ---
 
-
-
-
 # Gate the weight table: its ordering matches the ADR D8 ladder verbatim and every display class carries exactly one weight, failing on any unmapped class
 
 ## Scope

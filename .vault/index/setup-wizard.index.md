@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#setup-wizard'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-setup-wizard-adr]]'
   - '[[2026-04-12-setup-wizard-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#setup-wizard`.
 
 ### adr
 
-- `2026-04-12-setup-wizard-adr` - adr: first-run interactive setup wizard (#61)
+- `2026-04-12-setup-wizard-adr` - adr: first-run interactive setup wizard (#61) | (**status:** `superseded`)
 
 ### exec
 

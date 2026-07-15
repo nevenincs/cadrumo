@@ -428,7 +428,9 @@ def test_threshold_consumers_alias_core_constants() -> None:
         _assert_module_constant_identity(
             module_name=module_name,
             attr_name=attr_name,
-            expected=M347_THRESHOLD_EUR if constant_name == "M347_THRESHOLD_EUR" else getattr(external_constants, constant_name),
+            expected=M347_THRESHOLD_EUR
+            if constant_name == "M347_THRESHOLD_EUR"
+            else getattr(external_constants, constant_name),
             import_message=message,
         )
 
@@ -456,15 +458,19 @@ def test_m347_consumers_use_public_core_facade_in_source(source_tree_ast: Mappin
         assert private_leaf_imports == [], relative_path
 
     row_models_tree = _read_ast(repo_path("src/cadrumo/domain/modelos/_row_models.py"), source_tree_ast)
+    assert isinstance(row_models_tree, ast.Module)
     export_assignments = [
         node
         for node in row_models_tree.body
-        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets)
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets)
     ]
     assert len(export_assignments) == 1
+    export_value = export_assignments[0].value
+    assert isinstance(export_value, (ast.List, ast.Tuple))
     exported_names = {
         element.value
-        for element in export_assignments[0].value.elts
+        for element in export_value.elts
         if isinstance(element, ast.Constant) and isinstance(element.value, str)
     }
     assert "M347_THRESHOLD_EUR" not in exported_names

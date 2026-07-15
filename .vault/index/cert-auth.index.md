@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cert-auth'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-cert-auth-adr]]'
   - '[[2026-04-12-cert-auth-code-review-exec]]'
@@ -26,7 +26,7 @@ Auto-generated index of all documents tagged with `#cert-auth`.
 
 ### adr
 
-- `2026-04-12-cert-auth-adr` - ADR: PKCS#12 Certificate Authentication for AEAT Sede Electrónica
+- `2026-04-12-cert-auth-adr` - ADR: PKCS#12 Certificate Authentication for AEAT Sede Electrónica | (**status:** `accepted`)
 
 ### exec
 

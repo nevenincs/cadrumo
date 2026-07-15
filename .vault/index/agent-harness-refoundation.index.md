@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness-refoundation'
-date: '2026-07-02'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S01]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S02]]'
@@ -110,7 +110,7 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 
 ### adr
 
-- `2026-07-02-agent-harness-refoundation-adr` - `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `proposed`)
+- `2026-07-02-agent-harness-refoundation-adr` - `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
 ### audit
 

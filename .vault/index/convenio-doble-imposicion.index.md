@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#convenio-doble-imposicion'
-date: '2026-06-30'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-30-convenio-doble-imposicion-adr]]'
   - '[[2026-06-30-convenio-doble-imposicion-research]]'

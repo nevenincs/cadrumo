@@ -27,8 +27,7 @@ def _rotating_file_handlers(log_dir: Path) -> list[logging.handlers.RotatingFile
     return [
         handler
         for handler in root.handlers
-        if isinstance(handler, logging.handlers.RotatingFileHandler)
-        and Path(handler.baseFilename).parent == log_dir
+        if isinstance(handler, logging.handlers.RotatingFileHandler) and Path(handler.baseFilename).parent == log_dir
     ]
 
 

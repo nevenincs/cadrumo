@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Adjudicate Modelo 369 export while preserving Union, Importacion, and Exterior revision separation
 
 ## Scope

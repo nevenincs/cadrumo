@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#google-oauth'
+  - "#adr"
+  - "#google-oauth"
 date: '2026-05-13'
-modified: '2026-07-10'
 related:
   - "[[2026-05-13-google-oauth-adr]]"
   - "[[2026-05-13-google-oauth-snapshot-adr]]"
   - "[[2026-05-13-google-oauth-taxonomy-adr]]"
   - "[[2026-05-12-google-oauth-adr]]"
   - "[[2026-05-06-google-oauth-research]]"
+superseded_by: '2026-07-14-google-optional-adapter-boundary-adr'
+modified: '2026-07-14'
 ---
-
-# `google-oauth` adr: `Calculation-to-Sheets visual verification surface` | (**status:** `accepted`)
+# `google-oauth` adr: `Calculation-to-Sheets visual verification surface` | (**status:** `superseded`)
 
 ## Problem Statement
 

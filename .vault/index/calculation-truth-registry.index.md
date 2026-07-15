@@ -38,7 +38,6 @@ related:
   - '[[2026-05-03-calculation-truth-registry-phase5-step8-review-audit]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step9-exec]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step9-review-audit]]'
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
   - '[[2026-05-04-calculation-truth-registry-legal-grounding-review-audit]]'
@@ -510,7 +509,6 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 
 ### plan
 
-- `2026-05-03-calculation-truth-registry-rebuild-plan` - `calculation-truth-registry` `teardown-rebuild` plan
 - `2026-07-12-calculation-truth-registry-plan` - `calculation-truth-registry` `legacy-backlog reconciliation` plan
 - `2026-07-14-calculation-truth-registry-plan` - `calculation-truth-registry` plan
 

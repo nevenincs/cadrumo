@@ -397,8 +397,7 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
     actual_location = legacy_headers.get("location") if legacy_headers is not None else None
     if actual_location != expected_location:
         raise SystemExit(
-            "Legacy redirect check failed: "
-            f"expected Location {expected_location!r}, received {actual_location!r}.",
+            f"Legacy redirect check failed: expected Location {expected_location!r}, received {actual_location!r}.",
         )
 
 

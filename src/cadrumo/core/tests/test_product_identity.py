@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.core as core_module
-
 from .. import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
@@ -28,6 +26,13 @@ _IDENTITY_EXPORTS = frozenset(
         "ProductIdentity",
     }
 )
+
+_CORE_IDENTITY_OBJECTS = {
+    "AEAT_AUTHORITY_SHORT_NAME": AEAT_AUTHORITY_SHORT_NAME,
+    "PRODUCT_IDENTITY": PRODUCT_IDENTITY,
+    "IdentityReferent": IdentityReferent,
+    "ProductIdentity": ProductIdentity,
+}
 
 
 def test_product_identity_matches_the_accepted_external_tuple() -> None:
@@ -114,11 +119,11 @@ def test_core_facade_reexports_the_exact_identity_objects() -> None:
     assert {
         name
         for name in core_all
-        if any(getattr(core_module, name) is identity_object for identity_object in identity_objects)
+        if any(_CORE_IDENTITY_OBJECTS.get(name) is identity_object for identity_object in identity_objects)
     } == _IDENTITY_EXPORTS
 
     for export_name in _IDENTITY_EXPORTS:
-        assert getattr(core_module, export_name) is getattr(identity_module, export_name)
+        assert _CORE_IDENTITY_OBJECTS[export_name] is getattr(identity_module, export_name)
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:

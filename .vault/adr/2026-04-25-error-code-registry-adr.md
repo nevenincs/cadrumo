@@ -6,8 +6,6 @@ date: '2026-04-25'
 modified: '2026-07-03'
 related:
   - "[[2026-04-25-error-code-registry-research]]"
-  - "[[2026-04-24-aeat-cli-wireframe-adr]]"
-  - "[[2026-04-24-aeat-cli-wireframe-reference]]"
 ---
 
 # `error-code-registry` adr: `error-code-registry` | (**status:** `accepted`)

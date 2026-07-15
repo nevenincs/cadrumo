@@ -6,6 +6,7 @@ date: '2026-07-09'
 modified: '2026-07-10'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
+  - '[[2026-07-10-m184-socio-attribution-handoff-research]]'
 ---
 
 # `m184-socio-attribution-handoff` adr: `M184 attributed-base handoff to socio M100 via typed profile facts` | (**status:** `proposed`)

@@ -4,7 +4,7 @@
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
 Confirmed pointer repairs coordinate mutation through the public
-:func:`~application.user_profile.active_profile_pointer_transaction` boundary.
+:func:`~cadrumo.application.user_profile.active_profile_pointer_transaction` boundary.
 
 See Also:
     :class:`~application.workflow.ProfileBucketPointer`
@@ -221,9 +221,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         profile_total_keys=validation.total_keys,
         missing_required=validation.missing_required,
         next_action=(
-            "aeat app overview status"
-            if validation.valid
-            else f"aeat config profile edit {registered_pointer.label}"
+            "aeat app overview status" if validation.valid else f"aeat config profile edit {registered_pointer.label}"
         ),
     )
 

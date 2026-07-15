@@ -9,9 +9,6 @@ related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 
-
-
-
 # Record that Modelo 360 has no legacy outbound mandate and preserve its layout authority as evidence only
 
 ## Scope

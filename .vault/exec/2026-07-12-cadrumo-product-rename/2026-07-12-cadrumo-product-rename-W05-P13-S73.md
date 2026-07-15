@@ -10,9 +10,6 @@ related:
   - "[[2026-07-14-cadrumo-product-rename-audit]]"
 ---
 
-
-
-
 # Update release templates, checklist, and current verification proofs
 
 ## Scope

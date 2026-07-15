@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Rename the aeat-prefixed temp work-area and secret prefixes to cadrumo across the five sites
 
 ## Scope

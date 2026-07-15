@@ -8,7 +8,6 @@ related:
   - "[[2026-04-25-workflow-live-flag-excision-research]]"
   - "[[2026-04-25-workflow-live-flag-excision-adr]]"
   - "[[2026-04-25-workflow-live-flag-excision-plan]]"
-  - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-18-live-submit-cli-excision-adr]]"
 ---
 

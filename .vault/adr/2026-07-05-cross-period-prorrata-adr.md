@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-period-prorrata'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
@@ -90,7 +90,8 @@ This ADR decides the cross-period model so the deferral has a buildable design.
 - Binding rules: `revision-resolution-is-law-determined` (prior settlement
   revision resolved via `select_revision`, stored ids only asserted),
   `carried-observations-stamp-their-revision` (cross-year reads re-confirm the
-  stamp; divergence blocks, missing stamp advises),
+  required persisted stamp; missing or invalid stamps refuse at strict load,
+  while divergence or inability to re-confirm blocks carry),
   `period-filter-single-boundary-authority` (the annual window is
   `Period.contains` over the ejercicio's periods, no ad-hoc date math),
   `one-aggregation-path-pull-equals-calculate` (one shared resolver set),
@@ -181,8 +182,10 @@ DEFERRED with the schema shaped to admit it.
   anti-tautology proof (`aeat-roundtrip-discipline`).
 - Carry discipline: the seed read resolves the prior settlement revision via
   `select_revision` and re-confirms the observation's `stamped_revision_id`;
-  divergence blocks the seed, a missing legacy stamp surfaces a non-blocking
-  advisory. Local `app_filing` observations may feed the calculate-path carry
+  a matching stamp permits the seed, while divergence or inability to
+  re-confirm blocks it. A missing or invalid persisted stamp refuses at strict
+  load before seeding and is never reconstructed or bypassed. Local `app_filing`
+  observations may feed the calculate-path carry
   but never substitute for official evidence
   (`local-filed-observations-are-non-official-evidence`).
 - One aggregation path: the provisional apportionment and the settlement
@@ -327,9 +330,10 @@ supplies the missing model, not a shortcut past the proof gate.
   regularisation chain must be sourced from the Manual práctico IVA and bundled
   before promotion; without it the mechanism stays deferred (no fabricated
   expected values).
-- Pitfall: a future agent may seed the register from an UNstamped or
-  divergent-stamp observation "to unblock" — the seed gate must stay blocking
-  on divergence. A second pitfall: applying the provisional percentage to bases
+- Pitfall: a future agent may reconstruct or bypass a missing, corrupt, or
+  divergent observation stamp "to unblock". Missing or corrupt stamps must refuse
+  before seeding, and divergent or unreconfirmable populated stamps must stay
+  blocking. A second pitfall: applying the provisional percentage to bases
   instead of cuotas (the form declares full bases; only cuotas apportion).
 - Pathway: the register's regime/sector axes are the landing slots for prorrata
   especial and sectores diferenciados; the divergence advisory is the natural

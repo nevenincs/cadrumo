@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-access-gate"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-15'
 title: "Live AEAT Access Blocker & Verification Gate"
 related:
   - "[[2026-04-17-aeat-access-gate-research]]"
@@ -90,7 +90,7 @@ class AeatAuthenticator:
         session: AeatSession,
     ) -> AeatSession: ...
 
-    async def verify_login(
+    async def verify(
         self,
         session: AeatSession,
         *,
@@ -106,7 +106,7 @@ class AeatAuthenticator:
 ```
 
 `reauthenticate(session)` is the recovery path when a downstream
-call sees a 401 / 403 or `verify_login()` returns
+call sees a 401 / 403 or `verify()` returns
 `certificate_recognised=False`. Semantics:
 
 - Drops the current Playwright context and `storage_state`.
@@ -115,7 +115,7 @@ call sees a 401 / 403 or `verify_login()` returns
   `idle_deadline`.
 - Enforces a **hard cap of one retry per downstream call-site** to
   avoid burning AEAT anti-bot signals. Callers that observe a
-  failed `verify_login()` after `reauthenticate()` must raise
+  failed `verify()` after `reauthenticate()` must raise
   `AeatSessionExpiredError` upwards, not loop.
 - Raises `CertificateExpiredError` directly if the cert itself has
   expired since the original `authenticate()`; the old session is
@@ -133,7 +133,7 @@ Behavioural contract:
   constructs a `BrowserContext`, and stamps the
   `_aeat_certificate_thumbprint` marker that
   `preload_into_browser_context()` validates.
-- `verify_login()` navigates the authenticated context to
+- `verify()` navigates the authenticated context to
   `target_url` (defaulting to
   `Settings.aeat_certificate_verify_url`) and parses the
   surfaced NIF from the cert subject + the HTTP response code.
@@ -193,7 +193,7 @@ surfaces are safe for the audit log and doctor row.
 
 If the underlying PKCS#12 cert expires while a session is open, the
 session record is **not mutated**. Any subsequent call through the
-authenticator (`authenticate()`, `reauthenticate()`, `verify_login()`)
+authenticator (`authenticate()`, `reauthenticate()`, `verify()`)
 loads the cert afresh and raises the existing
 `CertificateExpiredError` from that call — never from an in-flight
 `AeatSession`. Downstream code therefore never needs to inspect a
@@ -411,7 +411,7 @@ A new live test `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/tes
   - `extract_nif_from_subject()` returns a valid NIF shape.
   - Under a real Playwright run,
     `await authenticator.authenticate()` returns an `AeatSession`,
-    and `await authenticator.verify_login(session)` returns
+    and `await authenticator.verify(session)` returns
     `AeatLoginAssertion(is_valid=True)`.
 - Zero mocks, patches, fakes (R5 + `tests/conftest.py` enforcement).
 - Clean up with `async with authenticator` or explicit
@@ -445,7 +445,7 @@ All added to `aeat.core.errors`-rooted hierarchy via `aeat.adapters.outbound.aea
   `AeatAccessGate.require_live_read()` when `AEAT_LIVE_TESTS_ENABLED`
   is not `"1"`.
 - `AeatLoginAssertionError(CertificateError)` — raised by
-  `verify_login()` when the assertion cannot be produced (network
+  `verify()` when the assertion cannot be produced (network
   error, page missing before Playwright can parse it).
 - `AeatSessionExpiredError(CertificateError)` — raised when an
   `AeatSession.is_stale()` check trips, or when a single

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#linkage-design-audit'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'
@@ -29,7 +29,7 @@ Auto-generated index of all documents tagged with `#linkage-design-audit`.
 
 ### adr
 
-- `2026-05-26-linkage-design-audit-adr` - `linkage-design-audit` ADR: `boundary-typed-contracts` (**status:** `accepted`)
+- `2026-05-26-linkage-design-audit-adr` - `linkage-design-audit` ADR: `boundary-typed-contracts` | (**status:** `accepted`)
 
 ### audit
 

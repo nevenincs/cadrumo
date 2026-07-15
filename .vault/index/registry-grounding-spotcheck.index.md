@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-grounding-spotcheck'
-date: '2026-07-03'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-03-registry-grounding-spotcheck-audit]]'
 ---

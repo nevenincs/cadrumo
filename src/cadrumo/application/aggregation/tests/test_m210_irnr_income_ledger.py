@@ -12,14 +12,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    SecureObjectRepository,
-    create_engine_from_settings,
-)
-from ....adapters.persistence.storage.sql import Base
+from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
-from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.calculations.registry import load_modelo_directory
 from ....domain.deadlines import IVARegime, TaxpayerProfile
@@ -27,7 +21,7 @@ from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...ledger import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
@@ -125,7 +119,7 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
     )
 
 
-def _seed_m210_profile(*, objects: object) -> None:
+def _seed_m210_profile(*, objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
@@ -143,19 +137,12 @@ def _seed_m210_profile(*, objects: object) -> None:
 
 def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambient_store(tmp_path: Path) -> None:
     """The public source mesh reads the injected store, never a same-bucket ambient store."""
-    injected_db_path = tmp_path / "injected" / "m210-injected.db"
-    injected_engine = create_engine_from_settings(
-        Settings(cadrumo_database_url=f"sqlite:///{injected_db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(injected_engine)
-    try:
-        with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_BUCKET_ID) as runtime:
-            injected_objects = SecureObjectRepository(
-                engine=injected_engine,
-                namespace_registry=STORAGE_NAMESPACE_REGISTRY,
-                active_session_bucket_id=_BUCKET_ID,
-                require_secure_active_session=True,
-            )
+    with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_BUCKET_ID) as runtime:  # noqa: SIM117
+        with isolated_injected_secure_object_repository(
+            tmp_path=tmp_path / "injected",
+            bucket_id=_BUCKET_ID,
+            database_name="m210-injected.db",
+        ) as injected_objects:
             injected_transaction_repository = TransactionCatalogueRepository(
                 bucket_id=_BUCKET_ID,
                 objects=injected_objects,
@@ -207,8 +194,6 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
             assert revision.source_transaction_ids == (injected_id,)
             assert {source.source_ref for source in revision.source_provenance} == {f"transaction:{injected_id}"}
             assert ambient_transaction_repository.exists() is False
-    finally:
-        injected_engine.dispose()
 
 
 def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_admission(tmp_path: Path) -> None:

@@ -71,7 +71,7 @@ to the parent.
 
 Two prior ADRs explicitly discussed "split" but meant something different from N-way row splitting:
 
-- `[[2026-05-02-aeat-cli-redesign-adr]]` originally specified `aeat app ledger edit --split business=SHARE --split personal=SHARE` — a single-row allocation knob (one ratio, two shares summing to 1).
+- The retired predecessor CLI used `aeat app ledger edit --split business=SHARE --split personal=SHARE` for a single-row allocation knob (one ratio, two shares summing to 1); it is historical evidence, not current authority.
 - `[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]` explicitly renamed `split` → `allocate` and stated "the prior 'split' framing implied row-splitting semantics, which the verb does not perform."
 
 The `LedgerSplit(BaseModel)` model (introduced commit `f55ba4c8`, refactored `f3526196`, deleted `3a08f880` on 2026-05-14) carried `business_share` + `personal_share` summing to 1 — it was a **workflow-layer annotation** on `LedgerReviewRecord` in the now-deleted `user_cli.py` shim. It was **never persisted to `Transaction`**. Commit `19ccb0d5` scrubbed `--split` from the CLI.

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#export-first'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-17-export-first-adr]]'
   - '[[2026-04-17-export-first-roadmap-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#export-first`.
 
 ### adr
 
-- `2026-04-17-export-first-adr` - export-first-adr
+- `2026-04-17-export-first-adr` - export-first-adr | (**status:** `accepted`)
 
 ### plan
 

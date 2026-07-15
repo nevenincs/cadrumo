@@ -184,9 +184,7 @@ def _source_resolution_was_assessed(
     """
     if str(work_unit.modelo) != Modelo.M369.value:
         return False
-    return any(
-        ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for ref in source_provenance
-    ) or any(
+    return any(ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for ref in source_provenance) or any(
         issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for issue in source_issues
     )
 

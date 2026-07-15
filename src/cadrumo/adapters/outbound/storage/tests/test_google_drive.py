@@ -104,6 +104,7 @@ def test_google_drive_provider_refuses_the_former_product_vault_before_service_c
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.former_vault_folder"
     assert exc.context == {"vault_folder_name": "aeat-vault"}
+    assert exc.context is not None
     assert resolve_error_message(exc) == tr(exc.translated_message, **exc.context)
 
 

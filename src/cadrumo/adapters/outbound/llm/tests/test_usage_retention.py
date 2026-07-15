@@ -29,12 +29,8 @@ from .._usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def _inject_legacy_usage_record(recorder: UsageRecorder, *, request_id: str, anchor: datetime) -> None:
-    """Persist a pre-change usage payload that lacks ``object_key_uuid``.
-
-    Reproduces a record written before the retention change so the read/prune
-    split can be exercised against a genuinely uuid-less payload.
-    """
+def _inject_corrupt_usage_record(recorder: UsageRecorder, *, request_id: str, anchor: datetime) -> None:
+    """Persist a malformed payload that lacks the required ``object_key_uuid``."""
     record = _record(1, request_id=request_id, anchor=anchor)
     redacted = redact_structured(
         record.model_dump(mode="json"),
@@ -43,7 +39,7 @@ def _inject_legacy_usage_record(recorder: UsageRecorder, *, request_id: str, anc
     payload = {"logical_root": recorder._logical_root(), "record": redacted}
     secure_object_repository_for_active_bucket().save(
         namespace=_USAGE_NAMESPACE,
-        object_key=f"{recorder._logical_root()}|{record.created_at.isoformat()}|{request_id}|legacy",
+        object_key=f"{recorder._logical_root()}|{record.created_at.isoformat()}|{request_id}|corrupt",
         classification=SensitivityClass.DIAGNOSTIC,
         schema_version=_USAGE_VERSION,
         written_at=record.created_at,
@@ -138,21 +134,21 @@ def test_client_construction_sweeps_the_usage_store(tmp_path: Path) -> None:
     assert {item.request_id for item in recorder.load_records()} == {"fresh"}
 
 
-def test_read_path_tolerates_record_missing_object_key_uuid(tmp_path: Path) -> None:
-    """A legacy record with no object_key_uuid stays readable (no brick on the read path)."""
+def test_read_path_refuses_record_missing_object_key_uuid(tmp_path: Path) -> None:
+    """The normal read path treats a missing writer-owned UUID as corruption."""
     anchor = datetime.now(UTC)
     recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
-    _inject_legacy_usage_record(recorder, request_id="legacy", anchor=anchor)
+    _inject_corrupt_usage_record(recorder, request_id="corrupt", anchor=anchor)
 
-    # load_records does not reconstruct keys, so the uuid-less record loads fine.
-    assert {item.request_id for item in recorder.load_records()} == {"legacy"}
+    with pytest.raises(LLMCacheError, match="object_key_uuid"):
+        recorder.load_records()
 
 
 def test_prune_hard_refuses_a_record_missing_object_key_uuid(tmp_path: Path) -> None:
     """prune cannot reconstruct a uuid-less record's key, so it refuses loudly."""
     anchor = datetime.now(UTC)
     recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
-    _inject_legacy_usage_record(recorder, request_id="legacy", anchor=anchor)
+    _inject_corrupt_usage_record(recorder, request_id="corrupt", anchor=anchor)
 
     with pytest.raises(LLMCacheError, match="object_key_uuid"):
         recorder.prune(retention_days=30, max_records=1000)

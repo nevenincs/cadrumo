@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli-cascade-supersession'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-cascade-supersession-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#profile-lifecycle-cli-cascad
 
 ### adr
 
-- `2026-06-03-profile-lifecycle-cli-cascade-supersession-adr` - `profile-lifecycle-cli-cascade-supersession` duplicate-date plan supersession ADR
+- `2026-06-03-profile-lifecycle-cli-cascade-supersession-adr` - `profile-lifecycle-cli-cascade-supersession` duplicate-date plan supersession ADR | (**status:** `accepted`)
 
 ### research
 

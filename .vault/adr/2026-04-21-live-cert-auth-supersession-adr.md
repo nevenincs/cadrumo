@@ -2,17 +2,16 @@
 tags:
   - "#adr"
   - "#live-cert-auth"
-date: 2026-04-21
-modified: '2026-07-10'
+date: '2026-04-21'
 related:
-  - "[[2026-04-18-auth-protocol-adr]]"
-  - "[[2026-04-18-auth-provider-abstraction-adr]]"
-  - "[[2026-04-18-cert-provider-migration-adr]]"
-  - "[[2026-04-18-auth-provider-ecosystem-research]]"
-  - "[[2026-04-27-live-cert-auth-research]]"
+  - '[[2026-04-18-auth-protocol-adr]]'
+  - '[[2026-04-18-auth-provider-abstraction-adr]]'
+  - '[[2026-04-27-live-cert-auth-research]]'
+supersedes:
+  - '2026-04-16-live-cert-auth-adr'
+modified: '2026-07-15'
 ---
-
-# `live-cert-auth` adr: `issue-141 pr-148 superseded by certificateauthprovider` | (**status:** `accepted`)
+# `live-cert-auth` adr: `issue-141 pr-148 superseded by the landed AuthProvider implementation` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -49,7 +48,7 @@ gated on `AEAT_LIVE_TESTS_ENABLED=1`:
 1. Health severity gate (OK or WARN).
 2. Real mTLS handshake via `AeatAuthenticator.verify_handshake()`.
 3. Cert load + NIF extraction from the FNMT subject.
-4. A full async `authenticate()` + `verify_login()` pass driven by real
+4. A full async `authenticate()` + `verify()` pass driven by real
    `async_playwright` — no mocks, patches, or monkey-patched attributes.
 
 The gated live cert smoke test at `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate_live.py` covers
@@ -72,15 +71,15 @@ the lower-level handshake path.
   `os.environ` globally inside a `try/finally` — a thread-safety smell that
   Gemini's review flagged. The equivalent bridge on `main` does not need that
   helper: `CertificateBundle` is constructed directly from `Settings` inside
-  `CertificateAuthProvider._require_bundle`, and `pydantic-settings` handles
+  `AeatAuthenticator._require_bundle`, and `pydantic-settings` handles
   env loading once at startup. The obsolete helper is not worth porting.
 - PR #148's `aeat browser verify-cert` CLI command is the only sliver of the
   diff that has no analogue on `main`. That command wraps
   `load_certificate + verify_handshake + one read-only StatusReader pass` into
   an on-demand CLI. Its value is ergonomic only: the same verification already
-  runs via the gated live tests and via `CertificateAuthProvider.authenticate`
+  runs via the gated live tests and via `AeatAuthenticator.authenticate`
   during any real authenticator invocation. Any future CLI convenience should
-  be scoped as a small follow-up issue against `CertificateAuthProvider` —
+  be scoped as a small follow-up issue against `AeatAuthenticator` —
   not resurrected from PR #148's pre-protocol diff.
 - PR #148's branch has diverged from `main` by dozens of file deletions (the
   now-retired `_authenticator.py`, `_gate.py`, `_models.py`, `_protocols.py`
@@ -99,8 +98,8 @@ the lower-level handshake path.
   `test_authenticator_live.py` / `test_certificate_live.py` tests.
 - **Do not port the `aeat browser verify-cert` CLI** in this ADR's scope.
   If an on-demand CLI verifier is still desired, file a new issue scoped as a
-  thin wrapper around `CertificateAuthProvider.authenticate` and
-  `AeatAuthenticator.verify_login`; it must not reintroduce the
+  thin wrapper around `AeatAuthenticator.authenticate` and
+  `AeatAuthenticator.verify`; it must not reintroduce the
   `load_certificate_from_settings` helper or its environment-mutation
   pattern.
 - **No other code changes are proposed by this ADR.** The Gemini-flagged
@@ -136,7 +135,9 @@ The live certificate `AuthProvider` implementation is `AeatAuthenticator`
 (`src/aeat/adapters/outbound/aeat/auth/_authenticator.py`, with
 `kind = AuthProviderKind.CERTIFICATE`). Read every `CertificateAuthProvider`
 mention above against the real surface: `CertificateAuthProvider.authenticate`
-is `AeatAuthenticator.authenticate`, and `CertificateAuthProvider.verify` is
-`AeatAuthenticator.verify` / `AeatAuthenticator.verify_login` /
-`AeatAuthenticator.verify_handshake`. The decisions this ADR records — close
-PR #148, close issue #141 — are unaffected by the naming reconciliation.
+is `AeatAuthenticator.authenticate`, and historical
+`CertificateAuthProvider.verify` references map solely to
+`AeatAuthenticator.verify`. `AeatAuthenticator.verify_handshake` remains a
+separate lower-level certificate helper, not a provider-verification alias. The
+decisions this ADR records — close PR #148, close issue #141 — are unaffected by
+the naming reconciliation.

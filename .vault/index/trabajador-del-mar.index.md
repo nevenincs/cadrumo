@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#trabajador-del-mar'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-31-trabajador-del-mar-W01-P01-S01]]'
   - '[[2026-05-31-trabajador-del-mar-W01-P01-S02]]'
@@ -39,7 +39,7 @@ Auto-generated index of all documents tagged with `#trabajador-del-mar`.
 
 ### adr
 
-- `2026-05-31-trabajador-del-mar-adr` - trabajador-del-mar adr: maritime-worker-irpf-axis | (**status:** accepted)
+- `2026-05-31-trabajador-del-mar-adr` - trabajador-del-mar adr: maritime-worker-irpf-axis | (**status:** `accepted`)
 
 ### exec
 

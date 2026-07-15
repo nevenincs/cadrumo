@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-auth-providers"
 date: '2026-04-18'
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-04-18-aeat-auth-providers-research]]"
   - "[[2026-04-12-cert-auth-adr]]"
@@ -15,7 +15,14 @@ related:
 
 ## status
 
-Accepted — 2026-04-18 (status resolved 2026-05-21). The pluggable `AuthProvider` abstraction this ADR specifies was implemented and merged (`CertificateAuthProvider` via PR #282 / #297) and is referenced as established fact by later accepted ADRs; the status field is corrected from `Proposed` to `Accepted` to match that landed reality. Supersedes the `Non-goals` section of `2026-04-12-cert-auth-adr.md` (lines 83–84) which listed Cl@ve and DNIe as out-of-scope. Builds on `2026-04-17-aeat-access-gate-adr.md` (the env-var gate stays as the policy layer regardless of provider).
+Accepted — 2026-04-18 (implementation reconciled 2026-07-15). The pluggable
+`AuthProvider` abstraction is implemented: `AeatAuthenticator` is the concrete
+certificate provider, alongside `ClaveMovilAuthProvider` and
+`ClavePermanenteAuthProvider`. Cl@ve PIN remains a reserved catalogue slot, not
+an implemented provider or engineering commitment. Supersedes the `Non-goals`
+section of `2026-04-12-cert-auth-adr.md` (lines 83–84) which listed Cl@ve and
+DNIe as out-of-scope. Builds on `2026-04-17-aeat-access-gate-adr.md` (the env-var
+gate stays as the policy layer regardless of provider).
 
 ## context
 
@@ -35,14 +42,16 @@ The project's export-first charter (#197) defers AEAT live writes to 1.0.0. Ther
 
 ## decision
 
-Generalise AEAT authentication from a single provider (certificate) to a **pluggable `AuthProvider` abstraction** with four initial concrete providers:
+Generalise AEAT authentication from a single provider (certificate) to a
+**pluggable `AuthProvider` abstraction**. The current implemented and reserved
+inventory is:
 
 | Provider | Priority | Automation envelope |
 |---|---|---|
-| `CertificateAuthProvider` | P0 — keep existing functionality | Fully headless |
-| `ClavePermanenteAuthProvider` | P1 — new primary for autónomos without cert | Fully headless for read paths |
-| `ClaveMovilAuthProvider` | P2 — interactive fallback | Headless except per-session human approval on phone |
-| `ClavePinAuthProvider` | P3 — sporadic one-off use | Headless except 24 h PIN entry per session |
+| `AeatAuthenticator` (`certificate`) | P0 — implemented | Fully headless |
+| `ClavePermanenteAuthProvider` | P1 — implemented | Fully headless for read paths |
+| `ClaveMovilAuthProvider` | P2 — implemented | Headless except per-session human approval on phone |
+| `clave_pin` catalogue slot | Reserved, not implemented | No runtime provider |
 
 `DniElectronicoAuthProvider` and `eIDASAuthProvider` are deferred to 1.x+ pending cross-platform smartcard middleware and EU-citizen use-case pressure.
 
@@ -52,7 +61,7 @@ Generalise AEAT authentication from a single provider (certificate) to a **plugg
 class AuthProvider(Protocol):
     """Provider-agnostic protocol for obtaining an AEAT-authenticated session."""
 
-    kind: AuthProviderKind  # StrEnum: CERTIFICATE, CLAVE_PERMANENTE, CLAVE_MOVIL, CLAVE_PIN, ...
+    kind: AuthProviderKind  # CERTIFICATE, CLAVE_PERMANENTE, or CLAVE_MOVIL
 
     async def authenticate(
         self,
@@ -81,7 +90,7 @@ class AeatSession(BaseModel, frozen=True):
     idle_deadline: datetime
     storage_state_path: Path | None
     identity_nif: str            # the taxpayer's NIF/NIE, obtained however
-    provider_detail: CertificateSessionDetail | ClavePermanenteSessionDetail | ClaveMovilSessionDetail | ClavePinSessionDetail = Field(discriminator="kind")
+    provider_detail: CertificateSessionDetail | ClavePermanenteSessionDetail | ClaveMovilSessionDetail = Field(discriminator="kind")
 
     @property
     def provider_kind(self) -> AuthProviderKind:
@@ -107,16 +116,19 @@ class BrowserSessionLike(Protocol):
 
 The three env vars already there (`AEAT_ALLOW_LIVE_READ_OPT_IN`, `AEAT_LIVE_READ_ENABLED`, and the write-side variants per #117/#197) remain the policy layer. Gate enforcement is unchanged. Provider selection is orthogonal.
 
-### CLI surface
+### CLI surface (superseded shape reconciled)
 
 ```
-aeat auth list-providers               # enumerate configured + configurable providers
-aeat auth login --provider cert        # or clave-permanente, clave-movil, clave-pin
-aeat auth status                       # which provider is active, session TTL remaining
-aeat auth logout
+aeat config auth providers             # implemented + reserved catalogue entries
+aeat config auth configure --provider certificate|clave_movil|clave_permanente
+aeat config auth status
+aeat config auth test
+aeat config auth clear
 ```
 
-`aeat doctor` extends to a per-provider row surface: one row per configured provider showing health.
+The later accepted `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`
+supersedes the former top-level `aeat auth` grammar and is the authority for the
+operator-facing catalogue and verbs.
 
 ## scope
 
@@ -155,12 +167,12 @@ aeat auth logout
 
 ## rollout
 
-- File an umbrella EPIC plus one child per provider (cert reframe + Cl@ve Permanente + Cl@ve Móvil + CLI + doctor extension).
-- Session-shape refactor is the prerequisite child and blocks all concrete providers.
-- Existing cert work (#141 blocker) continues but re-titled under the new provider framework.
-- Cl@ve Permanente ships first among new providers (lowest friction, highest user value).
-- Cl@ve Móvil ships as a follow-up once the interactive human-approval prompt UX is validated.
-- Cl@ve PIN is filed but left P3 unless Kent-journey evidence calls for it.
+- The session-shape refactor and the certificate, Cl@ve Permanente, and Cl@ve
+  Móvil providers are implemented behind the shared protocol.
+- `provider_detail.kind` is the sole stored provider-kind authority for session
+  and assertion records; `provider_kind` is a read-only projection.
+- Cl@ve PIN remains reserved unless a later accepted ADR and implementation
+  promote it; the reservation alone is not an open engineering gap.
 
 ## alternatives considered
 

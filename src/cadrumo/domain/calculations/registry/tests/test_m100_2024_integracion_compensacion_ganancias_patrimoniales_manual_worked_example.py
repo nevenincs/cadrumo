@@ -65,6 +65,7 @@ from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
+    RegistryScenarioRunReport,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
@@ -129,24 +130,28 @@ def _scenario(
     scenario_id: str,
     grounded: bool,
 ) -> RegistryCalculationScenario:
-    expected_outputs = tuple(
-        RegistryScenarioExpectedOutput(
-            target_casilla_id=validated_casilla_id(casilla_id, surface=casilla_id),
-            value=Decimal(value),
-            legal_refs=legal_refs,
-            source_refs=_SOURCE_REFS,
+    expected_outputs = (
+        tuple(
+            RegistryScenarioExpectedOutput(
+                target_casilla_id=validated_casilla_id(casilla_id, surface=casilla_id),
+                value=Decimal(value),
+                legal_refs=legal_refs,
+                source_refs=_SOURCE_REFS,
+            )
+            for casilla_id, value, legal_refs in _GROUNDED_OUTPUTS
         )
-        for casilla_id, value, legal_refs in _GROUNDED_OUTPUTS
-    ) if grounded else (
-        # Harmless CCAA/scenario-invariant placeholder so the harness's
-        # non-empty expected_outputs requirement is met for the anti-tautology
-        # scenario, whose report is only read (never assert-matched).
-        RegistryScenarioExpectedOutput(
-            target_casilla_id=validated_casilla_id("0422", surface="0422"),
-            value=Decimal("5600.00"),
-            legal_refs=_GP_AHORRO_REFS,
-            source_refs=_SOURCE_REFS,
-        ),
+        if grounded
+        else (
+            # Harmless CCAA/scenario-invariant placeholder so the harness's
+            # non-empty expected_outputs requirement is met for the anti-tautology
+            # scenario, whose report is only read (never assert-matched).
+            RegistryScenarioExpectedOutput(
+                target_casilla_id=validated_casilla_id("0422", surface="0422"),
+                value=Decimal("5600.00"),
+                legal_refs=_GP_AHORRO_REFS,
+                source_refs=_SOURCE_REFS,
+            ),
+        )
     )
     return RegistryCalculationScenario(
         id=scenario_id,
@@ -212,19 +217,27 @@ def test_integracion_compensacion_anti_tautology_saldo_slot_flips() -> None:
         scenario_id="m100-2024-gp-net-gain",
         grounded=False,
     )
-    net_loss_report = run_registry_calculation_scenario(net_loss, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    net_loss_report = run_registry_calculation_scenario(
+        net_loss, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT
+    )
     assert_registry_scenario_matches(net_loss_report)
-    net_gain_report = run_registry_calculation_scenario(net_gain, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    net_gain_report = run_registry_calculation_scenario(
+        net_gain, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT
+    )
 
-    def _value(report: object, casilla_id: str) -> Decimal | None:
-        return report.calculation.values.get(validated_casilla_id(casilla_id, surface=casilla_id))  # type: ignore[attr-defined]
+    def _value(report: RegistryScenarioRunReport, casilla_id: str) -> Decimal | None:
+        return report.calculation.values.get(validated_casilla_id(casilla_id, surface=casilla_id))
 
     saldo_negativo_casilla = validated_casilla_id("0421", surface="0421")
     saldo_positivo_casilla = validated_casilla_id("0420", surface="0420")
 
-    assert net_loss_report.calculation.values[saldo_negativo_casilla] > Decimal("0")
+    net_loss_negative = net_loss_report.calculation.values[saldo_negativo_casilla]
+    assert net_loss_negative is not None
+    assert net_loss_negative > Decimal("0")
     assert net_loss_report.calculation.values[saldo_positivo_casilla] == Decimal("0")
-    assert _value(net_gain_report, "0420") is not None and _value(net_gain_report, "0420") > Decimal("0")
+    net_gain_positive = _value(net_gain_report, "0420")
+    assert net_gain_positive is not None
+    assert net_gain_positive > Decimal("0")
     assert _value(net_gain_report, "0421") == Decimal("0")
 
 

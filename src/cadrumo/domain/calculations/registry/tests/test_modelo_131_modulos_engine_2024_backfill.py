@@ -301,9 +301,7 @@ class TestModulos2024DateAxisBoundaries:
     def test_2024_coefficient_parameters_are_scoped_to_calendar_year_2024(self) -> None:
         snapshot = _committed_snapshot("131", 2024, "1T")
         coeficientes = next(
-            parameter
-            for parameter in snapshot.revision.parameters
-            if parameter.id == "m131-modulos-coeficientes-2024"
+            parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes-2024"
         )
         for row in coeficientes.keyed_brackets:
             assert row.valid_from == date(2024, 1, 1)

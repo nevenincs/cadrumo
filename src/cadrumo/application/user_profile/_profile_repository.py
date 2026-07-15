@@ -80,7 +80,7 @@ from ...domain.user_profile import (
 from . import ReactivateProfileCommand, RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
-from ._profile_pointer_transaction import active_profile_pointer_transaction
+from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
 
 if TYPE_CHECKING:
@@ -187,6 +187,29 @@ class ProfileRepository:
     @property
     def root(self) -> Path:
         return self._root
+
+    def _rollback_failed_create(
+        self,
+        *,
+        profile_id: str,
+        pointer_transaction: ActiveProfilePointerTransaction,
+        rollback_pointer: bytes | None,
+    ) -> tuple[BaseException, ...]:
+        """Attempt every create rollback action and return all failures."""
+        rollback_errors: list[BaseException] = []
+        try:
+            dispose_engines_for_bucket(profile_id)
+        except BaseException as dispose_error:
+            rollback_errors.append(dispose_error)
+        try:
+            self._remove_bucket_directory(profile_id)
+        except BaseException as cleanup_error:
+            rollback_errors.append(cleanup_error)
+        try:
+            pointer_transaction.restore(rollback_pointer)
+        except BaseException as restore_error:
+            rollback_errors.append(restore_error)
+        return tuple(rollback_errors)
 
     # ── create ─────────────────────────────────────────────────────
 
@@ -341,19 +364,11 @@ class ProfileRepository:
                 )
                 record = result.profile
             except BaseException as create_error:
-                rollback_errors: list[BaseException] = []
-                try:
-                    dispose_engines_for_bucket(resolved_id)
-                except BaseException as dispose_error:
-                    rollback_errors.append(dispose_error)
-                try:
-                    self._remove_bucket_directory(resolved_id)
-                except BaseException as cleanup_error:
-                    rollback_errors.append(cleanup_error)
-                try:
-                    pointer_transaction.restore(rollback_pointer)
-                except BaseException as restore_error:
-                    rollback_errors.append(restore_error)
+                rollback_errors = self._rollback_failed_create(
+                    profile_id=resolved_id,
+                    pointer_transaction=pointer_transaction,
+                    rollback_pointer=rollback_pointer,
+                )
                 if rollback_errors:
                     raise BaseExceptionGroup(
                         "profile creation and repository rollback failed",

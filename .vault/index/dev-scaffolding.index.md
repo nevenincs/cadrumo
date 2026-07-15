@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dev-scaffolding'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-dev-scaffolding-adr]]'
   - '[[2026-04-12-dev-scaffolding-phase1-summary-exec]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#dev-scaffolding`.
 
 ### adr
 
-- `2026-04-12-dev-scaffolding-adr` - dev-scaffolding adr
+- `2026-04-12-dev-scaffolding-adr` - dev-scaffolding adr | (**status:** `accepted`)
 
 ### exec
 

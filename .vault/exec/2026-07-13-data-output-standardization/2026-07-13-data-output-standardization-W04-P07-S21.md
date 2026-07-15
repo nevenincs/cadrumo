@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Remove the tracked repo-root run artifacts from version control
 
 ## Scope

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-franquicia-2026-scope'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-01-iva-franquicia-2026-scope-adr]]'
   - '[[2026-07-01-iva-franquicia-2026-scope-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#iva-franquicia-2026-scope`.
 
 ### adr
 
-- `2026-07-01-iva-franquicia-2026-scope-adr` - `iva-franquicia-2026-scope` adr: `{title}` | (**status:** `{proposed|accepted|rejected|deprecated}`)
+- `2026-07-01-iva-franquicia-2026-scope-adr` - `iva-franquicia-2026-scope` adr: defer modelling the IVA régimen de franquicia until Spanish transposition | (**status:** `accepted`)
 
 ### research
 

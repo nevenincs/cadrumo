@@ -9,9 +9,6 @@ related:
   - "[[2026-07-13-data-output-standardization-plan]]"
 ---
 
-
-
-
 # Fix the export filename schema in the test corpus to modelo-id-year-period with canonical period tokens
 
 ## Scope

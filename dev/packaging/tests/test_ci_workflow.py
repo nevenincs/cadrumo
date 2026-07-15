@@ -59,8 +59,8 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     job = document["jobs"]["cadrumo-lint-and-test"]
     assert job["name"] == "Cadrumo / ${{ matrix.os }} / Python ${{ matrix.python-version }}"
     commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
-    assert "uv run --no-sync aeat app registry verify --json" in commands
-    assert "uv run --no-sync aeat app registry audit-oracles --json" in commands
+    assert "uv run --no-sync aeat app registry verify" in commands
+    assert "uv run --no-sync aeat app registry audit-oracles" in commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in commands
 
 
@@ -82,8 +82,8 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
     registry_commands = {command for command in commands if " app registry " in command}
 
     assert registry_commands == {
-        "uv run --no-sync aeat app registry verify --json",
-        "uv run --no-sync aeat app registry audit-oracles --json",
+        "uv run --no-sync aeat app registry verify",
+        "uv run --no-sync aeat app registry audit-oracles",
     }
     assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
 
@@ -93,7 +93,7 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
 @pytest.mark.parametrize(
     "surface",
     (
-        "uv run --no-sync aeat app registry verify --json",
+        "uv run --no-sync aeat app registry verify",
         "aeat --version",
         "echo 'AEAT is the Spanish tax authority'",
         "uv add cadrumo && aeat --version",
