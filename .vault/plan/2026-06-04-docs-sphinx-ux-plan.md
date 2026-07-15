@@ -14,6 +14,16 @@ related:
   - '[[2026-06-01-docs-educational-surface-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `docs-sphinx-ux` implementation plan
 
 Implement the accepted Furo-first generated Sphinx UX design system.
@@ -72,8 +82,8 @@ Turn the first documentation viewport into a compact task router while preservin
 
 Reduce generated API and CLI mental load through curated wrappers and generator changes instead of manual output edits.
 
-- [ ] `W02.P04.S10` - add a curated API boundary overview; `docs/api/index.md`.
-- [ ] `W02.P04.S11` - retarget the API toctree entry to the curated overview; `docs/index.md`.
+- [x] `W02.P04.S10` - add a curated API boundary overview; `docs/api/index.md`.
+- [x] `W02.P04.S11` - retarget the API toctree entry to the curated overview; `docs/index.md`.
 - [x] `W02.P04.S12` - separate operator CLI routes from schema registry detail; `src/aeat/entrypoints/cli/_doc_reference.py`.
 - [x] `W02.P04.S13` - update CLI reference conformance expectations; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
 
@@ -94,8 +104,8 @@ Build the real HTML documentation and require explicit human approval of visual 
 
 Build and inspect the real HTML output so the decision is validated against the generated documentation tree.
 
-- [ ] `W03.P05.S14` - run docs dependency and stub drift gates; `docs conformance lane`.
-- [ ] `W03.P05.S15` - build the rendered HTML documentation; `docs/_build/html`.
+- [x] `W03.P05.S14` - run docs dependency and stub drift gates; `docs conformance lane`.
+- [x] `W03.P05.S15` - build the rendered HTML documentation; `docs/_build/html`.
 - [ ] `W03.P05.S16` - inspect desktop and mobile rendered UX; `docs/_build/html`.
 
 ### Phase `W03.P08` - approve rendered experience
