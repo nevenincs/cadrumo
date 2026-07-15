@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-16'
 tier: L3
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-research]]'
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S94, S95 -->
 
@@ -72,9 +82,9 @@ Create one atomic pointer boundary and make profile logout close every session, 
 - [x] `W02.P04.S28` - Route profile-health repair mutation through the shared reentrant active-profile pointer transaction with locked reassessment, bounded fail-closed contention, and the health result's repairable flag as the sole eligibility authority, correct the three lifecycle CLI integration pointer setup calls to use the isolated backend root, then prove pointer-sourced unreadable-manifest repair, cold no-op behavior, and real CLI pointer repair, absence, and dangling-pointer outcomes; `src/cadrumo/application/workflow/_profile_health.py, src/cadrumo/application/workflow/tests/test_profile_health.py, src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`.
 - [x] `W02.P04.S29` - Prove byte-exact failed-create rollback through the repository transaction nested under outer pointer ownership, then prove dangling-pointer repair fails closed under real thread contention and succeeds after lock release against real files; `src/cadrumo/application/user_profile/tests/test_orchestration_pointer.py`.
 - [x] `W02.P04.S30` - Canonicalize active-profile labels to immutable bucket UUIDs at the WorkflowState and profile-health boundaries by composing the core precedence resolver with the existing manifest resolver without adding resolver authority, then prove a real lifecycle-repository-backed label override resolves its encrypted record and keeps a lower-priority dangling pointer ineligible until the override is cleared, after which the pointer becomes authoritative and repairable; `src/cadrumo/application/workflow/_models.py, src/cadrumo/application/workflow/_profile_health.py, src/cadrumo/application/workflow/tests/test_active_profile_resolution.py`.
-- [ ] `W02.P04.S31` - Add idempotent active BucketSession close after key zeroization and engine disposal; `src/cadrumo/adapters/persistence/storage/master_key/_active_session.py`.
-- [ ] `W02.P04.S32` - Add provider-session eviction that clears the OS-keystore cache and closes its BucketSession; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `W02.P04.S33` - Prove repeated close zeroizes keys, seals the session, disposes engines, and removes active-session visibility; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_session.py`.
+- [ ] `W02.P04.S31` - Introduce one public idempotent active-session eviction boundary that closes the currently bound BucketSession before clearing ContextVar visibility, route idle-expiry and interpreter-exit cleanup through it, and re-export it through the master-key and storage facades; `src/cadrumo/adapters/persistence/storage/master_key/_active_session.py, src/cadrumo/adapters/persistence/storage/master_key/__init__.py, src/cadrumo/adapters/persistence/storage/__init__.py`.
+- [ ] `W02.P04.S32` - Refactor provider teardown into idempotent session eviction that closes its BucketSession before unwinding activation and clearing provider bookkeeping without recreating the retired OS-keyring cache; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `W02.P04.S33` - Prove repeated active-session eviction removes current and boolean ContextVar visibility after the existing key zeroization and engine disposal, preserves nested outer-session restoration, and clears an already sealed binding; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_session.py`.
 - [ ] `W02.P04.S34` - Prove provider eviction closes real storage and permits a clean fresh reopen; `src/cadrumo/adapters/persistence/storage/tests/test_engine_session_lifecycle.py`.
 - [ ] `W02.P04.S35` - Compose strong profile logout as session close, provider-cache eviction, lock release, and pointer clear; `src/cadrumo/application/user_profile/_orchestration.py`.
 - [ ] `W02.P04.S36` - Prove strong logout releases a real lock, closes storage, clears the pointer, and remains idempotent; `src/cadrumo/application/user_profile/tests/test_orchestration.py`.
