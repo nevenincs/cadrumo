@@ -191,6 +191,7 @@ Disclaimer <disclaimer>
 CLI reference <cli/index>
 Cadrumo reference <reference/index>
 Glossary <_generated/glossary>
+Casilla reference <_generated/casillas/index>
 ```
 
 ```{toctree}

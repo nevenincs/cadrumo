@@ -45,10 +45,11 @@ loading instead of lazy chunking.
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -56,6 +57,41 @@ if TYPE_CHECKING:
 #: Callback that injects custom records into the open index after the
 #: directory pass. The custom-record step supplies this; this module calls it.
 InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
+
+#: Built subtrees excluded from the Pagefind full-text pass. The generated
+#: casilla reference pages carry every casilla the injected custom records
+#: already cover (6,330 records); indexing the pages too would duplicate every
+#: record and, on the two large modelos, bloat the index with thousands of
+#: label tokens. Exclusion is expressed the Pagefind-native way: stamping
+#: ``data-pagefind-ignore`` on the ``<body>`` of each page drops it from the
+#: index (the page's anchors stay in the DOM for the deep links to resolve).
+_PAGEFIND_EXCLUDED_SUBDIRS: Final[tuple[str, ...]] = ("_generated/casillas",)
+
+_BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)")
+
+
+def _mark_excluded_pages(html_root: Path) -> int:
+    """Stamp ``data-pagefind-ignore`` on the body of every excluded built page.
+
+    Runs before the directory pass so Pagefind skips the tagged pages. Idempotent
+    (the regex only matches a body tag that is not already tagged) and a no-op
+    when an excluded subtree is absent (e.g. the fixture sites tests drive).
+
+    Returns:
+        The number of pages tagged.
+    """
+    tagged = 0
+    for subdir in _PAGEFIND_EXCLUDED_SUBDIRS:
+        root = html_root / subdir
+        if not root.is_dir():
+            continue
+        for page in root.rglob("*.html"):
+            html = page.read_text(encoding="utf-8")
+            new_html, count = _BODY_TAG_RE.subn("<body data-pagefind-ignore", html, count=1)
+            if count:
+                page.write_text(new_html, encoding="utf-8", newline="\n")
+                tagged += 1
+    return tagged
 
 
 class PagefindUnavailableError(RuntimeError):
@@ -103,6 +139,7 @@ async def _run_index(
     """
     from pagefind.index import PagefindIndex
 
+    _mark_excluded_pages(html_root)
     output_path = html_root / "pagefind"
     async with PagefindIndex() as index:
         response = await index.add_directory(str(html_root))

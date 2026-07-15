@@ -1122,6 +1122,25 @@ def setup(app):
 
         generate_glossary_reference(Path(__file__).resolve().parent)
 
+    def _generate_casilla_reference(app):
+        """Render the per-modelo casilla reference pages fresh from the registry.
+
+        The ``docs/_generated/casillas/<modelo>.rst`` pages are a build-time
+        projection of the registry casilla set (the same projection the injected
+        search records use): regenerated on every build and gitignored, never
+        committed, so they cannot drift from the registry. Generating in
+        ``builder-inited`` writes the pages before Sphinx reads the source tree,
+        so their anchors resolve and the nitpicky ``-n -W`` gate holds. These
+        pages are the destination the search palette's casilla results deep-link
+        to (they carry each casilla's full legal/source grounding).
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        from dev.docs.casilla_reference import generate_casilla_reference
+
+        generate_casilla_reference(Path(__file__).resolve().parent)
+
     def _emit_cli_tree(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
 
@@ -1172,6 +1191,7 @@ def setup(app):
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)
+    app.connect("builder-inited", _generate_casilla_reference)
     app.connect("builder-inited", _emit_cli_tree)
     app.connect("builder-inited", _check_cli_sequences)
     # Priority 700 runs after intersphinx (which resolves external targets at the

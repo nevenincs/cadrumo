@@ -146,8 +146,10 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     if concept_match:
         return target in concept_targets
 
-    # Casilla namespace: search.html?q=<modelo>+<number>
-    casilla_match = re.fullmatch(r"search\.html\?q=(?P<modelo>[^+]+)\+.+", target)
+    # Casilla namespace: the per-modelo reference page plus the casilla anchor
+    # (_generated/casillas/<modelo>.html#casilla-<slug>). The query-string
+    # hand-off is retired; the target is now a real page+anchor.
+    casilla_match = re.fullmatch(r"_generated/casillas/(?P<modelo>[A-Za-z0-9-]+)\.html#casilla-[a-z0-9-]+", target)
     if casilla_match:
         return casilla_match.group("modelo") in casilla_modelos
 
@@ -254,7 +256,7 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
     pass on stale data.
     """
     assert not _target_resolves("_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces)
-    assert not _target_resolves("search.html?q=000+99999", build_surfaces)
+    assert not _target_resolves("_generated/casillas/000.html#casilla-99999", build_surfaces)
     assert not _target_resolves("api/cadrumo.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept_target = next(iter(build_surfaces["concept_targets"]))
