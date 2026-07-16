@@ -414,11 +414,20 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
 
 
 def logout_active_profile() -> str | None:
-    """Clear the active profile pointer and return the profile that was logged out."""
+    """Close the active storage session, clear its pointer, and return its profile.
+
+    The pointer transaction is acquired before session teardown to preserve the
+    project-wide lock order. Session close and ContextVar eviction complete
+    before pointer mutation, so an unexpected teardown failure cannot report a
+    successful pointer-only logout. Provider bookkeeping remains owned by the
+    provider context and unwinds idempotently when that context exits.
+    """
+    from ...adapters.persistence.storage import close_active_bucket_session
     from ...core import resolve_active_bucket_id
 
     with active_profile_pointer_transaction() as pointer_transaction:
         before = resolve_active_bucket_id()
+        close_active_bucket_session()
         pointer_transaction.clear()
         return before
 
