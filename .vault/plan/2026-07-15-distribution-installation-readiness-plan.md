@@ -21,15 +21,12 @@ Build one immutable artifact cohort, install it through every claimed channel, p
 real grounded tax work, publish those exact bytes, and prove public reacquisition before
 documenting availability.
 
-### Phase `W01.P01` - Build one complete immutable cohort
+### Phase `W01.P01` - Require the complete Python product
 
-Make the command-bearing distribution require its runtime data and generate one hash-bound cohort once from a clean tagged source archive.
+Make every command-bearing Python installation resolve the exact-version runtime data required for grounded tax work.
 
 - [x] `W01.P01.S01` - Require exact-version manuals and official companions for every command-bearing install; `pyproject.toml`.
 - [x] `W01.P01.S02` - Lock the complete runtime dependency closure after metadata changes; `uv.lock`.
-- [ ] `W01.P01.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
-- [ ] `W01.P01.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
-- [ ] `W01.P01.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
 
 ### Phase `W01.P02` - Prove installed tax and MCP behavior
 
@@ -74,15 +71,18 @@ Create a pinned Python virtualenv formula and tap snapshot and exercise every pl
 - [ ] `W02.P05.S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot; `dev/packaging/smoke_homebrew.py`.
 - [ ] `W02.P05.S24` - Run the Homebrew acquisition gate on every claimed macOS and Linux row; `.github/workflows/packaging-homebrew.yml`.
 
-### Phase `W02.P06` - Generate and prove Claude artifacts
+### Phase `W02.P06` - Generate Claude artifacts and seal the cohort
 
-Bind plugin, marketplace, and MCPB generation to the complete cohort and require real client startup and tax-work tool calls.
+Generate plugin marketplace and MCPB artifacts then freeze every Python Scoop Homebrew and Claude member into one immutable cohort before real client installation.
 
 - [ ] `W02.P06.S25` - Generate plugin bootstrap configuration that resolves the complete cohort; `src/cadrumo/agent/_workspace.py`.
 - [ ] `W02.P06.S26` - Byte-compare the complete generated marketplace plugin tree with its source authority; `src/cadrumo/agent/tests/test_marketplace_generation.py`.
-- [ ] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [ ] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
 - [ ] `W02.P06.S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort; `packaging/mcpb/build.py`.
+- [ ] `W02.P06.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
+- [ ] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
+- [ ] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
+- [ ] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [ ] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
 
 ## Wave `W03` - Prove platforms and clients
