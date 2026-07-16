@@ -252,6 +252,19 @@ def delete_persisted_session(
     return removed
 
 
+def persisted_session_exists(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    bucket_id: str | None = None,
+) -> bool:
+    """Return whether ``kind`` has persisted session state in ``bucket_id``."""
+    del settings
+    if kind not in _STEM_BY_KIND:
+        return False
+    return _get_session_store().exists(storage_state_paths(kind, bucket_id=bucket_id).storage_state)
+
+
 async def require_verified_aeat_session(
     settings: Settings,
     *,
@@ -303,6 +316,44 @@ async def require_verified_aeat_session(
 
 
 async def ensure_authenticated_aeat_session(
+    settings: Settings,
+    *,
+    kind: AuthProviderKind | None = None,
+    fresh: bool = False,
+    reset_lock: bool = False,
+    operation: str = "auth-ensure-session",
+    target_url: str | None = None,
+    browser_session_factory: BrowserSessionFactory | None = None,
+    provider_factory: ProviderFactory | None = None,
+) -> AuthenticatedAeatSessionResult:
+    """Serialize and fail-close the central live-session writer."""
+    from ..workflow import workflow_state_repository
+    from ._operator_scope import (
+        active_profile_storage_span,
+        assert_auth_cleanup_not_in_progress,
+        auth_mutation_span,
+    )
+
+    with active_profile_storage_span(settings) as bucket_id:
+        if bucket_id is None:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.no_session",
+            )
+        with auth_mutation_span(settings=settings, bucket_id=bucket_id):
+            assert_auth_cleanup_not_in_progress(workflow_state_repository().load())
+            return await _ensure_authenticated_aeat_session_locked(
+                settings,
+                kind=kind,
+                fresh=fresh,
+                reset_lock=reset_lock,
+                operation=operation,
+                target_url=target_url,
+                browser_session_factory=browser_session_factory,
+                provider_factory=provider_factory,
+            )
+
+
+async def _ensure_authenticated_aeat_session_locked(
     settings: Settings,
     *,
     kind: AuthProviderKind | None = None,

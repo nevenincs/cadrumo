@@ -32,6 +32,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -57,6 +59,7 @@ from ._certificate_sources import (
 from ._certificate_sources import (
     active_certificate_source as _active_certificate_source,
 )
+from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
 from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
 from ._operator_results import (
     AuthConfigureDanglingActiveProfileError,
@@ -68,6 +71,11 @@ from ._operator_results import (
     CertificateSourceNotFoundError,
     CertificateSourcePayload,
     CertificateSourceSecretMutationResult,
+)
+from ._operator_scope import (
+    active_profile_storage_span,
+    assert_auth_cleanup_not_in_progress,
+    auth_mutation_span,
 )
 
 if TYPE_CHECKING:
@@ -153,54 +161,57 @@ def _gate_active_bucket() -> str:
     return active_bucket_id
 
 
+@contextmanager
+def _certificate_mutation_span() -> Iterator[str]:
+    """Open the active bucket and serialize one certificate auth mutation."""
+    settings = load_settings()
+    with active_profile_storage_span(settings) as bucket_id:
+        if bucket_id is None:
+            raise AuthConfigureNoActiveBucketError(
+                translated_message="application.auth.operator.errors.no_active_bucket",
+            )
+        with auth_mutation_span(settings=settings, bucket_id=bucket_id):
+            active_bucket_id = _gate_active_bucket()
+            from ..workflow import workflow_state_repository
+
+            assert_auth_cleanup_not_in_progress(workflow_state_repository().load())
+            yield active_bucket_id
+
+
 def _persist_with_event(
     *,
     active_bucket_id: str,
-    next_state: WorkflowState,
+    transform: Callable[[WorkflowState], WorkflowState],
     event_type: BucketEventType,
     object_id: str,
     payload: dict[str, str],
-) -> None:
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import secure_object_repository_for_active_bucket
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+) -> WorkflowState:
     from ..workflow import workflow_state_repository
 
     occurred_at = now()
-    actor = "operator"
-    event_id = derive_bucket_event_id(
-        bucket_id=active_bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=object_id,
-        payload=payload,
-    )
-    catalogue_repo = BucketEventHistoryRepository()
-    next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
-        BucketEvent(
-            event_id=event_id,
-            bucket_id=active_bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=BucketEventObjectType.PROFILE,
-            object_id=object_id,
-            payload_version=1,
-            payload=payload,
+    state_repo = workflow_state_repository()
+    return state_repo.update_with_bucket_events(
+        lambda current: (
+            transform(_state_without_pending_cleanup(current)),
+            build_auth_bucket_events(
+                bucket_id=active_bucket_id,
+                events=(
+                    AuthBucketEventSpec(
+                        event_type,
+                        object_id,
+                        payload,
+                        occurred_at,
+                    ),
+                ),
+            ),
         ),
     )
-    state_repo = workflow_state_repository()
-    state_write = state_repo.to_secure_object_write(next_state)
-    catalogue_write = catalogue_repo.to_secure_object_write(next_catalogue)
-    secure_object_repository_for_active_bucket().save_many((state_write, catalogue_write))
+
+
+def _state_without_pending_cleanup(state: WorkflowState) -> WorkflowState:
+    """Return ``state`` only when no resumable auth cleanup owns the bucket."""
+    assert_auth_cleanup_not_in_progress(state)
+    return state
 
 
 def register_operator_certificate_source(
@@ -221,24 +232,19 @@ def register_operator_certificate_source(
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
     from ...domain.buckets import BucketEventType
-    from ..workflow import workflow_state_repository
-
-    active_bucket_id = _gate_active_bucket()
-    state_repo = workflow_state_repository()
-    current_state = state_repo.load()
-    next_state = register_certificate_source(
-        current_state,
-        name=name,
-        certificate_path=certificate_path,
-        friendly_name=friendly_name,
-    )
-    _persist_with_event(
-        active_bucket_id=active_bucket_id,
-        next_state=next_state,
-        event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_REGISTERED,
-        object_id=name.strip(),
-        payload={"name": name.strip(), "certificate_path": str(certificate_path)},
-    )
+    with _certificate_mutation_span() as active_bucket_id:
+        _persist_with_event(
+            active_bucket_id=active_bucket_id,
+            transform=lambda state: register_certificate_source(
+                state,
+                name=name,
+                certificate_path=certificate_path,
+                friendly_name=friendly_name,
+            ),
+            event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_REGISTERED,
+            object_id=name.strip(),
+            payload={"name": name.strip(), "certificate_path": str(certificate_path)},
+        )
     return CertificateSourceMutationResult(name=name.strip(), certificate_path=str(certificate_path))
 
 
@@ -288,26 +294,31 @@ def select_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
     from ...domain.buckets import BucketEventType
-    from ..workflow import workflow_state_repository
+    normalized_name = name.strip()
+    with _certificate_mutation_span() as active_bucket_id:
+        from ..workflow import workflow_state_repository
 
-    active_bucket_id = _gate_active_bucket()
-    state_repo = workflow_state_repository()
-    current_state = state_repo.load()
-    try:
-        next_state = select_certificate_source(current_state, name=name)
-    except _StateCertificateSourceNotFoundError as exc:
-        raise CertificateSourceNotFoundError(
-            translated_message="application.auth.operator.errors.certificate_source_not_found",
-            context={"name": name.strip()},
-        ) from exc
-    record = next_state.auth.certificate_sources[name.strip()]
-    _persist_with_event(
-        active_bucket_id=active_bucket_id,
-        next_state=next_state,
-        event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SELECTED,
-        object_id=name.strip(),
-        payload={"name": name.strip(), "certificate_path": record.certificate_path},
-    )
+        current = workflow_state_repository().load()
+        record = current.auth.certificate_sources.get(normalized_name)
+        if record is None:
+            raise CertificateSourceNotFoundError(
+                translated_message="application.auth.operator.errors.certificate_source_not_found",
+                context={"name": normalized_name},
+            )
+        try:
+            next_state = _persist_with_event(
+                active_bucket_id=active_bucket_id,
+                transform=lambda state: select_certificate_source(state, name=normalized_name),
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SELECTED,
+                object_id=normalized_name,
+                payload={"name": normalized_name, "certificate_path": record.certificate_path},
+            )
+        except _StateCertificateSourceNotFoundError as exc:
+            raise CertificateSourceNotFoundError(
+                translated_message="application.auth.operator.errors.certificate_source_not_found",
+                context={"name": normalized_name},
+            ) from exc
+        record = next_state.auth.certificate_sources[normalized_name]
     return CertificateSourceMutationResult(
         name=name.strip(),
         certificate_path=record.certificate_path,
@@ -334,18 +345,18 @@ def remove_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
     from ...domain.buckets import BucketEventType
     from ..workflow import workflow_state_repository
 
-    active_bucket_id = _gate_active_bucket()
-    state_repo = workflow_state_repository()
-    current_state = state_repo.load()
-    next_state, removed = remove_certificate_source(current_state, name=name)
-    if removed:
-        _persist_with_event(
-            active_bucket_id=active_bucket_id,
-            next_state=next_state,
-            event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_REMOVED,
-            object_id=name.strip(),
-            payload={"name": name.strip()},
-        )
+    normalized_name = name.strip()
+    with _certificate_mutation_span() as active_bucket_id:
+        current_state = workflow_state_repository().load()
+        removed = normalized_name in current_state.auth.certificate_sources
+        if removed:
+            _persist_with_event(
+                active_bucket_id=active_bucket_id,
+                transform=lambda state: remove_certificate_source(state, name=normalized_name)[0],
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_REMOVED,
+                object_id=normalized_name,
+                payload={"name": normalized_name},
+            )
     return CertificateSourceMutationResult(name=name.strip(), removed=removed)
 
 
@@ -528,28 +539,28 @@ def set_operator_certificate_source_secret(
     from ...domain.buckets import BucketEventType
     from ..workflow import workflow_state_repository
 
-    active_bucket_id = _gate_active_bucket()
-    state = workflow_state_repository().load()
     normalized_name = name.strip()
-    if normalized_name not in _auth_state_certificate_sources(state):
-        raise CertificateSourceNotFoundError(
-            translated_message="application.auth.operator.errors.certificate_source_not_found",
-            context={"name": normalized_name},
+    with _certificate_mutation_span() as active_bucket_id:
+        state = workflow_state_repository().load()
+        if normalized_name not in _auth_state_certificate_sources(state):
+            raise CertificateSourceNotFoundError(
+                translated_message="application.auth.operator.errors.certificate_source_not_found",
+                context={"name": normalized_name},
+            )
+        backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
+        rotated = backend.get(normalized_name) is not None
+        backend.set(normalized_name, secret)
+        event_type = (
+            BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED
+            if rotated
+            else BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET
         )
-    backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
-    rotated = backend.get(normalized_name) is not None
-    backend.set(normalized_name, secret)
-    event_type = (
-        BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED
-        if rotated
-        else BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET
-    )
-    _record_certificate_secret_event(
-        active_bucket_id=active_bucket_id,
-        event_type=event_type,
-        object_id=normalized_name,
-        payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
-    )
+        _record_certificate_secret_event(
+            active_bucket_id=active_bucket_id,
+            event_type=event_type,
+            object_id=normalized_name,
+            payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
+        )
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
         backend=SECURE_STORAGE_BACKEND_LABEL,
@@ -578,17 +589,17 @@ def remove_operator_certificate_source_secret(*, name: str) -> CertificateSource
     """
     from ...domain.buckets import BucketEventType
 
-    active_bucket_id = _gate_active_bucket()
     normalized_name = name.strip()
-    backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
-    removed = backend.remove(normalized_name)
-    if removed:
-        _record_certificate_secret_event(
-            active_bucket_id=active_bucket_id,
-            event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
-            object_id=normalized_name,
-            payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
-        )
+    with _certificate_mutation_span() as active_bucket_id:
+        backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
+        removed = backend.remove(normalized_name)
+        if removed:
+            _record_certificate_secret_event(
+                active_bucket_id=active_bucket_id,
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
+                object_id=normalized_name,
+                payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
+            )
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
         backend=SECURE_STORAGE_BACKEND_LABEL,
@@ -616,43 +627,24 @@ def _record_certificate_secret_event(
     ``WorkflowState`` write to co-persist, unlike
     :func:`~application.auth._certificate_sources_operator._persist_with_event`.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import secure_object_repository_for_active_bucket
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
-
     occurred_at = now()
-    actor = "operator"
-    event_id = derive_bucket_event_id(
-        bucket_id=active_bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=object_id,
-        payload=payload,
-    )
-    catalogue_repo = BucketEventHistoryRepository()
-    next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
-        BucketEvent(
-            event_id=event_id,
-            bucket_id=active_bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=BucketEventObjectType.PROFILE,
-            object_id=object_id,
-            payload_version=1,
-            payload=payload,
+    from ..workflow import workflow_state_repository
+
+    workflow_state_repository().update_with_bucket_events(
+        lambda state: (
+            state,
+            build_auth_bucket_events(
+                bucket_id=active_bucket_id,
+                events=(
+                    AuthBucketEventSpec(
+                        event_type,
+                        object_id,
+                        payload,
+                        occurred_at,
+                    ),
+                ),
+            ),
         ),
-    )
-    secure_object_repository_for_active_bucket().save_many(
-        (catalogue_repo.to_secure_object_write(next_catalogue),),
     )
 
 

@@ -262,7 +262,11 @@ def auth_login(
 @auth_app.command("logout", help=tr("cli.config.auth.logout_help"))
 def auth_logout(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
+    provider: str | None = typer.Option(
+        None,
+        "--provider",
+        help=tr("cli.config.auth.provider_help"),
+    ),
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.logout_all_help")),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -318,7 +322,11 @@ def auth_logout(
 @auth_app.command("reset", help=tr("cli.config.auth.reset_help"))
 def auth_reset(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
+    provider: str | None = typer.Option(
+        None,
+        "--provider",
+        help=tr("cli.config.auth.provider_help"),
+    ),
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.reset_all_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.auth.reset_yes_help")),
     output_language: OutputLanguage | None = typer.Option(

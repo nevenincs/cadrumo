@@ -26,6 +26,7 @@ class SecureObjectRecord(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes
+    revision_id: str = Field(min_length=64, max_length=64)
 
 
 class SecureObjectMetadata(BaseModel):
