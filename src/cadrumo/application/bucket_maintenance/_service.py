@@ -21,6 +21,8 @@ from __future__ import annotations
 import base64
 import json
 import secrets
+from collections.abc import Generator, Iterable
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -31,6 +33,7 @@ from ...adapters.persistence.storage import (
     BUCKET_DB_DIRNAME,
     StorageCustodyProfile,
 )
+from ...adapters.persistence.storage.bucket import acquire_lock, release_lock
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
@@ -210,6 +213,39 @@ class BucketMaintenanceService:
         )
 
         return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
+
+    @contextmanager
+    def deletion_target_locks(
+        self,
+        *,
+        root: Path,
+        bucket_ids: Iterable[str],
+        wait_seconds: float,
+    ) -> Generator[None]:
+        """Hold existing deletion targets in stable UUID order.
+
+        Missing targets, including a dangling active-pointer identifier, are
+        not materialized merely to create a lockfile. Existing targets are
+        validated against link redirection before their canonical bucket
+        lockfiles are acquired.
+        """
+        with ExitStack() as stack:
+            for bucket_id in sorted(set(bucket_ids)):
+                try:
+                    paths = validated_bucket_deletion_paths(
+                        root=root,
+                        bucket_id=bucket_id,
+                    )
+                except FileNotFoundError:
+                    continue
+                except ValueError as exc:
+                    raise BucketDeleteRefusedError(
+                        "bucket deletion lock refuses a linked target",
+                        context={"bucket_id": bucket_id},
+                    ) from exc
+                acquire_lock(paths, wait_seconds=wait_seconds)
+                stack.callback(release_lock, paths)
+            yield
 
     def rename(self, command: RenameBucketCommand) -> RenameBucketResult:
         """Relabel the bucket identified by ``command.bucket_id``.
