@@ -159,7 +159,10 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert "uv pip check" in hooks[3]
     assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
     for executable, hook in zip(("aeat", "cadrumo-mcp"), hooks[4:], strict=True):
-        assert "CADRUMO_LOCAL_STORAGE_ROOT=$state" in hook
+        assert (
+            "if not defined CADRUMO_LOCAL_STORAGE_ROOT "
+            "set `\"CADRUMO_LOCAL_STORAGE_ROOT=$state`\""
+        ) in hook
         assert f"venv\\Scripts\\{executable}.exe" in hook
         assert "%*" in hook
         assert f"Join-Path $dir '{executable}.cmd'" in hook

@@ -123,6 +123,7 @@ def _wrapper_script(executable: str) -> str:
     return (
         "$state = Join-Path $persist_dir 'state'; "
         '$wrapper = "@echo off`r`n'
+        'if not defined CADRUMO_LOCAL_STORAGE_ROOT '
         'set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"`r`n'
         f'`"%~dp0venv\\Scripts\\{executable}.exe`" %*`r`n"; '
         f"Set-Content -LiteralPath (Join-Path $dir '{executable}.cmd') "
