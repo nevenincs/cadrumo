@@ -27,6 +27,8 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -230,12 +232,14 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
 
     from ..state_projection import build_operator_state_projection
 
-    projection = build_operator_state_projection(
-        requested_provider=provider,
-        probe_live_backend=True,
-        include_workspace_summary=False,
-        include_pending_obligations=False,
-    )
+    scope_kind = AuthProviderKind.CERTIFICATE if provider == AuthProviderKind.CERTIFICATE.value else None
+    with _active_certificate_credential_scope(load_settings(), scope_kind):
+        projection = build_operator_state_projection(
+            requested_provider=provider,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
     return _auth_status_from_projection(projection)
 
 
@@ -445,27 +449,68 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
 
         from ..state_projection import build_operator_state_projection
 
-        projection = build_operator_state_projection(
-            requested_provider=requested_provider,
-            probe_live_backend=True,
-            include_workspace_summary=False,
-            include_pending_obligations=False,
-        )
-        status = _auth_status_from_projection(projection)
-        session_probe = _probe_local_session(status.provider, settings=resolved_settings)
-        provider_probe = _probe_configured_provider(
-            status.provider,
-            status.certificate_path,
-            settings=resolved_settings,
-        )
-        return AuthTestResult(
-            **status.model_dump(),
-            persisted_session_present=session_probe.present,
-            persisted_session_expired=session_probe.expired,
-            persisted_session_state=session_probe.state,
-            probe_summary=provider_probe.summary or session_probe.summary,
-            probe_result=provider_probe.result,
-        )
+        with _active_certificate_credential_scope(resolved_settings, provider_kind) as scoped_settings:
+            projection = build_operator_state_projection(
+                requested_provider=requested_provider,
+                probe_live_backend=True,
+                include_workspace_summary=False,
+                include_pending_obligations=False,
+            )
+            status = _auth_status_from_projection(projection)
+            session_probe = _probe_local_session(status.provider, settings=scoped_settings)
+            provider_probe = _probe_configured_provider(
+                status.provider,
+                status.certificate_path,
+                settings=scoped_settings,
+            )
+            return AuthTestResult(
+                **status.model_dump(),
+                persisted_session_present=session_probe.present,
+                persisted_session_expired=session_probe.expired,
+                persisted_session_state=session_probe.state,
+                probe_summary=provider_probe.summary or session_probe.summary,
+                probe_result=provider_probe.result,
+            )
+
+
+@contextmanager
+def _active_certificate_credential_scope(
+    settings: Settings,
+    provider_kind: AuthProviderKind | None,
+) -> Iterator[Settings]:
+    """Yield ``settings`` scoped to the active certificate credential.
+
+    For the certificate provider this resolves the selected certificate
+    source's path and its secure-storage passphrase — or the global
+    single-certificate settings when no named source is selected — through
+    :func:`application.auth.resolve_active_certificate_credentials`, and
+    overrides ``cadrumo_certificate_path`` /
+    ``cadrumo_certificate_password_secret`` /
+    ``cadrumo_certificate_friendly_name`` so ``auth status``, ``auth test``,
+    and ``auth login`` all consume the same resolved certificate bytes. For
+    any other provider, or when there is no certificate credential to apply,
+    it is a no-op, so a single-certificate operator is never regressed.
+    """
+    if provider_kind is not AuthProviderKind.CERTIFICATE:
+        yield settings
+        return
+
+    from ...core.config import override_settings
+    from ._certificate_sources_operator import resolve_active_certificate_credentials
+
+    credentials = resolve_active_certificate_credentials(settings=settings)
+    overrides: dict[str, object] = {}
+    if credentials.certificate_path is not None:
+        overrides["cadrumo_certificate_path"] = credentials.certificate_path
+    if credentials.password is not None:
+        overrides["cadrumo_certificate_password_secret"] = credentials.password
+    if credentials.friendly_name:
+        overrides["cadrumo_certificate_friendly_name"] = credentials.friendly_name
+    if not overrides:
+        yield settings
+        return
+    with override_settings(**overrides) as scoped:
+        yield scoped
 
 
 def build_live_auth_preflight_report(
@@ -601,14 +646,15 @@ async def login_operator_auth(
     _assert_login_precondition(resolved_settings, provider_kind)
 
     with _active_profile_storage_span(resolved_settings):
-        result = await ensure_authenticated_aeat_session(
-            resolved_settings,
-            kind=provider_kind,
-            fresh=fresh,
-            reset_lock=reset_lock,
-            operation="operator-auth-login",
-            target_url=target_url,
-        )
+        with _active_certificate_credential_scope(resolved_settings, provider_kind) as session_settings:
+            result = await ensure_authenticated_aeat_session(
+                session_settings,
+                kind=provider_kind,
+                fresh=fresh,
+                reset_lock=reset_lock,
+                operation="operator-auth-login",
+                target_url=target_url,
+            )
 
         from ..workflow import workflow_state_repository
 

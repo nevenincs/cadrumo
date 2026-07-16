@@ -35,11 +35,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, SecretStr
+
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings, override_settings
 from ...core.time import now
 from ._certificate_secret_backend import (
-    CertificateSecretBackendKind,
-    certificate_secret_backend,
+    SECURE_STORAGE_BACKEND_LABEL,
+    SecureStorageCertificateSecretBackend,
 )
 from ._certificate_sources import (
     CertificateSourceNotFoundError as _StateCertificateSourceNotFoundError,
@@ -68,10 +71,29 @@ from ._operator_results import (
 )
 
 if TYPE_CHECKING:
-    from pydantic import SecretStr
-
     from ...domain.buckets import BucketEventType
     from ..workflow import WorkflowState
+
+
+class ActiveCertificateCredentials(BaseModel):
+    """The certificate path + passphrase the certificate provider must use.
+
+    The single typed credential bundle produced by
+    :func:`~application.auth.resolve_active_certificate_credentials` and
+    consumed by ``certificate check``, ``auth status`` / ``auth test``,
+    and ``auth login`` so every surface resolves the same certificate
+    bytes and the same secret. The passphrase (when present) comes only
+    from encrypted secure storage for a named source, or from the global
+    single-certificate settings when no named source is selected; it is
+    never persisted to workflow state.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    certificate_path: Path | None = None
+    password: SecretStr | None = None
+    friendly_name: str | None = None
+    source_name: str | None = None
 
 
 def _active_bucket_id_for_secret_resolution() -> str | None:
@@ -394,40 +416,104 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
 
 
-def resolve_certificate_source_secret(
-    *,
-    name: str,
-    bucket_id: str,
-    backend_kind: CertificateSecretBackendKind = CertificateSecretBackendKind.SECURE_STORAGE,
-) -> SecretStr | None:
+def resolve_certificate_source_secret(*, name: str, bucket_id: str) -> SecretStr | None:
     """Return the passphrase registered for certificate source ``name``, or ``None``.
 
-    Reads through :func:`~application.auth.certificate_secret_backend`
-    scoped to ``bucket_id``; never falls back to a global setting itself
-    — callers that also want the legacy
+    Reads through the sole
+    :class:`~application.auth.SecureStorageCertificateSecretBackend`
+    scoped to ``bucket_id``; there is no keyring alternative and no
+    backend selector. It never falls back to a global setting itself —
+    callers that also want the
     :attr:`~core.config.Settings.cadrumo_certificate_password_secret`
-    fallback (single-certificate, pre-registry contract) compose that
-    fallback explicitly, keeping the precedence visible at the call
-    site rather than hidden inside this resolver.
+    single-certificate credential compose that precedence explicitly,
+    keeping it visible at the call site rather than hidden inside this
+    resolver.
     """
-    backend = certificate_secret_backend(bucket_id=bucket_id, kind=backend_kind)
+    backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
     return backend.get(name)
+
+
+def resolve_active_certificate_credentials(*, settings: Settings | None = None) -> ActiveCertificateCredentials:
+    """Resolve the certificate path + passphrase the certificate provider must use.
+
+    The single authority for "which certificate, and with which passphrase"
+    across ``certificate check``, ``auth status`` / ``auth test``, and
+    ``auth login``, so every surface consumes the same certificate bytes.
+    Resolution is:
+
+    - When a named certificate source is selected, its registered path is
+      the certificate and its passphrase comes ONLY from encrypted secure
+      storage. A selected source with no bound secret fails closed
+      (``password`` is ``None``); it never silently falls back to the
+      global :attr:`~core.config.Settings.cadrumo_certificate_password_secret`.
+    - When no named source is selected, the single-certificate global
+      settings (:attr:`~core.config.Settings.cadrumo_certificate_path` /
+      :attr:`~core.config.Settings.cadrumo_certificate_password_secret`)
+      are the credential — the pre-registry contract for an operator who
+      configured one certificate through ``auth configure --file``.
+
+    Best-effort and non-raising: an absent or dangling active profile
+    yields the global settings credential rather than an error, matching
+    the read-only surfaces that consume it.
+    """
+    resolved = settings or load_settings()
+    active_record = _safe_active_certificate_source()
+    if active_record is None:
+        return ActiveCertificateCredentials(
+            certificate_path=resolved.cadrumo_certificate_path,
+            password=resolved.cadrumo_certificate_password_secret,
+            friendly_name=resolved.cadrumo_certificate_friendly_name,
+            source_name=None,
+        )
+    bucket_id = _active_bucket_id_for_secret_resolution()
+    password: SecretStr | None = None
+    if bucket_id is not None:
+        from ...core.errors import AeatError
+
+        try:
+            password = resolve_certificate_source_secret(name=active_record.name, bucket_id=bucket_id)
+        except (OSError, AeatError):
+            password = None
+    return ActiveCertificateCredentials(
+        certificate_path=Path(active_record.certificate_path),
+        password=password,
+        friendly_name=active_record.friendly_name or resolved.cadrumo_certificate_friendly_name,
+        source_name=active_record.name,
+    )
+
+
+def _safe_active_certificate_source():
+    """Return the selected certificate source record, or ``None`` when unavailable.
+
+    Non-raising: a missing or unreadable workflow state (no active
+    profile, dangling pointer) resolves to ``None`` so the active-credential
+    resolver falls back to the global single-certificate settings rather
+    than propagating a storage error onto a read-only surface.
+    """
+    from ...core.errors import AeatError
+    from ..workflow import workflow_state_repository
+
+    try:
+        state = workflow_state_repository().load()
+    except (OSError, AeatError):
+        return None
+    return _active_certificate_source(state)
 
 
 def set_operator_certificate_source_secret(
     *,
     name: str,
     secret: SecretStr,
-    backend_kind: CertificateSecretBackendKind = CertificateSecretBackendKind.SECURE_STORAGE,
 ) -> CertificateSourceSecretMutationResult:
     """Set (or rotate) the passphrase for a registered certificate source.
 
     The named source MUST already be registered
     (:func:`~application.auth.register_operator_certificate_source`) — a secret is bound
-    to an existing source, never freestanding. The secret itself is
-    never persisted to :class:`~application.workflow.WorkflowState` or
-    emitted in the mutation result; only whether one is now present and
-    which backend holds it.
+    to an existing source, never freestanding. The secret always persists
+    to the sole encrypted secure-storage backend; there is no backend
+    choice. The secret itself is never persisted to
+    :class:`~application.workflow.WorkflowState` or emitted in the mutation
+    result; only whether one is now present.
 
     Raises:
         AuthConfigureNoActiveBucketError: When no active profile bucket
@@ -450,7 +536,7 @@ def set_operator_certificate_source_secret(
             translated_message="application.auth.operator.errors.certificate_source_not_found",
             context={"name": normalized_name},
         )
-    backend = certificate_secret_backend(bucket_id=active_bucket_id, kind=backend_kind)
+    backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
     rotated = backend.get(normalized_name) is not None
     backend.set(normalized_name, secret)
     event_type = (
@@ -462,26 +548,24 @@ def set_operator_certificate_source_secret(
         active_bucket_id=active_bucket_id,
         event_type=event_type,
         object_id=normalized_name,
-        payload={"name": normalized_name, "backend": str(backend_kind)},
+        payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
     )
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
-        backend=str(backend_kind),
+        backend=SECURE_STORAGE_BACKEND_LABEL,
         has_secret=True,
         rotated=rotated,
     )
 
 
-def remove_operator_certificate_source_secret(
-    *,
-    name: str,
-    backend_kind: CertificateSecretBackendKind = CertificateSecretBackendKind.SECURE_STORAGE,
-) -> CertificateSourceSecretMutationResult:
+def remove_operator_certificate_source_secret(*, name: str) -> CertificateSourceSecretMutationResult:
     """Remove the persisted passphrase for a registered certificate source.
 
     A ``name`` with no registered secret is a no-op (``removed=False``),
     matching the idempotent-removal convention used elsewhere on the
-    auth surface.
+    auth surface. The removal always targets the sole encrypted
+    secure-storage backend; there is no backend choice and no keyring
+    cleanup path.
 
     Raises:
         AuthConfigureNoActiveBucketError: When no active profile bucket
@@ -496,18 +580,18 @@ def remove_operator_certificate_source_secret(
 
     active_bucket_id = _gate_active_bucket()
     normalized_name = name.strip()
-    backend = certificate_secret_backend(bucket_id=active_bucket_id, kind=backend_kind)
+    backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
     removed = backend.remove(normalized_name)
     if removed:
         _record_certificate_secret_event(
             active_bucket_id=active_bucket_id,
             event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
             object_id=normalized_name,
-            payload={"name": normalized_name, "backend": str(backend_kind)},
+            payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
         )
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
-        backend=str(backend_kind),
+        backend=SECURE_STORAGE_BACKEND_LABEL,
         has_secret=False,
         removed=removed,
     )
@@ -573,11 +657,13 @@ def _record_certificate_secret_event(
 
 
 __all__ = [
+    "ActiveCertificateCredentials",
     "check_operator_certificate_sources",
     "list_operator_certificate_sources",
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
+    "resolve_active_certificate_credentials",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "set_operator_certificate_source_secret",

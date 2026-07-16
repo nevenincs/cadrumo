@@ -249,13 +249,9 @@ from ._apoderado import (
     ApoderadoStatus,
 )
 from ._certificate_secret_backend import (
+    SECURE_STORAGE_BACKEND_LABEL,
     CertificateSecretBackend,
-    CertificateSecretBackendKind,
-    CertificateSecretBackendUnavailableError,
-    CertificateSecretNotFoundError,
-    KeyringCertificateSecretBackend,
     SecureStorageCertificateSecretBackend,
-    certificate_secret_backend,
 )
 from ._certificate_sources import (
     CertificateSourceNoActiveBucketError,
@@ -264,11 +260,13 @@ from ._certificate_sources import (
     CertificateSourceNotFoundError as StateCertificateSourceNotFoundError,
 )
 from ._certificate_sources_operator import (
+    ActiveCertificateCredentials,
     check_operator_certificate_sources,
     list_operator_certificate_sources,
     register_operator_certificate_source,
     remove_operator_certificate_source,
     remove_operator_certificate_source_secret,
+    resolve_active_certificate_credentials,
     resolve_certificate_source_secret,
     select_operator_certificate_source,
     set_operator_certificate_source_secret,
@@ -339,6 +337,8 @@ from ._sessions import (
 __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
+    "SECURE_STORAGE_BACKEND_LABEL",
+    "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoLiveCheckUnavailableError",
@@ -373,9 +373,6 @@ __all__ = [
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
     "CertificateSecretBackend",
-    "CertificateSecretBackendKind",
-    "CertificateSecretBackendUnavailableError",
-    "CertificateSecretNotFoundError",
     "CertificateSourceCheckEntry",
     "CertificateSourceCheckReport",
     "CertificateSourceListResult",
@@ -386,7 +383,6 @@ __all__ = [
     "CertificateSourceRecord",
     "CertificateSourceSecretMutationResult",
     "CorruptAuthSessionError",
-    "KeyringCertificateSecretBackend",
     "LiveAuthPreflightReport",
     "PersistedAuthSession",
     "ProviderConfigurationProbe",
@@ -399,7 +395,6 @@ __all__ = [
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "build_live_auth_preflight_report",
-    "certificate_secret_backend",
     "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
     "clear_operator_auth",
@@ -426,6 +421,7 @@ __all__ = [
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
     "require_verified_aeat_session",
+    "resolve_active_certificate_credentials",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "select_provider",

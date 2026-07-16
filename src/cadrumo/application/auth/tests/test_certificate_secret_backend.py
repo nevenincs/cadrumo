@@ -11,12 +11,16 @@ under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore
 real workflow-state repository, mirroring the pattern already
 established for the sibling certificate-source registry tests.
 
+Also pins the post-cutover surface: named certificate secrets have exactly
+one storage authority (encrypted secure storage), so the deleted keyring
+backend, backend-kind selector, backend factory, and unavailable error must
+be absent from both the module and the ``application.auth`` facade.
+
 See Also:
     :mod:`~application.auth._certificate_secret_backend`
-        Certificate-secret backend contract and secure-storage/keyring
-        implementations under test.
+        Sole secure-storage certificate-secret backend contract under test.
     :class:`~application.auth.SecureStorageCertificateSecretBackend`
-        Default bucket-scoped backend exercised with a real encrypted store.
+        Bucket-scoped backend exercised with a real encrypted store.
     :class:`~adapters.persistence.storage.SecretStore`
         Encrypted secret substrate used for certificate passphrase persistence.
     :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
@@ -41,20 +45,30 @@ from ....adapters.persistence.storage import (
     override_secret_store,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
+from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
 from .. import (
-    CertificateSecretBackendKind,
+    SECURE_STORAGE_BACKEND_LABEL,
     CertificateSourceNotFoundError,
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
     resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
+from .. import _certificate_secret_backend as _backend_module
 from .._certificate_secret_backend import SecureStorageCertificateSecretBackend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_RETIRED_KEYRING_SYMBOLS = (
+    "KeyringCertificateSecretBackend",
+    "CertificateSecretBackendKind",
+    "CertificateSecretBackendUnavailableError",
+    "CertificateSecretNotFoundError",
+    "certificate_secret_backend",
+)
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _OTHER_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
@@ -207,7 +221,7 @@ def test_set_then_resolve_roundtrips_the_secret(_isolated_secret_store: SecretSt
     assert result.name == "personal"
     assert result.has_secret is True
     assert result.rotated is False
-    assert result.backend == str(CertificateSecretBackendKind.SECURE_STORAGE)
+    assert result.backend == SECURE_STORAGE_BACKEND_LABEL
 
     resolved = resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID)
     assert resolved is not None
@@ -280,3 +294,33 @@ def test_resolve_certificate_source_secret_is_none_when_never_set(
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
 
     assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+
+
+# ---------------------------------------------------------------------------
+# Post-cutover surface: no certificate keyring backend, selector, factory,
+# fallback, migration, probe, or cleanup path survives. Secure storage is the
+# sole authority.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("symbol", _RETIRED_KEYRING_SYMBOLS)
+def test_retired_keyring_symbol_absent_from_backend_module(symbol: str) -> None:
+    """The keyring backend, backend-kind selector, factory, and errors are deleted."""
+    assert not hasattr(_backend_module, symbol), f"{symbol} must be deleted from the certificate-secret backend module"
+
+
+@pytest.mark.parametrize("symbol", _RETIRED_KEYRING_SYMBOLS)
+def test_retired_keyring_symbol_absent_from_auth_facade(symbol: str) -> None:
+    """The retired keyring surface is no longer exported from ``application.auth``."""
+    assert not hasattr(_auth_facade, symbol), f"{symbol} must not be re-exported from the application.auth facade"
+    assert symbol not in _auth_facade.__all__
+
+
+def test_secure_storage_backend_is_the_only_public_backend() -> None:
+    """The module exposes exactly the secure-storage backend, its protocol, and the label."""
+    assert set(_backend_module.__all__) == {
+        "SECURE_STORAGE_BACKEND_LABEL",
+        "CertificateSecretBackend",
+        "SecureStorageCertificateSecretBackend",
+    }
+    assert SECURE_STORAGE_BACKEND_LABEL == "secure_storage"
