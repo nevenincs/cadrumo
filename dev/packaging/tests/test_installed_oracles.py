@@ -367,10 +367,10 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
     }
 
 
-def test_marketplace_plugin_executes_the_independently_installed_service(
+def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     installed_cohort: InstalledCohort,
 ) -> None:
-    """The generated marketplace launches the exact installed service cohort."""
+    """The generated marketplace launches its copied three-wheel cohort via uvx."""
     cohort = installed_cohort
     marketplace = cohort.work_dir / "cohort-marketplace"
     manifest = materialise_marketplace(
@@ -379,26 +379,45 @@ def test_marketplace_plugin_executes_the_independently_installed_service(
     )
     plugin_root = marketplace / "plugins" / "cadrumo"
     assert manifest.plugin.version == cohort.metadata["versions"]["cadrumo"]
-    assert not (plugin_root / "artifacts").exists()
+    embedded = plugin_root / "artifacts" / "python"
+    retained = json.loads(
+        (embedded / "plugin-python-cohort.json").read_text(encoding="utf-8"),
+    )
+    assert retained["source_commit"] == cohort.source_commit
+    assert retained["sha256"] == cohort.artifact_sha256
+    for distribution, filename in retained["artifacts"].items():
+        assert _sha256(embedded / filename) == cohort.artifact_sha256[distribution]
 
     mcp = json.loads((plugin_root / ".mcp.json").read_text(encoding="utf-8"))
     server = mcp["mcpServers"]["cadrumo"]
-    assert server["command"] == "cadrumo-mcp"
-    assert server["args"] == []
+    assert server["command"] == "uvx"
+    assert [argument for argument in server["args"] if argument == "--with"] == [
+        "--with",
+        "--with",
+    ]
+    for wheel in (
+        cohort.root_wheel,
+        cohort.data_wheels[0],
+        cohort.data_wheels[1],
+    ):
+        assert any(wheel.name in argument for argument in server["args"])
     assert server["env"]["CADRUMO_MCP_REQUIRED_VERSION"] == manifest.plugin.version
+    uvx = shutil.which("uvx")
+    assert uvx is not None
+    resolved_args = tuple(argument.replace("${CLAUDE_PLUGIN_ROOT}", str(plugin_root)) for argument in server["args"])
     environment = {
         key: ("" if value == "${user_config.persona}" else "core" if value == "${user_config.surface}" else value)
         for key, value in server["env"].items()
     }
     evidence = run_installed_mcp_oracle(
-        cohort.mcp_server,
-        server_args=(),
+        Path(uvx),
+        server_args=resolved_args,
         environment_overrides=environment,
         storage_root=cohort.work_dir / "plugin-mcp-state",
         work_dir=cohort.work_dir / "plugin-outside-checkout",
         timeout_seconds=420.0,
     )
-    assert Path(evidence.resolved_executable) == cohort.mcp_server
+    assert Path(evidence.resolved_executable) == Path(uvx).resolve()
     assert evidence.target_casilla == "DP200014:00562"
     assert evidence.target_value == "23000.00"
     assert evidence.formula_id == "modelo-200-cuota-integra"
