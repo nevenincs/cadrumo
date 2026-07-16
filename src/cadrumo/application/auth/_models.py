@@ -90,6 +90,29 @@ class AuthCleanupIntent(BaseModel):
     secret_source_names: tuple[str, ...] = ()
 
 
+class CertificateSecretMutationEventKind(StrEnum):
+    """Stable event classifications for certificate-secret mutations."""
+
+    SET = "set"
+    ROTATED = "rotated"
+    REMOVED = "removed"
+
+
+class CertificateSecretMutationIntent(BaseModel):
+    """Secret-free durable plan for one resumable certificate-secret mutation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    operation_id: str = Field(min_length=64, max_length=64)
+    bucket_id: str = Field(min_length=1)
+    source_name: str = Field(min_length=1, max_length=160)
+    event_kind: CertificateSecretMutationEventKind
+    started_at: datetime
+    prior_present: bool
+    request_witness: str | None = Field(default=None, min_length=64, max_length=64)
+    completion_witness: str | None = None
+
+
 class AuthState(BaseModel):
     """Persisted local AEAT access readiness state.
 
@@ -121,3 +144,4 @@ class AuthState(BaseModel):
     certificate_sources: dict[str, CertificateSourceRecord] = Field(default_factory=dict)
     active_certificate_source: str | None = None
     cleanup_intent: AuthCleanupIntent | None = None
+    certificate_secret_mutation_intent: CertificateSecretMutationIntent | None = None

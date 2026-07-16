@@ -175,6 +175,22 @@ def test_secure_storage_backend_never_leaks_secret_in_repr(secret_store: SecretS
     assert "do-not-leak-me" not in str(resolved)
 
 
+def test_secure_storage_backend_request_witness_is_stable_keyed_and_secret_free(
+    secret_store: SecretStore,
+) -> None:
+    """Retry matching uses a stable master-keyed witness, never the secret value."""
+    backend = SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID, store=secret_store)
+
+    first = backend.request_witness("personal", SecretStr("do-not-persist-in-workflow"))
+    repeated = backend.request_witness("personal", SecretStr("do-not-persist-in-workflow"))
+    different = backend.request_witness("personal", SecretStr("different-secret"))
+
+    assert first == repeated
+    assert first != different
+    assert len(first) == 64
+    assert "do-not-persist-in-workflow" not in first
+
+
 # ---------------------------------------------------------------------------
 # Operator-verb integration tests: the CLI-facing service functions, wired
 # through a real workflow-state repository and an injected SecretStore.

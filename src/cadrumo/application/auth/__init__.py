@@ -288,6 +288,8 @@ from ._models import (
     AuthCleanupIntent,
     AuthCleanupOperationKind,
     AuthState,
+    CertificateSecretMutationEventKind,
+    CertificateSecretMutationIntent,
     CertificateSourceRecord,
 )
 from ._operator import (
@@ -321,6 +323,7 @@ from ._operator_results import (
     AuthResetResult,
     AuthStatusResult,
     AuthTestResult,
+    CertificateSecretMutationInProgressError,
     CertificateSourceCheckEntry,
     CertificateSourceCheckReport,
     CertificateSourceListResult,
@@ -393,6 +396,9 @@ __all__ = [
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
     "CertificateSecretBackend",
+    "CertificateSecretMutationEventKind",
+    "CertificateSecretMutationInProgressError",
+    "CertificateSecretMutationIntent",
     "CertificateSourceCheckEntry",
     "CertificateSourceCheckReport",
     "CertificateSourceListResult",

@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.storage import RepositoryError
 from ....application.wizard import WIZARD_FLOWS
 from ....core.config import load_settings
-from ....domain.buckets import BucketEventType
+from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile import (
@@ -31,16 +31,18 @@ from ...workflow import WorkflowStateRepository, workflow_state_repository
 from .. import (
     AuthCleanupInProgressError,
     AuthProviderKind,
+    CertificateSecretMutationInProgressError,
     ensure_authenticated_aeat_session,
 )
 from .._acquisition_lock import acquire_auth_acquisition_lock
 from .._actions import update_auth
 from .._certificate_sources_operator import (
     register_operator_certificate_source,
+    remove_operator_certificate_source_secret,
     resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
-from .._models import AuthCleanupOperationKind
+from .._models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
 from .._operator import (
     _build_auth_cleanup_intent,
     configure_operator_auth,
@@ -110,10 +112,36 @@ def _blocking_workflow_update_trigger(db_path: Path):
             connection.commit()
 
 
+@contextmanager
+def _blocking_bucket_event_update_trigger(db_path: Path):
+    trigger_name = "fail_certificate_secret_event_finalize"
+    with sqlite3.connect(db_path) as connection:
+        connection.execute(
+            f"""
+            CREATE TRIGGER {trigger_name}
+            BEFORE UPDATE ON secure_objects
+            WHEN OLD.namespace = 'cadrumo.domain.buckets.event_history'
+            BEGIN
+                SELECT RAISE(ABORT, 'certificate secret event finalize blocked');
+            END
+            """,
+        )
+        connection.commit()
+    try:
+        yield
+    finally:
+        with sqlite3.connect(db_path) as connection:
+            connection.execute(f"DROP TRIGGER IF EXISTS {trigger_name}")
+            connection.commit()
+
+
 def _event_count(event_type: BucketEventType) -> int:
-    return sum(
-        event.event_type is event_type
-        for event in BucketEventHistoryRepository().load().events.values()
+    return sum(event.event_type is event_type for event in BucketEventHistoryRepository().load().events.values())
+
+
+def _events(event_type: BucketEventType) -> tuple[BucketEvent, ...]:
+    return tuple(
+        event for event in BucketEventHistoryRepository().load().events.values() if event.event_type is event_type
     )
 
 
@@ -236,9 +264,7 @@ def test_concurrent_auth_writers_are_serialized_without_losing_events(
             durable = BucketEventHistoryRepository().load()
 
         configured_workflow_objects = {
-            event.object_id
-            for event in final.bucket_events
-            if event.action == "auth.provider.configured"
+            event.object_id for event in final.bucket_events if event.action == "auth.provider.configured"
         }
         configured_durable_objects = {
             event.object_id
@@ -248,6 +274,164 @@ def test_concurrent_auth_writers_are_serialized_without_losing_events(
         assert final.auth.provider in {"certificate", "clave_movil"}
         assert configured_workflow_objects == {"certificate", "clave_movil"}
         assert configured_durable_objects == {"certificate", "clave_movil"}
+
+
+def test_certificate_secret_set_event_failure_resumes_original_set_once(
+    tmp_path: Path,
+) -> None:
+    """A failed event commit preserves SET classification and a secret-free intent."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        certificate_path = tmp_path / "operator.p12"
+        certificate_path.write_bytes(b"certificate")
+        blocked_path = tmp_path / "blocked.p12"
+        blocked_path.write_bytes(b"blocked")
+        _create_profile(provider="certificate")
+        with profile_storage_session(_BUCKET_ID):
+            register_operator_certificate_source(name="personal", certificate_path=certificate_path)
+            repository = workflow_state_repository()
+            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+
+            with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
+                set_operator_certificate_source_secret(
+                    name="personal",
+                    secret=SecretStr("first-private-passphrase"),
+                )
+
+            pending = repository.load().auth.certificate_secret_mutation_intent
+            resolved_after_failure = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_BUCKET_ID,
+            )
+            assert pending is not None
+            assert pending.event_kind is CertificateSecretMutationEventKind.SET
+            assert pending.prior_present is False
+            assert pending.completion_witness == f"secret-record:{pending.operation_id}"
+            assert "first-private-passphrase" not in pending.model_dump_json()
+            assert resolved_after_failure is not None
+            assert resolved_after_failure.get_secret_value() == "first-private-passphrase"
+            assert _event_count(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET) == 0
+
+            with pytest.raises(CertificateSecretMutationInProgressError) as blocked_error:
+                configure_operator_auth("clave_movil")
+            assert "first-private-passphrase" not in repr(blocked_error.value)
+            with pytest.raises(CertificateSecretMutationInProgressError):
+                register_operator_certificate_source(
+                    name="blocked",
+                    certificate_path=blocked_path,
+                )
+            with pytest.raises(CertificateSecretMutationInProgressError):
+                reset_operator_auth(provider="certificate")
+            with pytest.raises(CertificateSecretMutationInProgressError):
+                set_operator_certificate_source_secret(
+                    name="personal",
+                    secret=SecretStr("different-retry-passphrase"),
+                )
+            unchanged = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_BUCKET_ID,
+            )
+            assert unchanged is not None
+            assert unchanged.get_secret_value() == "first-private-passphrase"
+
+            resumed = set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("first-private-passphrase"),
+            )
+            final = repository.load()
+            events = _events(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET)
+
+        assert resumed.rotated is False
+        assert resumed.has_secret is True
+        assert final.auth.certificate_secret_mutation_intent is None
+        assert len(events) == 1
+        assert events[0].occurred_at == pending.started_at
+        assert events[0].payload["operation_id"] == pending.operation_id
+        assert "first-private-passphrase" not in events[0].model_dump_json()
+
+
+def test_certificate_secret_rotation_event_failure_resumes_original_rotation_once(
+    tmp_path: Path,
+) -> None:
+    """A failed event commit cannot reclassify a rotation as another mutation."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        certificate_path = tmp_path / "operator.p12"
+        certificate_path.write_bytes(b"certificate")
+        _create_profile(provider="certificate")
+        with profile_storage_session(_BUCKET_ID):
+            register_operator_certificate_source(name="personal", certificate_path=certificate_path)
+            set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("original-passphrase"),
+            )
+            repository = workflow_state_repository()
+            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+
+            with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
+                set_operator_certificate_source_secret(
+                    name="personal",
+                    secret=SecretStr("rotated-passphrase"),
+                )
+
+            pending = repository.load().auth.certificate_secret_mutation_intent
+            assert pending is not None
+            assert pending.event_kind is CertificateSecretMutationEventKind.ROTATED
+            assert pending.prior_present is True
+            assert _event_count(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED) == 0
+
+            resumed = set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("rotated-passphrase"),
+            )
+            resolved = resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID)
+            events = _events(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED)
+
+        assert resumed.rotated is True
+        assert resolved is not None
+        assert resolved.get_secret_value() == "rotated-passphrase"
+        assert len(events) == 1
+        assert events[0].occurred_at == pending.started_at
+        assert events[0].payload["operation_id"] == pending.operation_id
+
+
+def test_certificate_secret_remove_event_failure_reports_original_removal_once(
+    tmp_path: Path,
+) -> None:
+    """A failed event commit resumes an already-completed removal truthfully."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        certificate_path = tmp_path / "operator.p12"
+        certificate_path.write_bytes(b"certificate")
+        _create_profile(provider="certificate")
+        with profile_storage_session(_BUCKET_ID):
+            register_operator_certificate_source(name="personal", certificate_path=certificate_path)
+            set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("private-passphrase"),
+            )
+            repository = workflow_state_repository()
+            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+
+            with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
+                remove_operator_certificate_source_secret(name="personal")
+
+            pending = repository.load().auth.certificate_secret_mutation_intent
+            assert pending is not None
+            assert pending.event_kind is CertificateSecretMutationEventKind.REMOVED
+            assert pending.prior_present is True
+            assert pending.completion_witness == f"secret-absent:{pending.operation_id}"
+            assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+            assert _event_count(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED) == 0
+
+            resumed = remove_operator_certificate_source_secret(name="personal")
+            repeated = remove_operator_certificate_source_secret(name="personal")
+            final = repository.load()
+            events = _events(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED)
+
+        assert resumed.removed is True
+        assert repeated.removed is False
+        assert final.auth.certificate_secret_mutation_intent is None
+        assert len(events) == 1
+        assert events[0].occurred_at == pending.started_at
+        assert events[0].payload["operation_id"] == pending.operation_id
 
 
 def test_logout_write_failure_resumes_cleanup_and_emits_session_event_once(
@@ -309,11 +493,14 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
         cert_path.write_bytes(b"certificate")
         _create_profile(provider="certificate")
         settings = load_settings()
-        with profile_storage_session(_BUCKET_ID), acquire_auth_acquisition_lock(
-            settings,
-            AuthProviderKind.CERTIFICATE,
-            ttl_seconds=60,
-            operation="reset-recovery-test",
+        with (
+            profile_storage_session(_BUCKET_ID),
+            acquire_auth_acquisition_lock(
+                settings,
+                AuthProviderKind.CERTIFICATE,
+                ttl_seconds=60,
+                operation="reset-recovery-test",
+            ),
         ):
             register_operator_certificate_source(name="personal", certificate_path=cert_path)
             set_operator_certificate_source_secret(name="personal", secret=SecretStr("private"))

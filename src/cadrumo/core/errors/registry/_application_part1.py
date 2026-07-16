@@ -173,6 +173,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._operator_results.CertificateSecretMutationInProgressError",
+        ErrorCode(
+            code="LOCKED_CERTIFICATE_SECRET_MUTATION_IN_PROGRESS",
+            category=ErrorCategory.LOCKED,
+            message_key="application.auth.operator.errors.certificate_secret_mutation_in_progress",
+            default_suggestion="aeat config auth certificate secret --help",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth._operator_results.AuthOperationScopeConflictError",
         ErrorCode(
             code="REFUSED_AUTH_OPERATION_SCOPE_CONFLICT",

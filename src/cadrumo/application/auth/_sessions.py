@@ -330,7 +330,7 @@ async def ensure_authenticated_aeat_session(
     from ..workflow import workflow_state_repository
     from ._operator_scope import (
         active_profile_storage_span,
-        assert_auth_cleanup_not_in_progress,
+        assert_auth_recovery_not_in_progress,
         auth_mutation_span,
     )
 
@@ -340,7 +340,7 @@ async def ensure_authenticated_aeat_session(
                 translated_message="application.auth.sessions.errors.no_session",
             )
         with auth_mutation_span(settings=settings, bucket_id=bucket_id):
-            assert_auth_cleanup_not_in_progress(workflow_state_repository().load())
+            assert_auth_recovery_not_in_progress(workflow_state_repository().load())
             return await _ensure_authenticated_aeat_session_locked(
                 settings,
                 kind=kind,
