@@ -212,20 +212,37 @@ class AuthLoginResult(BaseModel):
     verification_status: str = ""
 
 
-class AuthClearResult(BaseModel):
-    """Result of clearing local auth metadata and persisted state.
+class AuthOperationScopeConflictError(AeatError, ValueError):
+    """Raised when ``--provider`` and ``--all`` are requested together."""
 
-    Reports the local side effects after
-    :func:`application.auth.clear_operator_auth` resets
-    :class:`application.auth.AuthState`, deletes persisted sessions, and
-    removes acquisition locks for the requested provider scope.
-    """
+
+class AuthProviderNotConfiguredError(AeatError, ValueError):
+    """Raised when an auth operation has neither an explicit nor configured provider."""
+
+
+class AuthLogoutResult(BaseModel):
+    """Secret-free result of terminating local auth sessions."""
 
     model_config = _STRICT_FROZEN
 
+    bucket_id: str
+    providers: tuple[str, ...]
     removed_sessions: int
-    cleared_workflow_state: bool
+    cleared_session_state: bool
+
+
+class AuthResetResult(BaseModel):
+    """Secret-free result of removing local provider auth configuration."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str
+    providers: tuple[str, ...]
+    removed_sessions: int
+    cleared_provider_configuration: bool
     cleared_locks: int
+    removed_certificate_sources: int
+    removed_certificate_secrets: int
 
 
 class CertificateSourceNotFoundError(AeatError, KeyError):
@@ -343,15 +360,18 @@ class CertificateSourceSecretMutationResult(BaseModel):
 
 
 __all__ = [
-    "AuthClearResult",
     "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
     "AuthLoginNotEnabledError",
     "AuthLoginPreconditionError",
     "AuthLoginResult",
+    "AuthLogoutResult",
+    "AuthOperationScopeConflictError",
+    "AuthProviderNotConfiguredError",
     "AuthProviderReservedError",
     "AuthProvidersReport",
+    "AuthResetResult",
     "AuthStatusResult",
     "AuthTestResult",
     "CertificateSourceCheckEntry",

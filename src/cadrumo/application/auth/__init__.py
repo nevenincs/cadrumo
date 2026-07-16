@@ -13,8 +13,9 @@ Operator-facing auth configuration stays in this layer.
 :func:`configure_operator_auth`,
 :func:`inspect_operator_auth`,
 :func:`test_operator_auth`,
-:func:`login_operator_auth`, and
-:func:`clear_operator_auth` return typed result records
+:func:`login_operator_auth`,
+:func:`logout_operator_auth`, and
+:func:`reset_operator_auth` return typed result records
 such as :class:`AuthStatusResult`,
 :class:`AuthLoginResult`, and
 :class:`LiveAuthPreflightReport`. The persisted local
@@ -285,11 +286,12 @@ from ._errors import AuthDiagnosticPayloadError
 from ._models import AuthState, CertificateSourceRecord
 from ._operator import (
     build_live_auth_preflight_report,
-    clear_operator_auth,
     configure_operator_auth,
     inspect_operator_auth,
     list_operator_auth_providers,
     login_operator_auth,
+    logout_operator_auth,
+    reset_operator_auth,
     test_operator_auth,
 )
 from ._operator_probes import (
@@ -298,15 +300,18 @@ from ._operator_probes import (
     probe_provider_configuration,
 )
 from ._operator_results import (
-    AuthClearResult,
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
     AuthConfigureResult,
     AuthLoginNotEnabledError,
     AuthLoginPreconditionError,
     AuthLoginResult,
+    AuthLogoutResult,
+    AuthOperationScopeConflictError,
+    AuthProviderNotConfiguredError,
     AuthProviderReservedError,
     AuthProvidersReport,
+    AuthResetResult,
     AuthStatusResult,
     AuthTestResult,
     CertificateSourceCheckEntry,
@@ -348,7 +353,6 @@ __all__ = [
     "AuthAcquisitionLockState",
     "AuthAcquisitionLockStatus",
     "AuthAcquisitionLockedError",
-    "AuthClearResult",
     "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
@@ -360,13 +364,17 @@ __all__ = [
     "AuthLoginNotEnabledError",
     "AuthLoginPreconditionError",
     "AuthLoginResult",
+    "AuthLogoutResult",
+    "AuthOperationScopeConflictError",
     "AuthProfileIdentityMismatchError",
     "AuthProvider",
     "AuthProviderDescription",
     "AuthProviderKind",
     "AuthProviderListing",
+    "AuthProviderNotConfiguredError",
     "AuthProviderReservedError",
     "AuthProvidersReport",
+    "AuthResetResult",
     "AuthSessionUnavailableError",
     "AuthState",
     "AuthStatusResult",
@@ -397,7 +405,6 @@ __all__ = [
     "build_live_auth_preflight_report",
     "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
-    "clear_operator_auth",
     "configure_operator_auth",
     "configure_session_store",
     "delete_persisted_session",
@@ -415,12 +422,14 @@ __all__ = [
     "load_auth_diagnostic",
     "load_persisted_session",
     "login_operator_auth",
+    "logout_operator_auth",
     "probe_provider_configuration",
     "record_auth_diagnostic_phone_state",
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
     "require_verified_aeat_session",
+    "reset_operator_auth",
     "resolve_active_certificate_credentials",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",

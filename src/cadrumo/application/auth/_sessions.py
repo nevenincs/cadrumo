@@ -176,11 +176,14 @@ class PersistedAuthSession(BaseModel):
 _STEM_BY_KIND: dict[AuthProviderKind, str] = {
     AuthProviderKind.CERTIFICATE: "storage",
     AuthProviderKind.CLAVE_MOVIL: "clave-movil-storage",
+    AuthProviderKind.CLAVE_PERMANENTE: "clave-permanente-storage",
 }
 
 
 def storage_state_paths(
     kind: AuthProviderKind | None = None,
+    *,
+    bucket_id: str | None = None,
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``.
 
@@ -192,7 +195,7 @@ def storage_state_paths(
 
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
-    storage_state = aeat_auth_session_storage_state_path(require_active_bucket_id(), stem)
+    storage_state = aeat_auth_session_storage_state_path(bucket_id or require_active_bucket_id(), stem)
     return StorageStatePaths(storage_state=storage_state)
 
 
@@ -222,24 +225,26 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
     return None
 
 
-def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
+def delete_persisted_session(
+    settings: Settings,
+    kind: AuthProviderKind | None = None,
+    *,
+    bucket_id: str | None = None,
+) -> list[Path]:
     """Remove persisted encrypted sessions for ``kind`` or every session-bearing provider.
 
     A ``kind`` of ``None`` sweeps every provider that actually persists a browser
-    session (the ``_STEM_BY_KIND`` set). Iterating the full ``AuthProviderKind``
-    enum here is wrong: a provider with no session stem (e.g. Cl@ve Permanente,
-    which holds no reusable session) has nothing to delete, and asking
-    ``storage_state_paths`` for its non-existent stem raised ``KeyError`` — which
-    surfaced to the operator as a spurious "unknown provider" refusal on
-    ``auth clear --sessions`` / ``--all``. A provider without a stem is simply
-    skipped.
+    session (the ``_STEM_BY_KIND`` set). Reserved catalogue slots are not
+    :class:`AuthProviderKind` members and therefore never enter this storage
+    loop; operator ``--all`` scope may name them for idempotent configuration
+    cleanup without manufacturing session paths for unsupported providers.
     """
     removed: list[Path] = []
     kinds = [kind] if kind is not None else list(_STEM_BY_KIND)
     for candidate_kind in kinds:
         if candidate_kind not in _STEM_BY_KIND:
             continue
-        paths = storage_state_paths(candidate_kind)
+        paths = storage_state_paths(candidate_kind, bucket_id=bucket_id)
         if not _get_session_store().delete(paths.storage_state):
             continue
         _logger.debug("delete_persisted_session: removed auth session %s", paths.storage_state)
