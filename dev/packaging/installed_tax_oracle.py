@@ -28,6 +28,7 @@ REGISTRY_REVISION = "2024-y-siguientes"
 TARGET_CASILLA = "DP200014:00562"
 EXPECTED_VALUE = Decimal("23000.00")
 EXPECTED_FORMULA = "modelo-200-cuota-integra"
+EXPECTED_LEGAL_REF = "ley-27-2014:art-29"
 EXPECTED_SOURCE_REF = "aeat-modelo-200-manual-2024"
 EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview"}
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
@@ -243,10 +244,18 @@ def _json_envelope(evidence: CommandEvidence, *, expected_command: str) -> dict[
     return document
 
 
-def _assert_no_warning_notices(document: dict[str, Any], *, command: str) -> None:
-    warnings = [notice for notice in document["notices"] if notice.get("severity") == "warning"]
-    if warnings:
-        raise InstalledTaxOracleError(f"{command} emitted unexpected warning notices: {warnings!r}")
+def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str) -> None:
+    if document.get("status") != "success":
+        raise InstalledTaxOracleError(f"{command} expected success status: {document!r}")
+    diagnostics = [
+        notice
+        for notice in document["notices"]
+        if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
+    ]
+    if diagnostics:
+        raise InstalledTaxOracleError(
+            f"{command} emitted unexpected diagnostic notices: {diagnostics!r}",
+        )
 
 
 def assert_grounded_observations(
@@ -285,6 +294,10 @@ def assert_grounded_observations(
     if target.get("formula_id") != EXPECTED_FORMULA:
         raise InstalledTaxOracleError(
             f"{TARGET_CASILLA} expected formula {EXPECTED_FORMULA!r}, got {target.get('formula_id')!r}",
+        )
+    if EXPECTED_LEGAL_REF not in target["legal_refs"]:
+        raise InstalledTaxOracleError(
+            f"{TARGET_CASILLA} does not cite {EXPECTED_LEGAL_REF!r}",
         )
     if EXPECTED_SOURCE_REF not in target["source_refs"]:
         raise InstalledTaxOracleError(
@@ -327,7 +340,7 @@ def run_installed_tax_oracle(
     )
     commands.append(profile)
     profile_document = _json_envelope(profile, expected_command="config.profile.create")
-    _assert_no_warning_notices(profile_document, command="config.profile.create")
+    _assert_no_diagnostic_notices(profile_document, command="config.profile.create")
 
     create = _run(
         (*base, *work_create_arguments()),
@@ -337,7 +350,7 @@ def run_installed_tax_oracle(
     )
     commands.append(create)
     create_document = _json_envelope(create, expected_command="modelo.work.create")
-    _assert_no_warning_notices(create_document, command="modelo.work.create")
+    _assert_no_diagnostic_notices(create_document, command="modelo.work.create")
     work_unit_id = str(create_document["result"].get("work_unit_id", ""))
     if not _REVISION_ID.fullmatch(work_unit_id):
         raise InstalledTaxOracleError(f"work creation returned an invalid work unit id: {work_unit_id!r}")
@@ -387,7 +400,7 @@ def run_installed_tax_oracle(
     )
     commands.append(observations)
     observations_document = _json_envelope(observations, expected_command="modelo.work.observations")
-    _assert_no_warning_notices(observations_document, command="modelo.work.observations")
+    _assert_no_diagnostic_notices(observations_document, command="modelo.work.observations")
     target = assert_grounded_observations(
         observations_document["result"],
         calculation_revision_id=calculation_revision_id,
