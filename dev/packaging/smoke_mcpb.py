@@ -227,12 +227,13 @@ def run_mcpb_smoke(
             "MCPB runtime path did not resolve from the stamped manifest: "
             f"{resolved_environment['UV_PROJECT_ENVIRONMENT']!r}",
         )
+    work_dir = run_root / "external-work"
     evidence = run_installed_mcp_oracle(
         uv,
         server_args=server_args,
         environment_overrides=resolved_environment,
         storage_root=storage_root,
-        work_dir=run_root / "external-work",
+        work_dir=work_dir,
         timeout_seconds=timeout_seconds,
     )
     if not runtime_environment.is_dir():
@@ -250,9 +251,8 @@ def run_mcpb_smoke(
         )
     if extracted in storage_root.parents or storage_root in extracted.parents:
         raise SystemExit("MCPB state root must be independent from the unpacked extension")
-    if work_dir := run_root / "external-work":
-        if work_dir in storage_root.parents or storage_root in work_dir.parents:
-            raise SystemExit("MCPB state root must be independent from the client work directory")
+    if work_dir in storage_root.parents or storage_root in work_dir.parents:
+        raise SystemExit("MCPB state root must be independent from the client work directory")
     evidence_path = run_root / "mcpb-assembly-runtime-evidence.json"
     evidence_path.write_text(
         json.dumps(
