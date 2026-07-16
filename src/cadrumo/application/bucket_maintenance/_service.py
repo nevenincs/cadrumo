@@ -48,13 +48,14 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.user_profile import UserProfileStatus
+from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
 from .._config_reset_repository import (
     ConfigResetJournalError,
     ConfigResetJournalRepository,
 )
 from ..user_profile import (
     UnsupportedBundleSchemaVersionError,
+    active_profile_pointer_transaction,
     delete_profile_with_lifecycle_span,
     deserialize_profile_bundle,
     missing_filing_baseline_flags,
@@ -215,6 +216,39 @@ class BucketMaintenanceService:
         return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
     @contextmanager
+    def _mutation_target_lock(
+        self,
+        *,
+        root: Path,
+        bucket_id: str,
+        wait_seconds: float,
+        missing_ok: bool = False,
+    ) -> Generator[None]:
+        try:
+            paths = validated_bucket_deletion_paths(
+                root=root,
+                bucket_id=bucket_id,
+            )
+        except FileNotFoundError as exc:
+            if missing_ok:
+                yield
+                return
+            raise ProfileNotFoundError(
+                translated_message="application.user_profile.errors.no_active_profile_selected",
+                context={"bucket_id": bucket_id},
+            ) from exc
+        except ValueError as exc:
+            raise BucketDeleteRefusedError(
+                "bucket mutation lock refuses a linked target",
+                context={"bucket_id": bucket_id},
+            ) from exc
+        acquire_lock(paths, wait_seconds=wait_seconds)
+        try:
+            yield
+        finally:
+            release_lock(paths)
+
+    @contextmanager
     def deletion_target_locks(
         self,
         *,
@@ -271,38 +305,56 @@ class BucketMaintenanceService:
         Returns:
             :class:`RenameBucketResult`: The result of the rename operation.
         """
-        pointer = read_profile_bucket_by_id(command.bucket_id)
-        if pointer is None:
-            from ...domain.user_profile import ProfileNotFoundError
+        from ...core.config import load_settings
 
-            raise ProfileNotFoundError(
-                translated_message="application.user_profile.errors.no_active_profile_selected",
-                context={"bucket_id": command.bucket_id},
-            )
-        previous_label = pointer.label
-        record = rename_profile(profile_id=command.bucket_id, new_label=command.new_label)
-        occurred_at = now()
-        event = BucketEvent(
-            event_id=derive_bucket_event_id(
-                bucket_id=command.bucket_id,
-                event_type=BucketEventType.BUCKET_RENAMED,
-                occurred_at=occurred_at,
-                actor="bucket-maintenance",
-                object_type=BucketEventObjectType.BUCKET,
-                object_id=command.bucket_id,
-                payload={"previous_label": previous_label, "new_label": record.display_name},
-            ),
+        settings = load_settings()
+        with self._mutation_target_lock(
+            root=settings.cadrumo_local_storage_root,
             bucket_id=command.bucket_id,
-            event_type=BucketEventType.BUCKET_RENAMED,
-            occurred_at=occurred_at,
-            actor="bucket-maintenance",
-            object_type=BucketEventObjectType.BUCKET,
-            object_id=command.bucket_id,
-            payload_version=_RENAME_PAYLOAD_VERSION,
-            payload={"previous_label": previous_label, "new_label": record.display_name},
-        )
-        repository = self._event_repository or self._event_repository_for_bucket(command.bucket_id)
-        repository.save(append_bucket_event(repository.load(), event))
+            wait_seconds=settings.cadrumo_file_lock_timeout_s,
+        ):
+            pointer = read_profile_bucket_by_id(command.bucket_id)
+            if pointer is None:
+                raise ProfileNotFoundError(
+                    translated_message="application.user_profile.errors.no_active_profile_selected",
+                    context={"bucket_id": command.bucket_id},
+                )
+            previous_label = pointer.label
+            with profile_storage_session(command.bucket_id):
+                record = rename_profile(
+                    profile_id=command.bucket_id,
+                    new_label=command.new_label,
+                )
+                occurred_at = now()
+                event = BucketEvent(
+                    event_id=derive_bucket_event_id(
+                        bucket_id=command.bucket_id,
+                        event_type=BucketEventType.BUCKET_RENAMED,
+                        occurred_at=occurred_at,
+                        actor="bucket-maintenance",
+                        object_type=BucketEventObjectType.BUCKET,
+                        object_id=command.bucket_id,
+                        payload={
+                            "previous_label": previous_label,
+                            "new_label": record.display_name,
+                        },
+                    ),
+                    bucket_id=command.bucket_id,
+                    event_type=BucketEventType.BUCKET_RENAMED,
+                    occurred_at=occurred_at,
+                    actor="bucket-maintenance",
+                    object_type=BucketEventObjectType.BUCKET,
+                    object_id=command.bucket_id,
+                    payload_version=_RENAME_PAYLOAD_VERSION,
+                    payload={
+                        "previous_label": previous_label,
+                        "new_label": record.display_name,
+                    },
+                )
+                repository = self._event_repository or self._event_repository_for_bucket(
+                    command.bucket_id,
+                )
+                repository.save(append_bucket_event(repository.load(), event))
         return RenameBucketResult(
             bucket_id=command.bucket_id,
             previous_label=previous_label,
@@ -311,6 +363,22 @@ class BucketMaintenanceService:
         )
 
     def delete(self, command: DeleteBucketCommand) -> DeleteBucketResult:
+        """Delete one bucket under pointer-first canonical mutation locks."""
+        from ...core.config import load_settings
+
+        settings = load_settings()
+        with (
+            active_profile_pointer_transaction(settings.cadrumo_local_storage_root),
+            self._mutation_target_lock(
+                root=settings.cadrumo_local_storage_root,
+                bucket_id=command.bucket_id,
+                wait_seconds=settings.cadrumo_file_lock_timeout_s,
+                missing_ok=command.reset_operation_id is not None,
+            ),
+        ):
+            return self._delete_locked(command)
+
+    def _delete_locked(self, command: DeleteBucketCommand) -> DeleteBucketResult:
         """Destructively erase the bucket identified by ``command.bucket_id``.
 
         Composes the existing two-step erase pattern: soft tombstone
@@ -358,10 +426,7 @@ class BucketMaintenanceService:
                 context={"bucket_id": command.bucket_id},
             )
         assessment = self.assess_deletion(AssessBucketDeletionCommand(bucket_id=command.bucket_id))
-        if (
-            command.reset_operation_id is not None
-            and command.expected_deletion_fingerprint is not None
-        ):
+        if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
             try:
                 ConfigResetJournalRepository().verify_deletion_ownership(
                     operation_id=command.reset_operation_id,
@@ -378,10 +443,7 @@ class BucketMaintenanceService:
                     },
                 ) from exc
         if not assessment.exists:
-            if (
-                command.reset_operation_id is not None
-                and command.expected_deletion_fingerprint is not None
-            ):
+            if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
                 return DeleteBucketResult(
                     bucket_id=command.bucket_id,
                     occurred_at=now(),
@@ -512,6 +574,21 @@ class BucketMaintenanceService:
         )
 
     def archive(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
+        """Archive one bucket under pointer-first canonical mutation locks."""
+        from ...core.config import load_settings
+
+        settings = load_settings()
+        with (
+            active_profile_pointer_transaction(settings.cadrumo_local_storage_root),
+            self._mutation_target_lock(
+                root=settings.cadrumo_local_storage_root,
+                bucket_id=command.bucket_id,
+                wait_seconds=settings.cadrumo_file_lock_timeout_s,
+            ),
+        ):
+            return self._archive_locked(command)
+
+    def _archive_locked(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
         """Move the bucket identified by ``command.bucket_id`` into reversible dormancy.
 
         Composes :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`'s
@@ -590,6 +667,18 @@ class BucketMaintenanceService:
         return ArchiveBucketResult(bucket_id=command.bucket_id, label=label, occurred_at=occurred_at)
 
     def restore(self, command: RestoreBucketCommand) -> RestoreBucketResult:
+        """Restore one bucket under its canonical mutation lock."""
+        from ...core.config import load_settings
+
+        settings = load_settings()
+        with self._mutation_target_lock(
+            root=settings.cadrumo_local_storage_root,
+            bucket_id=command.bucket_id,
+            wait_seconds=settings.cadrumo_file_lock_timeout_s,
+        ):
+            return self._restore_locked(command)
+
+    def _restore_locked(self, command: RestoreBucketCommand) -> RestoreBucketResult:
         """Bring the archived bucket identified by ``command.bucket_id`` back to active.
 
         Composes :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`

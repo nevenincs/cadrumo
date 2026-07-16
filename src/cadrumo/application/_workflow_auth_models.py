@@ -1,11 +1,9 @@
-"""Strict pydantic v2 records for AEAT auth readiness.
+"""Internal definitions for workflow-owned persisted authentication records.
 
-:class:`AuthState` is the workflow-state auth snapshot embedded in
-:class:`application.workflow.WorkflowState` and updated by
-:func:`application.auth.update_auth`. Operator-facing status and test
-surfaces expose redacted readiness through
-:class:`application.state_projection.ProjectionAuthReadiness` rather than
-re-reading this model independently.
+The public contract is exported by :mod:`application.workflow`. This shared
+leaf defines :class:`AuthState`, :class:`CertificateSourceRecord`, and the
+durable cleanup and certificate-secret mutation intents without creating an
+import cycle between workflow persistence and auth services.
 """
 
 from __future__ import annotations
@@ -15,32 +13,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ..core import STRICT_FROZEN_CONFIG
 
 
 class CertificateSourceRecord(BaseModel):
-    """One named, registered PKCS#12 certificate source.
-
-    A gestor managing several entities (their own personal certificate
-    plus one or more apoderado certificates) registers each certificate
-    under a distinct ``name`` so the active one can be selected without
-    re-supplying the filesystem path. Only the filesystem reference is
-    stored here; certificate passwords, private keys, and session
-    material never enter this record (or any persisted workflow
-    state), matching the existing single-certificate contract.
-
-    Attributes:
-        name: Operator-chosen identifier for this certificate source
-            (e.g. ``"personal"``, ``"apoderado-empresa-x"``). Unique
-            within the active profile's registry.
-        certificate_path: Filesystem path to the PKCS#12 (.p12/.pfx)
-            bundle.
-        friendly_name: Optional human-readable label distinct from
-            ``name``, mirroring
-            :attr:`core.config.Settings.cadrumo_certificate_friendly_name`.
-        registered_at: UTC timestamp the source was registered or last
-            re-pointed at a different path.
-    """
+    """One named, registered PKCS#12 certificate source."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -114,25 +91,7 @@ class CertificateSecretMutationIntent(BaseModel):
 
 
 class AuthState(BaseModel):
-    """Persisted local AEAT access readiness state.
-
-    This record stores provider selection, the certificate filesystem
-    reference, and local session timestamps inside
-    :class:`application.workflow.WorkflowState`. Public CLI emit shapes
-    read the canonical projection into
-    :class:`application.auth.AuthStatusResult` and
-    :class:`application.auth.AuthTestResult`.
-
-    ``certificate_sources`` and ``active_certificate_source`` extend the
-    single-certificate contract with a named multi-certificate registry:
-    an operator (typically a gestor) may register several PKCS#12
-    sources — one per entity they act for — and select which one is
-    active. ``certificate_path`` remains the single field the rest of
-    the auth surface (backend probes, live login, health reporting)
-    reads; selecting an active source mirrors its path onto
-    ``certificate_path`` so every existing consumer keeps working
-    unchanged.
-    """
+    """Persisted local AEAT access readiness embedded in workflow state."""
 
     model_config = STRICT_FROZEN_CONFIG
 

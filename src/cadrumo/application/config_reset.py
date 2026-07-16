@@ -327,11 +327,7 @@ def _target_from_assessment(
             status_at_snapshot=assessment.status,
             exists_at_snapshot=assessment.exists,
             fingerprint=assessment.fingerprint,
-            phase=(
-                ConfigResetTargetPhase.RETENTION_APPROVED
-                if resolved
-                else ConfigResetTargetPhase.SNAPSHOTTED
-            ),
+            phase=(ConfigResetTargetPhase.RETENTION_APPROVED if resolved else ConfigResetTargetPhase.SNAPSHOTTED),
             retention=retention,
         ),
         resolved,
@@ -370,8 +366,7 @@ def _reconcile_pointer_snapshot_for_resume(
     if current_pointer == operation.pointer_snapshot:
         return _Preflight(operation=operation)
     pointer_transition_started = any(
-        _phase_at_least(target.phase, ConfigResetTargetPhase.POINTER_RECONCILING)
-        for target in operation.targets
+        _phase_at_least(target.phase, ConfigResetTargetPhase.POINTER_RECONCILING) for target in operation.targets
     )
     if pointer_transition_started and not current_pointer.present:
         return _Preflight(operation=operation)
@@ -430,13 +425,12 @@ def _resume_preflight(
             continue
         current_fingerprint = assessment.fingerprint
         assert current_fingerprint is not None
-        owned_auth_transition = target.phase is ConfigResetTargetPhase.AUTH_CLEARING
         fingerprint_changed = (
             not target.exists_at_snapshot
             or target.fingerprint is None
             or target.fingerprint.digest != current_fingerprint.digest
         )
-        if fingerprint_changed and not owned_auth_transition:
+        if fingerprint_changed:
             refreshed, _ = _target_from_assessment(
                 assessment,
                 acknowledge_retention_override=False,
@@ -453,11 +447,7 @@ def _resume_preflight(
         resolved = not retention.blocks_erase or retention.override_approved
         phase = target.phase
         if _phase_before(phase, ConfigResetTargetPhase.AUTH_CLEARING):
-            phase = (
-                ConfigResetTargetPhase.RETENTION_APPROVED
-                if resolved
-                else ConfigResetTargetPhase.SNAPSHOTTED
-            )
+            phase = ConfigResetTargetPhase.RETENTION_APPROVED if resolved else ConfigResetTargetPhase.SNAPSHOTTED
         updated_targets.append(
             _update_target(
                 target,
@@ -520,8 +510,7 @@ def _roll_forward(
         deleted_count=sum(target.exists_at_snapshot for target in operation.targets),
         already_absent_count=sum(not target.exists_at_snapshot for target in operation.targets),
         retention_override_count=sum(
-            target.retention is not None and target.retention.override_approved
-            for target in operation.targets
+            target.retention is not None and target.retention.override_approved for target in operation.targets
         ),
         completed_at=completed_at,
     )
@@ -620,10 +609,7 @@ def _reconcile_pointer(
     if indexes:
         repository.save(operation)
     active_bucket_id = operation.pointer_snapshot.bucket_id
-    if active_bucket_id is not None and any(
-        target.bucket_id == active_bucket_id
-        for target in operation.targets
-    ):
+    if active_bucket_id is not None and any(target.bucket_id == active_bucket_id for target in operation.targets):
         logout_active_profile()
     for index in indexes:
         target = operation.targets[index]

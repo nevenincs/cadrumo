@@ -201,9 +201,9 @@ def test_secure_storage_backend_request_witness_is_stable_keyed_and_secret_free(
 def _isolated_secret_store(tmp_path: Path) -> Iterator[SecretStore]:
     """Inject a deterministic :class:`SecretStore` for the operator-verb tests.
 
-    ``get_secret_store()`` is a process-wide singleton; overriding it for
-    the duration of each test keeps the operator verbs' secret writes
-    isolated from any other test in the same pytest process.
+    ``override_secret_store`` installs an explicit process-wide test store for
+    the duration of each test, keeping operator-verb secret writes isolated
+    from any other test in the same pytest process.
     """
     provider = EphemeralMasterKeyProvider()
     blob_store = EncryptedBlobStore(root_dir=tmp_path / "op-blobs", master_key_provider=provider)

@@ -46,8 +46,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period, ResultDisposition
-from ....core.config import AuthProviderKindSetting, Settings
+from ....core import AuthProviderKind, Period, ResultDisposition
+from ....core.config import Settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -201,7 +201,7 @@ def _calculate_verified_negative_period() -> str:
         filing_repository=filing_repo,
         bucket_event_repository=event_repo,
         settings=Settings(
-            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         ),
         clock=verified_at,

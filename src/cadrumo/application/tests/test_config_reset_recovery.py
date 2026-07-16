@@ -1,0 +1,257 @@
+"""Fresh-process recovery proofs for every durable config-reset boundary."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+from textwrap import dedent
+
+import pytest
+
+from .test_config_reset import (
+    _OVERRIDE_REASON,
+    _PROFILE_A_ID,
+    _create_profile,
+    _isolated_reset_root,
+    _persist_filing,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_CRASH_EXIT_CODE = 91
+_BOUNDARIES = (
+    "snapshotted",
+    "retention_approved",
+    "auth_clearing",
+    "auth_clearing_after_effect",
+    "auth_cleared",
+    "pointer_reconciling",
+    "pointer_reconciling_after_effect",
+    "pointer_reconciled",
+    "deleting",
+    "deleting_after_effect",
+    "deleted",
+)
+
+_SETTINGS_PREAMBLE = dedent(
+    """
+    from __future__ import annotations
+
+    import sys
+    from pathlib import Path
+
+    from cadrumo.core import config as config_module
+    from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD, Settings
+
+    root = Path(sys.argv[1])
+    settings = Settings(
+        _env_file=None,
+        cadrumo_local_storage_root=root,
+        cadrumo_active_profile=None,
+        cadrumo_secret_store_backend="file",
+        cadrumo_secret_store_dir=root.parent / "secrets",
+        cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
+        cadrumo_output_language="en",
+    )
+    token = config_module._settings_override.set(settings)
+    from cadrumo.application import wizard as _wizard
+    """,
+)
+
+_CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
+    """
+    import os
+
+    from cadrumo.application._config_reset_repository import ConfigResetJournalRepository
+    from cadrumo.application.config_reset import start_config_reset
+
+    boundary = sys.argv[2]
+    phase_by_boundary = {
+        "snapshotted": "snapshotted",
+        "retention_approved": "retention_approved",
+        "auth_clearing": "auth_clearing",
+        "auth_clearing_after_effect": "auth_clearing",
+        "auth_cleared": "auth_cleared",
+        "pointer_reconciling": "pointer_reconciling",
+        "pointer_reconciling_after_effect": "pointer_reconciling",
+        "pointer_reconciled": "pointer_reconciled",
+        "deleting": "deleting",
+        "deleting_after_effect": "deleting",
+        "deleted": "deleted",
+    }
+    effect_return_by_boundary = {
+        "auth_clearing_after_effect": ("_operator.py", "reset_operator_auth"),
+        "pointer_reconciling_after_effect": ("_orchestration.py", "logout_active_profile"),
+        "deleting_after_effect": ("_service.py", "delete"),
+    }
+
+    def durable_target_phase() -> str | None:
+        operation = ConfigResetJournalRepository().latest()
+        if operation is None or len(operation.targets) != 1:
+            return None
+        return operation.targets[0].phase.value
+
+    def trace(frame, event, arg):
+        if event != "return":
+            return trace
+        expected_effect = effect_return_by_boundary.get(boundary)
+        if expected_effect is not None:
+            filename, function_name = expected_effect
+            if frame.f_code.co_filename.endswith(filename) and frame.f_code.co_name == function_name:
+                if durable_target_phase() == phase_by_boundary[boundary]:
+                    os._exit(91)
+            return trace
+        if frame.f_code.co_name not in {"create_exclusive", "save"}:
+            return trace
+        if not frame.f_code.co_filename.endswith("_config_reset_repository.py"):
+            return trace
+        if durable_target_phase() == phase_by_boundary[boundary]:
+            os._exit(91)
+        return trace
+
+    sys.settrace(trace)
+    try:
+        start_config_reset(confirmed=True)
+    finally:
+        config_module._settings_override.reset(token)
+    raise RuntimeError(f"reset completed without observing requested boundary: {boundary}")
+    """,
+)
+
+_RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
+    """
+    from cadrumo.application.config_reset import resume_config_reset
+
+    operation_id = sys.argv[2]
+    try:
+        operation = resume_config_reset(
+            operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=sys.argv[3],
+        )
+        print(operation.model_dump_json())
+    finally:
+        config_module._settings_override.reset(token)
+    """,
+)
+
+
+def _child_env(root: Path) -> dict[str, str]:
+    from ...core.config import DEV_TEST_DATABASE_PASSWORD
+
+    env = {key: value for key, value in os.environ.items() if not key.startswith(("AEAT_", "CADRUMO_", "PYTEST_"))}
+    env.update(
+        {
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            "CADRUMO_SECRET_STORE_DIR": str(root.parent / "secrets"),
+            "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONUTF8": "1",
+        },
+    )
+    return env
+
+
+def _run_crashing_start(root: Path, boundary: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+        [sys.executable, "-c", _CRASH_HARNESS, str(root), boundary],
+        cwd=Path.cwd(),
+        env=_child_env(root),
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=90,
+    )
+
+
+def _run_fresh_resume(
+    root: Path,
+    operation_id: str,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+        [
+            sys.executable,
+            "-c",
+            _RESUME_HARNESS,
+            str(root),
+            operation_id,
+            _OVERRIDE_REASON,
+        ],
+        cwd=Path.cwd(),
+        env=_child_env(root),
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=90,
+    )
+
+
+@pytest.mark.parametrize("boundary", _BOUNDARIES)
+def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
+    tmp_path: Path,
+    boundary: str,
+) -> None:
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...adapters.persistence.storage.sql import dispose_engine
+    from ...core import pointer_path
+    from .._config_reset_models import (
+        ConfigResetOperation,
+        ConfigResetOperationStatus,
+        ConfigResetPauseReason,
+        ConfigResetTargetPhase,
+    )
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..auth import configure_operator_auth
+    from ..user_profile import profile_storage_session
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+        with profile_storage_session(_PROFILE_A_ID):
+            configure_operator_auth("certificate")
+        if boundary == "snapshotted":
+            _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="7")
+        dispose_engine()
+
+        crashed = _run_crashing_start(root, boundary)
+
+        assert crashed.returncode == _CRASH_EXIT_CODE, (
+            boundary,
+            crashed.stdout,
+            crashed.stderr,
+        )
+        repository = ConfigResetJournalRepository()
+        interrupted = repository.latest()
+        assert interrupted is not None
+        expected_phase = boundary.removesuffix("_after_effect")
+        assert interrupted.targets[0].phase.value == expected_phase
+        if boundary == "pointer_reconciling_after_effect":
+            assert pointer_path(root).exists() is False
+        if boundary == "deleting_after_effect":
+            assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+
+        resumed_process = _run_fresh_resume(root, interrupted.operation_id)
+        resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
+        if boundary == "auth_clearing_after_effect":
+            assert resumed.status is ConfigResetOperationStatus.PAUSED
+            assert resumed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
+            assert resumed.paused_target_ids == (_PROFILE_A_ID,)
+            assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
+            resumed_process = _run_fresh_resume(root, interrupted.operation_id)
+            resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
+
+        assert resumed.status is ConfigResetOperationStatus.COMPLETE
+        assert resumed.summary is not None
+        assert resumed.summary.target_count == 1
+        assert resumed.summary.deleted_count == 1
+        assert resumed.targets[0].phase is ConfigResetTargetPhase.DELETED
+        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+        assert pointer_path(root).exists() is False
+        assert repository.load(interrupted.operation_id) == resumed

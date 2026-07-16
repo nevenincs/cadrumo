@@ -267,8 +267,9 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     that would mask a genuine programmer error as a merely-corrupt
     certificate.
     """
+    from ...core import AuthProviderKind
     from ...core.config import Settings
-    from ..auth import AuthProviderKind, probe_provider_configuration
+    from ..auth import probe_provider_configuration
 
     settings = Settings(
         cadrumo_certificate_path=_build_valid_pkcs12_bundle(tmp_path),

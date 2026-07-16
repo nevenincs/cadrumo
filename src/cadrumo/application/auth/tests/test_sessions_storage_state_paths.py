@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import AuthProviderKind
+from ....core import AuthProviderKind
 from .._sessions import storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

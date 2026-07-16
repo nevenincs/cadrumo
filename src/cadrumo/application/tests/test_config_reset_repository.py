@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import stat
 import subprocess
@@ -10,13 +11,16 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .._config_reset_models import (
     ConfigResetOperation,
     ConfigResetOperationStatus,
     ConfigResetPointerSnapshot,
     ConfigResetRetentionDecision,
+    ConfigResetSummary,
     ConfigResetTarget,
+    ConfigResetTargetPhase,
 )
 from .._config_reset_repository import (
     ConfigResetJournalAlreadyExistsError,
@@ -115,6 +119,69 @@ def test_corrupt_and_filename_mismatched_journals_refuse(
         repository.load(other_id)
 
 
+def test_future_schema_version_is_refused_as_corrupt(
+    tmp_path: Path,
+) -> None:
+    repository = ConfigResetJournalRepository(storage_root=tmp_path)
+    operation = _operation()
+    repository.create(operation)
+    path = repository.path_for(operation.operation_id)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["schema_version"] = 2
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(ConfigResetJournalCorruptError):
+        repository.load(operation.operation_id)
+
+
+def test_complete_operation_requires_every_target_deleted() -> None:
+    operation = _operation()
+
+    with pytest.raises(ValidationError, match="every target to be deleted"):
+        ConfigResetOperation(
+            operation_id=operation.operation_id,
+            status=ConfigResetOperationStatus.COMPLETE,
+            started_at=operation.started_at,
+            updated_at=operation.updated_at,
+            pointer_snapshot=operation.pointer_snapshot,
+            targets=operation.targets,
+            summary=ConfigResetSummary(
+                target_count=1,
+                deleted_count=0,
+                already_absent_count=1,
+                retention_override_count=0,
+                completed_at=operation.updated_at,
+            ),
+        )
+
+
+def test_complete_operation_requires_exact_summary_counts() -> None:
+    operation = _operation()
+    target = ConfigResetTarget(
+        bucket_id=_BUCKET_ID,
+        exists_at_snapshot=False,
+        phase=ConfigResetTargetPhase.DELETED,
+        completed_at=operation.updated_at,
+    )
+
+    with pytest.raises(ValidationError, match="target count does not match"):
+        ConfigResetOperation(
+            operation_id=operation.operation_id,
+            status=ConfigResetOperationStatus.COMPLETE,
+            started_at=operation.started_at,
+            updated_at=operation.updated_at,
+            pointer_snapshot=operation.pointer_snapshot,
+            targets=(target,),
+            summary=ConfigResetSummary(
+                target_count=2,
+                deleted_count=0,
+                already_absent_count=2,
+                retention_override_count=0,
+                completed_at=operation.updated_at,
+            ),
+        )
+
+
 def test_repository_excludes_non_journals_and_bucket_discovery(
     tmp_path: Path,
 ) -> None:
@@ -173,10 +240,7 @@ def test_concurrent_fresh_process_writers_leave_one_complete_document(
     assert [process.wait(timeout=60) for process in processes] == [0, 0, 0, 0]
     loaded = repository.load(_OPERATION_ID)
     assert loaded.operation_id == _OPERATION_ID
-    assert loaded.updated_at in {
-        loaded.started_at + timedelta(seconds=offset)
-        for offset in range(1, 5)
-    }
+    assert loaded.updated_at in {loaded.started_at + timedelta(seconds=offset) for offset in range(1, 5)}
     assert tuple(repository.root.glob("*.tmp")) == ()
 
 
