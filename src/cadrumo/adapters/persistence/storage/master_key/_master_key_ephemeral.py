@@ -70,11 +70,7 @@ class EphemeralMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        activation = self._activation_cm
-        session = self._session
-        self._activation_cm = None
-        self._session = None
-        if activation is not None:
-            activation.__exit__(exc_type, exc, tb)
-        if session is not None:
-            session.close()
+        """Evict this provider's session through the shared teardown boundary."""
+        from ._master_key import _provider_exit
+
+        _provider_exit(self, exc_type, exc, tb)

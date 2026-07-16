@@ -925,10 +925,7 @@ def _provider_enter(
         if session.unsecured_backend:
             _refuse_unsecured_active_bucket_with_real_profile(session)
     except BaseException:
-        provider._activation_cm = None
-        provider._session = None
-        activation.__exit__(None, None, None)
-        session.close()
+        _provider_exit(provider, None, None, None)
         raise
     return session
 
@@ -939,20 +936,33 @@ def _provider_exit(
     exc: BaseException | None,
     tb: TracebackType | None,
 ) -> None:
-    """Tear down the activation + session opened by :func:`_provider_enter`.
+    """Evict the activation + session opened by :func:`_provider_enter`.
 
-    Idempotent on the provider's bookkeeping attributes; tolerant of
-    the case where ``_provider_enter`` raised before fully populating
-    them.
+    Provider bookkeeping is detached before cleanup so repeated or reentrant
+    exits are no-ops. The exact provider-owned session is closed while its
+    activation is still bound, then the activation token restores the prior
+    binding. When an earlier eviction already removed that exact active
+    binding, the captured session is closed directly without disturbing a
+    different current session.
     """
     activation = provider._activation_cm
     session = provider._session
     provider._activation_cm = None
     provider._session = None
-    if activation is not None:
-        activation.__exit__(exc_type, exc, tb)
-    if session is not None:
-        session.close()
+    try:
+        if session is not None:
+            from ._active_session import (
+                close_active_bucket_session,
+                current_active_bucket_session,
+            )
+
+            if current_active_bucket_session() is session:
+                close_active_bucket_session()
+            else:
+                session.close()
+    finally:
+        if activation is not None:
+            activation.__exit__(exc_type, exc, tb)
 
 
 @contextlib.contextmanager
