@@ -42,6 +42,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S34]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S35]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S36]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S37]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S103]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S98]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S99]]'
@@ -52,6 +53,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
   - '[[2026-07-15-cli-authority-verb-conformance-research]]'
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
+  - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
 ---
 
 # `cli-authority-verb-conformance` feature index
@@ -68,6 +70,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 
 - `2026-07-15-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Wave W01 atomic Step reviews`
 - `2026-07-16-cli-authority-verb-conformance-duplication-authority-audit` - `cli-authority-verb-conformance` audit: `Duplication authority and CLI conformance campaign`
+- `2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit` - `cli-authority-verb-conformance` audit: `S37 auth logout/reset cutover review`
 
 ### exec
 
@@ -107,6 +110,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S34` - Prove same-object file-provider eviction closes real bucket-routed storage, clears provider and active-session bookkeeping, and permits a clean fresh reopen with the persisted bucket DEK and distinct session and engine handles
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S35` - Compose strong profile logout by closing and evicting the current BucketSession before clearing the active pointer under the existing pointer transaction, then let provider bookkeeping unwind through its owning context and release the pointer sidecar lock without inventing a provider cache or bucket-lock authority
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S36` - Refuse logout under an explicit profile override, prove pointer-sourced strong logout honors lock contention and closes real storage idempotently, and restore single declaration authority to the error registry
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S37` - Atomically replace broad auth clear across backend and live CLI contracts with typed target-scoped logout_operator_auth and reset_operator_auth, complete provider session coverage, safe secret and lock cleanup, distinct schemas and events, exact contract/risk/help/write metadata, four-locale help, and real workflow and command tests without a compatibility wrapper
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S103` - Prove switching and strong logout through real persisted custody state
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S98` - Preserve config profile logout as the sole strong local-session logout command
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S99` - Remove config lock and its weaker session-only execution path without an alias
@@ -118,7 +122,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 
 ### reference
 
-- `2026-07-15-cli-authority-verb-conformance-reference` - `cli-authority-verb-conformance` reference: `CLI authority and verb conformance source map`
+- `2026-07-15-cli-authority-verb-conformance-reference` - `cli-authority-verb-conformance` reference: `Authentication logout and reset authority map`
 
 ### research
 

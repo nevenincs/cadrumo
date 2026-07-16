@@ -3,20 +3,58 @@ tags:
   - '#reference'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-16'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
 ---
 
-# `cli-authority-verb-conformance` reference: `CLI authority and verb conformance source map`
+# `cli-authority-verb-conformance` reference: `Authentication logout and reset authority map`
 
-This reference is the implementation-facing authority map for the CLI semantic
-deduplication and cost-aware verb migration.  It records the inspected revision,
-exact call graphs, owning services, safety constraints, blast radius, and
-real-behavior verification targets.  It is intentionally explicit about false
-positives so later implementation does not collapse operations that merely
-share a low-level primitive.
+This implementation Reference maps CLI verbs to backend authorities. It records
+exact ownership, custody boundaries, duplicate status, and real-behavior
+verification locations. It is not operator setup guidance or a contributor
+procedure.
+
+## Scope and lookup conventions
+
+Use these locations according to the information needed:
+
+| Need | Authoritative location |
+|---|---|
+| Operator authentication setup and use | `docs/how-to/authenticate-with-aeat.md` and generated command details in `docs/cli/config/auth.rst` |
+| Contributor setup and support | `CONTRIBUTING.md`, `docs/workstation-setup.md`, and `README.md` |
+| Documentation authoring procedure | `docs/authoring-guide.md` |
+| Governing architecture decision | `.vault/adr/2026-07-15-cli-authority-verb-conformance-adr.md` |
+| Approved implementation sequence | `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md` |
+| S37 implementation provenance | `.vault/exec/2026-07-15-cli-authority-verb-conformance/2026-07-15-cli-authority-verb-conformance-W02-P06-S37.md` |
+| Independent S37 findings | `.vault/audit/2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit.md` |
+| Current public application authority | `src/cadrumo/application/auth/__init__.py` |
+| Current CLI entrypoint | `src/cadrumo/entrypoints/cli/_config/_auth.py` |
+
+Authentication custody terms have the following meanings in this reference:
+
+- **Target bucket**: the profile bucket whose authentication state and
+  provider artefacts the operation may access.
+- **Provider scope**: one explicit provider, all known providers, or the
+  configured provider when neither selector is supplied.
+- **Persisted session**: the bucket-routed provider session object used for
+  local AEAT session reuse.
+- **Acquisition lock**: the bucket-routed provider lock that serializes live
+  session acquisition.
+- **Certificate source**: a named certificate registration in `AuthState`.
+- **Certificate secret**: the source's secret in canonical bucket secure
+  storage. Secret values never enter workflow state or events.
+- **Workflow projection event**: the compact auth event stored in
+  `WorkflowState.bucket_events`.
+- **Append-only bucket event**: the typed durable event stored through
+  `BucketEventHistoryRepository`.
+- **Cleanup intent**: the secret-free durable `AuthCleanupIntent` that makes
+  logout or reset resumable after external cleanup starts.
+
+The remaining sections retain the wider campaign source map. Historical ADRs,
+audits, and execution records describe the state inspected at their recorded
+revision; they do not override the current implementation authority table.
 
 ## Summary
 
@@ -223,71 +261,149 @@ pointer; interruption-safe pointer replacement.
 namespace check.  `switch` is the accepted selector; add an explicit sandbox
 short-name resolution contract if required, then remove sandbox `use`.
 
-### Authentication reset, sessions, and locks
+### Authentication logout and reset authority
 
-Canonical graph:
+#### Canonical mappings
 
-```text
-clear_operator_auth
-  +--> delete_persisted_session
-  +--> clear_auth_acquisition_lock
-  +--> _apply_auth_clear_to_repository
-       +--> AuthState()
-       +--> provider/session/lock-cleared workflow events
-```
+Each command row uses the same lookup format. "Durable events" names both the
+workflow projection action and the typed append-only bucket event where both
+exist.
 
-Sources:
+| Operator command | Public application service | Preserved state | Removed state | Target and provider scope | Durable events | Implementation location | Verification location | Release status |
+|---|---|---|---|---|---|---|---|---|
+| `aeat config auth logout [--provider PROVIDER\|--all]` | `logout_operator_auth` | Provider configuration, certificate path and sources, certificate secrets, acquisition locks, unrelated providers, and every unrelated bucket | Persisted sessions in scope; current authenticated timestamp and subject when the versioned configured provider remains the cleanup target | CLI resolves the active bucket. The application service also accepts `target_bucket_id` without changing the active pointer. Provider scope is explicit, all known providers, or the configured provider. | `auth.session.cleared`; `AUTH_SESSION_CLEARED` | `src/cadrumo/application/auth/_operator.py`, `src/cadrumo/application/auth/_operator_scope.py`, `src/cadrumo/application/auth/_sessions.py`, and `src/cadrumo/application/auth/_mutation.py` | `src/cadrumo/application/auth/tests/test_operator_storage_session.py`, `src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`, and `src/cadrumo/application/tests/test_cli_workflow_verification.py` | S37 accepted. The full campaign plan governs release; S37 audit-derived gates include `config_reset.py` composition and certificate-secret event recovery. |
+| `aeat config auth reset [--provider PROVIDER\|--all] --yes` | `reset_operator_auth` | Unrelated provider configuration, unrelated certificate custody, non-auth bucket state, the active-profile pointer, and every unrelated bucket | Provider configuration in scope, persisted sessions, acquisition locks, certificate path, targeted certificate-source registrations, and their canonical secure-storage secrets | CLI requires `--yes` and resolves the active bucket. The application service accepts `target_bucket_id`. Certificate sources and secrets are reset only when certificate custody is in scope. | `auth.provider.cleared`, `auth.session.cleared`, `auth.lock.cleared`, and `auth.certificate_source.removed`; typed `AUTH_PROVIDER_CLEARED`, `AUTH_SESSION_CLEARED`, `AUTH_LOCK_CLEARED`, `AUTH_CERTIFICATE_SOURCE_REMOVED`, and `AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED` | `src/cadrumo/application/auth/_operator.py`, `src/cadrumo/application/auth/_operator_scope.py`, `src/cadrumo/application/auth/_sessions.py`, `src/cadrumo/application/auth/_acquisition_lock.py`, `src/cadrumo/application/auth/_certificate_sources_operator.py`, and `src/cadrumo/application/auth/_mutation.py` | `src/cadrumo/application/auth/tests/test_operator_storage_session.py`, `src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`, `src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py`, and `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py` | S37 accepted. The full campaign plan governs release; S37 audit-derived gates include S62-S64 composition and certificate-secret event recovery. |
 
-- `src/cadrumo/application/auth/_operator.py:640-778`
-- `src/cadrumo/application/auth/_sessions.py:199-247`
-- `src/cadrumo/application/auth/_acquisition_lock.py:82-157`
+#### Custody and persistence boundaries
 
-Competing `reset_config(AUTH|ALL)` at
-`src/cadrumo/application/config_reset.py:189-194` only assigns `AuthState()` and
-then reports `removed_auth_session=True`; it does not remove session objects,
-locks, or emit canonical events.  The single owner is `clear_operator_auth`.
-If ALL remains, auth cleanup must happen before deleting the active bucket.
+- `active_profile_storage_span` binds repository and secure-object access to the
+  explicit target bucket or the resolved active bucket. A nested target
+  operation restores any unrelated ambient bucket session after completion.
+- `auth_mutation_span` is the single reentrant per-bucket auth mutation lock.
+  Configure, login, certificate source and secret mutations, logout, and reset
+  use this boundary.
+- `WorkflowStateRepository.update_with_bucket_events` prepares auth state and
+  append-only bucket events from one revision. Its
+  `update_with_writes` boundary commits the compare-and-swap writes in one SQL
+  unit of work.
+- Logout and reset persist a secret-free cleanup intent before deleting
+  external session, lock, or secret artefacts. A matching command resumes the
+  operation. Other auth mutations fail closed while the intent remains.
+- Provider selection is mutually exclusive: `--provider` and `--all` cannot
+  appear together. Without either option, the configured provider is the
+  scope. A missing configured provider is a typed refusal.
+- Session objects and acquisition locks use both bucket and provider identity.
+  Logout removes session objects only. Reset removes both session objects and
+  acquisition locks.
+- Certificate cleanup uses the source registrations captured by the reset
+  intent. The intent records source identity and registration timestamps but
+  never secret values.
+- `WorkflowState.bucket_events` remains the compact workflow projection.
+  `BucketEventHistoryRepository` is the append-only event authority. Auth
+  event IDs derive deterministically from the bucket, type, timestamp, actor,
+  object, and secret-free payload, so recovery does not append duplicates.
 
-Required real-behavior tests seed a real encrypted session, real acquisition
-lock, and configured provider, then assert actual removals, post-state, and
-events for both the dedicated auth surface and retained reset compositions.
+#### Remaining `config_reset.py` duplicate
+
+In the committed S37 baseline,
+`src/cadrumo/application/config_reset.py` remains a live parallel auth writer.
+Its `ConfigResetScope.AUTH` and `ConfigResetScope.ALL` branches replace
+`AuthState()` directly and report `removed_auth_session=True`. They do not call
+`reset_operator_auth`, remove persisted provider sessions, clear acquisition
+locks, remove certificate-source secrets, or emit the canonical auth events.
+
+The approved plan assigns closure to `W02.P05.S62` through `W02.P05.S64`:
+
+| Step | Required authority change | Owner location |
+|---|---|---|
+| `W02.P05.S62` | Replace the flat scoped reset with resumable start, status, and resume operations | `src/cadrumo/application/config_reset.py` |
+| `W02.P05.S63` | Serialize targets and persist reset decisions before mutation | `src/cadrumo/application/config_reset.py` |
+| `W02.P05.S64` | Invoke target-scoped `reset_operator_auth` before target deletion | `src/cadrumo/application/config_reset.py` |
+
+This sequencing is a binding pre-release restriction. Candidate worktree edits
+do not close it: the branch must not be released, tagged as single-authority
+authentication, or used as proof of duplicate closure until S62-S64 are
+verified and committed with the direct `AuthState()` reset path removed.
+Procedures for operating the future resumable reset belong in operator how-to
+documentation, not in this Reference.
+
+#### Supersession and semantic-search status
+
+The former `clear_operator_auth` graph and `aeat config auth clear` command are
+retired. `logout_operator_auth` and `reset_operator_auth` supersede that graph.
+Historical ADRs, audits, research, and execution records may retain the old
+names as revision evidence. They are not current implementation declarations.
+
+Generated terminology and static reference artefacts can still contain the
+retired spelling until their assigned campaign steps run. After those
+artefacts and this reference are indexed, refresh the Vaultspec-RAG index. A
+fresh auth-authority search must return the logout/reset services and this
+section as the current authority. Historical results may retain the old token
+only when their document type and date identify them as historical evidence.
+
+#### Real-behavior and duplicate checks
+
+The verification map is:
+
+| Contract | Real-behavior location |
+|---|---|
+| Logout preserves provider and certificate custody while clearing real sessions | `src/cadrumo/application/auth/tests/test_operator_storage_session.py` |
+| Reset removes scoped provider state, sessions, locks, registrations, and secure-storage secrets | `src/cadrumo/application/auth/tests/test_operator_storage_session.py` |
+| Explicit target operations preserve unrelated bucket state and ambient sessions | `src/cadrumo/application/auth/tests/test_operator_storage_session.py` and `src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py` |
+| Cleanup survives real repository failure and appends events once | `src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py` |
+| Acquisition-lock cleanup is target-scoped and idempotent | `src/cadrumo/application/auth/tests/test_acquisition_lock.py` |
+| CLI verbs, provider help, payloads, and destructive confirmation match the backend | `src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py` and `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py` |
+| Workflow projection order is configure, logout, then reset | `src/cadrumo/application/tests/test_cli_workflow_verification.py` |
+| Revision-aware secure-object persistence rejects stale writes | `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py` |
+
+Current-source duplicate checks cover:
+
+- definitions and imports of `clear_operator_auth` and `AuthClearResult`;
+- executable CLI registration, schema keys, write policy, risk metadata, and
+  help entries for `config.auth.clear`;
+- direct `AuthState()` replacement in production reset services;
+- direct persisted-session, acquisition-lock, and certificate-secret deletion
+  outside the canonical auth application services; and
+- auth event construction outside `src/cadrumo/application/auth/_mutation.py`.
+
+Historical `.vault` records are excluded from executable-token checks. Generated
+artefacts are tracked separately until their assigned regeneration steps land.
 
 ### Certificate credential resolution
 
-Current disconnected graph:
+The earlier keyring-or-secure-storage graph is superseded. Current source
+declares encrypted secure storage as the sole named certificate-secret backend;
+the independent master-key OS-keyring custody backend is a separate concern.
+
+Current authority and remaining event-recovery gap:
 
 ```text
-certificate source select --> AuthState.certificate_path
+certificate source select --> AuthState active source and certificate path
 
-certificate secret set/remove --> secure storage OR keyring
-                                  [backend kind not persisted]
+certificate secret set/remove --> SecureStorageCertificateSecretBackend
+                              --> SecretStore mutation
+                              --> append-only certificate-secret event
+                                  [ordinary set/remove lacks recovery between stores]
 
-certificate check --> named-secret resolver --> default secure storage
-
-auth login --> selected-path precondition --> unchanged Settings
-                                      --> authenticator global path/secret
+resolve_active_certificate_credentials
+  --> selected source path
+  --> selected source secret from secure storage
+  --> auth status, test, and login credential scope
 ```
 
 Sources:
 
-- `src/cadrumo/application/auth/_certificate_sources_operator.py:250-293`
-- `src/cadrumo/application/auth/_certificate_sources_operator.py:330-510`
-- `src/cadrumo/application/auth/_certificate_secret_backend.py:85-316`
-- `src/cadrumo/application/auth/_operator.py:550-611`
-- `src/cadrumo/application/auth/_operator.py:781-805`
-- `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py:592-635`
-- `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py:1118-1141`
+- `src/cadrumo/application/auth/_certificate_sources_operator.py`
+- `src/cadrumo/application/auth/_certificate_secret_backend.py`
+- `src/cadrumo/application/auth/_operator.py`
+- `src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py`
 
-The target owner is an application `resolve_active_certificate_credentials`
-service returning a typed scoped credential/settings bundle consumed by check,
-status, test, and login.  Standardizing on secure storage is the lowest-cost
-single authority.  If keyring remains, persist its backend kind per named
-source and resolve it identically at every consumer.
-
-Required real-behavior tests use a registered and selected certificate with a
-real PKCS#12 payload and stored secret, without relying on global credential
-settings; cover restart persistence, missing bound secret fail-closed behavior,
-source removal/orphan reconciliation, and keyring only if retained.
+The sole-backend and credential-resolution direction is current. The open HIGH
+finding is narrower: ordinary secret set/remove changes the file-backed
+`SecretStore` before its SQL-backed append-only event is committed. Expanded
+plan rows `W02.P07.S48`, `W02.P07.S51`, and `W04.P13.S118` require a
+secret-free durable intent or outbox and real failure/retry proofs so the
+original event kind and timestamp are recovered exactly once.
 
 ### Data reset and quarantine
 
@@ -410,45 +526,24 @@ and post-restart behavior for file, keyring, AUTO, and unsecured custody.
 
 ### Import-linter infrastructure
 
-`.importlinter:2` still declares `root_package = aeat`; the contracts below it
-already name `cadrumo.*`.  `uv run lint-imports` therefore exits before building
-the graph with `Could not find package 'aeat' in your Python path.`  Change the
-root to `cadrumo`, execute the complete contract set without cache, and
-reconcile every real boundary violation or stale ignore exposed by the restored
-graph.  This is an implementation prerequisite, not an ambient warning.
+The research snapshot found `.importlinter` rooted at the retired `aeat`
+package and a vacuous ignore-ledger parser. Wave `W01` repaired that
+infrastructure before the CLI authority work began. The live configuration now
+declares `root_package = cadrumo`, retains all five architecture contracts, and
+contains no broad exemption added for the auth remediation.
 
-The read-only corrected-root diagnostic analyzed 3,419 files and 16,149
-dependencies.  After identifying two stale ignores, the complete five-contract
-run reported three kept contracts and two broken contracts with three
-root-cause paths:
+`src/cadrumo/tests/test_importlinter_ledger.py` now parses `cadrumo.*` edges,
+requires both the complete and layered ledgers to be non-empty, verifies that
+referenced modules resolve on disk, and ratchets the reconciled ceilings at
+199 application-to-adapter edges, 78 application-source wildcard edges, and 2
+test-only domain-to-adapter edges. Those ceilings may decrease but may not be
+raised.
 
-- remove the stale `_censo -> adapters.**` and `_censo_sync -> adapters.**`
-  entries;
-- restore the exact
-  `core.tests.test_isolation_fixture_state_root_coverage -> tests.secure_sql`
-  shared-fixture route required by the accepted test-carveout ADR;
-- remove `_irnr_income_ledger`'s unused default concrete construction and
-  require the already injected `TransactionCatalogueRepositoryProtocol` in
-  both the repository-loading function and the public IRNR resolver
-  constructor, so no optional path can bypass the source mesh's one memoized
-  transaction repository; and
-- replace `_verification_actions`' type-only concrete invoice dependency with
-  `InvoiceCatalogueRepositoryProtocol`, including the receiving OSS/IOSS
-  resolver annotations, without adding an ignore.
-
-The repair must not weaken contracts or add broad production exemptions.
-Existing narrow real-adapter test exemptions and individually pinned
-application construction edges remain governed by their accepted architecture
-decisions; the dead IRNR fallback and type-only verification leak are removed,
-not added to that debt ledger.
-
-`src/cadrumo/tests/test_importlinter_ledger.py` is also stale: its regular
-expression accepts only `aeat.*`, making all three count assertions vacuous.
-Retarget it to `cadrumo`, narrow `diagnostics_run_health -> adapters.**` to
-`adapters.outbound.llm`, and replace the obsolete 840/78/70 ceilings with the
-post-reconciliation live counts 199/78/2.  Ceilings may decrease but may not be
-raised.  Verification records all five contract results from an uncached run
-and runs the repaired ledger test against non-empty parsed edges.
+The latest S37 corrective run analyzed 3,427 files and 16,219 dependencies:
+all five contracts were kept and zero were broken. The S37 remediation removed
+auth adapter exemptions rather than adding architecture debt. A fresh uncached
+five-contract run and the non-vacuous ledger tests remain mandatory at final
+campaign verification.
 
 ### Canonical hashing
 
