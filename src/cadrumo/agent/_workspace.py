@@ -80,17 +80,14 @@ _PLUGIN_LICENSE = "Apache-2.0"
 _PLUGIN_KEYWORDS = (PRODUCT_IDENTITY.plugin_identifier, "tax", "aeat", "spain", "irpf", "iva", "modelo")
 _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 
-# ``uvx`` launches either the exact published version or the root wheel and both
-# mandatory companions embedded beneath ``${CLAUDE_PLUGIN_ROOT}``. Neither path
-# resolves an ambient product executable. The plugin supplies its release
+# The plugin integrates with the independently installed Cadrumo service. It
+# never provisions Python or embeds product wheels. Acquisition installs the
+# public ``cadrumo-mcp`` executable; the plugin invokes it and supplies its own
 # version through ``CADRUMO_MCP_REQUIRED_VERSION`` so a stale, incomplete, or
-# mixed installed cohort refuses before opening the protocol transport. The active persona is
-# wired from the ``userConfig`` persona option through the documented
-# ``${user_config.persona}`` interpolation; the server validates and refuses an
-# unknown persona (server-side validation is the refusal surface).
+# mixed installed cohort refuses before opening the protocol transport.
 _MCP_CONFIG = ".mcp.json"
 _MCP_SERVER_NAME = PRODUCT_IDENTITY.mcp_server
-_MCP_LAUNCHER = "uvx"
+_MCP_LAUNCHER = "cadrumo-mcp"
 _MCP_CONSOLE_SCRIPT = PRODUCT_IDENTITY.mcp_executable
 _MCP_PERSONA_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
@@ -386,19 +383,8 @@ def _cohort_wheels(cohort: PythonCohort) -> dict[str, Path]:
 
 
 def _mcp_args(version: str, cohort: PythonCohort | None) -> list[str]:
-    if cohort is None:
-        return ["--from", f"{_PYPI_DISTRIBUTION}[agent]=={version}", _MCP_CONSOLE_SCRIPT]
-    root = f"{_CLAUDE_PLUGIN_ROOT}/{_PLUGIN_ARTIFACTS_SUBDIR.as_posix()}"
-    wheels = _cohort_wheels(cohort)
-    return [
-        "--from",
-        f"{root}/{wheels['cadrumo'].name}[agent]",
-        "--with",
-        f"{root}/{wheels['cadrumo-data-manuals'].name}",
-        "--with",
-        f"{root}/{wheels['cadrumo-data-official'].name}",
-        _MCP_CONSOLE_SCRIPT,
-    ]
+    del version, cohort
+    return []
 
 
 def _mcp_config_document(version: str, cohort: PythonCohort | None) -> dict[str, object]:
@@ -422,36 +408,13 @@ def _materialise_plugin_python_cohort(
     output_dir: Path,
     cohort: PythonCohort | None,
 ) -> None:
+    """Ensure the service-integration plugin carries no Python artifacts."""
+    del cohort
     artifact_dir = output_dir / _PLUGIN_ARTIFACTS_SUBDIR
     if artifact_dir.exists():
         shutil.rmtree(artifact_dir)
-    if cohort is None:
-        if artifact_dir.parent.exists() and not any(artifact_dir.parent.iterdir()):
-            artifact_dir.parent.rmdir()
-        return
-    resolved = artifact_dir.resolve()
-    if cohort.directory == resolved or cohort.directory in resolved.parents or resolved in cohort.directory.parents:
-        raise ValueError("plugin output artifact directory must not overlap the source cohort")
-    artifact_dir.mkdir(parents=True)
-    retained: dict[str, str] = {}
-    wheels = _cohort_wheels(cohort)
-    for distribution in _PYTHON_COHORT_WHEELS:
-        source = wheels[distribution]
-        destination = artifact_dir / source.name
-        shutil.copy2(source, destination)
-        if not filecmp.cmp(source, destination, shallow=False):
-            raise ValueError(f"copied plugin wheel bytes drifted for {distribution!r}")
-        retained[distribution] = destination.name
-    _write_json(
-        artifact_dir,
-        _PLUGIN_COHORT_MANIFEST,
-        {
-            "artifacts": retained,
-            "sha256": {distribution: cohort.sha256[distribution] for distribution in _PYTHON_COHORT_WHEELS},
-            "source_commit": cohort.source_commit,
-            "version": cohort.version,
-        },
-    )
+    if artifact_dir.parent.exists() and not any(artifact_dir.parent.iterdir()):
+        artifact_dir.parent.rmdir()
 
 
 def materialise_plugin(
@@ -470,10 +433,9 @@ def materialise_plugin(
     declaration, all from the single authored harness source. The ``version`` is
     resolved from installed package metadata when no cohort is supplied;
     ``persona_default`` seeds the ``userConfig`` persona default. With
-    ``cohort_dir``, the plugin embeds and launches the canonical immutable root
-    wheel plus both mandatory companions. Otherwise it resolves the published
-    distribution at the exact plugin version. Neither path uses an ambient
-    product executable or project checkout.
+    ``cohort_dir`` may bind the emitted plugin version to the release cohort,
+    but the emitted plugin never embeds or provisions that cohort. It invokes
+    the independently installed public ``cadrumo-mcp`` service.
 
     Returns:
         :class:`PluginManifest` describing the plugin written.

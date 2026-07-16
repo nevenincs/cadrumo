@@ -52,8 +52,8 @@ def test_plugin_layout_emits_envelope_and_schema_valid_tree(tmp_path: Path) -> N
     assert (out / ".mcp.json").is_file()
     mcp = json.loads((out / ".mcp.json").read_text(encoding="utf-8"))
     server = mcp["mcpServers"]["cadrumo"]
-    assert server["command"] == "uvx"
-    assert server["args"] == ["--from", f"cadrumo[agent]=={payload['version']}", "cadrumo-mcp"]
+    assert server["command"] == "cadrumo-mcp"
+    assert server["args"] == []
     assert server["env"]["CADRUMO_MCP_REQUIRED_VERSION"] == payload["version"]
     assert not (out / "artifacts").exists()
 
