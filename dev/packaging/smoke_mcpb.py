@@ -172,6 +172,7 @@ def run_mcpb_smoke(
                 sort_keys=True,
                 separators=(",", ":"),
             ),
+            "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
             "CADRUMO_MCP_REQUIRED_VERSION": cohort.version,
             "CADRUMO_MCP_PERSONA": "${user_config.persona}",
             "CADRUMO_MCP_SURFACE": "${user_config.surface}",
@@ -179,7 +180,12 @@ def run_mcpb_smoke(
         },
     }:
         raise SystemExit(f"built MCPB launch contract drifted: {server!r}")
-    user_config = {"persona": "", "surface": "full"}
+    storage_root = run_root / "storage"
+    user_config = {
+        "persona": "",
+        "storage_root": str(storage_root),
+        "surface": "full",
+    }
     server_args = tuple(
         _resolve_mcpb_value(
             value,
@@ -196,8 +202,27 @@ def run_mcpb_smoke(
         )
         for key, value in server["env"].items()
     }
-    runtime_environment = extracted / f".cadrumo-runtime-{expected_runtime_identity}"
-    if resolved_environment["UV_PROJECT_ENVIRONMENT"] != str(runtime_environment):
+    hostile_platform_root = run_root / "platform-data-with-retired-state"
+    if sys.platform == "win32":
+        former_product_root = hostile_platform_root / "aeat"
+        canonical_product_root = hostile_platform_root / "cadrumo"
+        resolved_environment["LOCALAPPDATA"] = str(hostile_platform_root)
+    elif sys.platform == "darwin":
+        hostile_home = run_root / "home-with-retired-state"
+        former_product_root = hostile_home / "Library" / "Application Support" / "aeat"
+        canonical_product_root = hostile_home / "Library" / "Application Support" / "cadrumo"
+        resolved_environment["HOME"] = str(hostile_home)
+    else:
+        former_product_root = hostile_platform_root / "aeat"
+        canonical_product_root = hostile_platform_root / "cadrumo"
+        resolved_environment["XDG_DATA_HOME"] = str(hostile_platform_root)
+    former_product_root.mkdir(parents=True)
+    former_marker = former_product_root / "custody-marker.bin"
+    former_marker_bytes = b"retired-aeat-state-must-remain-byte-identical"
+    former_marker.write_bytes(former_marker_bytes)
+    runtime_environment = Path(resolved_environment["UV_PROJECT_ENVIRONMENT"])
+    expected_runtime_environment = extracted / f".cadrumo-runtime-{expected_runtime_identity}"
+    if runtime_environment.resolve() != expected_runtime_environment.resolve():
         raise SystemExit(
             "MCPB runtime path did not resolve from the stamped manifest: "
             f"{resolved_environment['UV_PROJECT_ENVIRONMENT']!r}",
@@ -206,7 +231,7 @@ def run_mcpb_smoke(
         uv,
         server_args=server_args,
         environment_overrides=resolved_environment,
-        storage_root=run_root / "storage",
+        storage_root=storage_root,
         work_dir=run_root / "external-work",
         timeout_seconds=timeout_seconds,
     )
@@ -216,6 +241,18 @@ def run_mcpb_smoke(
         )
     if evidence.target_value != "23000.00":
         raise SystemExit(f"MCPB tax oracle returned unexpected evidence: {evidence.to_jsonable()!r}")
+    if former_marker.read_bytes() != former_marker_bytes:
+        raise SystemExit("MCPB launch mutated retired aeat state")
+    if canonical_product_root.exists():
+        raise SystemExit(
+            "MCPB launch wrote through the implicit installed-product root instead "
+            f"of the selected project-independent state root: {canonical_product_root}",
+        )
+    if extracted in storage_root.parents or storage_root in extracted.parents:
+        raise SystemExit("MCPB state root must be independent from the unpacked extension")
+    if work_dir := run_root / "external-work":
+        if work_dir in storage_root.parents or storage_root in work_dir.parents:
+            raise SystemExit("MCPB state root must be independent from the client work directory")
     evidence_path = run_root / "mcpb-assembly-runtime-evidence.json"
     evidence_path.write_text(
         json.dumps(
@@ -238,6 +275,8 @@ def run_mcpb_smoke(
                 "proof": {
                     "archive_construction": "passed",
                     "bundle_runtime_oracle": "passed outside a desktop client",
+                    "project_independent_state": str(storage_root),
+                    "retired_default_state_refusal_isolated": str(former_product_root),
                     "client_installation": "not run",
                     "publisher_signature": "unsigned",
                     "support_claim": "none",
