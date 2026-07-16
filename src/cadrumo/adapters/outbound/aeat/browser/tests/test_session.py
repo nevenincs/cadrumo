@@ -24,15 +24,29 @@ See Also:
         lightweight tests to omit concrete browser ownership.
 """
 
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, cast, override
 
 import pytest
 from playwright.async_api import BrowserContext, Page, Playwright
+from pydantic import SecretStr
 
+from ......application.auth_credentials import ActiveCertificateCredentials
 from ......core.config import Settings
 from ......core.errors import SiteHealthError
 from ......tests import FIXTURES_DIR
+from ......tests.secure_sql import isolated_runtime_profile
+from ...auth import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatAuthenticator,
+    AeatLoginAssertionError,
+    AeatSession,
+    BrowserContextLike,
+    BrowserSessionLike,
+)
+from ...auth._providers import CertificateSessionDetail, ClaveMovilSessionDetail
+from ...auth.tests._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 from .._site_health import SiteHealthState
 from .._site_health_probe import probe_response
 from ..evasion import EvasionStrategy
@@ -399,6 +413,106 @@ async def test_browser_session_close_failure_surfaces_and_allows_retry(tmp_path:
 
     assert playwright_adapter.chromium.live_browser_count == 0
     assert playwright_adapter.chromium.closed_browser_count == 2
+
+
+@pytest.mark.asyncio
+async def test_authenticator_retains_browser_when_context_failure_cleanup_needs_retry(tmp_path: Path) -> None:
+    """Fresh auth retains its concrete browser owner until teardown succeeds."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="auth-browser-close-retry"):
+        settings = Settings(cadrumo_browser_close_timeout_ms=1_000)
+        profile = Profile(name="auth", storage_state_path=tmp_path / "auth-state.json")
+        playwright_adapter = RecordingPlaywright()
+        playwright_adapter.chromium.next_close_failures = 2
+        browser_session = BrowserSession(
+            playwright=cast(Playwright, playwright_adapter),
+            settings=settings,
+            profile=profile,
+            evasion_strategy=FailingEvasion(),
+        )
+
+        async def browser_factory(factory_settings: Settings) -> BrowserSessionLike:
+            assert factory_settings is settings
+            return browser_session
+
+        bundle_path = _build_bundle(tmp_path)
+        authenticator = AeatAuthenticator(
+            settings,
+            credentials=ActiveCertificateCredentials(
+                certificate_path=bundle_path,
+                password=SecretStr(SECRET_PASSPHRASE),
+                friendly_name=None,
+            ),
+            browser_session_factory=browser_factory,
+        )
+
+        with pytest.raises(BrowserError, match="boom from evasion"):
+            await authenticator.authenticate()
+
+        retained_browser = playwright_adapter.chromium.launched_browsers[0]
+        assert retained_browser.close_calls == 2
+        assert playwright_adapter.chromium.live_browser_count == 1
+        assert authenticator._browser_session is browser_session
+
+        await authenticator.close()
+
+        assert retained_browser.close_calls == 3
+        assert playwright_adapter.chromium.live_browser_count == 0
+        assert authenticator._browser_session is None
+
+
+@pytest.mark.asyncio
+async def test_authenticator_verify_rejects_non_active_or_non_certificate_session_before_navigation(
+    tmp_path: Path,
+) -> None:
+    """Only the exact active certificate session may use an owned context."""
+    settings = Settings()
+    profile = Profile(name="verify", storage_state_path=tmp_path / "verify-state.json")
+    browser_session = BrowserSession(
+        playwright=cast(Playwright, RecordingPlaywright()),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=_RecordingEvasion(),
+    )
+    context = await browser_session.create_context()
+    bundle_path = _build_bundle(tmp_path)
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=ActiveCertificateCredentials(
+            certificate_path=bundle_path,
+            password=SecretStr(SECRET_PASSPHRASE),
+            friendly_name=None,
+        ),
+    )
+    current = datetime.now(UTC)
+    active = AeatSession(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=profile.storage_state_path,
+        identity_nif="12345678Z",
+        provider_detail=CertificateSessionDetail(
+            certificate_thumbprint="active-thumbprint",
+            certificate_subject="CN=ACTIVE,SERIALNUMBER=12345678Z",
+        ),
+    )
+    authenticator._browser_session = browser_session
+    authenticator._context = cast(BrowserContextLike, context)
+    authenticator._active_session = active
+
+    with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
+        await authenticator.verify(active.model_copy())
+
+    wrong_provider = AeatSession(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=profile.storage_state_path,
+        identity_nif="12345678Z",
+        provider_detail=ClaveMovilSessionDetail(dni_nie="12345678Z"),
+    )
+    authenticator._active_session = wrong_provider
+    with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
+        await authenticator.verify(wrong_provider)
+
+    await authenticator.close()
 
 
 @pytest.mark.asyncio

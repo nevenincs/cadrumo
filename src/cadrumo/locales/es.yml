@@ -601,6 +601,8 @@ application:
           de leer datos AEAT.
         profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
           el perfil activo tenga identity.tax_id.
+        provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
+          AEAT; repite la autenticación antes de leer datos AEAT.
         sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
           auth test` antes de leer datos AEAT.
         session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test`

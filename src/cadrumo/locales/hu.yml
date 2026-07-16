@@ -554,6 +554,8 @@ application:
           parancsot az AEAT adatok olvasása előtt.
         profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
           aktív profil rendelkezzen identity.tax_id-val.
+        provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
+          bezárni; az AEAT adatok olvasása előtt hitelesítsen újra.
         sede_rejected: Az AEAT munkamenetet az AEAT Sede nem fogadja el; futtassa
           a `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
         session_expired: Az AEAT munkamenet lejárt; futtassa a `aeat config auth test`

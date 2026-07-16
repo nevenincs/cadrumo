@@ -537,6 +537,8 @@ application:
           AEAT data.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
           to carry identity.tax_id.
+        provider_close_failed: AEAT browser session could not be closed safely; retry
+          authentication before reading AEAT data.
         sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
           auth test` before reading AEAT data.
         session_expired: AEAT session is expired; run `aeat config auth test` before
