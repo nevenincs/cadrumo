@@ -256,6 +256,19 @@ class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     """
 
 
+class ProfileLogoutOverrideError(UserProfileError):
+    """Refuse logout while an explicit active-profile override is in force."""
+
+    def __init__(self) -> None:
+        """Initialise the refusal with override-specific recovery guidance."""
+        super().__init__(
+            translated_message="errors.refused.refused_cli_boundary",
+            suggestion=(
+                "Retry without --profile after removing CADRUMO_ACTIVE_PROFILE from the invocation environment."
+            ),
+        )
+
+
 def register_active_profile(
     state: WorkflowState,
     *,
@@ -416,17 +429,30 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
 def logout_active_profile() -> str | None:
     """Close the active storage session, clear its pointer, and return its profile.
 
+    Explicit ``cadrumo_active_profile`` overrides are process-scoped and cannot
+    be unset by this application boundary. They are refused before lock
+    acquisition or session teardown so logout never clears an unrelated
+    durable pointer or reports that an override-selected profile was signed
+    out.
+
     The pointer transaction is acquired before session teardown to preserve the
     project-wide lock order. Session close and ContextVar eviction complete
     before pointer mutation, so an unexpected teardown failure cannot report a
     successful pointer-only logout. Provider bookkeeping remains owned by the
     provider context and unwinds idempotently when that context exits.
+
+    Raises:
+        ProfileLogoutOverrideError: If an explicit active-profile override is
+            in force.
     """
     from ...adapters.persistence.storage import close_active_bucket_session
-    from ...core import resolve_active_bucket_id
 
+    override = (load_settings().cadrumo_active_profile or "").strip()
+    if override:
+        raise ProfileLogoutOverrideError
     with active_profile_pointer_transaction() as pointer_transaction:
-        before = resolve_active_bucket_id()
+        pointer = pointer_transaction.read()
+        before = pointer.bucket_id if pointer is not None else None
         close_active_bucket_session()
         pointer_transaction.clear()
         return before
@@ -742,6 +768,7 @@ def rename_profile(
 
 
 __all__ = [
+    "ProfileLogoutOverrideError",
     "build_lifecycle_service",
     "delete_profile_with_lifecycle_span",
     "fact_value",

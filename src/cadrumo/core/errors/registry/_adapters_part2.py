@@ -701,17 +701,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_PROVIDER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_provider",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderConfigError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER_CONFIG",

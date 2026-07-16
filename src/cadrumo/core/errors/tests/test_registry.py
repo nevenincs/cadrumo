@@ -61,6 +61,12 @@ def test_duplicate_registration_raises_clear_error() -> None:
         register(duplicate)
 
 
+def test_identical_duplicate_registration_raises_clear_error() -> None:
+    existing = next(iter(ERROR_REGISTRY.values()))
+    with pytest.raises(ValueError, match="duplicate ErrorCode registration"):
+        register(existing)
+
+
 def test_messages_do_not_leak_sphinx_role_markup() -> None:
     """Verify that resolved messages do not contain Sphinx markup roles."""
     for code in ERROR_REGISTRY.values():

@@ -602,61 +602,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._log_levels.LogLevelResolutionError",
-        ErrorCode(
-            code="REFUSED_CLI_LOG_LEVEL_RESOLUTION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_log_level_resolution",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.entrypoints.cli._tty.NonTtyRefusedError",
-        ErrorCode(
-            code="REFUSED_CLI_NON_TTY",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_non_tty",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.entrypoints.cli._errors.CliValidationBoundaryError",
-        ErrorCode(
-            code="REFUSED_CLI_VALIDATION_BOUNDARY",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_validation_boundary",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.entrypoints.cli._errors.CliUnexpectedBoundaryError",
-        ErrorCode(
-            code="INTERNAL_CLI_UNEXPECTED_BOUNDARY",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_cli_unexpected_boundary",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError",
-        ErrorCode(
-            code="REFUSED_CLI_BOUNDARY",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_boundary",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.wizard._errors.WizardError",
         ErrorCode(
             code="ERROR_WIZARD",

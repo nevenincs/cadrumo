@@ -175,6 +175,7 @@ if TYPE_CHECKING:
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
+        ProfileLogoutOverrideError,
         build_lifecycle_service,
         delete_profile_with_lifecycle_span,
         fact_value,
@@ -357,6 +358,7 @@ def __getattr__(name: str):
         return active_profile_pointer_transaction
     if name in (
         "ProfileAlreadyRegisteredError",
+        "ProfileLogoutOverrideError",
         "build_lifecycle_service",
         "delete_profile_with_lifecycle_span",
         "fact_value",
@@ -450,6 +452,7 @@ __all__ = [
     "ProfileLifecycleService",
     "ProfileListResult",
     "ProfileListing",
+    "ProfileLogoutOverrideError",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
