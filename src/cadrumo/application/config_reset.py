@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..adapters.persistence.storage.bucket import acquire_lock, release_lock
 from ..core import BucketPointer, capture_pointer
-from ..core.config import Settings, load_settings
+from ..core.config import load_settings
 from ..core.errors import AeatError
 from ..core.hashing import sha256_hex
 from ..core.time import now
@@ -38,7 +35,6 @@ from .bucket_maintenance import (
     BucketMaintenanceService,
     DeleteBucketCommand,
 )
-from .bucket_maintenance._manifest_digest import validated_bucket_deletion_paths
 from .user_profile import (
     active_profile_pointer_transaction,
     logout_active_profile,
@@ -112,7 +108,11 @@ def start_config_reset(
             repository.refuse_if_incomplete()
         except ConfigResetJournalIncompleteError as exc:
             raise _already_running_error(exc) from exc
-        with _target_locks(settings, tuple(sorted(target_ids))):
+        with BucketMaintenanceService().deletion_target_locks(
+            root=settings.cadrumo_local_storage_root,
+            bucket_ids=target_ids,
+            wait_seconds=settings.cadrumo_file_lock_timeout_s,
+        ):
             preflight = _initial_preflight(
                 operation_id=operation_id,
                 pointer_snapshot=pointer_snapshot,
@@ -139,7 +139,6 @@ def start_config_reset(
             return _roll_forward(
                 repository=repository,
                 operation=operation,
-                settings=settings,
             )
 
 
@@ -195,7 +194,11 @@ def resume_config_reset(
                     | ({current_pointer.bucket_id} if current_pointer.bucket_id is not None else set()),
                 ),
             )
-            with _target_locks(settings, lock_ids):
+            with BucketMaintenanceService().deletion_target_locks(
+                root=settings.cadrumo_local_storage_root,
+                bucket_ids=lock_ids,
+                wait_seconds=settings.cadrumo_file_lock_timeout_s,
+            ):
                 pointer_preflight = _reconcile_pointer_snapshot_for_resume(
                     operation,
                     current_pointer=current_pointer,
@@ -233,7 +236,6 @@ def resume_config_reset(
                 return _roll_forward(
                     repository=repository,
                     operation=operation,
-                    settings=settings,
                 )
 
 
@@ -264,27 +266,6 @@ def _capture_pointer_snapshot(root: Path, pointer: BucketPointer | None) -> Conf
         bucket_id=pointer.bucket_id,
         content_sha256=sha256_hex(captured),
     )
-
-
-@contextmanager
-def _target_locks(settings: Settings, target_ids: tuple[str, ...]) -> Generator[None]:
-    with ExitStack() as stack:
-        for bucket_id in target_ids:
-            try:
-                paths = validated_bucket_deletion_paths(
-                    root=settings.cadrumo_local_storage_root,
-                    bucket_id=bucket_id,
-                )
-            except FileNotFoundError:
-                continue
-            except ValueError as exc:
-                raise ConfigResetError(
-                    "configuration reset refuses a linked bucket target",
-                    context={"bucket_id": bucket_id},
-                ) from exc
-            acquire_lock(paths, wait_seconds=settings.cadrumo_file_lock_timeout_s)
-            stack.callback(release_lock, paths)
-        yield
 
 
 def _initial_preflight(
@@ -529,11 +510,10 @@ def _roll_forward(
     *,
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
-    settings: Settings,
 ) -> ConfigResetOperation:
     operation = _clear_auth_for_targets(repository, operation)
     operation = _reconcile_pointer(repository, operation)
-    operation = _delete_targets(repository, operation, settings=settings)
+    operation = _delete_targets(repository, operation)
     completed_at = now()
     summary = ConfigResetSummary(
         target_count=len(operation.targets),
@@ -660,8 +640,6 @@ def _reconcile_pointer(
 def _delete_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
-    *,
-    settings: Settings,
 ) -> ConfigResetOperation:
     service = BucketMaintenanceService()
     for index, target in enumerate(operation.targets):
