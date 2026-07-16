@@ -304,17 +304,25 @@ function Invoke-HostSmoke {
     $appsRoot = Join-Path $scoopRoot "apps"
     $appRoot = Join-Path $appsRoot $PackageName
     $bucketRegistrationRoot = Join-Path $scoopRoot "buckets\$bucketName"
+    $persistEntriesRoot = Join-Path $scoopRoot "persist"
     $persistRoot = Join-Path $scoopRoot "persist\$PackageName"
     $uvRoot = Join-Path $appsRoot "uv"
     $pythonRoot = Join-Path $appsRoot "python"
     $preexistingScoopApps = @(
         Get-ChildItem -LiteralPath $appsRoot -Directory | ForEach-Object { $_.Name }
     )
+    $preexistingScoopPersistEntries = @(
+        Get-ChildItem -LiteralPath $persistEntriesRoot -Directory |
+            ForEach-Object { $_.Name }
+    )
     $uvWasInstalled = Test-Path -LiteralPath (Join-Path $uvRoot "current")
     $pythonWasInstalled = Test-Path -LiteralPath (Join-Path $pythonRoot "current")
     $appWasInstalled = Test-Path -LiteralPath $appRoot
     if ($appWasInstalled) {
         throw "refusing to replace existing Scoop app $PackageName"
+    }
+    if (Test-Path -LiteralPath $persistRoot) {
+        throw "refusing to replace existing persisted state for Scoop app $PackageName"
     }
 
     Write-LocalScoopManifest `
@@ -450,6 +458,7 @@ function Invoke-HostSmoke {
             candidate_manifest = $candidateManifest
             run_evidence = $runEvidence
             preexisting_scoop_apps = $preexistingScoopApps
+            preexisting_scoop_persist_entries = $preexistingScoopPersistEntries
             uv_preexisting = $uvWasInstalled
             python_preexisting = $pythonWasInstalled
             installed_prefix = $prefix
@@ -515,6 +524,19 @@ function Invoke-HostSmoke {
         if ($retainedNewApps.Count -gt 0) {
             throw "cleanup retained Scoop apps installed by the smoke run: $($retainedNewApps -join ', ')"
         }
+        $retainedNewPersistEntries = @(
+            Get-ChildItem -LiteralPath $persistEntriesRoot -Directory |
+                Where-Object {
+                    $preexistingScoopPersistEntries -notcontains $_.Name
+                } |
+                ForEach-Object { $_.Name }
+        )
+        if ($retainedNewPersistEntries.Count -gt 0) {
+            throw (
+                "cleanup retained persisted state installed by the smoke run: " +
+                ($retainedNewPersistEntries -join ", ")
+            )
+        }
     }
     if ($null -eq $evidence) {
         throw "Scoop smoke completed without pass evidence"
@@ -523,6 +545,7 @@ function Invoke-HostSmoke {
     $evidence["cleanup_removed_app"] = $true
     $evidence["cleanup_removed_bucket"] = $true
     $evidence["cleanup_removed_new_apps"] = $newScoopApps
+    $evidence["cleanup_verified_new_app_persistence_absent"] = $newScoopApps
     $evidence["cleanup_removed_new_uv"] = $newScoopApps -contains "uv"
     $evidence["cleanup_removed_new_python"] = $newScoopApps -contains "python"
     $evidence["completed_at"] = [DateTimeOffset]::UtcNow.ToString("O")
