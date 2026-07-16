@@ -203,19 +203,19 @@ Manage or review the lifecycle of a work unit as it progresses:
 - `rename`: Add or update a friendly display name for the work unit:
   
   ```{cli-sequence} filing-spine-rename
-```
+  ```
 
 - `history`: Review all actions the tool has taken on this filing, in order:
   
   ```{cli-sequence} filing-spine-history
-```
+  ```
 
 - `discard`: Mark the filing workspace as discarded. The tool records this
   action in the history log. Use this if you created the workspace by mistake
   or want to replace it with a fresh one:
   
   ```{cli-sequence} filing-spine-discard
-```
+  ```
   
   The `--reason` text is for your own records only. It is not sent to AEAT.
 
@@ -228,13 +228,13 @@ and restart it:
 - `runs`: List recent flow runs, from most recent to oldest:
   
   ```{cli-sequence} filing-spine-runs
-```
+  ```
 
 - `resume`: Restart an interrupted command using the filing details or the
   reference number shown in the error message:
   
   ```{cli-sequence} filing-spine-resume
-```
+  ```
 
 ## When to use exact IDs
 

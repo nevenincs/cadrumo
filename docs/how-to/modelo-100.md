@@ -38,7 +38,7 @@ profile](profile-setup.md).
 
   ```{cli-sequence} modelo-100-preflight
   :verify: Confirm the year's ledger reads back clean for the annual period.
-```
+  ```
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
@@ -46,7 +46,7 @@ profile](profile-setup.md).
 
   ```{cli-sequence} modelo-100-dependencies
   :verify: Confirm the declaration's required source filings and dependencies read back.
-```
+  ```
 
   `dependencies` names each source filing and whether its clean-state
   evidence is satisfied; an unfiled or unevidenced quarter blocks the annual
