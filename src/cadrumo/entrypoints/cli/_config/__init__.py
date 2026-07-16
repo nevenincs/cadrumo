@@ -930,7 +930,7 @@ def config_profile_rename(
     "logout",
     help=tr(
         "cli.config.profile.logout_help",
-        default="Sign out of the active profile by clearing the pointer file.",
+        default="Close the active profile storage session and clear its local pointer.",
     ),
 )
 def config_profile_logout(
@@ -942,7 +942,7 @@ def config_profile_logout(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
-    """Clear the active-profile pointer so subsequent verbs refuse without an explicit unlock."""
+    """Close active storage, discard in-memory keys, and clear the profile pointer."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import logout_active_profile
 

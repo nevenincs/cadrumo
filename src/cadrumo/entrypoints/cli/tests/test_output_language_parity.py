@@ -1,7 +1,7 @@
 """Regression test for ``--output-language`` parity across the CLI surface.
 
 contract closes the parity gap identified in personas R7-C, Ines D3+D6, and
-Joan R7-002: ``auth clear``, ``auth providers``, ``auth configure``,
+Joan R7-002: ``auth logout``, ``auth reset``, ``auth providers``, ``auth configure``,
 ``config profile show``, ``modelo work calculate``, ``modelo work verify``,
 and ``modelo work file`` must each accept ``--output-language`` so the
 operator can request a specific output language on any user-facing verb.
@@ -34,7 +34,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _OPTION_FLAG = "--output-language"
 _CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
 _AUTH_COMMANDS = (
-    ("config", "auth", "clear"),
+    ("config", "auth", "logout"),
+    ("config", "auth", "reset"),
     ("config", "auth", "providers"),
     ("config", "auth", "configure"),
     ("config", "auth", "status"),

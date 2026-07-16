@@ -56,6 +56,7 @@ _RESOLVED_BINDING_IDS = frozenset(
         "renta-2025-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
         "renta-2025-profile-family-minor-children-in-unit",
+        "renta-2025-profile-has-economic-activity",
         "renta-2025-profile-anualidades-sin-minimo-descendientes",
         "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
         "renta-2025-profile-unidad-familiar-otros-miembros-base",

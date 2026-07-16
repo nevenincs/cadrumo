@@ -24,7 +24,7 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
-sys.argv = ["cadrumo", *sys.argv[3:]]
+sys.argv = ["aeat", *sys.argv[3:]]
 
 from cadrumo.entrypoints.cli import main
 
@@ -205,22 +205,22 @@ def _create_modelo_revision(
     [
         (
             "ca",
-            "Falta l'opció '--modelo'.",
+            "Falta l’opció '--modelo'.",
             "Valor no vàlid per a '--year': 'abc' no és un enter vàlid.",
             "Esborrany",
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
-            "la dependència entre períodes s'ha exclòs com a sense obligació prèvia",
-            "Confirmeu que la data d'inici d'activitat registrada és correcta.",
+            "dependència entre períodes exclosa perquè no hi ha obligació prèvia",
+            "Confirmeu que la data d’inici de l’activitat registrada és correcta.",
             "ja està verificada",
         ),
         (
             "hu",
-            "Hiányzó kapcsoló '--modelo'.",
+            "Hiányzó beállítás '--modelo'.",
             "Érvénytelen érték ehhez: '--year': 'abc' nem érvényes egész szám.",
             "Piszkozat",
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),
-            "Az időszakok közötti függőséget előzetes kötelezettség hiánya miatt kizártuk",
-            "Erősítse meg, hogy a rögzített tevékenységkezdési dátum helyes.",
+            "az időszakok közötti függőség korábbi kötelezettség hiányában kizárva",
+            "Ellenőrizze, hogy a rögzített tevékenységkezdési dátum helyes.",
             "már ellenőrzött",
         ),
     ],
@@ -368,7 +368,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     already_verified_output = _combined_output(already_verified)
     assert already_verified.returncode == 0, already_verified_output
     assert already_verified_phrase in already_verified_output
-    assert "verificado_completo" not in already_verified_output
+    assert "state\tverificado_completo" not in already_verified_output
     assert "verification requires borrador" not in already_verified_output
 
 
@@ -407,8 +407,8 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
     )
     hungarian_output = _combined_output(hungarian)
     assert hungarian.returncode == 0, hungarian_output
-    assert "la dependència entre períodes s'ha exclòs" in catalan_output
-    assert "Az időszakok közötti függőséget" in hungarian_output
+    assert "dependència entre períodes exclosa" in catalan_output
+    assert "az időszakok közötti függőség" in hungarian_output
     assert "cross-period dependency scoped out" not in catalan_output
     assert "cross-period dependency scoped out" not in hungarian_output
 
@@ -474,10 +474,10 @@ def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tm
     assert hungarian.returncode == 1, hungarian_output
     assert "granted_verificado_completo\tfalse" in catalan_output
     assert "granted_verificado_completo\tfalse" in hungarian_output
-    assert "La dependència entre períodes no està neta" in catalan_output
-    assert "Captureu o importeu evidència de l'AEAT" in catalan_output
-    assert "Az időszakok közötti függőség nem tiszta" in hungarian_output
-    assert "Rögzítse vagy importálja az AEAT bizonyítékot" in hungarian_output
+    assert "la dependència entre períodes no està neta" in catalan_output
+    assert "Captureu o importeu evidència de l’AEAT" in catalan_output
+    assert "az időszakok közötti függőség nem tiszta" in hungarian_output
+    assert "Rögzítse vagy importálja a forrásfüggőség AEAT-bizonyítékát" in hungarian_output
     assert "cross-period dependency is not clean" not in catalan_output
     assert "cross-period dependency is not clean" not in hungarian_output
     assert "Capture/import AEAT evidence" not in catalan_output

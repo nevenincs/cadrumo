@@ -31,15 +31,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _EDU_DIRS = ("docs/explanation", "docs/how-to", "docs/architecture")
 
-# A leading run of lowercase verb-ish tokens after `cadrumo` (subcommands use
+# A leading run of lowercase verb-ish tokens after `aeat` (subcommands use
 # lowercase words and hyphens). Args (NAME, paths) and flags (-x/--x) end the run.
-# The lookbehind keeps `cadrumo` from matching the tail of a hyphenated doc page
-# name (e.g. `file-at-cadrumo` in a toctree), which would otherwise greedily absorb
-# the following lines as a bogus command.
-_CADRUMO_RE = re.compile(r"(?<![\w-])cadrumo\s+((?:[a-z][a-z0-9-]*)(?:\s+[a-z][a-z0-9-]*)*)")
+# Horizontal whitespace is deliberate: a directory command such as ``cd aeat``
+# must not absorb the following line (for example ``uv sync``) as a CLI citation.
+_AEAT_RE = re.compile(r"(?<![\w-])aeat[ \t]+((?:[a-z][a-z0-9-]*)(?:[ \t]+[a-z][a-z0-9-]*)*)")
 _LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 # Commands are only authoritative inside code formatting (inline backticks or
-# fenced blocks); a bare "cadrumo ..." in prose is not a cited invocation.
+# fenced blocks); a bare "aeat ..." in prose is not a cited invocation.
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 
@@ -53,7 +52,7 @@ def _edu_docs() -> list[Path]:
 
 @cache
 def _verb_resolves(path_tuple: tuple[str, ...]) -> bool:
-    """True if `cadrumo <path...> --help` resolves to a real command."""
+    """True if `aeat <path...> --help` resolves to a real command."""
     result = invoke_cached_cli((*path_tuple, "--help"))
     return result.exit_code == 0
 
@@ -70,7 +69,7 @@ def _cited_commands(text: str) -> set[tuple[str, ...]]:
     spans += [m.group(1) for m in _FENCE_RE.finditer(text)]
     cmds: set[tuple[str, ...]] = set()
     for span in spans:
-        for m in _CADRUMO_RE.finditer(span):
+        for m in _AEAT_RE.finditer(span):
             tokens = tuple(m.group(1).split())
             if tokens:
                 cmds.add(tokens)
@@ -90,10 +89,16 @@ def test_cited_aeat_verbs_resolve() -> None:
         text = doc.read_text(encoding="utf-8")
         for tokens in sorted(_cited_commands(text)):
             if _longest_resolving_prefix(tokens) is None:
-                unresolved.append(f"{doc.relative_to(PROJECT_ROOT)}: cadrumo {' '.join(tokens)}")
-    assert not unresolved, "educational docs cite cadrumo commands whose leading verb does not resolve:\n" + "\n".join(
+                unresolved.append(f"{doc.relative_to(PROJECT_ROOT)}: aeat {' '.join(tokens)}")
+    assert not unresolved, "educational docs cite aeat commands whose leading verb does not resolve:\n" + "\n".join(
         unresolved,
     )
+
+
+def test_command_scanner_does_not_cross_line_boundaries() -> None:
+    """A directory name on one line cannot absorb commands from the next."""
+    text = "```console\ncd aeat\nuv sync\n```"
+    assert _cited_commands(text) == set()
 
 
 def test_relative_links_resolve() -> None:

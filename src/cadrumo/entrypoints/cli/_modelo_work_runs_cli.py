@@ -24,8 +24,7 @@ See Also:
 
 from __future__ import annotations
 
-import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Annotated
 
 import typer
@@ -36,6 +35,7 @@ from ...application.workflow import (
     WorkflowResumeContext,
     WorkflowResumeRefusedError,
     WorkflowResumeTargetResolution,
+    WorkflowStepDetails,
     list_runs,
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
@@ -58,19 +58,21 @@ _VERIFICATION_REPORT_LIST_COMMAND = (
 )
 _CANONICAL_DRAFT_BUILD_REFUSED_NEXT_ACTION = f"Repair the cited draft input and rerun {_DRAFT_RECALCULATE_COMMAND}."
 _CANONICAL_VERIFICATION_REPORT_NEXT_ACTION = f"Run: {_VERIFICATION_REPORT_LIST_COMMAND}"
-_CANONICAL_DRAFT_BUILD_REFUSED_SUMMARY = re.compile(
-    r"^Draft build refused: (?P<error_message>.+)\. Repair the cited draft input and recalculate\.$",
-)
 
 
-def _render_workflow_step_summary(summary: str) -> str:
-    """Localize the exact persisted builder-refusal summary for CLI projection only."""
-    match = _CANONICAL_DRAFT_BUILD_REFUSED_SUMMARY.fullmatch(summary)
-    if match is None:
+def _render_workflow_step_summary(
+    summary: str,
+    details: WorkflowStepDetails | Mapping[str, object] | None,
+) -> str:
+    """Localize a structured persisted builder refusal for CLI projection only."""
+    if details is None or details.get("error_type") != "ModeloBuilderError":
+        return summary
+    error_message = details.get("error_message")
+    if not isinstance(error_message, str) or not error_message:
         return summary
     return tr(
         "cli.app.modelo.work.workflow_draft_build_refused_summary",
-        error_message=match["error_message"],
+        error_message=error_message,
     )
 
 
@@ -104,7 +106,10 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
         final_stage=run.final_stage.value,
         aborted_reason=run.aborted_reason.value if run.aborted_reason is not None else None,
         started_at=run.started_at.isoformat(),
-        summary=_render_workflow_step_summary(final_step.summary if final_step is not None else run.summary),
+        summary=_render_workflow_step_summary(
+            final_step.summary if final_step is not None else run.summary,
+            final_step.details if final_step is not None else None,
+        ),
         next_action=_render_workflow_next_action(next_action),
     )
 

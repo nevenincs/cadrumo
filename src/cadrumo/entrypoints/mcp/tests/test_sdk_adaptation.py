@@ -46,6 +46,7 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert contract_properties["command"]["const"] == "contract"
 
     calculate = by_name["cadrumo_modelo_work_calculate"]
+    assert calculate.outputSchema
     calculate_properties = calculate.outputSchema["properties"]
     assert calculate_properties["command"]["const"] == "modelo.work.calculate"
     assert "calculation_revision_id" in calculate_properties["result"]["properties"]

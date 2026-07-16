@@ -15,7 +15,7 @@ and must not open the encrypted session; the master key unlocks only when
 a verb actually executes against the store, where the existing refusal
 stays intact.
 
-Real-behavior only: each case runs the REAL installed ``cadrumo`` console
+Real-behavior only: each case runs the REAL installed ``aeat`` console
 script in a subprocess with a controlled environment (no passphrase, a
 configured active profile, isolated storage root) and captured stdio (so
 stdin is genuinely non-interactive — the exact operator condition).
@@ -59,10 +59,10 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
 
 
 def _run(args: list[str], tmp_path: Path) -> subprocess.CompletedProcess[str]:
-    cadrumo_exe = shutil.which("cadrumo")
-    assert cadrumo_exe is not None, "cadrumo console script must be installed for this gate"
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None, "aeat console script must be installed for this gate"
     return subprocess.run(
-        [cadrumo_exe, *args],
+        [aeat_exe, *args],
         cwd=Path.cwd(),
         env=_passphraseless_env(tmp_path),
         capture_output=True,

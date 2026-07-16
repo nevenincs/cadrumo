@@ -3,9 +3,10 @@
 Proves the pure decision logic directly (SDK-independent) and the wired gate
 through the real built ``Server`` (SDK-gated, never skipped): an unconfirmed
 first mutating call is refused; an identity read clears it; a profile switch
-re-arms it; and the refusal is byte-identical on the direct call path and the
-``execute`` meta path. No mocks - the state object and decision function are
-exercised as real logic and the server drives real handlers.
+or strong logout re-arms it; and the refusal is byte-identical on the direct
+call path and the ``execute`` meta path. No mocks - the state object and
+decision function are exercised as real logic and the server drives real
+handlers.
 """
 
 from __future__ import annotations
@@ -16,11 +17,12 @@ from typing import Any, cast
 import anyio
 import pytest
 
+from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 from .._identity_gate import (
+    ACTIVE_IDENTITY_CHANGING_COMMANDS,
     IDENTITY_READ_COMMANDS,
     IDENTITY_READ_CONSOLE_TOOLS,
-    PROFILE_SWITCHING_COMMANDS,
     SessionIdentityState,
     identity_elicitation_echo,
     identity_gate_refusal,
@@ -40,6 +42,8 @@ _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 _MUTATING_KEY = "ledger.export"
 _MUTATING_TOOL = "cadrumo_ledger_export"
 _IDENTITY_READ_KEY = "overview.status"
+_LOGOUT_KEY = "config.profile.logout"
+_LOGOUT_TOOL = tool_name_for_command(_LOGOUT_KEY)
 
 
 # --- pure decision logic (SDK-independent) ------------------------------------
@@ -69,14 +73,13 @@ def test_whoami_style_direct_read_clears_the_gate() -> None:
     assert identity_gate_refusal(_MUTATING_KEY, state=state) is None
 
 
-def test_a_profile_switch_re_arms_the_gate() -> None:
+def test_every_active_identity_change_re_arms_the_gate() -> None:
     state = SessionIdentityState()
     state.record_identity_read()
     assert identity_gate_refusal(_MUTATING_KEY, state=state) is None  # confirmed, allowed
-    for switch_key in sorted(PROFILE_SWITCHING_COMMANDS):
-        state.record_identity_read()  # confirm again before each switch
-        # The switch itself is allowed (it establishes identity) and re-arms.
-        assert identity_gate_refusal(switch_key, state=state) is None
+    for command_key in sorted(ACTIVE_IDENTITY_CHANGING_COMMANDS):
+        state.record_identity_read()  # confirm again before each identity change
+        assert identity_gate_refusal(command_key, state=state) is None
         assert state.identity_confirmed is False
         # The next mutating call is refused again until a fresh read.
         assert identity_gate_refusal(_MUTATING_KEY, state=state) is not None
@@ -303,5 +306,61 @@ def test_identity_state_is_shared_across_the_two_call_paths() -> None:
         mutate_result = (await handlers[CallToolRequest](mutate)).root
         assert mutate_result.structuredContent is not None
         assert expected_refusal not in str(mutate_result.structuredContent.get("refusal", ""))
+
+    anyio.run(_drive)
+
+
+@pytest.mark.parametrize(
+    ("logout_tool", "logout_arguments"),
+    (
+        (_LOGOUT_TOOL, {}),
+        ("execute", {"command_key": _LOGOUT_KEY, "arguments": {}}),
+    ),
+)
+def test_strong_logout_re_arms_identity_on_direct_and_execute_paths(
+    logout_tool: str,
+    logout_arguments: dict[str, object],
+) -> None:
+    """Both server paths re-arm before the strong-logout confirmation route."""
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
+    assert expected_refusal is not None
+
+    server = cast("Any", build_server(descriptors, persona=None))
+    handlers = server.request_handlers
+
+    async def _drive() -> None:
+        whoami = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
+        )
+        whoami_result = (await handlers[CallToolRequest](whoami)).root
+        assert whoami_result.isError is False
+
+        logout = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=logout_tool, arguments=logout_arguments),
+        )
+        logout_result = (await handlers[CallToolRequest](logout)).root
+        logout_text = " ".join(block.text for block in logout_result.content if block.type == "text")
+        assert expected_refusal not in logout_text
+        assert expected_refusal not in str(logout_result.structuredContent or {})
+
+        mutate = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
+        )
+        mutate_result = (await handlers[CallToolRequest](mutate)).root
+        text = " ".join(block.text for block in mutate_result.content if block.type == "text")
+        assert text == expected_refusal
 
     anyio.run(_drive)

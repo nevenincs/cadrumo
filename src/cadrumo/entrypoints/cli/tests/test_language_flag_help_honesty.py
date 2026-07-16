@@ -7,7 +7,7 @@ found the highest outcome —
 *make it work* — was cheaply achievable by promoting an explicit ``--language``
 flag to ``CADRUMO_OUTPUT_LANGUAGE`` in the console entry point, before the lazily
 imported subcommand modules render their ``tr(...)``-bound help. These tests pin
-that contract against the real installed ``cadrumo`` console.
+that contract against the real installed ``aeat`` console.
 
 The help-text localisation only occurs through the real ``main()`` entry point
 (the pre-parse runs there, before the lazy command tree imports), so the
@@ -58,10 +58,10 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
 
 
 def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
-    cadrumo_exe = shutil.which("cadrumo")
-    assert cadrumo_exe is not None, "the cadrumo console script must be installed for this test"
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None, "the aeat console script must be installed for this test"
     return subprocess.run(
-        [cadrumo_exe, *args],
+        [aeat_exe, *args],
         cwd=Path.cwd(),
         env=env,
         capture_output=True,
@@ -254,7 +254,7 @@ def test_help_section_header_locale_does_not_leak_across_processes(tmp_path: Pat
 
     ``_localise_help_section_headers`` rebinds module-level
     :mod:`typer.rich_utils` constants, so this guards the invocation-scoping
-    contract: because each real ``cadrumo`` invocation is its own process, an ``hu``
+    contract: because each real ``aeat`` invocation is its own process, an ``hu``
     run's rebind must not survive into a subsequent ``en`` run. Two separate
     console processes prove the rebind reflects only its own invocation's locale.
     """

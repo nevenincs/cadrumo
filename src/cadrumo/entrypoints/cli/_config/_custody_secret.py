@@ -53,41 +53,6 @@ def _resolve_confirmed_new_passphrase(value: str | None, confirmation: str | Non
     return first
 
 
-def _register_lock_command(app: typer.Typer) -> None:
-    """Register the profile lock transport command."""
-
-    @app.command("lock", help=tr("cli.config.lock.help"))
-    def config_lock(
-        ctx: typer.Context,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Lock the active profile by clearing the active-profile pointer."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import logout_active_profile
-        from .._config_payloads import ConfigLockResult
-
-        before = logout_active_profile()
-        lock_result = ConfigLockResult(
-            locked_profile=before or "",
-            active_profile=None,
-            session_warning=tr("cli.config.profile.logout_session_warning"),
-        )
-        _emit_envelope(
-            ctx,
-            command="config.lock",
-            result=lock_result,
-            lines=(
-                f"locked_profile\t{before or '<none>'}",
-                tr("cli.config.profile.logout_session_warning"),
-            ),
-        )
-
-
 def _register_rekey_command(app: typer.Typer) -> None:
     """Register the profile rekey transport command."""
 
@@ -277,7 +242,6 @@ def _register_verify_recovery_command(app: typer.Typer) -> None:
 
 def register_secret_custody_commands(app: typer.Typer) -> None:
     """Register secret-store custody transport commands."""
-    _register_lock_command(app)
     _register_rekey_command(app)
     _register_recover_command(app)
     _register_show_recovery_command(app)

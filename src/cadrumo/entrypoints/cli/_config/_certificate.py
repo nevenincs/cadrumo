@@ -10,8 +10,8 @@ per-source passphrase slice: instead of one global, env-only
 ``CADRUMO_CERTIFICATE_PASSWORD_SECRET`` shared by whichever source happens
 to be active, ``certificate secret set`` binds a passphrase to one
 named source through a typed
-:class:`~application.auth.CertificateSecretBackend` (encrypted
-secure-storage by default; an OS keyring backend is also available).
+:class:`~application.auth.CertificateSecretBackend` backed solely by
+encrypted secure storage.
 
 See Also:
     :func:`~application.auth.register_operator_certificate_source`
@@ -22,8 +22,6 @@ See Also:
         Application service behind ``certificate select``.
     :class:`~application.auth.CertificateSecretBackend`
         Per-source passphrase boundary used by ``certificate secret`` verbs.
-    :class:`~application.auth.CertificateSecretBackendKind`
-        Closed set of supported certificate-secret backend choices.
     :mod:`~entrypoints.cli._config_payloads`
         Typed JSON payload schemas shared by config auth command results.
 """
@@ -401,14 +399,6 @@ def certificate_secret_set(
             default="The PKCS#12 passphrase (prompted, hidden, never echoed)",
         ),
     ),
-    backend: str = typer.Option(
-        "secure_storage",
-        "--backend",
-        help=tr(
-            "cli.config.auth.certificate.secret.set.backend_help",
-            default="Secret backend: secure_storage (default, encrypted at rest) or keyring (OS keychain)",
-        ),
-    ),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -423,26 +413,15 @@ def certificate_secret_set(
     from ....application.auth import (
         AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
-        CertificateSecretBackendKind,
-        CertificateSecretBackendUnavailableError,
         CertificateSourceNotFoundError,
         set_operator_certificate_source_secret,
     )
     from ....core.errors import resolve_error_message
 
     try:
-        backend_kind = CertificateSecretBackendKind(backend)
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            f"unknown certificate secret backend {backend!r}; "
-            f"accepted values: {', '.join(kind.value for kind in CertificateSecretBackendKind)}",
-        ) from exc
-
-    try:
         result = set_operator_certificate_source_secret(
             name=name,
             secret=SecretStr(secret),
-            backend_kind=backend_kind,
         )
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
@@ -452,8 +431,6 @@ def certificate_secret_set(
         raise _CliRefusedBoundaryError(str(exc)) from exc
     except CertificateSourceNotFoundError as exc:
         raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-    except CertificateSecretBackendUnavailableError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
 
     from .._config_payloads import CertificateSourceSecretMutationPayload
 
@@ -492,14 +469,6 @@ def certificate_secret_remove(
             default="Registered certificate source whose passphrase should be removed",
         ),
     ),
-    backend: str = typer.Option(
-        "secure_storage",
-        "--backend",
-        help=tr(
-            "cli.config.auth.certificate.secret.set.backend_help",
-            default="Secret backend: secure_storage (default, encrypted at rest) or keyring (OS keychain)",
-        ),
-    ),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -512,28 +481,16 @@ def certificate_secret_remove(
     from ....application.auth import (
         AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
-        CertificateSecretBackendKind,
-        CertificateSecretBackendUnavailableError,
         remove_operator_certificate_source_secret,
     )
 
     try:
-        backend_kind = CertificateSecretBackendKind(backend)
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            f"unknown certificate secret backend {backend!r}; "
-            f"accepted values: {', '.join(kind.value for kind in CertificateSecretBackendKind)}",
-        ) from exc
-
-    try:
-        result = remove_operator_certificate_source_secret(name=name, backend_kind=backend_kind)
+        result = remove_operator_certificate_source_secret(name=name)
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
-    except CertificateSecretBackendUnavailableError as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
 
     from .._config_payloads import CertificateSourceSecretMutationPayload
