@@ -162,6 +162,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._operator_results.AuthOperationScopeConflictError",
+        ErrorCode(
+            code="REFUSED_AUTH_OPERATION_SCOPE_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="application.auth.operator.errors.scope_conflict",
+            default_suggestion="aeat config auth logout --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.auth._operator_results.AuthProviderNotConfiguredError",
+        ErrorCode(
+            code="REFUSED_AUTH_PROVIDER_NOT_CONFIGURED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.auth.operator.errors.provider_not_configured",
+            default_suggestion="aeat config auth configure --provider PROVIDER",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth._operator_results.CertificateSourceNotFoundError",
         ErrorCode(
             code="REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND",

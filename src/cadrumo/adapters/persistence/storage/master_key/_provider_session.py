@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Protocol
 from ._active_session import close_active_bucket_session, current_active_bucket_session
 
 if TYPE_CHECKING:
+    import types
     from contextlib import AbstractContextManager
-    from types import TracebackType
 
     from ._bucket_session import BucketSession
 
@@ -24,7 +24,7 @@ def exit_provider_session(
     provider: ProviderSessionOwner,
     exc_type: type[BaseException] | None,
     exc: BaseException | None,
-    tb: TracebackType | None,
+    tb: types.TracebackType | None,
 ) -> None:
     """Close the exact provider-owned session before restoring its prior binding.
 

@@ -408,7 +408,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_PROFILE_LOGOUT_OVERRIDE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_boundary",
+            message_key="errors.refused.refused_profile_logout_override",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

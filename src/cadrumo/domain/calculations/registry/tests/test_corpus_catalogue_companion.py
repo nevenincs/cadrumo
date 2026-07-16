@@ -1,13 +1,11 @@
-"""Anti-tautology proofs for the companion-aware corpus integrity gate.
+"""Anti-tautology proofs for the mandatory-cohort corpus integrity gate.
 
-Two invariants the wheel split rests on:
+Two invariants the wheel cohort rests on:
 
 * a corpus binary that is PRESENT stays byte-exact hash-enforced — corrupting a
   present, cited binary still hard-fails (the gate did not go soft), and
-* a companion corpus binary that is ABSENT surfaces a loud advisory naming the
-  file and the ``cadrumo[corpus-sources]`` install hint and is never silently
-  accepted, while an absent NON-companion corpus file (extracted text, HTML)
-  still hard-fails exactly as before.
+* any corpus file that is ABSENT hard-fails, including data owned by either
+  mandatory companion distribution.
 
 The tests build real ``SourceReference`` records and a real temporary source
 root; no repository file is modified and no behaviour is mocked.
@@ -22,9 +20,6 @@ import pytest
 
 from .....core.resources import bundled_path
 from .._corpus_catalogue import (
-    CORPUS_SOURCES_INSTALL_HINT,
-    CorpusCompanionAdvisory,
-    is_companion_corpus_binary,
     verify_source_catalogue,
     verify_source_file,
 )
@@ -39,7 +34,7 @@ def _committed_present_companion_binary() -> SourceReference:
     """Return a committed source whose corpus binary is present in the bundled tree."""
     _modelos, catalogues = _committed_registry_tree()
     for source in catalogues.sources.values():
-        if not is_companion_corpus_binary(source):
+        if not source.corpus_path.lower().endswith((".pdf", ".xls", ".xlsx")):
             continue
         on_disk = bundled_path(*source.corpus_path.split("/"))
         if on_disk.is_file() and on_disk.stat().st_size < 5_000_000:
@@ -82,31 +77,20 @@ def test_corrupted_present_corpus_binary_still_hard_fails(tmp_path: Path) -> Non
         verify_source_file(tmp_path, source)
 
 
-def test_absent_companion_binary_surfaces_a_loud_advisory(tmp_path: Path) -> None:
+def test_absent_mandatory_companion_binary_hard_fails(tmp_path: Path) -> None:
     corpus_path = "corpus/aeat_official/disenos_registro/modelo_absent_probe/files/absent-companion.xlsx"
     source = _absent_source(corpus_path=corpus_path, kind="record_design")
-    assert is_companion_corpus_binary(source)
 
-    # verify_source_file returns an advisory (never raises) that names the file
-    # and the install hint.
-    advisory = verify_source_file(tmp_path, source)
-    assert advisory is not None
-    assert corpus_path in advisory
-    assert CORPUS_SOURCES_INSTALL_HINT in advisory
+    with pytest.raises(RegistryValidationError, match="missing corpus file"):
+        verify_source_file(tmp_path, source)
 
-    # verify_source_catalogue carries the advisory in its result (never silently
-    # accepted) and emits the loud CorpusCompanionAdvisory warning.
-    with pytest.warns(CorpusCompanionAdvisory, match="corpus source binary"):
-        result = verify_source_catalogue(tmp_path, {source.id: source})
-    assert result != ()
-    assert any(corpus_path in message for message in result)
-    assert all(CORPUS_SOURCES_INSTALL_HINT in message for message in result)
+    with pytest.raises(RegistryValidationError, match="missing corpus file"):
+        verify_source_catalogue(tmp_path, {source.id: source})
 
 
 def test_absent_non_companion_corpus_file_still_hard_fails(tmp_path: Path) -> None:
     corpus_path = "corpus/normatives/html/absent-probe.html"
     source = _absent_source(corpus_path=corpus_path, kind="form_spec")
-    assert not is_companion_corpus_binary(source)
 
     with pytest.raises(RegistryValidationError, match="missing corpus file"):
         verify_source_file(tmp_path, source)
