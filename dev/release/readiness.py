@@ -304,13 +304,18 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
     absence of evidence is reported but does not block the gate.
     """
     smoke_dir = repo_root / "var" / "packaging-smoke"
-    manifests = sorted(smoke_dir.glob("*/packaging-smoke-manifest.json"), key=lambda p: p.stat().st_mtime)
+    evidence_dir = repo_root / "var" / "packaging-smoke-evidence"
+    manifests = sorted(
+        (*smoke_dir.glob("*/packaging-smoke-manifest.json"), *evidence_dir.glob("*.json")),
+        key=lambda path: path.stat().st_mtime,
+    )
     if not manifests:
         return ReadinessCheck(
             "packaging-smoke-evidence",
             "advisory",
             False,
-            "no packaging-smoke manifest found under var/packaging-smoke — run `just packaging-smoke` first",
+            "no packaging-smoke manifest found under var/packaging-smoke or its evidence checkpoint — "
+            "run `just packaging-smoke` first",
         )
     latest = manifests[-1]
     try:
@@ -324,7 +329,7 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
         )
     ok = bool(payload.get("ok"))
     lane = payload.get("lane", "<unknown>")
-    run_label = latest.parent.name
+    run_label = latest.stem if latest.parent == evidence_dir else latest.parent.name
     return ReadinessCheck(
         "packaging-smoke-evidence",
         "advisory",

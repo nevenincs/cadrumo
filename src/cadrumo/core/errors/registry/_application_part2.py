@@ -404,6 +404,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._orchestration.ProfileLogoutOverrideError",
+        ErrorCode(
+            code="REFUSED_PROFILE_LOGOUT_OVERRIDE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._integrity.ProfileIntegrityError",
         ErrorCode(
             code="ERROR_PROFILE_CROSS_STORE_DRIFT",

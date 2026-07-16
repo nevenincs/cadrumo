@@ -29,7 +29,6 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.bucket import (
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -40,6 +39,7 @@ from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
+from ...domain.user_profile import UserProfileStatus
 from ...tests.secure_sql import dev_test_database_password
 from ..auth import inspect_operator_auth
 from ..auth import test_operator_auth as probe_operator_auth
@@ -136,7 +136,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
             ),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
 

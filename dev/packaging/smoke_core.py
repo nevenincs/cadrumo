@@ -19,6 +19,10 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
 
+from packaging.requirements import Requirement
+
+from .installed_tax_oracle import run_installed_tax_oracle
+
 _UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
@@ -43,6 +47,11 @@ _COMPANION_HOOKS = (
     "packaging/cadrumo_data_manuals/hatch_build.py",
     "packaging/cadrumo_data_official/hatch_build.py",
 )
+_DATA_COMPANION_PROJECTS = (
+    ("cadrumo-data-manuals", "packaging/cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
+    ("cadrumo-data-official", "packaging/cadrumo_data_official", "cadrumo_data_official-*.whl"),
+)
+_PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 _RENTA_PDF_ALLOW_LIST = {
     f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -359,6 +368,73 @@ def _wheel_metadata(wheel: Path) -> tuple[list[str], set[str]]:
     }
 
 
+def _wheel_identity(wheel: Path) -> tuple[str, str]:
+    """Return the normalized distribution name and version from one wheel."""
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_names = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
+        if len(metadata_names) != 1:
+            raise SystemExit(
+                f"expected one wheel METADATA member in {wheel}; got {metadata_names!r}",
+            )
+        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode(_UTF_8))
+    name = metadata.get("Name")
+    version = metadata.get("Version")
+    if not name or not version:
+        raise SystemExit(f"wheel metadata is missing Name or Version: {wheel}")
+    return _normalize_name(name), version
+
+
+def _assert_complete_wheel_cohort(
+    wheel: Path,
+    *,
+    data_wheel_manuals: Path,
+    data_wheel_official: Path,
+) -> str:
+    """Require one command wheel and both exact-version mandatory companions."""
+    named_companions = {
+        "cadrumo-data-manuals": data_wheel_manuals,
+        "cadrumo-data-official": data_wheel_official,
+    }
+    identities = {
+        expected_name: _wheel_identity(artifact)
+        for expected_name, artifact in named_companions.items()
+    }
+    mislabeled = {
+        expected_name: observed_name
+        for expected_name, (observed_name, _version) in identities.items()
+        if observed_name != expected_name
+    }
+    if mislabeled:
+        raise SystemExit(
+            f"supplied companion wheel labels do not match their metadata: {mislabeled!r}",
+        )
+    root_name, root_version = _wheel_identity(wheel)
+    if root_name != "cadrumo":
+        raise SystemExit(f"command wheel identity is {root_name!r}, expected 'cadrumo'")
+    mismatched = {
+        name: version
+        for name, (_observed_name, version) in identities.items()
+        if version != root_version
+    }
+    if mismatched:
+        raise SystemExit(
+            f"companion versions do not match cadrumo {root_version!r}: {mismatched!r}",
+        )
+    requirements, _extras = _wheel_metadata(wheel)
+    exact_pins = {
+        _normalize_name(requirement.name): str(requirement.specifier)
+        for row in requirements
+        if (requirement := Requirement(row)).marker is None
+        and _normalize_name(requirement.name) in named_companions
+    }
+    expected_pins = {name: f"=={root_version}" for name in named_companions}
+    if exact_pins != expected_pins:
+        raise SystemExit(
+            f"command wheel companion pins must be exact: expected {expected_pins!r}, got {exact_pins!r}",
+        )
+    return root_version
+
+
 def _format_path_sample(paths: list[str], *, limit: int = 20) -> str:
     """Format a bounded path list for actionable gate failures."""
     sample = paths[:limit]
@@ -623,6 +699,40 @@ def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
     return wheels[0]
 
 
+def _build_companion_wheels(repo_root: Path, work_dir: Path, uv: str) -> tuple[Path, Path]:
+    """Build the two mandatory data companions for a complete local cohort."""
+    out_dir = work_dir / "companion-wheels"
+    wheels: list[Path] = []
+    for project_name, project_dir, wheel_glob in _DATA_COMPANION_PROJECTS:
+        _run(
+            [uv, "build", "--project", str(repo_root / project_dir), "--out-dir", str(out_dir)],
+            cwd=repo_root,
+        )
+        built = sorted(out_dir.glob(wheel_glob))
+        if len(built) != 1:
+            raise SystemExit(f"expected one {project_name} wheel in {out_dir}; got {built!r}")
+        wheel = built[0]
+        if wheel.stat().st_size >= _PYPI_FILE_CAP_BYTES:
+            raise SystemExit(
+                f"{wheel.name} exceeds PyPI's 100 MB per-file cap: {wheel.stat().st_size} bytes",
+            )
+        wheels.append(wheel)
+    if len(wheels) != 2:
+        raise SystemExit(f"expected two mandatory companion wheels, got {wheels!r}")
+    return wheels[0], wheels[1]
+
+
+def _cohort_wheel(cohort_dir: Path, wheel_glob: str, *, label: str) -> Path:
+    """Resolve exactly one named wheel from a supplied cohort directory."""
+    wheels = tuple(sorted(cohort_dir.glob(wheel_glob)))
+    if len(wheels) != 1:
+        raise SystemExit(
+            f"supplied cohort must contain exactly one {label} wheel matching {wheel_glob!r}; "
+            f"got {[wheel.name for wheel in wheels]!r}",
+        )
+    return wheels[0].resolve(strict=True)
+
+
 def _install_wheel(
     repo_root: Path,
     work_dir: Path,
@@ -631,13 +741,22 @@ def _install_wheel(
     python: str,
     *,
     extras: tuple[str, ...] = (),
+    companion_wheels: tuple[Path, ...] = (),
 ) -> Path:
-    """Install the built wheel into a fresh virtualenv and return the venv path."""
+    """Install the command wheel and supplied companions into a fresh virtualenv."""
     venv = work_dir / "venv"
     _run([uv, "venv", str(venv), "--python", python], cwd=repo_root)
     target = str(wheel) if not extras else f"cadrumo[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
     _run(
-        [uv, "pip", "install", "--python", str(_venv_python(venv)), target],
+        [
+            uv,
+            "pip",
+            "install",
+            "--python",
+            str(_venv_python(venv)),
+            target,
+            *(str(companion.resolve()) for companion in companion_wheels),
+        ],
         cwd=repo_root,
     )
     _run([uv, "pip", "check", "--python", str(_venv_python(venv))], cwd=repo_root)
@@ -913,6 +1032,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--python", default="3.13", help="Python interpreter/version for the fresh venv.")
     parser.add_argument("--work-dir", help="Empty directory for wheel, venv, and profile smoke artifacts.")
     parser.add_argument(
+        "--cohort-dir",
+        required=True,
+        type=Path,
+        help="Directory containing the prebuilt cadrumo and mandatory companion wheels.",
+    )
+    parser.add_argument(
         "--skip-export-checks",
         action="store_true",
         help="Skip frozen uv export surface checks and run only the installed-wheel smoke.",
@@ -928,24 +1053,64 @@ def main(argv: list[str] | None = None) -> int:
         print("validating frozen dependency exports", flush=True)
         _validate_frozen_exports(repo_root, uv)
 
-    print("building wheel", flush=True)
-    wheel = _build_wheel(repo_root, work_dir, uv)
+    cohort_dir = args.cohort_dir.resolve(strict=True)
+    if not cohort_dir.is_dir():
+        parser.error(f"--cohort-dir is not a directory: {cohort_dir}")
+    wheel = _cohort_wheel(cohort_dir, "cadrumo-*.whl", label="cadrumo")
+    data_wheel_manuals = _cohort_wheel(
+        cohort_dir,
+        "cadrumo_data_manuals-*.whl",
+        label="cadrumo-data-manuals",
+    )
+    data_wheel_official = _cohort_wheel(
+        cohort_dir,
+        "cadrumo_data_official-*.whl",
+        label="cadrumo-data-official",
+    )
+    companion_wheels = (data_wheel_manuals, data_wheel_official)
+    print("using supplied complete wheel cohort", flush=True)
+    _assert_wheel_contains_tracked_data(repo_root, wheel)
     _assert_wheel_metadata_matches_pyproject(repo_root, wheel)
+    cohort_version = _assert_complete_wheel_cohort(
+        wheel,
+        data_wheel_manuals=data_wheel_manuals,
+        data_wheel_official=data_wheel_official,
+    )
 
-    print("installing wheel into fresh venv", flush=True)
-    venv = _install_wheel(repo_root, work_dir, wheel, uv, args.python)
+    print("installing complete wheel cohort into fresh venv", flush=True)
+    venv = _install_wheel(
+        repo_root,
+        work_dir,
+        wheel,
+        uv,
+        args.python,
+        companion_wheels=companion_wheels,
+    )
     _assert_installed_data(work_dir, venv)
     _assert_attachment_and_llm_surfaces(work_dir, venv)
     _assert_cli_smoke(work_dir, venv)
+    print("running installed grounded tax-work oracle", flush=True)
+    tax_evidence = run_installed_tax_oracle(
+        _venv_cadrumo(venv),
+        storage_root=work_dir / "tax-oracle-state",
+        work_dir=work_dir / "outside-checkout",
+    )
+    tax_evidence_path = work_dir / "installed-tax-oracle.json"
+    tax_evidence_path.write_text(
+        json.dumps(tax_evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding=_UTF_8,
+    )
 
     checks = [
         "wheel tracked shipped-data payload",
         "wheel metadata dependency surface",
+        "complete exact-version three-wheel cohort",
         "fresh uv virtualenv install",
         "installed bundled data resources",
         "attachment storage round-trip",
         "core LLM missing-extra boundary",
         "installed CLI config/profile smoke",
+        "installed grounded Modelo 200 tax-work oracle",
     ]
     if not args.skip_export_checks:
         checks.insert(0, "frozen dependency exports")
@@ -954,10 +1119,18 @@ def main(argv: list[str] | None = None) -> int:
         lane="core-wheel",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
+            "data_wheel_manuals": _manifest_path(work_dir, companion_wheels[0]),
+            "data_wheel_official": _manifest_path(work_dir, companion_wheels[1]),
+            "installed_tax_oracle": _manifest_path(work_dir, tax_evidence_path),
             "venv": _manifest_path(work_dir, venv),
         },
         checks=tuple(checks),
-        details={"python": args.python},
+        details={
+            "cohort_version": cohort_version,
+            "python": args.python,
+            "target_casilla": tax_evidence.target_casilla,
+            "target_value": tax_evidence.target_value,
+        },
     )
 
     print(f"core packaging smoke passed: {wheel}", flush=True)

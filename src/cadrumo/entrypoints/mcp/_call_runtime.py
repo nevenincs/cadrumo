@@ -77,14 +77,17 @@ def timeout_seconds(tier: CallTier) -> float:
 class SupervisedResult(BaseModel):
     """The outcome of a supervised subprocess run.
 
-    ``timed_out`` is true when the process exceeded its tier ceiling and its
-    process tree was terminated; ``stdout``/``stderr``/``returncode`` carry the
-    completed process output otherwise (and best-effort partial output on
-    timeout).
+    ``executable`` is the exact first argv element passed to
+    :class:`subprocess.Popen`, giving payload-free telemetry an observation of
+    the child origin rather than a separate resolver query. ``timed_out`` is
+    true when the process exceeded its tier ceiling and its process tree was
+    terminated; ``stdout``/``stderr``/``returncode`` carry the completed process
+    output otherwise (and best-effort partial output on timeout).
     """
 
     model_config = _STRICT_FROZEN
 
+    executable: str
     stdout: str
     stderr: str
     returncode: int
@@ -158,8 +161,15 @@ def run_supervised(
             stdout, stderr = process.communicate(timeout=5.0)
         except subprocess.TimeoutExpired:
             stdout, stderr = "", ""
-        return SupervisedResult(stdout=stdout or "", stderr=stderr or "", returncode=-1, timed_out=True)
+        return SupervisedResult(
+            executable=str(argv[0]),
+            stdout=stdout or "",
+            stderr=stderr or "",
+            returncode=-1,
+            timed_out=True,
+        )
     return SupervisedResult(
+        executable=str(argv[0]),
         stdout=stdout or "",
         stderr=stderr or "",
         returncode=process.returncode,

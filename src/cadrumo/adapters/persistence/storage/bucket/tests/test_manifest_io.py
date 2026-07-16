@@ -11,10 +11,10 @@ from pydantic import ValidationError
 
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
+from ......domain.user_profile import UserProfileStatus
 from ...errors import StorageValidationError
 from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from .._manifest import (
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
@@ -45,7 +45,7 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
         kdf_params=kdf,
         recovery_enrolled=True,
         schema_version=1,
-        status=BucketLifecycleStatus.ACTIVE,
+        status=UserProfileStatus.ACTIVE,
     )
 
 

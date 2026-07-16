@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.storage import StorageValidationError
 from ...agent import iter_personas, operator_rules_text
 from ...application.user_profile import TAX_ID_FACT_PATH
-from ...application.workflow import assess_active_profile_health, read_profile_bucket_by_id
+from ...application.workflow import assess_active_profile_health_with_session, read_profile_bucket_by_id
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ._persona_scope import AgentPersona
@@ -249,7 +249,7 @@ def build_whoami_identity() -> WhoamiIdentity:
     """Resolve the active taxpayer identity block, best-effort.
 
     Wraps the active-profile health assessment
-    (:func:`~application.workflow.assess_active_profile_health`): its
+    (:func:`~application.workflow.assess_active_profile_health_with_session`): its
     ``status`` is the ``readiness`` and its ``next_action`` the recovery
     step. The display LABEL is resolved from the plaintext bucket manifest
     (:func:`~application.workflow.read_profile_bucket_by_id`) - the same
@@ -264,7 +264,7 @@ def build_whoami_identity() -> WhoamiIdentity:
     resolution is guarded, so this read-only identity probe is safe to call on
     every session and before every mutation.
     """
-    health = assess_active_profile_health()
+    health = assess_active_profile_health_with_session()
     label: str | None = None
     if health.active_profile is not None:
         try:

@@ -19,7 +19,14 @@ import pydantic
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ..core.config import PROJECT_ROOT, AuthProviderKindSetting, CertificateBackend, Settings
+from ..core.config import (
+    PROJECT_ROOT,
+    AuthProviderKindSetting,
+    CertificateBackend,
+    Settings,
+    StorageRouteKind,
+    classify_storage_route,
+)
 from ..core.external_constants import load_external_constants
 from .env_scope import isolated_aeat_env as _isolated_aeat_env
 from .env_scope import settings_without_env_file
@@ -416,3 +423,27 @@ class TestDatabaseUrlDerivation:
 
         expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'cadrumo.db').as_posix()}"
         assert settings.cadrumo_database_url == expected
+
+    def test_env_example_leaves_normal_profile_storage_on_the_bucket_route(self, tmp_path: Path) -> None:
+        """The shipped environment template must not force a global database route."""
+
+        class ExampleSettings(Settings):
+            """Settings loaded from the same template copied by ``just env-setup``."""
+
+            model_config = SettingsConfigDict(
+                env_file=ENV_EXAMPLE_PATH,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        storage_root = tmp_path / "cadrumo-state"
+        bucket_id = "profile-bucket"
+        with _isolated_aeat_env():
+            settings = ExampleSettings(
+                cadrumo_local_storage_root=storage_root,
+                cadrumo_active_profile=bucket_id,
+            )
+
+        expected = f"sqlite:///{(storage_root / 'buckets' / bucket_id / 'db' / 'cadrumo.db').as_posix()}"
+        assert settings.cadrumo_database_url == expected
+        assert classify_storage_route(settings).kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE

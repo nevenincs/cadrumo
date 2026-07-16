@@ -54,9 +54,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
@@ -69,7 +68,7 @@ from ...core import (
 from ...core import (
     resolve_active_bucket_id as _resolve_active_bucket_id,
 )
-from ...core.identity import BucketId
+from ...core.config import override_settings
 from ...core.logging import get_logger
 from .._workflow_review_models import (
     InvoiceReviewRecord,
@@ -77,7 +76,10 @@ from .._workflow_review_models import (
     WorkflowEvent,
 )
 from ..auth import AuthState
+from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
+from ._profile_bucket_scan import resolve_profile_bucket
 from ._utils import utc_now
+from ._workflow_abort import WorkflowAbortReason as WorkflowAbortReason
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -126,26 +128,6 @@ class WorkflowPurpose(StrEnum):
     VERIFY = "VERIFY"
 
 
-class WorkflowAbortReason(StrEnum):
-    """Closed set of reasons the :class:`WorkflowEngine` may abort a run.
-
-    Each member maps to a distinct failure path in the engine's stage
-    sequence. CLI surfaces and audit logs carry the string value so
-    operators and tools can key on it without importing this module.
-    """
-
-    NO_PENDING_OBLIGATION = "NO_PENDING_OBLIGATION"
-    INBOX_BLOCKING_REQUERIMIENTO = "INBOX_BLOCKING_REQUERIMIENTO"
-    DEADLINE_PASSED = "DEADLINE_PASSED"
-    ALREADY_FILED = "ALREADY_FILED"
-    DRAFT_HAS_ERRORS = "DRAFT_HAS_ERRORS"
-    PREFLIGHT_FAILED = "PREFLIGHT_FAILED"
-    CERT_INVALID = "CERT_INVALID"
-    USER_CANCELLED = "USER_CANCELLED"
-    SITE_UNAVAILABLE = "SITE_UNAVAILABLE"
-    UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
-
-
 class DeclaracionPointer(BaseModel):
     """Lightweight pointer to a persisted filing draft stored in :class:`WorkflowState`.
 
@@ -165,32 +147,6 @@ class DeclaracionPointer(BaseModel):
     exported_path: str | None = None
     verified: bool | None = None
     updated_at: datetime = Field(default_factory=utc_now)
-
-
-class ProfileBucketPointer(BaseModel):
-    """Pointer to a secure profile bucket.
-
-    ``bucket_id`` is the immutable UUIDv4 profile identity and the
-    name of the bucket directory on disk. ``label`` is the decoupled
-    mutable operator-chosen display name read from the bucket manifest.
-    ``status`` is the plaintext lifecycle marker carried on the
-    manifest; the live-surface scanners filter on it so a tombstoned
-    profile never leaks into ``list`` / ``switch`` / name-uniqueness.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: BucketId
-    label: str = Field(min_length=1, max_length=160)
-    status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
-
-    @field_validator("bucket_id", "label")
-    @classmethod
-    def _trim_text(cls, value: str) -> str:
-        trimmed = value.strip()
-        if not trimmed:
-            raise ValueError("value must not be blank")
-        return trimmed
 
 
 def _period_identity_segment(period: Period) -> str:
@@ -260,10 +216,13 @@ class WorkflowState(BaseModel):
         :func:`~cadrumo.application.user_profile.build_lifecycle_service`; a
         per-bucket store and the bundled schema are resolved when ``None``.
         """
-        bucket_id = self.active_profile_bucket_id()
+        identifier, bucket_id = self._active_profile_selection()
         if bucket_id is None:
+            if identifier is not None:
+                _log.debug(
+                    "active profile record resolution returned no profile record: selected profile has no live bucket",
+                )
             return None
-        from ...core.config import override_settings
         from ...domain.user_profile import ProfileNotFoundError
         from ..user_profile import build_lifecycle_service
 
@@ -283,13 +242,16 @@ class WorkflowState(BaseModel):
         UUID. A selector without a live manifest has no secure bucket and
         returns ``None``; health diagnostics retain the raw selector separately.
         """
+        return self._active_profile_selection()[1]
+
+    @staticmethod
+    def _active_profile_selection() -> tuple[str | None, str | None]:
+        """Return the raw active selector and its canonical live bucket UUID."""
         identifier = _resolve_active_bucket_id()
         if identifier is None:
-            return None
-        from ._profile_bucket_scan import resolve_profile_bucket
-
+            return None, None
         pointer = resolve_profile_bucket(identifier)
-        return pointer.bucket_id if pointer is not None else None
+        return identifier, pointer.bucket_id if pointer is not None else None
 
 
 def active_transaction_catalogue_repository(

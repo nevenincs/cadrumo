@@ -127,7 +127,7 @@ class TestCliFlag:
 
     def test_help_exposes_prestacion_inss_exenta_flag(self, tmp_path: Path) -> None:
         """The --prestacion-inss-exenta flag is advertised in work calculate --help."""
-        from .....tests.cli_runner import invoke_cached_cli
+        from .....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 
         result = invoke_cached_cli(
             ["app", "modelo", "work", "calculate", "--help"],
@@ -142,4 +142,4 @@ class TestCliFlag:
             },
         )
         assert result.exit_code == 0
-        assert "--prestacion-inss-exenta" in result.output
+        assert "--prestacion-inss-exenta" in semantic_cli_output(result)

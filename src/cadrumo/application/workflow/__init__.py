@@ -143,6 +143,7 @@ from ._profile_health import (
     ActiveProfileHealth,
     ActiveProfileRepairResult,
     assess_active_profile_health,
+    assess_active_profile_health_with_session,
     repair_active_profile_pointer,
 )
 
@@ -219,6 +220,7 @@ __all__ = [
     "WorkflowStepDetails",
     "active_transaction_catalogue_repository",
     "assess_active_profile_health",
+    "assess_active_profile_health_with_session",
     "compute_run_id",
     "declaration_key",
     "default_engine",

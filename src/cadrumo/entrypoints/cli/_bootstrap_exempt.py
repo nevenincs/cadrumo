@@ -57,9 +57,12 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Custody verbs own their own session / recovery / rewrap flow. The
     # root callback must not pre-open the active bucket session before
     # these handlers can resolve passphrase or recovery material. The
-    # profile-switch verb opens the target bucket session itself.
+    # profile-switch verb opens the target bucket session itself. Logout
+    # must remain pointer-sourced so the root callback does not manufacture
+    # an active-profile override that the application correctly refuses.
     "config switch",
     "config lock",
+    "config profile logout",
     "config rekey",
     "config recover",
     "config show-recovery",

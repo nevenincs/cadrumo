@@ -82,3 +82,15 @@ def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) 
     """
 
     return _RUNNER.invoke(cadrumo_click_command(), list(args), **kwargs)
+
+
+def semantic_cli_output(result: Result) -> str:
+    """Return CLI output without terminal styling for semantic assertions.
+
+    Typer forces terminal styling when GitHub Actions is detected, even when
+    Click's test runner is invoked with ``color=False``.  Removing ANSI styling
+    keeps option names and prose intact without changing the production CLI's
+    colour behaviour.
+    """
+
+    return click.unstyle(result.output)

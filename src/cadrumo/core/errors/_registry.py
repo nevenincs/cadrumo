@@ -153,7 +153,7 @@ def register(code: ErrorCode) -> ErrorCode:
         ValueError: If a duplicate code identifier is encountered.
     """
     existing = _ERROR_REGISTRY_MUTABLE.get(code.code)
-    if existing is not None and existing != code:
+    if existing is not None:
         raise ValueError(f"duplicate ErrorCode registration for {code.code!r}")
     _ERROR_REGISTRY_MUTABLE[code.code] = code
     return code
@@ -161,9 +161,18 @@ def register(code: ErrorCode) -> ErrorCode:
 
 from .registry import _ALL_DECLARED_ERROR_CODES
 
-_DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
-    {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES},
-)
+
+def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping[str, ErrorCode]:
+    """Register raw declarations while refusing duplicate class ownership."""
+    declared: dict[str, ErrorCode] = {}
+    for qualname, code in rows:
+        if qualname in declared:
+            raise ValueError(f"duplicate ErrorCode declaration for {qualname!r}")
+        declared[qualname] = register(code)
+    return MappingProxyType(declared)
+
+
+_DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = _build_declared_code_map(_ALL_DECLARED_ERROR_CODES)
 ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTABLE)
 
 

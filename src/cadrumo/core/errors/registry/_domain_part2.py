@@ -736,17 +736,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileError",
-        ErrorCode(
-            code="ERROR_USER_PROFILE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_user_profile",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.categories._errors.CategoryError",
         ErrorCode(
             code="ERROR_CATEGORIES",

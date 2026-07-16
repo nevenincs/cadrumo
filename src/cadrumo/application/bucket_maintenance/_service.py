@@ -31,7 +31,6 @@ from ...adapters.persistence.storage import (
     BUCKET_DB_DIRNAME,
     StorageCustodyProfile,
 )
-from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
@@ -46,6 +45,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.user_profile import UserProfileStatus
 from ..user_profile import (
     UnsupportedBundleSchemaVersionError,
     delete_profile_with_lifecycle_span,
@@ -454,7 +454,7 @@ class BucketMaintenanceService:
                 translated_message="application.user_profile.errors.no_active_profile_selected",
                 context={"bucket_id": command.bucket_id},
             )
-        if pointer.status is not BucketLifecycleStatus.TOMBSTONED:
+        if pointer.status is not UserProfileStatus.TOMBSTONED:
             raise BucketRestoreRefusedError(
                 translated_message="application.bucket_maintenance.errors.restore_not_archived",
                 context={"bucket_id": command.bucket_id},

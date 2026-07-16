@@ -20,7 +20,6 @@ from ..adapters.persistence.storage import (
 )
 from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     BucketPaths,
     provision_bucket_directory,
@@ -39,6 +38,7 @@ from ..adapters.persistence.storage.sql import Base
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
+from ..domain.user_profile import UserProfileStatus
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
@@ -100,7 +100,7 @@ def _provision_bucket_dek_v1_session(
             recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=2,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
     session = BucketSession.open(

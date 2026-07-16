@@ -6,8 +6,8 @@ Exercises real corpus HTML through the production extractor (no mocks):
   each titled and anchored to its ``#aN`` BOE permalink fragment;
 * the TOC link farm and per-article jurisprudence forms are stripped - known
   boilerplate is ABSENT and known article prose is PRESENT;
-* attribution resolves from the sibling manifest's BOE permalink for a law,
-  and falls back to the standing attribution for a manifest-less slice;
+* attribution resolves from the HTML's canonical BOE permalink for a law,
+  and falls back to the standing attribution for a canonical-less slice;
 * the written text sidecar carries a walker-supported extension and the
   installed walker's own filter accepts it (real installed package, no mock);
 * anti-tautology: a tampered provenance sidecar is rejected.
@@ -43,9 +43,9 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 _NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives"
 
 # A real multi-article consolidated law (IVA) with a TOC link farm, bloque
-# anchors, and a sibling manifest carrying the BOE permalink.
+# anchors, and an embedded canonical BOE permalink.
 _LAW_HTML = _NORMATIVES / "html" / "ley-37-1992.html"
-# A real single-article slice with no manifest (base-attribution fallback).
+# A real single-article slice with no canonical link (base-attribution fallback).
 _SLICE_HTML = _NORMATIVES / "html" / "orden-hap-2250-2015-art-4.html"
 
 
@@ -109,15 +109,15 @@ def test_toc_and_form_boilerplate_is_stripped() -> None:
     assert "tributo de naturaleza indirecta" in body
 
 
-def test_attribution_resolves_from_manifest_and_falls_back() -> None:
-    """A law pins its BOE permalink; a manifest-less slice uses the fallback."""
+def test_attribution_resolves_from_canonical_link_and_falls_back() -> None:
+    """A law pins its BOE permalink; a canonical-less slice uses the fallback."""
     law = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
     assert "BOE" in law.attribution
-    assert "boe.es" in law.attribution  # the manifest permalink
+    assert "Official source: https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" in law.attribution
 
     slice_out = build_outputs(_SLICE_HTML, repo_root=_REPO_ROOT)[0]
     assert "BOE" in slice_out.attribution
-    # The slice has no manifest, so only the standing attribution (no URL).
+    # The slice has no canonical link, so only the standing attribution (no URL).
     assert "Official source:" not in slice_out.attribution
 
 

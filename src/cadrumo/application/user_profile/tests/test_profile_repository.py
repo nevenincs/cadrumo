@@ -444,7 +444,7 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
     exclude the profile without unlocking the encrypted bucket.
     """
 
-    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, read_manifest
+    from ....adapters.persistence.storage.bucket import read_manifest
 
     repository = ProfileRepository()
     created = _create(repository, label="Soft Delete", facts=_VALID_FACTS)
@@ -452,7 +452,7 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
     _delete(repository, created.profile_id)
 
     manifest = read_manifest(bucket_paths(_backend, created.profile_id))
-    assert manifest.status is BucketLifecycleStatus.TOMBSTONED
+    assert manifest.status is UserProfileStatus.TOMBSTONED
 
 
 def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> None:
@@ -464,8 +464,6 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
     resolver still finds it — ``show`` and diagnostics inspect a
     tombstoned profile by UUID.
     """
-
-    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus
 
     repository = ProfileRepository()
     created = _create(repository, label="Vanishing", facts=_VALID_FACTS)
@@ -479,11 +477,11 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
     # Full inventory: still present, marked tombstoned.
     full = list_profile_buckets(root=_backend, include_tombstoned=True)
     assert created.profile_id in full
-    assert full[created.profile_id].status is BucketLifecycleStatus.TOMBSTONED
+    assert full[created.profile_id].status is UserProfileStatus.TOMBSTONED
     # By-id resolver: still resolves, carries the tombstoned status.
     by_id = read_profile_bucket_by_id(created.profile_id, root=_backend)
     assert by_id is not None
-    assert by_id.status is BucketLifecycleStatus.TOMBSTONED
+    assert by_id.status is UserProfileStatus.TOMBSTONED
 
 
 def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
@@ -513,7 +511,7 @@ def test_reactivate_restores_active_status_and_the_live_scan(_backend: Path) -> 
     (without ``include_tombstoned``) includes it again, and the manifest
     ``status`` mirror agrees with the record.
     """
-    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, read_manifest
+    from ....adapters.persistence.storage.bucket import read_manifest
 
     repository = ProfileRepository()
     created = _create(repository, label="Reactivation Candidate", facts=_VALID_FACTS)
@@ -526,7 +524,7 @@ def test_reactivate_restores_active_status_and_the_live_scan(_backend: Path) -> 
     assert reactivated.record.status is UserProfileStatus.ACTIVE
     assert reactivated.record.removed_at is None
     manifest = read_manifest(bucket_paths(_backend, created.profile_id))
-    assert manifest.status is BucketLifecycleStatus.ACTIVE
+    assert manifest.status is UserProfileStatus.ACTIVE
     # Back on every live surface.
     assert read_profile_bucket("Reactivation Candidate", root=_backend) is not None
     assert created.profile_id in list_profile_buckets(root=_backend)

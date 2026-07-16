@@ -678,7 +678,6 @@ def _overview_calendar_all_profiles(
     payload still uses the single :class:`OverviewCalendarResult` schema
     registered for ``overview.calendar``.
     """
-    from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
     from ...application.user_profile import (
         ProfileRepository,
         profile_storage_session,
@@ -686,10 +685,11 @@ def _overview_calendar_all_profiles(
         record_to_values,
     )
     from ...application.workflow import list_profile_buckets
+    from ...domain.user_profile import UserProfileStatus
 
     today = today_madrid()
     buckets = list_profile_buckets()
-    active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is BucketLifecycleStatus.ACTIVE}
+    active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is UserProfileStatus.ACTIVE}
 
     all_lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",

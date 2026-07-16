@@ -192,7 +192,6 @@ ignore_imports =
     cadrumo.core.tests.** -> cadrumo.application.**
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
-    cadrumo.core.tests.test_isolation_fixture_state_root_coverage -> cadrumo.tests.secure_sql
     cadrumo.core.tests.** -> cadrumo.entrypoints.**
     # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
     cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos

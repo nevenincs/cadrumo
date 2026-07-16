@@ -50,7 +50,6 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
     bucket_paths,
@@ -104,17 +103,6 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
             if text:
                 return text
     return None
-
-
-def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
-    """Map the encrypted-record lifecycle status to its manifest mirror.
-
-    The two enums carry identical string values; the mapping is by
-    value so a new lifecycle state added to one enum but not the other
-    surfaces here as a :class:`ValueError` (the enum lookup rejects an
-    unknown value) rather than silently mismatching.
-    """
-    return BucketLifecycleStatus(status.value)
 
 
 def _default_kdf_params() -> ManifestKdfParams:
@@ -341,7 +329,7 @@ class ProfileRepository:
                         recovery_enrolled=False,
                         key_schedule=key_schedule,
                         schema_version=manifest_schema_version,
-                        status=BucketLifecycleStatus.ACTIVE,
+                        status=UserProfileStatus.ACTIVE,
                     ),
                 )
 
@@ -467,7 +455,7 @@ class ProfileRepository:
                 idle_lock_minutes=current_manifest.idle_lock_minutes,
                 key_schedule=current_manifest.key_schedule,
                 schema_version=aggregate.manifest_schema_version,
-                status=_manifest_status_for(aggregate.status),
+                status=aggregate.status,
             ),
         )
         self._lifecycle_repository(aggregate.profile_id).save(aggregate.record)
@@ -596,7 +584,7 @@ class ProfileRepository:
             manifest = read_manifest(paths)
             write_manifest(
                 paths,
-                manifest.model_copy(update={"status": BucketLifecycleStatus.TOMBSTONED}),
+                manifest.model_copy(update={"status": UserProfileStatus.TOMBSTONED}),
             )
             # Step 3: tombstone the encrypted record.
             result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
@@ -648,7 +636,7 @@ class ProfileRepository:
         manifest = read_manifest(paths)
         write_manifest(
             paths,
-            manifest.model_copy(update={"status": BucketLifecycleStatus.ACTIVE}),
+            manifest.model_copy(update={"status": UserProfileStatus.ACTIVE}),
         )
         return aggregate.model_copy(update={"record": reactivated_record, "status": reactivated_record.status})
 
@@ -745,7 +733,7 @@ class ProfileRepository:
                 ProfileSummary(
                     profile_id=manifest.bucket_id,
                     label=manifest.label,
-                    status=UserProfileStatus(manifest.status.value),
+                    status=manifest.status,
                 ),
             )
         summaries.sort(key=lambda row: row.profile_id)

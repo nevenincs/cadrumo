@@ -38,8 +38,11 @@ import contextlib
 import json
 import os
 import sys
+import sysconfig
 import time
 import uuid
+from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import PRODUCT_IDENTITY
@@ -280,11 +283,51 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
     return {"status": "error", "refusal": message, "timed_out": True}
 
 
+def _installed_cli_executable() -> str:
+    """Resolve the sibling CLI installed in the server's Python environment.
+
+    The MCP server and CLI are console scripts from one distribution cohort.
+    Resolving the interpreter's scripts directory preserves that relationship
+    even when ``PATH`` is empty, points at another environment, or contains a
+    checkout shim. Missing installation state fails closed instead of falling
+    back to an unrelated executable.
+    """
+    scripts_dir = Path(sysconfig.get_path("scripts")).resolve()
+    executable_name = PRODUCT_IDENTITY.cli_executable
+    if sys.platform == "win32":
+        executable_name = f"{executable_name}.exe"
+    executable = (scripts_dir / executable_name).resolve()
+    if not executable.is_file():
+        message = (
+            f"Installed Cadrumo CLI executable is missing from the MCP server environment: {executable}"
+        )
+        raise FileNotFoundError(message)
+    return str(executable)
+
+
+def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
+    """Build a structured refusal for an incomplete MCP installation."""
+    return {
+        "status": "error",
+        "refusal": str(error),
+        "installation_incomplete": True,
+    }
+
+
+@dataclass(frozen=True)
+class SubprocessToolOutcome:
+    """One supervised CLI dispatch and the executable actually passed to it."""
+
+    envelope: dict[str, object]
+    is_error: bool
+    executable: str
+
+
 def _run_subprocess_tool(
     descriptor: McpToolDescriptor,
     arguments: dict[str, object],
-) -> tuple[dict[str, object], bool]:
-    """Run one tool's CLI command under the supervised runtime and return (envelope, is_error).
+) -> SubprocessToolOutcome:
+    """Run one tool's CLI command and retain the executable observed by the runtime.
 
     The argv is reconstructed from the descriptor's per-verb input schema and the
     named ``arguments`` the client supplied - positional arguments in CLI order,
@@ -309,17 +352,41 @@ def _run_subprocess_tool(
         open_world=descriptor.annotations.open_world_hint,
     )
     timeout_s = timeout_seconds(tier)
-    argv = [PRODUCT_IDENTITY.cli_executable, *cli_argv_for(descriptor.verb_schema, arguments)]
-    result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+    try:
+        executable = _installed_cli_executable()
+        argv = [executable, *cli_argv_for(descriptor.verb_schema, arguments)]
+        result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+    except OSError as error:
+        return SubprocessToolOutcome(
+            envelope=_cli_resolution_refusal_envelope(error),
+            is_error=True,
+            executable="",
+        )
     if result.timed_out:
-        return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
+        return SubprocessToolOutcome(
+            envelope=_timeout_refusal_envelope(
+                command_key=descriptor.command_key,
+                tier=tier,
+                timeout_s=timeout_s,
+            ),
+            is_error=True,
+            executable=result.executable,
+        )
     raw = result.stdout.strip() or result.stderr.strip()
     try:
         envelope = json.loads(raw)
     except json.JSONDecodeError:
-        return ({"status": "error", "raw": raw}, True)
+        return SubprocessToolOutcome(
+            envelope={"status": "error", "raw": raw},
+            is_error=True,
+            executable=result.executable,
+        )
     is_error = envelope.get("status") == "error" or result.returncode != 0
-    return (envelope, is_error)
+    return SubprocessToolOutcome(
+        envelope=envelope,
+        is_error=is_error,
+        executable=result.executable,
+    )
 
 
 def build_meta_sdk_tools() -> list[Tool]:
@@ -472,6 +539,7 @@ def _record_telemetry(
     route: str = "",
     is_error: bool = False,
     duration_ms: int = 0,
+    executable_text: str = "",
     arguments_text: str = "",
     result_text: str = "",
 ) -> None:
@@ -483,6 +551,7 @@ def _record_telemetry(
             route=route,
             is_error=is_error,
             duration_ms=duration_ms,
+            executable_text=executable_text,
             arguments_text=arguments_text,
             result_text=result_text,
         )
@@ -638,7 +707,9 @@ def build_server(
             )
             return ({"status": "error", "refusal": advisory_line(faith)}, True)
         started = time.monotonic()
-        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
+        outcome = _run_subprocess_tool(descriptor, arguments)
+        envelope = outcome.envelope
+        is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
         _record_telemetry(
@@ -648,6 +719,7 @@ def build_server(
             route=route.value,
             is_error=is_error,
             duration_ms=int((time.monotonic() - started) * 1000),
+            executable_text=outcome.executable,
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
@@ -658,7 +730,7 @@ def build_server(
     async def _run_tool_with_progress(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
-    ) -> tuple[dict[str, object], bool]:
+    ) -> SubprocessToolOutcome:
         """Run the CLI subprocess off the event loop, heart-beating progress.
 
         The supervised call blocks (Popen.communicate); running it in a worker
@@ -679,7 +751,7 @@ def build_server(
         if progress_token is None:
             return await run_sync(_run_subprocess_tool, descriptor, arguments)
 
-        holder: dict[str, tuple[dict[str, object], bool]] = {}
+        holder: dict[str, SubprocessToolOutcome] = {}
 
         async def _work() -> None:
             holder["result"] = await run_sync(_run_subprocess_tool, descriptor, arguments)
@@ -909,7 +981,9 @@ def build_server(
                 isError=True,
             )
         started = time.monotonic()
-        envelope, is_error = await _run_tool_with_progress(descriptor, arguments)
+        outcome = await _run_tool_with_progress(descriptor, arguments)
+        envelope = outcome.envelope
+        is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
         _record_telemetry(
@@ -919,6 +993,7 @@ def build_server(
             route=route_label,
             is_error=is_error,
             duration_ms=int((time.monotonic() - started) * 1000),
+            executable_text=outcome.executable,
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
@@ -1026,7 +1101,9 @@ def build_server(
         resolver_args: dict[str, object] = {}
         if resolution.id_arg is not None:
             resolver_args[resolution.id_arg] = identity
-        envelope, is_error = await run_sync(_run_subprocess_tool, descriptor, resolver_args)
+        outcome = await run_sync(_run_subprocess_tool, descriptor, resolver_args)
+        envelope = outcome.envelope
+        is_error = outcome.is_error
         result = envelope.get("result")
         if is_error or not isinstance(result, dict):
             raise ValueError(f"could not resolve resource {uri}")

@@ -44,6 +44,7 @@ def test_a_fast_command_completes_without_timing_out() -> None:
         encoding="utf-8",
     )
     assert isinstance(result, SupervisedResult)
+    assert result.executable == sys.executable
     assert result.timed_out is False
     assert result.returncode == 0
     assert result.stdout.strip() == "ok"

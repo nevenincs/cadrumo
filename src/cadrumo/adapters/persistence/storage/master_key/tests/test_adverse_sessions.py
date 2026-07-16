@@ -10,9 +10,9 @@ import pytest
 
 from ......core.config import SecretStoreBackend, Settings, override_settings
 from ......core.external_constants import UTF_8_ENCODING
+from ......domain.user_profile import UserProfileStatus
 from ...bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketLockedError,
     BucketManifest,
     ManifestKdfParams,
@@ -200,6 +200,6 @@ def _write_registered_bucket(root: Path, bucket_id: str) -> None:
             recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )

@@ -179,7 +179,7 @@ class TestHardDeleteCrashWindow:
             read_profile_bucket,
             read_profile_bucket_by_id,
         )
-        from ..bucket import BucketLifecycleStatus
+        from .....domain.user_profile import UserProfileStatus
 
         _create_profile(_DELETE_PROFILE_ID, label="Delete target", facts=_VALID_FACTS)
 
@@ -193,7 +193,7 @@ class TestHardDeleteCrashWindow:
         assert read_profile_bucket("Delete target") is None
         by_id = read_profile_bucket_by_id(_DELETE_PROFILE_ID)
         assert by_id is not None
-        assert by_id.status is BucketLifecycleStatus.TOMBSTONED
+        assert by_id.status is UserProfileStatus.TOMBSTONED
 
     def test_partial_directory_is_detected_and_reclaimable_idempotently(self, backend: Path) -> None:
         from .....application.user_profile import (

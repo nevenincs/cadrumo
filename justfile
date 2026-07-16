@@ -187,10 +187,17 @@ packaging-smoke-preflight-tests:
 packaging-smoke-source:
     @uv run --no-sync python -m dev.packaging.source_preflight
 
-# Build the wheel, validate prod/optional/dev dependency surfaces, install into
-# a fresh venv, and run installed CLI/resource smoke checks.
+# Construct the temporary Python wheel cohort once for the current smoke campaign.
+# The immutable release-cohort builder replaces this transitional constructor.
+packaging-build-python-cohort: packaging-smoke-source
+    @uv build --wheel --out-dir var/packaging-smoke-cohort/python
+    @uv build --wheel --project packaging/cadrumo_data_manuals --out-dir var/packaging-smoke-cohort/python
+    @uv build --wheel --project packaging/cadrumo_data_official --out-dir var/packaging-smoke-cohort/python
+
+# Consume the supplied wheel cohort, validate dependency surfaces, install into
+# a fresh venv, and run the installed grounded tax-work oracle.
 packaging-smoke-core: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_core
+    @uv run --no-sync python -m dev.packaging.smoke_core --cohort-dir var/packaging-smoke-cohort/python
 
 # Build the wheel, create a stdlib venv, install with plain pip, and run the
 # same installed core CLI/resource/attachment/LLM smoke checks.
@@ -228,7 +235,7 @@ packaging-smoke-browser-linux: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_browser --with-deps
 
 # Linux host release-artifact smoke gates.
-packaging-smoke-linux: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser-linux
+packaging-smoke-linux: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-build-python-cohort packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser-linux
 
 # Build the wheel, mount only the wheel/probe into python:3.13-slim, and run
 # the installed core CLI/resource smoke with pip inside Linux.
@@ -244,7 +251,7 @@ packaging-smoke-docker-browser: packaging-smoke-source
 packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-docker-core packaging-smoke-docker-browser
 
 # Local release-artifact smoke gates that do not need host package-manager access.
-packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-split packaging-smoke-browser
+packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-build-python-cohort packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-split packaging-smoke-browser
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 

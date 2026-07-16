@@ -11,7 +11,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 from __future__ import annotations
 
 from ...core.errors import AeatError, CoreValidationError
-from ._models import WorkflowAbortReason
+from ._workflow_abort import WorkflowAbortReason
 
 
 class WorkflowError(AeatError):

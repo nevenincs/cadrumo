@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -99,11 +99,12 @@ def _assert_output_language_registered(args: Sequence[str]) -> None:
     help_args = [*args, "--help"]
     result = invoke_cached_cli(help_args)
     assert result.exit_code == 0, f"`{' '.join(help_args)}` exited {result.exit_code}:\n{result.output}"
-    assert _OPTION_FLAG in result.output, (
-        f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{result.output}"
+    help_output = semantic_cli_output(result)
+    assert _OPTION_FLAG in help_output, (
+        f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{help_output}"
     )
-    assert _CHOICE_LIST in result.output, (
-        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\nHelp output:\n{result.output}"
+    assert _CHOICE_LIST in help_output, (
+        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\nHelp output:\n{help_output}"
     )
 
 

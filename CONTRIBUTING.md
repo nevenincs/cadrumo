@@ -45,9 +45,9 @@ just devcontainer-test
 ```
 
 The container has no interactive display, so live AEAT browser reads run
-headless (`AEAT_BROWSER_HEADLESS=true` is set for you). Your digital
+headless (`CADRUMO_BROWSER_HEADLESS=true` is set for you). Your digital
 certificate is personal, per-machine data — it is never baked into the image.
-Mount it or set `AEAT_CERTIFICATE_PATH` after the container starts if you need
+Mount it or set `CADRUMO_CERTIFICATE_PATH` after the container starts if you need
 `aeat app live ...` inside the container.
 
 ## Check the workstation

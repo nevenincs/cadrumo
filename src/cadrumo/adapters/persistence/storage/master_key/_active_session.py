@@ -16,6 +16,8 @@ every column-level decrypt or encrypt call inside the block resolves
 the active DEK through :func:`get_active_master_key`. On exit the
 ``ContextVar`` token is reset to the previous value (``None`` at the
 top of the stack), so no key material outlives the with-block.
+:func:`close_active_bucket_session` is the explicit eviction boundary:
+it closes the current session before removing that exact binding.
 
 The pattern is per-thread and per-async-task by PEP 567 semantics.
 ``asyncio.Task`` instances inherit a copy of the parent context at
@@ -117,7 +119,7 @@ def get_active_master_key() -> bytes:
         )
     if session.is_expired(now()):
         bucket_id = session.bucket_id
-        session.close()
+        close_active_bucket_session()
         raise BucketLockedError(bucket_id=bucket_id)
     return session.dek
 
@@ -135,10 +137,32 @@ def current_active_bucket_session() -> BucketSession | None:
     gating) that need the live session's attributes (``bucket_id``, ``sealed``,
     idle deadline) rather than only its DEK (:func:`get_active_master_key`) or
     its presence (:func:`has_active_bucket_session`). Never mutates the
-    context; only :func:`activate_session` and :func:`suspend_active_session`
-    may bind or clear it.
+    context; :func:`activate_session`, :func:`suspend_active_session`, and
+    :func:`close_active_bucket_session` own binding changes.
     """
     return _active_session.get()
+
+
+def close_active_bucket_session() -> None:
+    """Close and evict the currently bound :class:`BucketSession`.
+
+    The existing :meth:`BucketSession.close` boundary owns key zeroisation,
+    sealing, and engine disposal. This function adds only active-context
+    eviction. It is idempotent when no session is bound or when the bound
+    session is already sealed.
+
+    The binding is cleared in ``finally`` so an unexpected close failure cannot
+    leave a key-owning or sealed object advertised as active. An identity check
+    preserves a replacement binding installed reentrantly during cleanup.
+    """
+    session = _active_session.get()
+    if session is None:
+        return
+    try:
+        session.close()
+    finally:
+        if _active_session.get() is session:
+            _active_session.set(None)
 
 
 @contextmanager
@@ -160,11 +184,8 @@ def _close_active_session_at_exit() -> None:
     buffers in place so the memory footprint at shutdown does not leak
     cleartext key material.
     """
-    session = _active_session.get()
-    if session is None:
-        return
     try:
-        session.close()
+        close_active_bucket_session()
     except Exception as exc:
         # Interpreter shutdown is a degraded environment; never raise
         # from an atexit hook, but keep a debug breadcrumb for audit.
@@ -178,6 +199,7 @@ _atexit.register(_close_active_session_at_exit)
 __all__ = [
     "NoActiveBucketSessionError",
     "activate_session",
+    "close_active_bucket_session",
     "current_active_bucket_session",
     "get_active_master_key",
     "has_active_bucket_session",

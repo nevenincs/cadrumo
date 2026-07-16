@@ -3,7 +3,7 @@
 Validates the contract end-to-end with one real corpus file and the
 installed ``vaultspec-rag`` walker (no mocks, no fakes):
 
-* the worked-example extractor turns a real BOE normatives HTML article
+* the production extractor turns a real BOE normatives HTML article
   into a schema-valid :class:`PreprocessOutput`;
 * the sidecar pair writes and the json sidecar round-trips through the
   schema with byte-for-byte equality of the typed record;
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from .._example import extract_normatives_html
+from .._html import build_outputs
 from .._schema import (
     PREPROCESS_SCHEMA_VERSION,
     ExtractionStatus,
@@ -61,7 +61,7 @@ def test_extractor_produces_schema_valid_output() -> None:
     on the unit, the parrafo body as text, and provenance bound to the real
     source file's hash.
     """
-    output = extract_normatives_html(_WORKED_EXAMPLE_HTML, repo_root=_REPO_ROOT)
+    output = build_outputs(_WORKED_EXAMPLE_HTML, repo_root=_REPO_ROOT)[0]
 
     assert isinstance(output, PreprocessOutput)
     assert output.schema_version == PREPROCESS_SCHEMA_VERSION
@@ -87,7 +87,7 @@ def test_sidecar_round_trips_through_schema(tmp_path: Path) -> None:
     source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
     source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
 
-    output = extract_normatives_html(source_copy, repo_root=tmp_path)
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
     text_path, json_path = write_sidecar(source_copy, output)
 
     assert text_path.is_file() and json_path.is_file()
@@ -121,7 +121,7 @@ def test_text_sidecar_is_indexable_by_the_installed_walker(tmp_path: Path) -> No
 
     source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
     source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
-    output = extract_normatives_html(source_copy, repo_root=tmp_path)
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
     text_path, _ = write_sidecar(source_copy, output)
 
     # Reproduce the walker's per-file accept gate (_process_scan_files) against
@@ -143,7 +143,7 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
     """
     source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
     source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
-    output = extract_normatives_html(source_copy, repo_root=tmp_path)
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
     _, json_path = write_sidecar(source_copy, output)
 
     good = json_path.read_text(encoding="utf-8")

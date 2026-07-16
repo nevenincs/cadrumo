@@ -59,7 +59,9 @@ jobs:
         run: |
           uv sync
           uv run vaultspec-core install --force
-          just env-setup
+
+      - name: Provision Playwright Chromium
+        run: just env-playwright
 
       - name: Lint
         run: |
