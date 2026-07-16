@@ -7,21 +7,28 @@ typed :class:`ConfigResetReport`:
 
 - ``PROFILE``: clears every operator profile pointer and deletes each
   persisted profile bucket.
-- ``AUTH``: clears the persisted auth session and provider metadata.
+- ``AUTH``: resolves the active target bucket and delegates all-provider
+  cleanup to :func:`application.auth.reset_operator_auth`, which owns provider
+  configuration, persisted sessions, acquisition locks, certificate-source
+  registrations, canonical secure-storage secrets, and auth events.
 - ``DATA``: quarantines undecryptable secure-object rows only. It
   does not delete readable ledger data; bucket-local ledger reset is
   owned by the ledger backend so finalized modelo protections can run.
-- ``ALL``: combines the three scopes above.
+- ``ALL``: enumerates live and tombstoned profiles in sorted order, invokes
+  canonical all-provider auth reset for each target bucket before profile
+  deletion, and then applies the DATA quarantine.
 
-The service runs through the normal runtime storage routes.
-:class:`~application.workflow.WorkflowStateRepository` loads the typed
-:class:`~application.workflow.WorkflowState`, profile removal goes
-through :class:`~application.user_profile.UserProfileLifecycleRepository`
-plus :func:`~application.user_profile.remove_profile_bucket_directory`,
-and DATA reset delegates to
+The service runs through public application authorities.
+:func:`application.auth.reset_operator_auth` owns target-bucket auth cleanup,
+profile removal goes through
+:class:`~application.user_profile.UserProfileLifecycleRepository` plus
+:func:`~application.user_profile.remove_profile_bucket_directory`, and DATA
+reset delegates to
 :func:`~application.diagnostics.quarantine_unreadable_secure_objects`
 for a :class:`~application.diagnostics.SecureObjectIntegrityReport`.
-It does not bypass runtime readiness or directly erase readable ledger data.
+:func:`~application.workflow.workflow_state_repository` enforces active-route
+readiness without owning auth mutation. The service does not directly erase
+readable ledger data.
 
 Each scope writes one log line through the project's standard
 :mod:`core.logging` channel so post-mortem analysis of an
@@ -48,9 +55,10 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ..core.errors import AeatError
 from ..core.logging import get_logger
+from .auth import reset_operator_auth
 
 _log = get_logger(__name__)
 
@@ -101,7 +109,8 @@ class ConfigResetReport(BaseModel):
         removed_profile_ids: Sorted tuple of profile UUIDs cleared from the
             profile lifecycle repository and then removed from their bucket
             directories. Empty when the scope did not touch profiles.
-        removed_auth_session: True when the auth session was reset.
+        removed_auth_session: Coarse success flag for auth-session cleanup. It
+            does not establish that a persisted session existed.
         quarantined_namespace_count: Number of secure-object namespaces
             whose unreadable rows were archived to the quarantine table
             during the DATA reset via
@@ -125,8 +134,10 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
     delete each profile through
     :class:`~application.user_profile.UserProfileLifecycleRepository`, and
     then remove bucket directories after disposing cached SQL engines. AUTH
-    resets replace auth state inside
-    :class:`~application.workflow.WorkflowState`. DATA resets call
+    resolves the active target bucket and delegates its all-provider cleanup to
+    :func:`application.auth.reset_operator_auth`. ALL performs that canonical
+    target-bucket auth reset before deleting each enumerated profile. DATA
+    resets call
     :func:`~application.diagnostics.quarantine_unreadable_secure_objects`
     for unreadable secure-object rows only.
     This broad reset surface is separate from
@@ -152,18 +163,22 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         )
 
     from .diagnostics import quarantine_unreadable_secure_objects
-    from .workflow import AuthState, utc_now, workflow_state_repository
+    from .workflow import workflow_state_repository
 
-    repository = workflow_state_repository()
-    current = repository.load()
-    new_state = current
+    auth_target_bucket_id: str | None = None
+    if scope is ConfigResetScope.AUTH:
+        auth_target_bucket_id = resolve_active_bucket_id()
+        if auth_target_bucket_id is None:
+            reset_operator_auth(all_providers=True, target_bucket_id=None)
+
+    workflow_state_repository().load()
     removed_profile_ids: tuple[str, ...] = ()
     removed_auth_session = False
     quarantined_namespace_count = 0
     profile_bucket_ids_to_remove: tuple[str, ...] = ()
 
     if scope in {ConfigResetScope.PROFILE, ConfigResetScope.ALL}:
-        from .user_profile import UserProfileLifecycleRepository
+        from .user_profile import UserProfileLifecycleRepository, profile_storage_session
         from .workflow import list_profile_buckets
 
         # Registered profiles are a filesystem-manifest scan, not a
@@ -175,23 +190,26 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         removed_profile_ids = tuple(sorted(list_profile_buckets(include_tombstoned=True)))
         profile_bucket_ids_to_remove = removed_profile_ids
         for profile_id in removed_profile_ids:
-            UserProfileLifecycleRepository(bucket_id=profile_id).delete(profile_id)
-        new_state = new_state.model_copy(
-            update={
-                "declarations": {},
-                "invoice_reviews": {},
-                "ledger_reviews": {},
-                "updated_at": utc_now(),
-            },
-        )
+            with profile_storage_session(profile_id):
+                if scope is ConfigResetScope.ALL:
+                    reset_operator_auth(all_providers=True, target_bucket_id=profile_id)
+                UserProfileLifecycleRepository(bucket_id=profile_id).delete(profile_id)
         _log.info("config reset PROFILE scope cleared %d profile(s)", len(removed_profile_ids))
 
-    if scope in {ConfigResetScope.AUTH, ConfigResetScope.ALL}:
-        new_state = new_state.model_copy(update={"auth": AuthState(), "updated_at": utc_now()})
+    if scope is ConfigResetScope.AUTH:
+        assert auth_target_bucket_id is not None
+        reset_operator_auth(
+            all_providers=True,
+            target_bucket_id=auth_target_bucket_id,
+        )
         removed_auth_session = True
         _log.info("config reset AUTH scope cleared session state")
-
-    repository.update(lambda _state: new_state)
+    elif scope is ConfigResetScope.ALL:
+        removed_auth_session = True
+        _log.info(
+            "config reset ALL scope cleared auth custody for %d profile(s)",
+            len(removed_profile_ids),
+        )
 
     if scope in {ConfigResetScope.DATA, ConfigResetScope.ALL}:
         report = quarantine_unreadable_secure_objects()

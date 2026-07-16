@@ -41,6 +41,12 @@ This package exposes the lifecycle composition verbs ``archive``,
 through domain repositories instead of decrypting secure-object storage
 directly.
 
+:class:`AssessBucketDeletionCommand`,
+:class:`BucketDeletionAssessment`, and
+:class:`BucketDeletionFingerprint` expose target-scoped, read-only foundation
+contracts for composing deletion safely. They do not implement reset
+orchestration.
+
 :meth:`BucketMaintenanceService.disk_usage` measures a bucket's on-disk
 footprint by summing regular-file byte sizes under its fixed directory
 layout (:func:`adapters.persistence.storage.bucket.bucket_paths`); it reads
@@ -84,6 +90,9 @@ See Also:
     :func:`compute_manifest_digest`
         Archive-header integrity anchor bound into the sealed payload's AEAD
         associated data.
+    :func:`compute_bucket_deletion_fingerprint`
+        Structured observation of deletion-relevant target contents; callers
+        remain responsible for keeping the target stable while it is computed.
 """
 
 from __future__ import annotations
@@ -91,8 +100,11 @@ from __future__ import annotations
 from ._contracts import (
     ArchiveBucketCommand,
     ArchiveBucketResult,
+    AssessBucketDeletionCommand,
     BrowseBucketCommand,
     BrowseBucketResult,
+    BucketDeletionAssessment,
+    BucketDeletionFingerprint,
     BucketDiskUsageSubdirRow,
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
@@ -110,7 +122,7 @@ from ._contracts import (
     RestoreBucketCommand,
     RestoreBucketResult,
 )
-from ._manifest_digest import compute_manifest_digest
+from ._manifest_digest import compute_bucket_deletion_fingerprint, compute_manifest_digest
 from ._sandbox import (
     SANDBOX_LABEL_PREFIX,
     ArchiveSandboxCommand,
@@ -151,8 +163,11 @@ __all__ = [
     "ArchiveBucketResult",
     "ArchiveSandboxCommand",
     "ArchiveSandboxResult",
+    "AssessBucketDeletionCommand",
     "BrowseBucketCommand",
     "BrowseBucketResult",
+    "BucketDeletionAssessment",
+    "BucketDeletionFingerprint",
     "BucketDiskUsageSubdirRow",
     "BucketMaintenanceService",
     "BucketNamespaceInventoryRow",
@@ -189,6 +204,7 @@ __all__ = [
     "SandboxNotFoundError",
     "SandboxSourceNotFoundError",
     "archive_sandbox",
+    "compute_bucket_deletion_fingerprint",
     "compute_manifest_digest",
     "create_sandbox",
     "discard_sandbox",
