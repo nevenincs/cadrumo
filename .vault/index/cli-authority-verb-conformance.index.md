@@ -41,6 +41,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S33]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S34]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S35]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S36]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -99,6 +100,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S33` - Prove repeated active-session eviction removes current and boolean ContextVar visibility after the existing key zeroization and engine disposal, preserves nested outer-session restoration, and clears an already sealed binding
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S34` - Prove same-object file-provider eviction closes real bucket-routed storage, clears provider and active-session bookkeeping, and permits a clean fresh reopen with the persisted bucket DEK and distinct session and engine handles
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S35` - Compose strong profile logout by closing and evicting the current BucketSession before clearing the active pointer under the existing pointer transaction, then let provider bookkeeping unwind through its owning context and release the pointer sidecar lock without inventing a provider cache or bucket-lock authority
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S36` - Refuse logout under an explicit profile override, prove pointer-sourced strong logout honors lock contention and closes real storage idempotently, and restore single declaration authority to the error registry
 
 ### plan
 
