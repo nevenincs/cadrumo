@@ -13,6 +13,7 @@ import hashlib
 import json
 import shutil
 import sys
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -26,7 +27,6 @@ from dev.packaging.smoke_pip_core import _create_pip_venv
 from dev.packaging.smoke_split_install import (
     _build_data_wheels,
     _build_root_wheel,
-    _head_extract,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -77,6 +77,9 @@ class InstalledCohort:
     data_wheels: tuple[Path, Path]
     cli: Path
     mcp_server: Path
+    source_commit: str
+    artifact_sha256: dict[str, str]
+    evidence_path: Path
     metadata: dict[str, Any]
 
 
@@ -93,6 +96,32 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _text_sha256(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _write_evidence(path: Path, document: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) -> Path:
+    """Extract one immutable source commit rather than resolving a moving HEAD twice."""
+    archive = work_dir / "source-commit.zip"
+    extract_root = work_dir / "source-commit"
+    _run(
+        ["git", "archive", "--format=zip", "-o", str(archive), source_commit],
+        cwd=repo_root,
+    )
+    with zipfile.ZipFile(archive) as bundle:
+        bundle.extractall(extract_root)
+    archive.unlink()
+    return extract_root
+
+
 @pytest.fixture(scope="module")
 def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohort:
     """Build HEAD once, install one cohort once, and inspect installed metadata."""
@@ -100,7 +129,10 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     assert uv is not None, "uv is required to build the installed oracle cohort"
 
     work_dir = tmp_path_factory.mktemp("installed-oracle-cohort")
-    build_root = _head_extract(_REPO_ROOT, work_dir)
+    source_commit_result = _run(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
+    source_commit = source_commit_result.stdout.strip()
+    assert len(source_commit) == 40
+    build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
     root_wheel = _build_root_wheel(build_root, work_dir, uv)
     built_data_wheels = _build_data_wheels(build_root, work_dir, uv)
     assert len(built_data_wheels) == 2
@@ -132,6 +164,26 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     mcp_server = _installed_script(venv, "cadrumo-mcp")
     assert cli.is_file()
     assert mcp_server.is_file()
+    artifact_sha256 = {
+        "cadrumo": _sha256(root_wheel),
+        "cadrumo-data-manuals": _sha256(data_wheels[0]),
+        "cadrumo-data-official": _sha256(data_wheels[1]),
+    }
+    evidence_path = (
+        _REPO_ROOT
+        / "var"
+        / "distribution-install-readiness"
+        / "installed-cohorts"
+        / source_commit
+        / "evidence.json"
+    )
+    _write_evidence(
+        evidence_path,
+        {
+            "artifact_sha256": artifact_sha256,
+            "source_commit": source_commit,
+        },
+    )
     return InstalledCohort(
         work_dir=work_dir,
         venv=venv,
@@ -139,6 +191,9 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         data_wheels=data_wheels,
         cli=cli,
         mcp_server=mcp_server,
+        source_commit=source_commit,
+        artifact_sha256=artifact_sha256,
+        evidence_path=evidence_path,
         metadata=metadata,
     )
 
@@ -173,7 +228,19 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
     for name, artifact in artifacts.items():
         direct_url = metadata["direct_urls"][name]
         assert direct_url["url"] == artifact.resolve().as_uri()
-        assert direct_url["archive_info"]["hashes"]["sha256"] == _sha256(artifact)
+        assert direct_url["archive_info"]["hashes"]["sha256"] == cohort.artifact_sha256[name]
+
+    print(
+        "installed-cohort-identity="
+        + json.dumps(
+            {
+                "artifact_sha256": cohort.artifact_sha256,
+                "evidence_path": str(cohort.evidence_path),
+                "source_commit": cohort.source_commit,
+            },
+            sort_keys=True,
+        ),
+    )
 
 
 def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
@@ -211,4 +278,30 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
     assert cli_evidence.legal_refs == mcp_evidence.legal_refs
     assert cli_evidence.source_refs == mcp_evidence.source_refs
     assert cli_evidence.notice_codes == mcp_evidence.notice_codes
+    expected_cli_sha256 = _text_sha256(str(cohort.cli))
+    assert mcp_evidence.invoked_cli_sha256 == expected_cli_sha256
+    assert mcp_evidence.invoked_cli_sha256_by_command == {
+        "config.profile.create": expected_cli_sha256,
+        "modelo.work.calculate": expected_cli_sha256,
+        "modelo.work.create": expected_cli_sha256,
+        "modelo.work.observations": expected_cli_sha256,
+    }
     assert any(call.command_key == "modelo.work.calculate" for call in mcp_evidence.calls)
+
+    _write_evidence(
+        cohort.evidence_path,
+        {
+            "artifact_sha256": cohort.artifact_sha256,
+            "cli_oracle": cli_evidence.to_jsonable(),
+            "mcp_oracle": mcp_evidence.to_jsonable(),
+            "source_commit": cohort.source_commit,
+        },
+    )
+    retained = json.loads(cohort.evidence_path.read_text(encoding="utf-8"))
+    assert retained["mcp_oracle"]["invoked_cli_sha256"] == expected_cli_sha256
+    assert retained["mcp_oracle"]["invoked_cli_sha256_by_command"] == {
+        "config.profile.create": expected_cli_sha256,
+        "modelo.work.calculate": expected_cli_sha256,
+        "modelo.work.create": expected_cli_sha256,
+        "modelo.work.observations": expected_cli_sha256,
+    }

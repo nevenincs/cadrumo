@@ -797,7 +797,7 @@ search_path = ["src", "stubs"]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src/cadrumo"]
+testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
