@@ -16,6 +16,7 @@ import re
 import shutil
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from decimal import Decimal
 from pathlib import Path
@@ -254,13 +255,17 @@ async def _execute(
 async def _run_protocol(
     server: Path,
     *,
+    server_args: Sequence[str],
+    environment_overrides: Mapping[str, str],
     storage_root: Path,
     work_dir: Path,
     timeout_seconds: float,
 ) -> InstalledMcpEvidence:
     environment = isolated_mcp_environment(storage_root)
+    environment.update(environment_overrides)
     params = StdioServerParameters(
         command=str(server),
+        args=list(server_args),
         env=environment,
         cwd=str(work_dir),
         encoding=_UTF_8,
@@ -524,6 +529,8 @@ def _observed_cli_attestation(storage_root: Path) -> tuple[str, dict[str, str]]:
 def run_installed_mcp_oracle(
     server: Path,
     *,
+    server_args: Sequence[str] = (),
+    environment_overrides: Mapping[str, str] | None = None,
     storage_root: Path,
     work_dir: Path,
     timeout_seconds: float = 180.0,
@@ -538,6 +545,8 @@ def run_installed_mcp_oracle(
     evidence = asyncio.run(
         _run_protocol(
             resolved_server,
+            server_args=server_args,
+            environment_overrides=environment_overrides or {},
             storage_root=storage_root,
             work_dir=resolved_work_dir,
             timeout_seconds=timeout_seconds,
