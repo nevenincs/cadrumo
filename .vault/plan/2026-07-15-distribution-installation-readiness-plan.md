@@ -34,6 +34,7 @@ Create the shared real-behavior oracle and remove ambient checkout and PATH depe
 
 - [x] `W01.P02.S06` - Execute the public CLI tax itinerary against isolated encrypted storage and assert the grounded Modelo 200 result; `dev/packaging/installed_tax_oracle.py`.
 - [x] `W01.P02.S08` - Resolve the CLI subprocess from the MCP server installation instead of ambient PATH; `src/cadrumo/entrypoints/mcp/_server.py`.
+- [x] `W01.P02.S61` - Make MCP identity reads unlock profiles created by sibling CLI subprocesses; `src/cadrumo`.
 - [ ] `W01.P02.S07` - Execute the public MCP protocol itinerary and assert the same grounded Modelo 200 result; `dev/packaging/installed_mcp_oracle.py`.
 - [ ] `W01.P02.S09` - Prove installed MCP execution succeeds with checkout imports and unrelated executable paths removed; `src/cadrumo/entrypoints/mcp/tests/test_installed_cli_resolution.py`.
 - [ ] `W01.P02.S10` - Prove both installed commands originate from one environment and one cohort; `dev/packaging/tests/test_installed_oracles.py`.
