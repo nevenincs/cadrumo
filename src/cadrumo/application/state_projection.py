@@ -85,7 +85,8 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import BindingSourceKind, Period, resolve_active_bucket_id
+from ..core import AuthProviderKind, BindingSourceKind, Period, resolve_active_bucket_id
+from ..core.config import load_settings
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -99,7 +100,11 @@ from ..domain.deadlines import (
     compute_obligation_schedule,
 )
 from ..domain.modelos import WorkUnitState
-from .auth import AuthProviderKind, select_provider
+from .auth import (
+    resolve_active_certificate_credentials_from_state,
+    select_provider,
+)
+from .auth_credentials import ActiveCertificateCredentials
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
 from .workflow import (
@@ -354,7 +359,11 @@ def _certificate_path_resolves(certificate_path: str) -> bool:
         return False
 
 
-def _provider_configured(state: WorkflowState) -> bool:
+def _provider_configured(
+    state: WorkflowState,
+    *,
+    effective_certificate_path: str,
+) -> bool:
     """Return the one canonical ``configured`` flag for the workflow state.
 
     A provider must be selected in workflow state. For the certificate
@@ -368,7 +377,7 @@ def _provider_configured(state: WorkflowState) -> bool:
     if not auth.provider:
         return False
     if auth.provider == AuthProviderKind.CERTIFICATE.value:
-        return _certificate_path_resolves(auth.certificate_path or "")
+        return _certificate_path_resolves(effective_certificate_path)
     return True
 
 
@@ -377,6 +386,7 @@ def _build_auth_readiness(
     *,
     requested_provider: str | None,
     probe_live_backend: bool,
+    credential_bucket_id: str | None,
 ) -> ProjectionAuthReadiness:
     """Compute the auth-readiness sub-record once.
 
@@ -394,7 +404,26 @@ def _build_auth_readiness(
     auth = state.auth
     normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
     provider = normalized_request or auth.provider or ""
-    configured = _provider_configured(state) and (normalized_request is None or auth.provider == normalized_request)
+    effective_certificate_path = auth.certificate_path or ""
+    certificate_credentials: ActiveCertificateCredentials | None = None
+    backend_settings = None
+    if provider == AuthProviderKind.CERTIFICATE.value:
+        backend_settings = load_settings()
+        certificate_credentials = resolve_active_certificate_credentials_from_state(
+            state,
+            settings=backend_settings,
+            bucket_id=credential_bucket_id,
+            resolve_secret=probe_live_backend and credential_bucket_id is not None,
+        )
+        effective_certificate_path = (
+            str(certificate_credentials.certificate_path)
+            if certificate_credentials.certificate_path is not None
+            else ""
+        )
+    configured = _provider_configured(
+        state,
+        effective_certificate_path=effective_certificate_path,
+    ) and (normalized_request is None or auth.provider == normalized_request)
 
     available = configured and bool(auth.authenticated_at)
     health_summary = ""
@@ -405,28 +434,17 @@ def _build_auth_readiness(
                 "auth backend probe skipped for unknown provider; reporting unavailable",
             )
             available = False
+        elif credential_bucket_id is None:
+            available = False
         else:
             try:
-                # The certificate path persisted by ``auth configure`` lives in
-                # workflow state; the backend reads from ``Settings``. Carry the
-                # workflow-state path into the Settings instance the backend
-                # sees so ``configure`` and ``status`` cannot disagree on
-                # whether the certificate is configured.
-                # `load_settings()` honours `override_settings`; bare `Settings()`
-                # bypasses the context-var and shows the project default cert
-                # path even when a test overrides it.
-                from ..core.config import load_settings as _load_settings
-
-                backend_settings = _load_settings()
-                if (
-                    provider == AuthProviderKind.CERTIFICATE.value
-                    and auth.certificate_path
-                    and backend_settings.cadrumo_certificate_path is None
-                ):
-                    backend_settings = backend_settings.model_copy(
-                        update={"cadrumo_certificate_path": Path(auth.certificate_path)},
-                    )
-                backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
+                if backend_settings is None:
+                    backend_settings = load_settings()
+                backend = select_provider(
+                    AuthProviderKind(provider),
+                    settings=backend_settings,
+                    certificate_credentials=certificate_credentials,
+                )
                 description = backend.describe()
                 available = description.available
                 health_summary = description.health_summary or ""
@@ -459,7 +477,7 @@ def _build_auth_readiness(
         # G1: the certificate path is a certificate-provider field; a
         # non-certificate provider must never carry a stale path left
         # over from an earlier certificate configuration.
-        certificate_path=(auth.certificate_path or "" if provider == AuthProviderKind.CERTIFICATE.value else ""),
+        certificate_path=(effective_certificate_path if provider == AuthProviderKind.CERTIFICATE.value else ""),
     )
 
 
@@ -1078,7 +1096,9 @@ def build_operator_state_projection(
             :func:`workflow_state_repository`; when ``None`` and no
             profile is active, an empty :class:`WorkflowState` is used
             (opening the bucket database would require a session that
-            does not exist yet).
+            does not exist yet). A caller-supplied state has no storage-route
+            provenance, so live backend probing is suppressed rather than
+            combining that snapshot with credentials from the current route.
         requested_provider: Optional provider id the caller scoped the
             auth readiness to. ``None`` reports the configured provider.
         probe_live_backend: When set, the live auth backend is queried
@@ -1109,10 +1129,13 @@ def build_operator_state_projection(
 
     if state is not None:
         resolved_state = state
+        credential_bucket_id = None
     elif not has_active_profile:
         resolved_state = WorkflowState()
+        credential_bucket_id = None
     else:
         resolved_state = workflow_state_repository().load()
+        credential_bucket_id = active_bucket_id
 
     profile_health = assess_active_profile_health(resolved_state)
 
@@ -1125,6 +1148,7 @@ def build_operator_state_projection(
         resolved_state,
         requested_provider=requested_provider,
         probe_live_backend=probe_live_backend,
+        credential_bucket_id=credential_bucket_id,
     )
     active_profile = _build_active_profile(profile_health)
 

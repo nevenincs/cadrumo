@@ -22,7 +22,7 @@ selector, or backend factory: secure storage is the single authority for a
 named certificate secret, and the master-key OS-keyring custody backend (a
 separate concern) is untouched by this module.
 
-Never store a resolved secret in :class:`~application.auth.AuthState` or
+Never store a resolved secret in :class:`~application.workflow.AuthState` or
 any other persisted workflow-state record — the secret lives ONLY inside
 the backend; workflow state at most records which named sources exist,
 never their passphrases (``sensitive-financial-data-secure-storage-only``).
@@ -40,7 +40,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import SecretStr
 
@@ -53,6 +53,9 @@ from ...adapters.persistence.storage import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
+
+if TYPE_CHECKING:
+    from ...core.config import Settings
 
 _SECRET_ROTATION_HORIZON = timedelta(days=365 * 10)
 """Effectively unbounded expiry for a rotation-driven, operator-managed secret.
@@ -84,7 +87,7 @@ class CertificateSecretBackend(Protocol):
 
     Every method is keyed by the certificate source's registered
     ``name`` (see
-    :attr:`~application.auth.CertificateSourceRecord.name`), scoping the
+    :attr:`~application.workflow.CertificateSourceRecord.name`), scoping the
     secret to that one source. The sole implementation
     (:class:`~application.auth.SecureStorageCertificateSecretBackend`)
     scopes storage to the active profile bucket so two profiles never share
@@ -144,7 +147,13 @@ class SecureStorageCertificateSecretBackend:
     further configuration, and the only one there is.
     """
 
-    def __init__(self, *, bucket_id: str, store: SecretStore | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        bucket_id: str,
+        store: SecretStore | None = None,
+        settings: Settings | None = None,
+    ) -> None:
         """Bind the backend to one profile bucket and an optional injected store.
 
         Args:
@@ -152,17 +161,20 @@ class SecureStorageCertificateSecretBackend:
                 backend reads or writes.
             store: Optional :class:`~adapters.persistence.storage.SecretStore`
                 override. Tests inject an isolated store; production
-                falls back to the process-wide singleton via
+                falls back to the canonical route-aware factory via
                 :func:`~adapters.persistence.storage.get_secret_store`.
+            settings: Optional route Settings forwarded to the canonical
+                secret-store factory.
         """
         self._bucket_id = bucket_id
         self._store = store
+        self._settings = settings
 
     def _resolved_store(self) -> SecretStore:
         if self._store is not None:
             return self._store
 
-        return get_secret_store()
+        return get_secret_store(settings=self._settings)
 
     def get(self, name: str) -> SecretStr | None:
         """Return the persisted passphrase for ``name``, or ``None`` when absent."""

@@ -29,13 +29,19 @@ See Also:
 from __future__ import annotations
 
 import secrets
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import date
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, close_active_bucket_session
-from ...adapters.persistence.storage.bucket import bucket_paths, keystore_path
+from ...adapters.persistence.storage.bucket import (
+    BucketValidationError,
+    acquire_lock,
+    bucket_paths,
+    keystore_path,
+    release_lock,
+)
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core import BucketPointer
 from ...core.config import load_settings
@@ -246,6 +252,26 @@ def profile_storage_session(profile_id: str):
         yield profile_id
 
 
+@contextmanager
+def _profile_mutation_span(profile_id: str) -> Generator[None]:
+    """Hold the canonical bucket lock for one application mutation."""
+    settings = load_settings()
+    paths = bucket_paths(settings.cadrumo_local_storage_root, profile_id)
+    try:
+        acquire_lock(paths, wait_seconds=settings.cadrumo_file_lock_timeout_s)
+    except BucketValidationError as exc:
+        if exc.context is None or exc.context.get("reason") != "bucket_dir_missing":
+            raise
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.no_active_profile_selected",
+            context={"profile": profile_id},
+        ) from exc
+    try:
+        yield
+    finally:
+        release_lock(paths)
+
+
 class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     """Raised when ``profile create`` targets a name that already has a manifest.
 
@@ -395,7 +421,11 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
     from ...core import resolve_active_bucket_id
     from ..workflow import workflow_state_repository
 
-    with active_profile_pointer_transaction(), profile_storage_session(profile_id):
+    with (
+        active_profile_pointer_transaction(),
+        _profile_mutation_span(profile_id),
+        profile_storage_session(profile_id),
+    ):
         workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
         _append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
 
@@ -406,7 +436,11 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     Returns the deleted :class:`~cadrumo.domain.user_profile.UserProfileRecord`
     from :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
     """
-    with active_profile_pointer_transaction(), profile_storage_session(profile_id):
+    with (
+        active_profile_pointer_transaction(),
+        _profile_mutation_span(profile_id),
+        profile_storage_session(profile_id),
+    ):
         aggregate = ProfileRepository().delete(profile_id)
     return aggregate.record
 
@@ -418,7 +452,7 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
     Returns the reactivated :class:`~cadrumo.domain.user_profile.UserProfileRecord`
     from :meth:`~cadrumo.application.user_profile.ProfileRepository.reactivate`.
     """
-    with profile_storage_session(profile_id):
+    with _profile_mutation_span(profile_id), profile_storage_session(profile_id):
         aggregate = ProfileRepository().reactivate(profile_id)
     return aggregate.record
 
@@ -581,7 +615,7 @@ def select_profile(
     solely in
     :meth:`~cadrumo.application.user_profile.ProfileRepository.select`.
     """
-    with active_profile_pointer_transaction():
+    with active_profile_pointer_transaction(), _profile_mutation_span(profile_id):
         repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
         repository.select(profile_id)  # raises ProfileNotFoundError if missing
         from ..workflow import utc_now
@@ -611,17 +645,18 @@ def set_active_field(
         The updated :class:`~cadrumo.application.workflow.WorkflowState`.
     """
     profile_id = _require_active(state)
-    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    service.edit_field(
-        EditProfileFieldCommand(
-            profile_id=profile_id,
-            path=fact.path,
-            value=fact.value,
-            valid_from=fact.valid_from,
-            valid_to=fact.valid_to,
-            source=fact.source,
-        ),
-    )
+    with _profile_mutation_span(profile_id):
+        service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+        service.edit_field(
+            EditProfileFieldCommand(
+                profile_id=profile_id,
+                path=fact.path,
+                value=fact.value,
+                valid_from=fact.valid_from,
+                valid_to=fact.valid_to,
+                source=fact.source,
+            ),
+        )
     action = "profile.values.cleared" if fact.value is None else "profile.values.updated"
     return _append_workflow_event(state, action=action, bucket_id=profile_id, object_id=fact.path)
 
@@ -674,12 +709,18 @@ def remove_active_profile(
     """
     with active_profile_pointer_transaction():
         profile_id = _require_active(state)
-        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-        repository.delete(profile_id)
-        from ..workflow import utc_now
+        with _profile_mutation_span(profile_id):
+            repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+            repository.delete(profile_id)
+            from ..workflow import utc_now
 
-        updated = state.model_copy(update={"updated_at": utc_now()})
-        return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
+            updated = state.model_copy(update={"updated_at": utc_now()})
+            return _append_workflow_event(
+                updated,
+                action="profile.tombstoned",
+                bucket_id=profile_id,
+                object_id=profile_id,
+            )
 
 
 def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
@@ -757,8 +798,9 @@ def rename_profile(
     :class:`~cadrumo.domain.user_profile.UserProfileRecord` after the label
     change is persisted.
     """
-    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    aggregate = repository.rename(profile_id, new_label=new_label)
+    with _profile_mutation_span(profile_id):
+        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        aggregate = repository.rename(profile_id, new_label=new_label)
     return aggregate.record
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -10,8 +11,15 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage import has_active_bucket_session
+from ....adapters.persistence.storage.bucket import (
+    BucketBusyError,
+    acquire_lock,
+    bucket_paths,
+    release_lock,
+)
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....application.wizard import WIZARD_FLOWS
+from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from ....domain.contribuyente import required_profile_keys
@@ -23,7 +31,6 @@ from ...user_profile import (
 )
 from ...workflow import workflow_state_repository
 from .. import (
-    AuthProviderKind,
     load_persisted_session,
     logout_operator_auth,
     register_operator_certificate_source,
@@ -34,6 +41,7 @@ from .. import (
 from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
 from .._operator import configure_operator_auth, reset_operator_auth
 from .._operator_results import AuthOperationScopeConflictError, AuthProviderNotConfiguredError
+from .._operator_scope import auth_mutation_span
 from .._sessions import storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -49,6 +57,28 @@ def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
         workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=profile_id))
         if provider is not None:
             configure_operator_auth(provider)
+
+
+def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile(_PROFILE_A)
+        settings = load_settings().model_copy(
+            update={"cadrumo_file_lock_timeout_s": 0.05},
+        )
+        paths = bucket_paths(settings.cadrumo_local_storage_root, _PROFILE_A)
+
+        def attempt_auth_mutation() -> None:
+            with auth_mutation_span(settings=settings, bucket_id=_PROFILE_A):
+                pass
+
+        acquire_lock(paths)
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                blocked = executor.submit(attempt_auth_mutation)
+                with pytest.raises(BucketBusyError):
+                    blocked.result(timeout=5)
+        finally:
+            release_lock(paths)
 
 
 def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> None:

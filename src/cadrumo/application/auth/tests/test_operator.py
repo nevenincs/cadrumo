@@ -13,7 +13,7 @@ from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....core import Period
+from ....core import AuthProviderKind, Period
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventType
@@ -23,7 +23,6 @@ from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile import profile_create_storage_span, register_minimal_profile
 from ...workflow import workflow_state_repository
-from .. import AuthProviderKind
 from .._operator import build_live_auth_preflight_report, configure_operator_auth, inspect_operator_auth
 from .._operator import test_operator_auth as run_operator_auth_test
 from .._sessions import (
@@ -477,11 +476,13 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
-    settings = Settings(
-        cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
-        cadrumo_clave_movil_nie_soporte=SecretStr("support-present"),
-        cadrumo_clave_prefer_non_qr=True,
-        cadrumo_clave_movil_timeout_ms=120_000,
+    settings = load_settings().model_copy(
+        update={
+            "cadrumo_clave_movil_dni_nie": SecretStr("12345678Z"),
+            "cadrumo_clave_movil_nie_soporte": SecretStr("support-present"),
+            "cadrumo_clave_prefer_non_qr": True,
+            "cadrumo_clave_movil_timeout_ms": 120_000,
+        },
     )
 
     report = build_live_auth_preflight_report("clave_movil", settings=settings)

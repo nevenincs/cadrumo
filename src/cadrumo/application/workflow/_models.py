@@ -22,6 +22,11 @@ defined in the shared leaf module
 dependency that a shared leaf module resolves without either package
 importing the other.
 
+Workflow-owned auth field types are similarly defined in
+:mod:`cadrumo.application._workflow_auth_models` and exported publicly by
+:mod:`cadrumo.application.workflow`. Auth services consume that shared leaf;
+they do not own or re-export the persisted records.
+
 See Also:
     :class:`~cadrumo.application.workflow.WorkflowEngine`
         Produces :class:`WorkflowResult` records and advances
@@ -37,13 +42,6 @@ See Also:
         Drives calculation revisions through the workflow and persists the
         resulting run record before verification or local filing state changes.
 
-Import ordering note
---------------------
-The ``SiteHealthStatus`` and ``ModeloDeadline`` imports are placed
-*after* :class:`WorkflowState` and related state models so that
-:mod:`cadrumo.application.auth._actions` (which imports :class:`WorkflowState`
-from this partially-initialised module during the browser-adapter import
-chain) finds those names already present.
 """
 
 from __future__ import annotations
@@ -70,12 +68,12 @@ from ...core import (
 )
 from ...core.config import override_settings
 from ...core.logging import get_logger
+from .._workflow_auth_models import AuthState
 from .._workflow_review_models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
     WorkflowEvent,
 )
-from ..auth import AuthState
 from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
 from ._profile_bucket_scan import resolve_profile_bucket
 from ._utils import utc_now

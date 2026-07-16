@@ -13,8 +13,8 @@ See Also:
         Canonical readiness projection consumed by status and test results.
     :class:`application.workflow.WorkflowState`
         Encrypted state envelope carrying the persisted
-        :class:`application.auth.AuthState`.
-    :class:`application.auth.AuthProviderDescription`
+        :class:`application.workflow.AuthState`.
+    :class:`core.AuthProviderDescription`
         Provider-readiness description that feeds provider catalogue output.
     :class:`application.auth.AuthenticatedAeatSessionResult`
         Live-session result consumed by :class:`AuthLoginResult`.
@@ -61,7 +61,7 @@ class AuthConfigureResult(BaseModel):
     """Result of configuring an auth provider in workflow state.
 
     The provider selection has already been written to
-    :class:`application.auth.AuthState` inside
+    :class:`application.workflow.AuthState` inside
     :class:`application.workflow.WorkflowState` when this result is
     returned.
 
@@ -185,7 +185,6 @@ class LiveAuthPreflightReport(BaseModel):
     nie_soporte_configured: bool | None = None
     certificate_path_configured: bool | None = None
     certificate_file_present: bool | None = None
-    certificate_backend: str = ""
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
     persisted_session_state: str = ""
@@ -260,7 +259,7 @@ class CertificateSourceNotFoundError(AeatError, KeyError):
 class CertificateSourcePayload(BaseModel):
     """One registered certificate source, operator-facing.
 
-    Projects :class:`application.auth.CertificateSourceRecord` for the
+    Projects :class:`application.workflow.CertificateSourceRecord` for the
     ``certificate register`` / ``certificate list`` verbs. Never carries
     certificate passwords or key material — only the filesystem
     reference already stored in workflow state.
@@ -302,7 +301,7 @@ class CertificateSourceCheckEntry(BaseModel):
     :func:`application.auth.probe_provider_configuration` runs for the
     single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
     ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
-    source in :class:`application.auth.AuthState.certificate_sources`
+    source in :class:`application.workflow.AuthState.certificate_sources`
     rather than only the active ``certificate_path``. Never carries
     certificate passwords or key material.
 

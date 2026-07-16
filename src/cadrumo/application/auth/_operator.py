@@ -14,8 +14,8 @@ producer, then narrow its
 operator-facing result records.
 
 See Also:
-    :class:`application.auth.AuthState`
-        Persisted local auth selection embedded in workflow state.
+    :class:`application.workflow.AuthState`
+        Workflow-owned persisted authentication readiness.
     :class:`application.auth.AuthStatusResult`
         CLI readiness result emitted by ``auth status``.
     :class:`application.auth.AuthTestResult`
@@ -28,16 +28,21 @@ See Also:
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings, unwrap_optional_secret
 from ...core.i18n import tr
 from ...core.time import now
-from . import AuthProviderKind
+from .._workflow_auth_models import (
+    AuthCleanupCertificateSource,
+    AuthCleanupIntent,
+    AuthCleanupOperationKind,
+    AuthState,
+)
+from ..auth_credentials import ActiveCertificateCredentials
 from ._acquisition_lock import (
     AuthAcquisitionLockState,
     clear_auth_acquisition_lock,
@@ -45,12 +50,8 @@ from ._acquisition_lock import (
 )
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
-from ._models import (
-    AuthCleanupCertificateSource,
-    AuthCleanupIntent,
-    AuthCleanupOperationKind,
-    AuthState,
-)
+from ._certificate_secret_backend import SecureStorageCertificateSecretBackend
+from ._credential_resolution import resolve_active_certificate_credentials
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from ._operator_probes import (
@@ -68,6 +69,7 @@ from ._operator_results import (
     AuthLoginPreconditionError,
     AuthLoginResult,
     AuthLogoutResult,
+    AuthOperationScopeConflictError,
     AuthProviderReservedError,
     AuthProvidersReport,
     AuthResetResult,
@@ -233,14 +235,12 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
 
     from ..state_projection import build_operator_state_projection
 
-    scope_kind = AuthProviderKind.CERTIFICATE if provider == AuthProviderKind.CERTIFICATE.value else None
-    with _active_certificate_credential_scope(load_settings(), scope_kind):
-        projection = build_operator_state_projection(
-            requested_provider=provider,
-            probe_live_backend=True,
-            include_workspace_summary=False,
-            include_pending_obligations=False,
-        )
+    projection = build_operator_state_projection(
+        requested_provider=provider,
+        probe_live_backend=True,
+        include_workspace_summary=False,
+        include_pending_obligations=False,
+    )
     return _auth_status_from_projection(projection)
 
 
@@ -444,74 +444,46 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
     ``auth status`` reports no provider at all. Both surfaces report the
     same "no provider configured" state on the same state.
     """
-    with _auth_operator_settings_scope(settings) as resolved_settings:
+    if settings is not None:
+        with _active_profile_storage_span(settings):
+            return test_operator_auth(provider, settings=None)
+
+    with _auth_operator_settings_scope(None) as resolved_settings:
         provider_kind = _provider_kind_or_none(provider)
         requested_provider = provider_kind.value if provider_kind is not None else None
 
         from ..state_projection import build_operator_state_projection
 
-        with _active_certificate_credential_scope(resolved_settings, provider_kind) as scoped_settings:
-            projection = build_operator_state_projection(
-                requested_provider=requested_provider,
-                probe_live_backend=True,
-                include_workspace_summary=False,
-                include_pending_obligations=False,
-            )
-            status = _auth_status_from_projection(projection)
-            session_probe = _probe_local_session(status.provider, settings=scoped_settings)
-            provider_probe = _probe_configured_provider(
-                status.provider,
-                status.certificate_path,
-                settings=scoped_settings,
-            )
-            return AuthTestResult(
-                **status.model_dump(),
-                persisted_session_present=session_probe.present,
-                persisted_session_expired=session_probe.expired,
-                persisted_session_state=session_probe.state,
-                probe_summary=provider_probe.summary or session_probe.summary,
-                probe_result=provider_probe.result,
-            )
-
-
-@contextmanager
-def _active_certificate_credential_scope(
-    settings: Settings,
-    provider_kind: AuthProviderKind | None,
-) -> Iterator[Settings]:
-    """Yield ``settings`` scoped to the active certificate credential.
-
-    For the certificate provider this resolves the selected certificate
-    source's path and its secure-storage passphrase — or the global
-    single-certificate settings when no named source is selected — through
-    :func:`application.auth.resolve_active_certificate_credentials`, and
-    overrides ``cadrumo_certificate_path`` /
-    ``cadrumo_certificate_password_secret`` /
-    ``cadrumo_certificate_friendly_name`` so ``auth status``, ``auth test``,
-    and ``auth login`` all consume the same resolved certificate bytes. For
-    any other provider, or when there is no certificate credential to apply,
-    it is a no-op, so a single-certificate operator is never regressed.
-    """
-    if provider_kind is not AuthProviderKind.CERTIFICATE:
-        yield settings
-        return
-
-    from ...core.config import override_settings
-    from ._certificate_sources_operator import resolve_active_certificate_credentials
-
-    credentials = resolve_active_certificate_credentials(settings=settings)
-    overrides: dict[str, object] = {}
-    if credentials.certificate_path is not None:
-        overrides["cadrumo_certificate_path"] = credentials.certificate_path
-    if credentials.password is not None:
-        overrides["cadrumo_certificate_password_secret"] = credentials.password
-    if credentials.friendly_name:
-        overrides["cadrumo_certificate_friendly_name"] = credentials.friendly_name
-    if not overrides:
-        yield settings
-        return
-    with override_settings(**overrides) as scoped:
-        yield scoped
+        projection = build_operator_state_projection(
+            requested_provider=requested_provider,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+        status = _auth_status_from_projection(projection)
+        certificate_credentials = None
+        try:
+            reported_provider_kind = AuthProviderKind(status.provider)
+        except ValueError:
+            pass
+        else:
+            if reported_provider_kind is AuthProviderKind.CERTIFICATE:
+                certificate_credentials = resolve_active_certificate_credentials(settings=resolved_settings)
+        session_probe = _probe_local_session(status.provider, settings=resolved_settings)
+        provider_probe = _probe_configured_provider(
+            status.provider,
+            status.certificate_path,
+            settings=resolved_settings,
+            certificate_credentials=certificate_credentials,
+        )
+        return AuthTestResult(
+            **status.model_dump(),
+            persisted_session_present=session_probe.present,
+            persisted_session_expired=session_probe.expired,
+            persisted_session_state=session_probe.state,
+            probe_summary=provider_probe.summary or session_probe.summary,
+            probe_result=provider_probe.result,
+        )
 
 
 def build_live_auth_preflight_report(
@@ -532,6 +504,10 @@ def build_live_auth_preflight_report(
         :func:`test_operator_auth`
             Shared provider-readiness probe that supplies the preflight base.
     """
+    if settings is not None:
+        with _active_profile_storage_span(settings):
+            return build_live_auth_preflight_report(provider, settings=None)
+
     resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
@@ -539,6 +515,11 @@ def build_live_auth_preflight_report(
             provider_kind = _configured_or_default_provider(resolved_settings)
         except ValueError:
             provider_kind = None
+    certificate_credentials = (
+        resolve_active_certificate_credentials(settings=resolved_settings)
+        if provider_kind is AuthProviderKind.CERTIFICATE
+        else None
+    )
     probe = test_operator_auth(
         provider_kind.value if provider_kind is not None else provider,
         settings=resolved_settings,
@@ -547,7 +528,11 @@ def build_live_auth_preflight_report(
         provider_kind,
         settings=resolved_settings,
     )
-    certificate_path = resolved_settings.cadrumo_certificate_path
+    certificate_path = (
+        certificate_credentials.certificate_path
+        if certificate_credentials is not None
+        else resolved_settings.cadrumo_certificate_path
+    )
     return LiveAuthPreflightReport(
         provider=probe.provider,
         configured=probe.configured,
@@ -577,7 +562,6 @@ def build_live_auth_preflight_report(
         certificate_file_present=bool(
             certificate_path is not None and certificate_path.is_file(),
         ),
-        certificate_backend=resolved_settings.cadrumo_certificate_backend.value,
         persisted_session_present=probe.persisted_session_present,
         persisted_session_expired=probe.persisted_session_expired,
         persisted_session_state=probe.persisted_session_state,
@@ -590,7 +574,6 @@ async def login_operator_auth(
     *,
     fresh: bool = False,
     reset_lock: bool = False,
-    target_url: str | None = None,
     settings: Settings | None = None,
     pytest_current_test: str | None = None,
 ) -> AuthLoginResult:
@@ -610,12 +593,11 @@ async def login_operator_auth(
             result consumed here.
     """
     if settings is not None:
-        with _auth_operator_settings_scope(settings):
+        with _active_profile_storage_span(settings):
             return await login_operator_auth(
                 provider,
                 fresh=fresh,
                 reset_lock=reset_lock,
-                target_url=target_url,
                 settings=None,
                 pytest_current_test=pytest_current_test,
             )
@@ -640,11 +622,21 @@ async def login_operator_auth(
             context={"provider": provider_kind.value},
         ) from exc
 
+    certificate_credentials = (
+        resolve_active_certificate_credentials(settings=resolved_settings)
+        if provider_kind is AuthProviderKind.CERTIFICATE
+        else None
+    )
+
     # Provider-specific local-readiness preconditions. A certificate
     # provider with no path / a missing file / an unreadable bundle
     # cannot authenticate; refuse here with prose, rather than letting
     # the raw bundle-load exception escape.
-    _assert_login_precondition(resolved_settings, provider_kind)
+    _assert_login_precondition(
+        resolved_settings,
+        provider_kind,
+        certificate_credentials=certificate_credentials,
+    )
 
     from ...domain.buckets import BucketEventType
     from ..workflow import workflow_state_repository
@@ -657,15 +649,14 @@ async def login_operator_auth(
         with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
             repository = workflow_state_repository()
             _assert_auth_recovery_not_in_progress(repository.load())
-            with _active_certificate_credential_scope(resolved_settings, provider_kind) as session_settings:
-                result = await ensure_authenticated_aeat_session(
-                    session_settings,
-                    kind=provider_kind,
-                    fresh=fresh,
-                    reset_lock=reset_lock,
-                    operation="operator-auth-login",
-                    target_url=target_url,
-                )
+            result = await ensure_authenticated_aeat_session(
+                resolved_settings,
+                kind=provider_kind,
+                certificate_credentials=certificate_credentials,
+                fresh=fresh,
+                reset_lock=reset_lock,
+                operation="operator-auth-login",
+            )
 
             occurred_at = now()
             repository.update_with_bucket_events(
@@ -733,7 +724,7 @@ def logout_operator_auth(
 ) -> AuthLogoutResult:
     """Terminate persisted sessions while preserving provider configuration."""
     if settings is not None:
-        with _auth_operator_settings_scope(settings):
+        with _active_profile_storage_span(settings, target_bucket_id=target_bucket_id):
             return logout_operator_auth(
                 provider=provider,
                 all_providers=all_providers,
@@ -883,7 +874,7 @@ def reset_operator_auth(
 ) -> AuthResetResult:
     """Remove auth custody through one durable, resumable reset operation."""
     if settings is not None:
-        with _auth_operator_settings_scope(settings):
+        with _active_profile_storage_span(settings, target_bucket_id=target_bucket_id):
             return reset_operator_auth(
                 provider=provider,
                 all_providers=all_providers,
@@ -1069,8 +1060,6 @@ def _clear_scoped_locks(
 
 
 def _delete_certificate_source_secrets(bucket_id: str, names: tuple[str, ...]) -> int:
-    from ._certificate_secret_backend import SecureStorageCertificateSecretBackend
-
     backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
     return sum(backend.remove(name) for name in names)
 
@@ -1090,8 +1079,6 @@ def _assert_logout_request_matches(
     else:
         matches = not intent.all_providers
     if not matches:
-        from ._operator_results import AuthOperationScopeConflictError
-
         raise AuthOperationScopeConflictError(
             translated_message="application.auth.operator.errors.scope_conflict",
         )
@@ -1124,8 +1111,6 @@ def _assert_reset_request_matches(
     else:
         matches = not intent.all_providers
     if not matches:
-        from ._operator_results import AuthOperationScopeConflictError
-
         raise AuthOperationScopeConflictError(
             translated_message="application.auth.operator.errors.scope_conflict",
         )
@@ -1347,27 +1332,28 @@ def _auth_cleanup_bucket_events(
 
 
 def _certificate_source_secret_exists(bucket_id: str, name: str) -> bool:
-    from ._certificate_secret_backend import SecureStorageCertificateSecretBackend
-
     return SecureStorageCertificateSecretBackend(bucket_id=bucket_id).get(name) is not None
 
 
-def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKind) -> None:
+def _assert_login_precondition(
+    settings: Settings,
+    provider_kind: AuthProviderKind,
+    *,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
+) -> None:
     """Refuse login when a provider's local readiness is unmet.
 
     Raises :class:`AuthLoginPreconditionError` with localised refusal keys so
-    the operator never sees raw env-var or class names. Reads the workflow-state
-    certificate path when
-    Settings has none, mirroring how :func:`inspect_operator_auth` and
-    the state projection cross the env-var / workflow-state seam.
+    the operator never sees raw env-var or class names. The caller supplies
+    the application-owned provider Settings projection, so this check never
+    reloads or reconstructs certificate credentials independently.
     """
     if provider_kind is AuthProviderKind.CERTIFICATE:
-        cert_path = settings.cadrumo_certificate_path
-        if cert_path is None:
-            from ..workflow import workflow_state_repository
-
-            recorded = workflow_state_repository().load().auth.certificate_path or ""
-            cert_path = Path(recorded) if recorded else None
+        cert_path = (
+            certificate_credentials.certificate_path
+            if certificate_credentials is not None
+            else None
+        )
         if cert_path is None:
             raise AuthLoginPreconditionError(
                 translated_message="application.auth.operator.login.refused_certificate_path_unset",
@@ -1410,7 +1396,7 @@ def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
     if state.auth.provider:
         return AuthProviderKind(state.auth.provider)
     if settings.cadrumo_auth_provider is not None:
-        return AuthProviderKind(settings.cadrumo_auth_provider.value)
+        return settings.cadrumo_auth_provider
     return AuthProviderKind.CERTIFICATE
 
 

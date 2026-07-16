@@ -45,10 +45,7 @@ def _profile_facts(
     }
     if overrides:
         values.update(overrides)
-    return tuple(
-        UserProfileFact.model_validate({"path": path, "value": value})
-        for path, value in values.items()
-    )
+    return tuple(UserProfileFact.model_validate({"path": path, "value": value}) for path, value in values.items())
 
 
 def _create_profile(
@@ -154,16 +151,13 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
     tmp_path: Path,
 ) -> None:
     from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...core import pointer_path
+    from ...core import AuthProviderKind, pointer_path
     from ...core.config import load_settings
     from .._config_reset_models import ConfigResetOperationStatus, ConfigResetTargetPhase
     from .._config_reset_repository import ConfigResetJournalRepository
-    from ..auth import AuthProviderKind
-    from ..auth._acquisition_lock import (
+    from ..auth import (
         acquire_auth_acquisition_lock,
         auth_acquisition_lock_path,
-    )
-    from ..auth._certificate_sources_operator import (
         register_operator_certificate_source,
         set_operator_certificate_source_secret,
     )
@@ -171,6 +165,10 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
     from ..user_profile import delete_profile_with_lifecycle_span
 
     with _isolated_reset_root(tmp_path) as root:
+        root.mkdir(parents=True, exist_ok=True)
+        cold_default_database = root / "cadrumo.db"
+        cold_default_bytes = b"cold-default-database-is-not-a-profile-bucket"
+        cold_default_database.write_bytes(cold_default_bytes)
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
         delete_profile_with_lifecycle_span(_PROFILE_B_ID)
@@ -213,6 +211,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
             _PROFILE_B_ID,
             _DANGLING_ID,
         )
+        assert all(target.bucket_id != "cadrumo.db" for target in operation.targets)
         assert operation.pointer_snapshot.present is True
         assert operation.pointer_snapshot.bucket_id == _DANGLING_ID
         assert operation.pointer_snapshot.content_sha256 is not None
@@ -235,6 +234,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
         assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
         assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
+        assert cold_default_database.read_bytes() == cold_default_bytes
         assert tuple(path for path in secret_blob_root.rglob("*") if path.is_file()) == ()
         assert ConfigResetJournalRepository().load(operation.operation_id) == operation
 

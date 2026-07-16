@@ -38,11 +38,18 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, SecretStr
+from pydantic import SecretStr
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
+from ...core.errors import AeatError
 from ...core.time import now
+from .._workflow_auth_models import (
+    CertificateSecretMutationEventKind,
+    CertificateSecretMutationIntent,
+)
+from ..auth_credentials import (
+    ActiveCertificateCredentials,
+)
 from ._certificate_secret_backend import (
     SECURE_STORAGE_BACKEND_LABEL,
     SecureStorageCertificateSecretBackend,
@@ -60,9 +67,10 @@ from ._certificate_sources import (
 from ._certificate_sources import (
     active_certificate_source as _active_certificate_source,
 )
-from ._models import (
-    CertificateSecretMutationEventKind,
-    CertificateSecretMutationIntent,
+from ._credential_resolution import (
+    resolve_active_certificate_credentials,
+    resolve_active_certificate_credentials_from_state,
+    resolve_certificate_source_secret,
 )
 from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
 from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
@@ -88,43 +96,6 @@ from ._operator_scope import (
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEvent, BucketEventType
     from ..workflow import WorkflowState, WorkflowStateRepository
-
-
-class ActiveCertificateCredentials(BaseModel):
-    """The certificate path + passphrase the certificate provider must use.
-
-    The single typed credential bundle produced by
-    :func:`~application.auth.resolve_active_certificate_credentials` and
-    consumed by ``certificate check``, ``auth status`` / ``auth test``,
-    and ``auth login`` so every surface resolves the same certificate
-    bytes and the same secret. The passphrase (when present) comes only
-    from encrypted secure storage for a named source, or from the global
-    single-certificate settings when no named source is selected; it is
-    never persisted to workflow state.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    certificate_path: Path | None = None
-    password: SecretStr | None = None
-    friendly_name: str | None = None
-    source_name: str | None = None
-
-
-def _active_bucket_id_for_secret_resolution() -> str | None:
-    """Return the active bucket id for per-source secret resolution, or ``None``.
-
-    Unlike :func:`~application.auth._certificate_sources_operator._gate_active_bucket`, this never raises: per-source
-    secret resolution is a best-effort enhancement to a pure-read probe
-    (:func:`~application.auth.check_operator_certificate_sources`), not a mutation gated on
-    a healthy active profile. An absent or dangling profile yields no
-    bucket id. A selected named source then fails closed with no secret;
-    the global single-certificate credential remains eligible only when
-    no named source is selected.
-    """
-    from ...core import resolve_active_bucket_id
-
-    return resolve_active_bucket_id()
 
 
 def _gate_active_bucket() -> str:
@@ -394,13 +365,12 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     as ``None`` so the probe fails closed; a named source never inherits
     the global
     :attr:`~core.config.Settings.cadrumo_certificate_password_secret`.
-    The global credential remains the legacy single-certificate contract
-    only when no named source is selected and therefore is never part of
-    this registry-wide check.
+    The unnamed Settings credential remains the supported single-certificate
+    contract only when no named source is selected and therefore is never part
+    of this registry-wide check.
 
-    This is a pure read: it does not require an active profile bucket
-    beyond what loading workflow state needs, and it never mutates
-    state or emits a bucket event.
+    This is a pure read: it opens the explicit or active profile's storage
+    session when needed, but it never mutates state or emits a bucket event.
 
     Returns:
         A :class:`~application.auth.CertificateSourceCheckReport` with one
@@ -411,130 +381,49 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     from ..workflow import workflow_state_repository
 
     resolved_settings = settings or load_settings()
-    state = workflow_state_repository().load()
-    active_record = _active_certificate_source(state)
-    active_name = active_record.name if active_record is not None else None
-    sources = list_certificate_sources(state)
-    active_bucket_id = _active_bucket_id_for_secret_resolution()
-    entries: list[CertificateSourceCheckEntry] = []
-    has_warnings = False
-    for record in sources:
-        per_source_secret: SecretStr | None = None
-        if active_bucket_id is not None:
-            per_source_secret = _resolve_named_certificate_source_secret(
-                name=record.name,
-                bucket_id=active_bucket_id,
-            )
-        scoped_settings = resolved_settings.model_copy(
-            update={"cadrumo_certificate_password_secret": per_source_secret},
-        )
-        outcome = _probe_certificate_bundle(record.certificate_path, settings=scoped_settings)
-        if outcome.result in (ProviderProbeResult.EXPIRING, ProviderProbeResult.EXPIRED):
-            has_warnings = True
-        entries.append(
-            CertificateSourceCheckEntry(
-                name=record.name,
-                certificate_path=record.certificate_path,
-                friendly_name=record.friendly_name or "",
-                active=record.name == active_name,
-                result=str(outcome.result),
-                summary=outcome.summary,
-                days_until_expiry=outcome.days_until_expiry,
-            ),
-        )
-    return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
-
-
-def resolve_certificate_source_secret(*, name: str, bucket_id: str) -> SecretStr | None:
-    """Return the passphrase registered for certificate source ``name``, or ``None``.
-
-    Reads through the sole
-    :class:`~application.auth.SecureStorageCertificateSecretBackend`
-    scoped to ``bucket_id``; there is no keyring alternative and no
-    backend selector. It never falls back to a global setting itself —
-    callers that also want the
-    :attr:`~core.config.Settings.cadrumo_certificate_password_secret`
-    single-certificate credential compose that precedence explicitly,
-    keeping it visible at the call site rather than hidden inside this
-    resolver.
-    """
-    backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
-    return backend.get(name)
-
-
-def _resolve_named_certificate_source_secret(*, name: str, bucket_id: str) -> SecretStr | None:
-    """Resolve one named secret through secure storage, failing closed on read errors."""
-    from ...core.errors import AeatError
-
-    try:
-        return resolve_certificate_source_secret(name=name, bucket_id=bucket_id)
-    except (OSError, AeatError):
-        return None
-
-
-def resolve_active_certificate_credentials(*, settings: Settings | None = None) -> ActiveCertificateCredentials:
-    """Resolve the certificate path + passphrase the certificate provider must use.
-
-    The single authority for "which certificate, and with which passphrase"
-    across ``certificate check``, ``auth status`` / ``auth test``, and
-    ``auth login``, so every surface consumes the same certificate bytes.
-    Resolution is:
-
-    - When a named certificate source is selected, its registered path is
-      the certificate and its passphrase comes ONLY from encrypted secure
-      storage. A selected source with no bound secret fails closed
-      (``password`` is ``None``); it never silently falls back to the
-      global :attr:`~core.config.Settings.cadrumo_certificate_password_secret`.
-    - When no named source is selected, the single-certificate global
-      settings (:attr:`~core.config.Settings.cadrumo_certificate_path` /
-      :attr:`~core.config.Settings.cadrumo_certificate_password_secret`)
-      are the credential — the pre-registry contract for an operator who
-      configured one certificate through ``auth configure --file``.
-
-    Best-effort and non-raising: an absent or dangling active profile
-    yields the global settings credential rather than an error, matching
-    the read-only surfaces that consume it.
-    """
-    resolved = settings or load_settings()
-    active_record = _safe_active_certificate_source()
-    if active_record is None:
-        return ActiveCertificateCredentials(
-            certificate_path=resolved.cadrumo_certificate_path,
-            password=resolved.cadrumo_certificate_password_secret,
-            friendly_name=resolved.cadrumo_certificate_friendly_name,
-            source_name=None,
-        )
-    bucket_id = _active_bucket_id_for_secret_resolution()
-    password: SecretStr | None = None
-    if bucket_id is not None:
-        password = _resolve_named_certificate_source_secret(
-            name=active_record.name,
-            bucket_id=bucket_id,
-        )
-    return ActiveCertificateCredentials(
-        certificate_path=Path(active_record.certificate_path),
-        password=password,
-        friendly_name=active_record.friendly_name or resolved.cadrumo_certificate_friendly_name,
-        source_name=active_record.name,
-    )
-
-
-def _safe_active_certificate_source():
-    """Return the selected certificate source record, or ``None`` when unavailable.
-
-    Non-raising: a missing or unreadable workflow state (no active
-    profile, dangling pointer) resolves to ``None`` so the active-credential
-    resolver falls back to the global single-certificate settings rather
-    than propagating a storage error onto a read-only surface.
-    """
-    from ...core.errors import AeatError
-    from ..workflow import workflow_state_repository
-
-    try:
+    with active_profile_storage_span(resolved_settings) as active_bucket_id:
+        if active_bucket_id is None:
+            return CertificateSourceCheckReport(entries=(), has_warnings=False)
         state = workflow_state_repository().load()
-    except (OSError, AeatError):
-        return None
-    return _active_certificate_source(state)
+        active_record = _active_certificate_source(state)
+        active_name = active_record.name if active_record is not None else None
+        sources = list_certificate_sources(state)
+        entries: list[CertificateSourceCheckEntry] = []
+        has_warnings = False
+        for record in sources:
+            try:
+                per_source_secret = resolve_certificate_source_secret(
+                    name=record.name,
+                    bucket_id=active_bucket_id,
+                    settings=resolved_settings,
+                )
+            except (OSError, AeatError):
+                per_source_secret = None
+            credentials = ActiveCertificateCredentials(
+                certificate_path=Path(record.certificate_path),
+                password=per_source_secret,
+                friendly_name=record.friendly_name,
+                source_name=record.name,
+            )
+            outcome = _probe_certificate_bundle(
+                record.certificate_path,
+                settings=resolved_settings,
+                certificate_credentials=credentials,
+            )
+            if outcome.result in (ProviderProbeResult.EXPIRING, ProviderProbeResult.EXPIRED):
+                has_warnings = True
+            entries.append(
+                CertificateSourceCheckEntry(
+                    name=record.name,
+                    certificate_path=record.certificate_path,
+                    friendly_name=record.friendly_name or "",
+                    active=record.name == active_name,
+                    result=str(outcome.result),
+                    summary=outcome.summary,
+                    days_until_expiry=outcome.days_until_expiry,
+                ),
+            )
+        return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
 
 
 def set_operator_certificate_source_secret(
@@ -824,6 +713,7 @@ __all__ = [
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
     "resolve_active_certificate_credentials",
+    "resolve_active_certificate_credentials_from_state",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "set_operator_certificate_source_secret",

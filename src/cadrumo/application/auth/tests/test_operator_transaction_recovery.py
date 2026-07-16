@@ -18,6 +18,7 @@ from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import RepositoryError
 from ....application.wizard import WIZARD_FLOWS
+from ....core import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.contribuyente import required_profile_keys
@@ -27,10 +28,14 @@ from ...user_profile import (
     profile_storage_session,
     register_minimal_profile,
 )
-from ...workflow import WorkflowStateRepository, workflow_state_repository
+from ...workflow import (
+    AuthCleanupOperationKind,
+    CertificateSecretMutationEventKind,
+    WorkflowStateRepository,
+    workflow_state_repository,
+)
 from .. import (
     AuthCleanupInProgressError,
-    AuthProviderKind,
     CertificateSecretMutationInProgressError,
     ensure_authenticated_aeat_session,
 )
@@ -42,7 +47,6 @@ from .._certificate_sources_operator import (
     resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
-from .._models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
 from .._operator import (
     _build_auth_cleanup_intent,
     configure_operator_auth,

@@ -24,8 +24,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
-from ....core.config import AuthProviderKindSetting, Settings
+from ....core import AuthProviderKind, Period
+from ....core.config import Settings
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
@@ -327,7 +327,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
         settings=Settings(
-            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
             cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
         ),
         clock=_T2,

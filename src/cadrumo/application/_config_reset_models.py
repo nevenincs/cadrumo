@@ -10,6 +10,7 @@ from __future__ import annotations
 import secrets
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -19,6 +20,7 @@ from ..domain.user_profile import UserProfileStatus
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
+CONFIG_RESET_SCHEMA_VERSION = 1
 
 
 class ConfigResetOperationStatus(StrEnum):
@@ -187,15 +189,14 @@ class ConfigResetSummary(BaseModel):
 class ConfigResetOperation(BaseModel):
     """Credential-free reset-journal document with local invariants.
 
-    Targets are unique and sorted. The model accepts schema versions greater
-    than or equal to one and validates its own record structure. It does not
-    enforce state transitions or fully reconcile phase, status, target, and
-    summary semantics.
+    Targets are unique and sorted. The model accepts only the current schema
+    version and validates its own record structure. It does not enforce state
+    transitions.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=1, ge=1)
+    schema_version: Literal[1] = CONFIG_RESET_SCHEMA_VERSION
     operation_id: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
     status: ConfigResetOperationStatus = ConfigResetOperationStatus.INCOMPLETE
     started_at: datetime
@@ -221,6 +222,30 @@ class ConfigResetOperation(BaseModel):
                 raise ValueError("deletion marker operation id does not match its journal")
         if (self.status is ConfigResetOperationStatus.COMPLETE) != (self.summary is not None):
             raise ValueError("complete reset operation requires exactly one summary")
+        if self.status is ConfigResetOperationStatus.COMPLETE:
+            if any(target.phase is not ConfigResetTargetPhase.DELETED for target in self.targets):
+                raise ValueError("complete reset operation requires every target to be deleted")
+            assert self.summary is not None
+            expected_deleted_count = sum(target.exists_at_snapshot for target in self.targets)
+            expected_already_absent_count = len(self.targets) - expected_deleted_count
+            expected_override_count = sum(
+                target.retention is not None and target.retention.override_approved for target in self.targets
+            )
+            if self.summary.target_count != len(self.targets):
+                raise ValueError("complete reset summary target count does not match targets")
+            if self.summary.deleted_count != expected_deleted_count:
+                raise ValueError("complete reset summary deleted count does not match targets")
+            if self.summary.already_absent_count != expected_already_absent_count:
+                raise ValueError("complete reset summary absent count does not match targets")
+            if self.summary.retention_override_count != expected_override_count:
+                raise ValueError("complete reset summary retention override count does not match targets")
+            if self.summary.completed_at != self.updated_at:
+                raise ValueError("complete reset summary timestamp must match operation update timestamp")
+            if any(
+                target.completed_at is None or target.completed_at > self.summary.completed_at
+                for target in self.targets
+            ):
+                raise ValueError("complete reset target timestamps must precede operation completion")
         paused = self.status is ConfigResetOperationStatus.PAUSED
         if paused != (self.pause_reason is not None):
             raise ValueError("paused reset operation requires exactly one pause reason")
@@ -243,6 +268,7 @@ def new_config_reset_operation_id() -> str:
 
 
 __all__ = [
+    "CONFIG_RESET_SCHEMA_VERSION",
     "ConfigResetDeletionMarker",
     "ConfigResetOperation",
     "ConfigResetOperationStatus",
