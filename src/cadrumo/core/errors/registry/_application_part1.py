@@ -294,6 +294,72 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application._config_reset_repository.ConfigResetJournalError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_JOURNAL",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application._config_reset_repository.ConfigResetJournalAlreadyExistsError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_JOURNAL_ALREADY_EXISTS",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application._config_reset_repository.ConfigResetJournalNotFoundError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_JOURNAL_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aeat_core_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application._config_reset_repository.ConfigResetJournalCorruptError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_JOURNAL_CORRUPT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application._config_reset_repository.ConfigResetJournalOwnershipError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_JOURNAL_OWNERSHIP",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application._config_reset_repository.ConfigResetJournalIncompleteError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_JOURNAL_INCOMPLETE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.topics.TopicNotFoundError",
         ErrorCode(
             code="REFUSED_TOPIC_NOT_FOUND",
