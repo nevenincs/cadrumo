@@ -22,12 +22,16 @@ classifiers = [
 ]
 
 dependencies = [
-  # NOTE: capability-gated optional integrations live in
-  # [project.optional-dependencies], not here, so a bare `pip install cadrumo`
-  # stays lean. `anthropic` (Anthropic-API LLM provider), the `google-*`
-  # stack (Drive/Sheets export), and `playwright*` (live AEAT browser) are
-  # all lazily imported — the core CLI builds without them — and map to the
-  # `anthropic`, `google`, and `browser` extras below.
+  # The command-bearing distribution is complete by default. The two data
+  # companions are separate files only to stay below the package-index
+  # per-file cap; they are exact-version runtime dependencies because the CLI
+  # and MCP server cannot perform grounded tax work without both corpus slices.
+  "cadrumo-data-manuals==0.2.1",
+  "cadrumo-data-official==0.2.1",
+  # Capability-gated integrations live in [project.optional-dependencies].
+  # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
+  # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
+  # imported and map to the `anthropic`, `google`, and `browser` extras below.
   # Argon2id KDF for the file-fallback master-key provider's
   # passphrase-to-KEK derivation. OWASP-current top-tier
   # password-hashing primitive; ships pre-built wheels for
@@ -172,25 +176,9 @@ search = [
   "snowballstemmer>=2.2,<4",
   "numpy>=1.26,<3",
 ]
-# Corpus source binaries (official AEAT PDF/XLS/XLSX) as TWO sub-cap companion
-# distributions, each exact-version-locked to this package. The binaries split
-# along the corpus directory seam — `cadrumo-data-manuals` ships `corpus/manuals`,
-# `cadrumo-data-official` ships `corpus/aeat_official` + `corpus/normatives` — so
-# each wheel stays under PyPI's 100 MB per-file cap and no size grant is needed;
-# together they cover every corpus source binary. The slim core wheel excludes
-# these binaries (the wheel excludes below); without BOTH companions the
-# registry integrity gate surfaces a loud advisory and the `cadrumo app registry`
-# verification verbs refuse with this extra's install hint. With them installed,
-# source verification is byte-identical to a full checkout. Reviewed data ships
-# as an artifact — never fetched at install or run time.
-corpus-sources = [
-  "cadrumo-data-manuals==0.2.1",
-  "cadrumo-data-official==0.2.1",
-]
-# Convenience aggregate: every optional integration at once. `corpus-sources`
-# is deliberately excluded until the two data companions are published on PyPI
-# (both are sub-cap and need no size grant; see RELEASING.md) — including it now
-# would make `cadrumo[all]` unresolvable.
+# Convenience aggregate: every capability-gated integration at once. The corpus
+# companions need no entry here because every command-bearing install requires
+# them through the base dependency closure.
 all = [
   "cadrumo[google]",
   "cadrumo[browser]",
@@ -238,7 +226,7 @@ exclude = [
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `cadrumo app registry` verification verbs at runtime.
   # They ship in the two `cadrumo-data-manuals` / `cadrumo-data-official` companion
-  # distributions (installed together via the `cadrumo[corpus-sources]` extra)
+  # distributions (installed as mandatory base dependencies)
   # under a mirrored `cadrumo_data/_data/corpus` tree; the corpus locator resolves
   # either root. Every derived surface the
   # grounding search and legal gates read at runtime — extracted text
@@ -280,10 +268,10 @@ explicit = true
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
 ]
-# The two data companions are not yet on PyPI, so the dev resolver builds each
-# from its in-repo project. uv sources never reach the published wheel metadata:
-# an installed `cadrumo[corpus-sources]` still resolves the bare
-# `cadrumo-data-manuals==0.2.0` / `cadrumo-data-official==0.2.0` pins from the index.
+# The two data companions are not yet on PyPI, so the development resolver builds
+# each from its in-repo project. These source overrides never reach published wheel
+# metadata, whose mandatory dependencies resolve the exact-version companion
+# distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
 
