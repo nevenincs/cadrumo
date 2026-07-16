@@ -63,3 +63,124 @@ Exact `rg`, current-file reads, `git show`, `git log`, and `git diff bee34cf878.
 ## Verdict
 
 **PASS.** Step `W02.P06.S43` directly proves that certificate logout removes a real persisted session while preserving provider configuration and certificate custody. No blocker or high finding remains, and no review-driven code or record correction is needed.
+
+## S48 formal review
+
+### Scope
+
+This section independently reviews commit `9dc920909d` and plan Step
+`W02.P07.S48` against the accepted certificate-custody decision, the amended
+plan and reference blueprint, the S48 execution record, and current HEAD
+`dc7bdccaf0`.
+
+The review covers:
+
+- named-source password resolution and explicit absent-value transport;
+- the absence of global-password fallback in the registry-wide certificate
+  check;
+- fail-closed behavior for missing and unreadable secure-storage secrets;
+- preservation of the legacy global path, password, and friendly name when no
+  named source is selected;
+- duplicate resolver, backend, and mutation-writer candidates;
+- real-behavior test quality and mutation sensitivity;
+- application import direction and the uncached import graph;
+- exact commit-path attribution despite the intervening reset commit; and
+- later-HEAD contamination and active shared-worktree changes.
+
+### Severity summary
+
+| Severity | Count | Disposition |
+|---|---:|---|
+| Critical | 0 | None found |
+| High | 0 | None found |
+| Medium | 0 | None found |
+| Low | 0 | None found |
+
+### s48-review | low | No actionable findings
+
+The review found no critical, high, medium, or low implementation defect. This
+heading is the audit template's clean-review sentinel, not a low-severity
+finding.
+
+`check_operator_certificate_sources` now copies caller-supplied settings and
+overrides only `cadrumo_certificate_password_secret`, including an explicit
+`None`. Every registered named source therefore reaches the production PKCS#12
+probe with either its selected-profile secure-storage secret or no password.
+Neither an absent record nor a real malformed secret-store index can expose the
+global single-certificate password to that named-source check.
+
+`resolve_active_certificate_credentials` preserves the distinct legacy
+contract. When no named source is selected, it returns the global certificate
+path, password, and friendly name unchanged. When a named source is selected,
+it resolves that source's password through the same private fail-closed read
+policy used by the registry check. Storage validation and operating-system
+read failures become explicit absence rather than fallback.
+
+The tests are mutation-sensitive and use real behavior. They generate genuine
+encrypted PKCS#12 bundles, bind secrets through the public application
+operation into a real encrypted `SecretStore`, and invoke the production probe.
+The adverse bundle is encrypted with the exact global password, so restoring
+the removed fallback changes `corrupt` to `ok` and fails the test. The
+storage-error proof corrupts the real non-secret index after a successful
+secret write; falling back after that error also changes `corrupt` to `ok`.
+The legacy proof registers but does not select a named source and compares the
+exact global credential fields. No fake, mock, stub, patch, monkeypatch, skip,
+xfail, or mirrored business logic appears.
+
+Semantic and exact searches found one public raw named-secret read seam,
+`resolve_certificate_source_secret`; one private read-error policy,
+`_resolve_named_certificate_source_secret`; one backend implementation,
+`SecureStorageCertificateSecretBackend`; and one ordinary resumable
+certificate-secret set/remove authority. The direct secret removal inside
+`reset_operator_auth` is a target-scoped, durable destructive composition with
+different constraints and is not substitutable for ordinary secret mutation.
+No second named-source global-password fallback or parallel ordinary writer
+was introduced.
+
+Commit attribution is clean. The S48 commit's actual parent is `60135859e2`,
+which contains peer-owned reset work landed after the requested comparison
+base `145578fead`. The S48 commit itself changes exactly five paths: its
+application module, designated test module, execution record, plan checkbox,
+and generated feature index. Current HEAD does not modify those five paths
+after S48. Unrelated active worktree changes remain outside the review and
+commit.
+
+### Recommendations
+
+Accept `W02.P07.S48` as delivered. Retain the missing-secret,
+secure-storage-corruption, and legacy-global proofs in the integrated
+certificate lane. Continue with the already separate S49 and S50 work to route
+omitted-provider and adapter authentication through the typed credential;
+those planned gaps are not regressions or incomplete work within the amended
+S48 boundary.
+
+### RAG and gate evidence
+
+Directed Vaultspec-RAG code search resolved the active credential resolver,
+registry-wide check, sole secure-storage backend, shared fail-closed helper,
+production probe, adverse tests, and remaining S49 operator bridge. Directed
+ADR search resolved the accepted rule that selected named credentials use
+profile secure storage and fail closed without global fallback. Exact `rg`,
+full-file reads, `git show`, ancestry inspection, and current-HEAD diffs
+confirmed every semantic candidate and the non-substitutability of auth reset's
+destructive cleanup.
+
+Independent gates produced:
+
+- Exact adverse and legacy nodes: 3 passed.
+- Complete certificate-source check module: 13 passed.
+- Focused Ruff: passed.
+- Commit whitespace check: passed.
+- Commit path inventory: exactly five paths.
+- Current-HEAD contamination check: no later changes to the five S48 paths.
+- Uncached import-linter: 3,433 files, 16,280 dependencies, five contracts
+  kept, zero broken.
+- Feature-scoped Vault check: clean.
+
+### Verdict
+
+**PASS.** Step `W02.P07.S48` removes the named-source global-password fallback,
+fails closed on missing or unreadable secure-storage credentials, preserves the
+unselected legacy global contract, and introduces no duplicate resolver,
+ordinary writer, prohibited test double, import-boundary violation, or
+delivery contamination.
