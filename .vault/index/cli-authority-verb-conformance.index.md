@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-16'
+modified: '2026-07-16'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S29]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S30]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S31]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S32]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -91,6 +92,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S29` - Prove byte-exact failed-create rollback through the repository transaction nested under outer pointer ownership, then prove dangling-pointer repair fails closed under real thread contention and succeeds after lock release against real files
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S30` - Canonicalize active-profile labels to immutable bucket UUIDs at the WorkflowState and profile-health boundaries by composing the core precedence resolver with the existing manifest resolver without adding resolver authority, then prove a real lifecycle-repository-backed label override resolves its encrypted record and keeps a lower-priority dangling pointer ineligible until the override is cleared, after which the pointer becomes authoritative and repairable
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S31` - Introduce one public idempotent active-session eviction boundary that closes the currently bound BucketSession before clearing ContextVar visibility, route idle-expiry and interpreter-exit cleanup through it, and re-export it through the master-key and storage facades
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S32` - Centralize provider teardown in the shared exit boundary so production and ephemeral providers atomically detach their bookkeeping, close only their exact owned BucketSession before unwinding activation, reuse that boundary after failed entry, and do not recreate the retired OS-keyring cache
 
 ### plan
 
