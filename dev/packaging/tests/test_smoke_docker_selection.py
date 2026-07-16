@@ -35,7 +35,8 @@ def test_generated_probes_compile_with_canonical_product_and_authority_names() -
     assert "registry/aeat/modelos/036/manifest.toml" in core
     assert "corpus/aeat_official/" in core
     assert "from cadrumo.adapters.outbound.aeat.browser" in browser
-    assert '"AEAT_BROWSER_CHANNEL": "chromium"' in browser
+    assert '"CADRUMO_BROWSER_CHANNEL": "chromium"' in browser
+    assert '"CADRUMO_BROWSER_HEADLESS": "true"' in browser
 
 
 def test_command_success_probe_observes_real_exit_status() -> None:

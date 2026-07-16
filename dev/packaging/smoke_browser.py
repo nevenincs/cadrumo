@@ -45,8 +45,8 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
     storage_root.mkdir(parents=True, exist_ok=True)
     return {
         **os.environ,
-        "AEAT_BROWSER_CHANNEL": "chromium",
-        "AEAT_BROWSER_HEADLESS": "true",
+        "CADRUMO_BROWSER_CHANNEL": "chromium",
+        "CADRUMO_BROWSER_HEADLESS": "true",
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "PLAYWRIGHT_BROWSERS_PATH": str(browser_cache),
@@ -98,7 +98,13 @@ thread.start()
 
 
 async def main():
-    browser_session = await default_browser_session_factory(load_settings())
+    settings = load_settings()
+    if settings.cadrumo_browser_channel != "chromium" or settings.cadrumo_browser_headless is not True:
+        raise SystemExit(
+            "browser smoke did not resolve canonical Chromium/headless settings: "
+            f"channel={settings.cadrumo_browser_channel!r} headless={settings.cadrumo_browser_headless!r}"
+        )
+    browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context()
         try:
