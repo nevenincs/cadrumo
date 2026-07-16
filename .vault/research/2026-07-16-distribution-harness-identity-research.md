@@ -43,15 +43,15 @@ by a user, another plugin, or the host.
 
 The plugin name, MCP server name, executable, MCPB name, and MCPB display name already
 derive from or spell the Cadrumo identity. The protocol server is created from
-`PRODUCT_IDENTITY.mcp_server`, and generated plugin configuration uses the same
-authority. These surfaces are grounded at `src/cadrumo/agent/_workspace.py:64-89`,
+`PRODUCT_IDENTITY.mcp_server`. Generated plugin configuration uses the same canonical
+source. These files define the values: `src/cadrumo/agent/_workspace.py:64-89`,
 `401-417`, `src/cadrumo/entrypoints/mcp/_server.py:793`, and
 `packaging/mcpb/manifest.json:4-7`.
 
-The namespace is not complete at client-visible harness projections. Prompts and
-harness-resource leaves retain unprefixed skill or persona identities. Therefore a
-branded MCP server name does not prove that every bundled harness identifier is
-distinguishable.
+The namespace is not complete in generated prompt and resource identifiers. Prompt
+names and the final name segment of harness resource URIs retain unprefixed skill or
+persona identifiers. Therefore a branded MCP server name does not prove that every
+bundled harness identifier is distinguishable.
 
 ### F3 - The MCP product description is English-only and has multiple sources
 
@@ -64,7 +64,8 @@ English-only `_MARKETPLACE_DESCRIPTION`, and the MCPB manifest has English-only
 The formats expose plain string fields rather than one canonical description source.
 Where a format has no locale map, its string must contain labeled English and Spanish
 versions. Schema validation alone cannot prove that both versions contain the same
-capability, safety, privacy, storage, confirmation, and filing-boundary claims.
+capability, safety, privacy, on-host storage, human confirmation, and never-files-live
+claims.
 
 This requirement applies to the user-facing MCP product or service description.
 Operational tool, prompt, argument, and resource descriptions remain model-facing
