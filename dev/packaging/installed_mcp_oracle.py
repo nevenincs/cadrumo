@@ -1,0 +1,520 @@
+"""Run a grounded tax calculation through an installed Cadrumo MCP server.
+
+The probe launches an absolute ``cadrumo-mcp`` executable over stdio with the
+checkout and its scripts directory absent from ``PATH``. It drives only the
+public MCP protocol, follows resource links for persisted observations, and
+reuses the installed CLI oracle's legal-grounding assertions.
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import os
+import re
+import shutil
+import sys
+import time
+from dataclasses import asdict, dataclass
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
+
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from mcp.types import CallToolResult, TextResourceContents
+from pydantic import AnyUrl
+
+from dev.packaging.installed_tax_oracle import (
+    BINDINGS,
+    CASILLAS,
+    EXPECTED_NOTICE_CODES,
+    EXPECTED_VALUE,
+    MODEL,
+    PERIOD,
+    PROFILE_LABEL,
+    PROFILE_TAX_ID,
+    REGISTRY_REVISION,
+    RELATIONS,
+    TARGET_CASILLA,
+    YEAR,
+    assert_grounded_observations,
+    isolated_product_environment,
+)
+
+_REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
+_EXECUTE_TOOL = "execute"
+_WHOAMI_TOOL = "cadrumo_whoami"
+
+
+class InstalledMcpOracleError(RuntimeError):
+    """Raised when installed MCP behavior does not satisfy the release oracle."""
+
+
+@dataclass(frozen=True)
+class McpCallEvidence:
+    """One public MCP tool call retained by the installed oracle."""
+
+    tool_name: str
+    command_key: str | None
+    duration_seconds: float
+    is_error: bool
+    status: str | None
+
+
+@dataclass(frozen=True)
+class InstalledMcpEvidence:
+    """Evidence proving installed MCP calculation and resource behavior."""
+
+    requested_executable: str
+    resolved_executable: str
+    server_name: str
+    storage_root: str
+    work_unit_id: str
+    calculation_revision_id: str
+    observations_resource: str
+    target_casilla: str
+    target_value: str
+    formula_id: str
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+    notice_codes: tuple[str, ...]
+    advertised_tools: tuple[str, ...]
+    calls: tuple[McpCallEvidence, ...]
+
+    def to_jsonable(self) -> dict[str, Any]:
+        """Return a JSON-compatible evidence mapping."""
+        return asdict(self)
+
+
+def minimal_runtime_path() -> str:
+    """Return a platform path containing OS utilities but no product scripts."""
+    if sys.platform == "win32":
+        system_root = Path(os.environ.get("SYSTEMROOT", r"C:\Windows"))
+        return str((system_root / "System32").resolve())
+    return os.pathsep.join(("/usr/bin", "/bin"))
+
+
+def isolated_mcp_environment(storage_root: Path) -> dict[str, str]:
+    """Build isolated MCP state with product executable discovery disabled."""
+    environment = isolated_product_environment(storage_root)
+    environment.pop("CADRUMO_MCP_PERSONA", None)
+    environment["PATH"] = minimal_runtime_path()
+    for executable in ("aeat", "cadrumo-mcp"):
+        resolved = shutil.which(executable, path=environment["PATH"])
+        if resolved is not None:
+            raise InstalledMcpOracleError(
+                f"isolated PATH unexpectedly resolves {executable!r}: {resolved}",
+            )
+    return environment
+
+
+def profile_create_arguments() -> dict[str, object]:
+    """Return named MCP arguments for the installed profile creation."""
+    return {
+        "profile_name": PROFILE_LABEL,
+        "quiet": True,
+        "accept_defaults": True,
+        "entity_type": "legal_entity",
+        "legal_entity_form": "sl",
+        "tax_id": PROFILE_TAX_ID,
+        "legal_name": "Installed Oracle SL",
+        "activity": "software services",
+        "incn_prior_12_months": "500000",
+        "new_entity_first_two_profit_periods": False,
+        "iva_regime": "GENERAL",
+        "tax_residence_ccaa": "madrid",
+    }
+
+
+def work_create_arguments() -> dict[str, object]:
+    """Return named MCP arguments for the installed Modelo 200 work unit."""
+    return {
+        "modelo": MODEL,
+        "year": int(YEAR),
+        "period": PERIOD,
+        "revision": REGISTRY_REVISION,
+        "name": "Installed Modelo 200 oracle",
+        "actor": "installed-mcp-oracle",
+    }
+
+
+def work_calculate_arguments(work_unit_id: str) -> dict[str, object]:
+    """Return named MCP arguments for the installed Modelo 200 calculation."""
+    return {
+        "work_unit_id": work_unit_id,
+        "casilla": list(CASILLAS),
+        "binding": list(BINDINGS),
+        "relation": list(RELATIONS),
+        "actor": "installed-mcp-oracle",
+    }
+
+
+def _content_text(result: CallToolResult) -> str:
+    return "\n".join(str(getattr(item, "text", "")) for item in result.content)
+
+
+def _structured(result: CallToolResult, *, operation: str) -> dict[str, Any]:
+    if result.isError:
+        raise InstalledMcpOracleError(f"{operation} failed: {_content_text(result)}")
+    payload = result.structuredContent
+    if not isinstance(payload, dict):
+        raise InstalledMcpOracleError(f"{operation} returned no structured object")
+    return payload
+
+
+def _assert_envelope(payload: dict[str, Any], *, command_key: str) -> dict[str, Any]:
+    if payload.get("command") != command_key:
+        raise InstalledMcpOracleError(
+            f"expected command {command_key!r}, got {payload.get('command')!r}",
+        )
+    if payload.get("status") not in {"success", "warning"}:
+        raise InstalledMcpOracleError(f"{command_key} did not succeed: {payload!r}")
+    if payload.get("active_profile") != PROFILE_LABEL:
+        raise InstalledMcpOracleError(
+            f"{command_key} used active profile {payload.get('active_profile')!r}",
+        )
+    result = payload.get("result")
+    if not isinstance(result, dict):
+        raise InstalledMcpOracleError(f"{command_key} result is not an object")
+    if not isinstance(payload.get("notices"), list):
+        raise InstalledMcpOracleError(f"{command_key} notices are not a list")
+    return result
+
+
+def _assert_no_warning_notices(payload: dict[str, Any], *, command_key: str) -> None:
+    warnings = [
+        notice
+        for notice in payload["notices"]
+        if isinstance(notice, dict) and notice.get("severity") == "warning"
+    ]
+    if warnings:
+        raise InstalledMcpOracleError(
+            f"{command_key} emitted unexpected warning notices: {warnings!r}",
+        )
+
+
+async def _call_tool(
+    session: ClientSession,
+    *,
+    tool_name: str,
+    arguments: dict[str, object],
+    command_key: str | None,
+    timeout_seconds: float,
+) -> tuple[dict[str, Any], McpCallEvidence]:
+    started = time.monotonic()
+    async with asyncio.timeout(timeout_seconds):
+        result = await session.call_tool(tool_name, arguments)
+    payload = _structured(result, operation=command_key or tool_name)
+    return (
+        payload,
+        McpCallEvidence(
+            tool_name=tool_name,
+            command_key=command_key,
+            duration_seconds=round(time.monotonic() - started, 3),
+            is_error=bool(result.isError),
+            status=str(payload.get("status")) if payload.get("status") is not None else None,
+        ),
+    )
+
+
+async def _execute(
+    session: ClientSession,
+    command_key: str,
+    arguments: dict[str, object],
+    *,
+    timeout_seconds: float,
+) -> tuple[dict[str, Any], McpCallEvidence]:
+    return await _call_tool(
+        session,
+        tool_name=_EXECUTE_TOOL,
+        arguments={"command_key": command_key, "arguments": arguments},
+        command_key=command_key,
+        timeout_seconds=timeout_seconds,
+    )
+
+
+async def _run_protocol(
+    server: Path,
+    *,
+    storage_root: Path,
+    work_dir: Path,
+    timeout_seconds: float,
+) -> InstalledMcpEvidence:
+    environment = isolated_mcp_environment(storage_root)
+    params = StdioServerParameters(
+        command=str(server),
+        env=environment,
+        cwd=str(work_dir),
+        encoding="utf-8",
+        encoding_error_handler="strict",
+    )
+    calls: list[McpCallEvidence] = []
+    async with (
+        stdio_client(params) as (read_stream, write_stream),
+        ClientSession(read_stream, write_stream) as session,
+    ):
+        async with asyncio.timeout(timeout_seconds):
+            initialized = await session.initialize()
+            listed = await session.list_tools()
+        advertised_tools = tuple(sorted(tool.name for tool in listed.tools))
+        if initialized.serverInfo.name != "cadrumo":
+            raise InstalledMcpOracleError(
+                f"expected MCP server name 'cadrumo', got {initialized.serverInfo.name!r}",
+            )
+        if not {_EXECUTE_TOOL, _WHOAMI_TOOL} <= set(advertised_tools):
+            raise InstalledMcpOracleError(
+                f"installed MCP surface lacks required tools: {advertised_tools!r}",
+            )
+
+        profile_payload, call = await _execute(
+            session,
+            "config.profile.create",
+            profile_create_arguments(),
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        _assert_envelope(profile_payload, command_key="config.profile.create")
+        _assert_no_warning_notices(
+            profile_payload,
+            command_key="config.profile.create",
+        )
+
+        whoami_payload, call = await _call_tool(
+            session,
+            tool_name=_WHOAMI_TOOL,
+            arguments={},
+            command_key=None,
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        if whoami_payload.get("active_profile") != PROFILE_LABEL:
+            raise InstalledMcpOracleError(
+                f"whoami returned active profile {whoami_payload.get('active_profile')!r}",
+            )
+        if whoami_payload.get("tax_id_present") is not True:
+            raise InstalledMcpOracleError(
+                f"whoami did not confirm the installed profile tax id: {whoami_payload!r}",
+            )
+        if whoami_payload.get("readiness") != "ready":
+            raise InstalledMcpOracleError(
+                f"whoami reported readiness {whoami_payload.get('readiness')!r}",
+            )
+
+        create_payload, call = await _execute(
+            session,
+            "modelo.work.create",
+            work_create_arguments(),
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        create_result = _assert_envelope(create_payload, command_key="modelo.work.create")
+        _assert_no_warning_notices(create_payload, command_key="modelo.work.create")
+        work_unit_id = str(create_result.get("work_unit_id", ""))
+        if not _REVISION_ID.fullmatch(work_unit_id):
+            raise InstalledMcpOracleError(
+                f"work creation returned an invalid work unit id: {work_unit_id!r}",
+            )
+
+        calculate_payload, call = await _execute(
+            session,
+            "modelo.work.calculate",
+            work_calculate_arguments(work_unit_id),
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        calculate_result = _assert_envelope(
+            calculate_payload,
+            command_key="modelo.work.calculate",
+        )
+        if calculate_result.get("saved") is not True:
+            raise InstalledMcpOracleError("calculation did not report saved=true")
+        calculation_revision_id = str(calculate_result.get("calculation_revision_id", ""))
+        if not _REVISION_ID.fullmatch(calculation_revision_id):
+            raise InstalledMcpOracleError(
+                f"calculation returned an invalid revision id: {calculation_revision_id!r}",
+            )
+        casilla_values = calculate_result.get("casilla_values")
+        if (
+            not isinstance(casilla_values, dict)
+            or Decimal(str(casilla_values.get(TARGET_CASILLA))) != EXPECTED_VALUE
+        ):
+            raise InstalledMcpOracleError(
+                f"calculation expected {TARGET_CASILLA}={EXPECTED_VALUE}, got {casilla_values!r}",
+            )
+        notices = calculate_payload["notices"]
+        notice_codes = {str(notice.get("code")) for notice in notices}
+        if notice_codes != EXPECTED_NOTICE_CODES:
+            raise InstalledMcpOracleError(
+                f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, "
+                f"got {sorted(notice_codes)!r}",
+            )
+        if any(notice.get("severity") != "warning" for notice in notices):
+            raise InstalledMcpOracleError(f"calculation notice severity drifted: {notices!r}")
+        calculate_observations_resource = str(
+            calculate_result.get("observations_resource", ""),
+        )
+        if not calculate_observations_resource.startswith("cadrumo://observations/"):
+            raise InstalledMcpOracleError(
+                f"calculation returned no observations resource: {calculate_result!r}",
+            )
+        calculate_observations_count = calculate_result.get("observations_count")
+        if (
+            not isinstance(calculate_observations_count, int)
+            or calculate_observations_count <= 0
+        ):
+            raise InstalledMcpOracleError("calculation reported no persisted observations")
+
+        observations_payload, call = await _execute(
+            session,
+            "modelo.work.observations",
+            {"calculation_revision_id": calculation_revision_id},
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        observations_result = _assert_envelope(
+            observations_payload,
+            command_key="modelo.work.observations",
+        )
+        _assert_no_warning_notices(
+            observations_payload,
+            command_key="modelo.work.observations",
+        )
+        if observations_result.get("calculation_revision_id") != calculation_revision_id:
+            raise InstalledMcpOracleError(
+                "persisted observations returned a different calculation revision",
+            )
+        if observations_result.get("work_unit_id") != work_unit_id:
+            raise InstalledMcpOracleError(
+                "persisted observations returned a different work unit",
+            )
+        observations_resource = str(
+            observations_result.get("observations_resource", ""),
+        )
+        if observations_resource != calculate_observations_resource:
+            raise InstalledMcpOracleError(
+                "calculation and persisted-observations calls returned different resources",
+            )
+        observations_count = observations_result.get("observations_count")
+        observation_count = observations_result.get("observation_count")
+        if (
+            not isinstance(observations_count, int)
+            or observations_count != calculate_observations_count
+            or observation_count != observations_count
+        ):
+            raise InstalledMcpOracleError(
+                f"persisted observation counts drifted: {observations_result!r}",
+            )
+
+        async with asyncio.timeout(timeout_seconds):
+            resource = await session.read_resource(AnyUrl(observations_resource))
+        if len(resource.contents) != 1 or not isinstance(resource.contents[0], TextResourceContents):
+            raise InstalledMcpOracleError(
+                f"observations resource returned unexpected contents: {resource.contents!r}",
+            )
+        try:
+            observations = json.loads(resource.contents[0].text)
+        except json.JSONDecodeError as exc:
+            raise InstalledMcpOracleError("observations resource did not return JSON") from exc
+        if not isinstance(observations, list):
+            raise InstalledMcpOracleError("observations resource did not return a JSON array")
+        if len(observations) != observations_count:
+            raise InstalledMcpOracleError(
+                f"observations resource count drifted: expected {observations_count}, got {len(observations)}",
+            )
+        persisted_result = dict(observations_result)
+        persisted_result["observations"] = observations
+        target = assert_grounded_observations(
+            persisted_result,
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+        )
+
+    return InstalledMcpEvidence(
+        requested_executable=str(server),
+        resolved_executable=str(server.resolve()),
+        server_name=initialized.serverInfo.name,
+        storage_root=str(storage_root.resolve()),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        observations_resource=observations_resource,
+        target_casilla=TARGET_CASILLA,
+        target_value=str(EXPECTED_VALUE),
+        formula_id=str(target["formula_id"]),
+        legal_refs=tuple(str(value) for value in target["legal_refs"]),
+        source_refs=tuple(str(value) for value in target["source_refs"]),
+        notice_codes=tuple(sorted(notice_codes)),
+        advertised_tools=advertised_tools,
+        calls=tuple(calls),
+    )
+
+
+def run_installed_mcp_oracle(
+    server: Path,
+    *,
+    storage_root: Path,
+    work_dir: Path,
+    timeout_seconds: float = 180.0,
+) -> InstalledMcpEvidence:
+    """Execute the complete installed MCP oracle and return retained evidence."""
+    requested_server = server.expanduser()
+    resolved_server = requested_server.resolve(strict=True)
+    if not resolved_server.is_file():
+        raise InstalledMcpOracleError(f"installed MCP server is not a file: {resolved_server}")
+    resolved_work_dir = work_dir.resolve()
+    resolved_work_dir.mkdir(parents=True, exist_ok=True)
+    return asyncio.run(
+        _run_protocol(
+            resolved_server,
+            storage_root=storage_root,
+            work_dir=resolved_work_dir,
+            timeout_seconds=timeout_seconds,
+        ),
+    )
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--server",
+        required=True,
+        type=Path,
+        help="Absolute installed cadrumo-mcp executable.",
+    )
+    parser.add_argument(
+        "--storage-root",
+        required=True,
+        type=Path,
+        help="Fresh isolated product storage root.",
+    )
+    parser.add_argument(
+        "--work-dir",
+        required=True,
+        type=Path,
+        help="Execution cwd outside the source checkout.",
+    )
+    parser.add_argument("--timeout-seconds", type=float, default=180.0)
+    parser.add_argument("--output", type=Path, help="Optional JSON evidence destination.")
+    return parser
+
+
+def main() -> int:
+    """Run the installed MCP oracle from the command line."""
+    args = _parser().parse_args()
+    evidence = run_installed_mcp_oracle(
+        args.server,
+        storage_root=args.storage_root,
+        work_dir=args.work_dir,
+        timeout_seconds=args.timeout_seconds,
+    )
+    rendered = json.dumps(evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True)
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(f"{rendered}\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

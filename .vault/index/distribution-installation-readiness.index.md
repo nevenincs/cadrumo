@@ -9,7 +9,9 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S01]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S02]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S06]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S07]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S08]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S61]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -31,7 +33,9 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P01-S01` - Require exact-version manuals and official companions for every command-bearing install
 - `2026-07-15-distribution-installation-readiness-W01-P01-S02` - Lock the complete runtime dependency closure after metadata changes
 - `2026-07-15-distribution-installation-readiness-W01-P02-S06` - Execute the public CLI tax itinerary against isolated encrypted storage and assert the grounded Modelo 200 result
+- `2026-07-15-distribution-installation-readiness-W01-P02-S07` - Execute the public MCP protocol itinerary and assert the same grounded Modelo 200 result
 - `2026-07-15-distribution-installation-readiness-W01-P02-S08` - Resolve the CLI subprocess from the MCP server installation instead of ambient PATH
+- `2026-07-15-distribution-installation-readiness-W01-P02-S61` - Make MCP identity reads unlock profiles created by sibling CLI subprocesses
 
 ### plan
 
