@@ -161,6 +161,7 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
 
     assert "auth_active_profile=<profile-id>" in lines
     assert "auth_persisted_session_state=live" in lines
+    assert all(not line.startswith("auth_certificate_backend=") for line in lines)
     assert all("operator-private-profile-id" not in line for line in lines)
 
 
