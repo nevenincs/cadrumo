@@ -608,7 +608,7 @@ class Settings(AeatIntegrationSettings):
     cadrumo_auth_timeout_ms: int = Field(
         default=30_000,
         ge=1,
-        description="Playwright navigation timeout for AEAT authentication probes in milliseconds",
+        description="Playwright navigation timeout for protected AEAT authentication in milliseconds",
     )
     cadrumo_strict_security: bool = Field(
         default=False,
