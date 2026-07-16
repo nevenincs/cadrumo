@@ -375,20 +375,39 @@ The earlier keyring-or-secure-storage graph is superseded. Current source
 declares encrypted secure storage as the sole named certificate-secret backend;
 the independent master-key OS-keyring custody backend is a separate concern.
 
-Current authority and remaining event-recovery gap:
+Current authority and remaining credential-consumption gap:
 
 ```text
 certificate source select --> AuthState active source and certificate path
 
 certificate secret set/remove --> SecureStorageCertificateSecretBackend
                               --> SecretStore mutation
+                              --> durable secret-free mutation intent
                               --> append-only certificate-secret event
-                                  [ordinary set/remove lacks recovery between stores]
+                                  [retry resumes the original operation]
 
 resolve_active_certificate_credentials
   --> selected source path
   --> selected source secret from secure storage
-  --> auth status, test, and login credential scope
+  --> ActiveCertificateCredentials(password may be None)
+
+certificate check
+  --> per-source secret lookup
+  --> global Settings fallback when the named secret is absent
+      [HIGH: bypasses the active credential authority]
+
+auth status/test
+  --> credential scope only when --provider certificate is explicit
+  --> omit password override when resolved password is None
+      [HIGH: retains an unrelated global Settings password]
+
+auth login
+  --> resolves the configured/default provider
+  --> the same credential scope and Settings bridge
+
+AeatAuthenticator
+  --> reconstructs CertificateBundle from Settings
+      [duplicate credential projection retained for W02.P07.S50]
 ```
 
 Sources:
@@ -396,14 +415,29 @@ Sources:
 - `src/cadrumo/application/auth/_certificate_sources_operator.py`
 - `src/cadrumo/application/auth/_certificate_secret_backend.py`
 - `src/cadrumo/application/auth/_operator.py`
+- `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py`
 - `src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py`
 
-The sole-backend and credential-resolution direction is current. The open HIGH
-finding is narrower: ordinary secret set/remove changes the file-backed
-`SecretStore` before its SQL-backed append-only event is committed. Expanded
-plan rows `W02.P07.S48`, `W02.P07.S51`, and `W04.P13.S118` require a
-secret-free durable intent or outbox and real failure/retry proofs so the
-original event kind and timestamp are recovered exactly once.
+The sole-backend and durable mutation direction is current: commits
+`f5273bda59`, `27d8bc5404`, and `84c435bb94` deleted the certificate keyring
+alternative, added resumable secret mutation, and proved CLI recovery. The
+remaining HIGH finding is consumption drift. A selected named source with no
+secure-storage secret correctly resolves `password=None`, but the Settings
+bridge omits that override and therefore preserves an unrelated global
+password. Certificate check separately falls back to that global password, and
+status/test do not enter the certificate scope when the caller omits
+`--provider`. The green focused suite does not cover these paths.
+
+Keep the approved Step boundaries explicit:
+
+- `W02.P07.S49` resolves the effective provider before status/test scoping and
+  transports an explicit absent password through the credential scope.
+- `W02.P07.S50` removes the authenticator's second credential projection by
+  consuming the resolved typed credential directly.
+- `W02.P07.S52` routes certificate check through the same authority and proves
+  register, select, check, default status, default test, and login all fail
+  closed on the same selected bytes when the named secret is absent, even if a
+  global password exists.
 
 ### Data reset and quarantine
 
