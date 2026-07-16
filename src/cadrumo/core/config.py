@@ -28,6 +28,7 @@ from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_v
 from pydantic_settings import BaseSettings, DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
 
 from . import _config_live_tests as _live_test_config
+from ._auth_provider import AuthProviderKind as _AuthProviderKind
 from ._config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
     AeatIntegrationSettings,
@@ -40,8 +41,9 @@ from ._config_state_root import (
 )
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
-    AuthProviderKindSetting,
-    CertificateBackend,
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN,  # noqa: F401 - public certificate route authority
+    AEAT_CERTIFICATE_PROTECTED_PATH,  # noqa: F401 - public certificate route authority
+    AEAT_CERTIFICATE_PROTECTED_URL,  # noqa: F401 - public certificate route authority
     JustificanteParserBackendSetting,
     LLMProviderSetting,
     SecretStoreBackend,
@@ -603,14 +605,6 @@ class Settings(AeatIntegrationSettings):
         default=None,
         description="Optional human-readable label for the certificate",
     )
-    cadrumo_certificate_backend: CertificateBackend = Field(
-        default=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        description="Which certificate backend to use: playwright_context or httpx_fallback",
-    )
-    aeat_certificate_verify_url: str = Field(
-        default_factory=_default_aeat_sede_origin_with_slash,
-        description="Target URL for cadrumo.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
-    )
     cadrumo_auth_timeout_ms: int = Field(
         default=30_000,
         ge=1,
@@ -639,7 +633,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── AEAT auth provider default ──────────────────────────────────────────
-    cadrumo_auth_provider: AuthProviderKindSetting | None = Field(
+    cadrumo_auth_provider: _AuthProviderKind | None = Field(
         default=None,
         description=(
             "Default auth provider for `aeat config auth status` / `test` when "
