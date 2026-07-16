@@ -303,7 +303,13 @@ def assess_active_profile_health_with_session() -> ActiveProfileHealth:
         # AeatError: keyring/master-key domain failures.
         # OSError: filesystem-backed secret-store I/O failures.
         # ImportError: defensive guard; the dynamic import of storage internals may fail.
-        return before.model_copy(update={"profile_record_error": _compact_error(exc)})
+        return before.model_copy(
+            update={
+                "profile_record_error": _compact_error(exc),
+                "repairable_by_clearing_pointer": False,
+                "next_action": "restore access to the active profile secret store, then retry",
+            }
+        )
 
 
 def _compact_error(exc: Exception) -> str:
