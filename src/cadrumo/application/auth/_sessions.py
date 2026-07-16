@@ -20,7 +20,8 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib import import_module
 from pathlib import Path
@@ -307,16 +308,15 @@ async def require_verified_aeat_session(
         settings=settings,
         browser_session_factory=default_browser_session_factory,
     )
-    try:
-        refreshed_session, assertion = await _probe_existing_session(provider, target_url=target_url)
-    except AuthSessionUnavailableError:
-        raise
-    except Exception as exc:
-        raise AuthSessionUnavailableError(
-            translated_message="application.auth.sessions.errors.verify_failed",
-        ) from exc
-    finally:
-        await _close_provider(provider)
+    async with _provider_lifecycle(provider):
+        try:
+            refreshed_session, assertion = await _probe_existing_session(provider, target_url=target_url)
+        except AuthSessionUnavailableError:
+            raise
+        except Exception as exc:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.verify_failed",
+            ) from exc
 
     if not bool(getattr(assertion, "is_valid", False)):
         raise AuthSessionUnavailableError(
@@ -445,13 +445,11 @@ async def _ensure_authenticated_aeat_session_locked(
             browser_session_factory=browser_session_factory,
             certificate_credentials=certificate_credentials,
         )
-        try:
+        async with _provider_lifecycle(provider):
             session, assertion = await _authenticate_and_verify_provider(
                 provider,
                 target_url=target_url,
             )
-        finally:
-            await _close_provider(provider)
         if not bool(getattr(assertion, "is_valid", False)):
             from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
 
@@ -649,13 +647,12 @@ async def _try_probe_verified_session(
         browser_session_factory=browser_session_factory,
         certificate_credentials=certificate_credentials,
     )
-    try:
-        session, assertion = await _probe_existing_session(provider, target_url=target_url)
-    except Exception as exc:
-        _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc, exc_info=True)
-        return None
-    finally:
-        await _close_provider(provider)
+    async with _provider_lifecycle(provider):
+        try:
+            session, assertion = await _probe_existing_session(provider, target_url=target_url)
+        except Exception as exc:
+            _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc, exc_info=True)
+            return None
     if bool(getattr(assertion, "is_valid", False)):
         return session, assertion
     return None
@@ -708,8 +705,24 @@ async def _authenticate_and_verify_provider(
     return session, assertion
 
 
-async def _close_provider(provider: AuthProvider) -> None:
+@asynccontextmanager
+async def _provider_lifecycle(provider: AuthProvider) -> AsyncIterator[None]:
+    """Close ``provider`` without hiding a primary auth failure."""
     try:
-        await provider.close()
-    except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
-        _logger.warning("provider close raised", exc_info=True)
+        yield
+    except BaseException:
+        try:
+            await provider.close()
+        except Exception as close_error:  # BROAD-EXCEPT-RATIONALE-PRESERVE-PRIMARY-AUTH-FAILURE
+            _logger.warning(
+                "provider close failed while preserving primary auth failure failure=%s",
+                type(close_error).__name__,
+            )
+        raise
+    else:
+        try:
+            await provider.close()
+        except Exception as exc:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.provider_close_failed",
+            ) from exc

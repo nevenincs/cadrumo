@@ -1032,6 +1032,7 @@ async def test_concurrent_close_and_verify_race(tmp_path: Path, _settings_factor
         thumbprint=cert.sha256_thumbprint,
         subject=cert.subject,
     )
+    authenticator._active_session = session
 
     # Start verify; it will suspend inside goto until proceed.set().
     verify_task = asyncio.create_task(authenticator.verify(session))

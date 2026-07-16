@@ -69,11 +69,20 @@ def resolve_active_certificate_credentials(
             workflow_state = _workflow_state_repository().load() if bucket_id is not None else None
             if workflow_state is None:
                 return unnamed_certificate_credentials(resolved)
-            return _resolve_active_certificate_credentials_from_state(
+            if bucket_id is None:
+                return ActiveCertificateCredentials()
+            credentials = project_active_certificate_credentials(
                 workflow_state,
                 settings=resolved,
-                bucket_id=bucket_id,
             )
+            if credentials.source_name is None:
+                return credentials
+            password = _resolve_named_certificate_source_secret(
+                name=credentials.source_name,
+                bucket_id=bucket_id,
+                settings=resolved,
+            )
+            return credentials.model_copy(update={"password": password})
     except (OSError, AeatError):
         return ActiveCertificateCredentials()
 
@@ -91,22 +100,6 @@ def project_active_certificate_credentials(
     be obtained through :func:`resolve_active_certificate_credentials`, which
     loads the workflow state inside its own witnessed active-profile span.
     """
-    return _resolve_active_certificate_credentials_from_state(
-        state,
-        settings=settings,
-        bucket_id=None,
-        resolve_secret=False,
-    )
-
-
-def _resolve_active_certificate_credentials_from_state(
-    state: WorkflowState,
-    *,
-    settings: Settings,
-    bucket_id: str | None,
-    resolve_secret: bool = True,
-) -> ActiveCertificateCredentials:
-    """Resolve credentials from state loaded within the matching bucket span."""
     active_record = active_certificate_source(state)
     if active_record is None:
         certificate_path = settings.cadrumo_certificate_path
@@ -114,16 +107,9 @@ def _resolve_active_certificate_credentials_from_state(
             certificate_path = Path(state.auth.certificate_path)
         credentials = unnamed_certificate_credentials(settings)
         return credentials.model_copy(update={"certificate_path": certificate_path})
-    password: SecretStr | None = None
-    if resolve_secret and bucket_id is not None:
-        password = _resolve_named_certificate_source_secret(
-            name=active_record.name,
-            bucket_id=bucket_id,
-            settings=settings,
-        )
     return ActiveCertificateCredentials(
         certificate_path=Path(active_record.certificate_path),
-        password=password,
+        password=None,
         friendly_name=active_record.friendly_name,
         source_name=active_record.name,
     )

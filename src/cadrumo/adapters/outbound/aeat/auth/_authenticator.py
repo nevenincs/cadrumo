@@ -66,6 +66,7 @@ from ._authenticator_types import (
     CertificateHealthCheck,
     _PersistedSessionInvalidError,
 )
+from ._browser_lifecycle import close_owned_browser_session
 from ._errors import (
     AeatLoginAssertionError,
     AeatSessionExpiredError,
@@ -264,6 +265,12 @@ class AeatAuthenticator:
                     "authenticating again",
                     translated_message="adapters.auth.authenticator.errors.already_active",
                 )
+            if self._browser_session is not None:
+                raise AeatLoginAssertionError(
+                    "AeatAuthenticator still owns a browser session whose close did not complete; "
+                    "call close() again before authenticating",
+                    translated_message="adapters.auth.authenticator.errors.already_active",
+                )
             resume_path = self._resolve_storage_state_path()
             if _session_store.exists(resume_path):
                 try:
@@ -275,14 +282,21 @@ class AeatAuthenticator:
                         _PERSISTED_SESSION_LABEL,
                         reason,
                     )
+                    if self._browser_session is not None:
+                        raise
 
             cert = self.load_certificate()
             nif = extract_nif_from_subject(cert)
 
             session_like = await self._resolve_browser_session()
-            context = await session_like.create_context(
-                provisioner=CertificateContextProvisioner(cert),
-            )
+            try:
+                context = await session_like.create_context(
+                    provisioner=CertificateContextProvisioner(cert),
+                )
+            except Exception:
+                if not await self._close_browser_session(session_like):
+                    self._browser_session = session_like
+                raise
 
             storage_state_path = self._storage_state_path_for(session_like)
             provisional_at = now()
@@ -306,7 +320,8 @@ class AeatAuthenticator:
                         _exc,
                         exc_info=True,
                     )
-                await self._close_browser_session(session_like)
+                if not await self._close_browser_session(session_like):
+                    self._browser_session = session_like
                 raise AeatLoginAssertionError(
                     "fresh AEAT authentication did not produce a valid login assertion; "
                     f"status={assertion.status_code} error={assertion.error_message!r}",
@@ -327,8 +342,8 @@ class AeatAuthenticator:
                 await self._capture_storage_state_locked(session)
             except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
                 await self._drop_context()
-                await self._close_browser_session(session_like)
-                self._browser_session = None
+                if await self._close_browser_session(session_like):
+                    self._browser_session = None
                 self._active_session = None
                 raise
             log.info(
@@ -426,6 +441,18 @@ class AeatAuthenticator:
                 raise AeatLoginAssertionError(
                     "no active browser context; call authenticate() first",
                     translated_message="adapters.auth.authenticator.errors.no_active_context",
+                )
+            active_session = self._active_session
+            if (
+                session is not active_session
+                or active_session.provider_kind is not self.kind
+                or not isinstance(active_session.provider_detail, CertificateSessionDetail)
+                or active_session.certificate_thumbprint is None
+                or active_session.certificate_subject is None
+            ):
+                raise AeatLoginAssertionError(
+                    "verify() requires the exact active certificate-bound session",
+                    translated_message="adapters.auth.authenticator.errors.capture_requires_active_session",
                 )
             self._inflight_pages += 1
             self._inflight_drained.clear()
@@ -624,8 +651,8 @@ class AeatAuthenticator:
         # on this).
         async with self._lock:
             await self._drop_context()
-            await self._close_browser_session(self._browser_session)
-            self._browser_session = None
+            if await self._close_browser_session(self._browser_session):
+                self._browser_session = None
             self._active_session = None
             self._closing = False
 
@@ -824,8 +851,8 @@ class AeatAuthenticator:
             await self._capture_storage_state_locked(session)
         except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
             await self._drop_context()
-            await self._close_browser_session(session_like)
-            self._browser_session = None
+            if await self._close_browser_session(session_like):
+                self._browser_session = None
             self._active_session = None
             raise
         log.info(
@@ -896,7 +923,8 @@ class AeatAuthenticator:
                 await context.close()
             except Exception as _exc:
                 log.debug(context_close_log, _exc, exc_info=True)
-        await self._close_browser_session(session_like)
+        if not await self._close_browser_session(session_like):
+            self._browser_session = session_like
 
     def _resolve_storage_state_path(
         self,
@@ -1066,14 +1094,14 @@ class AeatAuthenticator:
         except PlaywrightError:
             log.warning("AeatAuthenticator: context close failed", exc_info=True)
 
-    async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
-        """Directly close a provider-owned :class:`BrowserSessionLike`."""
-        if session is None:
-            return
-        try:
-            await session.close()
-        except Exception:
-            log.warning("AeatAuthenticator: browser session close failed", exc_info=True)
+    async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
+        """Close an owned browser session, retaining failed cleanup for retry."""
+        return await close_owned_browser_session(
+            session,
+            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            logger=log,
+            owner="AeatAuthenticator",
+        )
 
 
 __all__ = [
