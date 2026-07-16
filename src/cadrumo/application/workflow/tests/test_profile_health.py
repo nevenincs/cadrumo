@@ -16,6 +16,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ... import wizard as _wizard  # noqa: F401
 from .._profile_health import (
     assess_active_profile_health,
+    assess_active_profile_health_with_session,
     repair_active_profile_pointer,
 )
 
@@ -106,7 +107,38 @@ def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
         assert health.source == "pointer"
         assert repaired.dry_run is True
         assert repaired.cleared_pointer is False
-        assert read_pointer(profile.storage_root) is not None
+    assert read_pointer(profile.storage_root) is not None
+
+
+def test_profile_health_opens_a_cold_session_for_a_sibling_process_profile(tmp_path: Path) -> None:
+    """Read a durable profile after the creating process's bucket session has closed."""
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
+    ) as profile:
+        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
+        write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
+        storage_root = profile.storage_root
+        secret_store_backend = profile.settings.cadrumo_secret_store_backend
+        secret_store_dir = profile.settings.cadrumo_secret_store_dir
+        secret_passphrase = profile.settings.cadrumo_secret_passphrase
+
+    assert has_active_bucket_session() is False
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=None,
+        cadrumo_secret_store_backend=secret_store_backend,
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=secret_passphrase,
+    ):
+        health = assess_active_profile_health_with_session()
+
+    assert health.status == "ready"
+    assert health.source == "pointer"
+    assert health.profile_record_present is True
+    assert health.repairable_by_clearing_pointer is False
+    assert has_active_bucket_session() is False
 
 
 def test_profile_repair_clears_pointer_sourced_unreadable_manifest(tmp_path: Path) -> None:

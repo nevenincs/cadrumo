@@ -239,17 +239,17 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
     measured before releasing the transaction. Lock contention propagates
     without pointer mutation.
     """
-    before = _assess_with_best_effort_session()
+    before = assess_active_profile_health_with_session()
     if not clear_active or not confirmed or not before.repairable_by_clearing_pointer:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
     root = load_settings().cadrumo_local_storage_root
     with active_profile_pointer_transaction(root) as pointer_transaction:
-        before = _assess_with_best_effort_session()
+        before = assess_active_profile_health_with_session()
         if not before.repairable_by_clearing_pointer:
             return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
         pointer_transaction.clear()
-        after = _assess_with_best_effort_session()
+        after = assess_active_profile_health_with_session()
         return ActiveProfileRepairResult(
             dry_run=False,
             cleared_pointer=True,
@@ -258,10 +258,21 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
         )
 
 
-def _assess_with_best_effort_session() -> ActiveProfileHealth:
-    """Assess profile health, opening the active bucket session when available."""
+def assess_active_profile_health_with_session() -> ActiveProfileHealth:
+    """Assess profile health, opening a missing active-bucket session when possible.
+
+    Long-running processes can observe a profile that a sibling process just
+    created or selected. In that case the pointer and manifest are current but
+    no bucket session exists in this process yet. This projection retries only
+    that explicit cold-session failure under the canonical master-key provider;
+    every other degraded status remains unchanged.
+    """
     before = assess_active_profile_health()
-    if before.status != "profile_record_unreadable" or "NoActiveBucketSessionError" not in before.profile_record_error:
+    cold_session_error = (
+        "NoActiveBucketSessionError" in before.profile_record_error
+        or "no active bucket session" in before.profile_record_error
+    )
+    if before.status != "profile_record_unreadable" or not cold_session_error:
         return before
     try:
         from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
@@ -275,7 +286,19 @@ def _assess_with_best_effort_session() -> ActiveProfileHealth:
             override_settings(cadrumo_active_profile=registered_pointer.bucket_id),
             get_master_key_provider(),
         ):
-            return assess_active_profile_health()
+            reassessed = assess_active_profile_health()
+        updates: dict[str, object] = {"source": before.source}
+        if reassessed.status in {
+            "dangling_pointer",
+            "missing_profile_record",
+            "profile_record_unreadable",
+            "manifest_unreadable",
+        }:
+            repairable = before.source == "pointer"
+            updates["repairable_by_clearing_pointer"] = repairable
+            if repairable:
+                updates["next_action"] = "aeat config repair profile --clear-active --yes"
+        return reassessed.model_copy(update=updates)
     except (AeatError, OSError, ImportError) as exc:
         # AeatError: keyring/master-key domain failures.
         # OSError: filesystem-backed secret-store I/O failures.
@@ -296,5 +319,6 @@ __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
     "assess_active_profile_health",
+    "assess_active_profile_health_with_session",
     "repair_active_profile_pointer",
 ]
