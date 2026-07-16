@@ -8,7 +8,8 @@ from typing import Any, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .._manifest import BucketLifecycleStatus, BucketManifest, ManifestKdfParams
+from ......domain.user_profile import UserProfileStatus
+from .._manifest import BucketManifest, ManifestKdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -35,7 +36,7 @@ class _ManifestPayloadArgs(TypedDict, total=False):
     kdf_params: ManifestKdfParams
     recovery_enrolled: bool
     schema_version: int
-    status: BucketLifecycleStatus
+    status: UserProfileStatus
     idle_lock_minutes: int | None
     key_schedule: Any
 
@@ -92,7 +93,7 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
         "kdf_params": _kdf(),
         "recovery_enrolled": False,
         "schema_version": 1,
-        "status": BucketLifecycleStatus.ACTIVE,
+        "status": UserProfileStatus.ACTIVE,
     }
 
     # Apply overrides by checking each known key
@@ -113,7 +114,7 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
             payload["recovery_enrolled"] = overrides["recovery_enrolled"]
         if "schema_version" in overrides and isinstance(overrides["schema_version"], int):
             payload["schema_version"] = overrides["schema_version"]
-        if "status" in overrides and isinstance(overrides["status"], BucketLifecycleStatus):
+        if "status" in overrides and isinstance(overrides["status"], UserProfileStatus):
             payload["status"] = overrides["status"]
         if "idle_lock_minutes" in overrides and (
             isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None
@@ -142,7 +143,7 @@ def _manifest(**overrides: object) -> BucketManifest:
         "kdf_params": _kdf(),
         "recovery_enrolled": False,
         "schema_version": 1,
-        "status": BucketLifecycleStatus.ACTIVE,
+        "status": UserProfileStatus.ACTIVE,
     }
 
     # Apply overrides by checking each known key
@@ -163,7 +164,7 @@ def _manifest(**overrides: object) -> BucketManifest:
             payload["recovery_enrolled"] = overrides["recovery_enrolled"]
         if "schema_version" in overrides and isinstance(overrides["schema_version"], int):
             payload["schema_version"] = overrides["schema_version"]
-        if "status" in overrides and isinstance(overrides["status"], BucketLifecycleStatus):
+        if "status" in overrides and isinstance(overrides["status"], UserProfileStatus):
             payload["status"] = overrides["status"]
         if "idle_lock_minutes" in overrides and (
             isinstance(overrides["idle_lock_minutes"], int) or overrides["idle_lock_minutes"] is None

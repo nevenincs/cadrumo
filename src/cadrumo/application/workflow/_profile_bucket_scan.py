@@ -29,7 +29,7 @@ See Also:
         Consumes by-id manifest lookup to classify active-profile readiness.
     :class:`~adapters.persistence.storage.bucket.BucketManifest`
         Plaintext manifest shape parsed from each profile bucket directory.
-    :class:`~adapters.persistence.storage.bucket.BucketLifecycleStatus`
+    :class:`~domain.user_profile.UserProfileStatus`
         Lifecycle marker used to hide tombstoned profiles from live surfaces.
     :mod:`application.user_profile._orchestration`
         Owns profile creation, selection, and encrypted profile-record access
@@ -46,7 +46,6 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage import BUCKETS_DIRNAME, StorageValidationError
 from ...adapters.persistence.storage.bucket import (
-    BucketLifecycleStatus,
     BucketManifest,
     BucketPaths,
     bucket_paths,
@@ -54,6 +53,7 @@ from ...adapters.persistence.storage.bucket import (
     read_manifest,
 )
 from ...core.logging import get_logger
+from ...domain.user_profile import UserProfileStatus
 from ._errors import ProfileLabelAmbiguousError
 from ._profile_bucket_models import ProfileBucketPointer
 
@@ -119,7 +119,7 @@ def read_profile_bucket(
         # With tombstoned profiles included, a freed name may be carried
         # by both a tombstoned profile and a live one. The live profile
         # is the unambiguous resolution; a single live match wins.
-        live = [p for p in matches if p.status is BucketLifecycleStatus.ACTIVE]
+        live = [p for p in matches if p.status is UserProfileStatus.ACTIVE]
         if len(live) == 1:
             return live[0]
         raise ProfileLabelAmbiguousError(
@@ -193,7 +193,7 @@ def resolve_profile_bucket(
         return None
     by_id = read_profile_bucket_by_id(identifier, root=root)
     if by_id is not None:
-        if not include_tombstoned and by_id.status is BucketLifecycleStatus.TOMBSTONED:
+        if not include_tombstoned and by_id.status is UserProfileStatus.TOMBSTONED:
             return None
         return by_id
     return read_profile_bucket(identifier, root=root, include_tombstoned=include_tombstoned)
@@ -249,7 +249,7 @@ def list_profile_buckets(
         manifest = _read_manifest_or_none(paths)
         if manifest is None:
             continue
-        if not include_tombstoned and manifest.status is BucketLifecycleStatus.TOMBSTONED:
+        if not include_tombstoned and manifest.status is UserProfileStatus.TOMBSTONED:
             continue
         result[manifest.bucket_id] = ProfileBucketPointer(
             bucket_id=manifest.bucket_id,

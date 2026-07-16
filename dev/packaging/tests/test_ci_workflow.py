@@ -75,6 +75,18 @@ def test_ci_workflow_does_not_materialise_operator_dotenv() -> None:
     assert "env/.env" not in commands
 
 
+def test_ci_workflow_provisions_browser_before_unit_tests() -> None:
+    """Real browser tests run only after the canonical Chromium provisioner."""
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    steps = document["jobs"]["cadrumo-lint-and-test"]["steps"]
+    step_names = [str(step.get("name", "")) for step in steps]
+    browser_step = step_names.index("Provision Playwright Chromium")
+    unit_step = step_names.index("Test (unit)")
+
+    assert steps[browser_step]["run"] == "just env-playwright"
+    assert browser_step < unit_step
+
+
 def test_ci_workflow_product_surface_has_no_former_identity() -> None:
     """CI retains `aeat` only as the human CLI, never as a product identity."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))

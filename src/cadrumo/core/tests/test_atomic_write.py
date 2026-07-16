@@ -33,8 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PIPE_PAYLOAD = bytes(range(256)) * 4096
 _CHILD_TIMEOUT_SECONDS = 5.0
-_COOPERATIVE_ATTEMPTS = 8
-_EXIT_BACKPRESSURE = 21
+_EXIT_NO_CONTINUATION = 21
 _EXIT_INCOMPLETE = 22
 _EXIT_READER_FAILURE = 23
 
@@ -74,7 +73,7 @@ def _no_reader_backpressure_child() -> None:
         _close_fd(read_fd)
 
 
-def _cooperative_short_write_child() -> None:
+def _blocking_pipe_completion_child() -> None:
     read_fd, write_fd = os.pipe()
     received = bytearray()
     reader_errors: list[BaseException] = []
@@ -90,13 +89,10 @@ def _cooperative_short_write_child() -> None:
     reader_started = False
     outcome = 0
     try:
-        os.set_blocking(write_fd, False)
         reader.start()
         reader_started = True
         try:
             _write_all(write_fd, _PIPE_PAYLOAD)
-        except BlockingIOError:
-            outcome = _EXIT_BACKPRESSURE
         finally:
             _close_fd(write_fd)
             write_fd = -1
@@ -111,6 +107,95 @@ def _cooperative_short_write_child() -> None:
         _close_fd(read_fd)
         if reader_started:
             reader.join(timeout=0.25)
+    raise SystemExit(outcome)
+
+
+def _positive_short_write_continuation_child() -> None:
+    read_fd, write_fd = os.pipe()
+    received = bytearray()
+    outcome = 0
+    try:
+        # With no reader, the first internal os.write accepts a real positive
+        # capacity-bounded prefix. _write_all must then make another call,
+        # which encounters real nonblocking backpressure.
+        os.set_blocking(write_fd, False)
+        try:
+            _write_all(write_fd, _PIPE_PAYLOAD)
+        except BlockingIOError:
+            pass
+        else:
+            raise SystemExit(_EXIT_NO_CONTINUATION)
+        finally:
+            _close_fd(write_fd)
+            write_fd = -1
+
+        while chunk := os.read(read_fd, 65_536):
+            received.extend(chunk)
+        if not 0 < len(received) < len(_PIPE_PAYLOAD) or received != _PIPE_PAYLOAD[: len(received)]:
+            outcome = _EXIT_INCOMPLETE
+    finally:
+        _close_fd(write_fd)
+        _close_fd(read_fd)
+    raise SystemExit(outcome)
+
+
+def _signal_interrupted_short_write_completion_child() -> None:
+    import signal
+
+    # These POSIX-only members are intentionally resolved at runtime because
+    # the Windows stdlib typing surface omits them. Runtime dispatch calls this
+    # helper only on POSIX; the shared production writer has no platform branch.
+    posix_members = vars(signal)
+    sigalrm = posix_members["SIGALRM"]
+    itimer_real = posix_members["ITIMER_REAL"]
+    siginterrupt = posix_members["siginterrupt"]
+    setitimer = posix_members["setitimer"]
+
+    read_fd, write_fd = os.pipe()
+    received = bytearray()
+    reader_errors: list[BaseException] = []
+    reader_started = False
+
+    def _drain_pipe() -> None:
+        try:
+            while chunk := os.read(read_fd, 65_536):
+                received.extend(chunk)
+        except BaseException as exc:
+            reader_errors.append(exc)
+
+    reader = threading.Thread(target=_drain_pipe, daemon=True)
+
+    def _release_blocked_write(_signum: int, _frame: object) -> None:
+        nonlocal reader_started
+        if not reader_started:
+            reader.start()
+            reader_started = True
+
+    prior_handler = signal.signal(sigalrm, _release_blocked_write)
+    siginterrupt(sigalrm, True)
+    outcome = 0
+    try:
+        # The first blocking os.write fills the real pipe and then blocks.
+        # SIGALRM starts the reader and interrupts that call after a positive
+        # prefix, forcing _write_all to resume from its recorded offset.
+        setitimer(itimer_real, 0.01)
+        _write_all(write_fd, _PIPE_PAYLOAD)
+    finally:
+        setitimer(itimer_real, 0.0)
+        signal.signal(sigalrm, prior_handler)
+        _close_fd(write_fd)
+        write_fd = -1
+        if not reader_started:
+            reader.start()
+            reader_started = True
+        reader.join(timeout=_CHILD_TIMEOUT_SECONDS)
+
+        if reader.is_alive() or reader_errors:
+            outcome = _EXIT_READER_FAILURE
+        elif received != _PIPE_PAYLOAD:
+            outcome = _EXIT_INCOMPLETE
+        _close_fd(write_fd)
+        _close_fd(read_fd)
     raise SystemExit(outcome)
 
 
@@ -202,17 +287,25 @@ class TestHardenedTier:
         atomic_write_hardened_bytes(target, b"\x00\x01secret\xff")
         assert target.read_bytes() == b"\x00\x01secret\xff"
 
-    def test_write_all_completes_real_pipe_short_writes(self) -> None:
-        """A capacity-limited OS pipe must receive the complete payload."""
-        outcomes: list[int] = []
-        for _attempt in range(_COOPERATIVE_ATTEMPTS):
-            outcome = _bounded_child_exitcode(_cooperative_short_write_child)
-            outcomes.append(outcome)
-            assert outcome in {0, _EXIT_BACKPRESSURE}, outcomes
-            if outcome == 0:
-                break
-        else:
-            pytest.fail(f"all cooperative real-pipe attempts met transient backpressure: {outcomes}")
+    def test_write_all_completes_capacity_limited_real_pipe(self) -> None:
+        """A blocking capacity-limited OS pipe receives the complete payload."""
+        assert _bounded_child_exitcode(_blocking_pipe_completion_child) == 0
+
+    def test_write_all_continues_after_real_positive_short_write(self) -> None:
+        """The production loop continues after a real positive short write.
+
+        POSIX signals provide a deterministic byte-exact offset proof. Windows
+        lacks that signal interruption contract, so its real nonblocking pipe
+        pins the platform's positive-prefix then backpressure behavior; the
+        separate blocking-pipe test pins complete delivery on both platforms.
+        The production loop itself has no platform-specific branch.
+        """
+        child = (
+            _positive_short_write_continuation_child
+            if os.name == "nt"
+            else _signal_interrupted_short_write_completion_child
+        )
+        assert _bounded_child_exitcode(child) == 0
 
     def test_write_all_propagates_permanent_nonblocking_backpressure(self) -> None:
         assert _bounded_child_exitcode(_no_reader_backpressure_child) == 0

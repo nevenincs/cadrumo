@@ -12,6 +12,7 @@ from dev.docs.preprocess import (
     EXTRACTED_TEXT_SUFFIX,
     PreprocessOutput,
 )
+from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -28,6 +29,39 @@ def _sha256_of(path: Path) -> str:
 def _matches_origin_name(sidecar_name: str, origin_name: str) -> bool:
     stand_in_name = sidecar_name.removesuffix(EXTRACTED_JSON_SUFFIX)
     return stand_in_name == origin_name or _PART_SUFFIX.sub("", stand_in_name) == origin_name
+
+
+def test_normative_html_sources_use_canonical_lf_bytes() -> None:
+    """Normative HTML hashes must be identical on Windows and Unix checkouts."""
+    html_root = _CORPUS_ROOT / "normatives" / "html"
+    sources = sorted(html_root.glob("*.html"))
+    noncanonical = [source.name for source in sources if b"\r" in source.read_bytes()]
+
+    assert sources, "no normative HTML sources found"
+    assert not noncanonical, f"normative HTML contains non-LF line endings: {noncanonical!r}"
+
+
+def test_normative_html_sidecars_equal_current_production_extraction() -> None:
+    """Committed normative records are exact outputs of the live extractor."""
+    html_root = _CORPUS_ROOT / "normatives" / "html"
+    sources = sorted(html_root.glob("*.html"))
+    failures: list[str] = []
+
+    for source in sources:
+        json_paths = sorted(
+            path
+            for path in html_root.glob(f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
+            if _matches_origin_name(path.name, source.name)
+        )
+        if not json_paths:
+            continue
+        committed = [PreprocessOutput.model_validate_json(path.read_text(encoding="utf-8")) for path in json_paths]
+        expected = build_outputs(source, repo_root=_REPO_ROOT)
+        if committed != expected:
+            failures.append(source.relative_to(_REPO_ROOT).as_posix())
+
+    assert sources, "no normative HTML sources found"
+    assert not failures, f"normative HTML sidecars differ from the production extractor: {failures[:20]!r}"
 
 
 def test_committed_extraction_sidecars_match_current_sources() -> None:
@@ -53,6 +87,11 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
             failures.append(f"{rel_json}: sidecar is not paired with declared sibling source {rel_origin}")
         if output.source_sha256 != _sha256_of(origin):
             failures.append(f"{rel_json}: source_sha256 does not match current source bytes for {rel_origin}")
+        if origin.suffix == ".html" and output.preprocessor_id != HTML_EXTRACTOR_ID:
+            failures.append(
+                f"{rel_json}: normative HTML sidecar declares retired or unknown "
+                f"preprocessor_id {output.preprocessor_id!r}",
+            )
         if not text_path.is_file():
             failures.append(f"{rel_json}: text sidecar is missing: {text_path.relative_to(_REPO_ROOT).as_posix()}")
         elif text_path.read_text(encoding="utf-8") != output.render_text():

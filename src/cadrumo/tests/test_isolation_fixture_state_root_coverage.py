@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.secure_sql import isolated_cli_backend as isolated_cli_backend
-from ..config import _STATE_ROOT_DERIVED_DIRS, load_settings
+from ..core.config import _STATE_ROOT_DERIVED_DIRS, load_settings
+from .secure_sql import isolated_cli_backend as isolated_cli_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
