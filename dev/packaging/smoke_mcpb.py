@@ -59,6 +59,53 @@ def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout:
         raise SystemExit(f"command failed ({completed.returncode}): {argv!r}; retained log: {log}")
 
 
+def _run_concurrent_launches(
+    argv: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str],
+    logs: Path,
+    timeout: float,
+    count: int = 4,
+) -> None:
+    """Launch the real server concurrently after host-style provisioning."""
+    processes = [
+        subprocess.Popen(  # noqa: S603 - fixed installed tool and bundle-owned server
+            argv,
+            cwd=cwd,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding=_UTF_8,
+            errors="strict",
+        )
+        for _ in range(count)
+    ]
+    failures: list[str] = []
+    for index, process in enumerate(processes, start=1):
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            failures.append(f"launch {index} timed out")
+        log = logs / f"concurrent-launch-{index}.log"
+        log.write_text(
+            f"argv={json.dumps(argv)}\n"
+            f"cwd={cwd}\n"
+            f"exit_code={process.returncode}\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}\n",
+            encoding=_UTF_8,
+        )
+        if process.returncode != 0:
+            failures.append(f"launch {index} exited {process.returncode}; retained log: {log}")
+    if failures:
+        raise SystemExit("; ".join(failures))
+
+
 def _npx_argv(npx: Path) -> list[str]:
     """Return a directly executable NPX argv on POSIX and Windows."""
     if npx.suffix.casefold() not in {".cmd", ".bat", ".ps1"}:
@@ -107,6 +154,7 @@ def run_mcpb_smoke(
     extracted = run_root / "extracted"
     extracted.mkdir()
     environment = os.environ.copy()
+    environment.pop("UV_PROJECT_ENVIRONMENT", None)
 
     _run(
         [
@@ -157,12 +205,6 @@ def run_mcpb_smoke(
         "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
         "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
     }
-    expected_runtime_identity = (
-        f"{cohort.version}-"
-        f"{cohort.sha256['cadrumo'][:12]}-"
-        f"{cohort.sha256['cadrumo-data-manuals'][:12]}-"
-        f"{cohort.sha256['cadrumo-data-official'][:12]}"
-    )
     if server != {
         "command": "uv",
         "args": expected_args,
@@ -176,7 +218,6 @@ def run_mcpb_smoke(
             "CADRUMO_MCP_REQUIRED_VERSION": cohort.version,
             "CADRUMO_MCP_PERSONA": "${user_config.persona}",
             "CADRUMO_MCP_SURFACE": "${user_config.surface}",
-            "UV_PROJECT_ENVIRONMENT": (f"${{__dirname}}/.cadrumo-runtime-{expected_runtime_identity}"),
         },
     }:
         raise SystemExit(f"built MCPB launch contract drifted: {server!r}")
@@ -220,13 +261,24 @@ def run_mcpb_smoke(
     former_marker = former_product_root / "custody-marker.bin"
     former_marker_bytes = b"retired-aeat-state-must-remain-byte-identical"
     former_marker.write_bytes(former_marker_bytes)
-    runtime_environment = Path(resolved_environment["UV_PROJECT_ENVIRONMENT"])
-    expected_runtime_environment = extracted / f".cadrumo-runtime-{expected_runtime_identity}"
-    if runtime_environment.resolve() != expected_runtime_environment.resolve():
-        raise SystemExit(
-            "MCPB runtime path did not resolve from the stamped manifest: "
-            f"{resolved_environment['UV_PROJECT_ENVIRONMENT']!r}",
-        )
+    if "UV_PROJECT_ENVIRONMENT" in resolved_environment:
+        raise SystemExit("MCPB must use the client-provisioned bundle environment")
+    runtime_environment = extracted / ".venv"
+    launch_environment = {**environment, **resolved_environment}
+    _run(
+        [str(uv), "sync", "--directory", str(extracted)],
+        cwd=run_root,
+        env=launch_environment,
+        log=logs / "client-provision.log",
+        timeout=timeout_seconds,
+    )
+    _run_concurrent_launches(
+        [str(uv), *server_args],
+        cwd=run_root,
+        env=launch_environment,
+        logs=logs,
+        timeout=timeout_seconds,
+    )
     work_dir = run_root / "external-work"
     evidence = run_installed_mcp_oracle(
         uv,
@@ -274,6 +326,8 @@ def run_mcpb_smoke(
                 "official_validator": f"@anthropic-ai/mcpb@{_MCPB_CLI_VERSION}",
                 "proof": {
                     "archive_construction": "passed",
+                    "client_style_provisioning": "passed into bundle .venv",
+                    "concurrent_server_launches": "passed",
                     "bundle_runtime_oracle": "passed outside a desktop client",
                     "project_independent_state": str(storage_root),
                     "retired_default_state_refusal_isolated": str(former_product_root),

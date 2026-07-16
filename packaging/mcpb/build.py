@@ -41,7 +41,6 @@ _MCP_LAUNCHER: Final[str] = "uv"
 _CONSOLE_SCRIPT: Final[str] = "cadrumo-mcp"
 _REQUIRED_VERSION_ENV: Final[str] = "CADRUMO_MCP_REQUIRED_VERSION"
 _REQUIRED_COHORT_ENV: Final[str] = "CADRUMO_MCP_COHORT_SHA256"
-_UV_PROJECT_ENVIRONMENT: Final[str] = "UV_PROJECT_ENVIRONMENT"
 _STORAGE_ROOT_ENV: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
 _SERVER_ENTRY_POINT: Final[str] = "src/server.py"
 _SERVER_SOURCE: Final[str] = """\
@@ -106,12 +105,6 @@ def _product_sha256(cohort: PythonCohort) -> dict[str, str]:
     return {name: cohort.sha256[name] for name in _DISTRIBUTIONS}
 
 
-def _runtime_identity(cohort: PythonCohort) -> str:
-    """Return a short path identity derived directly from all canonical digests."""
-    components = (cohort.sha256[name][:12] for name in _DISTRIBUTIONS)
-    return f"{cohort.version}-{'-'.join(components)}"
-
-
 def load_manifest() -> dict[str, object]:
     """Load and validate the committed MCPB v0.4 manifest template."""
     data = json.loads(_MANIFEST.read_text(encoding=_UTF_8))
@@ -163,7 +156,6 @@ def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
         sort_keys=True,
         separators=(",", ":"),
     )
-    env[_UV_PROJECT_ENVIRONMENT] = f"${{__dirname}}/.cadrumo-runtime-{_runtime_identity(cohort)}"
     return data
 
 
