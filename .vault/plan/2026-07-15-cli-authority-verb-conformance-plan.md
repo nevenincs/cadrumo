@@ -11,16 +11,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S115, S117, S127, S184 -->
 
 # `cli-authority-verb-conformance` plan
@@ -104,10 +94,10 @@ Separate session termination from destructive provider and credential reset whil
 Resolve the selected certificate path and secure-storage secret once, delete the unreleased certificate keyring alternative, and feed check, status, test, and login from one typed bundle.
 
 - [ ] `W02.P07.S47` - Delete the certificate keyring backend, backend-kind selector, factory branch, exports, and certificate-specific keyring service and account code while retaining secure storage as the only certificate-secret backend and preserving independent master-key OS-keyring custody; `src/cadrumo/application/auth/_certificate_secret_backend.py; src/cadrumo/application/auth/__init__.py`.
-- [ ] `W02.P07.S48` - Make the active certificate credential resolver use only secure storage for source checks, secret mutation, registration removal, and reset cleanup without migration, fallback, probing, or reconciliation; `src/cadrumo/application/auth/_certificate_sources_operator.py`.
+- [ ] `W02.P07.S48` - Make the active certificate credential resolver use only secure storage and make ordinary certificate-secret set/remove crash-resumable through one secret-free durable intent or outbox carrying a stable operation id, event kind and timestamp, prior-presence state, and non-secret completion witness; resume pending mutations before accepting a new mutation, without migration, fallback, probing, reconciliation, or a parallel secret writer; `src/cadrumo/application/auth/_certificate_sources_operator.py; src/cadrumo/application/auth/_certificate_secret_backend.py; src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py`.
 - [ ] `W02.P07.S49` - Route auth status, test, and login certificate paths through the active credential resolver; `src/cadrumo/application/auth/_operator.py`.
 - [ ] `W02.P07.S50` - Make the certificate authenticator consume the resolved typed credential bundle; `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W02.P07.S51` - Prove certificate secrets set, resolve, and remove only through real secure storage and that no certificate keyring backend, selector, fallback, migration, probe, or cleanup path remains; `src/cadrumo/application/auth/tests/test_certificate_secret_backend.py`.
+- [ ] `W02.P07.S51` - Prove certificate secrets set, resolve, and remove only through real secure storage; force real event-commit failure after set and remove, then prove retry resumes the original operation, emits the original stable event exactly once, preserves SET versus ROTATED classification, and reports removal truthfully; also prove no certificate keyring backend, selector, fallback, migration, probe, cleanup path, or parallel secret writer remains; `src/cadrumo/application/auth/tests/test_certificate_secret_backend.py; src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`.
 - [ ] `W02.P07.S52` - Prove register, select, check, status, test, and login consume the same resolved certificate bytes; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
 
 ### Phase `W02.P05` - Build resumable all-profile reset
@@ -276,7 +266,7 @@ Replace rekey and overloaded recovery spellings with the accepted secure interac
 Expose distinct auth logout/reset and secure-storage-only certificate secret operations without clear or backend aliases.
 
 - [ ] `W04.P13.S116` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
-- [ ] `W04.P13.S118` - Prove certificate secret set and remove against real secure storage and reject backend selection, keyring spellings, and migration or fallback behavior; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
+- [ ] `W04.P13.S118` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event; reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
 - [ ] `W04.P13.S119` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
 
 ### Phase `W04.P14` - Cut over ledger and audit commands
