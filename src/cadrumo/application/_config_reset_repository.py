@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from ..core import exclusive_file_lock
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.config import Settings, load_settings
+from ..core.errors import AeatError
 from ..core.external_constants import UTF_8_ENCODING
 from ._config_reset_models import (
     ConfigResetOperation,
@@ -32,7 +33,7 @@ _DIRECTORY_MODE = 0o700
 _FILE_MODE = 0o600
 
 
-class ConfigResetJournalError(ValueError):
+class ConfigResetJournalError(AeatError):
     """Base failure for reset-journal persistence and validation."""
 
 

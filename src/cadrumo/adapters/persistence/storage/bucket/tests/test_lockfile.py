@@ -9,9 +9,12 @@ import subprocess
 import sys
 import textwrap
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing.process import BaseProcess
 from multiprocessing.queues import Queue
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
 import pytest
 
@@ -29,6 +32,23 @@ from .._lockfile import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@runtime_checkable
+class _ProcessFactory(Protocol):
+    def __call__(
+        self,
+        *,
+        target: Callable[..., None],
+        args: tuple[object, ...],
+    ) -> BaseProcess: ...
+
+
+@runtime_checkable
+class _ProcessContext(Protocol):
+    """Context surface required to construct one child lock contender."""
+
+    Process: _ProcessFactory
 
 
 def _holder_script(bucket_dir: Path, hold_seconds: float, ready_path: Path) -> str:
@@ -167,12 +187,15 @@ def test_child_process_cannot_inherit_parent_local_lock_ownership(
     tmp_path: Path,
 ) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
-    start_method = "fork" if "fork" in multiprocessing.get_all_start_methods() else "spawn"
-    context = multiprocessing.get_context(start_method)
+    if "fork" in multiprocessing.get_all_start_methods():
+        context = multiprocessing.get_context("fork")
+    else:
+        context = multiprocessing.get_context("spawn")
     results = context.Queue()
+    assert isinstance(context, _ProcessContext)
 
     acquire_lock(paths)
-    child = context.Process(  # pyright: ignore[reportAttributeAccessIssue]
+    child = context.Process(
         target=_attempt_lock_in_child,
         args=(str(tmp_path), "alpha", results),
     )

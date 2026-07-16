@@ -316,7 +316,8 @@ class _RecordingBrowserSession:
         assert provisioner is not None
         assert isinstance(provisioner, BrowserContextProvisioner)
         context_kwargs = provisioner.build_context_kwargs()
-        client_certificates = context_kwargs["client_certificates"]
+        client_certificates = context_kwargs.get("client_certificates")
+        assert client_certificates is not None
         assert len(client_certificates) == 1
         client_certificate = client_certificates[0]
         assert client_certificate["origin"] == AEAT_CERTIFICATE_PROTECTED_ORIGIN
@@ -341,7 +342,8 @@ class _RecordingBrowserSession:
 def _factory_returning(session: BrowserSessionLike):
     """Return a browser-session factory bound to one protocol implementation."""
 
-    async def factory(_settings: Settings) -> BrowserSessionLike:
+    async def factory(settings: Settings) -> BrowserSessionLike:
+        del settings
         return session
 
     return factory

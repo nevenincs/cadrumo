@@ -1036,8 +1036,7 @@ def filed_pull_cmd(
 
     _emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
-    single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
-    if single_mode:
+    if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         resolved_period = _live_period_option(period, year=year)
         report = asyncio.run(
             capture_filed_data(

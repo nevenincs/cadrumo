@@ -69,7 +69,7 @@ def resolve_active_certificate_credentials(
             workflow_state = _workflow_state_repository().load() if bucket_id is not None else None
             if workflow_state is None:
                 return unnamed_certificate_credentials(resolved)
-            return resolve_active_certificate_credentials_from_state(
+            return _resolve_active_certificate_credentials_from_state(
                 workflow_state,
                 settings=resolved,
                 bucket_id=bucket_id,
@@ -78,14 +78,35 @@ def resolve_active_certificate_credentials(
         return ActiveCertificateCredentials()
 
 
-def resolve_active_certificate_credentials_from_state(
+def project_active_certificate_credentials(
+    state: WorkflowState,
+    *,
+    settings: Settings,
+) -> ActiveCertificateCredentials:
+    """Project selected certificate metadata without reading secure storage.
+
+    Caller-supplied workflow state carries no storage-route provenance.  This
+    boundary therefore never accepts a bucket identifier and always leaves a
+    selected named source's password absent.  Secret-bearing credentials must
+    be obtained through :func:`resolve_active_certificate_credentials`, which
+    loads the workflow state inside its own witnessed active-profile span.
+    """
+    return _resolve_active_certificate_credentials_from_state(
+        state,
+        settings=settings,
+        bucket_id=None,
+        resolve_secret=False,
+    )
+
+
+def _resolve_active_certificate_credentials_from_state(
     state: WorkflowState,
     *,
     settings: Settings,
     bucket_id: str | None,
     resolve_secret: bool = True,
 ) -> ActiveCertificateCredentials:
-    """Resolve active credentials from an already-loaded workflow state."""
+    """Resolve credentials from state loaded within the matching bucket span."""
     active_record = active_certificate_source(state)
     if active_record is None:
         certificate_path = settings.cadrumo_certificate_path
@@ -109,7 +130,7 @@ def resolve_active_certificate_credentials_from_state(
 
 
 __all__ = [
+    "project_active_certificate_credentials",
     "resolve_active_certificate_credentials",
-    "resolve_active_certificate_credentials_from_state",
     "resolve_certificate_source_secret",
 ]

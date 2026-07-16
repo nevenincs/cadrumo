@@ -50,6 +50,7 @@ from .. import (
     configure_operator_auth,
     inspect_operator_auth,
     login_operator_auth,
+    project_active_certificate_credentials,
     register_operator_certificate_source,
     resolve_active_certificate_credentials,
     select_operator_certificate_source,
@@ -882,6 +883,10 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
 
     with profile_storage_session(_BUCKET_B):
+        projected_credentials = project_active_certificate_credentials(
+            retained_state_a,
+            settings=load_settings(),
+        )
         projection = build_operator_state_projection(
             state=retained_state_a,
             requested_provider=AuthProviderKind.CERTIFICATE.value,
@@ -890,6 +895,9 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
             include_pending_obligations=False,
         )
 
+    assert projected_credentials.certificate_path == cert_a
+    assert projected_credentials.source_name == "selected"
+    assert projected_credentials.password is None
     assert projection.auth.certificate_path == str(cert_a)
     assert projection.auth.available is False
     assert projection.auth.health_summary == ""
@@ -1033,7 +1041,9 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
         asyncio.run(login_operator_auth(AuthProviderKind.CERTIFICATE.value))
 
     assert raised.value.translated_message == "application.auth.operator.login.refused_certificate_file_missing"
-    assert raised.value.context["path"] == str(selected_path)
+    context = raised.value.context
+    assert context is not None
+    assert context["path"] == str(selected_path)
 
 
 def test_check_named_source_without_secret_never_inherits_a_valid_global_password(

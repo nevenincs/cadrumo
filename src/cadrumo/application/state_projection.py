@@ -101,7 +101,8 @@ from ..domain.deadlines import (
 )
 from ..domain.modelos import WorkUnitState
 from .auth import (
-    resolve_active_certificate_credentials_from_state,
+    project_active_certificate_credentials,
+    resolve_active_certificate_credentials,
     select_provider,
 )
 from .auth_credentials import ActiveCertificateCredentials
@@ -409,12 +410,14 @@ def _build_auth_readiness(
     backend_settings = None
     if provider == AuthProviderKind.CERTIFICATE.value:
         backend_settings = load_settings()
-        certificate_credentials = resolve_active_certificate_credentials_from_state(
+        certificate_credentials = project_active_certificate_credentials(
             state,
             settings=backend_settings,
-            bucket_id=credential_bucket_id,
-            resolve_secret=probe_live_backend and credential_bucket_id is not None,
         )
+        if probe_live_backend and credential_bucket_id is not None:
+            certificate_credentials = resolve_active_certificate_credentials(
+                settings=backend_settings,
+            )
         effective_certificate_path = (
             str(certificate_credentials.certificate_path)
             if certificate_credentials.certificate_path is not None

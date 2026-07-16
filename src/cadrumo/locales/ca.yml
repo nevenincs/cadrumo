@@ -33,11 +33,9 @@ adapters:
           sessio valida.
         capture_requires_active_session: capture_storage_state() requereix la sessió
           autenticada activa.
-        capture_requires_certificate: capture_storage_state() requereix una sessió
-          amb certificat i metadades de handshake.
+        capture_requires_certificate: capture_storage_state() requereix una sessió activa
+          amb certificat i metadades del recurs protegit.
         closing: L'autenticador s'està tancant; no es permeten noves operacions verify_login.
-        context_marker_missing: El context del navegador no està etiquetat amb el
-          marcador de certificat esperat.
         metadata_parse_failed: Les metadades persistides no han produit un model analitzat.
         no_active_context: No hi ha context de navegador actiu; crideu authenticate()
           primer.
@@ -5080,8 +5078,6 @@ errors:
     auth_auth_certificate: S'ha produït un error en l'autenticació amb certificat.
     auth_auth_certificate_expired: El certificat digital ha caducat. Renova el certificat
       per poder autenticar-te.
-    auth_auth_certificate_handshake: L'entrada de la negociació TLS no és vàlida.
-      Revisa l'URL indicat.
     auth_auth_certificate_load: No s'han pogut llegir les dades del certificat PKCS#12.
       Comprova que el fitxer no estigui malmès.
     auth_auth_certificate_nif_parse: No s'ha pogut extreure cap NIF ni NIE del titular

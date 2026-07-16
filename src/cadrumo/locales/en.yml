@@ -32,12 +32,10 @@ adapters:
           assertion.
         capture_requires_active_session: capture_storage_state() requires the currently
           active authenticated session.
-        capture_requires_certificate: capture_storage_state() requires a certificate-backed
-          session with handshake metadata.
+        capture_requires_certificate: capture_storage_state() requires an active certificate-backed
+          session with protected-resource metadata.
         closing: The authenticator is closing; no new verify_login operations are
           allowed.
-        context_marker_missing: Browser context was not tagged with the expected certificate
-          marker.
         metadata_parse_failed: Persisted metadata did not produce a parsed model.
         no_active_context: No active browser context; call authenticate() first.
         no_context_capture_storage: No active browser context; cannot capture storage
@@ -4767,8 +4765,6 @@ errors:
     auth_auth_certificate: A certificate-authentication error occurred.
     auth_auth_certificate_expired: The digital certificate has expired. Renew the
       certificate before authenticating.
-    auth_auth_certificate_handshake: The TLS handshake input is not valid. Check the
-      URL provided.
     auth_auth_certificate_load: The PKCS#12 certificate data could not be parsed.
       Check that the file is not corrupted.
     auth_auth_certificate_nif_parse: No DNI, NIF, or NIE could be extracted from the

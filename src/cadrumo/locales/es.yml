@@ -33,12 +33,10 @@ adapters:
           de sesion valida.
         capture_requires_active_session: capture_storage_state() requiere la sesión
           autenticada actualmente activa.
-        capture_requires_certificate: capture_storage_state() requiere una sesión
-          respaldada por certificado con metadatos de handshake.
+        capture_requires_certificate: capture_storage_state() requiere una sesión activa
+          con certificado y metadatos del recurso protegido.
         closing: El autenticador está cerrando; no se permiten nuevas operaciones
           verify_login.
-        context_marker_missing: El contexto del navegador no está etiquetado con el
-          marcador de certificado esperado.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
         no_active_context: No hay contexto de navegador activo; llame a authenticate()
           primero.
@@ -5132,8 +5130,6 @@ errors:
     auth_auth_certificate: Se produjo un error en la autenticación con certificado.
     auth_auth_certificate_expired: El certificado digital ha caducado. Renueva el
       certificado para poder autenticarte.
-    auth_auth_certificate_handshake: La entrada del handshake TLS no es válida. Revisa
-      la URL indicada.
     auth_auth_certificate_load: No se pudieron leer los datos del certificado PKCS#12.
       Comprueba que el archivo no esté dañado.
     auth_auth_certificate_nif_parse: No se pudo extraer ningún NIF ni NIE del titular

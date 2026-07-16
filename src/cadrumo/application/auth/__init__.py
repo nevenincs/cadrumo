@@ -210,11 +210,13 @@ from ._certificate_sources_operator import (
     register_operator_certificate_source,
     remove_operator_certificate_source,
     remove_operator_certificate_source_secret,
-    resolve_active_certificate_credentials,
-    resolve_active_certificate_credentials_from_state,
-    resolve_certificate_source_secret,
     select_operator_certificate_source,
     set_operator_certificate_source_secret,
+)
+from ._credential_resolution import (
+    project_active_certificate_credentials,
+    resolve_active_certificate_credentials,
+    resolve_certificate_source_secret,
 )
 from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
@@ -366,6 +368,7 @@ __all__ = [
     "logout_operator_auth",
     "persisted_session_exists",
     "probe_provider_configuration",
+    "project_active_certificate_credentials",
     "record_auth_diagnostic_phone_state",
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
@@ -373,7 +376,6 @@ __all__ = [
     "require_verified_aeat_session",
     "reset_operator_auth",
     "resolve_active_certificate_credentials",
-    "resolve_active_certificate_credentials_from_state",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "select_provider",
