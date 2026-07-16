@@ -288,6 +288,29 @@ class TestTextFrameComparison:
         assert f"workdir {SANDBOX_WORKDIR_TOKEN}" in normalised
         assert f"snapshot {MASK_SENTINEL}" in normalised
 
+    def test_token_rooted_suffix_uses_one_cross_platform_separator(self) -> None:
+        """A Windows writer and POSIX checker persist the same token path."""
+
+        normalised = normalise_text_output(
+            "path\tC:\\Temp\\sequence\\store\\logs\\cadrumo.log\n",
+            storage_root=r"C:\Temp\sequence\store",
+            workdir=r"C:\Temp\sequence\workdir",
+        )
+        assert normalised == f"path\t{SANDBOX_STORAGE_ROOT_TOKEN}/logs/cadrumo.log\n"
+
+    def test_unrelated_windows_path_keeps_its_native_separators(self) -> None:
+        """Separator canonicalisation cannot rewrite an unknown operator path."""
+
+        unrelated = r"open C:\Users\someone\Documents\report.pdf"
+        assert (
+            normalise_text_output(
+                unrelated,
+                storage_root=r"C:\Temp\sequence\store",
+                workdir=r"C:\Temp\sequence\workdir",
+            )
+            == unrelated
+        )
+
 
 class TestEnvelopePathNormalisation:
     """Value-anchored sandbox/checkout-path tokenisation inside JSON envelopes.
@@ -358,6 +381,21 @@ class TestEnvelopePathNormalisation:
         live = self._run(
             storage_root=r"C:\Temp\cli-sequence-BBB\cadrumo-storage",
             workdir=r"C:\Temp\cli-sequence-BBB\workdir",
+        )
+        assert compare_transcript_to_golden(live, golden, page=_PAGE) == ()
+
+    def test_windows_writer_and_posix_reader_compare_token_suffixes_cleanly(self) -> None:
+        """Known-root suffix separators are canonical across operating systems."""
+
+        golden = build_golden(
+            self._run(
+                storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
+                workdir=r"C:\Temp\cli-sequence-AAA\workdir",
+            ),
+        )
+        live = self._run(
+            storage_root="/home/runner/cli-sequence-BBB/cadrumo-storage",
+            workdir="/home/runner/cli-sequence-BBB/workdir",
         )
         assert compare_transcript_to_golden(live, golden, page=_PAGE) == ()
 

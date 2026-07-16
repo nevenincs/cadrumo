@@ -15,7 +15,6 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Iterator
-from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -512,7 +511,6 @@ _EXTERNAL_URL_RE = re.compile(r"""(?:url\(|["'(])\s*(?:https?:)?//""")
 _SEQUENCE_ID = "modelo-303-demo"
 _SEQUENCE_PAGE = "index"
 _SEQUENCE_DIRECTIVE_BODY = (
-    ":verify: Confirm the calculation is complete.\n"
     "@setup aeat app ledger import --file fixtures/x.csv\n"
     "aeat app modelo work calculate wu_demo\n"
     "@result aeat app modelo work verify wu_demo\n"
@@ -585,31 +583,40 @@ def _write_sequence_site(root: Path, *, goldens_root: Path) -> None:
         "    register(app)\n"
     )
     (root / "conf.py").write_text(conf, encoding="utf-8")
-    body = "# Modelo 303\n\n```{cli-sequence} " + _SEQUENCE_ID + "\n" + _SEQUENCE_DIRECTIVE_BODY + "\n```\n"
+    body = f"# Modelo 303\n\n```{{cli-sequence}} {_SEQUENCE_ID}\n:verify: Confirm the calculation is complete.\n```\n"
     (root / "index.md").write_text(body, encoding="utf-8")
+    contract_dir = root / "_sequences" / "contracts" / _SEQUENCE_PAGE
+    contract_dir.mkdir(parents=True)
+    (contract_dir / f"{_SEQUENCE_ID}.seq").write_text(_SEQUENCE_DIRECTIVE_BODY + "\n", encoding="utf-8")
 
 
 def _build_html(root: Path) -> tuple[str, Path, str]:
-    """Build the site in-process under -n -W, returning the index HTML, out dir, and warnings."""
-    from sphinx.application import Sphinx
-
-    warning = StringIO()
+    """Build the site in an isolated subprocess under ``-n -W``."""
     out = root / "_out"
-    app = Sphinx(
-        srcdir=str(root),
-        confdir=str(root),
-        outdir=str(out),
-        doctreedir=str(root / "_doctree"),
-        buildername="html",
-        status=StringIO(),
-        warning=warning,
-        freshenv=True,
-        warningiserror=True,
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "html",
+            "-n",
+            "-W",
+            "-j",
+            "1",
+            str(root),
+            str(out),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
     )
-    app.build()
+    combined = result.stdout + result.stderr
+    assert result.returncode == 0, combined
     index = out / "index.html"
     html = index.read_text(encoding="utf-8") if index.is_file() else ""
-    return html, out, warning.getvalue()
+    return html, out, combined
 
 
 def test_sequence_widget_assets_make_no_external_requests() -> None:
@@ -700,9 +707,8 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
     # repeating timer — the no-autoplay invariant stays intact.
     assert "setInterval" not in js
     assert "setTimeout" in js
-    # Setup frames are no longer excluded from the playhead: the setup-kind filter
-    # is gone, so the position indicator steps through every frame.
-    assert '!== "setup"' not in js, "setup frames must join the playhead (filter removed)"
+    # Setup frames never enter the reader payload, so the widget needs no setup filter.
+    assert '!== "setup"' not in js
 
     css = _WIDGET_CSS.read_text(encoding="utf-8")
     for surface in (
@@ -721,7 +727,7 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
         ".cadrumo-frame-desc",
     ):
         assert surface in css, f"widget CSS is missing the shell/copy surface {surface!r}"
-    # The collapsed-setup disclosure styling is gone (setup frames are unfolded).
+    # Setup scaffolding has no reader-facing disclosure surface.
     assert "details.cadrumo-setup" not in css
     # The switcher and copy transitions join the reduced-motion opt-out.
     reduced = css.rsplit("prefers-reduced-motion", 1)[1]
@@ -760,14 +766,13 @@ def test_sequence_page_ships_widget_and_degrades_without_js(
     assert "WARNING" not in warnings, warnings
 
     # No-JS degradation: the complete linear transcript is present in the static
-    # HTML with no script required — every frame, output, verify caption, and the
-    # imperative expect check.
+    # HTML with no script required, while build-only setup and assertions stay absent.
     assert 'class="cadrumo-sequence"' in html
     assert 'data-cadrumo-sequence="1"' in html
-    assert "Imported 3 transactions." in html  # the setup frame's output
+    assert "Imported 3 transactions." not in html
     assert "Confirm the calculation is complete." in html  # the verify caption
-    assert "Confirm result.status reads verified_complete." in html  # the expect check
-    assert html.count('class="cadrumo-frame"') == 3
+    assert "Confirm result.status reads verified_complete." not in html
+    assert html.count('class="cadrumo-frame"') == 2
 
     # Enhanceable markup: the hover-help keys (data-command-path) and the inline
     # payload the stepped player parses are both present, matching the frames.
@@ -780,7 +785,8 @@ def test_sequence_page_ships_widget_and_degrades_without_js(
     assert match is not None
     payload = json.loads(match.group(1).replace("<\\/", "</"))
     assert payload["sequence_id"] == _SEQUENCE_ID
-    assert [frame["kind"] for frame in payload["frames"]] == ["setup", "command", "result"]
+    assert [frame["kind"] for frame in payload["frames"]] == ["command", "result"]
+    assert all("expects" not in frame for frame in payload["frames"])
 
     # The widget assets ship into the built site and the page references them.
     assert (out / "_static" / "cadrumo-docs.js").is_file()

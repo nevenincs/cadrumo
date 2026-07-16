@@ -22,6 +22,7 @@ import pytest
 
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
+from dev.packaging.python_cohort import load_python_cohort
 from dev.packaging.smoke_core import _run, _venv_bin, _venv_python
 from dev.packaging.smoke_pip_core import _create_pip_venv
 from dev.packaging.smoke_split_install import (
@@ -129,14 +130,31 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     assert uv is not None, "uv is required to build the installed oracle cohort"
 
     work_dir = tmp_path_factory.mktemp("installed-oracle-cohort")
-    source_commit_result = _run(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
-    source_commit = source_commit_result.stdout.strip()
-    assert len(source_commit) == 40
-    build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
-    root_wheel = _build_root_wheel(build_root, work_dir, uv)
-    built_data_wheels = _build_data_wheels(build_root, work_dir, uv)
-    assert len(built_data_wheels) == 2
-    data_wheels = (built_data_wheels[0], built_data_wheels[1])
+    supplied_dir = _REPO_ROOT / "var" / "packaging-smoke-cohort" / "python"
+    if (supplied_dir / "python-cohort.json").is_file():
+        supplied = load_python_cohort(supplied_dir)
+        source_commit = supplied.source_commit
+        root_wheel = supplied.root_wheel
+        data_wheels = supplied.companion_wheels
+        artifact_sha256 = {
+            "cadrumo": supplied.sha256["cadrumo"],
+            "cadrumo-data-manuals": supplied.sha256["cadrumo-data-manuals"],
+            "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
+        }
+    else:
+        source_commit_result = _run(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
+        source_commit = source_commit_result.stdout.strip()
+        assert len(source_commit) == 40
+        build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
+        root_wheel = _build_root_wheel(build_root, work_dir, uv)
+        built_data_wheels = _build_data_wheels(build_root, work_dir, uv)
+        assert len(built_data_wheels) == 2
+        data_wheels = (built_data_wheels[0], built_data_wheels[1])
+        artifact_sha256 = {
+            "cadrumo": _sha256(root_wheel),
+            "cadrumo-data-manuals": _sha256(data_wheels[0]),
+            "cadrumo-data-official": _sha256(data_wheels[1]),
+        }
 
     venv = _create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     _run(
@@ -164,18 +182,8 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     mcp_server = _installed_script(venv, "cadrumo-mcp")
     assert cli.is_file()
     assert mcp_server.is_file()
-    artifact_sha256 = {
-        "cadrumo": _sha256(root_wheel),
-        "cadrumo-data-manuals": _sha256(data_wheels[0]),
-        "cadrumo-data-official": _sha256(data_wheels[1]),
-    }
     evidence_path = (
-        _REPO_ROOT
-        / "var"
-        / "distribution-install-readiness"
-        / "installed-cohorts"
-        / source_commit
-        / "evidence.json"
+        _REPO_ROOT / "var" / "distribution-install-readiness" / "installed-cohorts" / source_commit / "evidence.json"
     )
     _write_evidence(
         evidence_path,

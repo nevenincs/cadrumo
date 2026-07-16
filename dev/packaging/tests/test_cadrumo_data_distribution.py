@@ -1,7 +1,7 @@
 """Packaging gate for the two ``cadrumo-data-*`` corpus companion distributions.
 
 The wheel-split decision moves the corpus source binaries
-(``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the slim ``cadrumo`` wheel. Because
+(``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the compact ``cadrumo`` wheel. Because
 the full binary set exceeds PyPI's 100 MB per-file cap, it is split along the
 corpus directory seam into TWO sub-cap companions, each under the cap so no size
 grant is needed:
@@ -21,7 +21,7 @@ This gate builds both real companion wheels and asserts:
    ``cadrumo_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
    resolves.
 2. The two companions are DISJOINT and their union equals the FULL tracked
-   corpus-binary set — every binary the slim ``cadrumo`` wheel sheds is shipped by
+   corpus-binary set — every binary the compact ``cadrumo`` wheel sheds is shipped by
    exactly one companion, and none twice.
 3. Neither ships ``cadrumo_data/__init__.py`` (the namespace-package invariant) nor
    any corpus DERIVED surface (extracted text, html, json) — those stay in the
@@ -214,7 +214,7 @@ def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWh
     extra = sorted(union - expected_full)
     assert not missing, (
         f"the companions together miss {len(missing)} tracked corpus binaries "
-        f"(a binary shed by the slim wheel that no companion ships); first ten: {missing[:10]!r}"
+        f"(a binary shed by the root wheel that no data distribution ships); first ten: {missing[:10]!r}"
     )
     assert not extra, (
         f"the companions together ship {len(extra)} corpus members not in the tracked set; first ten: {extra[:10]!r}"

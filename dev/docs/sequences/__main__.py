@@ -18,11 +18,13 @@ call the same :func:`check_sequences` engine function this module's
 ``check`` mode wraps, so neither surface re-implements execution or
 comparison (the pull==calculate discipline).
 
-Sequence discovery reads the enrolled docs pages directly: a page enrolls by
-carrying at least one *backtick*-fenced ``cli-sequence`` MyST directive (the
-backtick fence form, never the colon form); this module extracts each
-directive's id, options, and frame body and parses it through the shared
-grammar parser. A sequence whose author binds
+Sequence discovery reads the enrolled docs pages and their private contracts:
+a page enrolls by carrying at least one *backtick*-fenced ``cli-sequence`` MyST
+directive (the backtick fence form, never the colon form). The public directive
+contains only its id and reader-facing ``:verify:`` sentence; this module reads
+the frame grammar from
+``docs/_sequences/contracts/<page>/<sequence-id>.seq`` and parses it through the
+shared grammar parser. A sequence whose author binds
 a ``@capture`` no later frame consumes is reported as a named advisory (never
 a failure): the capture still records into the transcript and golden, so it is
 review-visible, but the advisory keeps dead bindings from accumulating.
@@ -31,7 +33,9 @@ review-visible, but the advisory keeps dead bindings from accumulating.
 from __future__ import annotations
 
 import argparse
+import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,6 +47,7 @@ from pydantic import BaseModel, Field
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ._compare import check_transcript, evaluate_expectations
+from ._contracts import read_sequence_contract
 from ._errors import SequenceEngineError, SequenceParseError
 from ._golden_store import (
     read_golden,
@@ -60,6 +65,7 @@ __all__ = [
     "DiscoveredSequence",
     "check_page_coherence",
     "check_sequences",
+    "check_sequences_in_subprocess",
     "default_docs_root",
     "discover_sequences",
     "main",
@@ -204,13 +210,15 @@ def _profile_prerequisite_problem(text: str, docname: str, first_directive_line:
 def discover_sequences(
     *,
     docs_root: Path | None = None,
+    contracts_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
 ) -> tuple[tuple[DiscoveredSequence, ...], tuple[str, ...]]:
-    """Discover and parse every enrolled ``cli-sequence`` directive.
+    """Discover and parse every enrolled directive plus its private contract.
 
     Args:
         docs_root: The narrative pages tree; defaults to the committed ``docs/``.
+        contracts_root: Optional private-contract root override.
         page: Restrict to one docname-style page path (e.g.
             ``tutorials/first-filing``).
         sequence_id: Restrict to one sequence id.
@@ -257,10 +265,35 @@ def discover_sequences(
                 )
                 continue
             seen_ids[found_id] = docname
+            if raw.body.strip():
+                problems.append(
+                    f"page {docname!r} sequence {found_id!r}: cli-sequence directive bodies "
+                    "must be empty; commands and development metadata belong in the keyed "
+                    "private contract under docs/_sequences/contracts",
+                )
+                continue
+            private_public_options = sorted(set(raw.options) - {"verify"})
+            if private_public_options:
+                rendered = ", ".join(f":{key}:" for key in private_public_options)
+                problems.append(
+                    f"page {docname!r} sequence {found_id!r}: private option(s) {rendered} "
+                    "must live in the keyed sequence contract, not user-facing Markdown",
+                )
+                continue
             try:
-                sequence = parse_sequence(sequence_id=found_id, options=raw.options, body=raw.body)
+                contract_options, contract_body = read_sequence_contract(
+                    docname,
+                    found_id,
+                    docs_root=root,
+                    contracts_root=contracts_root,
+                )
+                options = {**contract_options, **raw.options}
+                sequence = parse_sequence(sequence_id=found_id, options=options, body=contract_body)
             except SequenceParseError as exc:
                 problems.extend(f"page {docname!r}: {problem}" for problem in exc.problems)
+                continue
+            except SequenceEngineError as exc:
+                problems.append(str(exc))
                 continue
             discovered.append(
                 DiscoveredSequence(
@@ -365,6 +398,63 @@ def check_sequences(
             continue
         all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
     return tuple(all_problems), tuple(advisories)
+
+
+def check_sequences_in_subprocess(
+    *,
+    docs_root: Path | None = None,
+    goldens_root: Path | None = None,
+    page: str | None = None,
+    sequence_id: str | None = None,
+    timeout: float = 3600,
+) -> tuple[str, ...]:
+    """Run the golden check in a fresh English-pinned interpreter.
+
+    CLI help strings are resolved while the command tree is imported. A
+    long-lived pytest or Sphinx process may already have materialised that tree
+    under another locale, so changing settings in-process cannot make its help
+    English again. The child still uses :func:`check_sequences`; the process
+    boundary only guarantees the language premise before the first CLI import.
+
+    Returns:
+        An empty tuple on success, or one complete child diagnostic report on
+        a golden divergence.
+
+    Raises:
+        SequenceEngineError: When the child cannot run the check surface.
+    """
+    command = [sys.executable, "-m", "dev.docs.sequences", "check"]
+    if docs_root is not None:
+        command.extend(("--docs-root", str(docs_root)))
+    if goldens_root is not None:
+        command.extend(("--goldens-root", str(goldens_root)))
+    if page is not None:
+        command.extend(("--page", page))
+    if sequence_id is not None:
+        command.extend(("--sequence", sequence_id))
+
+    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+    environment["PYTHONIOENCODING"] = _UTF_8
+    environment["PYTHONUTF8"] = "1"
+    result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
+        command,
+        cwd=Path(__file__).resolve().parents[3],
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding=_UTF_8,
+        timeout=timeout,
+        check=False,
+    )
+    if result.returncode == 0:
+        return ()
+    report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
+    if result.returncode == 1:
+        return (report,)
+    raise SequenceEngineError(
+        f"cli-sequence check subprocess failed (exit {result.returncode}):\n{report or '<no output>'}",
+    )
 
 
 def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> SequenceTranscript:

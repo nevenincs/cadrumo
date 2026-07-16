@@ -149,7 +149,7 @@ def cli_reference_page_for_command(command_path: tuple[str, ...]) -> str:
     against, shared with the search-index projection so a deep link always lands
     on the page that actually carries the command's section. It mirrors the
     generator's split exactly: a leaf mounted directly on a family (path length
-    3, e.g. ``aeat config lock``) renders on the family index page
+    3, e.g. ``aeat config switch``) renders on the family index page
     (``cli/config``); a leaf under a verb group (length >= 4, e.g.
     ``aeat app ledger add`` or the deeper ``aeat app ledger evidence add``)
     renders on that group's own page (``cli/app/ledger``), keyed on the group
@@ -656,7 +656,7 @@ def _render_family_index_page(
     The page is navigation, not a command dump: a grid linking to each major
     verb group's own page (which leads with that group's rendered ``--help``),
     plus any commands mounted directly on the family root with no intervening
-    group (``aeat config check``, ``aeat config lock``, ...).
+    group (``aeat config check``, ``aeat config switch``, ...).
 
     Args:
         family_name: The family name, e.g. ``"config"`` or ``"app"``.

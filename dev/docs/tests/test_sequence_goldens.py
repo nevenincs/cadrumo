@@ -48,6 +48,7 @@ from dev.docs.sequences import (
     build_golden,
     check_page_coherence,
     check_sequences,
+    check_sequences_in_subprocess,
     compare_transcript_to_golden,
     execute_sequence,
     parse_sequence,
@@ -209,7 +210,7 @@ class TestCommittedGoldensCleanGate:
 
     def test_every_committed_golden_matches_live_execution(self) -> None:
         """Every enrolled sequence re-executes clean against its committed golden."""
-        problems, _advisories = check_sequences()
+        problems = check_sequences_in_subprocess()
         assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
 
 
@@ -230,7 +231,6 @@ _FIXTURE_INDEX = (
     "Create a profile first with `aeat config profile create`.\n\n"
     f"```{{cli-sequence}} {_FIXTURE_SEQUENCE_ID}\n"
     ":verify: Confirm the profile listing succeeds.\n"
-    f"{_FIXTURE_BODY}\n"
     "```\n"
 )
 
@@ -259,6 +259,9 @@ def _write_fixture_docs(root: Path) -> tuple[Path, Path]:
     goldens_root = root / "goldens"
     goldens_root.mkdir(parents=True)
     (docs_root / "index.md").write_text(_FIXTURE_INDEX, encoding="utf-8")
+    contract_dir = docs_root / "_sequences" / "contracts" / "index"
+    contract_dir.mkdir(parents=True)
+    (contract_dir / f"{_FIXTURE_SEQUENCE_ID}.seq").write_text(_FIXTURE_BODY + "\n", encoding="utf-8")
     return docs_root, goldens_root
 
 
@@ -306,6 +309,9 @@ def _build_fixture_site(root: Path, docs_root: Path, goldens_root: Path) -> str:
     site = root / "site"
     site.mkdir()
     (site / "index.md").write_text(_FIXTURE_INDEX, encoding="utf-8")
+    contract_dir = site / "_sequences" / "contracts" / "index"
+    contract_dir.mkdir(parents=True)
+    (contract_dir / f"{_FIXTURE_SEQUENCE_ID}.seq").write_text(_FIXTURE_BODY + "\n", encoding="utf-8")
     _write_fixture_conf(site, goldens_root)
     warning = io.StringIO()
     app = Sphinx(
