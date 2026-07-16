@@ -44,6 +44,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S36]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S37]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S43]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S48]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S103]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S98]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S99]]'
@@ -115,6 +116,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S36` - Refuse logout under an explicit profile override, prove pointer-sourced strong logout honors lock contention and closes real storage idempotently, and restore single declaration authority to the error registry
 - `2026-07-15-cli-authority-verb-conformance-W02-P06-S37` - Atomically replace broad auth clear across backend and live CLI contracts with typed target-scoped logout_operator_auth and reset_operator_auth, complete provider session coverage, safe secret and lock cleanup, distinct schemas and events, exact contract/risk/help/write metadata, four-locale help, and real workflow and command tests without a compatibility wrapper
 - `2026-07-15-cli-authority-verb-conformance-W02-P06-S43` - Prove logout preserves provider and certificate-source configuration while clearing real sessions
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S48` - Make the active certificate credential resolver and named-source certificate check use only selected-profile secure storage with explicit fail-closed absence, and make ordinary certificate-secret set/remove crash-resumable through one secret-free durable intent or outbox carrying a stable operation id, event kind and timestamp, prior-presence state, and non-secret completion witness, resuming pending mutations before accepting a new mutation without migration, fallback, probing, reconciliation, or a parallel secret writer
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S103` - Prove switching and strong logout through real persisted custody state
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S98` - Preserve config profile logout as the sole strong local-session logout command
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S99` - Remove config lock and its weaker session-only execution path without an alias
