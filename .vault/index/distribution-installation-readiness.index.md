@@ -22,6 +22,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-summary]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P03-S11]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S17]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P04-S18]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -61,6 +62,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-summary` - `distribution-installation-readiness` `W01.P02` summary
 - `2026-07-15-distribution-installation-readiness-W02-P03-S11` - Make the core wheel lane install and exercise a supplied complete cohort
 - `2026-07-15-distribution-installation-readiness-W02-P04-S17` - Generate a versioned Scoop manifest with immutable cohort URLs hashes persistence and both command shims
+- `2026-07-15-distribution-installation-readiness-W02-P04-S18` - Prove Scoop generation matches the cohort and exposes both installed commands
 
 ### plan
 
