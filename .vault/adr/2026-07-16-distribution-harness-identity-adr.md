@@ -24,6 +24,9 @@ generic. The authored tree exposes names such as `coordinator`,
 `preparar-modelo-200`, and `operator-grounding`; the materialiser preserves them in
 client-visible paths and agent frontmatter.
 
+A persona is the authored harness role. Claude materialisation emits that persona as an
+agent definition, so both surfaces must carry the same prefixed identity.
+
 Generic harness identifiers can collide with host, user, or third-party components.
 They also hide which package supplied an installed capability. Top-level MCP identity is
 already Cadrumo-owned, but plugin, marketplace, and MCPB product descriptions are
@@ -37,8 +40,8 @@ translation wording, compatibility alias, or artifact mutation.
 ## Considerations
 
 - A harness identifier is every client-visible or materialised name for a bundled
-  agent/persona definition, skill, rule, or its prompt and resource projection.
-- Agent/persona, skill, and rule identities use the literal `cadrumo-` prefix in
+  persona, generated agent definition, skill, rule, or its prompt and resource copy.
+- Persona, generated agent, skill, and rule identities use the literal `cadrumo-` prefix in
   filenames, directories, frontmatter, and their prompt or resource projections.
 - MCP identity follows the accepted Cadrumo tuple in each surface's grammar.
   `cadrumo`, `cadrumo-mcp`, `cadrumo_`, and `cadrumo://` are compliant Cadrumo
@@ -51,7 +54,7 @@ translation wording, compatibility alias, or artifact mutation.
 - Generic progressive-discovery tools such as `search`, `execute`, `toolsets`, and
   `describe` are MCP operations, not projected harness document identifiers. Their
   accepted names remain unchanged.
-- Translation parity includes the capability, safety, privacy, on-host evidence, human
+- Translation parity includes the capability, safety, privacy, on-host storage, human
   confirmation, and never-files-live claims. Two language labels alone cannot pass.
 - Identity parity means equality between the authored inventory and the metadata
   observed after generation, installation, publication, and public reacquisition.
@@ -93,7 +96,8 @@ not translate or replace an established workflow stem.
 Verification retains the cohort digest, artifact digest, channel, client name and
 version, surface type, observed identifier, and expected identifier. It also retains
 the English and Spanish MCP product descriptions. Each required capability, safety,
-privacy, storage, confirmation, and filing-boundary claim receives a verdict.
+privacy, on-host storage, human confirmation, and never-files-live claim receives a
+verdict.
 
 Missing clients, skipped validation, schema-only proof, advisory results, generic
 harness names, and English-only MCP product descriptions cannot pass.
@@ -110,8 +114,8 @@ The distribution-readiness plan adds verification at five boundaries:
 
 1. Inventory the authored harness and every generated projection.
 2. Inspect plugin, marketplace, MCPB, and client-display metadata in the frozen cohort.
-3. Capture identifiers and English-Spanish product descriptions in every claimed
-   installed Claude client.
+3. Capture identifiers, the English MCP product description, and the Spanish MCP
+   product description in every claimed installed Claude client.
 4. Repeat the comparison after public marketplace and MCPB reacquisition.
 5. Reconcile every observation in the close audit and leave failed deliverables open.
 
@@ -138,8 +142,9 @@ promotion. The product claim concerns identifiers and descriptions users receive
 source intent or schema-valid construction.
 
 This decision extends the one-authored-source and generated-output architecture without
-changing it. It adds namespace and bilingual-description parity to executable delivery
-evidence while preserving the accepted Cadrumo identity tuple.
+changing it. It adds namespace parity and parity between the English and Spanish MCP
+product descriptions to delivery evidence. The accepted Cadrumo identity tuple remains
+unchanged.
 
 ## Consequences
 

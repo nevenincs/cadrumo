@@ -106,7 +106,7 @@ translation. A failed check leaves its row open for a separate approved implemen
 - [ ] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [ ] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
 - [ ] `W02.P06.S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple; `dev/packaging/verify_distribution_identity.py, src/cadrumo/_data/agent, src/cadrumo/agent, src/cadrumo/entrypoints/mcp`.
-- [ ] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin marketplace MCPB and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
+- [ ] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
 
 ## Wave `W03` - Prove platforms and clients
 
@@ -131,7 +131,7 @@ Run clean platform and client rows against exact cohort hashes and reject absent
 - [ ] `W03.P08.S38` - Install the cohort plugin in Claude Code and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
 - [ ] `W03.P08.S39` - Install the cohort plugin or MCPB in Claude Desktop and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
 - [ ] `W03.P08.S40` - Install the supported artifact in Cowork and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
-- [ ] `W03.P08.S69` - Capture each real Claude client's harness identifier inventory, MCP server name, and both MCP product descriptions and compare them with the exact cohort; `.github/workflows/packaging-claude.yml, var/distribution-install-readiness`.
+- [ ] `W03.P08.S69` - Capture each real Claude client's harness identifier inventory, MCP server name, English MCP product description, and Spanish MCP product description and compare them with the exact cohort; `.github/workflows/packaging-claude.yml, var/distribution-install-readiness`.
 
 ## Wave `W04` - Promote and reacquire exact bytes
 
@@ -181,7 +181,7 @@ Run feature-scoped quality, architecture, documentation, and honest-close review
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
 - [ ] `W05.P12.S59` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
-- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and English-Spanish MCP product-description parity; leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
+- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 
 ## Description
 
@@ -218,9 +218,11 @@ matching reacquisition Step passes.
   SHA-256 digests remain unchanged through testing, publication, and reacquisition.
 - Every authored, generated, installed, and publicly reacquired agent/persona, skill,
   and rule identifier, including its prompt and resource projections, carries
-  `cadrumo-`. MCP server, executable, tool-prefix, and URI identities match the accepted
-  Cadrumo tuple. Every user-facing MCP product description carries equivalent English
-  and Spanish text in the representation its artifact format supports.
+  `cadrumo-`. MCP server, executable, tool-prefix, and Uniform Resource Identifier
+  (URI) identities match the accepted Cadrumo tuple. Every artifact contains labeled
+  English and Spanish MCP product descriptions. Evidence records a verdict for the
+  capability, safety, privacy, on-host storage, human confirmation, and
+  never-files-live claims in both descriptions.
 - Default, agent, all-extra, wheel, and sdist installation resolves the same exact root,
   manuals, and official distribution versions without checkout imports.
 - Installed `aeat` completes the Modelo 200 2024 oracle and reports
