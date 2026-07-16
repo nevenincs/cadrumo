@@ -26,11 +26,37 @@ permissions:
 
 jobs:
   cadrumo-scoop-acquisition:
-    name: Cadrumo / Windows 11 / x64 / Scoop Sandbox
+    name: Cadrumo / Windows / x64 / Scoop Sandbox
     runs-on: [self-hosted, Windows, X64, cadrumo-windows-sandbox]
     timeout-minutes: 90
 
     steps:
+      - name: Initialize current-run evidence root
+        shell: powershell
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          $root = Join-Path `
+            $env:RUNNER_TEMP `
+            "cadrumo-s20-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) {
+            Remove-Item -LiteralPath $root -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          "CADRUMO_S20_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
+          [ordered]@{
+            schema = "cadrumo.packaging.scoop-workflow.v1"
+            status = "initialized"
+            github_run_id = $env:GITHUB_RUN_ID
+            github_run_attempt = $env:GITHUB_RUN_ATTEMPT
+            source_run_id = $env:SOURCE_RUN_ID
+            source_commit = $env:SOURCE_COMMIT
+            initialized_at = [DateTimeOffset]::UtcNow.ToString("O")
+          } |
+            ConvertTo-Json |
+            Set-Content -LiteralPath (Join-Path $root "run-context.json") -Encoding UTF8
+
       - name: Verify declared Windows Sandbox release row
         shell: powershell
         run: |
@@ -71,6 +97,9 @@ jobs:
           if ($run.name -ne "Cadrumo Packaging Smoke") {
             throw "source run is not the Cadrumo Packaging Smoke workflow"
           }
+          if ($run.path -ne ".github/workflows/packaging-smoke.yml") {
+            throw "source run does not use the packaging-smoke workflow authority"
+          }
           if ($run.conclusion -ne "success") {
             throw "source packaging run did not succeed"
           }
@@ -88,6 +117,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ inputs.source_commit }}
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
@@ -99,7 +129,7 @@ jobs:
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: cadrumo-python-cohort
-          path: var/packaging-smoke-cohort/python
+          path: ${{ env.CADRUMO_S20_ROOT }}/cohort
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ inputs.source_run_id }}
@@ -112,9 +142,9 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or -not $version) {
             throw "could not resolve the tested source version"
           }
-          $output = "var/distribution-install-readiness/s20-scoop/source-manifest.json"
+          $output = Join-Path $env:CADRUMO_S20_ROOT "source-manifest.json"
           uv run --no-project --with packaging python packaging/scoop/generate.py `
-            --cohort-dir var/packaging-smoke-cohort/python `
+            --cohort-dir "$env:CADRUMO_S20_ROOT/cohort" `
             --version $version.Trim() `
             --release-base-url "https://github.com/nevenincs/cadrumo/releases/download/v$($version.Trim())" `
             --output $output
@@ -122,14 +152,34 @@ jobs:
             throw "Scoop source manifest generation failed"
           }
 
+      - name: Stage token-free Sandbox harness
+        shell: powershell
+        run: |
+          $harness = Join-Path $env:CADRUMO_S20_ROOT "harness"
+          $packaging = Join-Path $harness "dev/packaging"
+          New-Item -ItemType Directory -Force -Path $packaging | Out-Null
+          Copy-Item -LiteralPath "dev/__init__.py" -Destination (Join-Path $harness "dev/__init__.py")
+          Copy-Item `
+            -LiteralPath "dev/packaging/__init__.py" `
+            -Destination (Join-Path $packaging "__init__.py")
+          foreach ($file in @(
+            "smoke_scoop.ps1",
+            "installed_tax_oracle.py",
+            "installed_mcp_oracle.py"
+          )) {
+            Copy-Item `
+              -LiteralPath (Join-Path "dev/packaging" $file) `
+              -Destination (Join-Path $packaging $file)
+          }
+
       - name: Install and exercise Cadrumo inside Windows Sandbox
         shell: powershell
         run: |
-          & dev/packaging/smoke_scoop.ps1 `
+          & "$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1" `
             -Mode Sandbox `
-            -CohortDir var/packaging-smoke-cohort/python `
-            -ManifestPath var/distribution-install-readiness/s20-scoop/source-manifest.json `
-            -EvidenceDir var/distribution-install-readiness/s20-scoop/evidence `
+            -CohortDir "$env:CADRUMO_S20_ROOT/cohort" `
+            -ManifestPath "$env:CADRUMO_S20_ROOT/source-manifest.json" `
+            -EvidenceDir "$env:CADRUMO_S20_ROOT/evidence" `
             -AppName cadrumo-s20-acquisition `
             -TimeoutMinutes 60
 
@@ -138,6 +188,6 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: cadrumo-scoop-acquisition-evidence
-          path: var/distribution-install-readiness/s20-scoop/
+          path: ${{ env.CADRUMO_S20_ROOT }}/
           if-no-files-found: error
           retention-days: 14
