@@ -150,8 +150,8 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert "config.init" not in _combined_output(retired)
 
 
-def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
-    """Root custody verbs use the profile lifecycle session path."""
+def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) -> None:
+    """Strong profile logout replaces the duplicate root lock door."""
 
     created = _run_cadrumo(
         tmp_path,
@@ -177,9 +177,13 @@ def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
     )
     assert created.returncode == 0, _combined_output(created)
 
-    locked = _run_cadrumo(tmp_path, ("config", "lock"))
-    assert locked.returncode == 0, _combined_output(locked)
-    assert "locked_profile\t" in locked.stdout
+    logged_out = _run_cadrumo(tmp_path, ("config", "profile", "logout"))
+    assert logged_out.returncode == 0, _combined_output(logged_out)
+    assert "logged_out_profile\t" in logged_out.stdout
+
+    removed_lock = _run_cadrumo(tmp_path, ("config", "lock"))
+    assert removed_lock.returncode != 0
+    assert "No such command 'lock'" in _combined_output(removed_lock)
 
     missing_default = _run_cadrumo(tmp_path, ("config", "switch"))
     assert missing_default.returncode != 0
@@ -304,7 +308,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     """The accepted custody verbs are mounted under the config root."""
 
-    for verb in ("lock", "switch", "rekey", "recover", "show-recovery", "verify-recovery"):
+    for verb in ("switch", "rekey", "recover", "show-recovery", "verify-recovery"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)

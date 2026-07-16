@@ -61,7 +61,6 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # must remain pointer-sourced so the root callback does not manufacture
     # an active-profile override that the application correctly refuses.
     "config switch",
-    "config lock",
     "config profile logout",
     "config rekey",
     "config recover",

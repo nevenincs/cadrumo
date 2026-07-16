@@ -225,6 +225,39 @@ def test_login_accepts_output_language_flag() -> None:
     assert "--output-language" in help_result.output
 
 
+def test_logout_and_reset_expose_distinct_scopes_and_confirmation() -> None:
+    """Logout is session-only; reset is separately named and requires confirmation."""
+    logout_help = invoke_typer_app(config_app, ["auth", "logout", "--help"])
+    reset_help = invoke_typer_app(config_app, ["auth", "reset", "--help"])
+
+    assert logout_help.exit_code == 0
+    assert "--provider" in logout_help.output
+    assert "--all" in logout_help.output
+    assert "--yes" not in logout_help.output
+    assert "--sessions" not in logout_help.output
+    assert "--locks" not in logout_help.output
+    assert reset_help.exit_code == 0
+    assert "--provider" in reset_help.output
+    assert "--all" in reset_help.output
+    assert "--yes" in reset_help.output
+
+
+def test_cli_logout_preserves_provider_and_reset_removes_it(
+    _isolated_application_layer: None,
+) -> None:
+    """The live CLI routes each new verb to its distinct application authority."""
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
+    configure_operator_auth("certificate")
+
+    logout = invoke_typer_app(config_app, ["auth", "logout", "--provider", "certificate"])
+    assert logout.exit_code == 0, logout.output
+    assert inspect_operator_auth().provider == "certificate"
+
+    reset = invoke_typer_app(config_app, ["auth", "reset", "--provider", "certificate", "--yes"])
+    assert reset.exit_code == 0, reset.output
+    assert inspect_operator_auth().provider == ""
+
+
 # ── M4: auth test runs a real per-provider probe ───────────────────────────
 
 

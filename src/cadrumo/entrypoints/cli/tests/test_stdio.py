@@ -186,7 +186,7 @@ def test_help_invocation_below_floor_widens_columns() -> None:
     """
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "create", "FOO", "--help"]),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
         scoped_env_var("COLUMNS", "80"),
         _ensure_help_render_width(),
     ):
@@ -202,8 +202,8 @@ def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path:
     names from Rich ellipses.
     """
 
-    cadrumo_exe = shutil.which("cadrumo")
-    assert cadrumo_exe is not None, "the cadrumo console script must be installed for this test"
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None, "the aeat console script must be installed for this test"
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
@@ -213,8 +213,8 @@ def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path:
         },
     )
 
-    result = subprocess.run(  # noqa: S603 - test intentionally invokes the resolved cadrumo console script.
-        [cadrumo_exe, "--language", "en", "config", "profile", "create", "--help"],
+    result = subprocess.run(  # noqa: S603 - test intentionally invokes the resolved aeat console script.
+        [aeat_exe, "--language", "en", "config", "profile", "create", "--help"],
         cwd=Path.cwd(),
         env=env,
         capture_output=True,
@@ -239,7 +239,7 @@ def test_help_invocation_keeps_wider_columns() -> None:
     """A genuinely wide terminal keeps its real width on a help surface."""
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "create", "FOO", "-h"]),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
         scoped_env_var("COLUMNS", "300"),
         _ensure_help_render_width(),
     ):
@@ -254,7 +254,7 @@ def test_non_help_invocation_leaves_columns_untouched() -> None:
     """
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "list"]),
+        scoped_sys_argv(["aeat", "config", "profile", "list"]),
         scoped_env_var("COLUMNS", "80"),
         _ensure_help_render_width(),
     ):
@@ -265,7 +265,7 @@ def test_non_help_invocation_without_columns_set() -> None:
     """A non-help invocation does not set COLUMNS when it was unset."""
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "list"]),
+        scoped_sys_argv(["aeat", "config", "profile", "list"]),
         scoped_env_var("COLUMNS", None),
         _ensure_help_render_width(),
     ):
@@ -293,7 +293,7 @@ def test_columns_env_var_used_for_env_write() -> None:
     invocation with a narrow terminal os.environ[_COLUMNS_ENV_VAR] must
     hold the floor value.
     """
-    with scoped_sys_argv(["cadrumo", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, "80"), _ensure_help_render_width():
+    with scoped_sys_argv(["aeat", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, "80"), _ensure_help_render_width():
         assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
 
@@ -305,7 +305,7 @@ def test_columns_env_var_used_for_env_read() -> None:
     uses the constant rather than an independent literal.
     """
     wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
-    with scoped_sys_argv(["cadrumo", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, wide), _ensure_help_render_width():
+    with scoped_sys_argv(["aeat", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, wide), _ensure_help_render_width():
         assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
@@ -320,7 +320,7 @@ def test_columns_write_is_scoped_help_invocation() -> None:
     the mutation from leaking into sibling processes or subsequent test runs.
     """
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "create", "--help"]),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "--help"]),
         scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         before = os.environ[_COLUMNS_ENV_VAR]
@@ -335,7 +335,7 @@ def test_columns_write_is_scoped_help_invocation() -> None:
 def test_columns_write_is_scoped_unset_env() -> None:
     """When COLUMNS was absent before the block it must be absent again after exit."""
     with (
-        scoped_sys_argv(["cadrumo", "--help"]),
+        scoped_sys_argv(["aeat", "--help"]),
         scoped_env_var(_COLUMNS_ENV_VAR, None),
     ):
         assert _COLUMNS_ENV_VAR not in os.environ
@@ -350,7 +350,7 @@ def test_columns_write_is_scoped_unset_env() -> None:
 def test_columns_write_not_scoped_on_non_help() -> None:
     """On a non-help invocation COLUMNS must not be touched at all."""
     with (
-        scoped_sys_argv(["cadrumo", "app", "status"]),
+        scoped_sys_argv(["aeat", "app", "status"]),
         scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         before = os.environ[_COLUMNS_ENV_VAR]

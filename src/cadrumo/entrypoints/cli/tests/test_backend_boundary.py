@@ -251,6 +251,7 @@ def test_manual_ledger_export_help_keeps_serialization_format_named_as_export_fo
 def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path: Path) -> None:
     """The root ``--format`` flag must remain the rendering switch used by ``_emit``."""
 
+    env = {"CADRUMO_SECRET_PASSPHRASE": "backend-boundary-passphrase"}
     created = invoke_cached_cli(
         [
             "config", "profile", "create", "operator",
@@ -261,6 +262,7 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
             "--surnames", "Operator",
             "--activity", "design",
         ],
+        env=env,
     )  # fmt: skip
     assert created.exit_code == 0, created.output
 
@@ -273,6 +275,7 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
 
     result = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
+        env=env,
     )
 
     assert result.exit_code == 0, result.output

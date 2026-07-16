@@ -29,15 +29,17 @@ from ...application.operator_surface import command_classification
 from ...core.i18n import tr
 from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 
-#: Verbs that change WHICH taxpayer profile is active. Executing one re-arms the
-#: gate so the NEXT mutating call must re-confirm identity. This is the closed
-#: set of active-identity-changing verbs (switch, create-and-activate, enter a
-#: sandbox), not every ``config profile`` mutation - editing or renaming the
-#: current profile does not change who is active, so it does not re-arm.
-PROFILE_SWITCHING_COMMANDS: frozenset[str] = frozenset(
+#: Verbs that change or clear WHICH taxpayer profile is active. Executing one
+#: re-arms the gate so the NEXT mutating call must re-confirm identity. This is
+#: the closed set of active-identity-changing verbs (switch, create-and-activate,
+#: enter a sandbox, or strong logout), not every ``config profile`` mutation -
+#: editing or renaming the current profile does not change who is active, so it
+#: does not re-arm.
+ACTIVE_IDENTITY_CHANGING_COMMANDS: frozenset[str] = frozenset(
     {
         "config.switch",
         "config.profile.create",
+        "config.profile.logout",
         "config.profile.sandbox.use",
     },
 )
@@ -84,10 +86,10 @@ class SessionIdentityState:
     """Per-session identity-read state for the block-first-mutation gate.
 
     ``identity_confirmed`` starts ``False`` (armed): the first mutating call is
-    refused until an identity read flips it ``True``. A profile-switching verb
-    re-arms it back to ``False`` so the next mutation re-confirms. The server
-    holds exactly one instance per built session and shares it across the direct
-    and ``execute`` paths.
+    refused until an identity read flips it ``True``. An active-identity-changing
+    verb re-arms it back to ``False`` so the next mutation re-confirms. The
+    server holds exactly one instance per built session and shares it across the
+    direct and ``execute`` paths.
     """
 
     def __init__(self) -> None:
@@ -95,7 +97,7 @@ class SessionIdentityState:
 
     @property
     def identity_confirmed(self) -> bool:
-        """Whether an identity read has occurred since session start / last switch."""
+        """Whether an identity read has occurred since the last identity change."""
         return self._identity_confirmed
 
     def record_identity_read(self) -> None:
@@ -122,19 +124,19 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
     Evaluated for every verb call on both the direct and ``execute`` paths, in
     order:
 
-    * A profile-switching verb re-arms ``state`` and is allowed (it is how
-      identity is established, so it is never itself blocked).
+    * An active-identity-changing verb re-arms ``state`` and is allowed. This
+      includes strong logout, which clears the active identity.
     * An identity-read verb records the read on ``state`` and is allowed,
       whatever its declared mutability.
     * Any other read-only call is allowed and leaves the state untouched.
-    * A mutating, non-switch call is refused (returns the localized refusal
-      text) unless an identity read has occurred since session start or the last
-      switch.
+    * Any other mutating call is refused (returns the localized refusal text)
+      unless an identity read has occurred since session start or the last
+      active-identity change.
 
     The refusal text carries no interpolation, so it is byte-identical on both
     call paths.
     """
-    if command_key in PROFILE_SWITCHING_COMMANDS:
+    if command_key in ACTIVE_IDENTITY_CHANGING_COMMANDS:
         state.rearm()
         return None
     if command_key in IDENTITY_READ_COMMANDS:
@@ -160,9 +162,9 @@ def identity_elicitation_echo(*, active_profile_label: str | None) -> str:
 
 
 __all__ = [
+    "ACTIVE_IDENTITY_CHANGING_COMMANDS",
     "IDENTITY_READ_COMMANDS",
     "IDENTITY_READ_CONSOLE_TOOLS",
-    "PROFILE_SWITCHING_COMMANDS",
     "SessionIdentityState",
     "identity_elicitation_echo",
     "identity_gate_refusal",

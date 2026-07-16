@@ -259,13 +259,11 @@ def auth_login(
     )
 
 
-@auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
-def auth_clear(
+@auth_app.command("logout", help=tr("cli.config.auth.logout_help"))
+def auth_logout(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider"),
-    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
-    sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
-    locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
+    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.logout_all_help")),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -273,32 +271,101 @@ def auth_clear(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
-    """Clear local auth metadata, persisted sessions, and auth locks."""
+    """Terminate local auth sessions without removing provider configuration."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import AuthProviderReservedError, clear_operator_auth
+    from ....application.auth import (
+        AuthConfigureNoActiveBucketError,
+        AuthOperationScopeConflictError,
+        AuthProviderNotConfiguredError,
+        logout_operator_auth,
+    )
 
     try:
-        result = clear_operator_auth(provider=provider, all_providers=all_providers, sessions=sessions, locks=locks)
+        result = logout_operator_auth(provider=provider, all_providers=all_providers)
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",
             context={"provider": provider or ""},
         ) from exc
-    except AuthProviderReservedError as exc:
+    except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.reserved_provider",
-            context={"provider": provider or ""},
+            translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    from .._config_payloads import AuthClearPayload
+    except AuthOperationScopeConflictError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.scope_conflict",
+        ) from exc
+    except AuthProviderNotConfiguredError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.provider_not_configured",
+        ) from exc
+    from .._config_payloads import AuthLogoutPayload
 
-    clear_result = AuthClearPayload.from_result(result)
+    payload = AuthLogoutPayload.model_validate(result.model_dump(mode="json"))
     _emit_envelope(
         ctx,
-        command="config.auth.clear",
-        result=clear_result,
+        command="config.auth.logout",
+        result=payload,
         lines=(
+            f"bucket_id\t{result.bucket_id}",
+            f"providers\t{','.join(result.providers)}",
             f"removed_sessions\t{result.removed_sessions}",
-            f"cleared_workflow_state\t{result.cleared_workflow_state}",
-            f"cleared_locks\t{result.cleared_locks}",
+            f"cleared_session_state\t{result.cleared_session_state}",
         ),
+    )
+
+
+@auth_app.command("reset", help=tr("cli.config.auth.reset_help"))
+def auth_reset(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider"),
+    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.reset_all_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.auth.reset_yes_help")),
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Remove local auth configuration and persisted provider state."""
+    _activate_subcommand_output_language(ctx, output_language)
+    if not yes:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.reset_requires_yes",
+        )
+    from ....application.auth import (
+        AuthConfigureNoActiveBucketError,
+        AuthOperationScopeConflictError,
+        AuthProviderNotConfiguredError,
+        reset_operator_auth,
+    )
+
+    try:
+        result = reset_operator_auth(provider=provider, all_providers=all_providers)
+    except KeyError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider or ""},
+        ) from exc
+    except AuthConfigureNoActiveBucketError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.no_active_bucket",
+        ) from exc
+    except AuthOperationScopeConflictError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.scope_conflict",
+        ) from exc
+    except AuthProviderNotConfiguredError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.provider_not_configured",
+        ) from exc
+    from .._config_payloads import AuthResetPayload
+
+    payload = AuthResetPayload.model_validate(result.model_dump(mode="json"))
+    _emit_envelope(
+        ctx,
+        command="config.auth.reset",
+        result=payload,
+        lines=tuple(f"{key}\t{value}" for key, value in result.model_dump(mode="json").items()),
     )

@@ -410,7 +410,7 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_
         assert "removed\tFalse" in removed_again.output
 
 
-def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolated_secret_store) -> None:
+def test_certificate_secret_set_exposes_no_backend_selector(tmp_path: Path, _isolated_secret_store) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         cert_path = tmp_path / "personal.p12"
@@ -439,6 +439,6 @@ def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolate
                 ],
             )
 
-        assert result.exit_code != 0, result.output
+        assert result.exit_code == 2, result.output
         assert "Traceback" not in result.output, result.output
-        assert "Refused" in result.output, result.output
+        assert "No such option: --backend" in result.output, result.output

@@ -563,7 +563,9 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
         unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_pin"])
         unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
         unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
-        unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
+        reserved_reset = _invoke(
+            ["--format", "json", "config", "auth", "reset", "--provider", "clave_pin", "--yes"],
+        )
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -575,8 +577,14 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert "dnie_pkcs" in unsupported_test.output
     assert unsupported_login.exit_code != 0
     assert "dnie_pkcs" in unsupported_login.output
-    assert unsupported_clear.exit_code != 0
-    assert "clave_pin" in unsupported_clear.output
+    assert reserved_reset.exit_code == 0, reserved_reset.output
+    reset_payload = json.loads(_json_output(reserved_reset))["result"]
+    assert reset_payload["providers"] == ["clave_pin"]
+    assert reset_payload["removed_sessions"] == 0
+    assert reset_payload["cleared_provider_configuration"] is False
+    assert reset_payload["cleared_locks"] == 0
+    assert reset_payload["removed_certificate_sources"] == 0
+    assert reset_payload["removed_certificate_secrets"] == 0
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:

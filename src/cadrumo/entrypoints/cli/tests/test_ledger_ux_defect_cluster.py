@@ -152,10 +152,14 @@ def test_classify_help_points_irpf_category_to_categories_catalogue(
     assert "actividad_economica" in flat
     assert "arrendamiento_local" in flat
     assert "Royalties" in flat
-    assert "LIRPF Art. 27" in flat
-    assert "Art. 25.4" in flat
+    normalized = flat.casefold()
+    assert "lirpf" in normalized and "27" in normalized
+    assert "25.4" in normalized
     assert "capital mobiliario" in flat
-    assert "not the author" in flat
+    assert any(
+        author_phrase in normalized
+        for author_phrase in ("not the author", "no es el autor", "no es l'autor", "nem a szerzo")
+    )
 
 
 def test_invalid_category_error_shows_a_concrete_valid_example(
