@@ -52,7 +52,7 @@ Generate Python, Scoop, Homebrew, Claude plugin, marketplace, and MCPB artifacts
 
 Make wheel, sdist, companion, default, agent, and all-extra installations consume and prove the complete cohort.
 
-- [ ] `W02.P03.S11` - Make the core wheel lane install and exercise a supplied complete cohort; `dev/packaging/smoke_core.py`.
+- [x] `W02.P03.S11` - Make the core wheel lane install and exercise a supplied complete cohort; `dev/packaging, justfile`.
 - [ ] `W02.P03.S12` - Make the plain pip lane consume supplied cohort artifacts without rebuilding; `dev/packaging/smoke_pip_core.py`.
 - [ ] `W02.P03.S13` - Make the sdist lane consume the supplied cohort and verify its resolved companions; `dev/packaging/smoke_sdist_core.py`.
 - [ ] `W02.P03.S14` - Make the split-install lane assert namespace integrity exact versions and downstream tax work; `dev/packaging/smoke_split_install.py`.

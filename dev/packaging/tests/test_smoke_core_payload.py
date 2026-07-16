@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -10,6 +11,8 @@ import pytest
 
 from dev.packaging.smoke_core import (
     _CORPUS_SOURCE_PREFIX,
+    _assert_complete_wheel_cohort,
+    _build_companion_wheels,
     _build_wheel,
     _configured_corpus_binary_suffixes,
     _expected_wheel_data_paths,
@@ -48,3 +51,21 @@ def test_core_wheel_contains_every_slim_member_and_no_split_owned_binary(tmp_pat
     assert _expected_wheel_data_paths(_REPO_ROOT) == independently_expected
     assert independently_expected <= members
     assert not {f"cadrumo/_data/corpus/{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
+
+    companions = _build_companion_wheels(_REPO_ROOT, tmp_path, uv)
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        expected_version = tomllib.load(handle)["project"]["version"]
+    assert (
+        _assert_complete_wheel_cohort(
+            wheel,
+            data_wheel_manuals=companions[0],
+            data_wheel_official=companions[1],
+        )
+        == expected_version
+    )
+    with pytest.raises(SystemExit, match="labels do not match"):
+        _assert_complete_wheel_cohort(
+            wheel,
+            data_wheel_manuals=companions[1],
+            data_wheel_official=companions[0],
+        )
