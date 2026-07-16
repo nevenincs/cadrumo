@@ -13,8 +13,8 @@ from datetime import date
 
 import pytest
 
-from ......application.auth import AuthProviderKind, ensure_authenticated_aeat_session
-from ......core import Modelo, Period
+from ......application.auth import ensure_authenticated_aeat_session
+from ......core import AuthProviderKind, Modelo, Period
 from ......core.config import load_settings
 from ......core.errors import AeatError
 from ......tests.live_gate import requires_live_enabled

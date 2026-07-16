@@ -9,7 +9,7 @@ never collected — a function existing is not the same as it running.
 
 Also covers two genuine test-coverage gaps:
 
-* ``reauthenticate()`` happy path with a fake browser factory.
+* ``reauthenticate()`` happy path with an in-process browser protocol implementation.
 * (The other item — a byte-for-byte parity test between
   ``AeatAccessGate.require_live_write()`` and
   ``SubmissionEngine._submit_with_transport()`` — is obsolete:
@@ -24,12 +24,17 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
-from .. import AEAT_SESSION_IDLE_TTL, AeatAuthenticator, BrowserSessionLike
+from .. import (
+    AEAT_SESSION_IDLE_TTL,
+    AeatAuthenticator,
+    BrowserSessionLike,
+    CertificateSessionDetail,
+)
 from . import _authenticator_support as _support
 from ._authenticator_support import (
     _certificate_session,
-    _HandshakeVerifier,
     _RecordingBrowserSession,
 )
 
@@ -48,14 +53,17 @@ test_close_is_idempotent = _support.test_close_is_idempotent
 test_close_latch_blocks_concurrent_verify = _support.test_close_latch_blocks_concurrent_verify
 test_concurrent_close_and_verify_race = _support.test_concurrent_close_and_verify_race
 test_reauthenticate_does_not_deadlock = _support.test_reauthenticate_does_not_deadlock
+test_protected_probe_requires_success_and_exact_final_resource = (
+    _support.test_protected_probe_requires_success_and_exact_final_resource
+)
 test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts = (
     _support.test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
 )
 test_resume_from_storage_state_invalidates_failed_live_probe = (
     _support.test_resume_from_storage_state_invalidates_failed_live_probe
 )
-test_resume_from_storage_state_reuses_persisted_session_without_handshake = (
-    _support.test_resume_from_storage_state_reuses_persisted_session_without_handshake
+test_resume_from_storage_state_reuses_persisted_session_with_live_protected_probe = (
+    _support.test_resume_from_storage_state_reuses_persisted_session_with_live_protected_probe
 )
 test_run_login_probe_redacts_navigation_exception_text = _support.test_run_login_probe_redacts_navigation_exception_text
 test_verify_raises_on_stale_session = _support.test_verify_raises_on_stale_session
@@ -63,7 +71,7 @@ test_verify_raises_without_context = _support.test_verify_raises_without_context
 
 
 @pytest.mark.asyncio
-async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _settings_factory) -> None:
+async def test_reauthenticate_happy_path_with_browser_factory(tmp_path, _settings_factory) -> None:
     """``reauthenticate()`` closes the old session and produces a genuinely fresh one.
 
     Uncovered before this test: the existing
@@ -72,8 +80,8 @@ async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _se
     never proves ``reauthenticate()`` actually delegates ``close()`` +
     ``authenticate()`` correctly on a real success. This test injects a real
     in-process :class:`BrowserSessionLike` factory (``_RecordingBrowserSession``)
-    plus a real :class:`_HandshakeVerifier`, authenticates once, then calls
-    ``reauthenticate()`` and asserts the returned session is a genuinely new
+    authenticates once, then calls ``reauthenticate()`` and asserts the
+    returned session is a genuinely new
     :class:`AeatSession` (later ``authenticated_at`` / ``idle_deadline``, an
     active browser context restored, no active session left dangling from the
     old one) rather than merely "did not raise".
@@ -84,8 +92,8 @@ async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _se
     bucket-scoped storage-state path; ``close()`` never deletes persisted
     state, so the delegated call legitimately takes the resume branch
     (``_resume_from_storage_state_locked``) rather than a from-scratch
-    handshake. That is real, correct ``authenticate()`` behaviour (persisted
-    sessions exist precisely so a fresh handshake is not always required) and
+    browser login. That is real, correct ``authenticate()`` behaviour
+    (persisted sessions exist precisely so a fresh login is not always required) and
     is itself part of what this test proves: ``reauthenticate()`` composes
     correctly with whichever branch the delegated ``authenticate()`` takes.
     """
@@ -93,19 +101,17 @@ async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _se
 
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    verifier = _HandshakeVerifier()
 
     async def factory(settings: Settings) -> BrowserSessionLike:
         return _RecordingBrowserSession(cert_ok=True)
 
     async with AeatAuthenticator(
         settings,
+        credentials=unnamed_certificate_credentials(settings),
         browser_session_factory=factory,
-        handshake_verifier=verifier,
     ) as auth:
         first_session = await auth.authenticate()
         assert auth._active_session == first_session
-        assert verifier.calls == 1
 
         refreshed_session = await auth.reauthenticate(first_session)
 
@@ -122,9 +128,9 @@ async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _se
         assert auth._closing is False
 
         # The delegated authenticate() call resumed the persisted session
-        # rather than re-running the handshake (see docstring above), so the
-        # verifier count is unchanged from the initial authenticate() call.
-        assert verifier.calls == 1
+        # and proved the same protected resource again (see docstring above).
+        assert isinstance(refreshed_session.provider_detail, CertificateSessionDetail)
+        assert refreshed_session.provider_detail.protected_resource_url
 
 
 @pytest.mark.asyncio
@@ -147,15 +153,14 @@ async def test_reauthenticate_second_authenticate_failure_raises_session_expired
 
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    verifier = _HandshakeVerifier()
 
     async def failing_factory(settings: Settings) -> BrowserSessionLike:
         return _RecordingBrowserSession(cert_ok=False)
 
     async with AeatAuthenticator(
         settings,
+        credentials=unnamed_certificate_credentials(settings),
         browser_session_factory=failing_factory,
-        handshake_verifier=verifier,
     ) as auth:
         now = datetime.now(UTC)
         session = _certificate_session(

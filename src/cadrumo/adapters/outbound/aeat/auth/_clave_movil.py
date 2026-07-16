@@ -46,6 +46,7 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
+from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
@@ -64,6 +65,7 @@ from ._authenticator import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
+from ._browser_lifecycle import close_owned_browser_session
 from ._clave_movil_metadata import ClaveMovilSessionMetadata
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_support import (
@@ -91,8 +93,6 @@ from ._clave_movil_support import (
 )
 from ._errors import AeatLoginAssertionError, AuthError
 from ._providers import (
-    AuthProviderDescription,
-    AuthProviderKind,
     ClaveMovilLoginAssertionDetail,
     ClaveMovilSessionDetail,
 )
@@ -103,7 +103,9 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().cadrumo_browser_navigation_timeout_ms
+_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
+    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+)
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
@@ -145,7 +147,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     async def authenticate(
         self,
         *,
-        browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
         """Run the Cl@ve Móvil login flow and return an :class:`AeatSession`.
@@ -169,7 +170,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 try:
                     return await self._resume_locked(
                         resume_path,
-                        browser_session=browser_session,
                         target_url=target_url,
                     )
                 except AeatLoginAssertionError as exc:
@@ -182,14 +182,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             return await self._fresh_login_locked(
                 dni_nie=dni_nie,
                 storage_state_path=resume_path,
-                browser_session=browser_session,
                 target_url=target_url,
             )
 
     async def probe_persisted_session(
         self,
         *,
-        browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> tuple[AeatSession, AeatLoginAssertion]:
         """Probe the encrypted persisted session without side effects.
@@ -224,7 +222,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     translated_message="adapters.auth.clave_movil.errors.session_expired",
                 )
 
-            session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+            session_like = await self._resolve_browser_session()
             context: BrowserContextLike | None = None
             try:
                 context = await session_like.create_context(storage_state=persisted.storage_state)
@@ -302,9 +300,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                             _exc,
                             exc_info=True,
                         )
-                if owns_session:
-                    await self._close_browser_session(session_like)
-                self._browser_session = None
+                closed = await self._close_browser_session(session_like)
+                self._browser_session = None if closed else session_like
                 self._context = None
                 self._active_session = None
                 raise
@@ -455,8 +452,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         """Tear down any retained :class:`BrowserContextLike` and browser session."""
         async with self._lock:
             await self._drop_context()
-            await self._close_browser_session(self._browser_session)
-            self._browser_session = None
+            if await self._close_browser_session(self._browser_session):
+                self._browser_session = None
             self._active_session = None
 
     # ── Identity + target helpers ───────────────────────────────────────────
@@ -549,7 +546,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         auth_route = (
             "clave_movil_non_qr_request" if self._settings.cadrumo_clave_prefer_non_qr else "clave_movil_qr_request"
         )
-        certificate_path = self._settings.cadrumo_certificate_path
         context: dict[str, object] = {
             "auth_mode": auth_mode,
             "auth_route": auth_route,
@@ -565,13 +561,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             "prefer_non_qr": self._settings.cadrumo_clave_prefer_non_qr,
             "headless": self._settings.cadrumo_browser_headless,
             "timeout_ms": self._settings.cadrumo_clave_movil_timeout_ms,
-            "certificate_path_configured": certificate_path is not None,
-            "certificate_password_configured": self._settings.cadrumo_certificate_password_secret is not None,
-            "certificate_backend": self._settings.cadrumo_certificate_backend.value,
-            "certificate_file_present": bool(
-                certificate_path is not None and certificate_path.is_file(),
-            ),
-            "certificate_path_fingerprint": _diagnostic_fingerprint(certificate_path),
         }
         context.update(self._active_profile_diagnostic_context(identity))
         return context
@@ -656,22 +645,14 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
-    async def _resolve_browser_session(
-        self,
-        *,
-        browser_session: BrowserSessionLike | None,
-    ) -> tuple[BrowserSessionLike, bool]:
-        if browser_session is not None:
-            return browser_session, False
+    async def _resolve_browser_session(self) -> BrowserSessionLike:
         if self._browser_session_factory is None:
             raise AeatLoginAssertionError(
                 "ClaveMovilAuthProvider was constructed without a browser "
                 "session factory; pass one via select_provider(..., "
-                "browser_session_factory=...) or provide a live "
-                "BrowserSessionLike to authenticate().",
+                "browser_session_factory=...).",
             )
-        session = await self._browser_session_factory(self._settings)
-        return session, True
+        return await self._browser_session_factory(self._settings)
 
     async def _drop_context(self) -> None:
         context = self._context
@@ -702,26 +683,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 exc_info=True,
             )
 
-    async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
-        if session is None:
-            return
-        close = getattr(session, "close", None)
-        if not callable(close):
-            return
-        try:
-            result = close()
-            if asyncio.iscoroutine(result):
-                await asyncio.wait_for(
-                    result,
-                    timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
-                )
-        except TimeoutError:
-            log.warning(
-                "ClaveMovilAuthProvider: browser session close exceeded %d ms",
-                self._settings.cadrumo_browser_close_timeout_ms,
-            )
-        except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
-            log.warning("ClaveMovilAuthProvider: browser session close failed", exc_info=True)
+    async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
+        return await close_owned_browser_session(
+            session,
+            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            logger=log,
+            owner="ClaveMovilAuthProvider",
+        )
 
     # ── Encrypted session state ────────────────────────────────────────────
 
@@ -800,7 +768,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         *,
         dni_nie: str,
         storage_state_path: Path,
-        browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
         target = target_url or self._default_target_url()
@@ -808,7 +775,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         selector_url = self._selector_url(target_path)
         attempt_context = self._attempt_context()
 
-        session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+        session_like = await self._resolve_browser_session()
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
@@ -921,8 +888,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                         _exc,
                         exc_info=True,
                     )
-            if owns_session:
-                await self._close_browser_session(session_like)
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
         authenticated_at = now()
@@ -979,7 +946,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         self,
         storage_state_path: Path,
         *,
-        browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
@@ -996,7 +962,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 translated_message="adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
             )
 
-        session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+        session_like = await self._resolve_browser_session()
         context: BrowserContextLike | None = None
         try:
             context = await session_like.create_context(
@@ -1062,8 +1028,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             self._browser_session = None
             self._context = None
             self._active_session = None
-            if owns_session:
-                await self._close_browser_session(session_like)
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
 

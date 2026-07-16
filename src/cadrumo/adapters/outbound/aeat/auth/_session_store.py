@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, Field, JsonValue, TypeAdapter
+from pydantic import BaseModel, JsonValue, TypeAdapter, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.auth_session_keys import (
@@ -74,10 +74,16 @@ class PersistedBrowserSession(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=_SESSION_VERSION, ge=1)
+    schema_version: int = _SESSION_VERSION
     storage_state: PlaywrightStorageState
     metadata: ProviderSessionMetadata
     written_at: datetime
+
+    @model_validator(mode="after")
+    def _schema_is_current(self) -> PersistedBrowserSession:
+        if self.schema_version != _SESSION_VERSION:
+            raise ValueError("persisted browser session schema version is unsupported")
+        return self
 
     @property
     def storage_state_sha256(self) -> str:

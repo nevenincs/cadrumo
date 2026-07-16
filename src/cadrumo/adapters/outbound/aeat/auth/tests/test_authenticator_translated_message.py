@@ -24,7 +24,6 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
 
 import pytest
 from cryptography import x509
@@ -34,22 +33,17 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
-from ......core.config import CertificateBackend, Settings
+from ......application.auth_credentials import unnamed_certificate_credentials
+from ......core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN, Settings
 from ......core.i18n import tr
 from ......tests.secure_sql import isolated_runtime_profile
 from .. import (
     AeatAuthenticator,
     AeatLoginAssertionError,
-    HandshakeResult,
-    LoadedCertificate,
-    load_certificate,
+    BrowserSessionLike,
 )
-from ..certificate import CertificateBundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-if TYPE_CHECKING:
-    pass
 
 _AUTHENTICATOR_LOCALE_KEYS = [
     "adapters.auth.authenticator.errors.already_active",
@@ -62,7 +56,6 @@ _SECRET = "correct-horse-battery-staple"
 _BUCKET_ID = "auth-translated-message"
 _CERT_NOT_BEFORE = datetime(2026, 5, 28, 14, 15, 0, tzinfo=UTC)
 _CERT_NOT_AFTER = datetime(2099, 5, 28, 14, 15, 0, tzinfo=UTC)
-_HANDSHAKE_ATTEMPTED_AT = datetime(2026, 5, 28, 14, 20, 0, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -105,16 +98,6 @@ def _build_bundle(tmp_path: Path) -> Path:
     return out
 
 
-def _load_cert(tmp_path: Path) -> LoadedCertificate:
-    bundle = CertificateBundle(
-        path=_build_bundle(tmp_path),
-        password=SecretStr(_SECRET),
-        friendly_name=None,
-        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-    )
-    return load_certificate(bundle)
-
-
 def _settings_for(bundle_path: Path) -> Settings:
     """Create Settings with certificate path and token directory overrides.
 
@@ -126,33 +109,21 @@ def _settings_for(bundle_path: Path) -> Settings:
     return Settings(
         cadrumo_certificate_path=bundle_path,
         cadrumo_certificate_password_secret=SecretStr(_SECRET),
-        cadrumo_certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        aeat_certificate_verify_url="https://127.0.0.1:1/",
         cadrumo_token_dir=bundle_path.parent / ".tokens",
         cadrumo_local_storage_root=bundle_path.parent / "storage",
-    )
-
-
-def _successful_handshake() -> HandshakeResult:
-    return HandshakeResult(
-        success=True,
-        status_code=200,
-        server_cert_chain=(),
-        elapsed_ms=10,
-        attempted_at=_HANDSHAKE_ATTEMPTED_AT,
-        error_message=None,
     )
 
 
 class _RecordingBrowserContext:
     """Minimal browser context stand-in that applies the certificate marker from the provisioner."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, protected_resource_matches: bool) -> None:
         self._storage: dict[str, object] = {"cookies": [], "origins": []}
         self.closed = False
+        self._protected_resource_matches = protected_resource_matches
 
     async def new_page(self) -> _RecordingPage:
-        return _RecordingPage()
+        return _RecordingPage(protected_resource_matches=self._protected_resource_matches)
 
     async def storage_state(self) -> dict[str, object]:
         return self._storage
@@ -162,14 +133,14 @@ class _RecordingBrowserContext:
 
 
 class _RecordingPage:
-    def __init__(self) -> None:
-        self.url = "https://www6.aeat.es/protected"
-        self.status = 200
+    def __init__(self, *, protected_resource_matches: bool) -> None:
+        self.url = ""
+        self._protected_resource_matches = protected_resource_matches
 
     async def goto(self, url: str, *, timeout: float | None = None) -> SimpleNamespace:
         del timeout
-        self.url = url
-        return SimpleNamespace(status=200)
+        self.url = url if self._protected_resource_matches else f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}/"
+        return SimpleNamespace(status=200, ok=True)
 
     async def close(self) -> None:
         pass
@@ -178,9 +149,10 @@ class _RecordingPage:
 class _RecordingBrowserSession:
     """Browser session stand-in that creates contexts and applies the provisioner marker."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, protected_resource_matches: bool = True) -> None:
         self.closed = False
         self.profile = None
+        self._protected_resource_matches = protected_resource_matches
 
     async def create_context(
         self,
@@ -190,31 +162,13 @@ class _RecordingBrowserSession:
         storage_state: Mapping[str, object] | None = None,
     ) -> _RecordingBrowserContext:
         del storage_state_path, storage_state
-        ctx = _RecordingBrowserContext()
-        # Replicate BrowserSession's annotation step so _assert_context_marker passes.
-        if provisioner is not None:
-            annotate = getattr(provisioner, "annotate_context", None)
-            if annotate is not None:
-                annotate(ctx)
-        return ctx
+        assert provisioner is not None
+        return _RecordingBrowserContext(
+            protected_resource_matches=self._protected_resource_matches,
+        )
 
     async def close(self) -> None:
         self.closed = True
-
-
-def _handshake_verifier(_cert: LoadedCertificate, _target: str) -> HandshakeResult:
-    return _successful_handshake()
-
-
-def _failing_handshake_verifier(_cert: LoadedCertificate, _target: str) -> HandshakeResult:
-    return HandshakeResult(
-        success=False,
-        status_code=0,
-        server_cert_chain=(),
-        elapsed_ms=0,
-        attempted_at=_HANDSHAKE_ATTEMPTED_AT,
-        error_message="simulated handshake failure",
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -229,16 +183,25 @@ def test_authenticate_already_active_carries_translated_message(
     when authenticate is called while a real session is still active."""
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path)
-    authenticator = AeatAuthenticator(settings, handshake_verifier=_handshake_verifier)
     browser_session = _RecordingBrowserSession()
+
+    async def factory(settings: Settings) -> BrowserSessionLike:
+        del settings
+        return browser_session
+
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=factory,
+    )
 
     async def run() -> None:
         try:
-            session = await authenticator.authenticate(browser_session=browser_session)
+            session = await authenticator.authenticate()
             assert session.identity_nif == "12345678Z"
 
             with pytest.raises(AeatLoginAssertionError) as exc_info:
-                await authenticator.authenticate(browser_session=browser_session)
+                await authenticator.authenticate()
             exc = exc_info.value
             assert exc.translated_message == "adapters.auth.authenticator.errors.already_active"
         finally:
@@ -255,20 +218,24 @@ def test_authenticate_already_active_carries_translated_message(
 def test_authenticate_assertion_failed_carries_translated_message(
     tmp_path: Path,
 ) -> None:
-    """authenticate raises AeatLoginAssertionError with assertion_failed key
-    when the browser context is missing the AEAT certificate marker."""
+    """authenticate raises assertion_failed when the protected URL is not retained."""
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path)
-    # Use a failing handshake so the probe is_valid=False, but the context marker check passes.
-    authenticator = AeatAuthenticator(settings, handshake_verifier=_failing_handshake_verifier)
+    browser_session = _RecordingBrowserSession(protected_resource_matches=False)
 
-    # cert_ok=True -> context carries CERTIFICATE_CONTEXT_MARKER (marker check passes).
-    # The probe fails because handshake.success=False -> assertion_failed raised.
-    browser_session = _RecordingBrowserSession()
+    async def factory(settings: Settings) -> BrowserSessionLike:
+        del settings
+        return browser_session
+
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=factory,
+    )
 
     async def run() -> None:
         with pytest.raises(AeatLoginAssertionError) as exc_info:
-            await authenticator.authenticate(browser_session=browser_session)
+            await authenticator.authenticate()
         exc = exc_info.value
         assert exc.translated_message == "adapters.auth.authenticator.errors.assertion_failed"
 
