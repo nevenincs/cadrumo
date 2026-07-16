@@ -7,8 +7,7 @@ cannot drift: the served plugin is byte-identical to a standalone
 ``materialise_plugin`` emission, and the checked-in scaffold under
 ``packaging/marketplace`` stays in lock-step with the generator's manifest.
 Where the ``claude`` CLI is on PATH the emitted marketplace additionally passes
-``claude plugin validate --strict``; the structural assertions always run so
-the suite never silently degrades to a validator-only skip.
+``claude plugin validate --strict``; the structural assertions always run.
 """
 
 from __future__ import annotations

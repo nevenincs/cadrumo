@@ -42,6 +42,8 @@ import sysconfig
 import time
 import uuid
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as distribution_version
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -143,6 +145,8 @@ if TYPE_CHECKING:
     from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[agent]'"
+_REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_VERSION"
+_RUNTIME_COHORT = (PRODUCT_IDENTITY.distribution, *PRODUCT_IDENTITY.companion_distributions)
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
 # toolsets. They are advertised alongside the per-verb tools and are never
@@ -171,6 +175,43 @@ def emit_missing_sdk_refusal() -> None:
     raise SystemExit(3)
 
 
+def enforce_required_runtime_cohort() -> None:
+    """Refuse when a plugin requires a different or incomplete installed cohort.
+
+    Direct standalone use leaves ``CADRUMO_MCP_REQUIRED_VERSION`` unset and is
+    unaffected. Distribution integrations set it to their own release version,
+    binding the client surface to one complete installed root-plus-data cohort.
+    """
+    required = os.environ.get(_REQUIRED_VERSION_ENV, "").strip()
+    if not required:
+        return
+
+    observed: dict[str, str] = {}
+    missing: list[str] = []
+    for distribution in _RUNTIME_COHORT:
+        try:
+            observed[distribution] = distribution_version(distribution)
+        except PackageNotFoundError:
+            missing.append(distribution)
+
+    mismatched = {name: installed for name, installed in observed.items() if installed != required}
+    if not missing and not mismatched:
+        return
+
+    details: list[str] = []
+    if missing:
+        details.append(f"missing: {', '.join(missing)}")
+    if mismatched:
+        rendered = ", ".join(f"{name}={installed}" for name, installed in sorted(mismatched.items()))
+        details.append(f"version mismatch: {rendered}")
+    sys.stderr.write(
+        "Cadrumo MCP runtime cohort does not satisfy the installed integration: "
+        f"required {required}; {'; '.join(details)}. "
+        f"Install cadrumo[agent]=={required} with both exact-version data companions.\n",
+    )
+    raise SystemExit(4)
+
+
 def serve() -> None:
     """Run the ``cadrumo-mcp`` stdio server, or refuse if the SDK is not installed.
 
@@ -179,6 +220,7 @@ def serve() -> None:
     :func:`~entrypoints.mcp._persona_scope.active_persona` error
     regardless of whether the optional SDK is installed.
     """
+    enforce_required_runtime_cohort()
     persona = active_persona()
     surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:

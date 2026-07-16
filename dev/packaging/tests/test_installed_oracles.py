@@ -13,6 +13,7 @@ import hashlib
 import json
 import shutil
 import sys
+import tomllib
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo.agent import materialise_marketplace
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
 from dev.packaging.python_cohort import load_python_cohort
@@ -78,6 +80,7 @@ class InstalledCohort:
     data_wheels: tuple[Path, Path]
     cli: Path
     mcp_server: Path
+    cohort_dir: Path
     source_commit: str
     artifact_sha256: dict[str, str]
     evidence_path: Path
@@ -133,6 +136,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     supplied_dir = _REPO_ROOT / "var" / "packaging-smoke-cohort" / "python"
     if (supplied_dir / "python-cohort.json").is_file():
         supplied = load_python_cohort(supplied_dir)
+        cohort_dir = supplied.directory
         source_commit = supplied.source_commit
         root_wheel = supplied.root_wheel
         data_wheels = supplied.companion_wheels
@@ -150,10 +154,57 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         built_data_wheels = _build_data_wheels(build_root, work_dir, uv)
         assert len(built_data_wheels) == 2
         data_wheels = (built_data_wheels[0], built_data_wheels[1])
+        cohort_dir = work_dir / "python-cohort"
+        cohort_dir.mkdir()
+        for artifact in (root_wheel, *data_wheels):
+            shutil.copy2(artifact, cohort_dir / artifact.name)
+        _run([uv, "build", "--sdist", "--out-dir", str(cohort_dir)], cwd=build_root)
+        for project in ("cadrumo_data_manuals", "cadrumo_data_official"):
+            _run(
+                [
+                    uv,
+                    "build",
+                    "--sdist",
+                    "--project",
+                    str(build_root / "packaging" / project),
+                    "--out-dir",
+                    str(cohort_dir),
+                ],
+                cwd=build_root,
+            )
+        artifacts = {
+            "cadrumo": root_wheel.name,
+            "cadrumo-sdist": next(cohort_dir.glob("cadrumo-*.tar.gz")).name,
+            "cadrumo-data-manuals": data_wheels[0].name,
+            "cadrumo-data-manuals-sdist": next(
+                cohort_dir.glob("cadrumo_data_manuals-*.tar.gz"),
+            ).name,
+            "cadrumo-data-official": data_wheels[1].name,
+            "cadrumo-data-official-sdist": next(
+                cohort_dir.glob("cadrumo_data_official-*.tar.gz"),
+            ).name,
+        }
+        project_metadata = tomllib.loads(
+            (build_root / "pyproject.toml").read_text(encoding="utf-8"),
+        )
+        version = project_metadata["project"]["version"]
+        assert isinstance(version, str)
+        _write_evidence(
+            cohort_dir / "python-cohort.json",
+            {
+                "artifacts": artifacts,
+                "sha256": {name: _sha256(cohort_dir / filename) for name, filename in artifacts.items()},
+                "source_commit": source_commit,
+                "version": version,
+            },
+        )
+        supplied = load_python_cohort(cohort_dir)
+        root_wheel = supplied.root_wheel
+        data_wheels = supplied.companion_wheels
         artifact_sha256 = {
-            "cadrumo": _sha256(root_wheel),
-            "cadrumo-data-manuals": _sha256(data_wheels[0]),
-            "cadrumo-data-official": _sha256(data_wheels[1]),
+            "cadrumo": supplied.sha256["cadrumo"],
+            "cadrumo-data-manuals": supplied.sha256["cadrumo-data-manuals"],
+            "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
         }
 
     venv = _create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
@@ -199,6 +250,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         data_wheels=data_wheels,
         cli=cli,
         mcp_server=mcp_server,
+        cohort_dir=cohort_dir,
         source_commit=source_commit,
         artifact_sha256=artifact_sha256,
         evidence_path=evidence_path,
@@ -313,3 +365,73 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         "modelo.work.create": expected_cli_sha256,
         "modelo.work.observations": expected_cli_sha256,
     }
+
+
+def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
+    installed_cohort: InstalledCohort,
+) -> None:
+    """The generated marketplace launches its copied three-wheel cohort via uvx."""
+    cohort = installed_cohort
+    marketplace = cohort.work_dir / "cohort-marketplace"
+    manifest = materialise_marketplace(
+        marketplace,
+        cohort_dir=cohort.cohort_dir,
+    )
+    plugin_root = marketplace / "plugins" / "cadrumo"
+    assert manifest.plugin.version == cohort.metadata["versions"]["cadrumo"]
+    embedded = plugin_root / "artifacts" / "python"
+    retained = json.loads(
+        (embedded / "plugin-python-cohort.json").read_text(encoding="utf-8"),
+    )
+    assert retained["source_commit"] == cohort.source_commit
+    assert retained["sha256"] == cohort.artifact_sha256
+    for distribution, filename in retained["artifacts"].items():
+        assert _sha256(embedded / filename) == cohort.artifact_sha256[distribution]
+
+    mcp = json.loads((plugin_root / ".mcp.json").read_text(encoding="utf-8"))
+    server = mcp["mcpServers"]["cadrumo"]
+    assert server["command"] == "uvx"
+    assert [argument for argument in server["args"] if argument == "--with"] == [
+        "--with",
+        "--with",
+    ]
+    for wheel in (
+        cohort.root_wheel,
+        cohort.data_wheels[0],
+        cohort.data_wheels[1],
+    ):
+        assert any(wheel.name in argument for argument in server["args"])
+    assert server["env"]["CADRUMO_MCP_REQUIRED_VERSION"] == manifest.plugin.version
+    uvx = shutil.which("uvx")
+    assert uvx is not None
+    resolved_args = tuple(argument.replace("${CLAUDE_PLUGIN_ROOT}", str(plugin_root)) for argument in server["args"])
+    environment = {
+        key: ("" if value == "${user_config.persona}" else "core" if value == "${user_config.surface}" else value)
+        for key, value in server["env"].items()
+    }
+    evidence = run_installed_mcp_oracle(
+        Path(uvx),
+        server_args=resolved_args,
+        environment_overrides=environment,
+        storage_root=cohort.work_dir / "plugin-mcp-state",
+        work_dir=cohort.work_dir / "plugin-outside-checkout",
+        timeout_seconds=420.0,
+    )
+    assert Path(evidence.resolved_executable) == Path(uvx).resolve()
+    assert evidence.target_casilla == "DP200014:00562"
+    assert evidence.target_value == "23000.00"
+    assert evidence.formula_id == "modelo-200-cuota-integra"
+
+    with pytest.raises(ValueError, match="does not match Python cohort version"):
+        materialise_marketplace(
+            cohort.work_dir / "wrong-version-marketplace",
+            version="999.0.0",
+            cohort_dir=cohort.cohort_dir,
+        )
+    with (cohort.cohort_dir / cohort.data_wheels[1].name).open("ab") as handle:
+        handle.write(b"foreign same-name bytes")
+    with pytest.raises(ValueError, match="cohort artifact digest mismatch"):
+        materialise_marketplace(
+            cohort.work_dir / "drifted-cohort-marketplace",
+            cohort_dir=cohort.cohort_dir,
+        )

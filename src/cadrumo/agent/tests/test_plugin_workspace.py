@@ -127,10 +127,14 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     assert "aeat" not in mcp["mcpServers"]
     server = mcp["mcpServers"]["cadrumo"]
     assert server["command"] == "uvx"
-    assert server["args"] == ["--from", "cadrumo[agent]==1.2.3", "cadrumo-mcp"]
-    assert "aeat-cli[agent]==1.2.3" not in server["args"]
-    assert "aeat-mcp" not in server["args"]
+    assert server["args"] == [
+        "--from",
+        "cadrumo[agent]==1.2.3",
+        "cadrumo-mcp",
+    ]
+    assert not (tmp_path / "artifacts").exists()
     assert server["env"] == {
+        "CADRUMO_MCP_REQUIRED_VERSION": "1.2.3",
         "CADRUMO_MCP_PERSONA": "${user_config.persona}",
         "CADRUMO_MCP_SURFACE": "${user_config.surface}",
     }
