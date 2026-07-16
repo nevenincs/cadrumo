@@ -20,6 +20,7 @@ from dev.packaging.smoke_core import (
     _configured_corpus_binary_suffixes,
     _expected_wheel_data_paths,
     _is_corpus_source_binary,
+    _run,
     _tracked_source_data_paths,
 )
 from dev.packaging.smoke_sdist_core import (
@@ -92,11 +93,24 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
 
     cohort_dir = tmp_path / "real-cohort"
     cohort_dir.mkdir()
+    companion_sdists_dir = tmp_path / "companion-sdists"
+    _run(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
+        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+    )
+    _run(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
+        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_official",
+    )
+    manuals_sdist = next(companion_sdists_dir.glob("cadrumo_data_manuals-*.tar.gz"))
+    official_sdist = next(companion_sdists_dir.glob("cadrumo_data_official-*.tar.gz"))
     artifacts = {
         "cadrumo": wheel,
         "cadrumo-sdist": sdist,
         "cadrumo-data-manuals": companions[0],
+        "cadrumo-data-manuals-sdist": manuals_sdist,
         "cadrumo-data-official": companions[1],
+        "cadrumo-data-official-sdist": official_sdist,
     }
     filenames: dict[str, str] = {}
     digests: dict[str, str] = {}
