@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from .....core.time import now
 from ..crypto import KEY_SIZE
 from ..errors import SecretStoreError
+from ._provider_session import exit_provider_session
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
@@ -71,6 +72,4 @@ class EphemeralMasterKeyProvider:
         tb: TracebackType | None,
     ) -> None:
         """Evict this provider's session through the shared teardown boundary."""
-        from ._master_key import _provider_exit
-
-        _provider_exit(self, exc_type, exc, tb)
+        exit_provider_session(self, exc_type, exc, tb)

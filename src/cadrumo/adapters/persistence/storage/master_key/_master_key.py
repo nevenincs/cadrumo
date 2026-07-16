@@ -107,6 +107,7 @@ from ._master_key_records import (
     _KdfVersionEnvelope,
 )
 from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
+from ._provider_session import exit_provider_session
 
 NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
 """NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
@@ -299,7 +300,7 @@ class KeyringMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        _provider_exit(self, exc_type, exc, tb)
+        exit_provider_session(self, exc_type, exc, tb)
 
     def _probe_backend(self) -> None:
         """Refuse no-op keyring backends up-front, via the injected client.
@@ -477,7 +478,7 @@ class FileFallbackMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        _provider_exit(self, exc_type, exc, tb)
+        exit_provider_session(self, exc_type, exc, tb)
 
     @property
     def _kdf_params_path(self) -> Path:
@@ -873,7 +874,7 @@ def _provider_enter(
 
     Stores the opened session and the activation context manager on
     ``provider._session`` and ``provider._activation_cm`` so the
-    matching ``_provider_exit`` can tear them down.
+    matching :func:`exit_provider_session` can tear them down.
     """
     from .....core.config import load_settings
     from ..bucket import NoActiveBucketError
@@ -925,44 +926,9 @@ def _provider_enter(
         if session.unsecured_backend:
             _refuse_unsecured_active_bucket_with_real_profile(session)
     except BaseException:
-        _provider_exit(provider, None, None, None)
+        exit_provider_session(provider, None, None, None)
         raise
     return session
-
-
-def _provider_exit(
-    provider: MasterKeyProvider,
-    exc_type: type[BaseException] | None,
-    exc: BaseException | None,
-    tb: TracebackType | None,
-) -> None:
-    """Evict the activation + session opened by :func:`_provider_enter`.
-
-    Provider bookkeeping is detached before cleanup so repeated or reentrant
-    exits are no-ops. The exact provider-owned session is closed while its
-    activation is still bound, then the activation token restores the prior
-    binding. When an earlier eviction already removed that exact active
-    binding, the captured session is closed directly without disturbing a
-    different current session.
-    """
-    activation = provider._activation_cm
-    session = provider._session
-    provider._activation_cm = None
-    provider._session = None
-    try:
-        if session is not None:
-            from ._active_session import (
-                close_active_bucket_session,
-                current_active_bucket_session,
-            )
-
-            if current_active_bucket_session() is session:
-                close_active_bucket_session()
-            else:
-                session.close()
-    finally:
-        if activation is not None:
-            activation.__exit__(exc_type, exc, tb)
 
 
 @contextlib.contextmanager
@@ -994,7 +960,7 @@ def activate_master_key_provider(
     try:
         yield provider
     finally:
-        _provider_exit(provider, None, None, None)
+        exit_provider_session(provider, None, None, None)
 
 
 class UnsecuredMasterKeyProvider:
@@ -1057,7 +1023,7 @@ class UnsecuredMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        _provider_exit(self, exc_type, exc, tb)
+        exit_provider_session(self, exc_type, exc, tb)
 
 
 def refuse_unsecured_with_real_nif(

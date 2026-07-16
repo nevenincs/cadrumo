@@ -64,6 +64,17 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in commands
 
 
+def test_ci_workflow_does_not_materialise_operator_dotenv() -> None:
+    """CI stays hermetic instead of loading operator-template overrides."""
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    steps = document["jobs"]["cadrumo-lint-and-test"]["steps"]
+    commands = "\n".join(str(step.get("run", "")) for step in steps)
+
+    assert "env-setup" not in commands
+    assert "env/.env.example" not in commands
+    assert "env/.env" not in commands
+
+
 def test_ci_workflow_product_surface_has_no_former_identity() -> None:
     """CI retains `aeat` only as the human CLI, never as a product identity."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
