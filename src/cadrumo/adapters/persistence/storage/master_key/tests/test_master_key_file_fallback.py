@@ -140,29 +140,29 @@ class TestFileFallbackProvider:
         """File-provider exit evicts real bucket storage before same-object reentry."""
         bucket_id = "provider-reopen"
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        master_key = provider.provision_master_key()
-        expected_dek = load_or_mint_bucket_dek(
-            kek=master_key,
-            storage_root=settings.cadrumo_local_storage_root,
-            bucket_id=bucket_id,
-            allow_bootstrap_mint=True,
-        )
-        _write_registered_bucket(
-            settings.cadrumo_local_storage_root,
-            bucket_id,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-        )
-
         with override_settings(
             cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
             cadrumo_active_profile=bucket_id,
             cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
             cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+            cadrumo_secret_passphrase="correct horse battery staple",
         ) as active_settings:
+            provider = FileFallbackMasterKeyProvider(
+                store_dir=settings.cadrumo_secret_store_dir,
+            )
+            master_key = provider.provision_master_key()
+            expected_dek = load_or_mint_bucket_dek(
+                kek=master_key,
+                storage_root=settings.cadrumo_local_storage_root,
+                bucket_id=bucket_id,
+                allow_bootstrap_mint=True,
+            )
+            _write_registered_bucket(
+                settings.cadrumo_local_storage_root,
+                bucket_id,
+                key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
+            )
+
             with activate_master_key_provider(provider):
                 first_session = current_active_bucket_session()
                 assert first_session is not None
