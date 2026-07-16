@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-16'
 step_id: 'S31'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
