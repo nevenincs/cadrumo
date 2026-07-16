@@ -31,7 +31,7 @@ from ....adapters.persistence.storage import (
     override_secret_store,
 )
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
-from ....core import AuthProviderKind
+from ....core import AuthProviderKind, BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....tests.secure_sql import isolated_profile_storage_root
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
@@ -45,11 +45,13 @@ from ...workflow import workflow_state_repository
 from .. import (
     AuthLoginPreconditionError,
     ProviderProbeResult,
+    active_auth_projection_span,
     build_live_auth_preflight_report,
     check_operator_certificate_sources,
     configure_operator_auth,
     inspect_operator_auth,
     login_operator_auth,
+    probe_provider_credentials,
     project_active_certificate_credentials,
     register_operator_certificate_source,
     resolve_active_certificate_credentials,
@@ -901,6 +903,128 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
     assert projection.auth.certificate_path == str(cert_a)
     assert projection.auth.available is False
     assert projection.auth.health_summary == ""
+
+
+def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
+    workflow_state_repository().update(_register_operator_profile())
+    now = datetime.now(UTC)
+    cert_a = _build_pkcs12(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="snapshot-a",
+        subject_cn="snapshot-a",
+        password=_SECRET,
+    )
+    cert_b = _build_pkcs12(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="snapshot-b",
+        subject_cn="snapshot-b",
+        password=_SECRET_B,
+    )
+    register_operator_certificate_source(name="source-a", certificate_path=cert_a)
+    set_operator_certificate_source_secret(name="source-a", secret=SecretStr(_SECRET))
+    select_operator_certificate_source(name="source-a")
+    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
+    snapshot_a = resolve_active_certificate_credentials()
+
+    register_operator_certificate_source(name="source-b", certificate_path=cert_b)
+    set_operator_certificate_source_secret(name="source-b", secret=SecretStr(_SECRET_B))
+    select_operator_certificate_source(name="source-b")
+    snapshot_b = resolve_active_certificate_credentials()
+
+    probe_a = probe_provider_credentials(
+        AuthProviderKind.CERTIFICATE.value,
+        str(snapshot_a.certificate_path or ""),
+        settings=load_settings(),
+        certificate_credentials=snapshot_a,
+    )
+    probe_b = probe_provider_credentials(
+        AuthProviderKind.CERTIFICATE.value,
+        str(snapshot_b.certificate_path or ""),
+        settings=load_settings(),
+        certificate_credentials=snapshot_b,
+    )
+
+    assert snapshot_a.source_name == "source-a"
+    assert snapshot_a.certificate_path == cert_a
+    assert snapshot_b.source_name == "source-b"
+    assert snapshot_b.certificate_path == cert_b
+    assert probe_a.result == ProviderProbeResult.OK
+    assert probe_b.result == ProviderProbeResult.OK
+
+
+def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
+    workflow_state_repository().update(_register_operator_profile())
+    now = datetime.now(UTC)
+    cert_a = _build_pkcs12(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="route-snapshot-a",
+        subject_cn="route-snapshot-a",
+        password=_SECRET,
+    )
+    register_operator_certificate_source(name="selected", certificate_path=cert_a)
+    set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+    select_operator_certificate_source(name="selected")
+    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
+
+    with profile_create_storage_span(_BUCKET_B):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_BUCKET_B,
+                display_name="gestor-route-snapshot-b",
+            ),
+        )
+        cert_b = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=200),
+            name="route-snapshot-b",
+            subject_cn="route-snapshot-b",
+            password=_SECRET_B,
+        )
+        register_operator_certificate_source(name="selected", certificate_path=cert_b)
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+        select_operator_certificate_source(name="selected")
+        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
+
+    settings = load_settings()
+    write_pointer(
+        settings.cadrumo_local_storage_root,
+        BucketPointer(bucket_id=_BUCKET_ID, schema_version=1),
+    )
+    with override_settings(cadrumo_active_profile=None):
+        with active_auth_projection_span(requested_provider=AuthProviderKind.CERTIFICATE.value) as snapshot:
+            assert snapshot.bucket_id == _BUCKET_ID
+            assert snapshot.state is not None
+            assert snapshot.certificate_credentials is not None
+            write_pointer(
+                settings.cadrumo_local_storage_root,
+                BucketPointer(bucket_id=_BUCKET_B, schema_version=1),
+            )
+            state_after_pointer_change = workflow_state_repository().load()
+            credentials_after_pointer_change = resolve_active_certificate_credentials()
+
+            assert state_after_pointer_change.auth.certificate_path == str(cert_a)
+            assert credentials_after_pointer_change.certificate_path == cert_a
+            assert credentials_after_pointer_change.password is not None
+            assert credentials_after_pointer_change.password.get_secret_value() == _SECRET
+
+        credentials_after_span = resolve_active_certificate_credentials()
+        assert credentials_after_span.certificate_path == cert_b
+        assert credentials_after_span.password is not None
+        assert credentials_after_span.password.get_secret_value() == _SECRET_B
 
 
 def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_ambient_session(

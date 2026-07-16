@@ -68,7 +68,6 @@ from ._authenticator import (
     BrowserResponseLike,
     BrowserSessionFactory,
     BrowserSessionLike,
-    BrowserSessionProfileLike,
 )
 from ._authenticator_types import CertificateHealthCheck
 from ._clave_movil import (
@@ -88,6 +87,7 @@ from ._errors import (
     AeatSessionExpiredError,
     AuthConfigurationError,
     AuthError,
+    AuthProviderCleanupError,
     AuthValidationError,
 )
 from ._providers import (
@@ -139,6 +139,7 @@ __all__ = [
     "AuthConfigurationError",
     "AuthError",
     "AuthLoginAssertionDetail",
+    "AuthProviderCleanupError",
     "AuthSessionDetail",
     "AuthValidationError",
     "BrowserContextLike",
@@ -147,7 +148,6 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
-    "BrowserSessionProfileLike",
     "CertificateBundle",
     "CertificateContextProvisioner",
     "CertificateError",

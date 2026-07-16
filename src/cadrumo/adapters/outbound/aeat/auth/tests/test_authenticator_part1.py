@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timezone
 
 import pytest
@@ -9,6 +10,9 @@ from pydantic import ValidationError
 
 from ......core.i18n import tr
 from .. import AuthConfigurationError
+from .. import _authenticator as authenticator_module
+from .._authenticator import _require_exact_active_certificate_session
+from .._providers import ClaveMovilSessionDetail
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -31,10 +35,8 @@ from ._authenticator_support import (
     _certificate_assertion,
     _certificate_session,
     _load_cert,
-    authenticator_module,
     datetime,
     extract_nif_from_subject,
-    logging,
     select_provider,
     timedelta,
     unnamed_certificate_credentials,
@@ -42,6 +44,30 @@ from ._authenticator_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def test_exact_active_certificate_session_guard_rejects_copies_and_other_providers() -> None:
+    current = datetime.now(UTC)
+    active = _certificate_session(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        thumbprint="active-thumbprint",
+        subject="CN=ACTIVE,SERIALNUMBER=12345678Z",
+    )
+
+    _require_exact_active_certificate_session(active, active)
+    with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
+        _require_exact_active_certificate_session(active.model_copy(), active)
+
+    wrong_provider = AeatSession(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=ClaveMovilSessionDetail(dni_nie="12345678Z"),
+    )
+    with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
+        _require_exact_active_certificate_session(wrong_provider, wrong_provider)
 
 
 def test_extract_nif_from_serial_with_idces_prefix(tmp_path: Path) -> None:

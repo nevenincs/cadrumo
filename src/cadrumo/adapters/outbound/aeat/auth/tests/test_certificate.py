@@ -13,6 +13,8 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
+from ......core.config import Settings
+from ...browser import Profile, create_browser_session
 from .. import (
     AEAT_CERTIFICATE_PROTECTED_ORIGIN,
     CertificateBundle,
@@ -178,3 +180,27 @@ def test_context_provisioner_pins_exact_origin_and_materialises_secret(tmp_path:
             },
         ],
     }
+
+
+@pytest.mark.asyncio
+async def test_context_provisioner_constructs_real_playwright_context(tmp_path: Path) -> None:
+    """A real PKCS#12 bundle crosses the production Playwright context boundary."""
+    p12 = _build_pkcs12_bundle(tmp_path)
+    loaded = load_certificate(
+        CertificateBundle(
+            path=p12,
+            password=SecretStr(SECRET_PASSPHRASE),
+        ),
+    )
+    session = await create_browser_session(
+        Settings(),
+        Profile(name="certificate-context", storage_state_path=tmp_path / "storage.json"),
+    )
+    context = await session.create_context(provisioner=CertificateContextProvisioner(loaded))
+    try:
+        page = await context.new_page()
+        await page.goto("data:text/html,<title>certificate-context</title>")
+        assert await page.title() == "certificate-context"
+    finally:
+        await context.close()
+        await session.close()

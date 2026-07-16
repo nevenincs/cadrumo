@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -58,6 +60,70 @@ def _resolve_named_certificate_source_secret(
         return None
 
 
+@dataclass(frozen=True, slots=True)
+class ActiveAuthProjectionSnapshot:
+    """Route-witnessed workflow state and certificate credential projection."""
+
+    bucket_id: str | None
+    state: WorkflowState | None
+    certificate_credentials: ActiveCertificateCredentials | None
+
+
+def _resolve_witnessed_certificate_credentials(
+    state: WorkflowState,
+    *,
+    bucket_id: str,
+    settings: Settings,
+) -> ActiveCertificateCredentials:
+    """Bind a secret to certificate metadata loaded from the witnessed bucket."""
+    credentials = project_active_certificate_credentials(state, settings=settings)
+    if credentials.source_name is None:
+        return credentials
+    password = _resolve_named_certificate_source_secret(
+        name=credentials.source_name,
+        bucket_id=bucket_id,
+        settings=settings,
+    )
+    return credentials.model_copy(update={"password": password})
+
+
+@contextmanager
+def active_auth_projection_span(
+    *,
+    settings: Settings | None = None,
+    requested_provider: str | None = None,
+) -> Iterator[ActiveAuthProjectionSnapshot]:
+    """Pin one active route while loading state, credentials, and their consumers."""
+    resolved = settings or load_settings()
+    with active_profile_storage_span(resolved) as bucket_id:
+        if bucket_id is None:
+            yield ActiveAuthProjectionSnapshot(
+                bucket_id=None,
+                state=None,
+                certificate_credentials=None,
+            )
+            return
+        from ...core.config import override_settings
+
+        with override_settings(cadrumo_active_profile=bucket_id):
+            state = _workflow_state_repository().load()
+            provider = (requested_provider or state.auth.provider or "").strip().lower()
+            credentials = (
+                _resolve_witnessed_certificate_credentials(
+                    state,
+                    bucket_id=bucket_id,
+                    settings=resolved,
+                )
+                if provider == "certificate"
+                else None
+            )
+            yield ActiveAuthProjectionSnapshot(
+                bucket_id=bucket_id,
+                state=state,
+                certificate_credentials=credentials,
+            )
+
+
 def resolve_active_certificate_credentials(
     *,
     settings: Settings | None = None,
@@ -65,24 +131,13 @@ def resolve_active_certificate_credentials(
     """Resolve the exact certificate credential selected for the active profile."""
     resolved = settings or load_settings()
     try:
-        with active_profile_storage_span(resolved) as bucket_id:
-            workflow_state = _workflow_state_repository().load() if bucket_id is not None else None
-            if workflow_state is None:
+        with active_auth_projection_span(
+            settings=resolved,
+            requested_provider="certificate",
+        ) as snapshot:
+            if snapshot.state is None:
                 return unnamed_certificate_credentials(resolved)
-            if bucket_id is None:
-                return ActiveCertificateCredentials()
-            credentials = project_active_certificate_credentials(
-                workflow_state,
-                settings=resolved,
-            )
-            if credentials.source_name is None:
-                return credentials
-            password = _resolve_named_certificate_source_secret(
-                name=credentials.source_name,
-                bucket_id=bucket_id,
-                settings=resolved,
-            )
-            return credentials.model_copy(update={"password": password})
+            return snapshot.certificate_credentials or ActiveCertificateCredentials()
     except (OSError, AeatError):
         return ActiveCertificateCredentials()
 
@@ -116,6 +171,8 @@ def project_active_certificate_credentials(
 
 
 __all__ = [
+    "ActiveAuthProjectionSnapshot",
+    "active_auth_projection_span",
     "project_active_certificate_credentials",
     "resolve_active_certificate_credentials",
     "resolve_certificate_source_secret",

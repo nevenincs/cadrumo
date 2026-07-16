@@ -173,10 +173,10 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     the active bucket when one exists and falls back to a diagnostic sentinel so
     browser connectivity probes can run before profile setup is complete.
 
-    Auth providers pass their own kind-namespaced storage-state paths to
-    :meth:`BrowserSession.create_context`; the profile storage path built here is
-    only the fallback for direct callers. Call ``await session.close()`` when you
-    are done. Auth providers already do that in their ``close()`` path.
+    Auth providers pass kind-namespaced encrypted storage state explicitly to
+    :meth:`BrowserSession.create_context`; the profile path is never loaded
+    implicitly. Call ``await session.close()`` when you are done. Auth providers
+    already do that in their ``close()`` path.
     """
     from .....core import resolve_active_bucket_id
 
@@ -187,13 +187,8 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     # the Profile model satisfied without pretending to be a real
     # profile.
     bucket_id = resolve_active_bucket_id() or _DIAGNOSTIC_PROFILE_BUCKET_ID
-    # Profile.storage_state_path is superseded by every auth-provider
-    # passing an explicit kind-namespaced storage_state_path to
-    # BrowserSession.create_context(). The value here is a fallback
-    # for hypothetical future callers that do not override it; no
-    # shipping provider currently relies on it. The storage-state
-    # filename is keyed by the active bucket UUID, consistent with the
-    # other token/lock filename call sites.
+    # Profile.storage_state_path identifies this browser profile but is never
+    # loaded implicitly. Auth providers pass encrypted storage state explicitly.
     storage_state_path = settings.cadrumo_token_dir / f"{bucket_id}-storage.json"
     profile = Profile(name=bucket_id, storage_state_path=storage_state_path)
     return await create_browser_session(settings, profile)

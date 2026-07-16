@@ -101,8 +101,9 @@ from ..domain.deadlines import (
 )
 from ..domain.modelos import WorkUnitState
 from .auth import (
+    active_auth_projection_span,
+    probe_provider_credentials,
     project_active_certificate_credentials,
-    resolve_active_certificate_credentials,
     select_provider,
 )
 from .auth_credentials import ActiveCertificateCredentials
@@ -112,7 +113,6 @@ from .workflow import (
     ActiveProfileHealth,
     WorkflowState,
     assess_active_profile_health,
-    workflow_state_repository,
 )
 
 if TYPE_CHECKING:
@@ -200,6 +200,8 @@ class ProjectionAuthReadiness(BaseModel):
     health_summary: str = ""
     health_severity: str = ""
     certificate_path: str = ""
+    probe_result: str = ""
+    probe_summary: str = ""
 
 
 class ProjectionWorkspaceSummary(BaseModel):
@@ -388,6 +390,7 @@ def _build_auth_readiness(
     requested_provider: str | None,
     probe_live_backend: bool,
     credential_bucket_id: str | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
 ) -> ProjectionAuthReadiness:
     """Compute the auth-readiness sub-record once.
 
@@ -406,16 +409,12 @@ def _build_auth_readiness(
     normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
     provider = normalized_request or auth.provider or ""
     effective_certificate_path = auth.certificate_path or ""
-    certificate_credentials: ActiveCertificateCredentials | None = None
     backend_settings = None
     if provider == AuthProviderKind.CERTIFICATE.value:
         backend_settings = load_settings()
-        certificate_credentials = project_active_certificate_credentials(
-            state,
-            settings=backend_settings,
-        )
-        if probe_live_backend and credential_bucket_id is not None:
-            certificate_credentials = resolve_active_certificate_credentials(
+        if certificate_credentials is None:
+            certificate_credentials = project_active_certificate_credentials(
+                state,
                 settings=backend_settings,
             )
         effective_certificate_path = (
@@ -431,6 +430,8 @@ def _build_auth_readiness(
     available = configured and bool(auth.authenticated_at)
     health_summary = ""
     health_severity = ""
+    probe_result = ""
+    probe_summary = ""
     if probe_live_backend and provider:
         if provider not in _AUTH_PROVIDER_VALUES:
             _log.warning(
@@ -459,6 +460,15 @@ def _build_auth_readiness(
                     exc_info=True,
                 )
                 available = False
+    if probe_live_backend and credential_bucket_id is not None:
+        provider_probe = probe_provider_credentials(
+            provider,
+            effective_certificate_path,
+            settings=backend_settings,
+            certificate_credentials=certificate_credentials,
+        )
+        probe_result = str(provider_probe.result)
+        probe_summary = provider_probe.summary
 
     authenticated = configured and bool(auth.authenticated_at)
     health_severity = _resolve_health_severity(
@@ -481,6 +491,8 @@ def _build_auth_readiness(
         # non-certificate provider must never carry a stale path left
         # over from an earlier certificate configuration.
         certificate_path=(effective_certificate_path if provider == AuthProviderKind.CERTIFICATE.value else ""),
+        probe_result=probe_result,
+        probe_summary=probe_summary,
     )
 
 
@@ -1127,18 +1139,48 @@ def build_operator_state_projection(
     """
     _ensure_profile_key_registry_registered()
     reference_today = today or today_madrid()
-    active_bucket_id = resolve_active_bucket_id()
-    has_active_profile = active_bucket_id is not None
-
     if state is not None:
-        resolved_state = state
-        credential_bucket_id = None
-    elif not has_active_profile:
-        resolved_state = WorkflowState()
-        credential_bucket_id = None
-    else:
-        resolved_state = workflow_state_repository().load()
-        credential_bucket_id = active_bucket_id
+        return _assemble_operator_state_projection(
+            state,
+            active_bucket_id=resolve_active_bucket_id(),
+            credential_bucket_id=None,
+            certificate_credentials=None,
+            requested_provider=requested_provider,
+            probe_live_backend=probe_live_backend,
+            include_workspace_summary=include_workspace_summary,
+            include_pending_obligations=include_pending_obligations,
+            modelo_readiness_requests=modelo_readiness_requests,
+            reference_today=reference_today,
+        )
+    with active_auth_projection_span(requested_provider=requested_provider) as snapshot:
+        return _assemble_operator_state_projection(
+            snapshot.state or WorkflowState(),
+            active_bucket_id=snapshot.bucket_id,
+            credential_bucket_id=(snapshot.bucket_id if snapshot.state is not None else None),
+            certificate_credentials=snapshot.certificate_credentials,
+            requested_provider=requested_provider,
+            probe_live_backend=probe_live_backend,
+            include_workspace_summary=include_workspace_summary,
+            include_pending_obligations=include_pending_obligations,
+            modelo_readiness_requests=modelo_readiness_requests,
+            reference_today=reference_today,
+        )
+
+
+def _assemble_operator_state_projection(
+    resolved_state: WorkflowState,
+    *,
+    active_bucket_id: str | None,
+    credential_bucket_id: str | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+    requested_provider: str | None,
+    probe_live_backend: bool,
+    include_workspace_summary: bool,
+    include_pending_obligations: bool,
+    modelo_readiness_requests: tuple[ModeloReadinessRequest, ...],
+    reference_today: date,
+) -> OperatorStateProjection:
+    has_active_profile = active_bucket_id is not None
 
     profile_health = assess_active_profile_health(resolved_state)
 
@@ -1152,6 +1194,7 @@ def build_operator_state_projection(
         requested_provider=requested_provider,
         probe_live_backend=probe_live_backend,
         credential_bucket_id=credential_bucket_id,
+        certificate_credentials=certificate_credentials,
     )
     active_profile = _build_active_profile(profile_health)
 

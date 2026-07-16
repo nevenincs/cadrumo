@@ -140,7 +140,6 @@ class _RecordingBrowserSession:
         self._page_factory = page_factory
         self.contexts: list[_RecordingContext] = []
         self.closed = False
-        self.profile = None
 
     async def create_context(
         self,
