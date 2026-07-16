@@ -29,7 +29,6 @@ from .....application.calculations import (
     IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
 )
-from .....application.config_reset import ConfigResetScope, reset_config
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
@@ -180,7 +179,6 @@ __all__ = [
     "CalculationObservationRepository",
     "CalculationRevisionCatalogueRepository",
     "Callable",
-    "ConfigResetScope",
     "ExpedienteNotFoundError",
     "FiledDeclaracionObservationStore",
     "InvoiceCatalogue",
@@ -218,7 +216,6 @@ __all__ = [
     "load_inventory",
     "load_usage_ratios",
     "preview_quarantine_unreadable_secure_objects",
-    "reset_config",
     "save_amortizacion_ledger",
     "save_assets",
     "save_inventory",

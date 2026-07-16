@@ -95,38 +95,37 @@ def test_ledger_remove_with_dry_run_does_not_require_yes() -> None:
     assert "confirm" not in haystack or "dry" in haystack, result.output
 
 
-def test_config_reset_refuses_without_explicit_scope() -> None:
-    """``aeat config reset --yes`` with no ``--scope`` is refused.
-
-    The most destructive scope (``all``, a full wipe) must never be an
-    implied default: one forgotten flag next to ``--yes`` would erase every
-    profile, session, and stored row. The refusal must name the accepted
-    scope set, never a bare "missing option".
-    """
-    result = invoke_cached_cli(["config", "reset", "--yes"])
+def test_config_reset_start_refuses_without_yes() -> None:
+    """``config reset start`` requires explicit destructive confirmation."""
+    result = invoke_cached_cli(["config", "reset", "start"])
     assert result.exit_code != 0, result.output
     combined = (result.output or "") + (result.stderr or "")
-    for scope_token in ("profile", "auth", "data", "all"):
-        assert scope_token in combined, combined
+    assert "--yes" in combined or "confirm" in combined.lower(), combined
 
 
-def test_config_reset_scope_refusal_fires_before_yes_guard() -> None:
-    """Bare ``aeat config reset`` names the scope contract first."""
-    result = invoke_cached_cli(["config", "reset"])
-    assert result.exit_code != 0, result.output
-    combined = (result.output or "") + (result.stderr or "")
-    assert "--scope" in combined, combined
-
-
-def test_config_reset_with_explicit_scope_and_yes_executes() -> None:
-    """Anti-tautology: an explicit ``--scope auth --yes`` still executes.
-
-    If this fails, the scope-required guard has started refusing the
-    explicit form and the refusal tests above are meaningless.
-    """
-    result = invoke_cached_cli(["config", "reset", "--scope", "auth", "--yes"])
+def test_config_reset_status_is_read_only_and_needs_no_yes() -> None:
+    """``config reset status`` succeeds without confirmation or mutation."""
+    result = invoke_cached_cli(["config", "reset", "status"])
     assert result.exit_code == 0, result.output
-    assert "scope\tAUTH" in result.output, result.output
+    assert "operation\t<none>" in result.output
+
+
+def test_config_reset_removed_scope_spelling_is_rejected() -> None:
+    """The retired flat scoped reset has no alias or compatibility parser."""
+    result = invoke_cached_cli(
+        ["config", "reset", "--scope", "auth", "--yes"],
+    )
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--scope" in combined
+
+
+def test_config_reset_resume_refuses_without_yes() -> None:
+    """``config reset resume`` retains the destructive confirmation gate."""
+    result = invoke_cached_cli(["config", "reset", "resume"])
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" in combined or "confirm" in combined.lower(), combined
 
 
 def test_auth_reset_refuses_without_yes() -> None:
