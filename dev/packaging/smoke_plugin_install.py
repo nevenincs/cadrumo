@@ -1,18 +1,19 @@
-"""Install the generated Claude plugin and perform real tax work through it.
+"""Install the cohort-bound Claude plugin and prove its real MCP behavior.
 
-The plugin integrates with an already installed ``cadrumo-mcp`` service. This
-lane materialises a marketplace, installs and enables its plugin in an isolated
-Claude configuration, verifies the installed three-distribution cohort, and
-asks the real Claude client to complete the grounded Modelo 200 oracle entirely
-through the plugin MCP tools.
+The marketplace plugin is the acquisition surface: it carries the exact tested
+three-wheel cohort and launches that cohort through ``uvx``. This smoke installs
+the generated marketplace through Claude Code, reads the installed declaration,
+then drives the declaration directly through the public MCP protocol. Tax truth
+comes from raw initialize/list/call results checked by the shared installed MCP
+oracle, never from model narration.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -20,64 +21,31 @@ import time
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.agent import materialise_marketplace
-from dev.packaging.installed_tax_oracle import isolated_product_environment
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from cadrumo.agent import materialise_marketplace  # noqa: E402
+from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
+from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _PLUGIN_ID: Final[str] = "cadrumo@neve"
-_DISTRIBUTIONS: Final[tuple[str, ...]] = (
-    "cadrumo",
-    "cadrumo-data-manuals",
-    "cadrumo-data-official",
+_COHORT_MANIFEST: Final[str] = "plugin-python-cohort.json"
+_CLAUDE_PLUGIN_ROOT: Final[str] = "${CLAUDE_PLUGIN_ROOT}"
+_CLIENT_TOOL_NAME: Final[str] = "mcp__plugin_cadrumo_cadrumo__cadrumo_harness_load"
+_CLIENT_PROMPT: Final[str] = (
+    "Call the Cadrumo cadrumo_harness_load MCP tool exactly once. "
+    "Do not use Bash or any other tool. Then say only connected."
 )
-_JSON_FENCE = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
-_COHORT_PROBE = (
-    "import json; from importlib.metadata import version; "
-    f"names={_DISTRIBUTIONS!r}; "
-    "print(json.dumps({name:version(name) for name in names},sort_keys=True))"
-)
-_TAX_PROMPT = """Use only the installed Cadrumo plugin MCP tools. Execute this real itinerary;
-do not use Bash, files, or fabricate values.
-1. Call execute with command_key config.profile.create and arguments:
-{"profile_name":"installed-oracle","quiet":true,"accept_defaults":true,
-"entity_type":"legal_entity","legal_entity_form":"sl","tax_id":"B66012345",
-"legal_name":"Installed Oracle SL","activity":"software services",
-"incn_prior_12_months":"500000","new_entity_first_two_profit_periods":false,
-"iva_regime":"GENERAL","tax_residence_ccaa":"madrid"}.
-2. Call cadrumo_whoami and require active_profile installed-oracle.
-3. Call execute with command_key modelo.work.create and arguments:
-{"modelo":"200","year":2024,"period":"0A","revision":"2024-y-siguientes",
-"name":"Installed Modelo 200 oracle","actor":"installed-tax-oracle"}.
-Extract the returned work_unit_id.
-4. Calculate that work unit through the Cadrumo MCP surface with:
-casilla=["00501=100000.00","DP200013:00417=0.00","DP200013:00418=0.00",
-"01032=0.00","DP200014:00547=0.00","DP200014:01033=0.00",
-"DP200014:01034=0.00"],
-binding=["modelo-200-2024-profile-legal-entity-form=sl",
-"modelo-200-2024-profile-new-entity-flag=0",
-"modelo-200-2024-profile-incn-prior-12-months=500000",
-"modelo-200-2024-profile-tributacion-estado-porcentaje=100",
-"modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
-"modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
-"modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0"],
-relation=["modelo-200-2024-rel-202-pagos-fraccionados=0",
-"modelo-200-2024-rel-202-pagos-fraccionados-40-2=0"],
-actor="installed-tax-oracle".
-5. Read the calculation observations and find DP200014:00562. Require value
-23000.00, formula_id modelo-200-cuota-integra, legal_refs containing
-ley-27-2014:art-29, and source_refs containing
-aeat-modelo-200-manual-2024.
-Return one compact JSON object in a ```json fence containing connected,
-active_profile, work_unit_id, target_casilla, target_value, formula_id,
-legal_ref_present, source_ref_present, and mcp_tools_called. If any call fails,
-return the real failure instead of claiming success."""
 
 
-def _python_for_mcp(executable: Path) -> Path:
-    candidate = executable.parent / ("python.exe" if sys.platform == "win32" else "python")
-    if not candidate.is_file():
-        raise SystemExit(f"cannot locate the installed cohort Python beside {executable}")
-    return candidate.resolve()
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _run(
@@ -89,7 +57,7 @@ def _run(
     timeout_seconds: float,
 ) -> dict[str, Any]:
     started = time.monotonic()
-    completed = subprocess.run(  # noqa: S603 - executable paths are explicit operator inputs
+    completed = subprocess.run(  # noqa: S603 - every executable is an explicit operator input
         argv,
         cwd=cwd,
         env=environment,
@@ -106,76 +74,156 @@ def _run(
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         encoding=_UTF_8,
     )
-    record = {
+    result = {
         "argv": argv,
-        "cwd": str(cwd),
         "duration_seconds": round(time.monotonic() - started, 3),
-        "log": str(log_path),
         "returncode": completed.returncode,
-        "stderr": completed.stderr,
         "stdout": completed.stdout,
+        "stderr": completed.stderr,
     }
     if completed.returncode != 0:
         raise SystemExit(f"command failed with exit {completed.returncode}: {argv!r}; see {log_path}")
-    return record
+    return result
 
 
-def _parse_oracle(result: dict[str, Any]) -> dict[str, Any]:
-    if result.get("is_error") is not False or result.get("subtype") != "success":
-        raise SystemExit(f"Claude did not complete successfully: {result!r}")
-    response = result.get("result")
-    if not isinstance(response, str):
-        raise SystemExit("Claude result did not contain textual output")
-    match = _JSON_FENCE.search(response)
-    if match is None:
-        raise SystemExit("Claude result did not contain the required JSON fence")
-    oracle = json.loads(match.group(1))
-    required = {
-        "connected": True,
-        "active_profile": "installed-oracle",
-        "target_casilla": "DP200014:00562",
-        "target_value": "23000.00",
-        "formula_id": "modelo-200-cuota-integra",
-        "legal_ref_present": True,
-        "source_ref_present": True,
+def _installed_plugin(claude: Path, *, environment: dict[str, str], cwd: Path, log: Path) -> dict[str, Any]:
+    record = _run(
+        [str(claude), "plugin", "list", "--json"],
+        cwd=cwd,
+        environment=environment,
+        log_path=log,
+        timeout_seconds=60.0,
+    )
+    document = json.loads(record["stdout"])
+    if not isinstance(document, list):
+        raise SystemExit("Claude plugin list did not return a JSON array")
+    plugin = next((item for item in document if isinstance(item, dict) and item.get("id") == _PLUGIN_ID), None)
+    if not isinstance(plugin, dict):
+        raise SystemExit(f"Claude did not report installed plugin {_PLUGIN_ID!r}")
+    return plugin
+
+
+def _verify_installed_cohort(plugin_root: Path, cohort: PythonCohort) -> dict[str, Any]:
+    retained_path = plugin_root / "artifacts" / "python" / _COHORT_MANIFEST
+    retained = json.loads(retained_path.read_text(encoding=_UTF_8))
+    expected_sha256 = {
+        "cadrumo": cohort.sha256["cadrumo"],
+        "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
+        "cadrumo-data-official": cohort.sha256["cadrumo-data-official"],
     }
-    for key, expected in required.items():
-        if oracle.get(key) != expected:
-            raise SystemExit(f"Claude oracle mismatch for {key}: {oracle.get(key)!r} != {expected!r}")
-    work_unit_id = oracle.get("work_unit_id")
-    tools = oracle.get("mcp_tools_called")
-    if not isinstance(work_unit_id, str) or not work_unit_id:
-        raise SystemExit("Claude oracle omitted the real work_unit_id")
-    if not isinstance(tools, list) or not tools or not all(isinstance(item, str) for item in tools):
-        raise SystemExit("Claude oracle omitted the MCP tool-call evidence")
-    return oracle
+    if retained.get("source_commit") != cohort.source_commit:
+        raise SystemExit("installed plugin cohort source commit drifted")
+    if retained.get("version") != cohort.version:
+        raise SystemExit("installed plugin cohort version drifted")
+    if retained.get("sha256") != expected_sha256:
+        raise SystemExit("installed plugin cohort digest declaration drifted")
+    artifacts = retained.get("artifacts")
+    if not isinstance(artifacts, dict) or set(artifacts) != set(expected_sha256):
+        raise SystemExit("installed plugin cohort artifact declaration is incomplete")
+    observed: dict[str, str] = {}
+    for distribution, filename in artifacts.items():
+        if not isinstance(filename, str) or Path(filename).name != filename:
+            raise SystemExit(f"installed plugin artifact path is invalid: {filename!r}")
+        observed[distribution] = _sha256(retained_path.parent / filename)
+    if observed != expected_sha256:
+        raise SystemExit("installed plugin cohort bytes do not match the tested cohort")
+    return retained
 
 
-def _copy_credentials(credentials: Path | None, config_dir: Path) -> Path | None:
-    if credentials is None:
-        return None
-    if not credentials.is_file():
-        raise SystemExit(f"Claude credentials file does not exist: {credentials}")
-    destination = config_dir / ".credentials.json"
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(credentials, destination)
-    return destination
+def _resolve_server(plugin: dict[str, Any]) -> tuple[Path, tuple[str, ...], dict[str, str], Path]:
+    install_path = plugin.get("installPath")
+    servers = plugin.get("mcpServers")
+    if not isinstance(install_path, str) or not install_path:
+        raise SystemExit("Claude plugin list omitted the installed plugin path")
+    if not isinstance(servers, dict) or not isinstance(servers.get("cadrumo"), dict):
+        raise SystemExit("Claude plugin list omitted the installed Cadrumo MCP declaration")
+    plugin_root = Path(install_path).resolve(strict=True)
+    server = servers["cadrumo"]
+    command = server.get("command")
+    args = server.get("args")
+    declared_environment = server.get("env")
+    if command != "uvx" or not isinstance(args, list) or not all(isinstance(item, str) for item in args):
+        raise SystemExit(f"installed plugin MCP launcher is not the pinned uvx contract: {server!r}")
+    if not isinstance(declared_environment, dict) or not all(
+        isinstance(key, str) and isinstance(value, str) for key, value in declared_environment.items()
+    ):
+        raise SystemExit("installed plugin MCP environment declaration is invalid")
+    uvx = shutil.which(command)
+    if uvx is None:
+        raise SystemExit("uvx is required to execute the installed plugin cohort")
+    resolved_args = tuple(item.replace(_CLAUDE_PLUGIN_ROOT, str(plugin_root)) for item in args)
+    if _CLAUDE_PLUGIN_ROOT in " ".join(resolved_args):
+        raise SystemExit("installed plugin root interpolation was not fully resolved")
+    environment = {
+        key: ("" if value == "${user_config.persona}" else "core" if value == "${user_config.surface}" else value)
+        for key, value in declared_environment.items()
+    }
+    return Path(uvx).resolve(strict=True), resolved_args, environment, plugin_root
+
+
+def _run_optional_claude_session(
+    claude: Path,
+    *,
+    environment: dict[str, str],
+    cwd: Path,
+    logs: Path,
+    model: str,
+    max_budget_usd: str,
+    timeout_seconds: float,
+) -> dict[str, Any]:
+    debug_log = logs / "claude-debug.log"
+    record = _run(
+        [
+            str(claude),
+            "-p",
+            "--output-format",
+            "json",
+            "--setting-sources",
+            "user",
+            "--permission-mode",
+            "bypassPermissions",
+            "--dangerously-skip-permissions",
+            "--model",
+            model,
+            "--max-budget-usd",
+            max_budget_usd,
+            "--debug-file",
+            str(debug_log),
+            _CLIENT_PROMPT,
+        ],
+        cwd=cwd,
+        environment=environment,
+        log_path=logs / "claude-client-session.log",
+        timeout_seconds=timeout_seconds,
+    )
+    debug_text = debug_log.read_text(encoding=_UTF_8)
+    connected = 'MCP server "plugin:cadrumo:cadrumo": Successfully connected' in debug_text
+    tool_called = f"tool={_CLIENT_TOOL_NAME}" in debug_text
+    if not connected or not tool_called:
+        raise SystemExit("Claude client session did not prove plugin MCP connection and harness tool use")
+    return {
+        "connected": connected,
+        "duration_seconds": record["duration_seconds"],
+        "model": model,
+        "status": "passed",
+        "tool_called": _CLIENT_TOOL_NAME,
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the isolated installed-plugin tax oracle and retain its evidence."""
+    """Run installed-plugin acquisition and protocol evidence."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--claude", type=Path, required=True)
-    parser.add_argument("--mcp", type=Path, required=True)
-    parser.add_argument("--credentials", type=Path)
+    parser.add_argument("--claude", type=Path, required=True, help="Absolute Claude Code executable.")
+    parser.add_argument("--cohort-dir", type=Path, required=True, help="Canonical tested Python cohort.")
     parser.add_argument("--evidence-dir", type=Path, required=True)
+    parser.add_argument("--run-claude-session", action="store_true")
     parser.add_argument("--model", default="sonnet")
-    parser.add_argument("--max-budget-usd", default="1.5")
+    parser.add_argument("--max-budget-usd", default="0.5")
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
     args = parser.parse_args(argv)
 
     claude = args.claude.resolve(strict=True)
-    mcp = args.mcp.resolve(strict=True)
+    cohort = load_python_cohort(args.cohort_dir)
     evidence_root = args.evidence_dir.resolve()
     run_root = evidence_root / f"run-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
     marketplace = run_root / "marketplace"
@@ -185,131 +233,98 @@ def main(argv: list[str] | None = None) -> int:
     workspace.mkdir(parents=True)
     config_dir.mkdir(parents=True)
 
-    environment = isolated_product_environment(run_root / "storage")
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment.pop("PYTHONHOME", None)
+    environment.pop("PYTHONPATH", None)
     environment["CLAUDE_CONFIG_DIR"] = str(config_dir)
-    environment["PATH"] = os.pathsep.join((str(mcp.parent), environment.get("PATH", "")))
-    copied_credentials = _copy_credentials(args.credentials.resolve() if args.credentials else None, config_dir)
-    if copied_credentials is None and not (
-        environment.get("ANTHROPIC_API_KEY") or environment.get("ANTHROPIC_AUTH_TOKEN")
-    ):
-        raise SystemExit("provide --credentials or set ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN")
+    has_claude_credential = bool(
+        environment.get("ANTHROPIC_API_KEY") or environment.get("ANTHROPIC_AUTH_TOKEN"),
+    )
+    if args.run_claude_session and not has_claude_credential:
+        raise SystemExit("--run-claude-session requires ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN")
 
-    commands: list[dict[str, Any]] = []
-    try:
-        cohort_record = _run(
-            [str(_python_for_mcp(mcp)), "-c", _COHORT_PROBE],
-            cwd=workspace,
-            environment=environment,
-            log_path=logs / "installed-cohort.log",
-            timeout_seconds=60.0,
-        )
-        commands.append(cohort_record)
-        installed_cohort = json.loads(cohort_record["stdout"])
-        versions = set(installed_cohort.values())
-        if set(installed_cohort) != set(_DISTRIBUTIONS) or len(versions) != 1:
-            raise SystemExit(f"installed MCP cohort is incomplete or mixed: {installed_cohort!r}")
-        (version,) = versions
-        manifest = materialise_marketplace(marketplace, version=version)
+    manifest = materialise_marketplace(marketplace, cohort_dir=cohort.directory)
+    _run(
+        [str(claude), "plugin", "marketplace", "add", str(marketplace)],
+        cwd=workspace,
+        environment=environment,
+        log_path=logs / "marketplace-add.log",
+        timeout_seconds=60.0,
+    )
+    _run(
+        [str(claude), "plugin", "install", _PLUGIN_ID, "--scope", "user"],
+        cwd=workspace,
+        environment=environment,
+        log_path=logs / "plugin-install.log",
+        timeout_seconds=120.0,
+    )
+    _run(
+        [str(claude), "plugin", "enable", _PLUGIN_ID],
+        cwd=workspace,
+        environment=environment,
+        log_path=logs / "plugin-enable.log",
+        timeout_seconds=60.0,
+    )
+    plugin = _installed_plugin(
+        claude,
+        environment=environment,
+        cwd=workspace,
+        log=logs / "plugin-list.log",
+    )
+    if plugin.get("enabled") is not True or plugin.get("version") != cohort.version:
+        raise SystemExit(f"installed plugin identity mismatch: {plugin!r}")
 
-        for name, command, timeout in (
-            ("marketplace-add", [str(claude), "plugin", "marketplace", "add", str(marketplace)], 60.0),
-            ("plugin-install", [str(claude), "plugin", "install", _PLUGIN_ID, "--scope", "user"], 120.0),
-            ("plugin-enable", [str(claude), "plugin", "enable", _PLUGIN_ID], 60.0),
-        ):
-            commands.append(
-                _run(
-                    command,
-                    cwd=workspace,
-                    environment=environment,
-                    log_path=logs / f"{name}.log",
-                    timeout_seconds=timeout,
-                ),
-            )
-        plugin_list_record = _run(
-            [str(claude), "plugin", "list", "--json"],
-            cwd=workspace,
+    uvx, server_args, server_environment, plugin_root = _resolve_server(plugin)
+    retained = _verify_installed_cohort(plugin_root, cohort)
+    protocol = run_installed_mcp_oracle(
+        uvx,
+        server_args=server_args,
+        environment_overrides=server_environment,
+        storage_root=run_root / "storage",
+        work_dir=run_root / "external-work",
+        timeout_seconds=args.timeout_seconds,
+    )
+    client_session = (
+        _run_optional_claude_session(
+            claude,
             environment=environment,
-            log_path=logs / "plugin-list.log",
-            timeout_seconds=60.0,
-        )
-        commands.append(plugin_list_record)
-        installed_plugins = json.loads(plugin_list_record["stdout"])
-        plugin = next((item for item in installed_plugins if item.get("id") == _PLUGIN_ID), None)
-        if plugin is None or plugin.get("enabled") is not True or plugin.get("version") != version:
-            raise SystemExit(f"installed plugin identity mismatch: {plugin!r}")
-        server = plugin.get("mcpServers", {}).get("cadrumo", {})
-        expected_env = {
-            "CADRUMO_MCP_REQUIRED_VERSION": version,
-            "CADRUMO_MCP_PERSONA": "${user_config.persona}",
-            "CADRUMO_MCP_SURFACE": "${user_config.surface}",
-        }
-        if server.get("command") != "cadrumo-mcp" or server.get("args") != [] or server.get("env") != expected_env:
-            raise SystemExit(f"installed plugin MCP declaration is not the global service integration: {server!r}")
-
-        debug_log = logs / "claude-debug.log"
-        claude_record = _run(
-            [
-                str(claude),
-                "-p",
-                "--output-format",
-                "json",
-                "--setting-sources",
-                "user",
-                "--permission-mode",
-                "bypassPermissions",
-                "--dangerously-skip-permissions",
-                "--model",
-                args.model,
-                "--max-budget-usd",
-                args.max_budget_usd,
-                "--debug-file",
-                str(debug_log),
-                _TAX_PROMPT,
-            ],
             cwd=workspace,
-            environment=environment,
-            log_path=logs / "claude-tax-oracle.log",
+            logs=logs,
+            model=args.model,
+            max_budget_usd=args.max_budget_usd,
             timeout_seconds=args.timeout_seconds,
         )
-        commands.append(claude_record)
-        claude_result = json.loads(claude_record["stdout"])
-        oracle = _parse_oracle(claude_result)
-        debug_text = debug_log.read_text(encoding=_UTF_8)
-        if 'MCP server "plugin:cadrumo:cadrumo": Successfully connected' not in debug_text:
-            raise SystemExit("Claude debug log does not prove the plugin MCP server connected")
-        if "tool=mcp__plugin_cadrumo_cadrumo__execute" not in debug_text:
-            raise SystemExit("Claude debug log does not prove real Cadrumo MCP execution")
+        if args.run_claude_session
+        else {"status": "not_run_no_credential" if not has_claude_credential else "not_requested"}
+    )
 
-        evidence_path = run_root / "plugin-evidence.json"
-        evidence_path.write_text(
-            json.dumps(
-                {
-                    "artifact": {
-                        "marketplace": str(marketplace),
-                        "marketplace_name": manifest.marketplace_name,
-                        "plugin_id": _PLUGIN_ID,
-                        "plugin_version": manifest.plugin.version,
-                    },
-                    "claude_result": claude_result,
-                    "client": {"claude_executable": str(claude), "model": args.model},
-                    "commands": commands,
-                    "debug_log": str(debug_log),
-                    "installed_cohort": installed_cohort,
-                    "installed_mcp_executable": str(mcp),
-                    "oracle": oracle,
-                },
-                ensure_ascii=False,
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n",
-            encoding=_UTF_8,
-        )
-        print(evidence_path)
-        return 0
-    finally:
-        if copied_credentials is not None:
-            copied_credentials.unlink(missing_ok=True)
+    evidence = {
+        "artifact": {
+            "marketplace_name": manifest.marketplace_name,
+            "plugin_id": _PLUGIN_ID,
+            "plugin_version": manifest.plugin.version,
+        },
+        "claude_client_session": client_session,
+        "cohort": {
+            "sha256": retained["sha256"],
+            "source_commit": cohort.source_commit,
+            "version": cohort.version,
+        },
+        "installed_plugin": {
+            "enabled": True,
+            "launcher": str(uvx),
+            "server_args": list(server_args),
+        },
+        "protocol_oracle": protocol.to_jsonable(),
+        "schema": "cadrumo.packaging.claude-plugin-evidence.v1",
+    }
+    evidence_path = run_root / "plugin-evidence.json"
+    evidence_path.write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding=_UTF_8,
+    )
+    print(evidence_path)
+    return 0
 
 
 if __name__ == "__main__":

@@ -126,8 +126,12 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     mcp = json.loads((tmp_path / ".mcp.json").read_text(encoding=_UTF_8))
     assert "aeat" not in mcp["mcpServers"]
     server = mcp["mcpServers"]["cadrumo"]
-    assert server["command"] == "cadrumo-mcp"
-    assert server["args"] == []
+    assert server["command"] == "uvx"
+    assert server["args"] == [
+        "--from",
+        "cadrumo[agent]==1.2.3",
+        "cadrumo-mcp",
+    ]
     assert not (tmp_path / "artifacts").exists()
     assert server["env"] == {
         "CADRUMO_MCP_REQUIRED_VERSION": "1.2.3",
