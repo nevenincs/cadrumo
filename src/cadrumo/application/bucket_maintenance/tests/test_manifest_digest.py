@@ -15,10 +15,10 @@ import pytest
 
 from ....adapters.persistence.storage.bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
+from ....domain.user_profile import UserProfileStatus
 from .. import compute_manifest_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -46,7 +46,7 @@ def _manifest(*, bucket_id: str = _BUCKET_ID, label: str = "Test label") -> Buck
         ),
         recovery_enrolled=False,
         schema_version=1,
-        status=BucketLifecycleStatus.ACTIVE,
+        status=UserProfileStatus.ACTIVE,
         key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
     )
 

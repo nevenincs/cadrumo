@@ -20,8 +20,7 @@ position, the Spanish description) together. Attribution is pulled from the
 modelo's ``manifest.json`` (the AEAT Sede source page and the per-artefact
 download URL), honouring the BOE/AEAT reuse-with-attribution obligation.
 
-This is the production Diseno de Registro preprocessor (the
-``_example.py`` HTML stub remains a worked example only). When the upstream
+This is the production Diseno de Registro preprocessor. When the upstream
 ``vaultspec-rag`` preprocess-hook lands, this module re-targets the upstream
 sink and the committed sidecars are retired; ``PreprocessOutput`` is the
 forward-compatible precursor that makes that migration mechanical.

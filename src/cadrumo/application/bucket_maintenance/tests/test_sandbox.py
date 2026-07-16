@@ -24,7 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, bucket_paths, manifest_path, read_manifest
+from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
+from ....domain.user_profile import UserProfileStatus
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     SANDBOX_LABEL_PREFIX,
@@ -134,7 +135,7 @@ def test_archive_of_non_sandbox_bucket_tombstones_nothing_on_refusal(runtime: Te
 
     # The guard fires before BucketMaintenanceService.archive runs; the
     # manifest must still report active status.
-    assert read_manifest(paths).status is BucketLifecycleStatus.ACTIVE
+    assert read_manifest(paths).status is UserProfileStatus.ACTIVE
 
 
 def test_restore_refuses_a_non_sandbox_labelled_bucket_by_default(runtime: TestRuntimeProfile) -> None:

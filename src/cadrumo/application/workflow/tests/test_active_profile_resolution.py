@@ -146,13 +146,13 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     materialises it.
     """
     from ....adapters.persistence.storage.bucket import (
-        BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
     )
     from ....adapters.persistence.storage.master_key import KdfParams
+    from ....domain.user_profile import UserProfileStatus
 
     provision_bucket_directory(root, bucket_id)
     write_manifest(
@@ -165,7 +165,7 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
 
@@ -173,13 +173,13 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
 def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
     from ....adapters.persistence.storage.bucket import (
-        BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
     )
     from ....adapters.persistence.storage.master_key import KdfParams
+    from ....domain.user_profile import UserProfileStatus
 
     provision_bucket_directory(root, bucket_id)
     write_manifest(
@@ -192,7 +192,7 @@ def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.TOMBSTONED,
+            status=UserProfileStatus.TOMBSTONED,
         ),
     )
 

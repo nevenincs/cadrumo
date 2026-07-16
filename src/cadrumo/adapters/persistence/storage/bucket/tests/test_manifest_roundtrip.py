@@ -20,8 +20,9 @@ from pathlib import Path
 import pytest
 
 from ......core.external_constants import UTF_8_ENCODING
+from ......domain.user_profile import UserProfileStatus
 from .._layout import BucketPaths, bucket_paths
-from .._manifest import BucketLifecycleStatus, BucketManifest, ManifestKdfParams
+from .._manifest import BucketManifest, ManifestKdfParams
 from .._manifest_io import manifest_path, read_manifest, write_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -56,7 +57,7 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
         ),
         recovery_enrolled=True,
         schema_version=1,
-        status=BucketLifecycleStatus.TOMBSTONED,
+        status=UserProfileStatus.TOMBSTONED,
     )
 
 
@@ -93,7 +94,7 @@ def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     # The lifecycle marker is the plaintext mirror the manifest scan
     # filters on; a save-drops / load-re-defaults regression would
     # silently flip a tombstoned profile back onto the live surface.
-    assert loaded.status is BucketLifecycleStatus.TOMBSTONED
+    assert loaded.status is UserProfileStatus.TOMBSTONED
 
 
 def test_bucket_manifest_round_trips_with_last_unlocked_at_unset(
@@ -141,7 +142,7 @@ def test_manifest_status_mutation_surfaces_as_strict_inequality(
 
     paths = _prepared_paths(tmp_path, "test-bucket-status-antitautology")
     original = _populated_manifest(paths.bucket_id)
-    assert original.status is BucketLifecycleStatus.TOMBSTONED
+    assert original.status is UserProfileStatus.TOMBSTONED
     write_manifest(paths, original)
 
     target = manifest_path(paths)
@@ -154,4 +155,4 @@ def test_manifest_status_mutation_surfaces_as_strict_inequality(
 
     reloaded = read_manifest(paths)
     assert reloaded != original
-    assert reloaded.status is BucketLifecycleStatus.ACTIVE
+    assert reloaded.status is UserProfileStatus.ACTIVE

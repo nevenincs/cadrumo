@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
+from ...domain.user_profile import UserProfileStatus
 
 
 class ProfileBucketPointer(BaseModel):
@@ -16,7 +16,7 @@ class ProfileBucketPointer(BaseModel):
 
     bucket_id: BucketId
     label: str = Field(min_length=1, max_length=160)
-    status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
+    status: UserProfileStatus = UserProfileStatus.ACTIVE
 
     @field_validator("bucket_id", "label")
     @classmethod

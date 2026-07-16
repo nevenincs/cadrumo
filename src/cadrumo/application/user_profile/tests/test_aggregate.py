@@ -15,10 +15,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.bucket import (
-    BucketLifecycleStatus,
-    ManifestKdfParams,
-)
+from ....adapters.persistence.storage.bucket import ManifestKdfParams
 from ....domain.user_profile import UserProfileRecord, UserProfileStatus
 from .._aggregate import ProfileAggregate
 from .._integrity import ProfileIntegrityError, verify_profile_integrity
@@ -221,19 +218,6 @@ def test_verify_integrity_raises_on_record_drift() -> None:
         translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
         sensitive_tokens=(_PROFILE_UUID, mismatched_record_id),
     )
-
-
-def test_lifecycle_status_enums_stay_value_synced() -> None:
-    """``BucketLifecycleStatus`` and ``UserProfileStatus`` carry the same values.
-
-    The plaintext manifest mirrors the encrypted record's lifecycle
-    status; ``_manifest_status_for`` maps the two enums by string
-    value, and ``verify_profile_integrity`` compares them by value. A
-    state added to one enum but not the other would silently break
-    that mapping — this guard fails the moment the two diverge.
-    """
-
-    assert {member.value for member in UserProfileStatus} == {member.value for member in BucketLifecycleStatus}
 
 
 def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:

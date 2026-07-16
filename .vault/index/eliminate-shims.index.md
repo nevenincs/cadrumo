@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#eliminate-shims'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-16'
+modified: '2026-07-16'
 related:
   - '[[2026-05-13-eliminate-shims-audit]]'
   - '[[2026-05-26-m100-extraction-profile-S29]]'
   - '[[2026-06-04-eliminate-shims-adr]]'
   - '[[2026-06-04-eliminate-shims-research]]'
+  - '[[2026-07-16-eliminate-shims-audit]]'
 ---
 
 # `eliminate-shims` feature index
@@ -25,6 +26,7 @@ Auto-generated index of all documents tagged with `#eliminate-shims`.
 ### audit
 
 - `2026-05-13-eliminate-shims-audit` - `eliminate-shims` audit: `chore/eliminate-shims state audit`
+- `2026-07-16-eliminate-shims-audit` - `eliminate-shims` audit: `CI closure code review`
 
 ### exec
 

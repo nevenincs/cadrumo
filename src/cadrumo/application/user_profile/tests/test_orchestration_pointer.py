@@ -24,7 +24,6 @@ import pytest
 from ....adapters.persistence.storage import LockAcquisitionError
 from ....adapters.persistence.storage.bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     manifest_path,
     provision_bucket_directory,
@@ -33,7 +32,7 @@ from ....adapters.persistence.storage.bucket import (
 from ....adapters.persistence.storage.master_key import KdfParams
 from ....core import BucketPointer, capture_pointer, pointer_path, read_pointer, restore_pointer, write_pointer
 from ....core.config import load_settings, override_settings
-from ....domain.user_profile import ProfileSchemaValidationError
+from ....domain.user_profile import ProfileSchemaValidationError, UserProfileStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ... import wizard as _wizard  # noqa: F401
 from ...workflow import WorkflowState, repair_active_profile_pointer
@@ -129,7 +128,7 @@ def test_repository_failed_create_restores_exact_pointer_bytes_under_outer_owner
             recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=2,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
     survivor_pointer_bytes = f'# retained survivor\r\nschema_version = 1\r\nbucket_id = "{survivor_id}"\r\n'.encode()

@@ -442,12 +442,13 @@ def test_sandbox_archive_moves_sandbox_off_live_surface_but_data_survives() -> N
     assert "sandbox:sleeper" not in listing.output
 
     # ...but still resolvable by id, and the directory/manifest survive.
-    from ....adapters.persistence.storage.bucket import BucketLifecycleStatus, bucket_paths, manifest_path
+    from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
     from ....core.config import load_settings
+    from ....domain.user_profile import UserProfileStatus
 
     pointer = read_profile_bucket_by_id(bucket_id)
     assert pointer is not None
-    assert pointer.status is BucketLifecycleStatus.TOMBSTONED
+    assert pointer.status is UserProfileStatus.TOMBSTONED
     paths = bucket_paths(load_settings().cadrumo_local_storage_root, bucket_id)
     assert manifest_path(paths).is_file()
 

@@ -5,9 +5,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ......core.config import SecretStoreBackend, Settings
+from ......domain.user_profile import UserProfileStatus
 from ...bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -82,6 +82,6 @@ def _write_registered_bucket(
             idle_lock_minutes=idle_lock_minutes,
             key_schedule=key_schedule,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
