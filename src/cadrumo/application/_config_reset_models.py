@@ -29,12 +29,22 @@ class ConfigResetOperationStatus(StrEnum):
     COMPLETE = "complete"
 
 
+class ConfigResetPauseReason(StrEnum):
+    """Closed vocabulary of reasons that require an explicit resume."""
+
+    RETENTION_UNRESOLVED = "retention_unresolved"
+    TARGET_STATE_CHANGED = "target_state_changed"
+    POINTER_CHANGED = "pointer_changed"
+
+
 class ConfigResetTargetPhase(StrEnum):
     """Closed vocabulary of target-phase labels, without transition rules."""
 
     SNAPSHOTTED = "snapshotted"
     RETENTION_APPROVED = "retention_approved"
+    AUTH_CLEARING = "auth_clearing"
     AUTH_CLEARED = "auth_cleared"
+    POINTER_RECONCILING = "pointer_reconciling"
     POINTER_RECONCILED = "pointer_reconciled"
     DELETING = "deleting"
     DELETED = "deleted"
@@ -136,9 +146,13 @@ class ConfigResetTarget(BaseModel):
             raise ValueError("existing reset target requires label and lifecycle status")
         if self.deletion_marker is not None and self.deletion_marker.bucket_id != self.bucket_id:
             raise ValueError("deletion marker bucket id does not match its reset target")
-        deleting = self.phase in {ConfigResetTargetPhase.DELETING, ConfigResetTargetPhase.DELETED}
-        if deleting != (self.deletion_marker is not None):
-            raise ValueError("deleting/deleted target requires exactly one deletion marker")
+        if self.phase is ConfigResetTargetPhase.DELETING and self.deletion_marker is None:
+            raise ValueError("deleting target requires exactly one deletion marker")
+        if self.phase is ConfigResetTargetPhase.DELETED:
+            if self.exists_at_snapshot != (self.deletion_marker is not None):
+                raise ValueError("deleted existing target requires a marker; deleted absent target forbids one")
+        elif self.deletion_marker is not None and self.phase is not ConfigResetTargetPhase.DELETING:
+            raise ValueError("deletion marker is valid only for deleting/deleted targets")
         if (self.phase is ConfigResetTargetPhase.DELETED) != (self.completed_at is not None):
             raise ValueError("deleted target requires exactly one completion timestamp")
         if self.completed_at is not None:
@@ -188,6 +202,8 @@ class ConfigResetOperation(BaseModel):
     updated_at: datetime
     pointer_snapshot: ConfigResetPointerSnapshot
     targets: tuple[ConfigResetTarget, ...]
+    pause_reason: ConfigResetPauseReason | None = None
+    paused_target_ids: tuple[str, ...] = ()
     summary: ConfigResetSummary | None = None
 
     @model_validator(mode="after")
@@ -205,6 +221,15 @@ class ConfigResetOperation(BaseModel):
                 raise ValueError("deletion marker operation id does not match its journal")
         if (self.status is ConfigResetOperationStatus.COMPLETE) != (self.summary is not None):
             raise ValueError("complete reset operation requires exactly one summary")
+        paused = self.status is ConfigResetOperationStatus.PAUSED
+        if paused != (self.pause_reason is not None):
+            raise ValueError("paused reset operation requires exactly one pause reason")
+        if paused != bool(self.paused_target_ids):
+            raise ValueError("paused reset operation requires one or more paused target ids")
+        if self.paused_target_ids != tuple(sorted(set(self.paused_target_ids))):
+            raise ValueError("paused reset target ids must be unique and sorted")
+        if any(bucket_id not in set(bucket_ids) for bucket_id in self.paused_target_ids):
+            raise ValueError("paused target ids must belong to the reset target set")
         return self
 
 
@@ -221,6 +246,7 @@ __all__ = [
     "ConfigResetDeletionMarker",
     "ConfigResetOperation",
     "ConfigResetOperationStatus",
+    "ConfigResetPauseReason",
     "ConfigResetPointerSnapshot",
     "ConfigResetRetentionDecision",
     "ConfigResetSummary",

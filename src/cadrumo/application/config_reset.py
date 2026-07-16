@@ -1,249 +1,774 @@
-"""Scoped reset service for ``aeat config reset``.
-
-Removes one or more pieces of operator-local state behind an explicit
-``--yes`` confirmation gate and the CLI requires an explicit ``--scope``.
-Four :class:`ConfigResetScope` values are supported and returned through the
-typed :class:`ConfigResetReport`:
-
-- ``PROFILE``: clears every operator profile pointer and deletes each
-  persisted profile bucket.
-- ``AUTH``: resolves the active target bucket and delegates all-provider
-  cleanup to :func:`application.auth.reset_operator_auth`, which owns provider
-  configuration, persisted sessions, acquisition locks, certificate-source
-  registrations, canonical secure-storage secrets, and auth events.
-- ``DATA``: quarantines undecryptable secure-object rows only. It
-  does not delete readable ledger data; bucket-local ledger reset is
-  owned by the ledger backend so finalized modelo protections can run.
-- ``ALL``: enumerates live and tombstoned profiles in sorted order, invokes
-  canonical all-provider auth reset for each target bucket before profile
-  deletion, and then applies the DATA quarantine.
-
-The service runs through public application authorities.
-:func:`application.auth.reset_operator_auth` owns target-bucket auth cleanup,
-profile removal goes through
-:class:`~application.user_profile.UserProfileLifecycleRepository` plus
-:func:`~application.user_profile.remove_profile_bucket_directory`, and DATA
-reset delegates to
-:func:`~application.diagnostics.quarantine_unreadable_secure_objects`
-for a :class:`~application.diagnostics.SecureObjectIntegrityReport`.
-:func:`~application.workflow.workflow_state_repository` enforces active-route
-readiness without owning auth mutation. The service does not directly erase
-readable ledger data.
-
-Each scope writes one log line through the project's standard
-:mod:`core.logging` channel so post-mortem analysis of an
-operator's reset history is possible without an extra audit-only
-backend. The function rejects calls without explicit confirmation and
-raises :class:`ConfigResetUnconfirmedError` with a registered translated
-message key.
-
-See Also:
-    :func:`~application.workflow._persistence.reset_workflow_state`
-        Narrow ``aeat config repair reset-progress`` route that deletes the
-        saved workflow-state envelope after producing a
-        :class:`~application.workflow.WorkflowStateResetFingerprint`.
-    :class:`~application.diagnostics.SecureObjectIntegrityReport`
-        DATA-scope quarantine summary returned by the diagnostics pipeline.
-    :mod:`application.repair_integrity`
-        Policy registry for repair surfaces, including the metadata-only
-        workflow-state reset plan.
-"""
+"""Durable roll-forward authority for all-profile configuration reset."""
 
 from __future__ import annotations
 
-from enum import StrEnum
+from collections.abc import Generator
+from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
+from pathlib import Path
 
-from pydantic import BaseModel, Field
-
-from ..core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ..adapters.persistence.storage.bucket import acquire_lock, release_lock
+from ..core import BucketPointer, capture_pointer
+from ..core.config import Settings, load_settings
 from ..core.errors import AeatError
-from ..core.logging import get_logger
+from ..core.hashing import sha256_hex
+from ..core.time import now
+from ..domain.retention import RetentionFloorAssessment
+from ._config_reset_models import (
+    ConfigResetDeletionMarker,
+    ConfigResetOperation,
+    ConfigResetOperationStatus,
+    ConfigResetPauseReason,
+    ConfigResetPointerSnapshot,
+    ConfigResetRetentionDecision,
+    ConfigResetSummary,
+    ConfigResetTarget,
+    ConfigResetTargetPhase,
+    new_config_reset_operation_id,
+)
+from ._config_reset_repository import (
+    ConfigResetJournalIncompleteError,
+    ConfigResetJournalNotFoundError,
+    ConfigResetJournalRepository,
+)
 from .auth import reset_operator_auth
-
-_log = get_logger(__name__)
-
-
-class ConfigResetScope(StrEnum):
-    """Closed catalogue of operator-driven reset scopes.
-
-    The enum is the shared application/CLI contract: CLI tokens are parsed
-    by :func:`parse_config_reset_scope` from
-    :data:`CONFIG_RESET_SCOPE_CLI_VALUES` before :func:`reset_config` runs, and
-    :class:`ConfigResetReport` echoes the applied scope.
-    """
-
-    PROFILE = "PROFILE"
-    AUTH = "AUTH"
-    DATA = "DATA"
-    ALL = "ALL"
+from .bucket_maintenance import (
+    AssessBucketDeletionCommand,
+    BucketDeletionAssessment,
+    BucketMaintenanceService,
+    DeleteBucketCommand,
+)
+from .bucket_maintenance._manifest_digest import validated_bucket_deletion_paths
+from .user_profile import (
+    active_profile_pointer_transaction,
+    logout_active_profile,
+)
+from .workflow import list_profile_buckets
 
 
-CONFIG_RESET_SCOPE_CLI_VALUES: tuple[str, ...] = tuple(scope.value.lower() for scope in ConfigResetScope)
-"""Lowercase :class:`ConfigResetScope` tokens accepted by ``aeat config reset --scope``."""
+class ConfigResetError(AeatError):
+    """Base application failure for durable configuration reset."""
 
 
-def parse_config_reset_scope(raw: str) -> ConfigResetScope:
-    """Parse a CLI reset-scope token into the :class:`ConfigResetScope` member.
-
-    The CLI renders :data:`CONFIG_RESET_SCOPE_CLI_VALUES` as the accepted token
-    set, then delegates normalization here before calling :func:`reset_config`.
-    """
-    return ConfigResetScope(raw.strip().upper())
+class ConfigResetConfirmationRequiredError(ConfigResetError):
+    """Raised when a destructive start or resume lacks confirmation."""
 
 
-class ConfigResetUnconfirmedError(AeatError):
-    """Raised when :func:`reset_config` is called without ``confirmed=True``.
-
-    The error carries ``errors.refused.refused_config_reset_unconfirmed`` and
-    the refused :class:`ConfigResetScope` value in structured context so the
-    CLI/error envelope renders through the registered
-    :class:`~core.errors.ErrorEnvelope` refusal catalogue.
-    """
+class ConfigResetAlreadyRunningError(ConfigResetError):
+    """Raised when a new start overlaps an incomplete reset operation."""
 
 
-class ConfigResetReport(BaseModel):
-    """Outcome of a scoped reset.
-
-    Attributes:
-        scope: The :class:`ConfigResetScope` that was applied.
-        removed_profile_ids: Sorted tuple of profile UUIDs cleared from the
-            profile lifecycle repository and then removed from their bucket
-            directories. Empty when the scope did not touch profiles.
-        removed_auth_session: Coarse success flag for auth-session cleanup. It
-            does not establish that a persisted session existed.
-        quarantined_namespace_count: Number of secure-object namespaces
-            whose unreadable rows were archived to the quarantine table
-            during the DATA reset via
-            :class:`~application.diagnostics.SecureObjectIntegrityReport`.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    scope: ConfigResetScope
-    removed_profile_ids: tuple[str, ...] = Field(default=())
-    removed_auth_session: bool = False
-    quarantined_namespace_count: int = Field(default=0, ge=0)
+class ConfigResetOperationNotFoundError(ConfigResetError):
+    """Raised when status or resume cannot resolve an operation."""
 
 
-def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetReport:
-    """Apply the scoped reset and return a :class:`ConfigResetReport`.
+_PHASE_ORDER = {
+    ConfigResetTargetPhase.SNAPSHOTTED: 0,
+    ConfigResetTargetPhase.RETENTION_APPROVED: 1,
+    ConfigResetTargetPhase.AUTH_CLEARING: 2,
+    ConfigResetTargetPhase.AUTH_CLEARED: 3,
+    ConfigResetTargetPhase.POINTER_RECONCILING: 4,
+    ConfigResetTargetPhase.POINTER_RECONCILED: 5,
+    ConfigResetTargetPhase.DELETING: 6,
+    ConfigResetTargetPhase.DELETED: 7,
+}
 
-    The operation is destructive and therefore refuses unless
-    ``confirmed=True``. Confirmed PROFILE / ALL resets enumerate profile
-    manifests via :func:`~application.workflow.list_profile_buckets`,
-    delete each profile through
-    :class:`~application.user_profile.UserProfileLifecycleRepository`, and
-    then remove bucket directories after disposing cached SQL engines. AUTH
-    resolves the active target bucket and delegates its all-provider cleanup to
-    :func:`application.auth.reset_operator_auth`. ALL performs that canonical
-    target-bucket auth reset before deleting each enumerated profile. DATA
-    resets call
-    :func:`~application.diagnostics.quarantine_unreadable_secure_objects`
-    for unreadable secure-object rows only.
-    This broad reset surface is separate from
-    :func:`~application.workflow._persistence.reset_workflow_state`, which
-    only clears the workflow-state envelope for
-    ``aeat config repair reset-progress``.
 
-    Args:
-        scope: The :class:`ConfigResetScope` to apply.
-        confirmed: Explicit ``--yes`` flag from the CLI surface. The
-            function refuses without it.
+@dataclass(frozen=True, slots=True)
+class _Preflight:
+    operation: ConfigResetOperation
+    pause_reason: ConfigResetPauseReason | None = None
+    paused_target_ids: tuple[str, ...] = ()
 
-    Returns:
-        A :class:`ConfigResetReport` summarising what was cleared.
 
-    Raises:
-        :class:`ConfigResetUnconfirmedError`: When ``confirmed`` is ``False``.
-    """
+def start_config_reset(
+    *,
+    confirmed: bool,
+    acknowledge_retention_override: bool = False,
+    retention_override_reason: str | None = None,
+) -> ConfigResetOperation:
+    """Start and execute one durable all-profile reset operation."""
+    _require_confirmation(confirmed)
+    settings = load_settings()
+    repository = ConfigResetJournalRepository(settings=settings)
+    operation_id = new_config_reset_operation_id()
+    with (
+        repository.operation_lock(operation_id),
+        active_profile_pointer_transaction(settings.cadrumo_local_storage_root) as pointer_transaction,
+    ):
+        pointer_snapshot = _capture_pointer_snapshot(
+            settings.cadrumo_local_storage_root,
+            pointer_transaction.read(),
+        )
+        target_ids = set(
+            list_profile_buckets(
+                root=settings.cadrumo_local_storage_root,
+                include_tombstoned=True,
+            ),
+        )
+        if pointer_snapshot.bucket_id is not None:
+            target_ids.add(pointer_snapshot.bucket_id)
+        try:
+            repository.refuse_if_incomplete()
+        except ConfigResetJournalIncompleteError as exc:
+            raise _already_running_error(exc) from exc
+        with _target_locks(settings, tuple(sorted(target_ids))):
+            preflight = _initial_preflight(
+                operation_id=operation_id,
+                pointer_snapshot=pointer_snapshot,
+                target_ids=tuple(sorted(target_ids)),
+                acknowledge_retention_override=acknowledge_retention_override,
+                retention_override_reason=retention_override_reason,
+            )
+            operation = _update_operation(
+                preflight.operation,
+                status=(
+                    ConfigResetOperationStatus.PAUSED
+                    if preflight.pause_reason is not None
+                    else ConfigResetOperationStatus.INCOMPLETE
+                ),
+                pause_reason=preflight.pause_reason,
+                paused_target_ids=preflight.paused_target_ids,
+            )
+            try:
+                repository.create_exclusive(operation)
+            except ConfigResetJournalIncompleteError as exc:
+                raise _already_running_error(exc) from exc
+            if operation.status is ConfigResetOperationStatus.PAUSED:
+                return operation
+            return _roll_forward(
+                repository=repository,
+                operation=operation,
+                settings=settings,
+            )
+
+
+def config_reset_status(operation_id: str | None = None) -> ConfigResetOperation | None:
+    """Return one reset journal without changing its status or phase."""
+    repository = ConfigResetJournalRepository()
+    if operation_id is not None:
+        try:
+            return repository.load(operation_id)
+        except ConfigResetJournalNotFoundError as exc:
+            raise ConfigResetOperationNotFoundError(
+                "configuration reset operation was not found",
+                context={"operation_id": operation_id},
+            ) from exc
+    return repository.latest()
+
+
+def resume_config_reset(
+    operation_id: str,
+    *,
+    confirmed: bool,
+    acknowledge_retention_override: bool = False,
+    retention_override_reason: str | None = None,
+) -> ConfigResetOperation:
+    """Resume one incomplete operation from its durable recorded phases."""
+    _require_confirmation(confirmed)
+    settings = load_settings()
+    repository = ConfigResetJournalRepository(settings=settings)
+    with repository.operation_lock(operation_id):
+        try:
+            operation = repository.load(operation_id)
+        except ConfigResetJournalNotFoundError as exc:
+            raise ConfigResetOperationNotFoundError(
+                "configuration reset operation was not found",
+                context={"operation_id": operation_id},
+            ) from exc
+        if operation.status is ConfigResetOperationStatus.COMPLETE:
+            return operation
+        with active_profile_pointer_transaction(
+            settings.cadrumo_local_storage_root,
+        ) as pointer_transaction:
+            current_pointer = _capture_pointer_snapshot(
+                settings.cadrumo_local_storage_root,
+                pointer_transaction.read(),
+            )
+            lock_ids = tuple(
+                sorted(
+                    {
+                        target.bucket_id
+                        for target in operation.targets
+                        if target.phase is not ConfigResetTargetPhase.DELETED
+                    }
+                    | ({current_pointer.bucket_id} if current_pointer.bucket_id is not None else set()),
+                ),
+            )
+            with _target_locks(settings, lock_ids):
+                pointer_preflight = _reconcile_pointer_snapshot_for_resume(
+                    operation,
+                    current_pointer=current_pointer,
+                )
+                operation = pointer_preflight.operation
+                if pointer_preflight.pause_reason is not None:
+                    operation = _pause_operation(
+                        operation,
+                        reason=pointer_preflight.pause_reason,
+                        target_ids=pointer_preflight.paused_target_ids,
+                    )
+                    repository.save(operation)
+                    return operation
+                preflight = _resume_preflight(
+                    operation,
+                    acknowledge_retention_override=acknowledge_retention_override,
+                    retention_override_reason=retention_override_reason,
+                )
+                if preflight.pause_reason is not None:
+                    operation = _pause_operation(
+                        preflight.operation,
+                        reason=preflight.pause_reason,
+                        target_ids=preflight.paused_target_ids,
+                    )
+                    repository.save(operation)
+                    return operation
+                operation = _update_operation(
+                    preflight.operation,
+                    status=ConfigResetOperationStatus.INCOMPLETE,
+                    pause_reason=None,
+                    paused_target_ids=(),
+                    updated_at=now(),
+                )
+                repository.save(operation)
+                return _roll_forward(
+                    repository=repository,
+                    operation=operation,
+                    settings=settings,
+                )
+
+
+def _require_confirmation(confirmed: bool) -> None:
     if not confirmed:
-        raise ConfigResetUnconfirmedError(
-            translated_message="errors.refused.refused_config_reset_unconfirmed",
-            context={"scope": scope.value},
+        raise ConfigResetConfirmationRequiredError(
+            "configuration reset requires explicit confirmation",
         )
 
-    from .diagnostics import quarantine_unreadable_secure_objects
-    from .workflow import workflow_state_repository
 
-    auth_target_bucket_id: str | None = None
-    if scope is ConfigResetScope.AUTH:
-        auth_target_bucket_id = resolve_active_bucket_id()
-        if auth_target_bucket_id is None:
-            reset_operator_auth(all_providers=True, target_bucket_id=None)
-
-    workflow_state_repository().load()
-    removed_profile_ids: tuple[str, ...] = ()
-    removed_auth_session = False
-    quarantined_namespace_count = 0
-    profile_bucket_ids_to_remove: tuple[str, ...] = ()
-
-    if scope in {ConfigResetScope.PROFILE, ConfigResetScope.ALL}:
-        from .user_profile import UserProfileLifecycleRepository, profile_storage_session
-        from .workflow import list_profile_buckets
-
-        # Registered profiles are a filesystem-manifest scan, not a
-        # persisted WorkflowState field. Each profile is identified by
-        # its immutable UUID, which is also its bucket id and bucket
-        # directory name.
-        # A reset physically removes every bucket directory, tombstoned
-        # ones included, so the scan must enumerate the full set.
-        removed_profile_ids = tuple(sorted(list_profile_buckets(include_tombstoned=True)))
-        profile_bucket_ids_to_remove = removed_profile_ids
-        for profile_id in removed_profile_ids:
-            with profile_storage_session(profile_id):
-                if scope is ConfigResetScope.ALL:
-                    reset_operator_auth(all_providers=True, target_bucket_id=profile_id)
-                UserProfileLifecycleRepository(bucket_id=profile_id).delete(profile_id)
-        _log.info("config reset PROFILE scope cleared %d profile(s)", len(removed_profile_ids))
-
-    if scope is ConfigResetScope.AUTH:
-        assert auth_target_bucket_id is not None
-        reset_operator_auth(
-            all_providers=True,
-            target_bucket_id=auth_target_bucket_id,
-        )
-        removed_auth_session = True
-        _log.info("config reset AUTH scope cleared session state")
-    elif scope is ConfigResetScope.ALL:
-        removed_auth_session = True
-        _log.info(
-            "config reset ALL scope cleared auth custody for %d profile(s)",
-            len(removed_profile_ids),
-        )
-
-    if scope in {ConfigResetScope.DATA, ConfigResetScope.ALL}:
-        report = quarantine_unreadable_secure_objects()
-        quarantined_namespace_count = sum(1 for ns in report.namespaces if ns.unreadable > 0)
-        _log.info(
-            "config reset DATA scope quarantined %d unreadable rows across %d namespace(s)",
-            report.unreadable_total,
-            quarantined_namespace_count,
-        )
-
-    if profile_bucket_ids_to_remove:
-        from .user_profile import remove_profile_bucket_directory
-
-        for profile_id in profile_bucket_ids_to_remove:
-            # The bucket manifest is the existence claim; removing the
-            # directory clears the profile from the manifest scan.
-            # ``remove_profile_bucket_directory`` disposes that bucket's
-            # engine first, releasing the SQLite file handle that would
-            # otherwise block the rename on Windows.
-            remove_profile_bucket_directory(profile_id)
-
-    return ConfigResetReport(
-        scope=scope,
-        removed_profile_ids=removed_profile_ids,
-        removed_auth_session=removed_auth_session,
-        quarantined_namespace_count=quarantined_namespace_count,
+def _already_running_error(
+    error: ConfigResetJournalIncompleteError,
+) -> ConfigResetAlreadyRunningError:
+    return ConfigResetAlreadyRunningError(
+        "another configuration reset is incomplete",
+        context={"operation_id": error.args[0]},
     )
 
 
+def _capture_pointer_snapshot(root: Path, pointer: BucketPointer | None) -> ConfigResetPointerSnapshot:
+    captured = capture_pointer(root)
+    if captured is None:
+        return ConfigResetPointerSnapshot(present=False)
+    if pointer is None:
+        raise ConfigResetError("active pointer bytes do not contain a bucket identifier")
+    return ConfigResetPointerSnapshot(
+        present=True,
+        bucket_id=pointer.bucket_id,
+        content_sha256=sha256_hex(captured),
+    )
+
+
+@contextmanager
+def _target_locks(settings: Settings, target_ids: tuple[str, ...]) -> Generator[None]:
+    with ExitStack() as stack:
+        for bucket_id in target_ids:
+            try:
+                paths = validated_bucket_deletion_paths(
+                    root=settings.cadrumo_local_storage_root,
+                    bucket_id=bucket_id,
+                )
+            except FileNotFoundError:
+                continue
+            except ValueError as exc:
+                raise ConfigResetError(
+                    "configuration reset refuses a linked bucket target",
+                    context={"bucket_id": bucket_id},
+                ) from exc
+            acquire_lock(paths, wait_seconds=settings.cadrumo_file_lock_timeout_s)
+            stack.callback(release_lock, paths)
+        yield
+
+
+def _initial_preflight(
+    *,
+    operation_id: str,
+    pointer_snapshot: ConfigResetPointerSnapshot,
+    target_ids: tuple[str, ...],
+    acknowledge_retention_override: bool,
+    retention_override_reason: str | None,
+) -> _Preflight:
+    service = BucketMaintenanceService()
+    targets: list[ConfigResetTarget] = []
+    blocked: list[str] = []
+    for bucket_id in target_ids:
+        assessment = service.assess_deletion(
+            AssessBucketDeletionCommand(bucket_id=bucket_id),
+        )
+        target, resolved = _target_from_assessment(
+            assessment,
+            acknowledge_retention_override=acknowledge_retention_override,
+            retention_override_reason=retention_override_reason,
+        )
+        targets.append(target)
+        if not resolved:
+            blocked.append(bucket_id)
+    recorded_at = now()
+    operation = ConfigResetOperation(
+        operation_id=operation_id,
+        started_at=recorded_at,
+        updated_at=recorded_at,
+        pointer_snapshot=pointer_snapshot,
+        targets=tuple(targets),
+    )
+    if blocked:
+        return _Preflight(
+            operation=operation,
+            pause_reason=ConfigResetPauseReason.RETENTION_UNRESOLVED,
+            paused_target_ids=tuple(blocked),
+        )
+    return _Preflight(operation=operation)
+
+
+def _target_from_assessment(
+    assessment: BucketDeletionAssessment,
+    *,
+    acknowledge_retention_override: bool,
+    retention_override_reason: str | None,
+) -> tuple[ConfigResetTarget, bool]:
+    retention = _retention_decision(
+        assessment.retention,
+        acknowledge_retention_override=acknowledge_retention_override,
+        retention_override_reason=retention_override_reason,
+    )
+    resolved = not retention.blocks_erase or retention.override_approved
+    return (
+        ConfigResetTarget(
+            bucket_id=assessment.bucket_id,
+            label=assessment.label,
+            status_at_snapshot=assessment.status,
+            exists_at_snapshot=assessment.exists,
+            fingerprint=assessment.fingerprint,
+            phase=(
+                ConfigResetTargetPhase.RETENTION_APPROVED
+                if resolved
+                else ConfigResetTargetPhase.SNAPSHOTTED
+            ),
+            retention=retention,
+        ),
+        resolved,
+    )
+
+
+def _retention_decision(
+    assessment: RetentionFloorAssessment | None,
+    *,
+    acknowledge_retention_override: bool,
+    retention_override_reason: str | None,
+) -> ConfigResetRetentionDecision:
+    if assessment is None:
+        return ConfigResetRetentionDecision(
+            assessed_at=now(),
+            blocks_erase=False,
+            retained_record_count=0,
+        )
+    reason = (retention_override_reason or "").strip()
+    approved = assessment.blocks_erase and acknowledge_retention_override and bool(reason)
+    return ConfigResetRetentionDecision(
+        assessed_at=assessment.as_of,
+        blocks_erase=assessment.blocks_erase,
+        retained_record_count=len(assessment.retained),
+        latest_safe_erase_date=assessment.latest_safe_erase_date,
+        override_approved=approved,
+        override_reason=reason if approved else None,
+    )
+
+
+def _reconcile_pointer_snapshot_for_resume(
+    operation: ConfigResetOperation,
+    *,
+    current_pointer: ConfigResetPointerSnapshot,
+) -> _Preflight:
+    if current_pointer == operation.pointer_snapshot:
+        return _Preflight(operation=operation)
+    pointer_transition_started = any(
+        _phase_at_least(target.phase, ConfigResetTargetPhase.POINTER_RECONCILING)
+        for target in operation.targets
+    )
+    if pointer_transition_started and not current_pointer.present:
+        return _Preflight(operation=operation)
+    target_ids = {target.bucket_id for target in operation.targets}
+    targets = list(operation.targets)
+    paused_ids: tuple[str, ...] = ()
+    if current_pointer.bucket_id is not None:
+        paused_ids = (current_pointer.bucket_id,)
+        if current_pointer.bucket_id not in target_ids:
+            assessment = BucketMaintenanceService().assess_deletion(
+                AssessBucketDeletionCommand(bucket_id=current_pointer.bucket_id),
+            )
+            target, _ = _target_from_assessment(
+                assessment,
+                acknowledge_retention_override=False,
+                retention_override_reason=None,
+            )
+            targets.append(target)
+            targets.sort(key=lambda item: item.bucket_id)
+    elif operation.pointer_snapshot.bucket_id is not None:
+        paused_ids = (operation.pointer_snapshot.bucket_id,)
+    updated = _update_operation(
+        operation,
+        pointer_snapshot=current_pointer,
+        targets=tuple(targets),
+        updated_at=now(),
+    )
+    return _Preflight(
+        operation=updated,
+        pause_reason=ConfigResetPauseReason.POINTER_CHANGED,
+        paused_target_ids=paused_ids,
+    )
+
+
+def _resume_preflight(
+    operation: ConfigResetOperation,
+    *,
+    acknowledge_retention_override: bool,
+    retention_override_reason: str | None,
+) -> _Preflight:
+    service = BucketMaintenanceService()
+    updated_targets: list[ConfigResetTarget] = []
+    changed: list[str] = []
+    blocked: list[str] = []
+    for target in operation.targets:
+        if target.phase is ConfigResetTargetPhase.DELETED:
+            updated_targets.append(target)
+            continue
+        assessment = service.assess_deletion(
+            AssessBucketDeletionCommand(bucket_id=target.bucket_id),
+        )
+        if not assessment.exists:
+            if target.exists_at_snapshot and target.phase is not ConfigResetTargetPhase.DELETING:
+                changed.append(target.bucket_id)
+            updated_targets.append(target)
+            continue
+        current_fingerprint = assessment.fingerprint
+        assert current_fingerprint is not None
+        owned_auth_transition = target.phase is ConfigResetTargetPhase.AUTH_CLEARING
+        fingerprint_changed = (
+            not target.exists_at_snapshot
+            or target.fingerprint is None
+            or target.fingerprint.digest != current_fingerprint.digest
+        )
+        if fingerprint_changed and not owned_auth_transition:
+            refreshed, _ = _target_from_assessment(
+                assessment,
+                acknowledge_retention_override=False,
+                retention_override_reason=None,
+            )
+            updated_targets.append(refreshed)
+            changed.append(target.bucket_id)
+            continue
+        retention = _retention_decision(
+            assessment.retention,
+            acknowledge_retention_override=acknowledge_retention_override,
+            retention_override_reason=retention_override_reason,
+        )
+        resolved = not retention.blocks_erase or retention.override_approved
+        phase = target.phase
+        if _phase_before(phase, ConfigResetTargetPhase.AUTH_CLEARING):
+            phase = (
+                ConfigResetTargetPhase.RETENTION_APPROVED
+                if resolved
+                else ConfigResetTargetPhase.SNAPSHOTTED
+            )
+        updated_targets.append(
+            _update_target(
+                target,
+                label=assessment.label,
+                status_at_snapshot=assessment.status,
+                exists_at_snapshot=True,
+                fingerprint=current_fingerprint,
+                retention=retention,
+                phase=phase,
+            ),
+        )
+        if not resolved:
+            blocked.append(target.bucket_id)
+    updated = _update_operation(
+        operation,
+        targets=tuple(updated_targets),
+        updated_at=now(),
+    )
+    if changed:
+        return _Preflight(
+            operation=updated,
+            pause_reason=ConfigResetPauseReason.TARGET_STATE_CHANGED,
+            paused_target_ids=tuple(sorted(changed)),
+        )
+    if blocked:
+        return _Preflight(
+            operation=updated,
+            pause_reason=ConfigResetPauseReason.RETENTION_UNRESOLVED,
+            paused_target_ids=tuple(sorted(blocked)),
+        )
+    return _Preflight(operation=updated)
+
+
+def _pause_operation(
+    operation: ConfigResetOperation,
+    *,
+    reason: ConfigResetPauseReason,
+    target_ids: tuple[str, ...],
+) -> ConfigResetOperation:
+    return _update_operation(
+        operation,
+        status=ConfigResetOperationStatus.PAUSED,
+        pause_reason=reason,
+        paused_target_ids=tuple(sorted(set(target_ids))),
+        updated_at=now(),
+    )
+
+
+def _roll_forward(
+    *,
+    repository: ConfigResetJournalRepository,
+    operation: ConfigResetOperation,
+    settings: Settings,
+) -> ConfigResetOperation:
+    operation = _clear_auth_for_targets(repository, operation)
+    operation = _reconcile_pointer(repository, operation)
+    operation = _delete_targets(repository, operation, settings=settings)
+    completed_at = now()
+    summary = ConfigResetSummary(
+        target_count=len(operation.targets),
+        deleted_count=sum(target.exists_at_snapshot for target in operation.targets),
+        already_absent_count=sum(not target.exists_at_snapshot for target in operation.targets),
+        retention_override_count=sum(
+            target.retention is not None and target.retention.override_approved
+            for target in operation.targets
+        ),
+        completed_at=completed_at,
+    )
+    operation = _update_operation(
+        operation,
+        status=ConfigResetOperationStatus.COMPLETE,
+        summary=summary,
+        pause_reason=None,
+        paused_target_ids=(),
+        updated_at=completed_at,
+    )
+    repository.save(operation)
+    return operation
+
+
+def _clear_auth_for_targets(
+    repository: ConfigResetJournalRepository,
+    operation: ConfigResetOperation,
+) -> ConfigResetOperation:
+    for index, target in enumerate(operation.targets):
+        if _phase_at_least(target.phase, ConfigResetTargetPhase.AUTH_CLEARED):
+            continue
+        if not target.exists_at_snapshot:
+            operation = _replace_target(
+                operation,
+                index,
+                _update_target(target, phase=ConfigResetTargetPhase.AUTH_CLEARED),
+            )
+            repository.save(operation)
+            continue
+        target = _update_target(target, phase=ConfigResetTargetPhase.AUTH_CLEARING)
+        operation = _replace_target(operation, index, target)
+        repository.save(operation)
+        reset_operator_auth(all_providers=True, target_bucket_id=target.bucket_id)
+        assessment = BucketMaintenanceService().assess_deletion(
+            AssessBucketDeletionCommand(bucket_id=target.bucket_id),
+        )
+        if not assessment.exists or assessment.fingerprint is None:
+            raise ConfigResetError(
+                "configuration reset target disappeared during auth cleanup",
+                context={"bucket_id": target.bucket_id},
+            )
+        target = _update_target(
+            target,
+            fingerprint=assessment.fingerprint,
+            retention=_retention_decision_from_record(
+                assessment.retention,
+                target.retention,
+            ),
+            phase=ConfigResetTargetPhase.AUTH_CLEARED,
+        )
+        operation = _replace_target(operation, index, target)
+        repository.save(operation)
+    return operation
+
+
+def _retention_decision_from_record(
+    assessment: RetentionFloorAssessment | None,
+    recorded: ConfigResetRetentionDecision | None,
+) -> ConfigResetRetentionDecision:
+    if assessment is None:
+        return _retention_decision(
+            None,
+            acknowledge_retention_override=False,
+            retention_override_reason=None,
+        )
+    if recorded is not None and recorded.override_approved:
+        return _retention_decision(
+            assessment,
+            acknowledge_retention_override=True,
+            retention_override_reason=recorded.override_reason,
+        )
+    return _retention_decision(
+        assessment,
+        acknowledge_retention_override=False,
+        retention_override_reason=None,
+    )
+
+
+def _reconcile_pointer(
+    repository: ConfigResetJournalRepository,
+    operation: ConfigResetOperation,
+) -> ConfigResetOperation:
+    indexes = [
+        index
+        for index, target in enumerate(operation.targets)
+        if _phase_before(target.phase, ConfigResetTargetPhase.POINTER_RECONCILED)
+    ]
+    for index in indexes:
+        target = operation.targets[index]
+        operation = _replace_target(
+            operation,
+            index,
+            _update_target(target, phase=ConfigResetTargetPhase.POINTER_RECONCILING),
+        )
+    if indexes:
+        repository.save(operation)
+    active_bucket_id = operation.pointer_snapshot.bucket_id
+    if active_bucket_id is not None and any(
+        target.bucket_id == active_bucket_id
+        for target in operation.targets
+    ):
+        logout_active_profile()
+    for index in indexes:
+        target = operation.targets[index]
+        operation = _replace_target(
+            operation,
+            index,
+            _update_target(target, phase=ConfigResetTargetPhase.POINTER_RECONCILED),
+        )
+    if indexes:
+        repository.save(operation)
+    return operation
+
+
+def _delete_targets(
+    repository: ConfigResetJournalRepository,
+    operation: ConfigResetOperation,
+    *,
+    settings: Settings,
+) -> ConfigResetOperation:
+    service = BucketMaintenanceService()
+    for index, target in enumerate(operation.targets):
+        if target.phase is ConfigResetTargetPhase.DELETED:
+            continue
+        if not target.exists_at_snapshot:
+            completed_at = now()
+            operation = _replace_target(
+                operation,
+                index,
+                _update_target(
+                    target,
+                    phase=ConfigResetTargetPhase.DELETED,
+                    completed_at=completed_at,
+                ),
+            )
+            repository.save(operation)
+            continue
+        fingerprint = target.fingerprint
+        retention = target.retention
+        assert fingerprint is not None
+        assert retention is not None
+        if target.phase is not ConfigResetTargetPhase.DELETING:
+            target = _update_target(
+                target,
+                phase=ConfigResetTargetPhase.DELETING,
+                deletion_marker=ConfigResetDeletionMarker(
+                    operation_id=operation.operation_id,
+                    bucket_id=target.bucket_id,
+                    fingerprint=fingerprint.digest,
+                    marked_at=now(),
+                ),
+            )
+            operation = _replace_target(operation, index, target)
+            repository.save(operation)
+        result = service.delete(
+            DeleteBucketCommand(
+                bucket_id=target.bucket_id,
+                confirmed=True,
+                acknowledge_retention_override=retention.override_approved,
+                retention_override_reason=retention.override_reason,
+                reset_operation_id=operation.operation_id,
+                expected_deletion_fingerprint=fingerprint.digest,
+            ),
+        )
+        target = _update_target(
+            target,
+            phase=ConfigResetTargetPhase.DELETED,
+            completed_at=result.occurred_at,
+        )
+        operation = _replace_target(operation, index, target)
+        repository.save(operation)
+    return operation
+
+
+def _replace_target(
+    operation: ConfigResetOperation,
+    index: int,
+    target: ConfigResetTarget,
+) -> ConfigResetOperation:
+    targets = list(operation.targets)
+    targets[index] = target
+    return _update_operation(
+        operation,
+        targets=tuple(targets),
+        updated_at=now(),
+    )
+
+
+def _update_target(
+    target: ConfigResetTarget,
+    **updates: object,
+) -> ConfigResetTarget:
+    payload = target.model_dump()
+    payload.update(updates)
+    return ConfigResetTarget.model_validate(payload)
+
+
+def _update_operation(
+    operation: ConfigResetOperation,
+    **updates: object,
+) -> ConfigResetOperation:
+    payload = operation.model_dump()
+    payload.update(updates)
+    return ConfigResetOperation.model_validate(payload)
+
+
+def _phase_before(
+    current: ConfigResetTargetPhase,
+    expected: ConfigResetTargetPhase,
+) -> bool:
+    return _PHASE_ORDER[current] < _PHASE_ORDER[expected]
+
+
+def _phase_at_least(
+    current: ConfigResetTargetPhase,
+    expected: ConfigResetTargetPhase,
+) -> bool:
+    return _PHASE_ORDER[current] >= _PHASE_ORDER[expected]
+
+
 __all__ = [
-    "CONFIG_RESET_SCOPE_CLI_VALUES",
-    "ConfigResetReport",
-    "ConfigResetScope",
-    "ConfigResetUnconfirmedError",
-    "parse_config_reset_scope",
-    "reset_config",
+    "ConfigResetAlreadyRunningError",
+    "ConfigResetConfirmationRequiredError",
+    "ConfigResetError",
+    "ConfigResetOperationNotFoundError",
+    "config_reset_status",
+    "resume_config_reset",
+    "start_config_reset",
 ]
