@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-16'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
@@ -33,11 +33,18 @@ Some custody words also misstate their behavior.  `lock` performs logout,
 would be expensive and destabilizing, so this ADR chooses only changes whose
 semantic or deduplication value exceeds their migration cost.
 
-The audit also found that the import-linter gate cannot build its graph because
-its configured root is the retired package `aeat`, and two exact SHA-256 bodies
-remain outside the canonical core helper.  The operator explicitly brought the
-degraded linter into scope; implementation cannot build on an inoperative
-architecture gate.
+The audit also found two degraded governance surfaces.  The import-linter gate
+cannot build its graph because its configured root is the retired package
+`aeat`, while the duplication report can falsely report GREEN on Windows after
+jscpd scans no production files.  Hashing duplication is also substantially
+broader than the earlier two-body count: eighteen exact production one-shot
+SHA-256 bodies and four additional reducible hash bodies remain outside the
+canonical helper.  Further authority duplication exists in storage namespace
+metadata, filed-capture persistence and finalization, LLM review orchestration,
+registry query projections, and profile export/subject-access publication.
+These are within scope because a CLI hardening campaign cannot rely on
+false-green architecture or duplication evidence or preserve parallel backend
+authorities beneath a simplified command surface.
 
 ## Prior-decision reconciliation
 
@@ -61,6 +68,39 @@ decisions: production construction edges remain individually pinned, broad
 application wildcards remain forbidden, and real-adapter test seams may cross
 through a shared `cadrumo.tests` helper only by a live, narrow route.
 
+This amendment also corrects this ADR's own accepted certificate-keyring
+migration language.  `cadrumo.core.COMPATIBILITY_REGIME` is currently
+`PRE_RELEASE`; therefore `no-legacy-compatibility` governs unchanged.  The
+unreleased certificate keyring backend, selector, schema, tests, and
+documentation are deleted rather than migrated, reconciled, probed, cleaned up
+through a compatibility path, or preserved behind a fallback.  The native
+Windows Credential Manager, macOS Keychain, and Linux Secret Service migration
+jobs required by the previous text are withdrawn.  This correction does not
+remove or weaken the separate master-key OS-keyring custody backend, which is
+not a certificate-secret backend.
+
+The accepted secure-storage architecture and security-review decisions already
+make `STORAGE_NAMESPACE_REGISTRY` the authority for storage namespace metadata.
+Duplicate namespace literals and a false-green adoption test are implementation
+drift, not competing accepted architecture.  This ADR makes that existing
+authority operational across domain, application, and adapter consumers.
+
+The accepted registry-authority-flow decision remains authoritative for
+revision selection.  Scoped and unscoped resolution remain distinct; only
+their post-resolution report projections are consolidated.  The accepted
+profile-portability decision remains authoritative for portable bundle
+contents, while this ADR assigns publication, durability, event sequencing, and
+subject-access routing to one application authority.  The sealed full-profile
+recovery archive remains a different product and custody contract.
+
+The earlier research and reference documents were revision-bound audit inputs.
+The current-tree semantic and exact-source audit supersedes their counts where
+the repository has proven broader duplication: eighteen exact one-shot hashes,
+four additional reducible hash bodies, and the authority overlaps specified
+below.  Filed-capture finalization, LLM review routing, registry report
+projection, and duplication-runner ownership were not settled by a conflicting
+accepted ADR and are new decisions within this campaign.
+
 These are partial amendments; the parent ADRs remain authoritative for every
 unmentioned decision.
 
@@ -78,13 +118,22 @@ unmentioned decision.
   the current check alias does not satisfy it.
 - Both `switch` and `use` are common CLI vocabulary.  The project already chose
   `switch`, so renaming it again would create cost without semantic gain.
-- Secure-storage-only named certificate secrets are cheaper and easier to make
-  authoritative than persisting and resolving a second per-source keyring
-  backend.
+- Named certificate secrets have never shipped under a released durability
+  contract.  Secure storage is their sole authority; retaining migration or
+  cleanup logic for the deleted certificate keyring backend would violate the
+  active pre-release compatibility regime.
 - The repository is pre-release and forbids shims.  Documentation, locales,
   schemas, command mirrors, and tests move atomically with each hard change.
 - The shared worktree contains unrelated active campaigns.  Implementation must
   preserve their changes and use path-scoped commits and gates.
+- Similar text is not sufficient reason to consolidate different policies.
+  Consolidation applies only where the audited paths share one semantic
+  authority and substitutable behavior.
+- A duplication tool that did not observe the production tree cannot establish
+  zero duplication.  Unavailable, failed, timed-out, or unparseable evidence is
+  distinct from an observed zero result.
+- Canonical hashing owns byte-to-digest mechanics.  Callers continue to own the
+  semantic byte projection and domain separation that define an identifier.
 
 ## Considered options
 
@@ -105,13 +154,15 @@ Chosen.  Repair the authorities first, remove exact duplicate doors, and rename
 only custody/auth words that materially conflate states or misdescribe
 security behavior.
 
-### Option D: preserve every capability by implementing full replay and a
-persisted per-source keyring selector in this campaign
+### Option D: preserve or migrate the unreleased certificate keyring backend
 
-Rejected for this campaign.  True replay is a substantial reproducibility
-feature, and a second certificate-secret backend adds schema and resolution
-complexity.  Removing the non-functional replay leaf and standardizing named
-certificate secrets on secure storage reaches a coherent, smaller surface.
+Rejected.  The live compatibility regime is `PRE_RELEASE`, so no released data
+or caller requires preservation.  A backend selector, migration, reconciliation
+probe, fallback, legacy cleanup branch, or native migration matrix would
+maintain obsolete app-written state and contradict the active
+delete-not-migrate rule.  Named certificate secrets use secure storage only.
+This decision is independent of the retained master-key OS-keyring custody
+backend.
 
 ### Option E: remove the whole `config reset` surface
 
@@ -168,11 +219,42 @@ duplicates once DATA and AUTH move to their canonical doors.
 - Tests use real services, repositories, encrypted storage, pointer files,
   sessions, locks, certificate payloads, and CLI invocation.  Fakes, mocks,
   monkeypatches, skips, and mirrored business logic are forbidden.
-- Legacy keyring reconciliation is proven by required native integration jobs
-  against Windows Credential Manager, macOS Keychain, and Linux Secret Service.
-  Each platform job runs its real service test unconditionally and fails when
-  the service is unavailable; no in-memory/test keyring, skip, or fallback
-  backend is accepted as migration evidence.
+- `COMPATIBILITY_REGIME == PRE_RELEASE` is binding.  Delete the certificate
+  keyring backend and every selector, factory branch, schema field, locale,
+  test, documentation path, migration, reconciliation, fallback, and
+  certificate-specific native integration obligation attached to it.  Do not
+  disturb the separate master-key OS-keyring custody implementation.
+- `STORAGE_NAMESPACE_REGISTRY` is the sole authority for namespace identifiers,
+  schema versions, sensitivity, default keys and key grammars, custody scope,
+  and custody policy.  Consumers may use a neutral typed facade where import
+  boundaries require it, but may not redeclare registry metadata.
+- Filed-capture modes share one latest-observation persistence and finalization
+  authority while retaining their explicit fail-fast, best-effort, and strict
+  IVA compensation failure policies.
+- LLM review orchestration has one application owner and requires typed
+  invocation provenance.  Application operations may not default provenance to
+  a particular CLI spelling.
+- Scoped and unscoped registry revision resolution remain distinct.  Once
+  resolution succeeds, shared report shapes use one projection authority.
+  Accepted parameters may never be silently ignored.
+- Portable profile export and subject access use one durable publication
+  service.  A success audit event is emitted only after the destination has
+  been atomically published and durably synchronized.
+- Exact one-shot SHA-256 and reducible local file-hash mechanics use
+  `core.hashing`.  Incremental streams, structured folds, keyed HMAC, HKDF,
+  X509 fingerprints, digest-byte checksums, and other semantically different
+  cryptographic operations remain distinct.
+- Duplication health distinguishes observed zero, observed clones, and
+  unavailable or invalid evidence.  Only an observed zero may be GREEN.
+- Intentional non-consolidations remain: passphrase change versus mnemonic
+  recovery; Google logout versus profile/auth logout; doclink acquisition
+  versus canonical attach; sandbox discard versus prune; portable export
+  versus sealed archive; evidence export invoking check; ledger list versus
+  review read models; auth status versus test; legal aggregation resolver
+  families; GROI/NIF oracle authorities; broad Typer templates; recipient
+  registry versus replay guard; invoice create versus wizard; scoped versus
+  unscoped registry selection; strict IVA compensation persistence versus
+  ordinary filed capture; and `classify --auto-split` versus `split --llm`.
 - User-facing documentation changes follow the mandatory structured
   documentation workflow and its approval gates.
 
@@ -272,8 +354,9 @@ credentials.  The ordered phases are:
 2. acquire every target's existing exclusive bucket lock in sorted UUID order,
    call a public target-scoped deletion assessment for every bucket, and refuse
    before mutation if any retention gate is unresolved;
-3. migrate/reconcile named certificate secrets, then clear target-scoped auth
-   sessions, locks, provider state, and secrets while each target is reachable;
+3. clear target-scoped auth sessions, locks, provider state, registered
+   certificate sources, and their canonical secure-storage secrets while each
+   target remains reachable;
 4. strongly logout and clear the pointer when it names a target;
 5. delete each bucket through `BucketMaintenanceService`, recording completion
    after each idempotent irreversible transition;
@@ -314,30 +397,124 @@ bound secrets.  Both accept an explicit bucket target for bulk reset without
 switching the global pointer; CLI calls resolve the active bucket once.
 
 Introduce one active-certificate credential resolver consumed by certificate
-check, auth status/test, and login.  Named certificate secrets use secure
-storage only.  Before removing the keyring selector, run an idempotent
-registered-source migration: if secure storage is empty and the deterministic
-keyring entry exists, copy and verify it in secure storage before deleting the
-keyring entry; if both exist and differ, refuse with a typed conflict and leave
-both intact; if secure storage already matches, delete the keyring copy.  Every
-keyring access/deletion failure is explicit and retryable.  Once reconciliation
-completes, runtime credential resolution has no keyring fallback.
+check, auth status/test, and login.  Named certificate secrets use
+selected-profile secure storage only and fail closed when absent.  Delete
+`KeyringCertificateSecretBackend`, `CertificateSecretBackendKind.KEYRING`, its
+factory branch, certificate-secret `--backend`, and all certificate-specific
+keyring service/account, schema, locale, documentation, and test surfaces.
+There is no migration, reconciliation, fallback, probe, or deletion path for
+values written by the unreleased certificate keyring backend.  This deletion
+does not affect master-key OS-keyring custody.
 
 Route all purchase-evidence assignment through the attach policy.  Keep
 `ledger link` for invoice relations and remove its evidence option.  If the
 combined relation operation remains useful, implement it as one atomic
 application transaction.
 
-Move profile bundle export orchestration into one application service with a
-typed purpose.  Portable export and subject access delegate to it; subject
-access remains a separate legal-intent leaf.  Export uses a durable non-secret
-operation record: write and fsync a restrictive-permission temporary artefact,
-record `prepared` with target and digest, atomically replace the target, then
-record/emit `completed`.  Resume reconciles a prepared operation by target
-digest or removes an uncommitted temp file, so neither a false-success event nor
-an invisible completed export is silently accepted.
+Move the whole portable profile export transaction into one application
+service with a typed purpose distinguishing `portable_transfer` from
+`subject_access`.  Both live CLI consumers route through that service; neither
+retains independent profile resolution, serialization, publication, category
+enumeration, or event emission.
 
-Delegate the two residual SHA-256 implementations to `core.hashing.sha256_hex`.
+The service serializes writers to the same destination, resolves the payload
+and transport, writes a restrictive-permission temporary artefact and fsyncs
+its bytes, durably records a non-secret PREPARED operation containing the
+destination, purpose, transport, digest, and owned temporary identity, then
+atomically replaces the destination and fsyncs its parent directory.  Only
+after durable publication does it mark the operation COMPLETED and emit
+`PROFILE_EXPORTED`.  Reconciliation of PREPARED state is idempotent: a matching
+destination digest completes the operation; otherwise the service safely
+retries or removes only its owned unpublished temporary artefact.  It never
+records or emits false success.
+
+Subject-access categories derive from the actual portable bundle schema and
+registry-selected carried namespaces or from the typed service result, not a
+static five-item CLI tuple.  Subject access and cleartext portable export carry
+the same handoff and disclosure-risk classification.  The sealed full-bucket
+recovery archive remains a separate authority and format.
+
+Delegate all eighteen exact production one-shot SHA-256 bodies to
+`core.hashing.sha256_hex`, preserving each caller's existing byte projection,
+truncation, and identifier semantics.  The audited bodies are in
+`adapters/inbound/declaracion/_parser.py`,
+`adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`,
+`adapters/outbound/aeat/auth/_clave_movil_support.py`,
+`adapters/outbound/llm/_cache.py`,
+`adapters/persistence/storage/_rotation.py`,
+`adapters/persistence/storage/sql/engine.py`,
+`agent/eval/_flywheel.py`, `entrypoints/mcp/_telemetry.py`,
+`application/aggregation/_percepciones_observations_repository.py`,
+`application/aggregation/_retencion_observations_repository.py`,
+the two bodies in
+`application/calculations/_observations_repository.py`,
+`application/filing/_import.py`,
+`application/modelo/_m145_communication_records.py`,
+`application/modelo/_review_package_recipient_registry.py`,
+`application/storage/calc_sheets/_engine.py`,
+`application/workflow/_models.py`, and
+`domain/submission/_models.py`.
+
+Reduce four further bodies without changing their semantics:
+`core/corpus_manifest/__init__.py` delegates its whole-file digest and length to
+`core.hashing.hash_file`; `core/observability/_fingerprint.py` retains its
+retry/stability policy while delegating successful file hashing;
+`domain/manuals/_fetch.py` delegates local-file verification while retaining
+incremental network-response hashing; and
+`adapters/outbound/storage/_mirror_manifest.py` constructs the same
+domain-separated bytes and delegates their unkeyed digest to `sha256_hex`.
+Despite its current name, the last operation is not converted into a keyed HMAC
+because that would change object identifiers.
+
+Incremental registry and filing fingerprints, attachment and mirror streams,
+observability tree folds, network-response streams, true HMAC, HKDF, X509
+fingerprints, BIP39/digest-byte checksums, and other operations requiring
+incremental or binary digest behavior remain separate.
+
+`STORAGE_NAMESPACE_REGISTRY` becomes the operational source of truth for every
+registered namespace.  Transaction catalogue, participation index, Cl@ve
+Móvil/Permanente, profile repositories, calculation observations, LLM usage,
+bundle membership, and custody consumers obtain namespace, version, sensitivity,
+default-key/key-grammar, and custody metadata from the registered definition or
+its neutral typed facade.  Local copies in application, domain, and adapter
+modules are deleted.  Registry metadata is corrected where it does not describe
+the live object-key shape, including transaction catalogue and optional
+calculation-observation member keys.  Distinct namespaces are not merged merely
+because some metadata fields match.
+
+The namespace adoption authority covers every production root, including
+profile persistence adapters.  It recognizes the live `cadrumo.*` namespace
+family, detects duplicate declarations, and proves that consumers bind to the
+registered definition rather than merely checking whether a literal appears
+somewhere in the registry.
+
+Make `_filed_observation_persistence` the sole owner of latest filed-calculation
+observation selection, history ordering, and persistence.  Remove the copied
+selector and raw period-token ordering from `_filed_data_capture`.  One typed
+capture finalizer receives accumulated observations and an explicit failure
+policy and is used by single, bulk, and source capture.  Single and source
+capture remain fail-fast for registry-enrollment finalization; bulk capture
+continues to accumulate selected failures; the strict IVA compensation-history
+path remains separate.  CLI and report wrappers do not become persistence
+owners.
+
+Introduce one typed application LLM-review workflow that owns suggestion,
+review, apply, reject, auto-split, and saturation routing while calling the
+existing canonical persistence primitives.  Invocation origin is required
+typed input rather than an application default naming a CLI command.  The CLI
+retains grammar, active-profile/repository composition, confirmation,
+localization, and rendering.  `classify --auto-split` and `split --llm` remain
+separate operator intents because their one-child/no-split behavior differs.
+
+Within `RegistryQueryService`, preserve `_resolve_revision` and
+`_resolve_revision_for_scope` as different selection authorities.  Convert
+their successful results into one internal typed resolved context, then use one
+projection builder for each shared describe, casillas, formulas, and other
+provably identical report shape.  Unscoped `as_of` is currently accepted but
+ignored by `_resolve_revision`; the contract must either route it through a
+real validity authority or remove/reject it.  Silent acceptance is forbidden.
+Bindings and single-casilla detail remain separate unless their constraints are
+proved substitutable.
 
 ### Decision 3: remove duplicate and misleading command doors
 
@@ -419,15 +596,15 @@ exclusive.  Logout is idempotent after scope resolution: it removes persisted
 sessions, updates workflow session readiness to unauthenticated, and emits
 session-cleared events while preserving provider, certificate-source, secret,
 and acquisition-lock configuration.  Reset clears provider configuration,
-sessions, acquisition locks, registered certificate sources, and both
-reconciled secure-storage secrets and any deterministic legacy keyring entries
-in scope.  An explicit provider reset leaves a differently configured provider
-untouched.  The broad ambiguous `clear` operation ceases to exist.
+sessions, acquisition locks, registered certificate sources, and their
+canonical secure-storage secrets in scope.  The deleted certificate keyring
+backend has no migration, fallback, or cleanup participation.  An explicit
+provider reset leaves a differently configured provider untouched.  The broad
+ambiguous `clear` operation ceases to exist.
 
 Certificate secret set/remove has no backend option and always addresses the
-selected profile's secure storage.  The one-time keyring reconciliation must
-complete or fail explicitly before these new commands operate; no legacy
-keyring-only registration is silently abandoned.
+selected profile's secure storage.  No certificate keyring selector,
+registration, reconciliation prerequisite, or fallback remains.
 
 `auth reset` and `config reset start/resume` are non-interactive destructive
 operations and require explicit `--yes`; omission is a typed refusal.  Reset
@@ -457,6 +634,35 @@ reference, live materialization proving unique leaf paths, documented-command
 and JSON-schema conformance, locale coverage, clone audit, path-scoped quality
 gates, formal code review, and attributable full-project gates.
 
+Conformance also includes AST-based recurrence gates for new exact one-shot
+SHA-256 bodies and duplicate local file-hash implementations, with explicit
+allowance for the canonical helper and audited distinct cryptographic
+primitives.  Namespace adoption validation must prove real consumer binding and
+cannot pass on an empty or mismatched namespace inventory.  Duplication evidence
+must be observed from the production tree before it contributes a GREEN health
+result.
+
+### Decision 5: make duplication evidence trustworthy
+
+Make `dev.audit.duplication` the sole owner of the pinned jscpd invocation,
+production source selection, output parsing, and typed result.  It passes the
+production path in a platform-independent form, captures stdout and stderr,
+preserves exit status and timeout information, and distinguishes observed zero,
+observed clone clusters, unavailable execution, failed execution, and
+unparseable output.
+
+`dev.audit.report` consumes that typed result rather than constructing a second
+jscpd command or interpreting missing output as zero.  Observed zero is GREEN;
+observed clone debt is AMBER with its measured count; unavailable, failed,
+timed-out, or unparseable evidence is AMBER and explicitly unavailable, never
+false GREEN.  The clone-count policy remains advisory and separate from runner
+health.
+
+The `just` surface invokes the Python-owned runner directly rather than a shell
+pipeline whose final parser process can mask jscpd failure.  All duplication
+entry points therefore share one command definition, one parser, one status
+taxonomy, and one production-tree scope.
+
 ## Rationale
 
 The research establishes that this is not a naming-only problem.  Exact aliases
@@ -477,6 +683,25 @@ their current surface.  A future ADR may add real evidence replay or a typed
 multi-backend certificate-secret model when those capabilities justify their
 cost.
 
+The active pre-release compatibility regime makes certificate-keyring deletion
+both cheaper and more correct than reconciliation.  Migration would create code
+and native-job obligations solely to preserve state that no released version
+promised to retain, directly contradicting the repository's governing
+compatibility decision.
+
+The broader authority corrections follow the same principle as the CLI
+simplification: one semantic policy owner, with transport-specific or
+intent-specific wrappers preserved only where their contracts differ.
+Centralizing namespace metadata, filed persistence, LLM review routing,
+post-resolution registry projection, and export publication removes parallel
+policy without flattening legitimate differences in authorization, failure
+mode, legal intent, selection, or cryptographic semantics.
+
+A false-green duplication report is an architecture defect in its own right.
+Treating missing evidence as zero would allow future consolidation decisions to
+rest on an unobserved tree.  A typed runner result makes the distinction between
+“no clones were measured” and “no measurement occurred” enforceable.
+
 ## Consequences
 
 - The project regains an operative import-architecture gate before feature work.
@@ -493,11 +718,28 @@ cost.
 - Evidence replay is temporarily unavailable rather than falsely advertised.
   Adding it later requires a distinct replay service and stored-input outcome
   tests.
-- Named certificate secrets lose the CLI-selectable keyring backend.  Secure
-  storage becomes the single supported source until a future persisted backend
-  model is approved.
-- The subject-access command remains discoverable but shares export mechanics,
-  preserving legal intent without duplicate serialization/event code.
+- The unreleased certificate keyring backend and its migration obligations are
+  deleted.  Named certificate secrets use selected-profile secure storage only.
+  The independent master-key OS-keyring custody backend remains supported.
+- Subject access remains a separate legally discoverable command but shares the
+  complete portable-export transaction, category authority, handoff risk, and
+  durable publication sequencing.  The sealed recovery archive remains
+  separate.
 - The documentation and conformance blast radius is large.  The plan must
   sequence backend authority, surface migration, documentation regeneration,
   and full validation so partially renamed states never ship.
+- Storage namespace metadata has one enforceable registry authority; fixing
+  drift may change incorrect diagnostic or catalogue metadata but requires no
+  pre-release data migration.
+- Filed capture retains distinct failure policies while removing duplicate
+  latest-selection, ordering, persistence, and finalization logic.
+- LLM review commands retain their different operator semantics while sharing
+  typed application orchestration and truthful invocation provenance.
+- Registry scoped and unscoped selection remain distinct, but equivalent report
+  projections cannot drift.  The silently ignored unscoped `as_of` contract is
+  removed or made effective.
+- Eighteen one-shot digests and four further reducible bodies move to canonical
+  hashing mechanics without merging streaming, keyed, certificate, checksum,
+  or binary-digest operations.
+- Duplication reporting can no longer claim GREEN without successfully observing
+  the production tree.  Existing clone debt remains advisory but visible.
