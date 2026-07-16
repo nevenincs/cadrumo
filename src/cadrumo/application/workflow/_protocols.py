@@ -37,8 +37,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ...application.auth import AuthProviderDescription
-from ...core import Period
+from ...core import AuthProviderDescription, Period
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases have a single canonical
@@ -140,7 +139,7 @@ class CertificateBundleProtocol(Protocol):
     def describe(self) -> AuthProviderDescription:
         """Return the current auth-provider description; raise on failure.
 
-        Returns an :class:`AuthProviderDescription` with the provider's
+        Returns a :class:`core.AuthProviderDescription` with the provider's
         configured and available state.
         """
         ...

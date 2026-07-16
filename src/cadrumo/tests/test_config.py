@@ -19,10 +19,9 @@ import pydantic
 import pytest
 from pydantic_settings import SettingsConfigDict
 
+from ..core import AuthProviderKind
 from ..core.config import (
     PROJECT_ROOT,
-    AuthProviderKindSetting,
-    CertificateBackend,
     Settings,
     StorageRouteKind,
     classify_storage_route,
@@ -89,11 +88,11 @@ class TestAuthProviderEnum:
     """#285 — ``CADRUMO_AUTH_PROVIDER`` coerces to the settings enum strictly."""
 
     def test_env_value_coerces_to_enum(self) -> None:
-        from ..core.config import AuthProviderKindSetting
+        from ..core import AuthProviderKind
 
         with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
             settings = settings_without_env_file()
-        assert settings.cadrumo_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
+        assert settings.cadrumo_auth_provider is AuthProviderKind.CLAVE_MOVIL
 
     def test_blank_env_value_treated_as_unset(self) -> None:
         with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER=""):
@@ -108,20 +107,12 @@ class TestAuthProviderEnum:
                 settings_without_env_file()
 
 
-class TestCertificateBackendEnum:
-    """Certificate backend settings accept canonical values only."""
-
-    def test_lowercase_setting_value_is_accepted(self) -> None:
-        with _isolated_aeat_env(CADRUMO_CERTIFICATE_BACKEND="playwright_context"):
-            settings = settings_without_env_file()
-        assert settings.cadrumo_certificate_backend is CertificateBackend.PLAYWRIGHT_CONTEXT
-
-    def test_uppercase_enum_name_is_rejected(self) -> None:
-        import pydantic
-
-        with _isolated_aeat_env(CADRUMO_CERTIFICATE_BACKEND="PLAYWRIGHT_CONTEXT"):
-            with pytest.raises(pydantic.ValidationError):
-                settings_without_env_file()
+def test_certificate_backend_and_verify_url_are_not_settings_surfaces() -> None:
+    """Retired certificate proof selectors are absent from the configuration schema."""
+    assert "cadrumo_certificate_backend" not in Settings.model_fields
+    assert "aeat_certificate_verify_url" not in Settings.model_fields
+    assert "CADRUMO_CERTIFICATE_BACKEND" not in Settings.env_var_names()
+    assert "AEAT_CERTIFICATE_VERIFY_URL" not in Settings.env_var_names()
 
 
 class TestStatusDetailUrlTemplate:
@@ -202,7 +193,7 @@ class TestStatusDetailUrlTemplate:
         with _isolated_aeat_env():
             settings = LegacyProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_local_storage_root != Path("legacy-state-root")
-        assert settings.cadrumo_auth_provider is AuthProviderKindSetting.CERTIFICATE
+        assert settings.cadrumo_auth_provider is AuthProviderKind.CERTIFICATE
 
         env_path.write_text("UNRELATED_CADRUMO_TYPO=1\n", encoding="utf-8")
         with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):

@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.submission import SubmissionRepository
-from ....core import Period
+from ....core import AuthProviderDescription, AuthProviderKind, Period
 from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.buckets import (
@@ -52,7 +52,6 @@ from ....domain.transactions import TransactionCatalogue
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...auth import AuthProviderDescription, AuthProviderKind
 from ...calculations import CalculationObservationRepository
 from ...filing import (
     approve_draft,

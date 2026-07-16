@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import TypedDict
 
 import pytest
@@ -36,6 +37,7 @@ def _open_session(
     dek: bytes = _DEK,
     idle_minutes: int = 15,
     opened_at: datetime = _NOW,
+    storage_root: Path | None = None,
 ) -> BucketSession:
     return BucketSession.open(
         bucket_id=bucket_id,
@@ -43,15 +45,18 @@ def _open_session(
         dek=dek,
         idle_minutes=idle_minutes,
         opened_at=opened_at,
+        storage_root=storage_root,
     )
 
 
 def test_open_round_trip_exposes_kek_and_dek() -> None:
-    session = _open_session()
+    storage_root = Path("var") / "profiles"
+    session = _open_session(storage_root=storage_root)
 
     assert session.kek == _KEK
     assert session.dek == _DEK
     assert session.bucket_id == _BUCKET_ID
+    assert session.storage_root == storage_root.resolve()
     assert session.sealed is False
 
 

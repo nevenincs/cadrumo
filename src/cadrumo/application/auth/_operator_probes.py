@@ -13,12 +13,16 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings, unwrap_optional_secret
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
-from . import AuthProviderKind
+from ..auth_credentials import (
+    ActiveCertificateCredentials,
+    unnamed_certificate_credentials,
+)
 from ._operator_scope import active_profile_storage_span
 from ._sessions import load_persisted_session
 
@@ -168,10 +172,10 @@ class _ProviderProbeOutcome(BaseModel):
 class ProviderConfigurationProbe(BaseModel):
     """Public per-provider local configuration readiness verdict.
 
-    Wraps the pure-local :func:`_probe_configured_provider` (no network,
+    Wraps the pure-local :func:`probe_provider_credentials` (no network,
     no active-profile requirement) so the workstation doctor
     (``aeat config check``) can render one certificate / Cl@ve Móvil
-    readiness row per :class:`application.auth.AuthProviderKind`
+    readiness row per :class:`core.AuthProviderKind`
     directly from :class:`core.config.Settings`. ``result`` is the
     typed :class:`ProviderProbeResult`; ``summary`` is the localised
     one-line operator-facing verdict.
@@ -200,7 +204,34 @@ def probe_provider_configuration(
     :attr:`ProviderProbeResult.IDENTITY_UNSET`, a broken one as
     ``expired`` / ``corrupt`` / ``invalid_identity``.
     """
-    outcome = _probe_configured_provider(provider, "", settings=settings)
+    resolved_settings = settings or load_settings()
+    credentials = (
+        unnamed_certificate_credentials(resolved_settings)
+        if provider == AuthProviderKind.CERTIFICATE.value
+        else None
+    )
+    return probe_provider_credentials(
+        provider,
+        "",
+        settings=resolved_settings,
+        certificate_credentials=credentials,
+    )
+
+
+def probe_provider_credentials(
+    provider: str,
+    certificate_path: str,
+    *,
+    settings: Settings | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
+) -> ProviderConfigurationProbe:
+    """Probe one provider using the caller's already-resolved credential snapshot."""
+    outcome = _probe_configured_provider(
+        provider,
+        certificate_path,
+        settings=settings,
+        certificate_credentials=certificate_credentials,
+    )
     return ProviderConfigurationProbe(
         provider=provider,
         result=outcome.result,
@@ -213,6 +244,7 @@ def _probe_configured_provider(
     certificate_path: str,
     *,
     settings: Settings | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> _ProviderProbeOutcome:
     """Run a real per-provider local probe and return a typed verdict.
 
@@ -236,7 +268,11 @@ def _probe_configured_provider(
         )
 
     if kind is AuthProviderKind.CERTIFICATE:
-        return _probe_certificate_bundle(certificate_path, settings=settings)
+        return _probe_certificate_bundle(
+            certificate_path,
+            settings=settings,
+            certificate_credentials=certificate_credentials,
+        )
     if kind is AuthProviderKind.CLAVE_MOVIL:
         return _probe_clave_movil_identity(settings=settings)
     return _ProviderProbeOutcome()
@@ -246,6 +282,7 @@ def _probe_certificate_bundle(
     certificate_path: str,
     *,
     settings: Settings | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> _ProviderProbeOutcome:
     """Open the configured ``.p12`` and classify the certificate's health.
 
@@ -267,7 +304,8 @@ def _probe_certificate_bundle(
     )
 
     resolved_settings = settings or load_settings()
-    configured_certificate_path = resolved_settings.cadrumo_certificate_path
+    credentials = certificate_credentials or unnamed_certificate_credentials(resolved_settings)
+    configured_certificate_path = credentials.certificate_path
     raw = (certificate_path or "").strip() or (
         str(configured_certificate_path) if configured_certificate_path is not None else ""
     )
@@ -295,7 +333,7 @@ def _probe_certificate_bundle(
                 error=type(exc).__name__,
             ),
         )
-    password = resolved_settings.cadrumo_certificate_password_secret
+    password = credentials.password
     if password is None:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
@@ -307,8 +345,7 @@ def _probe_certificate_bundle(
             password=password,
             warn_days=resolved_settings.cadrumo_cert_warn_days,
             critical_days=resolved_settings.cadrumo_cert_critical_days,
-            friendly_name=resolved_settings.cadrumo_certificate_friendly_name,
-            backend=resolved_settings.cadrumo_certificate_backend,
+            friendly_name=credentials.friendly_name,
         )
     except CertificateError as exc:
         _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)

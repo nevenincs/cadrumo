@@ -14,10 +14,51 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
+from ...domain.retention import RetentionFloorAssessment
+from ...domain.user_profile import UserProfileStatus
+from .._bucket_deletion_contracts import BucketDeletionFingerprint
+
+_SHA256_PATTERN = r"^[0-9a-f]{64}$"
+
+
+class AssessBucketDeletionCommand(BaseModel):
+    """Read-only deletion-assessment intent for one explicit bucket."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+
+
+class BucketDeletionAssessment(BaseModel):
+    """Assessment of an explicit bucket target before deletion.
+
+    The existing and absent forms are mutually exclusive. An existing
+    assessment carries the bucket label, lifecycle status, deletion
+    fingerprint, and :class:`RetentionFloorAssessment`; an absent assessment
+    carries none of those values.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    bucket_id: BucketId
+    exists: bool
+    label: str | None = Field(default=None, min_length=1, max_length=160)
+    status: UserProfileStatus | None = None
+    fingerprint: BucketDeletionFingerprint | None = None
+    retention: RetentionFloorAssessment | None = None
+
+    @model_validator(mode="after")
+    def _validate_existence_shape(self) -> BucketDeletionAssessment:
+        present_fields = (self.label, self.status, self.fingerprint, self.retention)
+        if self.exists and any(value is None for value in present_fields):
+            raise ValueError("existing deletion assessment requires label, status, fingerprint, and retention")
+        if not self.exists and any(value is not None for value in present_fields):
+            raise ValueError("absent deletion assessment cannot carry bucket metadata")
+        return self
 
 
 class RenameBucketCommand(BaseModel):
@@ -66,6 +107,11 @@ class DeleteBucketCommand(BaseModel):
     retention window (Ley 58/2003 art. 66/70) the erase is refused
     unless this flag is ``True`` AND ``retention_override_reason`` is a
     non-empty justification the audit trail records.
+
+    The optional ``reset_operation_id`` and
+    ``expected_deletion_fingerprint`` pair provides caller-owned operation
+    context. The service verifies that context against the durable reset
+    journal before accepting an operation-owned deletion.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -74,13 +120,35 @@ class DeleteBucketCommand(BaseModel):
     confirmed: bool = False
     acknowledge_retention_override: bool = False
     retention_override_reason: str | None = Field(default=None, min_length=1, max_length=512)
+    reset_operation_id: str | None = Field(
+        default=None,
+        min_length=64,
+        max_length=64,
+        pattern=_SHA256_PATTERN,
+    )
+    expected_deletion_fingerprint: str | None = Field(
+        default=None,
+        min_length=64,
+        max_length=64,
+        pattern=_SHA256_PATTERN,
+    )
+
+    @model_validator(mode="after")
+    def _validate_reset_ownership(self) -> DeleteBucketCommand:
+        owns_reset_delete = self.reset_operation_id is not None
+        has_fingerprint = self.expected_deletion_fingerprint is not None
+        if owns_reset_delete != has_fingerprint:
+            raise ValueError("reset deletion ownership requires operation id and expected fingerprint together")
+        return self
 
 
 class DeleteBucketResult(BaseModel):
-    """Outcome of a successful bucket erasure.
+    """Outcome of an actual deletion or an accepted already-absent target.
 
-    Carries the deleted bucket's prior label so the operator-facing
-    emitter can render a confirming line without re-reading anything.
+    ``previous_label`` carries the deleted bucket's observed prior label and
+    is ``None`` for an accepted already-absent target. The deletion
+    fingerprint is observed for an actual deletion or carries the caller's
+    expected value for an accepted already-absent target.
     ``retention_override_used`` records whether a still-retained record
     was erased under the explicit legal-retention override, and
     ``latest_safe_erase_date`` names the instant the erased set would
@@ -91,10 +159,18 @@ class DeleteBucketResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    previous_label: str = Field(min_length=1, max_length=160)
+    previous_label: str | None = Field(default=None, min_length=1, max_length=160)
     occurred_at: datetime
     retention_override_used: bool = False
     latest_safe_erase_date: datetime | None = None
+    deletion_fingerprint: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
+    reset_operation_id: str | None = Field(
+        default=None,
+        min_length=64,
+        max_length=64,
+        pattern=_SHA256_PATTERN,
+    )
+    already_absent: bool = False
 
 
 class ArchiveBucketCommand(BaseModel):

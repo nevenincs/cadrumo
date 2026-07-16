@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ..core.config import Settings, load_settings
 from ..core.errors import AeatError
 from ..core.paths import (
@@ -135,7 +135,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     """Probe each auth provider's local certificate / Cl@ve Móvil configuration.
 
     Runs the pure-local per-provider probe for every
-    :class:`~application.auth.AuthProviderKind` (no network, no
+    :class:`~core.AuthProviderKind` (no network, no
     active-profile session) and maps its typed
     :class:`~application.auth.ProviderProbeResult` onto a
     :class:`PreflightCheck`. A not-configured optional provider is ``OK``
@@ -143,7 +143,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     invalid Cl@ve identity is ``ERROR``; a certificate inside its
     pre-expiry window is ``WARN``. The probe never raises.
     """
-    from .auth import AuthProviderKind, probe_provider_configuration
+    from .auth import probe_provider_configuration
 
     rows: list[PreflightCheck] = []
     for kind in AuthProviderKind:

@@ -42,7 +42,8 @@ from typing import Any
 from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
-from ..core.config import AuthProviderKindSetting, Settings
+from ..core import AuthProviderKind
+from ..core.config import Settings
 
 _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
 """Keep temporary Cadrumo local-storage roots alive for returned Settings instances."""
@@ -96,7 +97,7 @@ def settings_without_env_file(**overrides: Any) -> Settings:
 
 def ready_clave_settings(tax_id: str) -> Settings:
     return settings_without_env_file(
-        cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+        cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
         cadrumo_clave_movil_dni_nie=SecretStr(tax_id),
     )
 
@@ -130,7 +131,7 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
     Examples:
         >>> with isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
         ...     settings = Settings()
-        ...     assert settings.cadrumo_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
+        ...     assert settings.cadrumo_auth_provider is AuthProviderKind.CLAVE_MOVIL
     """
     saved: dict[str, str | None] = {}
     for name in Settings.env_var_names():

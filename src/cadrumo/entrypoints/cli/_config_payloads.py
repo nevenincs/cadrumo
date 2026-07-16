@@ -17,6 +17,7 @@ from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
+    from ...application.config_reset import ConfigResetOperation
 
 # Shared sub-models (not registered — used as nested types)
 
@@ -401,18 +402,119 @@ class ConfigStatusResult(OutputSchema):
     next_action: str | None = None
 
 
-@register_schema("config.reset")
-class ConfigResetResult(OutputSchema):
-    """JSON envelope for ``aeat config reset``.
+class ConfigResetTargetPayload(OutputSchema):
+    """Secret-free phase projection for one reset target."""
 
-    Reports the reset scope, removed profile ids, and whether local auth session
-    state was removed. It does not include deleted profile records or auth
-    secrets.
-    """
+    bucket_id: str
+    label: str | None
+    status_at_snapshot: str | None
+    exists_at_snapshot: bool
+    phase: str
+    retention_blocks_erase: bool | None
+    retention_override_approved: bool | None
+    completed_at: str | None
 
-    scope: str
-    removed_profile_ids: list[str]
-    removed_auth_session: bool
+
+class ConfigResetSummaryPayload(OutputSchema):
+    """Reconciled completion counts for one reset operation."""
+
+    target_count: int
+    deleted_count: int
+    already_absent_count: int
+    retention_override_count: int
+    completed_at: str
+
+
+class ConfigResetOperationPayload(OutputSchema):
+    """Credential-free operator projection of one durable reset journal."""
+
+    operation_id: str
+    status: str
+    started_at: str
+    updated_at: str
+    pause_reason: str | None
+    paused_target_ids: list[str]
+    targets: list[ConfigResetTargetPayload]
+    summary: ConfigResetSummaryPayload | None
+
+    @classmethod
+    def from_operation(cls, operation: ConfigResetOperation) -> ConfigResetOperationPayload:
+        """Project the application journal without fingerprints or deletion witnesses."""
+        targets = [
+            ConfigResetTargetPayload(
+                bucket_id=target.bucket_id,
+                label=target.label,
+                status_at_snapshot=(
+                    target.status_at_snapshot.value
+                    if target.status_at_snapshot is not None
+                    else None
+                ),
+                exists_at_snapshot=target.exists_at_snapshot,
+                phase=target.phase.value,
+                retention_blocks_erase=(
+                    target.retention.blocks_erase
+                    if target.retention is not None
+                    else None
+                ),
+                retention_override_approved=(
+                    target.retention.override_approved
+                    if target.retention is not None
+                    else None
+                ),
+                completed_at=(
+                    target.completed_at.isoformat()
+                    if target.completed_at is not None
+                    else None
+                ),
+            )
+            for target in operation.targets
+        ]
+        summary = operation.summary
+        return cls(
+            operation_id=operation.operation_id,
+            status=operation.status.value,
+            started_at=operation.started_at.isoformat(),
+            updated_at=operation.updated_at.isoformat(),
+            pause_reason=(
+                operation.pause_reason.value
+                if operation.pause_reason is not None
+                else None
+            ),
+            paused_target_ids=list(operation.paused_target_ids),
+            targets=targets,
+            summary=(
+                ConfigResetSummaryPayload(
+                    target_count=summary.target_count,
+                    deleted_count=summary.deleted_count,
+                    already_absent_count=summary.already_absent_count,
+                    retention_override_count=summary.retention_override_count,
+                    completed_at=summary.completed_at.isoformat(),
+                )
+                if summary is not None
+                else None
+            ),
+        )
+
+
+@register_schema("config.reset.start")
+class ConfigResetStartResult(OutputSchema):
+    """JSON envelope for starting one durable all-profile reset."""
+
+    operation: ConfigResetOperationPayload
+
+
+@register_schema("config.reset.status")
+class ConfigResetStatusResult(OutputSchema):
+    """JSON envelope for read-only durable reset status."""
+
+    operation: ConfigResetOperationPayload | None
+
+
+@register_schema("config.reset.resume")
+class ConfigResetResumeResult(OutputSchema):
+    """JSON envelope for resuming one exact durable reset journal."""
+
+    operation: ConfigResetOperationPayload
 
 
 # P07 — auth and bucket verb result schemas

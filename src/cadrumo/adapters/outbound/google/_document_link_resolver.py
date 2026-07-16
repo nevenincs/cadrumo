@@ -80,7 +80,7 @@ class _DriveFilesResource(Protocol):
         q: str,
         fields: str,
         pageSize: int,  # noqa: N803
-        pageToken: str | None = None,  # noqa: N803
+        pageToken: str = ...,  # noqa: N803
     ) -> _DriveFilesListRequest: ...
 
 
@@ -279,12 +279,20 @@ def list_drive_folder_documents(
     page_token: str | None = None
     query = f"'{folder_id}' in parents and trashed = false"
     while True:
-        request = drive_service.files().list(
-            q=query,
-            fields="nextPageToken, files(id, name, mimeType)",
-            pageSize=_DRIVE_LIST_PAGE_SIZE,
-            pageToken=page_token,
-        )
+        files = drive_service.files()
+        if page_token is None:
+            request = files.list(
+                q=query,
+                fields="nextPageToken, files(id, name, mimeType)",
+                pageSize=_DRIVE_LIST_PAGE_SIZE,
+            )
+        else:
+            request = files.list(
+                q=query,
+                fields="nextPageToken, files(id, name, mimeType)",
+                pageSize=_DRIVE_LIST_PAGE_SIZE,
+                pageToken=page_token,
+            )
         try:
             response = execute_request(
                 # CAST-RATIONALE-thirdparty: Google Drive SDK request object is untyped at the client boundary

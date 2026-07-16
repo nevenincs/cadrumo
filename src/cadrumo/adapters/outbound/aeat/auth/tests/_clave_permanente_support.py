@@ -63,6 +63,7 @@ class _RecordingPage:
         self.url = url
 
         class _RecordingResponse:
+            ok = True
             status = 200
 
         return _RecordingResponse()
@@ -139,7 +140,6 @@ class _RecordingBrowserSession:
         self._page_factory = page_factory
         self.contexts: list[_RecordingContext] = []
         self.closed = False
-        self.profile = None
 
     async def create_context(
         self,

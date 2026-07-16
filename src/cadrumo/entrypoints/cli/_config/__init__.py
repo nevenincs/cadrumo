@@ -6,14 +6,9 @@ through :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
-from typing import cast
-
 import click
 import typer
-import typer._click.types as typer_click_types
 
-from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
-from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
@@ -52,19 +47,11 @@ from ._profile_readiness import (
 )
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
+from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 _log = _get_logger(__name__)
-
-# CAST-RATIONALE-CONFIG-RESET-SCOPE-CHOICE: typer vendors its own copy of click, so
-# click.Choice is a click.types.ParamType while typer.Option's click_type expects
-# typer._click.types.ParamType. They are the same object at runtime (the vendored
-# click), so the cast only bridges the static type duality — no Any escape.
-_CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
-)
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
 _wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
@@ -1134,56 +1121,6 @@ def config_status(
     del projection
 
 
-@app.command("reset", help=tr("cli.config.reset.help"))
-def config_reset(
-    ctx: typer.Context,
-    scope: str | None = typer.Option(
-        None,
-        "--scope",
-        click_type=_CONFIG_RESET_SCOPE_CHOICE,
-        help=tr("cli.config.reset.scope_help"),
-    ),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
-) -> None:
-    """Reset operator-entered configuration scopes."""
-    from ....application.config_reset import reset_config
-
-    if scope is None:
-        # The most destructive scope (`all`, a full wipe) must never be an
-        # implied default: one forgotten flag next to `--yes` would erase
-        # every profile, session, and stored row. The refusal names the
-        # accepted set per the CLI-boundary rule (never a bare "missing").
-        accepted = ", ".join(_CONFIG_RESET_SCOPE_CLI_VALUES)
-        raise _CliRefusedBoundaryError(
-            f"config reset requires an explicit --scope; accepted scopes: {accepted}. "
-            "The full wipe is `--scope all` and is never implied.",
-            context={"accepted_scopes": accepted},
-        )
-    if not yes:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.reset.requires_yes",
-        )
-    from .._config_payloads import ConfigResetResult
-
-    scope_enum = _parse_config_reset_scope(scope)
-    report = reset_config(scope_enum, confirmed=True)
-    result = ConfigResetResult(
-        scope=report.scope.value,
-        removed_profile_ids=list(report.removed_profile_ids),
-        removed_auth_session=report.removed_auth_session,
-    )
-    _emit_envelope(
-        ctx,
-        command="config.reset",
-        result=result,
-        lines=(
-            f"scope\t{report.scope.value}",
-            f"removed_profiles\t{len(report.removed_profile_ids)}",
-            f"removed_auth\t{report.removed_auth_session}",
-        ),
-    )
-
-
 from ._capabilities_cli import register as _register_profile_capabilities
 from ._check_cli import register as _register_config_check
 
@@ -1220,6 +1157,7 @@ register_descendiente_commands(
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
 )
 register_sandbox_commands(profile_app)
+register_reset_commands(app)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
@@ -1248,6 +1186,7 @@ __all__ = [
     "register_profile_bundle_commands",
     "register_repair_maintenance_commands",
     "register_repair_profile_command",
+    "register_reset_commands",
     "register_sandbox_commands",
     "repair_app",
     "tr",

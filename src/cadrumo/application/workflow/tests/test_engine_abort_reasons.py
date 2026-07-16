@@ -8,8 +8,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import Expediente, RemoteNotification
-from ....application.auth import AuthProviderKind
-from ....core import Period
+from ....core import AuthProviderKind, Period
 from ....core.config import override_settings
 from ....core.errors import BaseSeverity
 from ....domain.filing import ModeloBuilderError

@@ -73,6 +73,7 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+@pytest.mark.serial
 def test_version_cold_start_completes_under_budget() -> None:
     """A fresh-interpreter ``aeat --version`` returns inside the budget.
 

@@ -47,10 +47,11 @@ class CallTier(StrEnum):
 
 #: The per-tier wall-clock ceiling, in seconds. Generous for the live/sede family
 #: (a Playwright portal pull legitimately runs for minutes), tighter for local
-#: work so a stuck local call fails fast.
+#: work so a stuck local call fails fast. Local mutations still need enough
+#: headroom for cold installed-client startup and registry loading.
 _TIER_TIMEOUTS: dict[CallTier, float] = {
     CallTier.READ: 45.0,
-    CallTier.MUTATE: 120.0,
+    CallTier.MUTATE: 180.0,
     CallTier.LIVE: 420.0,
 }
 

@@ -18,7 +18,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._providers import AuthProviderKind
+from .....core import AuthProviderKind
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 """Schema version for Cl@ve Móvil :class:`ClaveMovilSessionMetadata` records."""

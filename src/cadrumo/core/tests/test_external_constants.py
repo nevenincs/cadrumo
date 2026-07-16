@@ -164,6 +164,26 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
     assert paths.irpf_expediente_detail_year_suffix
 
 
+def test_certificate_protected_resource_authority_is_exact_and_composed() -> None:
+    """Certificate authentication has one non-configurable www6 protected resource."""
+    from .. import (
+        AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+        AEAT_CERTIFICATE_PROTECTED_PATH,
+        AEAT_CERTIFICATE_PROTECTED_URL,
+    )
+
+    constants = load_external_constants()
+
+    assert AEAT_CERTIFICATE_PROTECTED_ORIGIN == "https://www6.agenciatributaria.gob.es"
+    assert constants.aeat.domains.www6 == AEAT_CERTIFICATE_PROTECTED_ORIGIN
+    assert AEAT_CERTIFICATE_PROTECTED_PATH == "/wlpl/TEWV-CORE/ResumenVlt"
+    assert constants.aeat.sede_paths.expedientes_resumen == AEAT_CERTIFICATE_PROTECTED_PATH
+    assert (
+        f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}{AEAT_CERTIFICATE_PROTECTED_PATH}"
+        == AEAT_CERTIFICATE_PROTECTED_URL
+    )
+
+
 def test_clave_movil_surface_constants_are_typed() -> None:
     """Cl@ve Móvil URL fragments and selectors live in the external registry."""
 

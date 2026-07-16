@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
@@ -121,7 +122,6 @@ class BucketEventHistoryRepository:
 
     def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
         """Load the catalogue and the exact secure-object revision observed."""
-        from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
         from ..storage import (
             ClassificationError,
             Envelope,

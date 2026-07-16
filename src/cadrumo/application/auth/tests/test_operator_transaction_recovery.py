@@ -18,6 +18,7 @@ from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import RepositoryError
 from ....application.wizard import WIZARD_FLOWS
+from ....core import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.contribuyente import required_profile_keys
@@ -27,10 +28,15 @@ from ...user_profile import (
     profile_storage_session,
     register_minimal_profile,
 )
-from ...workflow import WorkflowStateRepository, workflow_state_repository
+from ...workflow import (
+    AuthCleanupOperationKind,
+    CertificateSecretMutationEventKind,
+    WorkflowState,
+    WorkflowStateRepository,
+    workflow_state_repository,
+)
 from .. import (
     AuthCleanupInProgressError,
-    AuthProviderKind,
     CertificateSecretMutationInProgressError,
     ensure_authenticated_aeat_session,
 )
@@ -42,7 +48,6 @@ from .._certificate_sources_operator import (
     resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
-from .._models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
 from .._operator import (
     _build_auth_cleanup_intent,
     configure_operator_auth,
@@ -72,7 +77,7 @@ def _seed_cleanup_intent(*, operation_kind: AuthCleanupOperationKind) -> None:
     settings = load_settings()
     repository = workflow_state_repository()
 
-    def prepare(state):
+    def prepare(state: WorkflowState) -> WorkflowState:
         intent = _build_auth_cleanup_intent(
             settings=settings,
             bucket_id=_BUCKET_ID,
@@ -154,7 +159,7 @@ def test_workflow_state_update_retries_real_revision_conflict_without_losing_cha
         concurrent = WorkflowStateRepository(objects=profile.repository)
         first_attempt = True
 
-        def transform(state):
+        def transform(state: WorkflowState) -> WorkflowState:
             nonlocal first_attempt
             if first_attempt:
                 first_attempt = False
@@ -187,7 +192,7 @@ def test_concurrent_first_workflow_writers_retry_absent_row_collision(
         def provider_write() -> None:
             first_attempt = True
 
-            def transform(state):
+            def transform(state: WorkflowState) -> WorkflowState:
                 nonlocal first_attempt
                 if first_attempt:
                     first_attempt = False
@@ -199,7 +204,7 @@ def test_concurrent_first_workflow_writers_retry_absent_row_collision(
         def certificate_write() -> None:
             first_attempt = True
 
-            def transform(state):
+            def transform(state: WorkflowState) -> WorkflowState:
                 nonlocal first_attempt
                 if first_attempt:
                     first_attempt = False

@@ -31,6 +31,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
+from ....core import Period, PeriodError
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.justificante import (
@@ -350,6 +351,18 @@ def extract_justificante_from_digest(
     csv_value = _extract_csv(text, normalised, source_label)
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
     period, ejercicio = _extract_period_and_ejercicio(normalised)
+    if ejercicio is None or not ejercicio.isdigit():
+        raise JustificanteParseError(
+            f"could not resolve a filing year for period {period!r} in {source_label}",
+            missing=("ejercicio",),
+        )
+    try:
+        typed_period = Period.from_year_and_code(int(ejercicio), period)
+    except PeriodError as exc:
+        raise JustificanteParseError(
+            f"invalid filing period {period!r} for ejercicio {ejercicio!r} in {source_label}",
+            malformed=("period",),
+        ) from exc
     nif_match = _NIF_RE.search(normalised) or _NIF_INVERTED_RE.search(normalised)
     nif = _require(nif_match, "tax_id").upper()
     presented_at = _extract_presented_at(normalised)
@@ -362,8 +375,7 @@ def extract_justificante_from_digest(
         record = Justificante(
             csv=csv_value,
             modelo=modelo,
-            # Justificante.period before-validator coerces the printed (token, ejercicio) into a Period.
-            period=period,  # ty: ignore[invalid-argument-type]
+            period=typed_period,
             ejercicio=ejercicio,
             presentation_id=presentation_id,
             presented_at=presented_at,

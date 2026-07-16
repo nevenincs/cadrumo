@@ -42,7 +42,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # settings (log rotation cap/backup, LLM cache/usage/run-telemetry retention,
     # run-trace + wallet-dump + corpus-cache retention/derivation); re-pinned to
     # present size. SPLIT-CANDIDATE: the settings model is a split-by-mixin target.
-    "src/cadrumo/core/config.py": 1390,  # SPLIT-CANDIDATE
+    "src/cadrumo/core/config.py": 1400,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
     # Live-censo calendar reconciliation is actively landing and growing; bounded
@@ -93,6 +93,11 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1373,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/transactions/_models.py": 1419,  # SPLIT-CANDIDATE
     "src/cadrumo/entrypoints/cli/_config/__init__.py": 1261,  # SPLIT-CANDIDATE
+    # cli-authority-verb-conformance W02/W05 in-flight: the logout/reset operator
+    # split and the schema-payload migration grew these past the default budget;
+    # pinned at present size pending the owning campaign's split pass.
+    "src/cadrumo/application/auth/_operator.py": 1450,  # SPLIT-CANDIDATE
+    "src/cadrumo/entrypoints/cli/_config_payloads.py": 1350,  # SPLIT-CANDIDATE
 }
 _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/cadrumo/application/modelo/_revision_persistence.py", "persist_filed_revision"): 192,  # SPLIT-CANDIDATE

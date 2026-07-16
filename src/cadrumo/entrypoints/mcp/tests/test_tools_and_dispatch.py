@@ -271,25 +271,37 @@ def test_ledger_import_provider_renders_as_a_json_enum() -> None:
     assert provider_property["enum"], "the recognised provider set must be non-empty"
 
 
-def test_config_reset_scope_renders_as_a_json_enum() -> None:
-    """The ``config.reset`` scope is a closed set, so its schema is an enum.
-
-    ``--scope`` cannot be typed as its ``ConfigResetScope`` enum directly because
-    the enum values are upper-case (``ALL``) while the CLI tokens are lower-case
-    (``all``); it therefore uses ``click_type=click.Choice(<lowercase tokens>)``.
-    Typer wraps that Choice in a ``FuncParamType`` whose own ``.choices`` is
-    ``None`` but whose ``.func`` carries the original Choice, so the input-schema
-    builder unwraps ``.func`` and surfaces the closed set as a JSON ``enum`` rather
-    than a bare string (``aeat-architecture-boundaries``: a closed value set must
-    surface its accepted values). Generic — no per-command special case.
-    """
-    from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES
-
+def test_config_reset_lifecycle_schemas_expose_only_start_status_and_resume() -> None:
+    """The MCP mirror follows the durable reset lifecycle without scope compatibility."""
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
-    scope_property = by_key["config.reset"].input_schema["properties"]["scope"]
-    assert scope_property["type"] == "string"
-    assert scope_property["enum"] == list(CONFIG_RESET_SCOPE_CLI_VALUES)
-    assert scope_property["enum"], "the recognised reset-scope set must be non-empty"
+    assert "config.reset" not in by_key
+    assert {
+        "config.reset.start",
+        "config.reset.status",
+        "config.reset.resume",
+    } <= set(by_key)
+
+    start = by_key["config.reset.start"].input_schema["properties"]
+    assert set(start) == {"yes", "override_retention", "reason"}
+    assert start["yes"]["type"] == "boolean"
+    assert start["override_retention"]["type"] == "boolean"
+    assert start["reason"]["type"] == "string"
+
+    status = by_key["config.reset.status"].input_schema["properties"]
+    assert set(status) == {"operation_id"}
+    assert status["operation_id"]["type"] == "string"
+
+    resume = by_key["config.reset.resume"].input_schema["properties"]
+    assert set(resume) == {
+        "operation_id",
+        "yes",
+        "override_retention",
+        "reason",
+    }
+    assert resume["operation_id"]["type"] == "string"
+    assert resume["yes"]["type"] == "boolean"
+    assert resume["override_retention"]["type"] == "boolean"
+    assert resume["reason"]["type"] == "string"
 
 
 def test_modelo_work_addressing_exposes_both_identifier_forms_as_optional() -> None:

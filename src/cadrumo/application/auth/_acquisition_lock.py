@@ -20,14 +20,13 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware
 from ...core.time import now as _utc_now
-from . import AuthProviderKind
 
 if TYPE_CHECKING:
     from ...core.config import Settings

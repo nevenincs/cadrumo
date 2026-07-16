@@ -42,7 +42,6 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         "adapters.auth.authenticator.errors.no_context_capture_storage",
         "adapters.auth.authenticator.errors.capture_requires_certificate",
         "adapters.auth.authenticator.errors.persisted_session_verification_failed",
-        "adapters.auth.authenticator.errors.context_marker_missing",
         # adapters.sede (declarations / playwright surface)
         "adapters.sede.errors.playwright_buscar_click_failed",
         "adapters.sede.errors.playwright_combobox_open_failed",

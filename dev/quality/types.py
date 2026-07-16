@@ -78,14 +78,6 @@ _IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = (
         "model2vec",
         "model2vec is the optional cadrumo[search] extra, not installed in the type-check env.",
     ),
-    _ExternalGap(
-        "adapters/outbound/google/tests/_drive_media_server.py",
-        "ty",
-        "unresolved-import",
-        "build_from_document",
-        "googleapiclient.build_from_document is real at runtime but absent from "
-        "google-api-python-client-stubs; ty ignores local stub overrides (pyright resolves it).",
-    ),
 )
 
 

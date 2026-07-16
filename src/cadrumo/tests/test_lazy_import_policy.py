@@ -255,24 +255,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.outbound.aeat.auth._authenticator", "core.auth_session_keys"),
             ImportEdge("adapters.outbound.aeat.auth._authenticator", "core.i18n"),
             ImportEdge("adapters.outbound.aeat.auth._authenticator", "core.redaction"),
-            ImportEdge(
-                "adapters.outbound.aeat.auth._certificate_backends._httpx_fallback",
-                "adapters.outbound.aeat.auth.certificate",
-            ),
-            ImportEdge(
-                "adapters.outbound.aeat.auth._certificate_backends._playwright_context",
-                "adapters.outbound.aeat.auth.certificate",
-            ),
             ImportEdge("adapters.outbound.aeat.auth._clave_movil", "core"),
             ImportEdge("adapters.outbound.aeat.auth._clave_movil", "core.auth_session_keys"),
-            ImportEdge(
-                "adapters.outbound.aeat.auth.certificate",
-                "adapters.outbound.aeat.auth._certificate_backends._httpx_fallback",
-            ),
-            ImportEdge(
-                "adapters.outbound.aeat.auth.certificate",
-                "adapters.outbound.aeat.auth._certificate_backends._playwright_context",
-            ),
             ImportEdge("adapters.outbound.aeat.browser._factory", "adapters.outbound.aeat.browser._errors"),
             ImportEdge("adapters.outbound.aeat.browser._factory", "core"),
             ImportEdge("adapters.outbound.aeat.browser.evasion", "core"),
@@ -798,7 +782,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 472  # net +1 from atomic_write deferral migrations; was 471.
+_ALLOWLIST_EDGE_CEILING: int = 468  # retired certificate backend modules removed four deferral edges.
 
 
 def _cadrumo_relative(dotted: str) -> str:

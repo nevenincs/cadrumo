@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from ......application.auth import AuthProviderDescription, AuthProviderKind
-from ......core import Period
+from ......core import AuthProviderDescription, AuthProviderKind, Period
 from ......core.errors import BaseSeverity
 from ......domain.submission import (
     ModeloDraftStatus,
@@ -192,7 +191,9 @@ class TestPreflightGates:
         assert raised.value.context["kind"] == "certificate"
         assert raised.value.context["configured"] is True
         assert raised.value.context["available"] is False
-        assert "configured but not ready" in str(raised.value.context["operator_impact"])
+        operator_impact = str(raised.value.context["operator_impact"])
+        assert operator_impact
+        assert "Test certificate" in operator_impact
 
     def test_gate_4_default_refuses_an_unconfigured_provider(self) -> None:
         """A live purpose (gate not skipped) still REFUSES with no auth configured.

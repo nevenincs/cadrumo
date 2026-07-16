@@ -40,6 +40,10 @@ class AuthConfigurationError(AuthError):
     """
 
 
+class AuthProviderCleanupError(AuthError):
+    """Raised when an auth provider retains browser resources after close."""
+
+
 class AuthValidationError(AuthError, ValueError):
     """Raised when authentication parameters or field values fail domain validation.
 

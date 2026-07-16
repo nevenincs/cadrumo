@@ -8,12 +8,22 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
-from typing import override
+from typing import TypeGuard, override
 from urllib.parse import urlparse
 
-from googleapiclient.discovery import build_from_document
+import httplib2
+from googleapiclient.discovery import build
 
 from .._document_link_resolver import _DriveService
+
+
+def _is_drive_service(value: object) -> TypeGuard[_DriveService]:
+    """Narrow a generated Drive resource to the production protocol it exercises."""
+    files = getattr(value, "files", None)
+    if not callable(files):
+        return False
+    files_resource = files()
+    return callable(getattr(files_resource, "get_media", None)) and callable(getattr(files_resource, "list", None))
 
 
 @dataclass(frozen=True)
@@ -43,14 +53,21 @@ def drive_media_endpoint(*, payload: bytes, status: int = 200) -> Iterator[Drive
     with ThreadingHTTPServer(("127.0.0.1", 0), DriveMediaRequestHandler) as server:
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
+        transport = httplib2.Http()
         try:
             root_url = f"http://127.0.0.1:{server.server_port}/"
-            service = build_from_document(
-                json.dumps(_drive_media_discovery_document(root_url=root_url)),
-                credentials=None,
+            service = build(
+                "drive",
+                "v3",
+                http=transport,
+                cache_discovery=False,
+                client_options={"api_endpoint": f"{root_url}drive/v3/"},
             )
+            if not _is_drive_service(service):
+                raise TypeError("generated Drive v3 resource does not satisfy the document resolver contract")
             yield DriveMediaEndpoint(service=service, requested_paths=requested_paths)
         finally:
+            transport.close()
             server.shutdown()
             thread.join(timeout=2)
 
@@ -94,101 +111,20 @@ def drive_files_list_endpoint(
     with ThreadingHTTPServer(("127.0.0.1", 0), DriveFilesListRequestHandler) as server:
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
+        transport = httplib2.Http()
         try:
             root_url = f"http://127.0.0.1:{server.server_port}/"
-            service = build_from_document(
-                json.dumps(_drive_files_list_discovery_document(root_url=root_url)),
-                credentials=None,
+            service = build(
+                "drive",
+                "v3",
+                http=transport,
+                cache_discovery=False,
+                client_options={"api_endpoint": f"{root_url}drive/v3/"},
             )
+            if not _is_drive_service(service):
+                raise TypeError("generated Drive v3 resource does not satisfy the document resolver contract")
             yield DriveFilesListEndpoint(service=service, requested_queries=requested_queries)
         finally:
+            transport.close()
             server.shutdown()
             thread.join(timeout=2)
-
-
-def _drive_media_discovery_document(*, root_url: str) -> dict[str, object]:
-    return {
-        "kind": "discovery#restDescription",
-        "discoveryVersion": "v1",
-        "id": "drive:v3",
-        "name": "drive",
-        "version": "v3",
-        "title": "Drive API",
-        "rootUrl": root_url,
-        "servicePath": "drive/v3/",
-        "baseUrl": f"{root_url}drive/v3/",
-        "basePath": "/drive/v3/",
-        "batchPath": "batch/drive/v3",
-        "schemas": {
-            "File": {
-                "id": "File",
-                "type": "object",
-            },
-        },
-        "resources": {
-            "files": {
-                "methods": {
-                    "get": {
-                        "id": "drive.files.get",
-                        "path": "files/{fileId}",
-                        "flatPath": "files/{fileId}",
-                        "httpMethod": "GET",
-                        "parameterOrder": ["fileId"],
-                        "parameters": {
-                            "fileId": {
-                                "type": "string",
-                                "required": True,
-                                "location": "path",
-                            },
-                        },
-                        "response": {"$ref": "File"},
-                        "supportsMediaDownload": True,
-                        "useMediaDownloadService": True,
-                        "scopes": ["https://www.googleapis.com/auth/drive.file"],
-                    },
-                },
-            },
-        },
-    }
-
-
-def _drive_files_list_discovery_document(*, root_url: str) -> dict[str, object]:
-    return {
-        "kind": "discovery#restDescription",
-        "discoveryVersion": "v1",
-        "id": "drive:v3",
-        "name": "drive",
-        "version": "v3",
-        "title": "Drive API",
-        "rootUrl": root_url,
-        "servicePath": "drive/v3/",
-        "baseUrl": f"{root_url}drive/v3/",
-        "basePath": "/drive/v3/",
-        "batchPath": "batch/drive/v3",
-        "schemas": {
-            "FileList": {
-                "id": "FileList",
-                "type": "object",
-            },
-        },
-        "resources": {
-            "files": {
-                "methods": {
-                    "list": {
-                        "id": "drive.files.list",
-                        "path": "files",
-                        "flatPath": "files",
-                        "httpMethod": "GET",
-                        "parameters": {
-                            "q": {"type": "string", "location": "query"},
-                            "fields": {"type": "string", "location": "query"},
-                            "pageSize": {"type": "integer", "location": "query"},
-                            "pageToken": {"type": "string", "location": "query"},
-                        },
-                        "response": {"$ref": "FileList"},
-                        "scopes": ["https://www.googleapis.com/auth/drive.file"],
-                    },
-                },
-            },
-        },
-    }

@@ -18,10 +18,10 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...application.auth import describe_provider_operator_impact
 from ...core import Period
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
+from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ...core.time import today_madrid
@@ -1055,13 +1055,13 @@ class WorkflowEngine:
                 ) from exc
             cert_details = {
                 "provider_kind": certificate.kind.value,
-                "provider_operator_impact": describe_provider_operator_impact(certificate),
+                "provider_operator_impact": describe_auth_provider_operator_impact(certificate),
             }
             if not certificate.configured or not certificate.available:
                 provider_summary = _summary_text(
                     f"Auth provider unavailable: kind={certificate.kind.value} "
                     f"configured={certificate.configured} available={certificate.available}. "
-                    f"{describe_provider_operator_impact(certificate)}",
+                    f"{describe_auth_provider_operator_impact(certificate)}",
                 )
                 steps.append(
                     WorkflowStep(

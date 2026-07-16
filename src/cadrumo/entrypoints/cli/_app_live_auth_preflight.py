@@ -65,7 +65,6 @@ def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ..
         _metric_line("auth_nie_soporte", "present" if report.nie_soporte_configured else "missing"),
         _metric_line("auth_certificate_path", "present" if report.certificate_path_configured else "missing"),
         _metric_line("auth_certificate_file", "present" if report.certificate_file_present else "missing"),
-        _metric_line("auth_certificate_backend", report.certificate_backend),
         _metric_line("auth_persisted_session", "present" if report.persisted_session_present else "missing"),
         _metric_line("auth_persisted_session_expired", report.persisted_session_expired),
         _metric_line("auth_persisted_session_state", report.persisted_session_state),

@@ -36,6 +36,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core._amendment_kind_regime
+   cadrumo.core._auth_provider
    cadrumo.core._bucket_pointer
    cadrumo.core._bucket_pointer_io
    cadrumo.core._capabilities

@@ -91,7 +91,6 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                         "certificate_path_configured": True,
                         "certificate_password_configured": False,
                         "certificate_file_present": False,
-                        "certificate_backend": "playwright_context",
                         "certificate_path_fingerprint": "sha256:certpath",
                     },
                     "html": "<html><body>newer captured page with sensitive form fields</body></html>",
@@ -122,7 +121,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].identity_alignment == "mismatch"
         assert listed.rows[0].nie_soporte_configured is True
         assert listed.rows[0].certificate_path_configured is True
-        assert listed.rows[0].certificate_backend == "playwright_context"
+        assert "certificate_backend" not in listed.rows[0].model_dump()
         assert listed.rows[0].url.startswith(
             f"{external.domains.www12.removeprefix('https://')}{external.clave_movil.autentica_dni_nie_contraste_path}",
         )
@@ -141,6 +140,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert detail.clave_identity_fingerprint == "sha256:clavetax"
         assert detail.nie_soporte_fingerprint == "sha256:support"
         assert detail.certificate_path_fingerprint == "sha256:certpath"
+        assert "certificate_backend" not in detail.model_dump()
         assert detail.operator_report_commands == (
             "aeat config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
             "aeat config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",

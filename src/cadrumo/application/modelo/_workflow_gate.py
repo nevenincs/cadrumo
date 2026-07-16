@@ -47,8 +47,8 @@ from functools import lru_cache
 from pathlib import Path
 
 from ...adapters.persistence.profile.submission import SubmissionRepository
-from ...application.auth import AuthProviderKind, select_provider
-from ...core import Period
+from ...application.auth import select_provider
+from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
@@ -279,7 +279,7 @@ def build_revision_workflow_engine(
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
     provider_kind = (
-        AuthProviderKind(cfg.cadrumo_auth_provider.value)
+        cfg.cadrumo_auth_provider
         if cfg.cadrumo_auth_provider is not None
         else AuthProviderKind.CERTIFICATE
     )

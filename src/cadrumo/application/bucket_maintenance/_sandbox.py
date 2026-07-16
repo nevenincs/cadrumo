@@ -532,6 +532,8 @@ def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
     outcome = BucketMaintenanceService().delete(
         DeleteBucketCommand(bucket_id=command.bucket_id, confirmed=command.confirmed),
     )
+    if outcome.previous_label is None:
+        raise SandboxNotFoundError(command.bucket_id)
     return DiscardSandboxResult(
         bucket_id=outcome.bucket_id,
         previous_label=outcome.previous_label,

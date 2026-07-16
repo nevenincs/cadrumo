@@ -12,8 +12,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.auth import AeatSession, ClaveMovilSessionDetail
 from ....adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
-from ....application.auth import AuthProviderDescription, AuthProviderKind
-from ....core import Period
+from ....core import AuthProviderDescription, AuthProviderKind, Period
 from ....core.config import Settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import (

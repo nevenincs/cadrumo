@@ -43,8 +43,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period, RefundElection, ResultDisposition
-from ....core.config import AuthProviderKindSetting, Settings
+from ....core import AuthProviderKind, Period, RefundElection, ResultDisposition
+from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RelationId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
@@ -268,7 +268,7 @@ def _calculate_negative_period(
             activity_start_date=_activity_start_date_for_period(period_token),
         ),
         settings=Settings(
-            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         ),
         work_unit_repository=work_repo,
@@ -315,7 +315,7 @@ def _file_period(
         filing_repository=filing_repo,
         bucket_event_repository=event_repo,
         settings=Settings(
-            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         ),
         clock=_file_clock(work_unit.period),

@@ -33,7 +33,6 @@ from .....application.auth import resolve_certificate_source_secret
 from .....application.user_profile import profile_storage_session
 from .....application.workflow import workflow_state_repository
 from .....core import resolve_active_bucket_id
-from .....core.config import override_settings
 from .....domain.buckets import BucketEvent, BucketEventType
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -322,8 +321,25 @@ def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) ->
                     str(expiring_cert),
                 ],
             )
-            with override_settings(cadrumo_certificate_password_secret=_CERT_SECRET):
-                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", _CERT_SECRET],
+            )
+            invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "apoderado-acme",
+                    "--secret",
+                    _CERT_SECRET,
+                ],
+            )
+            checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
         assert checked.exit_code == 0, f"check failed: {checked.output}"
         assert "personal" in checked.output
@@ -350,8 +366,21 @@ def test_certificate_check_reports_expired_certificate(tmp_path: Path) -> None:
                 root_app,
                 ["config", "auth", "certificate", "register", "--name", "expired-cert", "--file", str(expired_cert)],
             )
-            with override_settings(cadrumo_certificate_password_secret=_CERT_SECRET):
-                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+            invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "expired-cert",
+                    "--secret",
+                    _CERT_SECRET,
+                ],
+            )
+            checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
         assert checked.exit_code == 0, f"check failed: {checked.output}"
         assert "\texpired\t" in checked.output
@@ -376,9 +405,9 @@ def test_certificate_check_with_no_registered_sources_reports_none(tmp_path: Pat
 def _isolated_secret_store(tmp_path: Path):
     """Inject a deterministic :class:`SecretStore` for the secret-verb CLI tests.
 
-    ``get_secret_store()`` is a process-wide singleton; overriding it for
-    the duration of each test keeps the CLI verbs' secret writes isolated
-    from any other test in the same pytest process.
+    ``override_secret_store`` installs an explicit process-wide test store for
+    the duration of each test, keeping CLI secret writes isolated from any
+    other test in the same pytest process.
     """
     provider = EphemeralMasterKeyProvider()
     blob_store = EncryptedBlobStore(root_dir=tmp_path / "cli-secret-blobs", master_key_provider=provider)

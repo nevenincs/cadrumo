@@ -84,10 +84,7 @@ _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 # mandatory companions embedded beneath ``${CLAUDE_PLUGIN_ROOT}``. Neither path
 # resolves an ambient product executable. The plugin supplies its release
 # version through ``CADRUMO_MCP_REQUIRED_VERSION`` so a stale, incomplete, or
-# mixed installed cohort refuses before opening the protocol transport. The active persona is
-# wired from the ``userConfig`` persona option through the documented
-# ``${user_config.persona}`` interpolation; the server validates and refuses an
-# unknown persona (server-side validation is the refusal surface).
+# mixed installed cohort refuses before opening the protocol transport.
 _MCP_CONFIG = ".mcp.json"
 _MCP_SERVER_NAME = PRODUCT_IDENTITY.mcp_server
 _MCP_LAUNCHER = "uvx"

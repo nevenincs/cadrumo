@@ -33,11 +33,9 @@ adapters:
           sessio valida.
         capture_requires_active_session: capture_storage_state() requereix la sessió
           autenticada activa.
-        capture_requires_certificate: capture_storage_state() requereix una sessió
-          amb certificat i metadades de handshake.
+        capture_requires_certificate: capture_storage_state() requereix una sessió activa
+          amb certificat i metadades del recurs protegit.
         closing: L'autenticador s'està tancant; no es permeten noves operacions verify_login.
-        context_marker_missing: El context del navegador no està etiquetat amb el
-          marcador de certificat esperat.
         metadata_parse_failed: Les metadades persistides no han produit un model analitzat.
         no_active_context: No hi ha context de navegador actiu; crideu authenticate()
           primer.
@@ -500,22 +498,22 @@ application:
         profile_tax_id_missing_next_action: Edita el perfil actiu amb 'aeat config
           profile edit NOM --tax-id DNI/NIE' abans d'autenticar.
       errors:
-        cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
-          per a aquest perfil. Reprèn aquesta operació abans de canviar la configuració
-          d'autenticació.
-        certificate_secret_mutation_in_progress: Encara s'està recuperant un canvi
-          del secret de certificat per a aquest perfil. Torna a provar la mateixa
-          ordre de secret abans de canviar la configuració d'autenticació.
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
           --file RUTA` amb la ruta al teu paquet PKCS#12 (.p12/.pfx).
         certificate_file_unresolved: La ruta del certificat '%{certificate_path}'
           no resol a un fitxer existent. Executa `aeat config auth configure --provider
           certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
+        certificate_secret_mutation_in_progress: Encara s'està recuperant un canvi
+          del secret de certificat per a aquest perfil. Torna a provar la mateixa
+          ordre de secret abans de canviar la configuració d'autenticació.
         certificate_source_not_found: L'origen de certificat '%{name}' no està registrat.
           Executeu `aeat config auth certificate list` per veure els orígens registrats,
           o `aeat config auth certificate register --name %{name} --file RUTA` per
           registrar-lo.
+        cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
+          per a aquest perfil. Reprèn aquesta operació abans de canviar la configuració
+          d'autenticació.
         dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
           resol a un bucket de perfil registrat. Executa aeat config profile list
           per inspeccionar els perfils registrats i despres aeat config switch NAME
@@ -596,6 +594,8 @@ application:
           de llegir dades AEAT.
         profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
           el perfil actiu tingui identity.tax_id.
+        provider_close_failed: No s'ha pogut tancar de manera segura la sessió del navegador
+          AEAT; repeteix l'autenticació abans de llegir dades AEAT.
         sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
           auth test` abans de llegir dades AEAT.
         session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
@@ -3535,15 +3535,22 @@ cli:
         interrompuda
       yes_help: Confirmar la reparació.
     reset:
-      help: Reiniciar àmbits de configuració introduïts per l'operador
-      invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
-      requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
-      scope_help: 'Àmbit a reiniciar. profile: esborra tots els perfils (manifests,
-        DEKs, declaracions, revisions de llibre major i factures). auth: neteja la
-        sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena les
-        files d''objectes segurs il·legibles a tots els espais de noms. all: aplica
-        profile, auth i data junts.'
-      yes_help: Confirmar explícitament l'operació de reinici
+      help: Inicia, consulta o reprèn el reinici irreversible de tots els perfils
+        emmagatzemats localment.
+      operation_id_help: Selecciona una operació de reinici exacta pel seu ID; omet-lo
+        per seleccionar automàticament l'operació aplicable.
+      override_retention_help: Anul·la una pausa per conservació legal després de
+        revisar les teves obligacions; requereix un valor no buit per a --reason.
+      reason_help: Indica el motiu obligatori per anul·lar una pausa per conservació
+        legal.
+      requires_yes: Fes servir --yes per confirmar aquest reinici irreversible.
+      resume_help: Reprèn una operació de reinici incompleta.
+      start_help: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
+        localment.
+      status_help: Mostra l'estat d'una operació de reinici sense modificar dades
+        locals.
+      yes_help: Confirma la supressió irreversible de tots els perfils emmagatzemats
+        localment.
     set:
       help: Assignar un valor a una clau de configuració
       key_help: Clau a assignar (ex. iva.regime)
@@ -5073,8 +5080,6 @@ errors:
     auth_auth_certificate: S'ha produït un error en l'autenticació amb certificat.
     auth_auth_certificate_expired: El certificat digital ha caducat. Renova el certificat
       per poder autenticar-te.
-    auth_auth_certificate_handshake: L'entrada de la negociació TLS no és vàlida.
-      Revisa l'URL indicat.
     auth_auth_certificate_load: No s'han pogut llegir les dades del certificat PKCS#12.
       Comprova que el fitxer no estigui malmès.
     auth_auth_certificate_nif_parse: No s'ha pogut extreure cap NIF ni NIE del titular
@@ -5089,6 +5094,8 @@ errors:
       Cl@ve Móvil o són incorrectes. Revisa la configuració de Cl@ve.
     auth_auth_configuration: Falten ajustos d'autenticació obligatoris o són incorrectes.
       Revisa la configuració d'autenticació.
+    auth_auth_provider_cleanup: El proveïdor d'autenticació no ha pogut alliberar tots
+      els recursos del navegador. Torna a provar el tancament abans d'iniciar una altra sessió.
     auth_auth_validation: Els paràmetres d'autenticació no han superat la validació.
       Corregeix els valors indicats i torna-ho a provar.
     auth_former_product_session_state: Cadrumo ha detectat estat de sessió d'un producte

@@ -12,6 +12,7 @@ on the semantic stack at import time.
 
 from __future__ import annotations
 
+import importlib
 import inspect
 from pathlib import Path
 from typing import Any
@@ -41,11 +42,9 @@ def load_static_model(model_id: str, *, revision: str, cache_dir: Path | None = 
     """
     try:
         # IMPORT-RATIONALE-OPTIONAL-SEARCH-EXTRA: model2vec rides the optional
-        # cadrumo[search] extra; a bare-core install lacks it, so the import is
-        # lazy and its typing is unresolved until the extra is present.
-        from model2vec import (
-            StaticModel,  # type: ignore[import-not-found, unused-ignore]  # TYPE-IGNORE-RATIONALE-optextra: model2vec is an optional extra without shipped type stubs
-        )
+        # cadrumo[search] extra; importlib keeps the dependency lazy so a
+        # bare-core install reaches the typed refusal below.
+        model2vec = importlib.import_module("model2vec")
     except ImportError as exc:
         raise CorpusSearchDependencyError(
             "the corpus-search semantic stack (model2vec) is not installed",
@@ -53,12 +52,13 @@ def load_static_model(model_id: str, *, revision: str, cache_dir: Path | None = 
             suggestion=SEARCH_EXTRA_HINT,
         ) from exc
     kwargs: dict[str, object] = {}
-    accepted = inspect.signature(StaticModel.from_pretrained).parameters
+    static_model = model2vec.StaticModel
+    accepted = inspect.signature(static_model.from_pretrained).parameters
     if "revision" in accepted:
         kwargs["revision"] = revision
     if cache_dir is not None and "cache_dir" in accepted:
         kwargs["cache_dir"] = str(cache_dir)
-    return StaticModel.from_pretrained(model_id, **kwargs)
+    return static_model.from_pretrained(model_id, **kwargs)
 
 
 # KWARGS-ANY-RATIONALE-cli: model is an untyped model2vec StaticModel optional-extra object

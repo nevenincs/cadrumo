@@ -75,7 +75,6 @@ class AuthDiagnosticSummary(BaseModel):
     certificate_path_configured: bool | None = None
     certificate_password_configured: bool | None = None
     certificate_file_present: bool | None = None
-    certificate_backend: str = ""
     phone_state: str = ""
     phone_state_reported_at: datetime | None = None
 
@@ -292,7 +291,6 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
         certificate_path_configured=_optional_bool(auth_attempt.get("certificate_path_configured")),
         certificate_password_configured=_optional_bool(auth_attempt.get("certificate_password_configured")),
         certificate_file_present=_optional_bool(auth_attempt.get("certificate_file_present")),
-        certificate_backend=str(auth_attempt.get("certificate_backend") or ""),
         phone_state=str(operator_report.get("phone_state") or payload.phone_state or ""),
         phone_state_reported_at=phone_state_reported_at,
     )

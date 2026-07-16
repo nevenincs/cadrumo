@@ -283,7 +283,7 @@ class TestAuthenticatorDescribeNarrowing:
         from pydantic import SecretStr
 
         from ..adapters.outbound.aeat.auth import AeatAuthenticator, AuthValidationError, CertificateHealthCheck
-        from ..adapters.outbound.aeat.auth.certificate import CertificateBackend
+        from ..application.auth_credentials import unnamed_certificate_credentials
         from ..core.config import Settings
 
         cert_path = tmp_path / "cert.p12"
@@ -303,13 +303,16 @@ class TestAuthenticatorDescribeNarrowing:
             password: SecretStr,
             warn_days: int,
             critical_days: int,
-            backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
             friendly_name: str | None = None,
             now: datetime | None = None,
         ) -> NoReturn:
             raise _UnexpectedError("boom")
 
-        auth = AeatAuthenticator(settings, certificate_health_check=cast(CertificateHealthCheck, _raise_unexpected))
+        auth = AeatAuthenticator(
+            settings,
+            credentials=unnamed_certificate_credentials(settings),
+            certificate_health_check=cast(CertificateHealthCheck, _raise_unexpected),
+        )
 
         with pytest.raises(AuthValidationError) as exc_info:
             auth.describe()
@@ -328,7 +331,8 @@ class TestAuthenticatorDescribeNarrowing:
         from pydantic import SecretStr
 
         from ..adapters.outbound.aeat.auth import AeatAuthenticator, CertificateHealthCheck
-        from ..adapters.outbound.aeat.auth.certificate import CertificateBackend, CertificateError
+        from ..adapters.outbound.aeat.auth.certificate import CertificateError
+        from ..application.auth_credentials import unnamed_certificate_credentials
         from ..core.config import Settings
 
         cert_path = tmp_path / "cert.p12"
@@ -345,7 +349,6 @@ class TestAuthenticatorDescribeNarrowing:
             password: SecretStr,
             warn_days: int,
             critical_days: int,
-            backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
             friendly_name: str | None = None,
             now: datetime | None = None,
         ) -> NoReturn:
@@ -353,6 +356,7 @@ class TestAuthenticatorDescribeNarrowing:
 
         auth = AeatAuthenticator(
             settings,
+            credentials=unnamed_certificate_credentials(settings),
             certificate_health_check=cast(CertificateHealthCheck, _raise_certificate_error),
         )
         desc = auth.describe()

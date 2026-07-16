@@ -290,7 +290,6 @@ ignore_imports =
     # path-safety utility import - a plain storage helper with no port to invert.
     cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage
-    cadrumo.application.auth -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.auth._apoderado -> cadrumo.adapters.persistence.storage
     cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.**
     cadrumo.application.auth._diagnostics -> cadrumo.adapters.**

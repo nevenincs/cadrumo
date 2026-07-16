@@ -15,8 +15,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from ......adapters.persistence.profile.submission import SubmissionRepository
-from ......application.auth import AuthProviderDescription, AuthProviderKind
-from ......core import Period
+from ......core import AuthProviderDescription, AuthProviderKind, Period
 from ......core.access_gate import AeatAccessGate, LiveSubmitForbiddenError
 from ......core.config import Settings
 from ......domain.submission import (

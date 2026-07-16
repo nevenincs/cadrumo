@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.secure_sql import isolated_runtime_profile
-from ...auth import AuthState
+from .. import AuthState
 from .._models import WorkflowState
 from .._persistence import WorkflowStateRepository
 

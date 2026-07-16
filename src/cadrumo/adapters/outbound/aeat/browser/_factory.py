@@ -91,7 +91,8 @@ class DefaultBrowserSession:
         self._playwright = playwright
         self._session = session
         self._close_lock = asyncio.Lock()
-        self._closed = False
+        self._session_closed = False
+        self._playwright_stopped = False
 
     @property
     def profile(self) -> Profile:
@@ -128,17 +129,23 @@ class DefaultBrowserSession:
     async def close(self) -> None:
         """Close the session and stop the Playwright runtime.
 
-        Idempotent: subsequent calls are no-ops. ``BrowserSession.close()``
-        runs first; ``Playwright.stop()`` runs in the ``finally`` block so
-        Playwright resources are released even when the session teardown
-        raises.
+        Idempotent after both resources close. ``BrowserSession.close()`` runs
+        first, then ``Playwright.stop()``. Each successful teardown is recorded
+        independently so a later call retries only the resource whose previous
+        close failed.
         """
         async with self._close_lock:
-            if self._closed:
+            if self._session_closed and self._playwright_stopped:
                 return
-            try:
-                await self._session.close()
-            finally:
+            session_error: BaseException | None = None
+            if not self._session_closed:
+                try:
+                    await self._session.close()
+                except BaseException as exc:
+                    session_error = exc
+                else:
+                    self._session_closed = True
+            if not self._playwright_stopped:
                 try:
                     await self._playwright.stop()
                 except Exception as exc:  # Playwright stop() exception surface is undocumented; teardown must not abort
@@ -148,7 +155,13 @@ class DefaultBrowserSession:
                         exc=exc,
                         warning=True,
                     )
-                self._closed = True
+                else:
+                    self._playwright_stopped = True
+                    # A stopped Playwright runtime has reaped every browser it
+                    # owns even when Browser.close() raised first.
+                    self._session_closed = True
+            if session_error is not None:
+                raise session_error
 
 
 async def default_browser_session_factory(settings: Settings) -> DefaultBrowserSession:
@@ -160,10 +173,10 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     the active bucket when one exists and falls back to a diagnostic sentinel so
     browser connectivity probes can run before profile setup is complete.
 
-    Auth providers pass their own kind-namespaced storage-state paths to
-    :meth:`BrowserSession.create_context`; the profile storage path built here is
-    only the fallback for direct callers. Call ``await session.close()`` when you
-    are done. Auth providers already do that in their ``close()`` path.
+    Auth providers pass kind-namespaced encrypted storage state explicitly to
+    :meth:`BrowserSession.create_context`; the profile path is never loaded
+    implicitly. Call ``await session.close()`` when you are done. Auth providers
+    already do that in their ``close()`` path.
     """
     from .....core import resolve_active_bucket_id
 
@@ -174,13 +187,8 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     # the Profile model satisfied without pretending to be a real
     # profile.
     bucket_id = resolve_active_bucket_id() or _DIAGNOSTIC_PROFILE_BUCKET_ID
-    # Profile.storage_state_path is superseded by every auth-provider
-    # passing an explicit kind-namespaced storage_state_path to
-    # BrowserSession.create_context(). The value here is a fallback
-    # for hypothetical future callers that do not override it; no
-    # shipping provider currently relies on it. The storage-state
-    # filename is keyed by the active bucket UUID, consistent with the
-    # other token/lock filename call sites.
+    # Profile.storage_state_path identifies this browser profile but is never
+    # loaded implicitly. Auth providers pass encrypted storage state explicitly.
     storage_state_path = settings.cadrumo_token_dir / f"{bucket_id}-storage.json"
     profile = Profile(name=bucket_id, storage_state_path=storage_state_path)
     return await create_browser_session(settings, profile)

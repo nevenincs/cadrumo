@@ -62,6 +62,11 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # an active-profile override that the application correctly refuses.
     "config switch",
     "config profile logout",
+    # Durable reset owns the pointer transaction, target locks, target-scoped
+    # auth sessions, and external journal itself. Root bootstrap must not open
+    # an active bucket session or manufacture an active-profile override before
+    # start/resume; status reads only the external journal.
+    "config reset",
     "config rekey",
     "config recover",
     "config show-recovery",

@@ -1,7 +1,7 @@
-cadrumo.application.auth._models module
+cadrumo.core.i18n._auth_provider module
 =======================================
 
-.. automodule:: cadrumo.application.auth._models
+.. automodule:: cadrumo.core.i18n._auth_provider
    :members:
    :show-inheritance:
    :ignore-module-all:

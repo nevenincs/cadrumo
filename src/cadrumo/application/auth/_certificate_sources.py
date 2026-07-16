@@ -4,13 +4,13 @@ A gestor managing several taxpayers typically holds several PKCS#12
 certificates — their own personal certificate plus one apoderado
 certificate per represented entity. Before this module, the certificate
 auth provider carried exactly one certificate path
-(:attr:`~application.auth.AuthState.certificate_path`), configured through
+(:attr:`~application.workflow.AuthState.certificate_path`), configured through
 ``aeat config auth configure --provider certificate --file PATH``: adopting
 a different certificate meant re-running that command and losing track of
 the previous path.
 
 This module adds a named registry
-(:attr:`~application.auth.AuthState.certificate_sources`) on top of the existing
+(:attr:`~application.workflow.AuthState.certificate_sources`) on top of the existing
 single-path field:
 :func:`~application.auth._certificate_sources.register_certificate_source` adds
 or re-points a named source,
@@ -29,7 +29,7 @@ backends, and service-account impersonation UX are explicitly out of scope
 for this module.
 
 See Also:
-    :class:`~application.auth.AuthState`
+    :class:`~application.workflow.AuthState`
         Persisted local auth selection embedded in workflow state; carries
         the ``certificate_sources`` registry and ``certificate_path``
         mirror this module maintains.
@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.time import now
-from ._models import AuthState, CertificateSourceRecord
+from .._workflow_auth_models import AuthState, CertificateSourceRecord
 
 if TYPE_CHECKING:
     from ..workflow import WorkflowState
@@ -82,8 +82,10 @@ def register_certificate_source(
     ``certificate_path``/``friendly_name`` and refreshes
     ``registered_at`` rather than erroring — re-registration is the
     supported way to point an existing name at a renewed certificate
-    file. Registering a source never changes which source is active;
-    call
+    file. Re-registering the active name also refreshes the compatibility
+    ``certificate_path`` mirror so state projection and the active-source
+    resolver cannot disagree. Registering a source never changes which source
+    is active; call
     :func:`~application.auth._certificate_sources.select_certificate_source`
     explicitly to activate it.
 
@@ -101,17 +103,21 @@ def register_certificate_source(
     )
     sources = dict(auth.certificate_sources)
     sources[normalized_name] = record
-    return _with_auth_state(state, auth.model_copy(update={"certificate_sources": sources}))
+    updates: dict[str, object] = {"certificate_sources": sources}
+    if auth.active_certificate_source == normalized_name:
+        updates["certificate_path"] = record.certificate_path
+        updates["configured_at"] = record.registered_at
+    return _with_auth_state(state, auth.model_copy(update=updates))
 
 
 def list_certificate_sources(state: WorkflowState) -> tuple[CertificateSourceRecord, ...]:
-    """Return every registered :class:`~application.auth.CertificateSourceRecord`."""
+    """Return every registered :class:`~application.workflow.CertificateSourceRecord`."""
     auth = _auth_state(state)
     return tuple(sorted(auth.certificate_sources.values(), key=lambda record: record.name))
 
 
 def active_certificate_source(state: WorkflowState) -> CertificateSourceRecord | None:
-    """Return the active :class:`~application.auth.CertificateSourceRecord`, if any."""
+    """Return the active :class:`~application.workflow.CertificateSourceRecord`, if any."""
     auth = _auth_state(state)
     if auth.active_certificate_source is None:
         return None

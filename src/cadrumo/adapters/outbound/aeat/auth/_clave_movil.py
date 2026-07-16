@@ -46,6 +46,7 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
+from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
@@ -64,6 +65,7 @@ from ._authenticator import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
+from ._browser_lifecycle import close_owned_browser_context, close_owned_browser_session
 from ._clave_movil_metadata import ClaveMovilSessionMetadata
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_support import (
@@ -89,10 +91,8 @@ from ._clave_movil_support import (
 from ._clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from ._errors import AeatLoginAssertionError, AuthError
+from ._errors import AeatLoginAssertionError, AuthError, AuthProviderCleanupError
 from ._providers import (
-    AuthProviderDescription,
-    AuthProviderKind,
     ClaveMovilLoginAssertionDetail,
     ClaveMovilSessionDetail,
 )
@@ -103,7 +103,9 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().cadrumo_browser_navigation_timeout_ms
+_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
+    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+)
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
@@ -145,7 +147,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     async def authenticate(
         self,
         *,
-        browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
         """Run the Cl@ve Móvil login flow and return an :class:`AeatSession`.
@@ -163,13 +164,17 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     "ClaveMovilAuthProvider already has an active session; call close() before authenticating again",
                     translated_message="adapters.auth.clave_movil.errors.already_active",
                 )
+            if self._context is not None or self._browser_session is not None:
+                raise AuthProviderCleanupError(
+                    "ClaveMovilAuthProvider retained browser resources after close",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
             dni_nie = self._require_identity()
             resume_path = self._storage_state_path()
             if _session_store.exists(resume_path):
                 try:
                     return await self._resume_locked(
                         resume_path,
-                        browser_session=browser_session,
                         target_url=target_url,
                     )
                 except AeatLoginAssertionError as exc:
@@ -182,14 +187,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             return await self._fresh_login_locked(
                 dni_nie=dni_nie,
                 storage_state_path=resume_path,
-                browser_session=browser_session,
                 target_url=target_url,
             )
 
     async def probe_persisted_session(
         self,
         *,
-        browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> tuple[AeatSession, AeatLoginAssertion]:
         """Probe the encrypted persisted session without side effects.
@@ -209,6 +212,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 raise AeatLoginAssertionError(
                     "ClaveMovilAuthProvider already has an active session; call close() first",
                 )
+            if self._context is not None or self._browser_session is not None:
+                raise AuthProviderCleanupError(
+                    "ClaveMovilAuthProvider retained browser resources after close",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
             storage_state_path = self._storage_state_path()
             if not _session_store.exists(storage_state_path):
                 raise AeatLoginAssertionError(
@@ -224,7 +232,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     translated_message="adapters.auth.clave_movil.errors.session_expired",
                 )
 
-            session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+            session_like = await self._resolve_browser_session()
             context: BrowserContextLike | None = None
             try:
                 context = await session_like.create_context(storage_state=persisted.storage_state)
@@ -293,19 +301,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 )
                 return session, assertion
             except Exception:  # cleanup on verify error then re-raise; Playwright+AeatError undocumented
-                if context is not None:
-                    try:
-                        await self._close_context(context, reason="verify cleanup")
-                    except Exception as _exc:
-                        log.debug(
-                            "ClaveMovilAuthProvider: context.close in verify cleanup suppressed: %s",
-                            _exc,
-                            exc_info=True,
-                        )
-                if owns_session:
-                    await self._close_browser_session(session_like)
-                self._browser_session = None
-                self._context = None
+                context_closed = await self._close_context(context, reason="verify cleanup")
+                closed = await self._close_browser_session(session_like)
+                self._browser_session = None if closed else session_like
+                self._context = None if context_closed else context
                 self._active_session = None
                 raise
 
@@ -454,10 +453,16 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     async def close(self) -> None:
         """Tear down any retained :class:`BrowserContextLike` and browser session."""
         async with self._lock:
-            await self._drop_context()
-            await self._close_browser_session(self._browser_session)
-            self._browser_session = None
+            context_closed = await self._drop_context()
+            browser_session_closed = await self._close_browser_session(self._browser_session)
+            if browser_session_closed:
+                self._browser_session = None
             self._active_session = None
+        if not context_closed or not browser_session_closed:
+            raise AuthProviderCleanupError(
+                "ClaveMovilAuthProvider retained browser resources after close",
+                translated_message="errors.auth.auth_auth_provider_cleanup",
+            )
 
     # ── Identity + target helpers ───────────────────────────────────────────
 
@@ -549,7 +554,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         auth_route = (
             "clave_movil_non_qr_request" if self._settings.cadrumo_clave_prefer_non_qr else "clave_movil_qr_request"
         )
-        certificate_path = self._settings.cadrumo_certificate_path
         context: dict[str, object] = {
             "auth_mode": auth_mode,
             "auth_route": auth_route,
@@ -565,13 +569,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             "prefer_non_qr": self._settings.cadrumo_clave_prefer_non_qr,
             "headless": self._settings.cadrumo_browser_headless,
             "timeout_ms": self._settings.cadrumo_clave_movil_timeout_ms,
-            "certificate_path_configured": certificate_path is not None,
-            "certificate_password_configured": self._settings.cadrumo_certificate_password_secret is not None,
-            "certificate_backend": self._settings.cadrumo_certificate_backend.value,
-            "certificate_file_present": bool(
-                certificate_path is not None and certificate_path.is_file(),
-            ),
-            "certificate_path_fingerprint": _diagnostic_fingerprint(certificate_path),
         }
         context.update(self._active_profile_diagnostic_context(identity))
         return context
@@ -656,72 +653,37 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
-    async def _resolve_browser_session(
-        self,
-        *,
-        browser_session: BrowserSessionLike | None,
-    ) -> tuple[BrowserSessionLike, bool]:
-        if browser_session is not None:
-            return browser_session, False
+    async def _resolve_browser_session(self) -> BrowserSessionLike:
         if self._browser_session_factory is None:
             raise AeatLoginAssertionError(
                 "ClaveMovilAuthProvider was constructed without a browser "
                 "session factory; pass one via select_provider(..., "
-                "browser_session_factory=...) or provide a live "
-                "BrowserSessionLike to authenticate().",
+                "browser_session_factory=...).",
             )
-        session = await self._browser_session_factory(self._settings)
-        return session, True
+        return await self._browser_session_factory(self._settings)
 
-    async def _drop_context(self) -> None:
+    async def _drop_context(self) -> bool:
         context = self._context
-        self._context = None
-        if context is None:
-            return
-        await self._close_context(context, reason="_drop_context")
+        closed = await self._close_context(context, reason="_drop_context")
+        if closed:
+            self._context = None
+        return closed
 
-    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> None:
-        if context is None:
-            return
-        try:
-            await asyncio.wait_for(
-                context.close(),
-                timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
-            )
-        except TimeoutError:
-            log.warning(
-                "ClaveMovilAuthProvider: context.close in %s exceeded %d ms",
-                reason,
-                self._settings.cadrumo_browser_close_timeout_ms,
-            )
-        except Exception as _exc:
-            log.debug(
-                "ClaveMovilAuthProvider: context.close in %s suppressed: %s",
-                reason,
-                _exc,
-                exc_info=True,
-            )
+    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> bool:
+        return await close_owned_browser_context(
+            context,
+            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            logger=log,
+            owner=f"ClaveMovilAuthProvider:{reason}",
+        )
 
-    async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
-        if session is None:
-            return
-        close = getattr(session, "close", None)
-        if not callable(close):
-            return
-        try:
-            result = close()
-            if asyncio.iscoroutine(result):
-                await asyncio.wait_for(
-                    result,
-                    timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
-                )
-        except TimeoutError:
-            log.warning(
-                "ClaveMovilAuthProvider: browser session close exceeded %d ms",
-                self._settings.cadrumo_browser_close_timeout_ms,
-            )
-        except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
-            log.warning("ClaveMovilAuthProvider: browser session close failed", exc_info=True)
+    async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
+        return await close_owned_browser_session(
+            session,
+            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            logger=log,
+            owner="ClaveMovilAuthProvider",
+        )
 
     # ── Encrypted session state ────────────────────────────────────────────
 
@@ -800,7 +762,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         *,
         dni_nie: str,
         storage_state_path: Path,
-        browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
         target = target_url or self._default_target_url()
@@ -808,7 +769,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         selector_url = self._selector_url(target_path)
         attempt_context = self._attempt_context()
 
-        session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+        session_like = await self._resolve_browser_session()
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
@@ -912,17 +873,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
                 except Exception as _exc:
                     log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
-            if context is not None:
-                try:
-                    await self._close_context(context, reason="fresh-login cleanup")
-                except Exception as _exc:
-                    log.debug(
-                        "ClaveMovilAuthProvider: context.close in fresh-login cleanup suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
-            if owns_session:
-                await self._close_browser_session(session_like)
+            if not await self._close_context(context, reason="fresh-login cleanup"):
+                self._context = context
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
         authenticated_at = now()
@@ -955,6 +909,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     _cleanup_exc,
                     exc_info=True,
                 )
+            if not await self._close_context(context, reason="persist-failure cleanup"):
+                self._context = context
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
         session = self._fresh_login_session(
@@ -979,7 +937,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         self,
         storage_state_path: Path,
         *,
-        browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
@@ -996,7 +953,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 translated_message="adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
             )
 
-        session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+        session_like = await self._resolve_browser_session()
         context: BrowserContextLike | None = None
         try:
             context = await session_like.create_context(
@@ -1050,20 +1007,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             )
             return refreshed
         except Exception:  # cleanup on resume error then re-raise; Playwright+AeatError undocumented
-            if context is not None:
-                try:
-                    await self._close_context(context, reason="resume cleanup")
-                except Exception as _exc:
-                    log.debug(
-                        "ClaveMovilAuthProvider: context.close in resume cleanup suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
+            context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None
-            self._context = None
+            self._context = None if context_closed else context
             self._active_session = None
-            if owns_session:
-                await self._close_browser_session(session_like)
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
 

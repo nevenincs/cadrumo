@@ -26,8 +26,10 @@ from typing import TYPE_CHECKING, Annotated, Any, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings.sources import EnvPrefixTarget
 
 from . import _config_live_tests as _live_test_config
+from ._auth_provider import AuthProviderKind as _AuthProviderKind
 from ._config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
     AeatIntegrationSettings,
@@ -40,8 +42,9 @@ from ._config_state_root import (
 )
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
-    AuthProviderKindSetting,
-    CertificateBackend,
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN,  # noqa: F401 - public certificate route authority
+    AEAT_CERTIFICATE_PROTECTED_PATH,  # noqa: F401 - public certificate route authority
+    AEAT_CERTIFICATE_PROTECTED_URL,  # noqa: F401 - public certificate route authority
     JustificanteParserBackendSetting,
     LLMProviderSetting,
     SecretStoreBackend,
@@ -198,13 +201,23 @@ class Settings(AeatIntegrationSettings):
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         """Keep the hard-cut dotenv filter while preserving strict unknown-key validation."""
         assert isinstance(dotenv_settings, DotEnvSettingsSource)
+        env_prefix_target: EnvPrefixTarget
+        match dotenv_settings.env_prefix_target:
+            case "variable":
+                env_prefix_target = "variable"
+            case "alias":
+                env_prefix_target = "alias"
+            case "all":
+                env_prefix_target = "all"
+            case invalid_target:
+                raise CoreValidationError(f"invalid environment prefix target: {invalid_target!r}")
         filtered_dotenv_settings = _CadrumoDotEnvSettingsSource(
             settings_cls,
             env_file=dotenv_settings.env_file,
             env_file_encoding=dotenv_settings.env_file_encoding,
             case_sensitive=dotenv_settings.case_sensitive,
             env_prefix=dotenv_settings.env_prefix,
-            env_prefix_target=dotenv_settings.env_prefix_target,
+            env_prefix_target=env_prefix_target,
             env_nested_delimiter=dotenv_settings.env_nested_delimiter,
             env_nested_max_split=dotenv_settings.env_nested_max_split,
             env_ignore_empty=dotenv_settings.env_ignore_empty,
@@ -603,18 +616,10 @@ class Settings(AeatIntegrationSettings):
         default=None,
         description="Optional human-readable label for the certificate",
     )
-    cadrumo_certificate_backend: CertificateBackend = Field(
-        default=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        description="Which certificate backend to use: playwright_context or httpx_fallback",
-    )
-    aeat_certificate_verify_url: str = Field(
-        default_factory=_default_aeat_sede_origin_with_slash,
-        description="Target URL for cadrumo.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
-    )
     cadrumo_auth_timeout_ms: int = Field(
         default=30_000,
         ge=1,
-        description="Playwright navigation timeout for AEAT authentication probes in milliseconds",
+        description="Playwright navigation timeout for protected AEAT authentication in milliseconds",
     )
     cadrumo_strict_security: bool = Field(
         default=False,
@@ -639,7 +644,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── AEAT auth provider default ──────────────────────────────────────────
-    cadrumo_auth_provider: AuthProviderKindSetting | None = Field(
+    cadrumo_auth_provider: _AuthProviderKind | None = Field(
         default=None,
         description=(
             "Default auth provider for `aeat config auth status` / `test` when "

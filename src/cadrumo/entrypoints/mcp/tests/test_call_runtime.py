@@ -37,6 +37,14 @@ def test_tier_is_derived_from_annotations() -> None:
     assert timeout_seconds(CallTier.LIVE) > timeout_seconds(CallTier.MUTATE) > timeout_seconds(CallTier.READ)
 
 
+def test_mutate_ceiling_has_headroom_beyond_the_observed_cold_client_cutoff() -> None:
+    # An installed Claude Desktop MCPB run reached 121.366 seconds before the
+    # former 120-second server ceiling killed modelo.work.create. Keep the
+    # local-mutation tier at the next established oracle ceiling rather than
+    # barely clearing one observed machine.
+    assert timeout_seconds(CallTier.MUTATE) == 180.0
+
+
 def test_a_fast_command_completes_without_timing_out() -> None:
     result = run_supervised(
         [sys.executable, "-c", "print('ok')"],

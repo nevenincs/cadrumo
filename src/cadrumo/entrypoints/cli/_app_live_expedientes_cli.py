@@ -138,8 +138,7 @@ def expedientes_pull(
     bucket_id = _bucket_id()
     run_auth_preflight(_auth_preflight, family="expedientes")
     selected_modelos = tuple(modelos or ())
-    single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
-    if single_mode:
+    if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=selected_modelos[0], year=year))
         result = ExpedientesCaptureResult(
             bucket_id=bucket_id,

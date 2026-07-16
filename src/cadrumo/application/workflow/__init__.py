@@ -10,6 +10,11 @@ submission collaborators into resumable modelo runs. A
 pointers, auth readiness, review annotations, and bucket events; it does not
 store profile facts or profile-value maps.
 
+Persisted authentication records are part of this public workflow boundary.
+Their definitions live in the internal shared leaf
+:mod:`application._workflow_auth_models`, while callers import them from this
+facade.
+
 The profile-discovery surface is manifest-backed and intentionally cheap.
 :func:`list_profile_buckets`,
 :func:`read_profile_bucket`,
@@ -73,8 +78,16 @@ See Also:
 
 from __future__ import annotations
 
-# ---- auth (re-exported for WorkflowState.auth field callers) ----------------
-from ..auth import AuthState
+# ---- persisted auth state (workflow-owned shared leaf) ----------------------
+from .._workflow_auth_models import (
+    AuthCleanupCertificateSource,
+    AuthCleanupIntent,
+    AuthCleanupOperationKind,
+    AuthState,
+    CertificateSecretMutationEventKind,
+    CertificateSecretMutationIntent,
+    CertificateSourceRecord,
+)
 
 # ---- adapters & engine (pull in auth / filing layers) -----------------------
 from ._adapters import (
@@ -180,8 +193,14 @@ from ._resume import (
 __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
+    "AuthCleanupCertificateSource",
+    "AuthCleanupIntent",
+    "AuthCleanupOperationKind",
     "AuthState",
     "CertificateBundleProtocol",
+    "CertificateSecretMutationEventKind",
+    "CertificateSecretMutationIntent",
+    "CertificateSourceRecord",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",
     "DeclaracionPointer",

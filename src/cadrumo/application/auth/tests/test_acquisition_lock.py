@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
+from ....core import AuthProviderKind
 from ....core.config import Settings
 from ....core.external_constants import UTF_8_ENCODING
-from .. import AuthProviderKind
 from .._acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,

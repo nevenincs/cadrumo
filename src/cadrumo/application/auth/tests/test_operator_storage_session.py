@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -9,9 +11,16 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage import has_active_bucket_session
+from ....adapters.persistence.storage.bucket import (
+    BucketBusyError,
+    acquire_lock,
+    bucket_paths,
+    release_lock,
+)
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....application.wizard import WIZARD_FLOWS
-from ....core.config import override_settings
+from ....core import AuthProviderKind
+from ....core.config import load_settings, override_settings
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -21,15 +30,18 @@ from ...user_profile import (
     register_minimal_profile,
 )
 from ...workflow import workflow_state_repository
-from .. import AuthProviderKind
-from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
-from .._certificate_sources_operator import (
+from .. import (
+    load_persisted_session,
+    logout_operator_auth,
     register_operator_certificate_source,
     resolve_certificate_source_secret,
+    select_operator_certificate_source,
     set_operator_certificate_source_secret,
 )
-from .._operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
+from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+from .._operator import configure_operator_auth, reset_operator_auth
 from .._operator_results import AuthOperationScopeConflictError, AuthProviderNotConfiguredError
+from .._operator_scope import auth_mutation_span
 from .._sessions import storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -45,6 +57,28 @@ def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
         workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=profile_id))
         if provider is not None:
             configure_operator_auth(provider)
+
+
+def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile(_PROFILE_A)
+        settings = load_settings().model_copy(
+            update={"cadrumo_file_lock_timeout_s": 0.05},
+        )
+        paths = bucket_paths(settings.cadrumo_local_storage_root, _PROFILE_A)
+
+        def attempt_auth_mutation() -> None:
+            with auth_mutation_span(settings=settings, bucket_id=_PROFILE_A):
+                pass
+
+        acquire_lock(paths)
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                blocked = executor.submit(attempt_auth_mutation)
+                with pytest.raises(BucketBusyError):
+                    blocked.result(timeout=5)
+        finally:
+            release_lock(paths)
 
 
 def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> None:
@@ -166,6 +200,82 @@ def test_logout_deletes_real_clave_permanente_session(tmp_path: Path) -> None:
         with profile_storage_session(_PROFILE_A):
             assert _session_store.exists(path) is False
         assert result.removed_sessions == 1
+
+
+def test_certificate_logout_removes_session_and_preserves_certificate_configuration(
+    tmp_path: Path,
+) -> None:
+    """Certificate logout removes only the persisted session, not its configured custody."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        certificate_path = tmp_path / "personal.p12"
+        certificate_path.write_bytes(b"real-storage-certificate-fixture")
+        _create_profile(_PROFILE_A, provider="certificate")
+
+        with profile_storage_session(_PROFILE_A):
+            register_operator_certificate_source(
+                name="personal",
+                certificate_path=certificate_path,
+                friendly_name="Personal certificate",
+            )
+            select_operator_certificate_source(name="personal")
+            set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("certificate-passphrase"),
+            )
+            repository = workflow_state_repository()
+            before = repository.load()
+            session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+            authenticated_at = datetime.now(UTC)
+            _session_store.save(
+                session_path,
+                storage_state={"cookies": [], "origins": []},
+                metadata={
+                    "provider_kind": "certificate",
+                    "identity_nif": "12345678Z",
+                    "authenticated_at": authenticated_at.isoformat(),
+                    "idle_deadline": (authenticated_at + timedelta(minutes=30)).isoformat(),
+                },
+            )
+            assert _session_store.exists(session_path)
+            persisted_before = load_persisted_session(
+                load_settings(),
+                AuthProviderKind.CERTIFICATE,
+            )
+            secret_before = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_PROFILE_A,
+            )
+
+        assert persisted_before is not None
+        assert persisted_before.provider_kind is AuthProviderKind.CERTIFICATE
+        assert persisted_before.identity_nif == "12345678Z"
+        assert secret_before is not None
+        provider_configuration_before = (
+            before.auth.provider,
+            before.auth.configured_at,
+        )
+        certificate_path_before = before.auth.certificate_path
+        active_source_before = before.auth.active_certificate_source
+        source_registration_before = before.auth.certificate_sources["personal"]
+        secret_value_before = secret_before.get_secret_value()
+
+        result = logout_operator_auth(provider="certificate")
+
+        with profile_storage_session(_PROFILE_A):
+            after = workflow_state_repository().load()
+            secret_after = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_PROFILE_A,
+            )
+            assert _session_store.exists(session_path) is False
+
+        assert result.removed_sessions == 1
+        assert (after.auth.provider, after.auth.configured_at) == provider_configuration_before
+        assert after.auth.certificate_path == certificate_path_before
+        assert after.auth.active_certificate_source == active_source_before
+        assert after.auth.certificate_sources["personal"] == source_registration_before
+        assert secret_after is not None
+        assert secret_after.get_secret_value() == secret_value_before
 
 
 def test_logout_all_emits_events_only_for_affected_providers(tmp_path: Path) -> None:

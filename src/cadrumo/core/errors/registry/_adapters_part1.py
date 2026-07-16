@@ -74,17 +74,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth.certificate.CertificateHandshakeError",
-        ErrorCode(
-            code="AUTH_AUTH_CERTIFICATE_HANDSHAKE",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_auth_certificate_handshake",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.aeat.auth.certificate.CertificateLoadError",
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_LOAD",
@@ -644,6 +633,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.auth.auth_auth",
             default_suggestion=None,
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.outbound.aeat.auth._errors.AuthProviderCleanupError",
+        ErrorCode(
+            code="AUTH_AUTH_PROVIDER_CLEANUP",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_auth_provider_cleanup",
+            default_suggestion=None,
+            retryable=True,
             runbook_id=None,
         ),
     ),

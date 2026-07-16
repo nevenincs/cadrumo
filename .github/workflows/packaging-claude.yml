@@ -1,0 +1,228 @@
+# Real Claude acquisition gates for the immutable Cadrumo Python cohort.
+# The Claude plugin and MCPB each carry and launch the same tested Python cohort.
+
+name: Cadrumo Claude Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful Cadrumo Packaging Smoke run containing the tested cohort
+        required: true
+        type: string
+      source_commit:
+        description: Full commit SHA that produced the tested cohort
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  cadrumo-claude-acquisition:
+    name: Cadrumo / Windows / Claude plugin and MCPB
+    runs-on: windows-2025
+    timeout-minutes: 60
+
+    steps:
+      - name: Initialize current-run evidence root
+        id: initialize
+        shell: powershell
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          $root = Join-Path `
+            $env:RUNNER_TEMP `
+            "cadrumo-claude-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) {
+            Remove-Item -LiteralPath $root -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          "CADRUMO_CLAUDE_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
+          [ordered]@{
+            schema = "cadrumo.packaging.claude-workflow.v1"
+            status = "initialized"
+            github_run_id = $env:GITHUB_RUN_ID
+            github_run_attempt = $env:GITHUB_RUN_ATTEMPT
+            source_run_id = $env:SOURCE_RUN_ID
+            source_commit = $env:SOURCE_COMMIT
+            initialized_at = [DateTimeOffset]::UtcNow.ToString("O")
+          } |
+            ConvertTo-Json |
+            Set-Content -LiteralPath (Join-Path $root "run-context.json") -Encoding UTF8
+          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
+      - name: Verify source workflow identity
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          if ($env:SOURCE_COMMIT -notmatch "^[0-9a-fA-F]{40}$") {
+            throw "source_commit must be one full Git commit SHA"
+          }
+          if ($env:SOURCE_RUN_ID -notmatch "^[1-9][0-9]*$") {
+            throw "source_run_id must be one positive workflow run id"
+          }
+          $headers = @{
+            Accept = "application/vnd.github+json"
+            Authorization = "Bearer $env:GH_TOKEN"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $run = Invoke-RestMethod `
+            -Headers $headers `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN_ID"
+          if ($run.name -ne "Cadrumo Packaging Smoke") {
+            throw "source run is not the Cadrumo Packaging Smoke workflow"
+          }
+          if ($run.path -ne ".github/workflows/packaging-smoke.yml") {
+            throw "source run does not use the packaging-smoke workflow authority"
+          }
+          if ($run.conclusion -ne "success") {
+            throw "source packaging run did not succeed"
+          }
+          if ($run.event -ne "push" -or $run.head_branch -ne "main") {
+            throw "source packaging run must be one trusted push to main"
+          }
+          if ($run.head_repository.full_name -ne $env:GITHUB_REPOSITORY) {
+            throw "source packaging run does not belong to this repository"
+          }
+          if ($run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()) {
+            throw "source packaging run commit does not match source_commit"
+          }
+
+      - name: Checkout tested source commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Download tested Cadrumo Python cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-python-cohort
+          path: ${{ env.CADRUMO_CLAUDE_ROOT }}/cohort
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Verify tested Python cohort
+        shell: powershell
+        run: |
+          uv run --no-project --with packaging python -m dev.packaging.python_cohort verify `
+            --cohort-dir "$env:CADRUMO_CLAUDE_ROOT/cohort"
+          if ($LASTEXITCODE -ne 0) {
+            throw "tested Python cohort verification failed"
+          }
+
+      - name: Install pinned Claude Code client
+        shell: powershell
+        run: |
+          node --version
+          npm --version
+          npm install --global "@anthropic-ai/claude-code@2.1.211"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Claude Code installation failed"
+          }
+          $claude = (Get-Command claude -ErrorAction Stop).Source
+          & $claude --version
+          if ($LASTEXITCODE -ne 0) {
+            throw "Claude Code is not callable"
+          }
+          "CADRUMO_CLAUDE_EXECUTABLE=$claude" | Add-Content -LiteralPath $env:GITHUB_ENV
+
+      - name: Install plugin and perform grounded tax work through Claude
+        shell: powershell
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          uv sync --frozen
+          $arguments = @(
+            "-m", "dev.packaging.smoke_plugin_install",
+            "--claude", "$env:CADRUMO_CLAUDE_EXECUTABLE",
+            "--cohort-dir", "$env:CADRUMO_CLAUDE_ROOT/cohort",
+            "--evidence-dir", "$env:CADRUMO_CLAUDE_ROOT/plugin-evidence"
+          )
+          if ($env:ANTHROPIC_API_KEY) {
+            $arguments += "--run-claude-session"
+          }
+          uv run --no-sync python @arguments
+          if ($LASTEXITCODE -ne 0) {
+            throw "Claude plugin installed-tax oracle failed"
+          }
+
+      - name: Build and perform grounded tax work through MCPB runtime
+        shell: powershell
+        run: |
+          uv run --no-sync python -m dev.packaging.smoke_mcpb `
+            --cohort-dir "$env:CADRUMO_CLAUDE_ROOT/cohort" `
+            --evidence-dir "$env:CADRUMO_CLAUDE_ROOT/mcpb-evidence"
+          if ($LASTEXITCODE -ne 0) {
+            throw "MCPB artifact runtime oracle failed"
+          }
+
+      - name: Curate non-sensitive acquisition evidence
+        if: always() && steps.initialize.outputs.ready == 'true'
+        shell: powershell
+        run: |
+          $curated = Join-Path $env:CADRUMO_CLAUDE_ROOT "curated-evidence"
+          New-Item -ItemType Directory -Force -Path $curated | Out-Null
+          Copy-Item `
+            -LiteralPath (Join-Path $env:CADRUMO_CLAUDE_ROOT "run-context.json") `
+            -Destination (Join-Path $curated "run-context.json")
+
+          $pluginEvidence = @(
+            Get-ChildItem `
+              -LiteralPath (Join-Path $env:CADRUMO_CLAUDE_ROOT "plugin-evidence") `
+              -Filter "plugin-evidence.json" `
+              -File `
+              -Recurse `
+              -ErrorAction SilentlyContinue
+          )
+          if ($pluginEvidence.Count -gt 1) {
+            throw "expected at most one plugin evidence record, found $($pluginEvidence.Count)"
+          }
+          if ($pluginEvidence.Count -eq 1) {
+            Copy-Item `
+              -LiteralPath $pluginEvidence[0].FullName `
+              -Destination (Join-Path $curated "plugin-evidence.json")
+          }
+
+          $mcpbEvidence = @(
+            Get-ChildItem `
+              -LiteralPath (Join-Path $env:CADRUMO_CLAUDE_ROOT "mcpb-evidence") `
+              -Filter "mcpb-assembly-runtime-evidence.json" `
+              -File `
+              -Recurse `
+              -ErrorAction SilentlyContinue
+          )
+          if ($mcpbEvidence.Count -gt 1) {
+            throw "expected at most one MCPB evidence record, found $($mcpbEvidence.Count)"
+          }
+          if ($mcpbEvidence.Count -eq 1) {
+            Copy-Item `
+              -LiteralPath $mcpbEvidence[0].FullName `
+              -Destination (Join-Path $curated "mcpb-assembly-runtime-evidence.json")
+          }
+
+      - name: Upload Cadrumo Claude acquisition evidence
+        if: always() && steps.initialize.outputs.ready == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-claude-acquisition-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/cadrumo-claude-${{ github.run_id }}-${{ github.run_attempt }}/curated-evidence/
+          if-no-files-found: error
+          retention-days: 14

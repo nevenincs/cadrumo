@@ -9,9 +9,9 @@ from urllib.parse import urlsplit
 import pytest
 
 from ....adapters.outbound.aeat.auth import _session_store
+from ....core import AuthProviderKind
 from ....core.external_constants import load_external_constants
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import AuthProviderKind
 from .._sessions import load_persisted_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

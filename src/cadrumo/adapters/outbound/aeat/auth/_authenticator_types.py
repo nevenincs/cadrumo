@@ -24,17 +24,16 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, SecretStr
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from .....core.time import coerce_utc_aware
 from ._errors import AeatLoginAssertionError
 from ._providers import (
     AuthLoginAssertionDetail,
-    AuthProviderKind,
     AuthSessionDetail,
     CertificateLoginAssertionDetail,
     CertificateSessionDetail,
 )
-from .certificate import CertificateBackend, CertificateHealth, HandshakeResult
+from .certificate import CertificateHealth
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -67,17 +66,17 @@ class AeatLoginAssertion(BaseModel):
         return self.assertion_detail.kind
 
     @property
-    def handshake_success(self) -> bool | None:
-        """Return the certificate handshake signal when this is certificate auth."""
+    def response_successful(self) -> bool | None:
+        """Return the protected-resource response signal for certificate auth."""
         if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.handshake_success
+            return self.assertion_detail.response_successful
         return None
 
     @property
-    def certificate_recognised(self) -> bool | None:
-        """Return the certificate-recognition signal for certificate assertions."""
+    def final_url(self) -> str | None:
+        """Return the final protected-resource URL for certificate assertions."""
         if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
-            return self.assertion_detail.certificate_recognised
+            return self.assertion_detail.final_url
         return None
 
     @property
@@ -100,7 +99,7 @@ class AeatSession(BaseModel):
     downstream Sede readers to reopen encrypted browser state. ``provider_detail``
     carries either :class:`CertificateSessionDetail` or
     :class:`~adapters.outbound.aeat.auth.ClaveMovilSessionDetail`:
-    certificate sessions expose thumbprint/subject/handshake data, while Cl@ve
+    certificate sessions expose thumbprint/subject/protected-resource data, while Cl@ve
     sessions expose DNI/NIE and landing metadata.
     """
 
@@ -131,13 +130,6 @@ class AeatSession(BaseModel):
             return self.provider_detail.certificate_subject
         return None
 
-    @property
-    def handshake(self) -> HandshakeResult | None:
-        """Return the certificate :class:`HandshakeResult` when available."""
-        if isinstance(self.provider_detail, CertificateSessionDetail):
-            return self.provider_detail.handshake
-        return None
-
     def is_stale(self, now: datetime | None = None) -> bool:
         """Return whether ``idle_deadline`` has elapsed at ``now``."""
         reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
@@ -151,6 +143,11 @@ class _PersistedSessionInvalidError(AeatLoginAssertionError):
 @runtime_checkable
 class BrowserPageLike(Protocol):
     """Minimal Playwright page surface consumed by auth verification flows."""
+
+    @property
+    def url(self) -> str:
+        """Final page URL after navigation and redirects."""
+        ...
 
     async def goto(
         self,
@@ -169,6 +166,11 @@ class BrowserPageLike(Protocol):
 @runtime_checkable
 class BrowserResponseLike(Protocol):
     """Minimal response surface needed to classify an AEAT probe."""
+
+    @property
+    def ok(self) -> bool:
+        """Whether Playwright classifies the response as successful."""
+        ...
 
     @property
     def status(self) -> int:
@@ -194,21 +196,6 @@ class BrowserContextLike(Protocol):
 
 
 @runtime_checkable
-class BrowserSessionProfileLike(Protocol):
-    """Minimal profile surface a browser session exposes to resume state.
-
-    Mirrors the single field auth reads off
-    :class:`adapters.outbound.aeat.browser.Profile`: the filesystem path
-    of the Playwright storage-state JSON a resumed session loads cookies from.
-    """
-
-    @property
-    def storage_state_path(self) -> Path:
-        """Path to the profile's Playwright storage-state JSON."""
-        ...
-
-
-@runtime_checkable
 class BrowserSessionLike(Protocol):
     """Browser-session factory surface used by certificate and Cl@ve auth.
 
@@ -217,19 +204,9 @@ class BrowserSessionLike(Protocol):
     certificate auth may pass a context provisioner, while resume paths pass
     either a storage-state path or an in-memory storage-state mapping.
 
-    ``profile`` exposes the session's resume path so
-    :meth:`AeatAuthenticator._resolve_storage_state_path` can read it as a
-    declared member rather than duck-typing via ``getattr``; it is ``None``
-    for lightweight test doubles that rely on the settings fallback. A
-    ``close()`` coroutine is intentionally *not* mandated here — real sessions
-    own a Chromium process while doubles may not, so teardown probes for it
-    (see :meth:`AeatAuthenticator._close_browser_session`).
+    Every implementation owns a browser lifecycle and therefore provides
+    deterministic asynchronous closure.
     """
-
-    @property
-    def profile(self) -> BrowserSessionProfileLike | None:
-        """Optional :class:`BrowserSessionProfileLike` carrying this session's resume ``storage_state_path``."""
-        ...
 
     async def create_context(
         self,
@@ -239,6 +216,10 @@ class BrowserSessionLike(Protocol):
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContextLike:
         """Create a :class:`BrowserContextLike` with optional auth provider state."""
+        ...
+
+    async def close(self) -> None:
+        """Close the owned browser process. Must be safe to call repeatedly."""
         ...
 
 
@@ -253,7 +234,6 @@ class CertificateHealthCheck(Protocol):
         password: SecretStr,
         warn_days: int,
         critical_days: int,
-        backend: CertificateBackend = ...,
         friendly_name: str | None = ...,
         now: datetime | None = ...,
     ) -> CertificateHealth:
@@ -277,7 +257,6 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
-    "BrowserSessionProfileLike",
     "CertificateHealthCheck",
     "_PersistedSessionInvalidError",
 ]
