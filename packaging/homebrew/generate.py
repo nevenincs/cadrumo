@@ -127,9 +127,7 @@ def _sdist_artifact(
     path = _one(cohort_dir, pattern)
     try:
         with tarfile.open(path, mode="r:gz") as archive:
-            metadata_members = tuple(
-                member for member in archive.getmembers() if member.name.endswith("/PKG-INFO")
-            )
+            metadata_members = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
             if len(metadata_members) != 1:
                 raise SystemExit(f"expected one PKG-INFO member in {path.name}")
             handle = archive.extractfile(metadata_members[0])
@@ -208,9 +206,7 @@ def _select_package(
         candidates = [candidate for candidate in candidates if candidate.get("version") == version]
     registry = dependency.get("source", {}).get("registry")
     if registry is not None:
-        candidates = [
-            candidate for candidate in candidates if candidate.get("source", {}).get("registry") == registry
-        ]
+        candidates = [candidate for candidate in candidates if candidate.get("source", {}).get("registry") == registry]
     registry_candidates = [
         candidate
         for candidate in candidates
@@ -298,18 +294,14 @@ def _resource_block(resource: Resource) -> str:
     blocks: list[str] = []
     covered: set[str] = set()
     for platform in ("macos", "linux"):
-        platform_targets = frozenset(
-            target for target in _TARGETS if target.startswith(f"{platform}-")
-        )
+        platform_targets = frozenset(target for target in _TARGETS if target.startswith(f"{platform}-"))
         selected = resource.platforms & platform_targets
         covered.update(selected)
         if not selected:
             continue
         if selected == platform_targets:
             blocks.append(
-                f"  on_{platform} do\n"
-                f"{_resource_declaration(resource, indent=2)}"
-                "  end\n",
+                f"  on_{platform} do\n{_resource_declaration(resource, indent=2)}  end\n",
             )
             continue
         if len(selected) != 1:
@@ -380,6 +372,7 @@ def generate_formula(
   license "Apache-2.0"
 
   depends_on "cmake" => :build
+  depends_on "jpeg-turbo"
   depends_on "libyaml"
   depends_on "openssl@3"
   depends_on "pkgconf" => :build
@@ -388,6 +381,10 @@ def generate_formula(
   depends_on "rust" => :build
   uses_from_macos "libxml2"
   uses_from_macos "libxslt"
+
+  on_linux do
+    depends_on "zlib-ng-compat"
+  end
 
 {resource_text}
 
