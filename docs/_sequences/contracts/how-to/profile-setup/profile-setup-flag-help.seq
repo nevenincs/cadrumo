@@ -1,0 +1,4 @@
+@step List every flag the create command accepts.
+@static aeat config profile create --help
+@step List every flag the edit command accepts.
+@static aeat config profile edit --help

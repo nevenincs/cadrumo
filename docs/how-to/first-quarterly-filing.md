@@ -26,12 +26,6 @@ client, and one office-supplies purchase.
 
 ```{cli-sequence} import-quarter-transactions
 :verify: Confirm both movements are now in the ledger.
-@step Bring the quarter's bank movements into the ledger.
-aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Check that the quarter's ledger now holds both movements.
-@result aeat --format json app ledger list --year 2026 --period 1T
-@expect result.total == 2
-@expect exit_code == 0
 ```
 
 The import reads the statement and stores each movement as a ledger row. The
@@ -40,9 +34,6 @@ listing confirms the two rows landed in the first quarter of 2026. Point
 
 ```{cli-sequence} import-provider-list
 :verify: Confirm the import command lists its accepted providers.
-@step Show the import command's help, including the accepted providers.
-@result aeat app ledger import --help
-@expect exit_code == 0
 ```
 
 ## Classify each transaction
@@ -56,10 +47,6 @@ above. The income classification takes only the business decision:
 
 ```{cli-sequence} first-quarter-classify-income
 :verify: Confirm the collected payment is classified as business income.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Classify the collected payment as business income.
-@result aeat --format json app ledger classify 71a5db2b --classification BUSINESS
-@expect result.transaction.business_classification == "BUSINESS"
 ```
 
 For an expense, add `--category-id <category-id>` plus the taxable base and
@@ -67,9 +54,6 @@ IVA fields. List the accepted categories any time:
 
 ```{cli-sequence} ledger-category-list
 :verify: Confirm the accepted expense categories read back.
-@step List the accepted expense categories.
-@result aeat --format json app ledger categories
-@expect exit_code == 0
 ```
 
 For the full classification workflow (bulk classification, mixed-use shares,
@@ -83,21 +67,7 @@ draft, calculates it, and verifies it. Modelo 130 is the IRPF payment on
 account for self-employed activity under estimación directa.
 
 ```{cli-sequence} modelo-130-first-quarter
-:seed: autonomo-irpf-2026
 :verify: Confirm the draft passed verification before you export it.
-@step Open a Modelo 130 draft for the first quarter.
-aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@step Calculate the quarter's instalment from the classified ledger.
-aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values.01 == "1000"
-@expect result.casilla_values.03 == "500.00"
-@expect result.casilla_values.04 == "100.00"
-@step Verify the draft before you export it.
-@result aeat --format json app modelo work verify {calculation_revision_id}
-@expect result.granted_verificado_completo == true
-@expect exit_code == 0
 ```
 
 Read the frames in order:
@@ -125,10 +95,6 @@ filed marker are shown as display frames. The full evidence-to-export chain runs
 end to end, executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
 
 ```{cli-sequence} first-quarter-export-file
-@step Export the verified draft to a local fichero-BOE.
-@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
-@step After you upload at the portal, record the local filed marker.
-@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
 ```
 
 A later quarter builds on this one: leave the three prior-period bindings unset

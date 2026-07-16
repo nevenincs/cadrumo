@@ -1,0 +1,2 @@
+@step Fetch and store the justificante for one filed period (a live AEAT read).
+@static aeat app live justificante pull --modelo 130 --year 2026 --period 1T

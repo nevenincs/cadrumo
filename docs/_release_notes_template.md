@@ -55,5 +55,5 @@ PyPI without breaking anyone pinned to an earlier pin.
 
 - [ ] `just packaging-smoke` green on Linux/WSL
 - [ ] `uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine
-- [ ] `pip install "cadrumo[corpus-sources]"` pulls both data companions and
-      `aeat app registry verify` runs clean
+- [ ] `pip install cadrumo==X.Y.Z` pulls both exact-version data distributions
+      and `aeat app registry verify` runs clean

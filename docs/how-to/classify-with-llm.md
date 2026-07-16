@@ -42,8 +42,6 @@ List the provider CLIs visible on `PATH`. Each row reports a provider, its
 status (`available` or `unavailable`), and a fix when something is missing:
 
 ```{cli-sequence} llm-providers
-@step List the provider CLIs visible on the path.
-@static aeat app ledger providers
 ```
 
 This checks discoverability only, not account login. The local vision reader
@@ -57,8 +55,6 @@ login command and data-retention settings belong to the provider, not to
 `aeat`. Then smoke-test with a preview, which saves nothing:
 
 ```{cli-sequence} llm-provider-smoke-test
-@step Smoke-test the provider with a preview that saves nothing.
-@static aeat app ledger classify <transaction-id> --llm claude
 ```
 
 A logged-out provider makes the command refuse and relay the provider's own
@@ -72,15 +68,6 @@ row to the provider for a preview:
 
 ```{cli-sequence} llm-suggest
 :verify: Confirm the unclassified row is ready to send for a suggestion.
-@step Import a quarter so there is an unclassified row.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Find a row that still needs classification.
-aeat app ledger list --filter classification=NOT_YET_PROCESSED
-@step Inspect the row before previewing.
-@result aeat --format json app ledger view e3eeac5e
-@expect result.transaction.business_classification == "NOT_YET_PROCESSED"
-@step Preview a suggestion for that one row.
-@static aeat app ledger classify e3eeac5e --llm claude
 ```
 
 `aeat` sends that one row to the selected provider CLI, which suggests a
@@ -91,8 +78,6 @@ record, including the `provenance` (`llm:<provider>`) and `persisted`
 fields, put the global JSON flag before the subcommand:
 
 ```{cli-sequence} llm-suggest-json
-@step Preview with machine-readable output.
-@static aeat --format json app ledger classify <transaction-id> --llm claude
 ```
 
 Use the row description, amount, direction, counterparty, and source
@@ -120,10 +105,6 @@ Apply and reject both run the provider, so they are shown as display-only
 frames:
 
 ```{cli-sequence} llm-apply-reject
-@step Apply persists the reviewed suggestion.
-@static aeat app ledger classify <transaction-id> --llm claude --apply
-@step Reject records the model as wrong, with your reason, in history.
-@static aeat app ledger classify <transaction-id> --llm claude --reject --reason "this is personal"
 ```
 
 Override runs entirely on your machine. Classify the row by hand with the
@@ -131,11 +112,6 @@ classification and category you choose:
 
 ```{cli-sequence} llm-override
 :verify: Confirm the manual override classifies the row.
-@step Import a quarter so there is a row to override.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Classify the row manually; a manual decision always wins.
-@result aeat --format json app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
-@expect result.transaction.business_classification == "BUSINESS"
 ```
 
 If the row is mixed-use, the LLM suggestion alone is not enough; supply the
@@ -145,13 +121,6 @@ After important corrections, re-run preflight for the period:
 
 ```{cli-sequence} llm-preflight
 :verify: Confirm the period preflight reads ready after corrections.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-@step Re-run the period preflight after important corrections.
-@result aeat --format json app ledger preflight --year 2026 --period 1T
-@expect result.ready == true
-@expect exit_code == 0
 ```
 
 ## Fill in the tax fields automatically
@@ -164,10 +133,6 @@ the rate comes from the registry, and the base and IVA amount are computed
 from the transaction total:
 
 ```{cli-sequence} llm-saturate
-@step Preview a suggestion that also selects the IVA category.
-@static aeat app ledger classify <transaction-id> --llm claude --saturate
-@step Apply the saturated suggestion.
-@static aeat app ledger classify <transaction-id> --llm claude --saturate --apply
 ```
 
 The preview adds the selected IVA category and, when the category has a
@@ -185,13 +150,6 @@ the IVA fields, and the row must already be classified business or mixed:
 
 ```{cli-sequence} llm-derive-iva
 :verify: Confirm the derived IVA fields land without any provider.
-@step Import a quarter so there is a business row to saturate.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Classify the row as business first.
-@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
-@step Derive the IVA fields from the official rate, without a provider.
-@result aeat --format json app ledger classify e3eeac5e --iva-category domestic_general_21 --saturate
-@expect result.transaction.iva_category == "domestic_general_21"
 ```
 
 To override any field by hand, classify manually with the figures yourself.
@@ -199,12 +157,6 @@ The taxable base plus IVA must equal the transaction total to the cent:
 
 ```{cli-sequence} llm-manual-figures
 :verify: Confirm the hand-entered IVA figures land on the row.
-@step Record a 121.00 purchase to classify by hand.
-@setup aeat --format json app ledger add --date 2026-03-10 --amount 121.00 --direction OUTGOING --description "Compra tipo reducido" --idempotency-key llm-manual
-@capture transaction_id result.transaction_id
-@step Classify manually with the reduced-rate IVA figures.
-@result aeat --format json app ledger classify {transaction_id} --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
-@expect result.transaction.iva_category == "domestic_reduced_10"
 ```
 
 IRPF category is still entered manually in
@@ -243,10 +195,6 @@ the attached image, previewing first. Override the vision model for one run
 with `--vision-model qwen2.5vl:7b`:
 
 ```{cli-sequence} llm-read-evidence-local
-@step Preview the on-host read of the attached image.
-@static aeat app ledger classify <transaction-id> --read-evidence --saturate
-@step Apply the on-host read.
-@static aeat app ledger classify <transaction-id> --read-evidence --saturate --apply
 ```
 
 Reading a text-layer PDF through a cloud provider requires all of the
@@ -259,8 +207,6 @@ following, or the command refuses and explains why:
   acknowledgement is never remembered; pass it every time.
 
 ```{cli-sequence} llm-read-evidence-cloud
-@step Read a text-layer PDF through a cloud provider, acknowledging the upload.
-@static aeat app ledger classify <transaction-id> --llm claude --read-evidence --evidence-acknowledged --saturate
 ```
 
 The acknowledgement gates the upload of the invoice text only. A transaction
@@ -277,10 +223,6 @@ step, add `--auto-split`. `--auto-split` requires `--read-evidence` and cannot
 combine with the manual override flags:
 
 ```{cli-sequence} llm-auto-split
-@step Preview one child transaction per invoice line.
-@static aeat app ledger classify <transaction-id> --read-evidence --auto-split
-@step Apply the split, one entry per line.
-@static aeat app ledger classify <transaction-id> --read-evidence --auto-split --apply
 ```
 
 A multi-line invoice previews one child transaction per line, each with its
@@ -325,13 +267,6 @@ Inspect a transaction and its history at any time:
 
 ```{cli-sequence} llm-inspect-history
 :verify: Confirm the transaction's history records its events.
-@step Import a quarter so there is a transaction to inspect.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Inspect the transaction.
-aeat app ledger view e3eeac5e
-@step Read the transaction's history.
-@result aeat --format json app ledger history e3eeac5e
-@expect result.events[0].event_type == "ledger.transaction.imported"
 ```
 
 ## Limits and batch alternatives

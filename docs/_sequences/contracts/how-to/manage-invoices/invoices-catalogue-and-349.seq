@@ -1,0 +1,16 @@
+@step Catalogue an intra-community supply so a calculation can read it.
+aeat --format json app ledger invoice catalogue create --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-CAT-001 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
+@capture invoice_id result.invoice_id
+@expect result.operation_type == "E"
+@step List the catalogue copies.
+aeat app ledger invoice catalogue list
+@step Inspect one catalogue invoice to confirm its id.
+aeat --format json app ledger invoice catalogue view {invoice_id}
+@expect result.base_total == "2000.00"
+@step Create the Modelo 349 work unit for the period the invoice falls in.
+aeat --format json app modelo work create --modelo 349 --year 2026 --period 02
+@capture work_unit_id result.work_unit_id
+@step Calculate the recapitulative declaration.
+@result aeat --format json app modelo work calculate {work_unit_id}
+@expect result.operation == "modelo.work.calculate"
+@expect exit_code == 0

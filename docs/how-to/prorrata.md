@@ -35,11 +35,6 @@ Elect the year's general percentage:
 
 ```{cli-sequence} prorrata-elect-general
 :verify: Confirm the general election is recorded on the profile.
-@step Elect the year's general deduction percentage.
-@result aeat --format json app ledger prorrata elect-general --ejercicio 2026 --percentage 80
-@expect result.entry.regime == "general"
-@expect result.entry.provisional_percentage == "80"
-@expect exit_code == 0
 ```
 
 - `--ejercicio` is the filing year the election covers.
@@ -56,10 +51,6 @@ Elect especial for the year:
 
 ```{cli-sequence} prorrata-elect-especial
 :verify: Confirm the especial election replaces the general one for the year.
-@step Elect especial prorrata for the year.
-@result aeat --format json app ledger prorrata elect-especial --ejercicio 2026 --percentage 80
-@expect result.entry.regime == "especial"
-@expect exit_code == 0
 ```
 
 Here `--percentage` is the common-use percentage, the rate applied to shared
@@ -70,10 +61,6 @@ Then tag each input row with its use when you add it:
 
 ```{cli-sequence} prorrata-classify-input
 :verify: Confirm the tagged common input is recorded in the ledger.
-@step Tag a shared input with its common use as you add it.
-@result aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --input-classification common --idempotency-key prorrata-common-input
-@expect result.transaction.business_classification == "BUSINESS"
-@expect exit_code == 0
 ```
 
 `--input-classification` takes one value:
@@ -95,11 +82,6 @@ regime (LIVA arts. 9.1.c / 101):
 
 ```{cli-sequence} prorrata-declare-sector
 :verify: Confirm the differentiated sector is registered.
-@step Declare a differentiated sector with its LIVA letra and activity code.
-@result aeat --format json app ledger prorrata declare-sector --sector-id arrendamiento --letra c --activity-code 6820
-@expect result.sector.sector_id == "arrendamiento"
-@expect result.sector.letra == "c"
-@expect exit_code == 0
 ```
 
 - `--sector-id` is a stable id the register entries and ledger rows reference.
@@ -113,12 +95,6 @@ Scope an election to a sector with `--sector`, and tag a row's sector with
 
 ```{cli-sequence} prorrata-sector-scoped
 :verify: Confirm the sector-scoped input is recorded against the declared sector.
-@step Scope the especial election to the differentiated sector.
-aeat --format json app ledger prorrata elect-especial --ejercicio 2026 --percentage 80 --sector arrendamiento
-@step Tag a row's sector as you add it.
-@result aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --sector arrendamiento --input-classification common --idempotency-key prorrata-sector-input
-@expect result.transaction.business_classification == "BUSINESS"
-@expect exit_code == 0
 ```
 
 Tag a row with a sector you have not declared and the tool warns the tag is
@@ -148,12 +124,6 @@ List every election and declared sector on the active profile:
 
 ```{cli-sequence} prorrata-list
 :verify: Confirm the register reads back the elections and declared sector.
-@setup aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
-@setup aeat app ledger prorrata declare-sector --sector-id arrendamiento --letra c --activity-code 6820
-@step List every prorrata election and declared sector.
-@result aeat --format json app ledger prorrata list
-@expect result.sectors[0].sector_id == "arrendamiento"
-@expect exit_code == 0
 ```
 
 ## Next steps

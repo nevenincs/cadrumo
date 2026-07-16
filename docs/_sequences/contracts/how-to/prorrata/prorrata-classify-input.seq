@@ -1,0 +1,4 @@
+@step Tag a shared input with its common use as you add it.
+@result aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --input-classification common --idempotency-key prorrata-common-input
+@expect result.transaction.business_classification == "BUSINESS"
+@expect exit_code == 0

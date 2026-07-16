@@ -1,0 +1,2 @@
+@step Pull a document from Google Drive into encrypted evidence.
+@static aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"

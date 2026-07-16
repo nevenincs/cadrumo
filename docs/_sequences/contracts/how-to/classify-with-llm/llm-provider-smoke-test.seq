@@ -1,0 +1,2 @@
+@step Smoke-test the provider with a preview that saves nothing.
+@static aeat app ledger classify <transaction-id> --llm claude

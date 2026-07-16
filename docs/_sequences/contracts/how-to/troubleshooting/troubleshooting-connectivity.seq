@@ -1,0 +1,2 @@
+@step Check that the tool can reach the AEAT website.
+@static aeat config repair connectivity

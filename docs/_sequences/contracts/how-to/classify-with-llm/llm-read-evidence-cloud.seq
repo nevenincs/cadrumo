@@ -1,0 +1,2 @@
+@step Read a text-layer PDF through a cloud provider, acknowledging the upload.
+@static aeat app ledger classify <transaction-id> --llm claude --read-evidence --evidence-acknowledged --saturate

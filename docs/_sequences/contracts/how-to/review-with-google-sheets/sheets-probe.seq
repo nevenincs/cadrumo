@@ -1,0 +1,2 @@
+@step Probe the Google connection.
+@static aeat config google sync probe

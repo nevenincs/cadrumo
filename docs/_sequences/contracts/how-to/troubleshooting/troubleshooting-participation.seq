@@ -1,0 +1,6 @@
+@step Rebuild the participation index from the finalized calculation records.
+@result aeat --format json app ledger participation rebuild
+@expect result.participation_count == 0
+@expect exit_code == 0
+@step Look up which finalized filings used one transaction.
+@static aeat app ledger participation <transaction-id>

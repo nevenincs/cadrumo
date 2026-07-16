@@ -34,15 +34,15 @@
           "before": {
             "active_profile": "<profile-id>",
             "missing_required": [],
-            "next_action": "aeat config repair profile --clear-active --yes",
-            "profile_present_keys": 0,
-            "profile_record_error": "StorageValidationError: storage runtime is not ready for profile-bound storage: no active bucket session; run `aeat config switch NAME` to unlock a profile before invoking profile-bound storage.",
-            "profile_record_present": false,
+            "next_action": "aeat app overview status",
+            "profile_present_keys": 6,
+            "profile_record_error": "",
+            "profile_record_present": true,
             "profile_total_keys": 76,
             "registered_bucket": true,
-            "repairable_by_clearing_pointer": true,
+            "repairable_by_clearing_pointer": false,
             "source": "pointer",
-            "status": "profile_record_unreadable"
+            "status": "ready"
           },
           "cleared_pointer": false,
           "dry_run": true

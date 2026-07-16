@@ -1,0 +1,4 @@
+@step Open the list-based work unit for the informational modelo.
+@static aeat app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
+@step Calculate, supplying each record as a repeatable --row input.
+@static aeat app modelo work calculate <work-unit-id> --row 'miembro nif=45678912S porcentaje=60 importe=10000' --row 'miembro nif=00000001R porcentaje=40 importe=5000'

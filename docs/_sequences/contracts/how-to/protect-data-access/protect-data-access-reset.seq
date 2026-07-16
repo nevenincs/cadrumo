@@ -1,0 +1,2 @@
+@step Delete operator-local state for the chosen scope.
+@static aeat config reset --scope profile --yes

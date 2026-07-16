@@ -1,0 +1,2 @@
+@step Force a fresh authentication.
+@static aeat config auth login --fresh

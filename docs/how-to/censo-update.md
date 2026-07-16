@@ -30,19 +30,12 @@ If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):
 
 ```{cli-sequence} censo-update-create-profile
-@step Create a taxpayer profile non-interactively.
-@static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
 ```
 
 Check the active profile first:
 
 ```{cli-sequence} censo-update-check-profile
 :verify: Confirm the active profile reports its status.
-@step Check the active profile.
-@result aeat --format json config profile status
-@expect result.active_profile == "docs-sequence-sandbox"
-@expect result.configured == true
-@expect exit_code == 0
 ```
 
 ## Why census facts matter
@@ -66,8 +59,6 @@ warning and refuses strict projection until you accept that basis; see
 Edit the active profile with the wizard:
 
 ```{cli-sequence} censo-update-edit-wizard
-@step Edit the active profile with the interactive wizard.
-@static aeat config profile edit <profile-name>
 ```
 
 The wizard walks the profile fields, including the census-backed ones. For a
@@ -76,12 +67,6 @@ place of `docs-sequence-sandbox`:
 
 ```{cli-sequence} censo-update-record-facts
 :verify: Confirm the profile validates after you record the census facts.
-@step Record the activity description from your Modelo 036 copy.
-aeat --format json config profile edit docs-sequence-sandbox --quiet --activity "consultoria"
-@step Confirm the edited profile still validates.
-@result aeat --format json config profile validate
-@expect result.valid == true
-@expect exit_code == 0
 ```
 
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
@@ -101,29 +86,17 @@ Validate the active profile after editing census facts:
 
 ```{cli-sequence} censo-update-validate
 :verify: Confirm the active profile validates after the census edits.
-@step Read the active profile status.
-aeat --format json config profile status
-@step Validate the active profile.
-@result aeat --format json config profile validate
-@expect result.valid == true
-@expect exit_code == 0
 ```
 
 If the profile still reports missing facts, edit those fields directly:
 
 ```{cli-sequence} censo-update-edit-field
-@step Edit a specific profile field directly.
-@static aeat config profile edit <profile-name> --quiet --activity <value>
 ```
 
 For modelo-specific readiness, use profile preflight:
 
 ```{cli-sequence} censo-update-preflight
 :verify: Confirm the profile preflight runs for the target modelo and period.
-@step Run the profile readiness preflight for Modelo 303, first quarter of 2026.
-@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
-@expect result.modelo == "303"
-@expect exit_code == 0
 ```
 
 ## Keep the facts current

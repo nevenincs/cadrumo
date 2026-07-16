@@ -1,0 +1,2 @@
+@step Record the local filed marker for one 303 quarter, in its obligation window.
+@static aeat app modelo work file --modelo 303 --year 2025 --period 1T

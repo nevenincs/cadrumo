@@ -1,0 +1,6 @@
+@step Read the active profile status.
+aeat --format json config profile status
+@step Validate the active profile.
+@result aeat --format json config profile validate
+@expect result.valid == true
+@expect exit_code == 0

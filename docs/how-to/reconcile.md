@@ -38,8 +38,6 @@ profile without reconciling yet. This reads from the AEAT sede, so it is shown
 as a display frame:
 
 ```{cli-sequence} reconcile-pull-store
-@step Fetch and store the justificante for one filed period (a live AEAT read).
-@static aeat app live justificante pull --modelo 130 --year 2026 --period 1T
 ```
 
 `pull` is live-only: it reads from AEAT (read-only) and needs the configured
@@ -62,10 +60,6 @@ unambiguous prefix of the snapshot id is enough). Both read the stored captures
 back through the live justificante surface, so they are shown as display frames:
 
 ```{cli-sequence} reconcile-justificante-list
-@step List the justificante captures stored in the active profile.
-@static aeat app live justificante list
-@step Inspect one capture by an unambiguous prefix of its snapshot id.
-@static aeat app live justificante view <snapshot-id>
 ```
 
 The view reports the expediente id, the CSV verification code, the PDF
@@ -78,8 +72,6 @@ Fetch the receipt for the filing and reconcile in one command. The pull reads
 from AEAT, so it is shown as a display frame:
 
 ```{cli-sequence} reconcile-pull
-@step Pull the receipt and reconcile it against the local record in one step.
-@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
 ```
 
 Replace `303`, `2026`, and `1T` with the modelo, year, and period of your
@@ -98,8 +90,6 @@ filing record against that file. This check is local and never contacts AEAT,
 but it needs the real receipt PDF on disk, so it is shown as a display frame:
 
 ```{cli-sequence} reconcile-file
-@step Reconcile the local filing record against a downloaded justificante PDF.
-@static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 ```
 
 This check is local. It reads the PDF you supply and never contacts AEAT.
@@ -162,10 +152,6 @@ reconciliations recorded for the active profile:
 
 ```{cli-sequence} reconcile-history
 :verify: Confirm the reconciliation history reads back cleanly.
-@step List the reconciliations recorded for the active profile.
-@result aeat --format json app modelo reconcile history
-@expect result.reconciliation_count == 0
-@expect exit_code == 0
 ```
 
 On a fresh profile the list is empty; after you reconcile a filing a row

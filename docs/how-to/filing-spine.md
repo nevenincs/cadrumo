@@ -18,8 +18,6 @@ A profile that will reach `export` must carry a name and surnames, or `export`
 refuses with "requires the operator name":
 
 ```{cli-sequence} filing-spine-create-profile
-@step Create a taxpayer profile non-interactively.
-@static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
 ```
 
 Every profile-scoped command needs the master-key passphrase; the tool
@@ -33,19 +31,7 @@ The command-line interface is the same one used in the quickstart. Run the four
 commands in order, from the profile above:
 
 ```{cli-sequence} filing-spine-chain
-:seed: iva-evidence-2026
 :verify: Confirm the chain verifies and exports a local fichero.
-@step Create the work unit for the filing target.
-aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@step Calculate the quarter's IVA from the classified ledger.
-aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
-@step Verify the calculated draft.
-aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
-@expect result.granted_verificado_completo == true
-@step Export the verified revision to a local fichero-BOE.
-@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303.boe
-@expect result.byte_size == 7365
-@expect exit_code == 0
 ```
 
 The `--activity-start-date` in the profile above scopes out the prior-period
@@ -74,18 +60,7 @@ quarter of 2026, for the active profile."
 That same visible target works across the normal workflow:
 
 ```{cli-sequence} filing-spine-visible-target
-:seed: filing-spine-303-ledger
 :verify: Confirm the visible target addresses the same saved work across reads.
-@setup aeat app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-@step Show the work unit status for the visible target.
-aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
-@step List the saved calculation revisions.
-aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
-@step Show the current revision's persisted values.
-@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
-@expect result.casilla_values.71 == "105.00"
-@expect exit_code == 0
 ```
 
 If no saved work exists yet, create it first with `aeat app modelo work create`
@@ -106,26 +81,12 @@ support or an error message asks you to target a specific ruleset version.
 To see the reference number for a saved filing:
 
 ```{cli-sequence} filing-spine-work-list
-:seed: filing-spine-303-ledger
 :verify: Confirm the saved filing appears in the work list.
-@setup aeat app modelo work create --modelo 303 --year 2026 --period 1T
-@step List every saved work unit to see its reference number.
-aeat --format json app modelo work list
-@step Show the status for one visible filing target.
-@result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
-@expect result.modelo == "303"
-@expect exit_code == 0
 ```
 
 After you have the `work_unit_id`, address the same saved work by ID:
 
 ```{cli-sequence} filing-spine-address-by-id
-@step Show the work unit status by its reference number.
-@static aeat app modelo work status <work-unit-id>
-@step Calculate by the same reference number.
-@static aeat app modelo work calculate <work-unit-id>
-@step List the saved revisions by the same reference number.
-@static aeat app modelo work revisions <work-unit-id>
 ```
 
 Prefer the visible target for hand-run commands. Use the reference number when
@@ -150,10 +111,6 @@ global, but the filing work is selected on each command. To work on a different
 filing, pass a different visible target or pass a different `work_unit_id`:
 
 ```{cli-sequence} filing-spine-other-target
-@step Address a different visible target, such as another period.
-@static aeat app modelo work status --modelo 303 --year 2026 --period 2T
-@step Or address a different work unit by its reference number.
-@static aeat app modelo work status <another-work-unit-id>
 ```
 
 ## A calculation revision is one saved result
@@ -182,8 +139,6 @@ If you need to view one specific saved calculation, type its reference number
 after the command:
 
 ```{cli-sequence} filing-spine-revision-by-id
-@step View one specific saved calculation by its reference number.
-@static aeat app modelo work revision <calculation-revision-id>
 ```
 
 Reference numbers to know:
@@ -204,8 +159,6 @@ work verify` (the chain sequence above runs it).
 Local filing defaults to the current verified revision:
 
 ```{cli-sequence} filing-spine-file
-@step File the current verified revision, recording a local marker only.
-@static aeat app modelo work file --modelo 303 --year 2026 --period 1T
 ```
 
 `work file` records a local filed marker. It does not submit anything to AEAT.
@@ -234,23 +187,11 @@ If you need a different saved calculation, use `--select` with the visible
 target:
 
 ```{cli-sequence} filing-spine-select
-@step Select the latest draft revision explicitly.
-@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
-@step Select the latest verified revision.
-@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
-@step Select the filed revision.
-@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
 ```
 
 You can also pass exact IDs on commands that accept them:
 
 ```{cli-sequence} filing-spine-exact-ids
-@step Verify a specific calculation by its reference number.
-@static aeat app modelo work verify <calculation-revision-id>
-@step File a specific calculation by its reference number.
-@static aeat app modelo work file <calculation-revision-id>
-@step Export a specific work unit and revision by their reference numbers.
-@static aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
 ```
 
 For the complete option list, see the [CLI reference](../cli/index.rst).
@@ -262,25 +203,19 @@ Manage or review the lifecycle of a work unit as it progresses:
 - `rename`: Add or update a friendly display name for the work unit:
   
   ```{cli-sequence} filing-spine-rename
-  @step Add or update a friendly display name for the work unit.
-  @static aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
-  ```
+```
 
 - `history`: Review all actions the tool has taken on this filing, in order:
   
   ```{cli-sequence} filing-spine-history
-  @step Review all actions the tool has taken on this filing, in order.
-  @static aeat app modelo work history --modelo 303 --year 2026 --period 1T
-  ```
+```
 
 - `discard`: Mark the filing workspace as discarded. The tool records this
   action in the history log. Use this if you created the workspace by mistake
   or want to replace it with a fresh one:
   
   ```{cli-sequence} filing-spine-discard
-  @step Mark the filing workspace as discarded, recording the reason.
-  @static aeat app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
-  ```
+```
   
   The `--reason` text is for your own records only. It is not sent to AEAT.
 
@@ -293,19 +228,13 @@ and restart it:
 - `runs`: List recent flow runs, from most recent to oldest:
   
   ```{cli-sequence} filing-spine-runs
-  @step List recent flow runs, from most recent to oldest.
-  @static aeat app modelo work runs
-  ```
+```
 
 - `resume`: Restart an interrupted command using the filing details or the
   reference number shown in the error message:
   
   ```{cli-sequence} filing-spine-resume
-  @step Restart an interrupted command using the filing details.
-  @static aeat app modelo work resume --modelo 303 --year 2026 --period 1T
-  @step Or restart using the run or work-unit reference number.
-  @static aeat app modelo work resume <run-id-or-work-unit-id>
-  ```
+```
 
 ## When to use exact IDs
 
