@@ -109,6 +109,7 @@ def _provision_bucket_dek_v1_session(
         dek=dek,
         idle_minutes=15,
         opened_at=opened_at,
+        storage_root=storage_root,
     )
     return session, paths
 
