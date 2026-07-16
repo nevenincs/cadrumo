@@ -3,17 +3,17 @@ tags:
   - '#adr'
   - '#portal-catalogue'
 date: '2026-04-17'
-modified: '2026-07-10'
+modified: '2026-07-16'
 related:
   - '[[2026-04-17-portal-catalogue-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-research]]'
   - '[[2026-04-12-submission-engine-adr]]'
   - '[[2026-04-12-setup-wizard-adr]]'
-  - '[[2026-04-12-cert-auth-adr]]'
   - '[[2026-04-12-trilingual-i18n-adr]]'
   - '[[2026-04-12-self-healing-sync-adr]]'
   - '[[2026-04-12-base-module-structure-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 
 # portal-catalogue adr: AEAT filing portal + URL registry | (**status:** `accepted`)

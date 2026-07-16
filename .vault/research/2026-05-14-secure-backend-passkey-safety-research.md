@@ -3,14 +3,14 @@ tags:
   - '#research'
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
-modified: '2026-07-03'
+modified: '2026-07-16'
 related:
   - '[[2026-04-12-data-storage-research]]'
-  - '[[2026-04-12-cert-auth-research]]'
   - '[[2026-04-12-setup-wizard-research]]'
   - '[[2026-04-12-pr28-storage-retro-research]]'
   - '[[2026-04-12-data-storage-adr]]'
   - '[[2026-05-08-secure-storage-legacy-path-audit-reference]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 ---
 
 # secure-backend-passkey-safety research: master-passkey enrollment + custody

@@ -3,12 +3,12 @@ tags:
   - "#research"
   - "#aeat-history-fetch"
 date: 2026-04-16
-modified: '2026-07-10'
+modified: '2026-07-16'
 title: AEAT filing-history read surface research (#168)
 related:
   - "[[2026-04-12-status-reader-adr]]"
   - "[[2026-04-12-notifications-inbox-adr]]"
-  - "[[2026-04-12-cert-auth-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 issue: wgergely/aeat#168
 epic: wgergely/aeat#166
 ---

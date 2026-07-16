@@ -8,8 +8,8 @@ related:
   - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-status-reader-adr]]"
   - "[[2026-04-21-live-cert-auth-supersession-adr]]"
-superseded_by: '2026-04-21-live-cert-auth-supersession-adr'
-modified: '2026-07-15'
+superseded_by: '2026-07-16-protected-browser-certificate-auth-adr'
+modified: '2026-07-16'
 ---
 > **PRESERVATION NOTE (apex-PM sweep, 2026-04-27):** This ADR was
 > originally authored in worktree `feature-117-live-cert` on 2026-04-16

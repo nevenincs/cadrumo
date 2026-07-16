@@ -2,15 +2,15 @@
 tags:
   - "#adr"
   - "#cert-auth"
-date: 2026-04-12
-modified: '2026-07-10'
-title: "AEAT PKCS#12 Certificate Authentication"
+date: '2026-04-12'
 related:
   - "[[2026-04-12-cert-auth-research]]"
   - "[[2026-04-12-playwright-anti-bot-adr]]"
+superseded_by: '2026-07-16-protected-browser-certificate-auth-adr'
+modified: '2026-07-16'
+title: "AEAT PKCS#12 Certificate Authentication"
 ---
-
-# ADR: PKCS#12 Certificate Authentication for AEAT Sede Electrónica | (**status:** `accepted`)
+# ADR: PKCS#12 Certificate Authentication for AEAT Sede Electrónica | (**status:** `superseded`)
 
 ## Status
 Accepted — 2026-04-12.

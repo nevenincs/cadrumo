@@ -3,15 +3,15 @@ tags:
   - "#adr"
   - "#aeat-access-gate"
 date: 2026-04-17
-modified: '2026-07-15'
+modified: '2026-07-16'
 title: "Live AEAT Access Blocker & Verification Gate"
 related:
   - "[[2026-04-17-aeat-access-gate-research]]"
-  - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-13-cert-pre-expiry-gate-adr]]"
   - "[[2026-04-12-submission-engine-adr]]"
   - "[[2026-04-12-workflow-engine-adr]]"
   - "[[2026-04-16-submission-safety-sweep-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 
 # ADR: Live AEAT Access Blocker & Verification Gate | (**status:** `accepted`)

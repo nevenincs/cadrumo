@@ -4,14 +4,15 @@ tags:
   - "#live-cert-auth"
 date: '2026-04-21'
 related:
-  - '[[2026-04-18-auth-protocol-adr]]'
-  - '[[2026-04-18-auth-provider-abstraction-adr]]'
-  - '[[2026-04-27-live-cert-auth-research]]'
+  - "[[2026-04-18-auth-protocol-adr]]"
+  - "[[2026-04-18-auth-provider-abstraction-adr]]"
+  - "[[2026-04-27-live-cert-auth-research]]"
 supersedes:
   - '2026-04-16-live-cert-auth-adr'
-modified: '2026-07-15'
+superseded_by: '2026-07-16-protected-browser-certificate-auth-adr'
+modified: '2026-07-16'
 ---
-# `live-cert-auth` adr: `issue-141 pr-148 superseded by the landed AuthProvider implementation` | (**status:** `accepted`)
+# `live-cert-auth` adr: `issue-141 pr-148 superseded by the landed AuthProvider implementation` | (**status:** `superseded`)
 
 ## Problem Statement
 
