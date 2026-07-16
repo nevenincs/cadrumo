@@ -467,6 +467,9 @@ application:
         profile_tax_id_missing_next_action: Szerkessze az aktív profilt a `aeat config
           profile edit NÉV --tax-id DNI/NIE` paranccsal a hitelesítés előtt.
       errors:
+        cleanup_in_progress: Ennél a profilnál még folyamatban van egy hitelesítési
+          kijelentkezés vagy visszaállítás helyreállítása. A hitelesítési beállítások
+          módosítása előtt folytassa azt a műveletet.
         certificate_file_required: A tanúsítvány-szolgáltató tanúsítványfájlt igényel.
           Futtassa a `aeat config auth configure --provider certificate --file ÚTVONAL`
           parancsot.

@@ -10,7 +10,7 @@ from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .....core import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
+from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 from .....core.classification import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -1041,7 +1041,10 @@ class SecureObjectRepository:
             # column is now AEAD wire bytes, so there is no plaintext to fall back
             # on (and hashing the ciphertext would be meaningless).
             previous_payload_hash = previous_metadata.payload_hash
-        elif expected_revision_id is not None:
+        elif (
+            expected_revision_id is not None
+            and expected_revision_id != ABSENT_SECURE_OBJECT_REVISION_ID
+        ):
             raise self._revision_conflict(
                 namespace=namespace,
                 expected_revision_id=expected_revision_id,
@@ -1114,6 +1117,12 @@ class SecureObjectRepository:
             )
             session.flush()
         except IntegrityError as exc:
+            if expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID:
+                raise self._revision_conflict(
+                    namespace=namespace,
+                    expected_revision_id=expected_revision_id,
+                    current_revision_id=None,
+                ) from exc
             raise RepositoryError(
                 context={
                     "namespace": namespace,

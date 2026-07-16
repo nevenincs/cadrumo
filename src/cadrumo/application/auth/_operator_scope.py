@@ -5,15 +5,23 @@ This module uses :class:`Settings` to derive the auth operator configuration.
 
 from __future__ import annotations
 
+import os
+import threading
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
+from dataclasses import dataclass
+from pathlib import Path
 
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings
 from ._catalogue import get_auth_provider, known_auth_provider_ids
-from ._operator_results import AuthOperationScopeConflictError, AuthProviderNotConfiguredError
+from ._operator_results import (
+    AuthCleanupInProgressError,
+    AuthOperationScopeConflictError,
+    AuthProviderNotConfiguredError,
+)
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "cadrumo_local_storage_root",
@@ -96,6 +104,74 @@ def active_profile_storage_span(
             return
         with profile_storage_session(bucket_id) as active:
             yield active
+
+
+@dataclass(slots=True)
+class _AuthMutationOwnership:
+    root: Path
+    bucket_id: str
+    pid: int
+    thread_id: int
+    depth: int
+
+
+_AUTH_MUTATION_OWNERSHIP = threading.local()
+
+
+@contextmanager
+def auth_mutation_span(*, settings: Settings, bucket_id: str) -> Iterator[None]:
+    """Acquire or re-enter the canonical per-bucket auth mutation span."""
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...core import exclusive_file_lock
+
+    root = settings.cadrumo_local_storage_root.expanduser().resolve(strict=False)
+    current_pid = os.getpid()
+    current_thread_id = threading.get_ident()
+    ownership = getattr(_AUTH_MUTATION_OWNERSHIP, "current", None)
+    if isinstance(ownership, _AuthMutationOwnership):
+        if (
+            ownership.root != root
+            or ownership.bucket_id != bucket_id
+            or ownership.pid != current_pid
+            or ownership.thread_id != current_thread_id
+        ):
+            raise RuntimeError("nested auth mutation targets a different bucket or execution owner")
+        ownership.depth += 1
+        try:
+            yield
+        finally:
+            ownership.depth -= 1
+        return
+
+    target = bucket_paths(root, bucket_id).audit_dir / "auth-mutation"
+    with exclusive_file_lock(target):
+        ownership = _AuthMutationOwnership(
+            root=root,
+            bucket_id=bucket_id,
+            pid=current_pid,
+            thread_id=current_thread_id,
+            depth=1,
+        )
+        _AUTH_MUTATION_OWNERSHIP.current = ownership
+        try:
+            yield
+        finally:
+            ownership.depth = 0
+            del _AUTH_MUTATION_OWNERSHIP.current
+
+
+def assert_auth_cleanup_not_in_progress(state) -> None:
+    """Refuse a new auth mutation while logout/reset recovery is pending."""
+    intent = state.auth.cleanup_intent
+    if intent is None:
+        return
+    raise AuthCleanupInProgressError(
+        translated_message="application.auth.operator.errors.cleanup_in_progress",
+        context={
+            "operation": intent.operation_kind.value,
+            "bucket_id": intent.bucket_id,
+        },
+    )
 
 
 class AuthOperationScope(BaseModel):

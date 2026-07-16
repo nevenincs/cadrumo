@@ -507,6 +507,9 @@ application:
         profile_tax_id_missing_next_action: Edita el perfil activo con 'aeat config
           profile edit NOMBRE --tax-id DNI/NIE' antes de la autenticación.
       errors:
+        cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
+          para este perfil. Reanuda esa operación antes de cambiar la configuración
+          de autenticación.
         certificate_file_required: El proveedor de certificado requiere un archivo
           de certificado. Ejecuta `aeat config auth configure --provider certificate
           --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).

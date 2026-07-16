@@ -30,7 +30,8 @@ from .....application.auth import test_operator_auth as probe_operator_auth
 from .....application.user_profile import profile_create_storage_span, register_minimal_profile
 from .....application.workflow import workflow_state_repository
 from .....core.config import load_settings, override_settings
-from .....tests.cli_runner import invoke_typer_app
+from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from .....tests.cli_runner import invoke_typer_app, semantic_cli_output
 from .. import app as config_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -229,17 +230,24 @@ def test_logout_and_reset_expose_distinct_scopes_and_confirmation() -> None:
     """Logout is session-only; reset is separately named and requires confirmation."""
     logout_help = invoke_typer_app(config_app, ["auth", "logout", "--help"])
     reset_help = invoke_typer_app(config_app, ["auth", "reset", "--help"])
+    provider_help = {
+        " ".join(tr("cli.config.auth.provider_help", locale=locale).split()) for locale in SUPPORTED_OUTPUT_LANGUAGES
+    }
+    logout_output = " ".join(semantic_cli_output(logout_help).replace("│", " ").split())
+    reset_output = " ".join(semantic_cli_output(reset_help).replace("│", " ").split())
 
     assert logout_help.exit_code == 0
-    assert "--provider" in logout_help.output
-    assert "--all" in logout_help.output
-    assert "--yes" not in logout_help.output
-    assert "--sessions" not in logout_help.output
-    assert "--locks" not in logout_help.output
+    assert "--provider" in logout_output
+    assert any(help_text in logout_output for help_text in provider_help)
+    assert "--all" in logout_output
+    assert "--yes" not in logout_output
+    assert "--sessions" not in logout_output
+    assert "--locks" not in logout_output
     assert reset_help.exit_code == 0
-    assert "--provider" in reset_help.output
-    assert "--all" in reset_help.output
-    assert "--yes" in reset_help.output
+    assert "--provider" in reset_output
+    assert any(help_text in reset_output for help_text in provider_help)
+    assert "--all" in reset_output
+    assert "--yes" in reset_output
 
 
 def test_cli_logout_preserves_provider_and_reset_removes_it(

@@ -500,6 +500,9 @@ application:
         profile_tax_id_missing_next_action: Edita el perfil actiu amb 'aeat config
           profile edit NOM --tax-id DNI/NIE' abans d'autenticar.
       errors:
+        cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
+          per a aquest perfil. Reprèn aquesta operació abans de canviar la configuració
+          d'autenticació.
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
           --file RUTA` amb la ruta al teu paquet PKCS#12 (.p12/.pfx).

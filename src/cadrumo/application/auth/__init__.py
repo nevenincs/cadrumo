@@ -283,7 +283,13 @@ from ._diagnostics import (
     record_auth_diagnostic_phone_state,
 )
 from ._errors import AuthDiagnosticPayloadError
-from ._models import AuthState, CertificateSourceRecord
+from ._models import (
+    AuthCleanupCertificateSource,
+    AuthCleanupIntent,
+    AuthCleanupOperationKind,
+    AuthState,
+    CertificateSourceRecord,
+)
 from ._operator import (
     build_live_auth_preflight_report,
     configure_operator_auth,
@@ -300,6 +306,7 @@ from ._operator_probes import (
     probe_provider_configuration,
 )
 from ._operator_results import (
+    AuthCleanupInProgressError,
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
     AuthConfigureResult,
@@ -335,6 +342,7 @@ from ._sessions import (
     delete_persisted_session,
     ensure_authenticated_aeat_session,
     load_persisted_session,
+    persisted_session_exists,
     require_verified_aeat_session,
     storage_state_paths,
 )
@@ -353,6 +361,10 @@ __all__ = [
     "AuthAcquisitionLockState",
     "AuthAcquisitionLockStatus",
     "AuthAcquisitionLockedError",
+    "AuthCleanupCertificateSource",
+    "AuthCleanupInProgressError",
+    "AuthCleanupIntent",
+    "AuthCleanupOperationKind",
     "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
@@ -423,6 +435,7 @@ __all__ = [
     "load_persisted_session",
     "login_operator_auth",
     "logout_operator_auth",
+    "persisted_session_exists",
     "probe_provider_configuration",
     "record_auth_diagnostic_phone_state",
     "register_operator_certificate_source",

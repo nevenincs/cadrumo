@@ -126,6 +126,17 @@ def test_auth_scope_errors_have_canonical_registry_envelopes(error: Exception, c
     assert envelope.message == resolve_error_message(error)
 
 
+def test_auth_scope_conflict_registry_guidance_is_command_neutral() -> None:
+    """The shared logout/reset scope error points to their common auth help."""
+    error = AuthOperationScopeConflictError(
+        translated_message="application.auth.operator.errors.scope_conflict",
+    )
+
+    envelope = build_error_envelope(error)
+
+    assert envelope.suggestion == "aeat config auth --help"
+
+
 def test_reserved_provider_reset_is_an_idempotent_noop(tmp_path: Path) -> None:
     """Known reserved providers are valid targets and never clear another configured provider."""
     with isolated_profile_storage_root(tmp_path=tmp_path):

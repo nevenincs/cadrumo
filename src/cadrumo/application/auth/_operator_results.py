@@ -216,6 +216,10 @@ class AuthOperationScopeConflictError(AeatError, ValueError):
     """Raised when ``--provider`` and ``--all`` are requested together."""
 
 
+class AuthCleanupInProgressError(AeatError):
+    """Raised when a non-resume auth mutation meets durable cleanup intent."""
+
+
 class AuthProviderNotConfiguredError(AeatError, ValueError):
     """Raised when an auth operation has neither an explicit nor configured provider."""
 
@@ -360,6 +364,7 @@ class CertificateSourceSecretMutationResult(BaseModel):
 
 
 __all__ = [
+    "AuthCleanupInProgressError",
     "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",

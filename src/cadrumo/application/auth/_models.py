@@ -11,6 +11,7 @@ re-reading this model independently.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -49,6 +50,46 @@ class CertificateSourceRecord(BaseModel):
     registered_at: datetime
 
 
+class AuthCleanupOperationKind(StrEnum):
+    """Durable auth cleanup operation kinds."""
+
+    LOGOUT = "logout"
+    RESET = "reset"
+
+
+class AuthCleanupCertificateSource(BaseModel):
+    """Version witness for one certificate source captured by auth cleanup."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    name: str = Field(min_length=1, max_length=160)
+    registered_at: datetime
+
+
+class AuthCleanupIntent(BaseModel):
+    """Secret-free durable plan for one resumable operator auth cleanup."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    operation_id: str = Field(min_length=64, max_length=64)
+    operation_kind: AuthCleanupOperationKind
+    bucket_id: str = Field(min_length=1)
+    provider_ids: tuple[str, ...]
+    all_providers: bool
+    started_at: datetime
+    provider_at_start: str | None = None
+    configured_at_at_start: datetime | None = None
+    authenticated_at_at_start: datetime | None = None
+    had_session_state: bool = False
+    certificate_path_at_start: str | None = None
+    active_certificate_source_at_start: str | None = None
+    certificate_sources: tuple[AuthCleanupCertificateSource, ...] = ()
+    provider_configuration_ids: tuple[str, ...] = ()
+    session_provider_ids: tuple[str, ...] = ()
+    lock_provider_ids: tuple[str, ...] = ()
+    secret_source_names: tuple[str, ...] = ()
+
+
 class AuthState(BaseModel):
     """Persisted local AEAT access readiness state.
 
@@ -79,3 +120,4 @@ class AuthState(BaseModel):
     subject: str | None = None
     certificate_sources: dict[str, CertificateSourceRecord] = Field(default_factory=dict)
     active_certificate_source: str | None = None
+    cleanup_intent: AuthCleanupIntent | None = None

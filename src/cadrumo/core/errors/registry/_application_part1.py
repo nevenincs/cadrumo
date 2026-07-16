@@ -162,12 +162,23 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._operator_results.AuthCleanupInProgressError",
+        ErrorCode(
+            code="LOCKED_AUTH_CLEANUP_IN_PROGRESS",
+            category=ErrorCategory.LOCKED,
+            message_key="application.auth.operator.errors.cleanup_in_progress",
+            default_suggestion="aeat config auth --help",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth._operator_results.AuthOperationScopeConflictError",
         ErrorCode(
             code="REFUSED_AUTH_OPERATION_SCOPE_CONFLICT",
             category=ErrorCategory.REFUSED,
             message_key="application.auth.operator.errors.scope_conflict",
-            default_suggestion="aeat config auth logout --help",
+            default_suggestion="aeat config auth --help",
             retryable=False,
             runbook_id=None,
         ),
