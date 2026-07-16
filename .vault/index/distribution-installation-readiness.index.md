@@ -3,9 +3,13 @@ generated: true
 tags:
   - '#index'
   - '#distribution-installation-readiness'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-16'
+modified: '2026-07-16'
 related:
+  - '[[2026-07-15-distribution-installation-readiness-W01-P01-S01]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P01-S02]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S06]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S08]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -21,6 +25,13 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 ### adr
 
 - `2026-07-15-distribution-installation-readiness-adr` - `distribution-installation-readiness` adr: `Immutable tested-cohort promotion and executable acquisition proof` | (**status:** `accepted`)
+
+### exec
+
+- `2026-07-15-distribution-installation-readiness-W01-P01-S01` - Require exact-version manuals and official companions for every command-bearing install
+- `2026-07-15-distribution-installation-readiness-W01-P01-S02` - Lock the complete runtime dependency closure after metadata changes
+- `2026-07-15-distribution-installation-readiness-W01-P02-S06` - Execute the public CLI tax itinerary against isolated encrypted storage and assert the grounded Modelo 200 result
+- `2026-07-15-distribution-installation-readiness-W01-P02-S08` - Resolve the CLI subprocess from the MCP server installation instead of ambient PATH
 
 ### plan
 

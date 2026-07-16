@@ -38,8 +38,10 @@ import contextlib
 import json
 import os
 import sys
+import sysconfig
 import time
 import uuid
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import PRODUCT_IDENTITY
@@ -280,6 +282,37 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
     return {"status": "error", "refusal": message, "timed_out": True}
 
 
+def _installed_cli_executable() -> str:
+    """Resolve the sibling CLI installed in the server's Python environment.
+
+    The MCP server and CLI are console scripts from one distribution cohort.
+    Resolving the interpreter's scripts directory preserves that relationship
+    even when ``PATH`` is empty, points at another environment, or contains a
+    checkout shim. Missing installation state fails closed instead of falling
+    back to an unrelated executable.
+    """
+    scripts_dir = Path(sysconfig.get_path("scripts")).resolve()
+    executable_name = PRODUCT_IDENTITY.cli_executable
+    if sys.platform == "win32":
+        executable_name = f"{executable_name}.exe"
+    executable = (scripts_dir / executable_name).resolve()
+    if not executable.is_file():
+        message = (
+            f"Installed Cadrumo CLI executable is missing from the MCP server environment: {executable}"
+        )
+        raise FileNotFoundError(message)
+    return str(executable)
+
+
+def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
+    """Build a structured refusal for an incomplete MCP installation."""
+    return {
+        "status": "error",
+        "refusal": str(error),
+        "installation_incomplete": True,
+    }
+
+
 def _run_subprocess_tool(
     descriptor: McpToolDescriptor,
     arguments: dict[str, object],
@@ -309,8 +342,12 @@ def _run_subprocess_tool(
         open_world=descriptor.annotations.open_world_hint,
     )
     timeout_s = timeout_seconds(tier)
-    argv = [PRODUCT_IDENTITY.cli_executable, *cli_argv_for(descriptor.verb_schema, arguments)]
-    result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+    try:
+        executable = _installed_cli_executable()
+        argv = [executable, *cli_argv_for(descriptor.verb_schema, arguments)]
+        result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+    except OSError as error:
+        return (_cli_resolution_refusal_envelope(error), True)
     if result.timed_out:
         return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
     raw = result.stdout.strip() or result.stderr.strip()
