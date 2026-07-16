@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-16'
+modified: '2026-07-16'
 related:
   - '[[2026-07-12-cadrumo-product-rename-W01-P01-S01]]'
   - '[[2026-07-12-cadrumo-product-rename-W01-P01-S02]]'
@@ -84,6 +84,7 @@ related:
   - '[[2026-07-12-cadrumo-product-rename-W05-P11-S58]]'
   - '[[2026-07-12-cadrumo-product-rename-W05-P11-S59]]'
   - '[[2026-07-12-cadrumo-product-rename-W05-P11-S60]]'
+  - '[[2026-07-12-cadrumo-product-rename-W05-P11-S61]]'
   - '[[2026-07-12-cadrumo-product-rename-W05-P12-S62]]'
   - '[[2026-07-12-cadrumo-product-rename-W05-P12-S63]]'
   - '[[2026-07-12-cadrumo-product-rename-W05-P12-S64]]'
@@ -112,6 +113,7 @@ related:
   - '[[2026-07-12-cadrumo-product-rename-W06-P15-S82]]'
   - '[[2026-07-12-cadrumo-product-rename-W06-P15-S83]]'
   - '[[2026-07-12-cadrumo-product-rename-W06-P15-S84]]'
+  - '[[2026-07-12-cadrumo-product-rename-W06-P15-S85]]'
   - '[[2026-07-12-cadrumo-product-rename-adr]]'
   - '[[2026-07-12-cadrumo-product-rename-audit]]'
   - '[[2026-07-12-cadrumo-product-rename-plan]]'
@@ -247,6 +249,8 @@ Auto-generated index of all documents tagged with `#cadrumo-product-rename`.
 - `2026-07-12-cadrumo-product-rename-W06-P15-S82` - Resolve every actionable formal-review finding without introducing compatibility shims
 - `2026-07-12-cadrumo-product-rename-W06-P15-S83` - Rerun affected focused and artifact gates after review remediation
 - `2026-07-12-cadrumo-product-rename-W06-P15-S84` - Confirm every edited path is owned, every unrelated dirty path remains untouched, and commits use explicit pathspecs
+- `2026-07-12-cadrumo-product-rename-W05-P11-S61` - Block publication until all three PyPI Trusted Publishers and remaining reservation evidence are confirmed
+- `2026-07-12-cadrumo-product-rename-W06-P15-S85` - Close issue #476 and the chore-476 restructure execution association only after all Steps and external release gates are complete
 
 ### plan
 

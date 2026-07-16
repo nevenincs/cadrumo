@@ -11,6 +11,16 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `distribution-installation-readiness` plan
 
 ## Wave `W01` - Make the Python product complete
@@ -53,11 +63,11 @@ Generate Python, Scoop, Homebrew, Claude plugin, marketplace, and MCPB artifacts
 Make wheel, sdist, companion, default, agent, and all-extra installations consume and prove the complete cohort.
 
 - [x] `W02.P03.S11` - Make the core wheel lane install and exercise a supplied complete cohort; `dev/packaging, justfile`.
-- [ ] `W02.P03.S12` - Make the plain pip lane consume supplied cohort artifacts without rebuilding; `dev/packaging/smoke_pip_core.py`.
-- [ ] `W02.P03.S13` - Make the sdist lane consume the supplied cohort and verify its resolved companions; `dev/packaging/smoke_sdist_core.py`.
-- [ ] `W02.P03.S14` - Make the split-install lane assert namespace integrity exact versions and downstream tax work; `dev/packaging/smoke_split_install.py`.
-- [ ] `W02.P03.S15` - Correct the all-extras product identity gate and run real installed behavior; `dev/packaging/smoke_extras.py`.
-- [ ] `W02.P03.S16` - Reject Python lane evidence that lacks the installed tax and MCP oracles; `dev/packaging/tests/test_packaging_real_behavior.py`.
+- [x] `W02.P03.S12` - Make the plain pip lane consume supplied cohort artifacts without rebuilding; `dev/packaging/smoke_pip_core.py`.
+- [x] `W02.P03.S13` - Make the sdist lane consume the supplied cohort and verify its resolved companions; `dev/packaging/smoke_sdist_core.py`.
+- [x] `W02.P03.S14` - Make the split-install lane assert namespace integrity exact versions and downstream tax work; `dev/packaging/smoke_split_install.py`.
+- [x] `W02.P03.S15` - Correct the all-extras product identity gate and run real installed behavior; `dev/packaging/smoke_extras.py`.
+- [x] `W02.P03.S16` - Reject Python lane evidence that lacks the installed tax and MCP oracles; `dev/packaging/tests/test_installed_oracles.py, .github/workflows/packaging-smoke.yml`.
 
 ### Phase `W02.P04` - Generate and prove Scoop
 
@@ -72,8 +82,8 @@ Create a versioned Scoop product artifact with both commands and exercise it in 
 
 Create a pinned Python virtualenv formula and tap snapshot and exercise every platform row the formula claims.
 
-- [ ] `W02.P05.S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort; `packaging/homebrew/generate.py`.
-- [ ] `W02.P05.S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort; `packaging/homebrew/tests/test_generate.py`.
+- [x] `W02.P05.S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort; `packaging/homebrew/generate.py`.
+- [x] `W02.P05.S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort; `packaging/homebrew/tests/test_generate.py`.
 - [ ] `W02.P05.S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot; `dev/packaging/smoke_homebrew.py`.
 - [ ] `W02.P05.S24` - Run the Homebrew acquisition gate on every claimed macOS and Linux row; `.github/workflows/packaging-homebrew.yml`.
 
@@ -124,8 +134,8 @@ Publish only the tested cohort through one authority, then reacquire from every 
 Make the protected manual OIDC workflow consume stored tested artifacts and remove competing publication paths.
 
 - [ ] `W04.P09.S41` - Promote stored cohort bytes through protected manual OIDC publication without rebuilding; `.github/workflows/publish.yml`.
-- [ ] `W04.P09.S42` - Verify cohort hashes evidence completeness and destination versions before any upload; `dev/release/readiness.py`.
-- [ ] `W04.P09.S43` - Remove local release upload authority while retaining diagnostic build recipes; `justfile`.
+- [ ] `W04.P09.S42` - Verify cohort hashes evidence completeness and destination versions before any upload; `dev/release/promote_python_cohort.py`.
+- [x] `W04.P09.S43` - Remove local release upload authority while retaining diagnostic build recipes; `justfile`.
 - [ ] `W04.P09.S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts; `dev/release/tests/test_publish_workflow.py`.
 
 ### Phase `W04.P10` - Reacquire public channels
@@ -147,7 +157,7 @@ Publish acquisition guidance only for passing channels, formally review the impl
 
 Align README and user guides with the measured support matrix and prevent documentation from leading artifact availability.
 
-- [ ] `W05.P11.S51` - Define the installation guide information architecture and evidence-backed claim boundaries; `docs/_distribution-installation-wireframe.md`.
+- [ ] `W05.P11.S51` - Define the installation guide information architecture and evidence-backed claim boundaries; `.vault/reference/2026-07-15-distribution-installation-readiness-reference.md`.
 - [ ] `W05.P11.S52` - Publish only currently proven acquisition commands and support claims; `README.md`.
 - [ ] `W05.P11.S53` - Document clean installation verification update and removal for Python Scoop and Homebrew; `docs/workstation-setup.md`.
 - [ ] `W05.P11.S54` - Document Claude Code Desktop Cowork plugin and MCPB acquisition with real verification commands; `docs/how-to/connect-an-agent.md`.

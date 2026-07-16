@@ -21,12 +21,22 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S66]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-summary]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P03-S11]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P03-S12]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P03-S13]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P03-S14]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P03-S15]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P03-S16]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S17]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S18]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P04-S19]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P05-S21]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P05-S22]]'
+  - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
   - '[[2026-07-15-distribution-installation-readiness-research]]'
+  - '[[2026-07-16-distribution-installation-readiness-audit]]'
   - '[[2026-07-16-distribution-installation-readiness-p02-review-audit]]'
 ---
 
@@ -36,13 +46,14 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 
 ## Documents
 
-### audit
-
-- `2026-07-16-distribution-installation-readiness-p02-review-audit` - `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
-
 ### adr
 
 - `2026-07-15-distribution-installation-readiness-adr` - `distribution-installation-readiness` adr: `Immutable tested-cohort promotion and executable acquisition proof` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-16-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `Packaging ADR reconciliation`
+- `2026-07-16-distribution-installation-readiness-p02-review-audit` - `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
 
 ### exec
 
@@ -61,8 +72,17 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-S66` - Record the actual MCP child executable through payload-free runtime telemetry
 - `2026-07-15-distribution-installation-readiness-W01-P02-summary` - `distribution-installation-readiness` `W01.P02` summary
 - `2026-07-15-distribution-installation-readiness-W02-P03-S11` - Make the core wheel lane install and exercise a supplied complete cohort
+- `2026-07-15-distribution-installation-readiness-W02-P03-S12` - Make the plain pip lane consume supplied cohort artifacts without rebuilding
+- `2026-07-15-distribution-installation-readiness-W02-P03-S13` - Make the sdist lane consume the supplied cohort and verify its resolved companions
+- `2026-07-15-distribution-installation-readiness-W02-P03-S14` - Make the split-install lane assert namespace integrity exact versions and downstream tax work
+- `2026-07-15-distribution-installation-readiness-W02-P03-S15` - Correct the all-extras product identity gate and run real installed behavior
+- `2026-07-15-distribution-installation-readiness-W02-P03-S16` - Reject Python lane evidence that lacks the installed tax and MCP oracles
 - `2026-07-15-distribution-installation-readiness-W02-P04-S17` - Generate a versioned Scoop manifest with immutable cohort URLs hashes persistence and both command shims
 - `2026-07-15-distribution-installation-readiness-W02-P04-S18` - Prove Scoop generation matches the cohort and exposes both installed commands
+- `2026-07-15-distribution-installation-readiness-W02-P04-S19` - Install from the intended bucket in Windows Sandbox and execute CLI MCP update and persistence behavior
+- `2026-07-15-distribution-installation-readiness-W02-P05-S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort
+- `2026-07-15-distribution-installation-readiness-W02-P05-S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort
+- `2026-07-15-distribution-installation-readiness-W04-P09-S43` - Remove local release upload authority while retaining diagnostic build recipes
 
 ### plan
 

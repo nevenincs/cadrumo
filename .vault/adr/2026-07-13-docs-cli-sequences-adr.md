@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-16'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
 ---
@@ -12,6 +12,20 @@ related:
 
 Operator approval recorded 2026-07-13 (session team-docs-branch1); the
 conformance-gate repair is mandated as its own plan phase.
+
+## Reader-surface amendment (2026-07-16)
+
+Setup frames and expectation assertions remain executed, golden-backed
+build-time contracts, but they are not user-facing content. The renderer omits
+`@setup` frames and `@expect` objects from both static HTML and the inline
+widget payload. The `:verify:` sentence remains the reader-facing explanation
+of what the final result proves.
+
+This amendment changes only the presentation boundary. Setup still executes,
+its output remains in the committed golden, and every expectation still runs
+against live output during check and refresh. A hermetically executable command
+must remain an executed frame. Authors may not convert it to `@static` merely
+to avoid refreshing a changed golden.
 
 ## Problem Statement
 
@@ -78,9 +92,8 @@ sequence id argument, directive options, and a body of plain frame lines —
 no nested fences. The grammar:
 
 - A line beginning `aeat ...` is a visible command frame.
-- `@setup aeat ...` is an executed but visually collapsed setup frame
-  (rendered inside a "Preparation" disclosure — executed truth, never
-  invisible magic).
+- `@setup aeat ...` is executed and golden-backed build scaffolding. It never
+  renders or enters the reader payload.
 - `@result aeat ...` is the mandatory terminal verification frame; exactly
   one, and it must be the last frame (D4).
 - `@capture <name> <json-path>` directly after a command frame binds a value
@@ -203,13 +216,11 @@ inspection or verification verb (`verify`, `view`, `status`, `history`), not
 a repetition of the last mutation; this is author discipline checked in
 review, not machine-classified.
 
-User-facing narration follows `aeat-user-docs-hardening` imperative voice:
-the required `:verify:` directive option carries one singular imperative
-sentence ("Verify the calculation before exporting."), rendered as the
-result frame's caption, and each `@expect` renders as an imperative check
-the reader can perform on their own real output ("Confirm `status` reads
-`verified_complete`."). The word "sequence" never renders; user-facing
-framing is verification guidance only.
+User-facing narration follows `aeat-user-docs-hardening` imperative voice.
+The required `:verify:` directive option carries one singular imperative
+sentence ("Verify the calculation before exporting.") and renders as the
+result frame's caption. The `@expect` assertions remain build-only. The word
+"sequence" never renders; user-facing framing is verification guidance only.
 
 *Rejected:* an abstract non-executed closing frame (hand-authored claims are
 the defect class this feature removes); implicit last-frame-is-result (loses
@@ -240,23 +251,24 @@ the engine's synthetic result frames to satisfy the letter of "parse error".
 ### D5 — Frontend component contract: server-rendered frames progressively enhanced by a vendored framework-free widget, help keyed into a generated `cli-tree.json`
 
 **Chosen.** The directive renders, at build time, a
-`div.cadrumo-sequence[data-sequence-id]` containing (a) every frame as
-static HTML in document order — the tokenised command line plus its full
-output in a `pre` — and (b) one inline
+`div.cadrumo-sequence[data-sequence-id]` containing (a) every reader-facing
+frame as static HTML in document order — the tokenised command line plus its
+full output in a `pre` — and (b) one inline
 `script[type="application/json"]` payload per sequence. No-JS degradation is
 therefore automatic and content-identical: without JavaScript the page shows
 the complete linear transcript; the widget only *enhances* (it toggles frame
 visibility and adds controls, and never injects content), so there is a
 single content source and the JSON payload cannot drift from the visible
-frames.
+frames. Setup scaffolding and expectation assertions exist only in the
+execution and golden layers.
 
 Payload shape (per sequence): `sequence_id`, ordered `frames`, each frame
-`{kind: command|setup|result, tokens, output: {format: json|text, body},
-exit_code, expects}`. Token model: tokenisation happens in Python at build
-time against the materialised Click tree (executable, verb path, option,
-option value, positional value, interpolated placeholder), so highlighting
-is correct by construction — never client-side bash guessing. Each verb
-token carries its command-path key. Hover help: one gitignored
+`{kind: command|result|static, tokens, output: {format: json|text, body},
+exit_code}`. Token model: tokenisation happens in Python at build time against
+the materialised Click tree (executable, verb path, option, option value,
+positional value, interpolated placeholder), so highlighting is correct by
+construction — never client-side bash guessing. Each verb token carries its
+command-path key. Hover help: one gitignored
 `cli-tree.json` projection generated per build from the
 `dev/docs/cli_reference.py` machinery (`{path: {help, usage, options:
 [{names, help, required}]}}`), emitted into the static output and fetched
@@ -296,7 +308,7 @@ every sequence is order-independent and its goldens are self-contained.
 Seeding is *executed CLI truth*, not out-of-band Python: fixture state is
 built by `@setup` frames (profile create, ledger import of a synthetic CSV
 under `docs/_sequences/fixtures/`), which run and golden-gate like any frame
-but render collapsed. The `:seed:` option names a reusable recipe file under
+but never render. The `:seed:` option names a reusable recipe file under
 `docs/_sequences/seeds/<name>.seq` — a shared fragment of `@setup` frames
 inlined before the sequence's own frames — so "create profile, import the
 standard quarter" is declared once and reused across pages. All fixture data
@@ -535,8 +547,8 @@ for the educational surface is revisited.
   via `python -m dev.docs.sequences refresh` and never hand-edited.
 - **Rule slug:** `sequence-result-is-mandatory-and-asserted`.
   **Rule:** Every CLI sequence ends in exactly one terminal `@result` frame
-  carrying at least one `@expect` semantic assertion, narrated user-facing as
-  a singular imperative verification step.
+  carrying at least one build-only `@expect` semantic assertion, while one
+  singular imperative `:verify:` sentence explains the result to the reader.
 - **Rule slug:** `sequence-mask-is-the-central-mask`.
   **Rule:** Sequence golden comparison uses exactly the central
   `GOLDEN_MASK_FIELDS` set; per-sequence mask extensions are forbidden, and a
