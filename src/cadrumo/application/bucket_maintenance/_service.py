@@ -46,6 +46,10 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.user_profile import UserProfileStatus
+from .._config_reset_repository import (
+    ConfigResetJournalError,
+    ConfigResetJournalRepository,
+)
 from ..user_profile import (
     UnsupportedBundleSchemaVersionError,
     delete_profile_with_lifecycle_span,
@@ -65,8 +69,10 @@ from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     ArchiveBucketCommand,
     ArchiveBucketResult,
+    AssessBucketDeletionCommand,
     BrowseBucketCommand,
     BrowseBucketResult,
+    BucketDeletionAssessment,
     BucketDiskUsageSubdirRow,
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
@@ -84,7 +90,11 @@ from ._contracts import (
     RestoreBucketCommand,
     RestoreBucketResult,
 )
-from ._manifest_digest import compute_manifest_digest
+from ._manifest_digest import (
+    compute_bucket_deletion_fingerprint,
+    compute_manifest_digest,
+    validated_bucket_deletion_paths,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from datetime import datetime
@@ -185,7 +195,7 @@ class BucketMaintenanceService:
 
     @staticmethod
     def _event_repository_for_bucket(bucket_id: str) -> BucketEventHistoryRepository:
-        """Return a :class:`BucketEventHistoryRepository` bound to ``bucket_id``'s database.
+        """Return an event repository bound to a surviving target bucket.
 
         The maintenance event for a surviving bucket belongs in that
         bucket's own event history — the same binding principle the
@@ -272,16 +282,29 @@ class BucketMaintenanceService:
         active-profile pointer, writes the manifest lifecycle status,
         tombstones the encrypted record, emits ``PROFILE_TOMBSTONED``)
         followed by hard directory removal via
-        :func:`remove_profile_bucket_directory`. The ``BUCKET_DELETED``
-        event is emitted into the bucket's own history between the
-        soft and hard steps so the operator's verb invocation is
-        recorded before the storage is gone.
+        :func:`remove_profile_bucket_directory`. Ordinary deletion writes
+        ``BUCKET_DELETED`` through the injected repository or the default
+        repository bound to the active bucket. Reset-owned deletion uses only
+        an explicitly injected event repository; otherwise its external reset
+        journal remains the surviving ownership evidence and no ambient
+        post-delete event route is opened.
 
         Refuses unless ``command.confirmed`` is ``True``; refuses if
         the target bucket is the active profile (the operator must
         switch profiles first). Both refusals are service-boundary contracts,
         not CLI ergonomics — a programmatic caller observes the same
         guarantees.
+
+        Retention and the deletion fingerprint are reassessed before deletion.
+        An expected-fingerprint mismatch is refused before lifecycle mutation.
+        Supplied operation context must match the journal's target snapshot,
+        approved retention decision, deletion marker, and deleting/deleted
+        phase. It is propagated to the result and to any explicitly routed
+        deletion event.
+
+        An already-absent target is accepted only when the caller supplies an
+        operation identifier and expected fingerprint that match a durable
+        deleting marker in the external reset journal.
 
         Returns:
             :class:`DeleteBucketResult`: The result of the delete operation.
@@ -298,21 +321,71 @@ class BucketMaintenanceService:
                 translated_message="application.bucket_maintenance.errors.delete_active_bucket",
                 context={"bucket_id": command.bucket_id},
             )
-        pointer = read_profile_bucket_by_id(command.bucket_id)
-        if pointer is None:
+        assessment = self.assess_deletion(AssessBucketDeletionCommand(bucket_id=command.bucket_id))
+        if (
+            command.reset_operation_id is not None
+            and command.expected_deletion_fingerprint is not None
+        ):
+            try:
+                ConfigResetJournalRepository().verify_deletion_ownership(
+                    operation_id=command.reset_operation_id,
+                    bucket_id=command.bucket_id,
+                    expected_fingerprint=command.expected_deletion_fingerprint,
+                )
+            except ConfigResetJournalError as exc:
+                raise BucketDeleteRefusedError(
+                    "reset journal does not own the requested bucket deletion",
+                    context={
+                        "bucket_id": command.bucket_id,
+                        "reset_operation_id": command.reset_operation_id,
+                        "expected_fingerprint": command.expected_deletion_fingerprint,
+                    },
+                ) from exc
+        if not assessment.exists:
+            if (
+                command.reset_operation_id is not None
+                and command.expected_deletion_fingerprint is not None
+            ):
+                return DeleteBucketResult(
+                    bucket_id=command.bucket_id,
+                    occurred_at=now(),
+                    deletion_fingerprint=command.expected_deletion_fingerprint,
+                    reset_operation_id=command.reset_operation_id,
+                    already_absent=True,
+                )
             from ...domain.user_profile import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
                 context={"bucket_id": command.bucket_id},
             )
-        previous_label = pointer.label
-        assessment = self._assess_retention_floor(command.bucket_id)
-        override_used = self._enforce_retention_floor(command, assessment)
-        latest_safe_erase_date = assessment.latest_safe_erase_date
+        fingerprint = assessment.fingerprint
+        retention = assessment.retention
+        assert fingerprint is not None
+        assert retention is not None
+        if (
+            command.expected_deletion_fingerprint is not None
+            and command.expected_deletion_fingerprint != fingerprint.digest
+        ):
+            raise BucketDeleteRefusedError(
+                "bucket content changed after reset deletion assessment",
+                context={
+                    "bucket_id": command.bucket_id,
+                    "reset_operation_id": command.reset_operation_id or "",
+                    "expected_fingerprint": command.expected_deletion_fingerprint,
+                    "observed_fingerprint": fingerprint.digest,
+                },
+            )
+        previous_label = assessment.label
+        assert previous_label is not None
+        override_used = self._enforce_retention_floor(command, retention)
+        latest_safe_erase_date = retention.latest_safe_erase_date
         delete_profile_with_lifecycle_span(command.bucket_id)
         occurred_at = now()
         payload: dict[str, str] = {"previous_label": previous_label}
+        if command.reset_operation_id is not None:
+            payload["reset_operation_id"] = command.reset_operation_id
+            payload["deletion_fingerprint"] = fingerprint.digest
         if override_used:
             # The override is a legally-material operator decision (erasing a
             # record the law still requires kept); record the acknowledgement,
@@ -341,8 +414,13 @@ class BucketMaintenanceService:
             payload_version=_DELETE_PAYLOAD_VERSION,
             payload=payload,
         )
-        repository = self._event_repository or BucketEventHistoryRepository()
-        repository.save(append_bucket_event(repository.load(), event))
+        if command.reset_operation_id is None:
+            repository = self._event_repository or BucketEventHistoryRepository()
+            repository.save(append_bucket_event(repository.load(), event))
+        elif self._event_repository is not None:
+            self._event_repository.save(
+                append_bucket_event(self._event_repository.load(), event),
+            )
         remove_profile_bucket_directory(command.bucket_id)
         return DeleteBucketResult(
             bucket_id=command.bucket_id,
@@ -350,6 +428,51 @@ class BucketMaintenanceService:
             occurred_at=occurred_at,
             retention_override_used=override_used,
             latest_safe_erase_date=latest_safe_erase_date,
+            deletion_fingerprint=fingerprint.digest,
+            reset_operation_id=command.reset_operation_id,
+        )
+
+    def assess_deletion(
+        self,
+        command: AssessBucketDeletionCommand,
+    ) -> BucketDeletionAssessment:
+        """Assess one explicit bucket target without lifecycle mutation.
+
+        A missing bucket directory produces an absent assessment. An existing
+        bucket with an unregistered or unreadable manifest is refused. A valid
+        existing bucket produces its label, lifecycle status, retention
+        information, and deletion fingerprint.
+        """
+        from ...core.config import load_settings
+
+        root = load_settings().cadrumo_local_storage_root
+        try:
+            validated_bucket_deletion_paths(root=root, bucket_id=command.bucket_id)
+        except FileNotFoundError:
+            return BucketDeletionAssessment(bucket_id=command.bucket_id, exists=False)
+        except ValueError as exc:
+            raise BucketDeleteRefusedError(
+                "bucket deletion assessment refuses a linked bucket root",
+                context={"bucket_id": command.bucket_id},
+            ) from exc
+        pointer = read_profile_bucket_by_id(command.bucket_id)
+        if pointer is None:
+            raise BucketDeleteRefusedError(
+                "bucket directory exists without a readable registered manifest",
+                context={"bucket_id": command.bucket_id},
+            )
+        retention = self._assess_retention_floor(command.bucket_id)
+        fingerprint = compute_bucket_deletion_fingerprint(
+            root=root,
+            bucket_id=command.bucket_id,
+        )
+        return BucketDeletionAssessment(
+            bucket_id=command.bucket_id,
+            exists=True,
+            label=pointer.label,
+            status=pointer.status,
+            fingerprint=fingerprint,
+            retention=retention,
         )
 
     def archive(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
