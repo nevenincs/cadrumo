@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, SecretStr
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.config import Settings, load_settings, override_settings
+from ...core.config import Settings, load_settings
 from ...core.time import now
 from ._certificate_secret_backend import (
     SECURE_STORAGE_BACKEND_LABEL,
@@ -117,9 +117,10 @@ def _active_bucket_id_for_secret_resolution() -> str | None:
     Unlike :func:`~application.auth._certificate_sources_operator._gate_active_bucket`, this never raises: per-source
     secret resolution is a best-effort enhancement to a pure-read probe
     (:func:`~application.auth.check_operator_certificate_sources`), not a mutation gated on
-    a healthy active profile. An absent or dangling profile simply
-    yields no per-source secret, falling back to the shared
-    :attr:`~core.config.Settings.cadrumo_certificate_password_secret`.
+    a healthy active profile. An absent or dangling profile yields no
+    bucket id. A selected named source then fails closed with no secret;
+    the global single-certificate credential remains eligible only when
+    no named source is selected.
     """
     from ...core import resolve_active_bucket_id
 
@@ -386,13 +387,16 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     reminder per entity, not only for whichever certificate happens to
     be selected.
 
-    Each source's passphrase resolves through
-    :func:`~application.auth.resolve_certificate_source_secret` first (the
-    per-source :class:`~application.auth.CertificateSecretBackend`); when no per-source secret is
-    registered, the probe falls back to the shared, env-only
-    :attr:`~core.config.Settings.cadrumo_certificate_password_secret` —
-    preserving the pre-registry single-certificate contract for sources
-    that never adopted a per-source secret.
+    Every named source's passphrase resolves only through
+    :func:`~application.auth.resolve_certificate_source_secret` (the
+    per-source :class:`~application.auth.CertificateSecretBackend`). An
+    absent secret or secure-storage read failure is projected explicitly
+    as ``None`` so the probe fails closed; a named source never inherits
+    the global
+    :attr:`~core.config.Settings.cadrumo_certificate_password_secret`.
+    The global credential remains the legacy single-certificate contract
+    only when no named source is selected and therefore is never part of
+    this registry-wide check.
 
     This is a pure read: it does not require an active profile bucket
     beyond what loading workflow state needs, and it never mutates
@@ -412,18 +416,19 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     active_name = active_record.name if active_record is not None else None
     sources = list_certificate_sources(state)
     active_bucket_id = _active_bucket_id_for_secret_resolution()
-
     entries: list[CertificateSourceCheckEntry] = []
     has_warnings = False
     for record in sources:
         per_source_secret: SecretStr | None = None
         if active_bucket_id is not None:
-            per_source_secret = resolve_certificate_source_secret(name=record.name, bucket_id=active_bucket_id)
-        if per_source_secret is not None:
-            with override_settings(cadrumo_certificate_password_secret=per_source_secret) as scoped_settings:
-                outcome = _probe_certificate_bundle(record.certificate_path, settings=scoped_settings)
-        else:
-            outcome = _probe_certificate_bundle(record.certificate_path, settings=resolved_settings)
+            per_source_secret = _resolve_named_certificate_source_secret(
+                name=record.name,
+                bucket_id=active_bucket_id,
+            )
+        scoped_settings = resolved_settings.model_copy(
+            update={"cadrumo_certificate_password_secret": per_source_secret},
+        )
+        outcome = _probe_certificate_bundle(record.certificate_path, settings=scoped_settings)
         if outcome.result in (ProviderProbeResult.EXPIRING, ProviderProbeResult.EXPIRED):
             has_warnings = True
         entries.append(
@@ -455,6 +460,16 @@ def resolve_certificate_source_secret(*, name: str, bucket_id: str) -> SecretStr
     """
     backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
     return backend.get(name)
+
+
+def _resolve_named_certificate_source_secret(*, name: str, bucket_id: str) -> SecretStr | None:
+    """Resolve one named secret through secure storage, failing closed on read errors."""
+    from ...core.errors import AeatError
+
+    try:
+        return resolve_certificate_source_secret(name=name, bucket_id=bucket_id)
+    except (OSError, AeatError):
+        return None
 
 
 def resolve_active_certificate_credentials(*, settings: Settings | None = None) -> ActiveCertificateCredentials:
@@ -492,12 +507,10 @@ def resolve_active_certificate_credentials(*, settings: Settings | None = None) 
     bucket_id = _active_bucket_id_for_secret_resolution()
     password: SecretStr | None = None
     if bucket_id is not None:
-        from ...core.errors import AeatError
-
-        try:
-            password = resolve_certificate_source_secret(name=active_record.name, bucket_id=bucket_id)
-        except (OSError, AeatError):
-            password = None
+        password = _resolve_named_certificate_source_secret(
+            name=active_record.name,
+            bucket_id=bucket_id,
+        )
     return ActiveCertificateCredentials(
         certificate_path=Path(active_record.certificate_path),
         password=password,

@@ -108,7 +108,10 @@ def _build_pkcs12(
     return out
 
 
-def test_check_reports_ok_for_a_certificate_far_from_expiry(tmp_path: Path) -> None:
+def test_check_reports_ok_for_a_certificate_far_from_expiry(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
     """A certificate with hundreds of days remaining is classified ``ok``."""
     workflow_state_repository().update(_register_operator_profile())
     cert_path = _build_pkcs12(
@@ -119,9 +122,9 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(tmp_path: Path) -> N
         subject_cn="gestor-personal",
     )
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
 
-    with override_settings(cadrumo_certificate_password_secret=_SECRET):
-        report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -132,7 +135,10 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(tmp_path: Path) -> N
     assert report.has_warnings is False
 
 
-def test_check_reports_expiring_within_the_warning_window(tmp_path: Path) -> None:
+def test_check_reports_expiring_within_the_warning_window(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
     """A certificate inside the 60-day warning window is classified ``expiring``.
 
     Uses ``freeze_time``-free real-clock-relative dates: the warning
@@ -150,9 +156,9 @@ def test_check_reports_expiring_within_the_warning_window(tmp_path: Path) -> Non
         subject_cn="apoderado-acme",
     )
     register_operator_certificate_source(name="apoderado-acme", certificate_path=cert_path)
+    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(_SECRET))
 
-    with override_settings(cadrumo_certificate_password_secret=_SECRET):
-        report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -162,7 +168,10 @@ def test_check_reports_expiring_within_the_warning_window(tmp_path: Path) -> Non
     assert report.has_warnings is True
 
 
-def test_check_reports_expired_for_a_lapsed_certificate(tmp_path: Path) -> None:
+def test_check_reports_expired_for_a_lapsed_certificate(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
     """A certificate whose validity has already elapsed is classified ``expired``."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
@@ -174,9 +183,9 @@ def test_check_reports_expired_for_a_lapsed_certificate(tmp_path: Path) -> None:
         subject_cn="expired-cert",
     )
     register_operator_certificate_source(name="expired-cert", certificate_path=cert_path)
+    set_operator_certificate_source_secret(name="expired-cert", secret=SecretStr(_SECRET))
 
-    with override_settings(cadrumo_certificate_password_secret=_SECRET):
-        report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -186,7 +195,10 @@ def test_check_reports_expired_for_a_lapsed_certificate(tmp_path: Path) -> None:
     assert report.has_warnings is True
 
 
-def test_check_covers_every_registered_source_independently(tmp_path: Path) -> None:
+def test_check_covers_every_registered_source_independently(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
     """Each registered source is classified independently, not only the active one.
 
     A gestor with a valid personal certificate and an expiring apoderado
@@ -211,9 +223,10 @@ def test_check_covers_every_registered_source_independently(tmp_path: Path) -> N
     )
     register_operator_certificate_source(name="personal", certificate_path=valid_cert)
     register_operator_certificate_source(name="apoderado-acme", certificate_path=expiring_cert, friendly_name="ACME SL")
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(_SECRET))
 
-    with override_settings(cadrumo_certificate_password_secret=_SECRET):
-        report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources()
 
     by_name = {entry.name: entry for entry in report.entries}
     assert set(by_name) == {"personal", "apoderado-acme"}
@@ -231,8 +244,7 @@ def test_check_classifies_a_missing_certificate_file_distinctly(tmp_path: Path) 
     register_operator_certificate_source(name="deleted", certificate_path=ghost_path)
     ghost_path.unlink()
 
-    with override_settings(cadrumo_certificate_password_secret=_SECRET):
-        report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -320,13 +332,14 @@ def test_check_opens_the_bundle_with_the_secure_storage_secret_no_global_fallbac
 ) -> None:
     """``check`` resolves each source's passphrase from secure storage, not a global setting.
 
-    No ``override_settings(cadrumo_certificate_password_secret=...)`` is
-    applied: the probe must open the PKCS#12 with the per-source
-    secure-storage secret alone, classifying it ``ok``.
+    The global password is intentionally wrong: the probe must open the
+    PKCS#12 with the per-source secure-storage secret alone, classifying
+    it ``ok``.
     """
     _register_select_with_secret(tmp_path)
 
-    report = check_operator_certificate_sources()
+    with override_settings(cadrumo_certificate_password_secret=SecretStr("intentionally-wrong-global")):
+        report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -379,3 +392,82 @@ def test_selected_source_without_secret_fails_closed_no_global_credential_leak(
     assert credentials.source_name == "personal"
     assert credentials.certificate_path == cert_path
     assert credentials.password is None
+
+
+def test_resolver_preserves_legacy_global_credential_when_no_named_source_is_selected(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
+    """An unselected registration does not displace the exact legacy global path and password."""
+    workflow_state_repository().update(_register_operator_profile())
+    registered_path = tmp_path / "registered-but-inactive.p12"
+    registered_path.write_bytes(b"registered source bytes")
+    register_operator_certificate_source(name="inactive", certificate_path=registered_path)
+    global_path = tmp_path / "legacy-global.p12"
+    global_path.write_bytes(b"legacy global bytes")
+    global_password = SecretStr("legacy-global-password")
+
+    with override_settings(
+        cadrumo_certificate_path=global_path,
+        cadrumo_certificate_password_secret=global_password,
+        cadrumo_certificate_friendly_name="legacy-global",
+    ):
+        credentials = resolve_active_certificate_credentials()
+
+    assert credentials.source_name is None
+    assert credentials.certificate_path == global_path
+    assert credentials.password is not None
+    assert credentials.password.get_secret_value() == global_password.get_secret_value()
+    assert credentials.friendly_name == "legacy-global"
+
+
+def test_check_named_source_without_secret_never_inherits_a_valid_global_password(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
+    """A named source without a bound secret fails closed even when the global password would open it."""
+    workflow_state_repository().update(_register_operator_profile())
+    now = datetime.now(UTC)
+    cert_path = _build_pkcs12(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="personal",
+        subject_cn="gestor-personal",
+    )
+    register_operator_certificate_source(name="personal", certificate_path=cert_path)
+    select_operator_certificate_source(name="personal")
+
+    with override_settings(cadrumo_certificate_password_secret=SecretStr(_SECRET)):
+        report = check_operator_certificate_sources()
+
+    assert len(report.entries) == 1
+    assert report.entries[0].name == "personal"
+    assert report.entries[0].result == ProviderProbeResult.CORRUPT
+
+
+def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
+    _isolated_secret_store: SecretStore,
+    tmp_path: Path,
+) -> None:
+    """A real corrupt secure-storage index cannot redirect a named source to the valid global password."""
+    workflow_state_repository().update(_register_operator_profile())
+    now = datetime.now(UTC)
+    cert_path = _build_pkcs12(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="personal",
+        subject_cn="gestor-personal",
+    )
+    register_operator_certificate_source(name="personal", certificate_path=cert_path)
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
+    select_operator_certificate_source(name="personal")
+    (_isolated_secret_store.store_dir / "index.json").write_text("{not-json", encoding="utf-8")
+
+    with override_settings(cadrumo_certificate_password_secret=SecretStr(_SECRET)):
+        report = check_operator_certificate_sources()
+
+    assert len(report.entries) == 1
+    assert report.entries[0].name == "personal"
+    assert report.entries[0].result == ProviderProbeResult.CORRUPT
