@@ -153,7 +153,7 @@ def remove_certificate_source(state: WorkflowState, *, name: str) -> tuple[Workf
     When ``name`` is the active source, the active selection is cleared
     (``active_certificate_source`` becomes ``None``); ``certificate_path``
     is left as-is, matching the pre-existing single-certificate contract
-    where clearing the path is a distinct ``auth clear`` operation.
+    where clearing provider custody is a distinct ``auth reset`` operation.
 
     Returns a ``(state, removed)`` tuple; ``removed`` is ``False`` when
     ``name`` was not registered (a no-op, not an error).

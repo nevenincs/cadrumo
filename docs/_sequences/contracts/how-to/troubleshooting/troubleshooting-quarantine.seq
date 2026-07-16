@@ -1,0 +1,6 @@
+@step Preview how many records would move, per storage area.
+aeat config repair quarantine --dry-run
+@step Apply the move for real; the real run requires --yes.
+@result aeat --format json config repair quarantine --yes
+@expect result.unreadable_total == 0
+@expect exit_code == 0

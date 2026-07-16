@@ -1,0 +1,4 @@
+@step Show each source filing the declaration folds in and its current blockers.
+@result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
+@expect result.clean_state.requires_clean_state == true
+@expect exit_code == 0

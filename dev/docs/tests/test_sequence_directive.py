@@ -164,23 +164,23 @@ def test_tokeniser_links_value_option_to_its_value() -> None:
     assert value.option_name == "--file"
 
 
-def test_payload_shape_and_render_match_static_frames() -> None:
-    """The payload carries every frame; the static HTML renders from that one source."""
+def test_payload_shape_and_render_exclude_authoring_metadata() -> None:
+    """The reader payload omits setup scaffolding and build-only assertions."""
     sequence = _parsed_sequence()
     payload = build_sequence_payload(sequence, _golden())
 
     assert payload["sequence_id"] == _SEQUENCE_ID
     assert payload["verify"] == "Verify the calculation before exporting."
-    assert [frame["kind"] for frame in payload["frames"]] == ["setup", "command", "command", "result"]
+    assert [frame["kind"] for frame in payload["frames"]] == ["command", "command", "result"]
 
     # The authored command line keeps its placeholder (the reproducible form),
     # not the golden's resolved id.
-    calculate = payload["frames"][2]
+    calculate = payload["frames"][1]
     assert calculate["command_line"] == "aeat app modelo work calculate {work_unit_id}"
     assert any(tok["kind"] == "placeholder" and tok["text"] == "{work_unit_id}" for tok in calculate["tokens"])
 
     # The create frame's masked JSON output hides the central surrogate ids.
-    create_output = payload["frames"][1]["output"]
+    create_output = payload["frames"][0]["output"]
     assert create_output["format"] == "json"
     assert "snap_demo" not in create_output["body"]
     # The displayed body is the human-readable canonical JSON DOCUMENT itself —
@@ -191,10 +191,7 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     assert "\n" in create_output["body"]
     assert "\\n" not in create_output["body"]
 
-    # The result frame carries the imperative expect narration.
-    result = payload["frames"][3]
-    assert result["expects"][0]["json_path"] == "result.status"
-    assert result["expects"][0]["narration"] == "Confirm result.status reads verified_complete."
+    assert all("expects" not in frame for frame in payload["frames"])
 
     html = render_sequence_html(payload)
     # No-JS transcript: every frame's command tokens appear as spans and the
@@ -202,14 +199,16 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     assert 'class="cadrumo-sequence"' in html
     assert f'data-sequence-id="{_SEQUENCE_ID}"' in html
     assert 'class="cli-tok cli-tok-leaf" data-command-path="aeat app modelo work calculate"' in html
-    # Setup frames render un-folded: an ordinary visible frame, no disclosure.
+    # Setup scaffolding and expectation assertions are not user-facing.
     assert "cadrumo-setup" not in html
     assert "<details" not in html
-    assert 'class="cadrumo-frame" data-frame-index="0" data-frame-kind="setup"' in html
-    # Every frame carries a per-step header (a 1-based badge + imperative line).
-    assert html.count('class="cadrumo-frame-header"') == 4
+    assert 'data-frame-kind="setup"' not in html
+    assert "Imported 3 transactions." not in html
+    assert "Confirm result.status reads verified_complete." not in html
+    # Every visible frame carries a per-step header.
+    assert html.count('class="cadrumo-frame-header"') == 3
     assert '<span class="cadrumo-frame-step">1</span>' in html
-    assert '<span class="cadrumo-frame-step">4</span>' in html
+    assert '<span class="cadrumo-frame-step">3</span>' in html
     # JSON outputs render as the readable highlighted document: the Pygments
     # token spans are present, the double-encoded `"{\n` noise signature is not,
     # and the panel NEVER borrows the docs' `.highlight` code-block class (its
@@ -219,7 +218,6 @@ def test_payload_shape_and_render_match_static_frames() -> None:
     assert '<span class="nt">' in html, "JSON output must carry Pygments key highlighting"
     assert "&quot;{" not in html, "JSON output must never render double-encoded"
     assert "Verify the calculation before exporting." in html
-    assert "Confirm result.status reads verified_complete." in html
 
     # The inline payload is present, well-formed, and equal to the computed payload.
     match = re.search(
@@ -245,8 +243,15 @@ def test_stale_golden_frame_count_is_refused() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _write_site(root: Path, *, index_body: str, goldens_root: Path) -> None:
-    """Write a minimal MyST Sphinx site whose only page carries the directive."""
+def _write_site(
+    root: Path,
+    *,
+    index_body: str,
+    goldens_root: Path,
+    sequence_id: str,
+    contract_body: str,
+) -> None:
+    """Write a minimal MyST site with a public directive and private contract."""
     conf = (
         'extensions = ["myst_parser"]\n'
         'myst_enable_extensions = ["colon_fence"]\n'
@@ -259,6 +264,9 @@ def _write_site(root: Path, *, index_body: str, goldens_root: Path) -> None:
     )
     (root / "conf.py").write_text(conf, encoding="utf-8")
     (root / "index.md").write_text(index_body, encoding="utf-8")
+    contract_dir = root / "_sequences" / "contracts" / "index"
+    contract_dir.mkdir(parents=True)
+    (contract_dir / f"{sequence_id}.seq").write_text(contract_body.strip() + "\n", encoding="utf-8")
 
 
 def _build(root: Path, *, warningiserror: bool) -> tuple[str, str]:
@@ -293,7 +301,9 @@ def _isolated_storage(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-_INDEX_WITH_DIRECTIVE = "# Modelo 303\n\n```{cli-sequence} " + _SEQUENCE_ID + "\n" + _DIRECTIVE_BODY + "\n```\n"
+_INDEX_WITH_DIRECTIVE = (
+    f"# Modelo 303\n\n```{{cli-sequence}} {_SEQUENCE_ID}\n:verify: Verify the calculation before exporting.\n```\n"
+)
 
 
 def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_storage: None) -> None:
@@ -306,7 +316,13 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_st
         json.dumps(_golden().model_dump(mode="json"), indent=2) + "\n",
         encoding="utf-8",
     )
-    _write_site(site, index_body=_INDEX_WITH_DIRECTIVE, goldens_root=goldens_root)
+    _write_site(
+        site,
+        index_body=_INDEX_WITH_DIRECTIVE,
+        goldens_root=goldens_root,
+        sequence_id=_SEQUENCE_ID,
+        contract_body="\n".join(_DIRECTIVE_BODY.splitlines()[1:]),
+    )
 
     html, warnings = _build(site, warningiserror=True)
 
@@ -314,9 +330,9 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_st
     # No-JS degradation: the full linear transcript is present in the static HTML.
     assert "aeat" in html
     assert 'data-command-path="aeat app modelo work verify"' in html
-    assert "Imported 3 transactions." in html  # the setup frame's output renders
+    assert "Imported 3 transactions." not in html
     assert "Verify the calculation before exporting." in html
-    # One inline JSON payload, well-formed and matching the four static frames.
+    # One inline JSON payload, well-formed and containing only reader-facing frames.
     match = re.search(
         r'<script type="application/json" class="cadrumo-sequence-payload">(.*?)</script>',
         html,
@@ -325,7 +341,7 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_st
     assert match is not None
     payload = json.loads(match.group(1).replace("<\\/", "</"))
     assert payload["sequence_id"] == _SEQUENCE_ID
-    assert [frame["kind"] for frame in payload["frames"]] == ["setup", "command", "command", "result"]
+    assert [frame["kind"] for frame in payload["frames"]] == ["command", "command", "result"]
     # Shell-aware display flows through the real build: the default shell is on the
     # root, both variants render per frame, and the payload carries the shells.
     assert 'data-cadrumo-shell="bash"' in html
@@ -341,7 +357,13 @@ def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _is
     site.mkdir()
     goldens_root = tmp_path / "empty-goldens"
     goldens_root.mkdir()
-    _write_site(site, index_body=_INDEX_WITH_DIRECTIVE, goldens_root=goldens_root)
+    _write_site(
+        site,
+        index_body=_INDEX_WITH_DIRECTIVE,
+        goldens_root=goldens_root,
+        sequence_id=_SEQUENCE_ID,
+        contract_body="\n".join(_DIRECTIVE_BODY.splitlines()[1:]),
+    )
 
     html, warnings = _build(site, warningiserror=False)
 
@@ -351,13 +373,8 @@ def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _is
     assert "cadrumo-sequence" not in html
 
 
-_INDEX_LIVE_AEAT = (
-    "# Pull\n\n```{cli-sequence} live-pull-demo\n"
-    ":verify: Confirm the justificante downloaded.\n"
-    "@result aeat app live justificante pull\n"
-    "@expect exit_code == 0\n"
-    "```\n"
-)
+_INDEX_LIVE_AEAT = "# Pull\n\n```{cli-sequence} live-pull-demo\n:verify: Confirm the justificante downloaded.\n```\n"
+_CONTRACT_LIVE_AEAT = "@result aeat app live justificante pull\n@expect exit_code == 0"
 
 
 def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isolated_storage: None) -> None:
@@ -371,7 +388,13 @@ def test_directive_refuses_live_aeat_in_an_executed_frame(tmp_path: Path, _isola
     site.mkdir()
     goldens_root = tmp_path / "goldens"
     goldens_root.mkdir()
-    _write_site(site, index_body=_INDEX_LIVE_AEAT, goldens_root=goldens_root)
+    _write_site(
+        site,
+        index_body=_INDEX_LIVE_AEAT,
+        goldens_root=goldens_root,
+        sequence_id="live-pull-demo",
+        contract_body=_CONTRACT_LIVE_AEAT,
+    )
 
     html, warnings = _build(site, warningiserror=False)
 
@@ -531,14 +554,8 @@ def test_parse_shells_default_and_validation() -> None:
         parse_shells("fish")
 
 
-_INDEX_UNKNOWN_SHELL = (
-    "# Bad shell\n\n```{cli-sequence} bad-shell-demo\n"
-    ":verify: Confirm it.\n"
-    ":shells: fish\n"
-    "@result aeat app modelo work verify wu\n"
-    "@expect exit_code == 0\n"
-    "```\n"
-)
+_INDEX_UNKNOWN_SHELL = "# Bad shell\n\n```{cli-sequence} bad-shell-demo\n:verify: Confirm it.\n```\n"
+_CONTRACT_UNKNOWN_SHELL = ":shells: fish\n@result aeat app modelo work verify wu\n@expect exit_code == 0"
 
 
 def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_storage: None) -> None:
@@ -547,7 +564,13 @@ def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_storage: None
     site.mkdir()
     goldens_root = tmp_path / "goldens"
     goldens_root.mkdir()
-    _write_site(site, index_body=_INDEX_UNKNOWN_SHELL, goldens_root=goldens_root)
+    _write_site(
+        site,
+        index_body=_INDEX_UNKNOWN_SHELL,
+        goldens_root=goldens_root,
+        sequence_id="bad-shell-demo",
+        contract_body=_CONTRACT_UNKNOWN_SHELL,
+    )
 
     html, warnings = _build(site, warningiserror=False)
 
@@ -557,7 +580,7 @@ def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_storage: None
 
 
 # ---------------------------------------------------------------------------
-# Per-step headers and unfolded setup frames (round 4)
+# Per-step headers and private setup scaffolding
 # ---------------------------------------------------------------------------
 
 
@@ -593,22 +616,19 @@ def test_frame_headers_fall_back_to_leaf_help() -> None:
     assert all("header" in frame for frame in payload["frames"])
     assert all(header for header in headers)
     # The verify frame's header is drawn from the verb's help, not the bare path.
-    verify_header = payload["frames"][3]["header"]
+    verify_header = payload["frames"][2]["header"]
     assert verify_header != "aeat app modelo work verify"
     assert len(verify_header) > 3
 
 
-def test_setup_frames_render_unfolded_with_headers() -> None:
-    """Setup frames render as ordinary visible frames — no disclosure, with a header."""
+def test_setup_frames_are_not_published() -> None:
+    """Setup frames execute for verification but never enter reader-facing HTML."""
     sequence = _parsed_sequence()
     payload = build_sequence_payload(sequence, _golden())
     html = render_sequence_html(payload)
-    assert "<details" not in html
-    assert "cadrumo-setup" not in html
-    # The setup frame (index 0) is a plain frame carrying its own step header.
-    assert 'data-frame-kind="setup"' in html
-    assert html.index('data-frame-kind="setup"') < html.index("cadrumo-frame-header") + len(html)
-    # The step badge numbering is 1-based across all frames, setup included.
+    assert 'data-frame-kind="setup"' not in html
+    assert "Imported 3 transactions." not in html
+    assert [frame["kind"] for frame in payload["frames"]] == ["command", "command", "result"]
     assert '<span class="cadrumo-frame-step">1</span>' in html
 
 
@@ -616,13 +636,12 @@ def test_setup_frames_render_unfolded_with_headers() -> None:
 # @static non-executed display frames (mandatory-display doctrine)
 # ---------------------------------------------------------------------------
 
-_INDEX_ALL_STATIC = (
-    "# Pull live data\n\n```{cli-sequence} live-all-static\n"
+_INDEX_ALL_STATIC = "# Pull live data\n\n```{cli-sequence} live-all-static\n```\n"
+_CONTRACT_ALL_STATIC = (
     "@step Pull the justificante from AEAT.\n"
     "@static aeat app live justificante pull\n"
     "@step View the stored justificante.\n"
     "@static aeat app live justificante latest\n"
-    "```\n"
 )
 
 
@@ -638,7 +657,13 @@ def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, _isolated_s
     site.mkdir()
     goldens_root = tmp_path / "goldens"
     goldens_root.mkdir()  # deliberately empty — an all-static sequence has no golden
-    _write_site(site, index_body=_INDEX_ALL_STATIC, goldens_root=goldens_root)
+    _write_site(
+        site,
+        index_body=_INDEX_ALL_STATIC,
+        goldens_root=goldens_root,
+        sequence_id="live-all-static",
+        contract_body=_CONTRACT_ALL_STATIC,
+    )
 
     # The build succeeds under warningiserror (a real directive fault would raise,
     # e.g. a missing-golden error); the benign cross-build "already registered"
@@ -714,7 +739,7 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
     static_frame = payload["frames"][-1]
     assert static_frame["exit_code"] is None
     assert static_frame["output"] == {"format": "empty", "body": ""}
-    assert static_frame["expects"] == []
+    assert "expects" not in static_frame
     # The executed frames still carry their golden output.
     assert payload["frames"][0]["output"]["format"] == "json"
 

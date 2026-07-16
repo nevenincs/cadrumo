@@ -323,7 +323,8 @@ def test_logout_refuses_explicit_profile_override_without_mutating_session_or_po
             assert resolve_active_bucket_id() == _MISSING_PROFILE_ID
             logout_active_profile()
 
-        assert "without --profile" in (exc_info.value.suggestion or "")
+        assert exc_info.value.translated_message == "errors.refused.refused_profile_logout_override"
+        assert exc_info.value.suggestion is None
         assert capture_pointer(storage_root) == pointer_before
         assert read_pointer(storage_root) == BucketPointer(bucket_id=_DEFAULT_PROFILE_ID, schema_version=1)
         assert current_active_bucket_session() is session

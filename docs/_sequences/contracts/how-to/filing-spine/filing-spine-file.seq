@@ -1,0 +1,2 @@
+@step File the current verified revision, recording a local marker only.
+@static aeat app modelo work file --modelo 303 --year 2026 --period 1T

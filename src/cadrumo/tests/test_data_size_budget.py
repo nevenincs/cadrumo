@@ -12,20 +12,22 @@ Bundling the corpus is an accepted decision (offline-verifiable legal grounding,
 the corpus-registry-packaging decision); growth is legitimate demand. The budget does
 not forbid growth — it forces a decision when growth crosses the ceiling. The
 budget may only be raised by a reviewed decision; a breach forces either that
-or the corpus-split escape hatch declared below.
+or a reviewed repartition of the data-distribution cohort.
 
-The corpus-split escape hatch has since been PARTIALLY realised at the wheel
-boundary: the wheel-split decision ships the corpus source binaries
+The corpus split is fully realised at the wheel boundary: the packaging
+decision ships the corpus source binaries
 (``corpus/**/*.{pdf,xls,xlsx}``) in the two ``cadrumo-data-manuals`` /
-``cadrumo-data-official`` companions and the derived runtime surfaces in the slim
-``aeat`` wheel — from the ONE source tree, which is unchanged, so the 550 MiB
+``cadrumo-data-official`` mandatory distributions and the derived runtime
+surfaces in the compact ``cadrumo`` wheel — from the ONE source tree, which is
+unchanged, so the 550 MiB
 total-tree gate still stands and still guards every byte. But a single total
-ceiling could now be silently EVADED by the split: runtime (slim-wheel) payload
+ceiling could now be silently EVADED by the split: command-bearing-wheel payload
 could balloon while the total stays under budget because the corpus-binary slice
 happened to shrink, and neither side's own growth would be visible. So the budget
 is measured per side as well: the tree is partitioned exhaustively into the
-runtime (slim ``aeat`` wheel) slice and the corpus-binary slice (the ONE slice
-the two ``aeat-data-*`` companions ship between them), each carries its own
+runtime (compact ``cadrumo`` wheel) slice and the corpus-binary slice (the ONE
+slice the two mandatory ``cadrumo-data-*`` distributions ship between them),
+each carries its own
 ceiling, and the partition is asserted exhaustive so no byte can hide between the
 two.
 
@@ -45,10 +47,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _DATA_ROOT = SRC_CADRUMO / "_data"
 
 # Corpus source binaries — the slice the wheel-split ships across the two
-# ``aeat-data-*`` companions; everything else in the tree is the runtime (slim
-# ``aeat`` wheel) slice. A file is a corpus source binary when it lives under
-# ``corpus/`` and carries one of these suffixes (the same pattern the aeat wheel
-# excludes).
+# ``cadrumo-data-*`` distributions; everything else in the tree is the runtime
+# (compact ``cadrumo`` wheel) slice. A file is a corpus source binary when it
+# lives under ``corpus/`` and carries one of these suffixes (the same pattern
+# the root wheel excludes).
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 # Declared budget: 550 MiB — the 516 MiB measured at the most recent review plus
@@ -63,22 +65,18 @@ _DATA_SIZE_BUDGET_BYTES = _DATA_SIZE_BUDGET_MIB * 1024 * 1024
 # per-distribution caps, not a second aggregate: the total-tree budget above is
 # the aggregate ceiling. Raising either requires the same reviewed-decision
 # discipline. The runtime ceiling is the load-bearing new guard — it makes
-# slim-wheel growth visible even when the corpus slice shrinks under the total.
+# command-bearing-wheel growth visible even when the corpus slice shrinks.
 _RUNTIME_DATA_BUDGET_MIB = 230
 _RUNTIME_DATA_BUDGET_BYTES = _RUNTIME_DATA_BUDGET_MIB * 1024 * 1024
 _CORPUS_BINARY_BUDGET_MIB = 380
 _CORPUS_BINARY_BUDGET_BYTES = _CORPUS_BINARY_BUDGET_MIB * 1024 * 1024
 
-# Deferral-as-data: the corpus-split escape hatch. When a budget breach is
-# driven by legitimate corpus growth rather than accidental payload, the second
-# option a breach permits is splitting the bundled corpus into a separate data
-# distribution. It is recorded here as a named constant carrying
-# its target condition so the option is discoverable in code, not only in prose.
-_CORPUS_SPLIT_ESCAPE_HATCH = (
-    "Split src/cadrumo/_data/corpus into a separate optional data distribution "
-    "when a raise-by-decision is no longer the "
-    "right call — i.e. when operator install-size pain appears, or the corpus "
-    "growth is structural (a new modelo family's manuals) rather than incidental."
+# Cohort remediation: if legitimate corpus growth breaches a per-file cap,
+# rebalance the mandatory data distributions or add another mandatory slice.
+_CORPUS_COHORT_REPARTITION = (
+    "Rebalance the mandatory cadrumo-data-* ownership partitions, or add another "
+    "mandatory exact-version data distribution, when structural corpus growth "
+    "would otherwise breach a package-index file cap."
 )
 
 
@@ -98,7 +96,7 @@ def _data_slice_bytes() -> tuple[int, int, int]:
     """Return ``(total, corpus_binary, runtime)`` byte sizes, partitioning the tree.
 
     ``corpus_binary`` is the slice the two ``aeat-data-*`` companions ship
-    between them and ``runtime`` is the slim ``aeat`` wheel slice; the two are
+    between them and ``runtime`` is the compact ``cadrumo`` wheel slice; the two are
     disjoint and exhaustive, so ``corpus_binary + runtime == total`` by
     construction.
     """
@@ -129,13 +127,13 @@ def test_data_tree_within_declared_budget() -> None:
     assert actual_bytes <= _DATA_SIZE_BUDGET_BYTES, (
         f"src/cadrumo/_data is {actual_mib:.1f} MiB, over the {_DATA_SIZE_BUDGET_MIB} MiB declared data budget. "
         f"A breach permits exactly two options: (1) raise the budget with a reviewed decision that "
-        f"records why the growth is warranted, or (2) take the corpus-split escape hatch — "
-        f"{_CORPUS_SPLIT_ESCAPE_HATCH}"
+        f"records why the growth is warranted, or (2) repartition the mandatory corpus cohort — "
+        f"{_CORPUS_COHORT_REPARTITION}"
     )
 
 
-def test_runtime_slice_within_slim_wheel_budget() -> None:
-    """The runtime (slim ``aeat`` wheel) slice stays under its per-distribution ceiling.
+def test_runtime_slice_within_command_bearing_wheel_budget() -> None:
+    """The runtime (compact ``cadrumo`` wheel) slice stays under its ceiling.
 
     This is the guard the split makes necessary: derived-surface growth in the
     runtime wheel is now visible even when the corpus-binary slice shrinks and
@@ -145,7 +143,7 @@ def test_runtime_slice_within_slim_wheel_budget() -> None:
     _total, _corpus_binary, runtime = _data_slice_bytes()
     runtime_mib = runtime / 1024 / 1024
     assert runtime <= _RUNTIME_DATA_BUDGET_BYTES, (
-        f"the runtime (slim aeat wheel) _data slice is {runtime_mib:.1f} MiB, over the "
+        f"the runtime (compact cadrumo wheel) _data slice is {runtime_mib:.1f} MiB, over the "
         f"{_RUNTIME_DATA_BUDGET_MIB} MiB per-distribution ceiling. This slice is the tree minus the corpus source "
         f"binaries (extracted text, normative html, registry, terminology, agent data). Raise the ceiling with a "
         f"reviewed decision that records why the runtime payload grew, or move payload to the aeat-data-* companions."

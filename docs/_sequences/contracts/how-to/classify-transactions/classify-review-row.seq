@@ -1,0 +1,7 @@
+@step Import the quarter's movements so there is a row to classify.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step List the rows that still need a decision.
+aeat app ledger list --filter classification=NOT_YET_PROCESSED
+@step Inspect the row before changing it.
+@result aeat --format json app ledger view e3eeac5e
+@expect result.transaction.business_classification == "NOT_YET_PROCESSED"

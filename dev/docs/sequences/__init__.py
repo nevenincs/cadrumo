@@ -24,6 +24,7 @@ from .__main__ import (
     DiscoveredSequence,
     check_page_coherence,
     check_sequences,
+    check_sequences_in_subprocess,
     default_docs_root,
     discover_sequences,
     refresh_sequences,
@@ -34,6 +35,7 @@ from ._compare import (
     compare_transcript_to_golden,
     evaluate_expectations,
 )
+from ._contracts import read_sequence_contract, sequence_contract_path
 from ._errors import (
     SequenceEngineError,
     SequenceExecutionError,
@@ -116,6 +118,7 @@ __all__ = [
     "build_golden",
     "check_page_coherence",
     "check_sequences",
+    "check_sequences_in_subprocess",
     "check_transcript",
     "command_path_key",
     "compare_transcript_to_golden",
@@ -136,10 +139,12 @@ __all__ = [
     "parse_frame_lines",
     "parse_sequence",
     "read_golden",
+    "read_sequence_contract",
     "refresh_invocation",
     "refresh_sequences",
     "refuse_live_frames",
     "result_frame_asserts_result_payload",
+    "sequence_contract_path",
     "sequence_sandbox",
     "tokenise_command",
     "write_golden",

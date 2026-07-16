@@ -1,0 +1,13 @@
+@step Record the second quarter's three movements.
+@static aeat app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
+@static aeat app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@static aeat app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50
+@step Create the second-quarter draft.
+@static aeat app modelo work create --modelo 130 --year 2026 --period 2T
+@step Calculate it with no binding zeros; the carries resolve from the filed first quarter.
+@static aeat app modelo work calculate --modelo 130 --year 2026 --period 2T
+@step Verify, export, file, and reconcile, exactly as in the first quarter.
+@static aeat app modelo work verify --modelo 130 --year 2026 --period 2T
+@static aeat app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
+@static aeat app modelo work file --modelo 130 --year 2026 --period 2T
+@static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T

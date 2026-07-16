@@ -1,0 +1,6 @@
+@step Scope the especial election to the differentiated sector.
+aeat --format json app ledger prorrata elect-especial --ejercicio 2026 --percentage 80 --sector arrendamiento
+@step Tag a row's sector as you add it.
+@result aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --sector arrendamiento --input-classification common --idempotency-key prorrata-sector-input
+@expect result.transaction.business_classification == "BUSINESS"
+@expect exit_code == 0

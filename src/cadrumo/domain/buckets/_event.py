@@ -133,6 +133,10 @@ class BucketEventType(StrEnum):
 
     # operator authentication + workspace bootstrap
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
+    AUTH_PROVIDER_CLEARED = "auth.provider.cleared"
+    AUTH_SESSION_VERIFIED = "auth.session.verified"
+    AUTH_SESSION_CLEARED = "auth.session.cleared"
+    AUTH_LOCK_CLEARED = "auth.lock.cleared"
     CONFIG_ENV_UPDATED = "config.env.updated"
 
     # named multi-certificate source registry (personal + apoderado certs)

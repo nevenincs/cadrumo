@@ -1,0 +1,4 @@
+@step List a 303 quarter's saved revisions.
+@static aeat app modelo work revisions --modelo 303 --year 2025 --period 1T
+@step Inspect the filed revision for that quarter.
+@static aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select filed

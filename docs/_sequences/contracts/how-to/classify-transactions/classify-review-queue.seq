@@ -1,0 +1,6 @@
+@step Import the quarter's movements so there is pending work to surface.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Read the profile-wide review queue.
+@result aeat --format json app review queue
+@expect result.operation == "review.queue"
+@expect exit_code == 0

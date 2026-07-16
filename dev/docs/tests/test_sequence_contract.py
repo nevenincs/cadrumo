@@ -17,6 +17,7 @@ none; a page below its baseline passes. An empty baseline means every enrolled
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -24,12 +25,25 @@ import pytest
 from dev.docs.sequences import (
     default_docs_root,
     discover_sequences,
+    read_golden,
     result_frame_asserts_result_payload,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _BASELINE_PATH = Path(__file__).resolve().parent / "result_assertion_baseline.json"
+_EXECUTED_OPERATOR_JOURNEYS = frozenset(
+    {
+        "profile-setup-capabilities",
+        "profile-setup-logout",
+        "profile-setup-maintain",
+        "protect-data-access-logout",
+    },
+)
+_PUBLIC_DEVELOPMENT_METADATA_RE = re.compile(
+    r"^\s*(?:@(?:setup|result|capture|expect|static|step)\b|:(?:seed|shells):)",
+    re.MULTILINE,
+)
 
 
 def _current_offender_counts() -> dict[str, int]:
@@ -88,3 +102,46 @@ def test_result_assertion_baseline_is_well_formed() -> None:
         assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed >= 0, (
             f"baseline entry {page!r} must be a non-negative integer count, got {allowed!r}"
         )
+
+
+def test_operator_profile_journeys_remain_executed_truth() -> None:
+    """Profile custody journeys keep real execution and committed golden evidence."""
+    discovered, problems = discover_sequences(docs_root=default_docs_root())
+    assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
+    by_id = {item.sequence_id: item for item in discovered}
+
+    for sequence_id in sorted(_EXECUTED_OPERATOR_JOURNEYS):
+        item = by_id[sequence_id]
+        assert item.sequence.executed_frames, f"{sequence_id} must not be downgraded to an all-@static card"
+        golden = read_golden(item.page, sequence_id)
+        assert golden.frames, f"{sequence_id} must retain committed real-behavior evidence"
+
+
+def test_user_markdown_contains_no_sequence_development_metadata() -> None:
+    """Machine grammar stays in private keyed contracts, never reader Markdown."""
+    docs_root = default_docs_root()
+    offenders: list[str] = []
+    for path in sorted(docs_root.rglob("*.md")):
+        relative = path.relative_to(docs_root)
+        if relative.parts and relative.parts[0] in {"_build", "_sequences"}:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for match in _PUBLIC_DEVELOPMENT_METADATA_RE.finditer(text):
+            line = text.count("\n", 0, match.start()) + 1
+            offenders.append(f"{relative.as_posix()}:{line}: {match.group(0).strip()}")
+    assert offenders == [], "development metadata leaked into user-facing Markdown:\n  " + "\n  ".join(offenders)
+
+
+def test_every_sequence_has_exactly_one_keyed_private_contract() -> None:
+    """The public directive inventory and private contract inventory agree."""
+    docs_root = default_docs_root()
+    discovered, problems = discover_sequences(docs_root=docs_root)
+    assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
+    expected = {Path(item.page) / f"{item.sequence_id}.seq" for item in discovered}
+    contracts_root = docs_root / "_sequences" / "contracts"
+    actual = {path.relative_to(contracts_root) for path in contracts_root.rglob("*.seq")}
+    assert actual == expected, (
+        f"private sequence contracts differ from public directives; "
+        f"missing={sorted(str(path) for path in expected - actual)}, "
+        f"orphaned={sorted(str(path) for path in actual - expected)}"
+    )

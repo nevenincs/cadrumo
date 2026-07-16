@@ -1,0 +1,4 @@
+@step List the supported authentication providers and their availability.
+@result aeat --format json config auth providers
+@expect result.providers[0].id == "certificate"
+@expect exit_code == 0

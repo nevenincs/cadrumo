@@ -127,3 +127,22 @@ def test_config_reset_with_explicit_scope_and_yes_executes() -> None:
     result = invoke_cached_cli(["config", "reset", "--scope", "auth", "--yes"])
     assert result.exit_code == 0, result.output
     assert "scope\tAUTH" in result.output, result.output
+
+
+def test_auth_reset_refuses_without_yes() -> None:
+    """``config auth reset`` is destructive and refuses before backend mutation."""
+    result = invoke_cached_cli(["config", "auth", "reset", "--provider", "certificate"])
+
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" in combined or "confirm" in combined.lower(), combined
+
+
+def test_auth_logout_does_not_require_yes() -> None:
+    """Anti-tautology: session logout executes without the destructive reset guard."""
+    from ....application.auth import configure_operator_auth
+
+    configure_operator_auth("certificate")
+    result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
+
+    assert result.exit_code == 0, result.output

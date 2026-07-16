@@ -1,0 +1,4 @@
+@step Preview the encrypted backup to Drive without uploading.
+@static aeat config google sync push --dry-run
+@step Mirror the encrypted records to the Drive folder.
+@static aeat config google sync push

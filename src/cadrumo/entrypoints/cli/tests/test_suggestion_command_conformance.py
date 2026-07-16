@@ -15,7 +15,7 @@ that no longer exists, which is a silent failure of the first instructive
 surface.
 
 This gate converts that hand-sweep obligation into CI enforcement. It walks
-the REAL Click tree (``typer.main.get_command`` over the live ``cadrumo`` app —
+the REAL Click tree (``typer.main.get_command`` over the live Cadrumo app —
 no mocks, no fixture trees) and resolves every cited command path from:
 
 - every registered :class:`ErrorCode` ``default_suggestion``;
@@ -31,7 +31,7 @@ sweep; extending this gate over them is tracked as a follow-up (the catalogues
 carried three locale-divergent dead citations when this gate landed, owned by
 the locale-CLI workflow).
 
-Citation grammar: ``cadrumo`` followed by a root family (``app`` / ``config``)
+Citation grammar: ``aeat`` followed by a root family (``app`` / ``config``)
 and a run of lowercase kebab-case tokens. Resolution walks group-by-group and
 accepts trailing tokens once a leaf command is reached (they are arguments);
 uppercase placeholders (``NAME``), options (``--file``), and ``<id>`` forms
@@ -66,7 +66,7 @@ _AST_SCAN_ROOTS = (
     _PACKAGE_ROOT / "entrypoints",
 )
 
-# ``cadrumo`` + a root family + a run of kebab-case tokens. A token is lowercase
+# ``aeat`` + a root family + a run of kebab-case tokens. A token is lowercase
 # kebab-case OR a bare modelo code (three digits, e.g. ``100``/``303``), the
 # only digit-leading command segments in the live tree (``aeat app live
 # borrador 100 list``). Uppercase placeholders, ``--option`` forms, and
@@ -74,7 +74,9 @@ _AST_SCAN_ROOTS = (
 # lowercase argument VALUES, which the resolver tolerates past a leaf) are
 # captured. Admitting the modelo code keeps a runnable ``... borrador 100 list``
 # citation from terminating prematurely on the ``borrador`` group.
-_CITATION_PATTERN = re.compile(r"\bcadrumo (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
+# ``an aeat app`` is ordinary prose about an AEAT web application, not an
+# operator invocation, so the article boundary is excluded explicitly.
+_CITATION_PATTERN = re.compile(r"(?<!an )\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
 
 
 @cache
@@ -108,7 +110,7 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
       pointed at ``... --help``.
     """
     command: click.Command = _root_command()
-    context = click.Context(command, info_name="cadrumo")
+    context = click.Context(command, info_name="aeat")
     for token in tokens:
         if not _is_group(command):
             # Already at a leaf; remaining tokens are argument values.
@@ -171,7 +173,7 @@ def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
     is only evaluated on a citation whose verb path is sound.
     """
     command: click.Command = _root_command()
-    context = click.Context(command, info_name="cadrumo")
+    context = click.Context(command, info_name="aeat")
     for token in tokens:
         if not _is_group(command):
             return command
@@ -187,7 +189,7 @@ def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
 def _cited_options_after(text: str, start: int) -> list[str]:
     """Extract ``--option`` tokens that belong to the citation ending at ``start``.
 
-    Scans forward from the end of the matched verb path until the next ``cadrumo``
+    Scans forward from the end of the matched verb path until the next ``aeat``
     citation begins or the text ends, so options trailing one suggested command
     are not mis-attributed to a later one. ``--help`` is dropped (a universal
     root global that is always runnable). ``--opt=value`` is reduced to the bare
@@ -276,7 +278,7 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
                     if option not in valid_options:
                         failures.append(
                             f"{origin}: cites {cited!r} with option {option!r}, which is not a parameter of "
-                            f"'cadrumo {' '.join(tokens)}' (nor a root-global option)"
+                            f"'aeat {' '.join(tokens)}' (nor a root-global option)"
                         )
     return failures
 
@@ -352,8 +354,8 @@ _RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "default_sugges
 def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
     """Collect ``id()`` of every string ``Constant`` used as a runnable-suggestion value.
 
-    Matches both ``suggestion="cadrumo ..."`` keyword arguments and
-    ``{"recovery": "cadrumo ..."}`` / ``{"next_action": "cadrumo ..."}`` dict
+    Matches both ``suggestion="aeat ..."`` keyword arguments and
+    ``{"recovery": "aeat ..."}`` / ``{"next_action": "aeat ..."}`` dict
     entries, where the operator is directed to run the cited command verbatim.
     """
     suggestion_ids: set[int] = set()
@@ -434,6 +436,7 @@ def test_scanner_flags_a_dead_citation() -> None:
     # The live canonical forms pass, and argument values past a leaf are tolerated.
     assert not _dead_citations_in("Run aeat app ledger import --file STATEMENT.csv.", origin="synthetic")
     assert not _dead_citations_in("Run aeat app modelo work calculate yourworkunit.", origin="synthetic")
+    assert _count_citations("Open an aeat app through the external selector.") == 0
 
 
 def test_scanner_flags_a_group_citation() -> None:

@@ -1,0 +1,5 @@
+@step Declare a differentiated sector with its LIVA letra and activity code.
+@result aeat --format json app ledger prorrata declare-sector --sector-id arrendamiento --letra c --activity-code 6820
+@expect result.sector.sector_id == "arrendamiento"
+@expect result.sector.letra == "c"
+@expect exit_code == 0

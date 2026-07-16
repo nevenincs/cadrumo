@@ -40,15 +40,24 @@ _PAGE_TEXT = (
     "Narrative prose around the sequence. " + _PROFILE_PREREQUISITE + "\n"
     "```{cli-sequence} " + _SEQUENCE_ID + "\n"
     ":verify: Verify the profile listing succeeds.\n"
+    "```\n"
+    "\n"
+    "Closing prose.\n"
+)
+_CONTRACT_BODY = (
     "aeat --format json config profile list\n"
     "@capture run_status status\n"
     "@result aeat --format json config profile list\n"
     '@expect status == "success"\n'
     "@expect exit_code == 0\n"
-    "```\n"
-    "\n"
-    "Closing prose.\n"
 )
+
+
+def _write_contract(root: Path, page: str, sequence_id: str, body: str) -> None:
+    """Write one private contract fixture at the production keyed path."""
+    target = root / "_sequences" / "contracts" / Path(page) / f"{sequence_id}.seq"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body.strip() + "\n", encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -57,6 +66,7 @@ def docs_tree(tmp_path_factory: pytest.TempPathFactory) -> Path:
     target = root / f"{_PAGE}.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(_PAGE_TEXT, encoding="utf-8")
+    _write_contract(root, _PAGE, _SEQUENCE_ID, _CONTRACT_BODY)
     return root
 
 
@@ -94,18 +104,56 @@ class TestDiscovery:
     def test_grammar_faults_name_the_page(self, tmp_path: Path) -> None:
         page = tmp_path / "faulty.md"
         page.write_text(
-            "```{cli-sequence} faulty-case\n:verify: V.\nnot-a-frame\n```\n",
+            "```{cli-sequence} faulty-case\n:verify: V.\n```\n",
             encoding="utf-8",
         )
+        _write_contract(tmp_path, "faulty", "faulty-case", "not-a-frame")
         _, problems = discover_sequences(docs_root=tmp_path)
         assert any("'faulty'" in problem and "not-a-frame" in problem for problem in problems)
 
-    def test_duplicate_sequence_ids_across_pages_are_refused(self, tmp_path: Path) -> None:
-        body = (
-            "```{cli-sequence} dupe-case\n:verify: V.\n@result aeat config profile list\n@expect exit_code == 0\n```\n"
+    def test_public_directive_body_is_refused(self, tmp_path: Path) -> None:
+        """Commands and assertions cannot leak back into user-facing Markdown."""
+        page = tmp_path / "leaked.md"
+        page.write_text(
+            "```{cli-sequence} leaked-case\n"
+            ":verify: Verify it.\n"
+            "@result aeat config profile list\n"
+            "@expect exit_code == 0\n"
+            "```\n",
+            encoding="utf-8",
         )
+        _write_contract(
+            tmp_path,
+            "leaked",
+            "leaked-case",
+            "@result aeat config profile list\n@expect exit_code == 0",
+        )
+        _, problems = discover_sequences(docs_root=tmp_path)
+        assert any("directive bodies must be empty" in problem for problem in problems), problems
+
+    def test_private_option_on_public_directive_is_refused(self, tmp_path: Path) -> None:
+        """Seed and shell machinery belongs to the private contract."""
+        page = tmp_path / "private-option.md"
+        page.write_text(
+            "```{cli-sequence} private-option-case\n:shells: bash\n```\n",
+            encoding="utf-8",
+        )
+        _write_contract(
+            tmp_path,
+            "private-option",
+            "private-option-case",
+            "@result aeat config profile list\n@expect exit_code == 0",
+        )
+        _, problems = discover_sequences(docs_root=tmp_path)
+        assert any(":shells:" in problem and "user-facing Markdown" in problem for problem in problems), problems
+
+    def test_duplicate_sequence_ids_across_pages_are_refused(self, tmp_path: Path) -> None:
+        body = "```{cli-sequence} dupe-case\n:verify: V.\n```\n"
         (tmp_path / "one.md").write_text(body, encoding="utf-8")
         (tmp_path / "two.md").write_text(body, encoding="utf-8")
+        contract = "@result aeat config profile list\n@expect exit_code == 0"
+        _write_contract(tmp_path, "one", "dupe-case", contract)
+        _write_contract(tmp_path, "two", "dupe-case", contract)
         discovered, problems = discover_sequences(docs_root=tmp_path)
         assert len(discovered) == 1
         assert any("duplicate sequence id" in problem for problem in problems)
@@ -226,10 +274,14 @@ class TestProfilePrerequisiteGate:
             "# No prerequisite\n\nProse without the requirement.\n\n"
             "```{cli-sequence} no-profile-case\n"
             ":verify: Verify the listing succeeds.\n"
-            "@result aeat --format json config profile list\n"
-            '@expect status == "success"\n'
             "```\n",
             encoding="utf-8",
+        )
+        _write_contract(
+            tmp_path,
+            "no-profile",
+            "no-profile-case",
+            '@result aeat --format json config profile list\n@expect status == "success"',
         )
         _, problems = discover_sequences(docs_root=tmp_path)
         assert any(
@@ -244,10 +296,14 @@ class TestProfilePrerequisiteGate:
             "You need a profile: see [Create your profile](../how-to/profile-setup.md).\n\n"
             "```{cli-sequence} linked-case\n"
             ":verify: Verify the listing succeeds.\n"
-            "@result aeat --format json config profile list\n"
-            '@expect status == "success"\n'
             "```\n",
             encoding="utf-8",
+        )
+        _write_contract(
+            tmp_path,
+            "linked",
+            "linked-case",
+            '@result aeat --format json config profile list\n@expect status == "success"',
         )
         _, problems = discover_sequences(docs_root=tmp_path)
         assert problems == ()
@@ -258,11 +314,15 @@ class TestProfilePrerequisiteGate:
             "# Too late\n\n"
             "```{cli-sequence} too-late-case\n"
             ":verify: Verify the listing succeeds.\n"
-            "@result aeat --format json config profile list\n"
-            '@expect status == "success"\n'
             "```\n\n"
             "Afterwards: create a profile with `aeat config profile create`.\n",
             encoding="utf-8",
+        )
+        _write_contract(
+            tmp_path,
+            "too-late",
+            "too-late-case",
+            '@result aeat --format json config profile list\n@expect status == "success"',
         )
         _, problems = discover_sequences(docs_root=tmp_path)
         assert any("valid-profile prerequisite" in problem for problem in problems), problems
@@ -273,7 +333,7 @@ class TestProfilePrerequisiteGate:
         assert problems == ()
 
 
-def _coherence_page(second_expected_status: str) -> str:
+def _coherence_page(_second_expected_status: str) -> str:
     """A two-sequence page whose second sequence only holds CUMULATIVELY.
 
     Sequence one creates a Modelo 130 work unit; sequence two runs the SAME
@@ -281,22 +341,34 @@ def _coherence_page(second_expected_status: str) -> str:
     the first sequence's state is still present — the genuine shared-sandbox
     proof (an isolated run would report ``"created"``).
     """
-    create = "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T"
     return (
         "# Coherent page\n\n"
         "Create a profile first with `aeat config profile create`.\n\n"
         "```{cli-sequence} coherence-first\n"
         ":verify: Verify the draft was created.\n"
-        f"@result {create}\n"
-        '@expect result.status == "created"\n'
-        "@expect exit_code == 0\n"
         "```\n\n"
         "```{cli-sequence} coherence-second\n"
         ":verify: Verify the draft is reused.\n"
-        f"@result {create}\n"
-        f'@expect result.status == "{second_expected_status}"\n'
-        "@expect exit_code == 0\n"
         "```\n"
+    )
+
+
+def _write_coherence_contracts(root: Path, page: str, second_expected_status: str) -> None:
+    """Write the two private contracts used by one cumulative-page fixture."""
+    create = "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T"
+    _write_contract(
+        root,
+        page,
+        "coherence-first",
+        f'{create.replace("aeat ", "@result aeat ", 1)}\n@expect result.status == "created"\n@expect exit_code == 0',
+    )
+    _write_contract(
+        root,
+        page,
+        "coherence-second",
+        f"{create.replace('aeat ', '@result aeat ', 1)}\n"
+        f'@expect result.status == "{second_expected_status}"\n'
+        "@expect exit_code == 0",
     )
 
 
@@ -306,6 +378,7 @@ class TestPageCoherenceMode:
         ``status == "reused"`` expectation can only hold because sequence one's
         work unit survives in the shared page sandbox."""
         (tmp_path / "coherent.md").write_text(_coherence_page("reused"), encoding="utf-8")
+        _write_coherence_contracts(tmp_path, "coherent", "reused")
         problems = check_page_coherence(docs_root=tmp_path)
         assert problems == (), problems
 
@@ -314,6 +387,7 @@ class TestPageCoherenceMode:
         state fails naming the tier, page, sequence, frame, and the live vs
         expected values — never a golden-tier message."""
         (tmp_path / "incoherent.md").write_text(_coherence_page("created"), encoding="utf-8")
+        _write_coherence_contracts(tmp_path, "incoherent", "created")
         problems = check_page_coherence(docs_root=tmp_path)
         assert len(problems) == 1
         problem = problems[0]
@@ -346,13 +420,18 @@ class TestPageCoherenceMode:
             "# Live reads\n\n"
             "Set up a profile first with `aeat config profile create`.\n\n"
             "```{cli-sequence} live-notifications-static\n"
-            "@step Pull your notifications from AEAT.\n"
-            "@static aeat app live notifications pull\n"
-            "@step View the stored snapshot.\n"
-            "@static aeat app live notifications latest\n"
             "```\n"
         )
         (tmp_path / "live.md").write_text(page, encoding="utf-8")
+        _write_contract(
+            tmp_path,
+            "live",
+            "live-notifications-static",
+            "@step Pull your notifications from AEAT.\n"
+            "@static aeat app live notifications pull\n"
+            "@step View the stored snapshot.\n"
+            "@static aeat app live notifications latest",
+        )
         problems = check_page_coherence(docs_root=tmp_path)
         assert problems == (), problems
 
@@ -362,6 +441,7 @@ class TestPageCoherenceMode:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         (tmp_path / "incoherent.md").write_text(_coherence_page("created"), encoding="utf-8")
+        _write_coherence_contracts(tmp_path, "incoherent", "created")
         exit_code = main(["check", "--coherence", "--docs-root", str(tmp_path)])
         captured = capsys.readouterr()
         assert exit_code == 1

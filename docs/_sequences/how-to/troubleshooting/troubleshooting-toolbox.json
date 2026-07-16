@@ -45,7 +45,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "path\t<sandbox-storage-root>\\logs\\cadrumo.log\n"
+      "text": "path\t<sandbox-storage-root>/logs/cadrumo.log\n"
     },
     {
       "argv": [

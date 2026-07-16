@@ -25,21 +25,7 @@ classified ledger, then creates the draft, calculates it, and verifies it. Each
 load-bearing detail is explained under the sequence.
 
 ```{cli-sequence} modelo-130-quarterly
-:seed: autonomo-irpf-2026
 :verify: Confirm the draft passed verification before you export it.
-@step Open a Modelo 130 draft for the first quarter.
-aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@step Calculate the quarter's instalment from the classified ledger.
-aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values.01 == "1000"
-@expect result.casilla_values.03 == "500.00"
-@expect result.casilla_values.04 == "100.00"
-@step Verify the draft before you export it.
-@result aeat --format json app modelo work verify {calculation_revision_id}
-@expect result.granted_verificado_completo == true
-@expect exit_code == 0
 ```
 
 Load-bearing details:
@@ -96,16 +82,7 @@ through registry bindings; prior filings feed the carries. Casillas `06`,
 complementary results). Inspect what is bound, missing, or manual:
 
 ```{cli-sequence} modelo-130-inspect-boxes
-:seed: autonomo-irpf-2026
 :verify: Confirm the draft's bindings and the modelo's casilla definitions read back.
-@setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
-@setup aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@step Show which casillas are bound, missing, or supplied by hand.
-aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
-@step Show the modelo's casilla definitions for the period.
-@result aeat --format json app modelo casillas 130 --period 1T
-@expect result.casilla_count == 20
-@expect exit_code == 0
 ```
 
 ## Supply a manual box value
@@ -116,18 +93,7 @@ same calculate call as the first-period bindings, then review the saved
 calculation to confirm your value landed:
 
 ```{cli-sequence} modelo-130-manual-casilla
-:seed: autonomo-irpf-2026
 :verify: Confirm the manual value you supplied appears in the saved calculation.
-@step Open the Modelo 130 draft for the first quarter.
-aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@step Calculate, supplying casilla 06 by hand alongside the first-period bindings.
-aeat --format json app modelo work calculate {work_unit_id} --casilla 06=100.00 --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@capture calculation_revision_id result.calculation_revision_id
-@step Review the saved calculation and confirm casilla 06 holds your value.
-@result aeat --format json app modelo work revision {calculation_revision_id}
-@expect result.casilla_values.06 == "100.00"
-@expect exit_code == 0
 ```
 
 `--casilla` works only on `manual` boxes; a `bound` box filled from your ledger
@@ -168,17 +134,7 @@ The chain is the standard filing workflow - see
 revisions behave. In short:
 
 ```{cli-sequence} modelo-130-review-chain
-:seed: autonomo-irpf-2026
 :verify: Confirm the draft calculates, reviews, and verifies before you export it.
-@setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
-@step Calculate the quarter from the classified ledger.
-aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@step Review the saved revision.
-aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
-@step Verify the draft before you export it.
-@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
-@expect result.granted_verificado_completo == true
-@expect exit_code == 0
 ```
 
 Once the draft verifies, export it. Export refuses until every
@@ -189,10 +145,6 @@ shown as display frames. The full evidence-to-export chain runs end to end,
 executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
 
 ```{cli-sequence} modelo-130-export-file
-@step Export the verified draft to a local fichero-BOE.
-@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
-@step After you upload at the portal, record the local filed marker in the obligation window.
-@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
 ```
 
 Each computed casilla carries its formula, legal references, and source

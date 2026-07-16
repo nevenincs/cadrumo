@@ -34,7 +34,7 @@ from contextlib import contextmanager
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import BUCKET_DEK_FILENAME
+from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, close_active_bucket_session
 from ...adapters.persistence.storage.bucket import bucket_paths, keystore_path
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core import BucketPointer
@@ -262,10 +262,7 @@ class ProfileLogoutOverrideError(UserProfileError):
     def __init__(self) -> None:
         """Initialise the refusal with override-specific recovery guidance."""
         super().__init__(
-            translated_message="errors.refused.refused_cli_boundary",
-            suggestion=(
-                "Retry without --profile after removing CADRUMO_ACTIVE_PROFILE from the invocation environment."
-            ),
+            translated_message="errors.refused.refused_profile_logout_override",
         )
 
 
@@ -445,8 +442,6 @@ def logout_active_profile() -> str | None:
         ProfileLogoutOverrideError: If an explicit active-profile override is
             in force.
     """
-    from ...adapters.persistence.storage import close_active_bucket_session
-
     override = (load_settings().cadrumo_active_profile or "").strip()
     if override:
         raise ProfileLogoutOverrideError

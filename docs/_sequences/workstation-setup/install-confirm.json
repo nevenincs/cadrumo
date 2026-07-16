@@ -43,7 +43,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile\t<profile-id>\ncapability\tcloud_evidence_upload\tdisabled\tglobal_setting\ncapability\tllm_vision\tdisabled\tprofile\ncapability\tgoogle_export\tenabled\tdefault\ndependency\tollama-vision\tmissing\tstart Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url\ndependency\tllm-provider:claude\tavailable\ndependency\tllm-provider:antigravity\tavailable\ndependency\tllm-provider:codex\tavailable\ndependency\tplaywright-chromium\tavailable\ndependency\textra:google\tavailable\ndependency\textra:browser\tavailable\ndependency\textra:anthropic\tavailable\ndependency\textra:ofx\tavailable\npreflight\tauth-provider:certificate\tok\tNo certificate file has been selected.\npreflight\tauth-provider:clave_movil\tok\tNo DNI/NIE has been configured for Cl@ve Móvil.\npreflight\tauth-provider:clave_permanente\tok\tprovider clave_permanente: unknown\npreflight\tstorage:local-root\tok\tsecure-storage root <sandbox-storage-root> is reachable and writable (present)\npreflight\tcorpus:normatives\tok\tthe bundled legal normatives corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\normatives\npreflight\tcorpus:manuals\tok\tthe bundled Manual práctico corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\manuals\npreflight\tenv:configuration\tok\tdeployment configuration loaded and a master-key passphrase is configured\npreflight\tstorage:windows-long-path\tok\tLongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply\npreflight\tregistry:referential-integrity\tok\tall 90 registry revisions pass the typed-ID referential-integrity gate\npreflight\tportal-registry:health\tok\t41 portals registered; no portal drift recorded\n"
+      "text": "profile\t<profile-id>\ncapability\tcloud_evidence_upload\tdisabled\tglobal_setting\ncapability\tllm_vision\tdisabled\tprofile\ncapability\tgoogle_export\tenabled\tdefault\ndependency\tollama-vision\tmissing\tstart Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url\ndependency\tllm-provider:claude\tmissing\tinstall the 'claude' CLI and put it on PATH\ndependency\tllm-provider:antigravity\tmissing\tinstall the 'agy' CLI and put it on PATH\ndependency\tllm-provider:codex\tmissing\tinstall the 'codex' CLI and put it on PATH\ndependency\tplaywright-chromium\tmissing\tplaywright install chromium\ndependency\textra:google\tavailable\ndependency\textra:browser\tavailable\ndependency\textra:anthropic\tavailable\ndependency\textra:ofx\tavailable\npreflight\tauth-provider:certificate\tok\tNo certificate file has been selected.\npreflight\tauth-provider:clave_movil\tok\tNo DNI/NIE has been configured for Cl@ve Móvil.\npreflight\tauth-provider:clave_permanente\tok\tprovider clave_permanente: unknown\npreflight\tstorage:local-root\tok\tsecure-storage root <sandbox-storage-root> is reachable and writable (present)\npreflight\tcorpus:normatives\tok\tthe bundled legal normatives corpus is present at <repo-root>/src/cadrumo/_data/corpus/normatives\npreflight\tcorpus:manuals\tok\tthe bundled Manual práctico corpus is present at <repo-root>/src/cadrumo/_data/corpus/manuals\npreflight\tenv:configuration\tok\tdeployment configuration loaded and a master-key passphrase is configured\npreflight\tstorage:windows-long-path\tok\tLongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply\npreflight\tregistry:referential-integrity\tok\tall 90 registry revisions pass the typed-ID referential-integrity gate\npreflight\tportal-registry:health\tok\t41 portals registered; no portal drift recorded\n"
     },
     {
       "argv": [
@@ -84,27 +84,27 @@
               "service": "ollama-vision"
             },
             {
-              "available": true,
-              "detail": "claude resolved at C:\\Users\\hello\\.local\\bin\\claude.EXE",
-              "remediation": "",
+              "available": false,
+              "detail": "claude not found on PATH",
+              "remediation": "install the 'claude' CLI and put it on PATH",
               "service": "llm-provider:claude"
             },
             {
-              "available": true,
-              "detail": "agy resolved at C:\\Users\\hello\\AppData\\Local\\agy\\bin\\agy.EXE",
-              "remediation": "",
+              "available": false,
+              "detail": "agy not found on PATH",
+              "remediation": "install the 'agy' CLI and put it on PATH",
               "service": "llm-provider:antigravity"
             },
             {
-              "available": true,
-              "detail": "codex resolved at C:\\Users\\hello\\AppData\\Roaming\\npm\\codex.CMD",
-              "remediation": "",
+              "available": false,
+              "detail": "codex not found on PATH",
+              "remediation": "install the 'codex' CLI and put it on PATH",
               "service": "llm-provider:codex"
             },
             {
-              "available": true,
-              "detail": "Chromium build present under C:\\Users\\hello\\AppData\\Local\\ms-playwright",
-              "remediation": "",
+              "available": false,
+              "detail": "no Playwright Chromium build found under <sandbox-workdir>/.playwright-browsers",
+              "remediation": "playwright install chromium",
               "service": "playwright-chromium"
             },
             {
@@ -165,14 +165,14 @@
             },
             {
               "check": "corpus:normatives",
-              "detail": "the bundled legal normatives corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\normatives",
+              "detail": "the bundled legal normatives corpus is present at <repo-root>/src/cadrumo/_data/corpus/normatives",
               "healthy": true,
               "remediation": "",
               "severity": "ok"
             },
             {
               "check": "corpus:manuals",
-              "detail": "the bundled Manual práctico corpus is present at <repo-root>\\src\\cadrumo\\_data\\corpus\\manuals",
+              "detail": "the bundled Manual práctico corpus is present at <repo-root>/src/cadrumo/_data/corpus/manuals",
               "healthy": true,
               "remediation": "",
               "severity": "ok"

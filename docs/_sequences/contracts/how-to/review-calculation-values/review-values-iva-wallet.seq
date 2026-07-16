@@ -1,0 +1,8 @@
+@step Inspect the local IVA compensation wallet balance.
+aeat --format json app modelo iva-wallet balance --as-of-year 2026
+@step Seed a first-period opening balance of zero.
+aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+@step Correct the seeded opening amount, recording the reason.
+@result aeat --format json app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+@expect result.amount == "1200.50"
+@expect exit_code == 0

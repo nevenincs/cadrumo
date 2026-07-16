@@ -18,6 +18,7 @@ this module stays SDK-independent and unit-tested.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
@@ -32,10 +33,19 @@ from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_t
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
+
+@dataclass(frozen=True)
+class ToolRunOutcome:
+    """The common result contract shared by direct and meta-tool dispatch."""
+
+    envelope: dict[str, object]
+    is_error: bool
+
+
 #: The subprocess runner the server injects into :func:`meta_execute`: it takes a
-#: descriptor and the named arguments and returns the CLI envelope plus an error
-#: flag, exactly as the direct call path runs it.
-ToolRunner = Callable[[McpToolDescriptor, dict[str, object]], tuple[dict[str, object], bool]]
+#: descriptor and the named arguments and returns the same typed outcome the
+#: direct call path uses.
+ToolRunner = Callable[[McpToolDescriptor, dict[str, object]], ToolRunOutcome]
 
 
 class MetaSearchResult(BaseModel):
@@ -443,5 +453,5 @@ def meta_execute(
     refusal = gate_refusal(persona=persona, descriptor=descriptor)
     if refusal is not None:
         return MetaExecuteResult(command_key=command_key, refused=refusal)
-    envelope, is_error = run(descriptor, arguments)
-    return MetaExecuteResult(command_key=command_key, envelope=envelope, is_error=is_error)
+    outcome = run(descriptor, arguments)
+    return MetaExecuteResult(command_key=command_key, envelope=outcome.envelope, is_error=outcome.is_error)

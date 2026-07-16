@@ -16,18 +16,7 @@ Check the profile first with `aeat config profile status`. It confirms the profi
 Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`. The card below confirms the profile, asks whether Modelo 303 applies for 2026, then checks readiness for the first quarter, the whole diagnostic flow in order.
 
 ```{cli-sequence} choose-modelo-applicability
-:seed: choose-modelo-autonomo
 :verify: Confirm the tool reports whether Modelo 303 applies and whether the profile is ready to file it.
-@step Confirm the active profile is loaded and carries the basics.
-aeat config profile status
-@step Ask whether Modelo 303 applies for 2026, and read the rationale.
-aeat --format json app overview explain 303 --year 2026
-@expect result.applicable == true
-@expect result.verdict == "applicable"
-@step Check filing readiness for the first-quarter Modelo 303 context.
-@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
-@expect result.ready == true
-@expect exit_code == 0
 ```
 
 The explain answer has four parts:
@@ -74,15 +63,6 @@ To see every form the tool knows, list the catalogue with `aeat app modelo list`
 
 ```{cli-sequence} choose-modelo-catalogue
 :verify: Confirm the catalogue lists the known forms and describes Modelo 303 in detail.
-@step List every form the tool knows.
-aeat --format json app modelo list
-@step Narrow the catalogue to the 2026 fiscal year.
-aeat --format json app modelo list --year 2026
-@step Look up Modelo 303 in detail.
-@result aeat --format json app modelo describe 303
-@expect result.code == "303"
-@expect result.cadence == "quarterly"
-@expect exit_code == 0
 ```
 
 The list shows each modelo's code, official Spanish title, cadence, tax domain, and revision count. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.

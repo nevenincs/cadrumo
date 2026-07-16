@@ -13,7 +13,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\t<profile-id>\nLogout cleared the active-profile pointer. Subsequent verbs in this terminal will refuse with NoActiveBucketSessionError until you run aeat config switch NAME or open a new terminal and re-select.\n"
+      "text": "logged_out_profile\t<profile-id>\nLogout closed the active storage session, discarded in-memory key material, disposed bucket engines, and cleared the active-profile pointer. Run aeat config switch NAME before another profile-bound command.\n"
     },
     {
       "argv": [

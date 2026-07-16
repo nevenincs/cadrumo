@@ -110,19 +110,28 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             (the incremental changed-page set); ``None`` checks every enrolled
             page (a full build).
     """
-    from dev.docs.sequences import check_sequences, refresh_invocation
+    from dev.docs.sequences import check_sequences_in_subprocess, refresh_invocation
 
     docs_root = Path(app.srcdir)
     goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
 
     problems: list[str] = []
     if pages is None:
-        found, _advisories = check_sequences(docs_root=docs_root, goldens_root=goldens_root)
-        problems.extend(found)
+        problems.extend(
+            check_sequences_in_subprocess(
+                docs_root=docs_root,
+                goldens_root=goldens_root,
+            ),
+        )
     else:
         for page in pages:
-            found, _advisories = check_sequences(docs_root=docs_root, goldens_root=goldens_root, page=page)
-            problems.extend(found)
+            problems.extend(
+                check_sequences_in_subprocess(
+                    docs_root=docs_root,
+                    goldens_root=goldens_root,
+                    page=page,
+                ),
+            )
 
     if problems:
         detail = "\n".join(problems)

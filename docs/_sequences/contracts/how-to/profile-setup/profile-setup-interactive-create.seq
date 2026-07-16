@@ -1,0 +1,2 @@
+@step Start the guided wizard for a new profile.
+@static aeat config profile create my-profile

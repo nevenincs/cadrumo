@@ -1,0 +1,2 @@
+@step Create a taxpayer profile non-interactively.
+@static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01

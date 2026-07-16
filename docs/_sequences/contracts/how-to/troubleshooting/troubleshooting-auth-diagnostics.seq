@@ -1,0 +1,6 @@
+@step List the saved login-failure diagnostics.
+@result aeat --format json config auth diagnostics list
+@expect result.row_count == 0
+@expect exit_code == 0
+@step Inspect one diagnostic by its reference.
+@static aeat config auth diagnostics show <diagnostic-id>

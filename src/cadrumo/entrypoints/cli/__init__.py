@@ -48,7 +48,7 @@ _configure_stdio_for_utf8()
 
 from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
-from ...core.i18n import tr as _tr
+from ...core.i18n import tr
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
@@ -89,7 +89,7 @@ class _TyperExceptionsState(Protocol):
 
 app = typer.Typer(
     name=_PRODUCT_IDENTITY.cli_executable,
-    help=_tr("cli.root.app_help"),
+    help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
@@ -106,42 +106,42 @@ def _root(
         "--language",
         "--lang",
         click_type=_TyperChoice(_SUPPORTED_OUTPUT_LANGUAGES),
-        help=_tr("cli.root.language_help"),
+        help=tr("cli.root.language_help"),
         is_eager=True,
     ),
     profile: str | None = typer.Option(
         None,
         "--profile",
-        help=_tr("cli.root.profile_help"),
+        help=tr("cli.root.profile_help"),
     ),
     version: bool = typer.Option(
         False,
         "--version",
         "-V",
-        help=_tr("cli.root.version_help"),
+        help=tr("cli.root.version_help"),
         is_eager=True,
     ),
     detail: bool = typer.Option(
         False,
         "--detail",
-        help=_tr("cli.root.detail_help"),
+        help=tr("cli.root.detail_help"),
         is_eager=True,
     ),
     help_: bool = typer.Option(
         False,
         "--help",
         "-h",
-        help=_tr("cli.root.help_help"),
+        help=tr("cli.root.help_help"),
         is_eager=True,
     ),
     format_: str = typer.Option(
         _FORMAT_TEXT,
         "--format",
-        help=_tr("cli.root.format_help"),
+        help=tr("cli.root.format_help"),
     ),
-    quiet: bool = typer.Option(False, "--quiet", help=_tr("cli.root.quiet_help")),
-    verbose: bool = typer.Option(False, "--verbose", help=_tr("cli.root.verbose_help")),
-    debug: bool = typer.Option(False, "--debug", help=_tr("cli.root.debug_help")),
+    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.root.quiet_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.root.verbose_help")),
+    debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
     if language is not None:
@@ -166,7 +166,7 @@ def _root(
             # The short `aeat --version` line is machine-format semver
             # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
             # managers. Cadrumo policy treats semver output as machine-format,
-            # not operator text, so _tr() wrapping is intentionally omitted.
+            # not operator text, so tr() wrapping is intentionally omitted.
             typer.echo(f"{_PRODUCT_IDENTITY.display_name} {report.package_version}")
         raise typer.Exit()
     if help_:
@@ -439,7 +439,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
-    # session opens — so any `_tr()` fired during module import or the
+    # session opens — so any `tr()` fired during module import or the
     # root callback cached the settings-default language before the
     # profile preference was readable. Drop the cache here so the verb
     # body re-resolves through the now-readable profile preference.
@@ -672,7 +672,7 @@ def _full_invocation_tokens() -> tuple[str, ...]:
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,
-        help=_tr("cli.root.unavailable_app_help"),
+        help=tr("cli.root.unavailable_app_help"),
         no_args_is_help=False,
         invoke_without_command=True,
     )
@@ -691,7 +691,7 @@ def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
     dependency = _redact_for_cli_output(_missing_dependency_name(error))
-    return _tr("cli.root.startup_import_error", dependency=dependency) + "\n"
+    return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:
@@ -710,7 +710,7 @@ def _missing_dependency_name(error: ModuleNotFoundError) -> str:
 
 app_app = typer.Typer(
     name="app",
-    help=_tr("cli.root.app_app_help"),
+    help=tr("cli.root.app_app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
@@ -721,7 +721,7 @@ app_app = typer.Typer(
 @app_app.callback()
 def _app_root(
     ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help=_tr("cli.root.app_help_help"), is_eager=True),
+    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
 ) -> None:
     """Render app-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
@@ -837,7 +837,7 @@ def _localise_help_section_headers() -> None:
     Typer renders the ``Options`` / ``Commands`` / ``Arguments`` panel titles
     (the ``--help`` section headers) and the parse-error ``Try '... --help' for
     help.`` hint from module-level constants in :mod:`typer.rich_utils` that are
-    frozen to English at import. The already-``_tr()``-bound option *descriptions*
+    frozen to English at import. The already-``tr()``-bound option *descriptions*
     localise via the :func:`_apply_language_argv_to_environment` env promotion,
     but the framework-owned section headers stayed English — the residual gap the
     operator-surface ``--language`` help-honesty contract leaves open.
@@ -852,14 +852,14 @@ def _localise_help_section_headers() -> None:
     """
     import typer.rich_utils as _rich_utils
 
-    _rich_utils.OPTIONS_PANEL_TITLE = _tr("cli.help.panel.options", default="Options")
-    _rich_utils.COMMANDS_PANEL_TITLE = _tr("cli.help.panel.commands", default="Commands")
-    _rich_utils.ARGUMENTS_PANEL_TITLE = _tr("cli.help.panel.arguments", default="Arguments")
-    _rich_utils.ERRORS_PANEL_TITLE = _tr("cli.help.panel.error", default="Error")
+    _rich_utils.OPTIONS_PANEL_TITLE = tr("cli.help.panel.options", default="Options")
+    _rich_utils.COMMANDS_PANEL_TITLE = tr("cli.help.panel.commands", default="Commands")
+    _rich_utils.ARGUMENTS_PANEL_TITLE = tr("cli.help.panel.arguments", default="Arguments")
+    _rich_utils.ERRORS_PANEL_TITLE = tr("cli.help.panel.error", default="Error")
     # RICH_HELP keeps the ``[blue]…[/]`` Rich markup and the ``{command_path}`` /
-    # ``{help_option}`` positional placeholders Typer ``.format()``s; _tr() uses
+    # ``{help_option}`` positional placeholders Typer ``.format()``s; tr() uses
     # ``%{name}`` interpolation so it passes these ``{…}`` tokens through intact.
-    _rich_utils.RICH_HELP = _tr(
+    _rich_utils.RICH_HELP = tr(
         "cli.help.try_for_help",
         default="Try [blue]'{command_path} {help_option}'[/] for help.",
     )
@@ -886,16 +886,16 @@ def _localise_typer_parse_error_messages() -> None:
     def localised_missing_parameter_format_message(self) -> str:
         rendered = missing_parameter_format_message(self)
         if rendered.startswith("Missing argument"):
-            missing = _tr("cli.help.missing_argument", default="Missing argument")
+            missing = tr("cli.help.missing_argument", default="Missing argument")
             return f"{missing}{rendered.removeprefix('Missing argument')}"
         if rendered.startswith("Missing option"):
-            missing = _tr("cli.help.missing_option", default="Missing option")
+            missing = tr("cli.help.missing_option", default="Missing option")
             return f"{missing}{rendered.removeprefix('Missing option')}"
         if rendered.startswith("Missing parameter"):
-            missing = _tr("cli.help.missing_parameter", default="Missing parameter")
+            missing = tr("cli.help.missing_parameter", default="Missing parameter")
             return f"{missing}{rendered.removeprefix('Missing parameter')}"
         if rendered.startswith("Missing "):
-            missing = _tr("cli.help.missing_parameter", default="Missing parameter")
+            missing = tr("cli.help.missing_parameter", default="Missing parameter")
             return f"{missing}{rendered.removeprefix('Missing')}"
         return rendered
 
@@ -905,15 +905,15 @@ def _localise_typer_parse_error_messages() -> None:
             prefix, separator, detail = rendered.partition(": ")
             parameter = prefix.removeprefix("Invalid value for ")
             rendered = (
-                f"{_tr('cli.help.invalid_value_for', default='Invalid value for %{parameter}', parameter=parameter)}"
+                f"{tr('cli.help.invalid_value_for', default='Invalid value for %{parameter}', parameter=parameter)}"
                 f"{separator}{detail}"
             )
         elif rendered.startswith("Invalid value"):
-            invalid_value = _tr("cli.help.invalid_value", default="Invalid value")
+            invalid_value = tr("cli.help.invalid_value", default="Invalid value")
             rendered = f"{invalid_value}{rendered.removeprefix('Invalid value')}"
         return rendered.replace(
             "is not a valid integer.",
-            _tr("cli.help.not_valid_integer", default="is not a valid integer."),
+            tr("cli.help.not_valid_integer", default="is not a valid integer."),
         )
 
     def localised_write_usage(self, prog: str, args: str = "", prefix: str | None = None) -> None:
@@ -921,7 +921,7 @@ def _localise_typer_parse_error_messages() -> None:
             self,
             prog,
             args,
-            _tr("cli.help.usage_prefix", default="Usage: ") if prefix is None else prefix,
+            tr("cli.help.usage_prefix", default="Usage: ") if prefix is None else prefix,
         )
 
     _typer_exceptions.MissingParameter.format_message = localised_missing_parameter_format_message
@@ -941,7 +941,7 @@ def main() -> None:
 
     An explicit ``--language`` / ``--lang`` flag is promoted to
     ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
-    render their ``_tr(...)``-bound help, so the flag genuinely localises help
+    render their ``tr(...)``-bound help, so the flag genuinely localises help
     text (see :mod:`._language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved
     locale (see :func:`_localise_help_section_headers`).

@@ -1,0 +1,18 @@
+:seed: iva-year-2025
+@step Open the annual Modelo 390 work unit for 2025.
+aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
+@capture work_unit_id result.work_unit_id
+@step Calculate the annual summary from the year's ledger and the filed 303 quarters.
+aeat --format json app modelo work calculate {work_unit_id}
+@capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values["iva.anual.cuota-devengada-total"] == "1470.00"
+@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "1470.00"
+@expect result.casilla_values["iva.anual.cuota-deducible-total"] == "105.00"
+@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "105.00"
+@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "1365.00"
+@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1365.00"
+@step Verify the annual draft; the four filed 303 quarters satisfy the cross-period gate.
+@result aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@expect result.completeness_status == "complete"
+@expect exit_code == 0

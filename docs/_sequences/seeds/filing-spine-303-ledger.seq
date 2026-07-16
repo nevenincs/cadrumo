@@ -1,3 +1,5 @@
+@step Select the documentation profile before preparing the quarter.
+@setup aeat config switch docs-sequence-sandbox
 @step Record when the activity started so the quarter is a valid obligation.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
 @step Import the quarter's bank movements into the ledger.

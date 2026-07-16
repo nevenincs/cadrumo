@@ -35,8 +35,7 @@ def _write_pyprojects(root: Path, version: str) -> None:
     _write_project(root_project, name="cadrumo", version=version)
     root_project.write_text(
         root_project.read_text(encoding="utf-8")
-        + "[project.optional-dependencies]\n"
-        + f'corpus-sources = ["cadrumo-data-manuals=={version}", "cadrumo-data-official=={version}"]\n',
+        + f'dependencies = ["cadrumo-data-manuals=={version}", "cadrumo-data-official=={version}"]\n',
         encoding="utf-8",
     )
     _write_project(
@@ -187,8 +186,8 @@ def test_version_surfaces_agree_fails_on_companion_project_drift(tmp_path: Path)
     assert "1.9.9" in check.detail
 
 
-def test_version_surfaces_agree_fails_on_nonmatching_exact_pin(tmp_path: Path) -> None:
-    """An exact companion pin that does not name the cohort version blocks release."""
+def test_version_surfaces_agree_fails_on_nonmatching_mandatory_exact_pin(tmp_path: Path) -> None:
+    """A mandatory companion pin that does not name the cohort version blocks release."""
     root = _make_repo_root(tmp_path, version="2.0.0")
     project = root / "pyproject.toml"
     project.write_text(
@@ -203,6 +202,24 @@ def test_version_surfaces_agree_fails_on_nonmatching_exact_pin(tmp_path: Path) -
 
     assert check.passed is False
     assert "cadrumo-data-official==1.9.9" in check.detail
+
+
+def test_version_surfaces_agree_fails_when_a_mandatory_companion_is_missing(tmp_path: Path) -> None:
+    """Removing a base dependency cannot recreate the retired slim-only install."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    project = root / "pyproject.toml"
+    project.write_text(
+        project.read_text(encoding="utf-8").replace(
+            ', "cadrumo-data-official==2.0.0"',
+            "",
+        ),
+        encoding="utf-8",
+    )
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "cadrumo-data-manuals==2.0.0" in check.detail
 
 
 def test_changelog_ready_fails_when_missing(tmp_path: Path) -> None:

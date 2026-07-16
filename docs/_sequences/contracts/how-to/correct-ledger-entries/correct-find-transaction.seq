@@ -1,0 +1,9 @@
+@step Record an example expense you will correct in the sections below.
+aeat --format json app ledger add --date 2026-03-15 --amount 210.00 --direction OUTGOING --description "Silla de oficina" --idempotency-key correct-find
+@capture transaction_id result.transaction_id
+@step List your transactions to find the one to fix.
+aeat app ledger list
+@step Inspect one transaction in detail before changing it.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.description == "Silla de oficina"
+@expect exit_code == 0

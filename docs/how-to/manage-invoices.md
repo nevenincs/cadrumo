@@ -52,13 +52,6 @@ you entered:
 
 ```{cli-sequence} invoices-record-issued
 :verify: Confirm the issued invoice was stored as a collectible invoice.
-@step Record an invoice you sent to a customer.
-aeat --format json app ledger invoice add --kind issued --counterparty-nif B12345678 --counterparty-name "Cliente SL" --invoice-number FAC-2026-001 --invoice-date 2026-02-15 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --total-amount 1210
-@capture invoice_id result.invoice_id
-@step Confirm it resolved to a collectible invoice.
-@result aeat --format json app ledger invoice view {invoice_id} --kind issued
-@expect result.source_kind == "collectible_invoice"
-@expect result.total_amount == "1210"
 ```
 
 Record the short `invoice_id`; you address the invoice by it (or by an
@@ -71,12 +64,6 @@ Record an invoice a supplier sent you. The `source_kind` resolves to
 
 ```{cli-sequence} invoices-record-received
 :verify: Confirm the received invoice was stored as a payable invoice.
-@step Record an invoice a supplier sent you.
-aeat --format json app ledger invoice add --kind received --counterparty-nif A87654321 --counterparty-name "Proveedor SA" --invoice-number PROV-99 --invoice-date 2026-02-20 --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --total-amount 605
-@capture invoice_id result.invoice_id
-@step Confirm it resolved to a payable invoice.
-@result aeat --format json app ledger invoice view {invoice_id} --kind received
-@expect result.source_kind == "payable_invoice"
 ```
 
 ## List, view, update, and remove
@@ -86,19 +73,6 @@ The view of one invoice takes its id (or an unambiguous prefix) and the kind:
 
 ```{cli-sequence} invoices-list-update-remove
 :verify: Confirm the note was added and the invoice then removed.
-@step Record an issued invoice to manage.
-@setup aeat --format json app ledger invoice add --kind issued --counterparty-nif B12345678 --counterparty-name "Cliente SL" --invoice-number FAC-2026-050 --invoice-date 2026-02-15 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --total-amount 1210
-@capture invoice_id result.invoice_id
-@step List every invoice, both kinds.
-aeat app ledger invoice list
-@step Filter the list to issued invoices only.
-aeat app ledger invoice list --kind issued
-@step Add a note to the invoice.
-aeat app ledger invoice update {invoice_id} --kind issued --notes "paid late"
-@step Remove the invoice, confirming with --yes.
-@result aeat --format json app ledger invoice remove {invoice_id} --kind issued --yes
-@expect result.notes == "paid late"
-@expect exit_code == 0
 ```
 
 ## Record an intra-community invoice
@@ -110,13 +84,6 @@ operation type:
 
 ```{cli-sequence} invoices-record-intracommunity
 :verify: Confirm the operation type and country were stored on the issued invoice.
-@step Record a supply to a VAT-registered EU customer with its M349 operation type.
-aeat --format json app ledger invoice add --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-001 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --iva-amount 0 --total-amount 2000 --country-code DE --eu-iva-id DE345678901 --operation-type E
-@capture invoice_id result.invoice_id
-@step Confirm the operation type and country were stored.
-@result aeat --format json app ledger invoice view {invoice_id} --kind issued
-@expect result.operation_type == "E"
-@expect result.country_code == "DE"
 ```
 
 `--operation-type` takes one M349 operation key: `E` supplies of goods, `M`
@@ -135,22 +102,6 @@ recapitulative declaration for the period the invoice falls in:
 
 ```{cli-sequence} invoices-catalogue-and-349
 :verify: Confirm the catalogued invoice reaches the Modelo 349 calculation.
-@step Catalogue an intra-community supply so a calculation can read it.
-aeat --format json app ledger invoice catalogue create --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-CAT-001 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
-@capture invoice_id result.invoice_id
-@expect result.operation_type == "E"
-@step List the catalogue copies.
-aeat app ledger invoice catalogue list
-@step Inspect one catalogue invoice to confirm its id.
-aeat --format json app ledger invoice catalogue view {invoice_id}
-@expect result.base_total == "2000.00"
-@step Create the Modelo 349 work unit for the period the invoice falls in.
-aeat --format json app modelo work create --modelo 349 --year 2026 --period 02
-@capture work_unit_id result.work_unit_id
-@step Calculate the recapitulative declaration.
-@result aeat --format json app modelo work calculate {work_unit_id}
-@expect result.operation == "modelo.work.calculate"
-@expect exit_code == 0
 ```
 
 For an intra-community operation, pass `--operation-type` so the catalogue
@@ -170,18 +121,6 @@ the link on the catalogue copy:
 
 ```{cli-sequence} invoices-link-catalogue
 :verify: Confirm the catalogue invoice records the linked transaction.
-@step Record the bank transaction that collected the invoice.
-@setup aeat --format json app ledger add --date 2026-02-12 --amount 2000 --direction INCOMING --description "Cobro cliente DE" --idempotency-key invoices-link
-@capture transaction_id result.transaction_id
-@step Catalogue the issued invoice.
-@setup aeat --format json app ledger invoice catalogue create --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-CAT-050 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
-@capture invoice_id result.invoice_id
-@step Link the catalogue invoice to the transaction that collected it.
-aeat app ledger link {transaction_id} --invoice-id {invoice_id}
-@step Confirm the catalogue invoice now records the linked transaction.
-@result aeat --format json app ledger invoice catalogue view {invoice_id}
-@expect result.operation_type == "E"
-@expect exit_code == 0
 ```
 
 Remove a catalogue invoice you created by mistake, confirming with `--yes`.
@@ -191,13 +130,6 @@ invoice that no longer exists:
 
 ```{cli-sequence} invoices-catalogue-remove
 :verify: Confirm the catalogue invoice was removed.
-@step Catalogue an invoice to remove.
-@setup aeat --format json app ledger invoice catalogue create --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-CAT-099 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
-@capture invoice_id result.invoice_id
-@step Remove the unlinked catalogue invoice.
-@result aeat --format json app ledger invoice catalogue remove {invoice_id} --yes
-@expect result.invoice_number == "EU-CAT-099"
-@expect exit_code == 0
 ```
 
 ## Which modelos read your invoices

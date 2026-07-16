@@ -170,7 +170,7 @@ def _read_mcpb_manifest(repo_root: Path) -> tuple[str, tuple[str, ...]]:
 
 
 def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
-    """Confirm every release authority and exact companion pin reports one version."""
+    """Confirm every release authority and mandatory companion pin reports one version."""
     project_versions = tuple(
         (relative, _read_project_version(repo_root / relative)) for relative, _expected_name in _PROJECT_NAME_PATHS
     )
@@ -180,7 +180,9 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     mcpb_version, mcpb_args = _read_mcpb_manifest(repo_root)
     root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
     observed_pins = tuple(
-        str(requirement) for requirement in root_project["project"]["optional-dependencies"]["corpus-sources"]
+        str(requirement)
+        for requirement in root_project["project"]["dependencies"]
+        if any(str(requirement).startswith(distribution) for distribution in PRODUCT_IDENTITY.companion_distributions)
     )
     expected_pins = tuple(
         f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
@@ -197,7 +199,10 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
         f"mcpb={mcpb_version!r} mcpb_pin_ok={mcpb_pin_ok} pins={observed_pins!r}"
     )
     if passed:
-        detail = f"all release authorities, the .mcpb bundle, and exact companion pins agree on {pyproject_version!r}"
+        detail = (
+            "all release authorities, the .mcpb bundle, and mandatory exact companion "
+            f"dependencies agree on {pyproject_version!r}"
+        )
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
 

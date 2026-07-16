@@ -1,0 +1,2 @@
+@step Check an EU VAT number against the VIES register (a live AEAT read).
+@static aeat app live verify nif-iva DE123456789

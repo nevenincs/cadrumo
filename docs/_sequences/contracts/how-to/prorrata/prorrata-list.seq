@@ -1,0 +1,6 @@
+@setup aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
+@setup aeat app ledger prorrata declare-sector --sector-id arrendamiento --letra c --activity-code 6820
+@step List every prorrata election and declared sector.
+@result aeat --format json app ledger prorrata list
+@expect result.sectors[0].sector_id == "arrendamiento"
+@expect exit_code == 0

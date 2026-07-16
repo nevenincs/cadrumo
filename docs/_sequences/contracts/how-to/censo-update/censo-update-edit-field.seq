@@ -1,0 +1,2 @@
+@step Edit a specific profile field directly.
+@static aeat config profile edit <profile-name> --quiet --activity <value>

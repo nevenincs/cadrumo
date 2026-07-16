@@ -1,0 +1,2 @@
+@step Acquire or verify a live AEAT session.
+@static aeat config auth login

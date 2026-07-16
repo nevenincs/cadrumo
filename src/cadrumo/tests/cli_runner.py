@@ -93,4 +93,16 @@ def semantic_cli_output(result: Result) -> str:
     colour behaviour.
     """
 
-    return click.unstyle(result.output)
+    return semantic_cli_text(result.output)
+
+
+def semantic_cli_text(text: str) -> str:
+    """Return one CLI stream without terminal styling.
+
+    Sequence capture reads stdout and stderr independently, whereas
+    :func:`semantic_cli_output` consumes Click's combined
+    :class:`~click.testing.Result.output`.  This string-level authority keeps
+    both callers on the same presentation-only ANSI removal.
+    """
+
+    return click.unstyle(text)

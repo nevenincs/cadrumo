@@ -1,0 +1,4 @@
+@step Preview the on-host read of the attached image.
+@static aeat app ledger classify <transaction-id> --read-evidence --saturate
+@step Apply the on-host read.
+@static aeat app ledger classify <transaction-id> --read-evidence --saturate --apply

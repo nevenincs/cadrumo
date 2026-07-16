@@ -1,0 +1,9 @@
+:seed: filing-calendar-obligated-profile
+@step Print a provisional calendar for the year.
+aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
+@step Include every registered profile.
+aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --all-profiles --allow-incomplete
+@step Inspect obligations Cadrumo normally filters out.
+@result aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed --allow-incomplete
+@expect result.taxpayer_model_declared == true
+@expect exit_code == 0

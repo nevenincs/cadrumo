@@ -66,8 +66,7 @@ def test_verify_source_file_checks_hash_and_size(tmp_path: Path) -> None:
     reference = _source_reference("corpus/source.xlsx", payload)
     assert source_path.read_bytes() == payload
     assert reference.sha256, "reference must carry a hash for verification to be meaningful"
-    result = verify_source_file(tmp_path, reference)
-    assert result is None
+    verify_source_file(tmp_path, reference)
 
 
 def test_verify_source_file_rejects_hash_mismatch(tmp_path: Path) -> None:
@@ -94,8 +93,7 @@ def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
 
     catalogue = {"aeat-source": _source_reference("corpus/source.xlsx", payload)}
     assert len(catalogue) == 1
-    result = verify_source_catalogue(tmp_path, catalogue)
-    assert result == ()
+    verify_source_catalogue(tmp_path, catalogue)
 
 
 def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
@@ -367,14 +365,8 @@ def test_source_citation_text_rejects_path_escape(tmp_path: Path) -> None:
     ]
 
 
-def test_source_citation_skips_absent_companion_binary_but_fails_absent_html(tmp_path: Path) -> None:
-    """A split install's absent companion binary is unevaluable, never a citation failure.
-
-    The corpus catalogue gate surfaces the ONE loud companion advisory for the
-    absent binary; the citation check must not duplicate-fail it. An absent
-    NON-companion file (extracted text, normative html — always in the runtime
-    wheel) stays a hard citation failure exactly as before.
-    """
+def test_source_citation_fails_absent_binary_and_html_sources(tmp_path: Path) -> None:
+    """Every absent cited source fails, including mandatory-companion binaries."""
     binary = _source_reference("corpus/manuals/example/source.pdf", b"pdf payload").model_copy(
         update={"id": "source-companion-pdf", "evidence_tier": "official_source_guidance", "kind": "instructions"},
     )
@@ -402,7 +394,8 @@ def test_source_citation_skips_absent_companion_binary_but_fails_absent_html(tmp
         "official_source_guidance",
     )
 
-    assert binary_failures == []
+    assert len(binary_failures) == 1
+    assert "cannot be read" in binary_failures[0]
     assert len(html_failures) == 1
     assert "cannot be read" in html_failures[0]
 

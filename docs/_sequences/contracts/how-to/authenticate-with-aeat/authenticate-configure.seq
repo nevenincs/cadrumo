@@ -1,0 +1,2 @@
+@step Configure a provider that needs a file, such as your digital certificate.
+@static aeat config auth configure --provider certificate --file ./certificate.p12

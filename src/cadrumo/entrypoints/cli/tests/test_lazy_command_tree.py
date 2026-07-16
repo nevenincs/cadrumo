@@ -97,7 +97,7 @@ def test_version_cold_start_completes_under_budget() -> None:
     elapsed = time.perf_counter() - start
 
     assert completed.returncode == 0, completed.stderr
-    assert "cadrumo" in completed.stdout
+    assert completed.stdout.startswith("CADRUMO ")
     assert elapsed < _COLD_START_BUDGET_S, (
         f"aeat --version cold start took {elapsed:.2f}s (budget {_COLD_START_BUDGET_S}s) — "
         "lazy subcommand registration likely regressed to an eager import"

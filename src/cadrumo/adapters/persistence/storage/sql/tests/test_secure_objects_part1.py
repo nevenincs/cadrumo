@@ -273,8 +273,8 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
             payload=payload,
         )
         with sqlite3.connect(db_path) as con:
-            (stored_key,) = con.execute(
-                "SELECT object_key FROM secure_objects WHERE namespace = ?",
+            stored_key, revision_id = con.execute(
+                "SELECT object_key, revision_id FROM secure_objects WHERE namespace = ?",
                 (namespace,),
             ).fetchone()
 
@@ -292,6 +292,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
             schema_version=3,
             written_at=written_at,
             payload=payload,
+            revision_id=revision_id,
         )
 
 

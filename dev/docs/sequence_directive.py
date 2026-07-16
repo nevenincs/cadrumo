@@ -6,10 +6,10 @@ golden (it RENDERS from the golden, it never executes — the engine's check/ref
 CLI owns execution), tokenises each command line against the live Click tree, and
 emits, in document order:
 
-- every frame as static HTML — the tokenised command line and its full output in
-  a ``pre`` — so a reader without JavaScript sees the complete linear transcript;
+- each reader-facing frame as static HTML — setup scaffolding and expectation
+  assertions remain build-only;
 - exactly one inline ``script[type="application/json"]`` payload per sequence,
-  carrying the same frames and per-token command-path keys.
+  carrying those same reader-facing frames and per-token command-path keys.
 
 Both surfaces are rendered from ONE computed payload, so the JSON a widget reads
 cannot drift from the visible frames. The frontend widget (not yet built) only
@@ -120,24 +120,6 @@ def wrap_token_lines(token_texts: list[str], *, width: int = _WRAP_WIDTH) -> lis
     return lines
 
 
-def _literal_text(value: object) -> str:
-    """Render a JSON literal for user-facing narration (strings without quotes)."""
-    if value is None:
-        return "null"
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, str):
-        return value
-    return json.dumps(value)
-
-
-def _expect_narration(json_path: str, expected: object) -> str:
-    """Render one ``@expect`` as a singular imperative verification check."""
-    if json_path == _EXIT_CODE_PATH:
-        return f"Confirm the command exits with status {_literal_text(expected)}."
-    return f"Confirm {json_path} reads {_literal_text(expected)}."
-
-
 def _first_sentence(text: str) -> str:
     """Return the first sentence of a help string (whitespace collapsed)."""
     collapsed = " ".join(text.split())
@@ -228,8 +210,8 @@ def _frame_payload(
     """Build one frame's payload dict from the authored frame and its golden.
 
     The command line and its tokens come from the AUTHORED frame (``{name}``
-    placeholders intact, so the reader sees the reproducible form); the output,
-    exit code, and captures come from the committed golden. ``wrapped`` carries
+    placeholders intact, so the reader sees the reproducible form); the output
+    and exit code come from the committed golden. ``wrapped`` carries
     the token-index groupings per display line for each declared shell — the
     packing is shell-independent (only the continuation marker differs), so the
     groupings are identical across shells and the render appends the shell's
@@ -252,14 +234,6 @@ def _frame_payload(
         "exit_code": golden_frame.exit_code if golden_frame is not None else None,
         "output": _output_view(golden_frame) if golden_frame is not None else {"format": "empty", "body": ""},
         "stderr": _stderr_view(golden_frame) if golden_frame is not None else None,
-        "expects": [
-            {
-                "json_path": assertion.json_path,
-                "expected": assertion.expected,
-                "narration": _expect_narration(assertion.json_path, assertion.expected),
-            }
-            for assertion in parsed_frame.expects
-        ],
     }
     return payload
 
@@ -293,18 +267,20 @@ def build_sequence_payload(
         )
     frames: list[dict[str, Any]] = []
     golden_index = 0
-    for index, parsed_frame in enumerate(sequence.frames):
+    for source_index, parsed_frame in enumerate(sequence.frames):
         if parsed_frame.kind.value == "static":
-            frames.append(_frame_payload(parsed_frame, None, index, resolved_shells))
+            frames.append(_frame_payload(parsed_frame, None, len(frames), resolved_shells))
             continue
         golden_frame = golden_frames[golden_index]
         if parsed_frame.kind is not golden_frame.kind:
             raise ValueError(
-                f"frame {index} of {sequence.sequence_id!r} is {parsed_frame.kind.value!r} in the "
+                f"frame {source_index} of {sequence.sequence_id!r} is {parsed_frame.kind.value!r} in the "
                 f"body but {golden_frame.kind.value!r} in the golden; refresh the golden",
             )
-        frames.append(_frame_payload(parsed_frame, golden_frame, index, resolved_shells))
         golden_index += 1
+        if parsed_frame.kind.value == "setup":
+            continue
+        frames.append(_frame_payload(parsed_frame, golden_frame, len(frames), resolved_shells))
     return {
         "sequence_id": sequence.sequence_id,
         "verify": sequence.verify,
@@ -397,9 +373,6 @@ def _render_frame_html(frame: dict[str, Any], verify: str | None, shells: list[s
         parts.append(stderr_html)
     if frame["kind"] == "result" and verify is not None:
         parts.append(f'<p class="cadrumo-verify">{html.escape(verify)}</p>')
-        if frame["expects"]:
-            checks = "".join(f"<li>{html.escape(expect['narration'])}</li>" for expect in frame["expects"])
-            parts.append(f'<ul class="cadrumo-expects">{checks}</ul>')
     parts.append("</div>")
     return "".join(parts)
 
@@ -433,11 +406,12 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
 class CliSequenceDirective(Directive):
     """The backtick-fenced ``{cli-sequence}`` MyST directive.
 
-    Argument: the unique sequence id. Options: the required ``:verify:`` singular
-    imperative sentence and the optional ``:seed:`` recipe name. Body: the frame
-    lines. The directive parses the body, reads the committed golden for the
-    current page, and emits server-rendered static frames plus one inline JSON
-    payload. It never executes a command.
+    Argument: the unique sequence id. The sole public option is the
+    reader-facing ``:verify:`` sentence. The directive body is empty; frame
+    grammar and private seed/shell settings are read from the keyed contract
+    under ``docs/_sequences/contracts``. The directive reads the committed
+    golden and emits server-rendered static frames plus one inline JSON payload.
+    It never executes a command.
     """
 
     required_arguments = 1
@@ -459,6 +433,7 @@ class CliSequenceDirective(Directive):
             SequenceEngineError,
             parse_sequence,
             read_golden,
+            read_sequence_contract,
             refuse_live_frames,
         )
 
@@ -470,14 +445,38 @@ class CliSequenceDirective(Directive):
         # overrides each so the directive is buildable in isolation.
         goldens_root = getattr(env.config, "cadrumo_sequences_goldens_root", None)
         seeds_root = getattr(env.config, "cadrumo_sequences_seeds_root", None)
+        contracts_root = getattr(env.config, "cadrumo_sequences_contracts_root", None)
         goldens_root = Path(goldens_root) if goldens_root else None
         seeds_root = Path(seeds_root) if seeds_root else None
-        options = {"seed": self.options.get("seed"), "verify": self.options.get("verify")}
+        contracts_root = Path(contracts_root) if contracts_root else None
         body = "\n".join(self.content)
 
         try:
-            shells = parse_shells(self.options.get("shells"))
-            sequence = parse_sequence(sequence_id=sequence_id, options=options, body=body, seeds_root=seeds_root)
+            if body.strip():
+                raise SequenceEngineError(
+                    "directive bodies must be empty; commands and development metadata "
+                    "belong in the keyed private sequence contract",
+                )
+            public_private_options = sorted(set(self.options) - {"verify"})
+            if public_private_options:
+                rendered = ", ".join(f":{key}:" for key in public_private_options)
+                raise SequenceEngineError(
+                    f"private option(s) {rendered} must live in the keyed sequence contract",
+                )
+            contract_options, contract_body = read_sequence_contract(
+                page,
+                sequence_id,
+                docs_root=Path(env.srcdir),
+                contracts_root=contracts_root,
+            )
+            options = {**contract_options, "verify": self.options.get("verify")}
+            shells = parse_shells(contract_options.get("shells"))
+            sequence = parse_sequence(
+                sequence_id=sequence_id,
+                options=options,
+                body=contract_body,
+                seeds_root=seeds_root,
+            )
             # Statically refuse an enrolled sequence that reads live AEAT (a pull
             # verb or the app-live group): it is unenrollable at build time, not
             # only at execution, so the author gets a clear error here rather
@@ -499,10 +498,11 @@ class CliSequenceDirective(Directive):
 def register(app: Sphinx) -> None:
     """Register the ``cli-sequence`` directive and its config values on the Sphinx app.
 
-    ``cadrumo_sequences_goldens_root`` and ``cadrumo_sequences_seeds_root`` default
-    to ``None`` (the engine's committed ``docs/_sequences`` roots); a build sets
-    them only to redirect the directive at a fixture tree in isolation.
+    The golden, seed, and contract config roots default to ``None`` (the
+    engine's committed ``docs/_sequences`` roots); a build sets them only to
+    redirect the directive at a fixture tree in isolation.
     """
     app.add_config_value("cadrumo_sequences_goldens_root", None, "env")
     app.add_config_value("cadrumo_sequences_seeds_root", None, "env")
+    app.add_config_value("cadrumo_sequences_contracts_root", None, "env")
     app.add_directive("cli-sequence", CliSequenceDirective)

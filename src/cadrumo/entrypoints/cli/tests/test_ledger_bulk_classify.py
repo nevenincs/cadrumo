@@ -184,7 +184,7 @@ def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> Non
     assert payload["applied"] == 1, payload
     failure_ids = {f["transaction_id"] for f in payload["failures"]}
     assert tx2 in failure_ids, payload
-    assert any("set automatically by Cadrumo" in f["reason"] for f in payload["failures"]), payload
+    assert any("set automatically by aeat" in f["reason"] for f in payload["failures"]), payload
 
 
 def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:

@@ -1,0 +1,2 @@
+@step Link purchase evidence to a transaction by id, an alternative to attach.
+@static aeat app ledger link <transaction-id> --evidence-id <evidence-id>

@@ -1,12 +1,13 @@
-"""Tests for the corpus-binary resolution seam over the cadrumo_data companion.
+"""Tests for the corpus-binary resolution seam over the cadrumo_data namespace.
 
-The slim ``cadrumo`` runtime wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``;
-those binaries ship in TWO sub-cap companion distributions (``cadrumo-data-manuals``
-and ``cadrumo-data-official``) that both contribute subtrees to the SAME
+The command-bearing ``cadrumo`` wheel excludes
+``_data/corpus/**/*.{pdf,xls,xlsx}``; those binaries ship in TWO mandatory
+sub-cap distributions (``cadrumo-data-manuals`` and
+``cadrumo-data-official``) that both contribute subtrees to the SAME
 ``cadrumo_data`` PEP 420 implicit namespace package. :func:`resolve_corpus_binary`
 must resolve a corpus binary identically whether it lives under the ``cadrumo`` tree
 (full checkout) or under EITHER companion portion of the ``cadrumo_data`` namespace
-(split install), because ``importlib.resources.files("cadrumo_data")`` resolves a
+(installed cohort), because ``importlib.resources.files("cadrumo_data")`` resolves a
 ``MultiplexedPath`` spanning every installed portion. These tests exercise the
 real ``importlib.resources`` behaviour: each companion portion is simulated with
 a real temporary namespace package placed on ``sys.path``, never a mock.
@@ -75,6 +76,7 @@ def companion_package(tmp_path: Path) -> Iterator[Path]:
     probe_path.parent.mkdir(parents=True, exist_ok=True)
     probe_path.write_bytes(_PROBE_BYTES)
 
+    sys.modules.pop("cadrumo_data", None)
     sys.path.insert(0, str(tmp_path))
     importlib.invalidate_caches()
     try:
@@ -120,7 +122,7 @@ def test_companion_resolution_is_byte_identical_to_a_tree_read(
     companion_package: Path,
 ) -> None:
     # A tree read and a companion read of the same content resolve to real,
-    # readable on-disk paths carrying identical bytes: the split-install and
+    # readable on-disk paths carrying identical bytes: the installed-cohort and
     # full-checkout reads are uniform.
     tree_parts, tree_bytes = _first_bundled_corpus_binary()
     tree_path = resolve_corpus_binary(*tree_parts)

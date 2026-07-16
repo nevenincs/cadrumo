@@ -40,25 +40,7 @@ once you have AEAT's justificante on disk; it is shown but not run here, because
 it needs your real receipt:
 
 ```{cli-sequence} file-at-aeat-chain
-:seed: iva-evidence-2026
 :verify: Confirm the verified draft exports a file and records the local marker.
-@step Open and calculate the Modelo 303 draft for the first quarter.
-@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@setup aeat --format json app modelo work calculate {work_unit_id}
-@capture calculation_revision_id result.calculation_revision_id
-@step Verify the draft; export refuses an unverified draft.
-@setup aeat --format json app modelo work verify {calculation_revision_id}
-@step Ask for the verified saved calculation before exporting anything.
-aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
-@step Export the verified calculation to a filing file.
-aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
-@step Record the filing locally, only after the portal submission succeeds.
-@result aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
-@expect result.status == "vigente"
-@expect exit_code == 0
-@step Reconcile AEAT's justificante against your local record (run against your own receipt).
-@static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 ```
 
 The rest of this page walks each step of that chain in order.
@@ -137,8 +119,6 @@ AEAT, stores it as encrypted evidence in your profile, and reconciles in one
 step:
 
 ```{cli-sequence} file-at-aeat-reconcile-pull
-@step Pull and reconcile the justificante straight from AEAT.
-@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
 ```
 
 See [Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).

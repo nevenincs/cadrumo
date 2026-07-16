@@ -1,0 +1,2 @@
+@step Point the tool at the renewed certificate file.
+@static aeat config auth configure --provider certificate --file ./renewed-certificate.p12

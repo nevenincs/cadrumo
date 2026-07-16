@@ -1,0 +1,2 @@
+@step Re-register a renewed certificate under its existing name.
+@static aeat config auth certificate register --name apoderado-acme --file ./renewed-acme.p12

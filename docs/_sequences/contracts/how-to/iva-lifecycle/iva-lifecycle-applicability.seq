@@ -1,0 +1,5 @@
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Explain why and how often Modelo 303 applies this year.
+@result aeat --format json app overview explain 303 --year 2026
+@expect result.modelo == "303"
+@expect exit_code == 0

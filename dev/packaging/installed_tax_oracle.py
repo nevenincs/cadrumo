@@ -17,7 +17,9 @@ import time
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
+
+_UTF_8: Final[str] = "utf-8"
 
 PROFILE_LABEL = "installed-oracle"
 PROFILE_TAX_ID = "B66012345"
@@ -108,7 +110,7 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
             "CADRUMO_LOCAL_STORAGE_ROOT": str(resolved_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(32),
-            "PYTHONIOENCODING": "utf-8",
+            "PYTHONIOENCODING": _UTF_8,
         },
     )
     return environment
@@ -198,7 +200,7 @@ def _run(
         env=env,
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding=_UTF_8,
         errors="strict",
         timeout=timeout_seconds,
         check=False,
@@ -446,7 +448,7 @@ def main() -> int:
     rendered = json.dumps(evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True)
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(f"{rendered}\n", encoding="utf-8")
+        args.output.write_text(f"{rendered}\n", encoding=_UTF_8)
     print(rendered)
     return 0
 

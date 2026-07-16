@@ -1,0 +1,10 @@
+@step Check whether a foreign EU VAT number is valid.
+@static aeat app live verify nif-iva ESB12345678
+@step Check whether a Spanish NIF or NIE appears in the Spanish ROI register.
+@static aeat app live verify tgvi 12345678A
+@step List past verifications you have run.
+@static aeat app live verify list --surface tgvi
+@step View details of a specific verification.
+@static aeat app live verify view <observation-id>
+@step Show the latest verification observation for a NIF.
+@static aeat app live verify latest --surface nif_iva --nif ESB12345678

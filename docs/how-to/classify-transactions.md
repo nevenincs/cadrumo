@@ -28,13 +28,6 @@ sequence imports the standard quarter and inspects the unclassified expense:
 
 ```{cli-sequence} classify-review-row
 :verify: Confirm the row is still unclassified before you decide.
-@step Import the quarter's movements so there is a row to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step List the rows that still need a decision.
-aeat app ledger list --filter classification=NOT_YET_PROCESSED
-@step Inspect the row before changing it.
-@result aeat --format json app ledger view e3eeac5e
-@expect result.transaction.business_classification == "NOT_YET_PROCESSED"
 ```
 
 Use the description, amount, counterparty, source document, and business context
@@ -57,16 +50,6 @@ rows normally need a category id before a modelo can calculate from them:
 
 ```{cli-sequence} classify-expense-category
 :verify: Confirm the expense is classified as business with a category.
-@step Import the quarter's movements so there is an expense to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step List the accepted category ids.
-aeat app ledger categories
-@step Classify the expense as business with a category.
-aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
-@step Confirm the row now carries the business classification and category.
-@result aeat --format json app ledger view e3eeac5e
-@expect result.transaction.business_classification == "BUSINESS"
-@expect result.transaction.category_id == "material_oficina"
 ```
 
 For money you received (income), Cadrumo does not usually need a category. It
@@ -85,14 +68,6 @@ sequence classifies the expense with its taxable base, rate, and IVA amount:
 
 ```{cli-sequence} classify-tax-fields
 :verify: Confirm the taxable base and IVA fields were recorded on the row.
-@step Import the quarter's movements so there is an expense to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Classify the expense with the IVA breakdown from the invoice.
-aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500.00 --iva-rate 0.21 --iva-amount 105.00
-@step Confirm the taxable base and IVA fields were recorded.
-@result aeat --format json app ledger view e3eeac5e
-@expect result.transaction.taxable_base == "500"
-@expect result.transaction.iva_amount == "105"
 ```
 
 Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
@@ -132,19 +107,6 @@ categories, saves a ratio, and allocates the share on a row:
 
 ```{cli-sequence} classify-mixed-use
 :verify: Confirm the mixed-use row carries the allocated business share.
-@step Record a phone bill you use partly for business.
-@setup aeat --format json app ledger add --date 2026-03-15 --amount 60.50 --direction OUTGOING --description "Factura movil" --idempotency-key classify-mixed
-@capture transaction_id result.transaction_id
-@step Check which categories accept a ratio.
-aeat app ledger ratios eligible
-@step Save the ratio for the category, as a percentage from 0 to 1.
-aeat app ledger ratios set telefonia_movil 0.5
-@step Allocate the share on the row, naming the same category for both flags.
-aeat app ledger allocate {transaction_id} --business-pct 0.5 --usage-ratio-id telefonia_movil --category-id telefonia_movil
-@step Confirm the row is now mixed with the allocated share.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.business_classification == "MIXED"
-@expect result.transaction.business_pct == "0.5"
 ```
 
 A row's `--usage-ratio-id` must name a ratio-eligible category (the ones
@@ -160,14 +122,6 @@ the saved ratios, and validates them:
 
 ```{cli-sequence} classify-ratios-manage
 :verify: Confirm the saved ratios validate cleanly.
-@step Save a ratio for a ratio-eligible category.
-aeat app ledger ratios set telefonia_movil 0.5
-@step List the saved ratios.
-aeat app ledger ratios list
-@step Confirm the saved ratios are internally consistent.
-@result aeat --format json app ledger ratios validate
-@expect result.overrides_count == 1
-@expect exit_code == 0
 ```
 
 Remove a category ratio you no longer want with
@@ -199,18 +153,6 @@ result:
 
 ```{cli-sequence} classify-from-csv
 :verify: Confirm the CSV batch classified the quarter's rows.
-@step Import the quarter's movements so there are rows to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Select the rows still needing a decision.
-aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
-@step Export the period as a review snapshot to work from.
-aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
-@step Apply the prepared classification CSV to the quarter's rows.
-aeat app ledger classify --from-csv fixtures/classifications-2026-1t.csv
-@step Confirm the expense row is now classified as business.
-@result aeat --format json app ledger view e3eeac5e
-@expect result.transaction.business_classification == "BUSINESS"
-@expect result.transaction.category_id == "material_oficina"
 ```
 
 Use the CSV path when filtered review shows many rows you can classify safely
@@ -228,16 +170,6 @@ sequence adds a rule, lists the rules, previews the effect, then applies it:
 
 ```{cli-sequence} classify-rules
 :verify: Confirm the stored rule is registered and applies cleanly.
-@step Add a rule that classifies matching descriptions.
-aeat app ledger rule add --description-pattern "material" --classification BUSINESS --category-id material_oficina
-@step List the stored rules.
-aeat app ledger rule list
-@step Preview the effect without changing any rows.
-aeat app ledger rule apply --dry-run
-@step Apply the rule to matching rows.
-@result aeat --format json app ledger rule apply
-@expect result.rules_evaluated == 1
-@expect exit_code == 0
 ```
 
 Run `--dry-run` first. Add `--reaffirm` only if you want the rule to overwrite
@@ -264,12 +196,6 @@ sequence imports the quarter, then reads the queue:
 
 ```{cli-sequence} classify-review-queue
 :verify: Confirm the review queue lists the pending work.
-@step Import the quarter's movements so there is pending work to surface.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Read the profile-wide review queue.
-@result aeat --format json app review queue
-@expect result.operation == "review.queue"
-@expect exit_code == 0
 ```
 
 Each row shows the item id, its kind, the affected record, the period, a
@@ -278,16 +204,6 @@ the command to run next. Narrow the list by kind, modelo, or state:
 
 ```{cli-sequence} classify-review-queue-filter
 :verify: Confirm the queue can be narrowed by kind.
-@step Import the quarter's movements so there is pending work to surface.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Narrow the queue to ledger-transaction items.
-aeat app review queue --kind ledger_transaction
-@step Narrow the queue to modelo findings for one modelo.
-aeat app review queue --kind modelo_finding --modelo 303
-@step Show every state, not only pending items.
-@result aeat --format json app review queue --state all
-@expect result.operation == "review.queue"
-@expect exit_code == 0
 ```
 
 Accepted `--kind` tokens are `ledger_transaction`, `purchase_invoice_evidence`,
@@ -311,17 +227,6 @@ quarter, then runs preflight and reads the ledger status:
 
 ```{cli-sequence} classify-confirm-readiness
 :verify: Confirm preflight reports the classified quarter's readiness.
-@step Import the quarter's movements.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Classify the income and expense rows.
-@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-@step Run preflight for the target period.
-aeat app ledger preflight --year 2026 --period 1T
-@step Read the overall ledger state for the period.
-@result aeat --format json app ledger status --year 2026 --period 1T
-@expect result.business_income_total == "1210"
-@expect exit_code == 0
 ```
 
 Preflight names rows that still need category, taxable base, IVA amount, IVA
@@ -335,14 +240,6 @@ corrects it to personal:
 
 ```{cli-sequence} classify-correct
 :verify: Confirm the re-classification replaced the previous decision.
-@step Import the quarter's movements so there is a row to reclassify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
-@step Re-classify the same row as personal.
-aeat app ledger classify e3eeac5e --classification PERSONAL
-@step Confirm the row now reads personal.
-@result aeat --format json app ledger view e3eeac5e
-@expect result.transaction.business_classification == "PERSONAL"
 ```
 
 Inspect the row again with `ledger view` before calculating.

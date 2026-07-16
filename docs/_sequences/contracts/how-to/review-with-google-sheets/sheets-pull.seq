@@ -1,0 +1,2 @@
+@step Pull typed edits back from the reviewed spreadsheet.
+@static aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>

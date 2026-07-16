@@ -1,0 +1,15 @@
+:seed: autonomo-irpf-2026
+@step Open a Modelo 303 draft for the first quarter.
+aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate the draft from the classified ledger.
+aeat --format json app modelo work calculate {work_unit_id}
+@capture calculation_revision_id result.calculation_revision_id
+@step Verify the draft; the run saves a report you can reopen.
+aeat --format json app modelo work verify {calculation_revision_id}
+@capture verification_report_id result.verification_report_id
+@step Open the saved verification report and read its findings.
+@result aeat --format json app modelo verification-report view {verification_report_id}
+@expect result.granted_verificado_completo == true
+@expect result.completeness_status == "complete"
+@expect exit_code == 0

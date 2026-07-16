@@ -25,10 +25,6 @@ filing year:
 
 ```{cli-sequence} renta-assembly-bindings
 :verify: Confirm the declaration's bindings list with their four source kinds.
-@step List every data source the declaration binds for the filing year.
-@result aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A
-@expect result.binding_count == 64
-@expect exit_code == 0
 ```
 
 - **Profile facts.** Who you are: tax id, residence comunidad, marital
@@ -55,11 +51,6 @@ you. The full inventory for your year:
 
 ```{cli-sequence} renta-assembly-requires
 :verify: Confirm the declaration's requirement inventory reads back.
-@step List everything the declaration requires for the filing year.
-@result aeat --format json app modelo requires 100 --year 2025 --period 0A
-@expect result.modelo == "100"
-@expect result.filing_year == 2025
-@expect exit_code == 0
 ```
 
 ## How the quarterly filings fold in
@@ -77,10 +68,6 @@ record. See what the declaration expects and what currently blocks it:
 
 ```{cli-sequence} renta-assembly-dependencies
 :verify: Confirm each dependency reports whether its evidence is satisfied.
-@step Show each source filing the declaration folds in and its current blockers.
-@result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
-@expect result.clean_state.requires_clean_state == true
-@expect exit_code == 0
 ```
 
 Each dependency row names the source modelo and period and whether its
@@ -110,19 +97,7 @@ references. Read them (the setup steps calculate the employee filer's draft
 the reads inspect, and the last step looks up one box's definition):
 
 ```{cli-sequence} renta-assembly-provenance
-:seed: renta-2025
 :verify: Confirm every resolved value carries its legal and source references.
-@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
-@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
-@step Read the saved observations behind the calculated figures.
-aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
-@step Show the saved revision's persisted values.
-aeat --format json app modelo work revision --modelo 100 --year 2025 --period 0A
-@step Look up one box's definition, with its legal references.
-@result aeat --format json app modelo casilla 100 0003 --period 0A
-@expect result.casilla_id == "0003"
-@expect result.legal_refs[0] == "ley-35-2006:art-17"
-@expect exit_code == 0
 ```
 
 The JSON output of any of these commands carries `legal_refs` and

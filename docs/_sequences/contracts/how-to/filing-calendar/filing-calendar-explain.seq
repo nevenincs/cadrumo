@@ -1,0 +1,4 @@
+@step Explain whether Modelo 130 applies for the filing year.
+@result aeat --format json app overview explain 130 --year 2026
+@expect result.modelo == "130"
+@expect exit_code == 0

@@ -1,0 +1,9 @@
+@setup aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justificante ACUSE-036-2026
+@capture declaration_id result.declaration_id
+@step List the declarations recorded in the active profile.
+aeat --format json app modelo m036 list
+@expect result.declaration_count == 1
+@step View one declaration in full by its id (or an unambiguous prefix of it).
+@result aeat --format json app modelo m036 view {declaration_id}
+@expect result.event_kind == "alta"
+@expect exit_code == 0

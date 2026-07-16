@@ -686,7 +686,10 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
         assert "aeat app ledger ratios eligible" in flat, result.output
         assert "aeat app ledger ratios set" in flat, result.output
         assert "category-id" in flat, result.output
-        assert "Not arbitrary prose" in flat, result.output
+        assert any(
+            phrase in flat
+            for phrase in ("Not arbitrary prose", "No es texto libre", "No és text lliure", "Nem tetszőleges szöveg")
+        ), result.output
 
 
 def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> None:
@@ -704,7 +707,10 @@ def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> 
         assert "--business-pct" in flat, result.output
         assert "MIXED" in flat, result.output
         assert "BUSINESS" in flat, result.output
-        assert "fully BUSINESS" in flat, result.output
+        assert any(
+            phrase in flat
+            for phrase in ("fully BUSINESS", "totalmente BUSINESS", "totalment BUSINESS", "Teljesen BUSINESS")
+        ), result.output
 
 
 def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path) -> None:

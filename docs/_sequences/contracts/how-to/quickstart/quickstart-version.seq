@@ -1,0 +1,6 @@
+@step Confirm the command is installed and on your path.
+aeat --version
+@step Confirm the active profile is configured.
+@result aeat --format json config profile status
+@expect result.configured == true
+@expect exit_code == 0

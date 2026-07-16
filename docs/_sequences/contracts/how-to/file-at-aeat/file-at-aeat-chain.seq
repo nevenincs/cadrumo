@@ -1,0 +1,18 @@
+:seed: iva-evidence-2026
+@step Open and calculate the Modelo 303 draft for the first quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work calculate {work_unit_id}
+@capture calculation_revision_id result.calculation_revision_id
+@step Verify the draft; export refuses an unverified draft.
+@setup aeat --format json app modelo work verify {calculation_revision_id}
+@step Ask for the verified saved calculation before exporting anything.
+aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+@step Export the verified calculation to a filing file.
+aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+@step Record the filing locally, only after the portal submission succeeds.
+@result aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+@expect result.status == "vigente"
+@expect exit_code == 0
+@step Reconcile AEAT's justificante against your local record (run against your own receipt).
+@static aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf

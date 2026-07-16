@@ -80,26 +80,14 @@
 - **Actual:** `recovered yes`. Under the new passphrase, `profile list` still showed `persona-test` → data intact. Rekeyed back to the harness passphrase afterward.
 - **Verdict:** OK on behavior, but **DOC-ISSUE (MINOR):** the page's `recover` snippet says it "prompts twice (hidden) for a new passphrase" and never mentions the `--new-passphrase`/`--confirm-new-passphrase` flags — yet they exist and are the only non-interactive route. A non-interactive user following the page verbatim would hit a hidden prompt and block. (It mentions these flags for `rekey` but not for `recover`.)
 
-### 8. Lock the session
-
-- **Command:** `aeat config lock`
-- **Expected:** Clears the active-profile pointer; nothing deleted; re-select with `aeat config switch <name>`.
-- **Actual:**
-  ```
-  locked_profile	<profile-id>
-  El cierre de sesion limpio el puntero del perfil activo. Los verbos posteriores ... seran rechazados con NoActiveBucketSessionError hasta que ejecutes aeat config switch NAME ...
-  ```
-  `profile list` afterward → `active_profile <none>`, profile still present.
-- **Verdict:** OK on behavior. **APP-ISSUE (MINOR):** the output prints a literal placeholder `locked_profile	<profile-id>` instead of the actual profile name/id.
-
-### 9. Re-select after lock
+### 8. Re-select after logout
 
 - **Command:** `aeat config switch persona-test`
-- **Expected:** Active profile restored (the doc names this command in the lock section).
+- **Expected:** Active profile restored after ending the prior active session.
 - **Actual:** `active_profile persona-test`; subsequent `profile list` shows `* persona-test`.
 - **Verdict:** OK.
 
-### 10. Reset guards
+### 9. Reset guards
 
 - **Command:** `aeat config reset --scope auth` (no `--yes`)
 - **Actual:** `Refused. El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.` (exit 2)
@@ -107,14 +95,14 @@
 - **Actual:** `Refused. config reset requires an explicit --scope; accepted scopes: profile, auth, data, all. ...`
 - **Verdict:** OK. Both guards exactly match the doc's "refuses without `--yes`" and "no default scope" claims.
 
-### 11. Reset — auth scope (safe, executed)
+### 10. Reset — auth scope (safe, executed)
 
 - **Command:** `aeat config reset --scope auth --yes`
 - **Expected:** Clears AEAT session/provider settings; stored profiles and records untouched.
 - **Actual:** `scope AUTH`, `removed_profiles 0`, `removed_auth True`; `profile list` still shows `* persona-test`.
 - **Verdict:** OK. (Did not execute `--scope profile/data/all` — destructive, and the page's purpose is preserving data.)
 
-### 12. Cross-reference links
+### 11. Cross-reference links
 
 - `profile-setup.md`, `troubleshooting.md`, `../cli/index.rst` all EXIST.
 - `aeat config profile export` is a real verb.
@@ -130,20 +118,18 @@
 
 3. **[MINOR] [DOC]** — `config recover` documents only an interactive hidden prompt for the new passphrase and omits the `--new-passphrase`/`--confirm-new-passphrase` flags, which DO exist and are the only non-interactive route. *Repro:* `aeat config recover --help` lists both flags. *Fix:* mirror the `rekey` wording ("For non-interactive use, pass `--new-passphrase` together with `--confirm-new-passphrase`").
 
-4. **[MINOR] [APP]** — `aeat config lock` prints a literal placeholder: `locked_profile	<profile-id>` instead of the real profile name/id. *Repro:* `aeat config lock` on an active profile. *Fix:* substitute the actual profile identifier in the output.
+4. **[NIT] [DOC]** — The recovery-word count ("24") is only stated in the `recover` section ("veinticuatro palabras" in help). The create/verify/rotate sections say "a list of recovery words" / "word1 word2 word3 ...". *Fix:* state "24 words" where the key is first created so the user knows how many to write down.
 
-5. **[NIT] [DOC]** — The recovery-word count ("24") is only stated in the `recover` section ("veinticuatro palabras" in help). The create/verify/rotate sections say "a list of recovery words" / "word1 word2 word3 ...". *Fix:* state "24 words" where the key is first created so the user knows how many to write down.
-
-6. **[NIT] [BOTH]** — CLI output is Spanish, docs are English. A privacy-conscious English reader sees `Refused. ...` lines and field labels (`recovery_enrolled`, `rotated`) mixed with Spanish prose. Behavior is correct but the language mismatch adds friction. (Most field keys are English; the sentences are Spanish.)
+5. **[NIT] [BOTH]** — CLI output is Spanish, docs are English. A privacy-conscious English reader sees `Refused. ...` lines and field labels (`recovery_enrolled`, `rotated`) mixed with Spanish prose. Behavior is correct but the language mismatch adds friction. (Most field keys are English; the sentences are Spanish.)
 
 ---
 
 ## Testimonial
 
-As a privacy-first user this page actually delivered: the recovery-key lifecycle (create → verify → rotate → recover) and the rekey-without-re-encrypting promise all behaved *exactly* as written, and the reset guards (`--yes`, explicit `--scope`) gave me real confidence I wouldn't nuke my data by accident. Notably this is the one page that takes the master-key passphrase seriously as a concept — but it still never tells me a passphrase is required *at command time* or that I need an active profile first, so my very first documented command refused. I tripped immediately on that missing prerequisite, and again (briefly) on the `recover` section hiding its non-interactive flags. Once past those, every encryption-posture claim held up under test — data stayed readable through a passphrase change and a full recovery, and locking only cleared the pointer without deleting anything.
+As a privacy-first user this page actually delivered: the recovery-key lifecycle (create → verify → rotate → recover) and the rekey-without-re-encrypting promise all behaved *exactly* as written, and the reset guards (`--yes`, explicit `--scope`) gave me real confidence I wouldn't nuke my data by accident. Notably this is the one page that takes the master-key passphrase seriously as a concept — but it still never tells me a passphrase is required *at command time* or that I need an active profile first, so my very first documented command refused. I tripped immediately on that missing prerequisite, and again (briefly) on the `recover` section hiding its non-interactive flags. Once past those, every encryption-posture claim held up under test — data stayed readable through a passphrase change and a full recovery.
 
 ## Scorecard
 
 - **Doc clarity:** 3/5 (strong, accurate prose; loses points for the unstated profile + passphrase prerequisites and the recover non-interactive omission)
 - **App capability:** 5/5 (every documented behavior verified correct, including failure exit codes and guards)
-- **Findings by severity:** BLOCKER 0 · MAJOR 2 · MINOR 2 · NIT 2
+- **Findings by severity:** BLOCKER 0 · MAJOR 2 · MINOR 1 · NIT 2

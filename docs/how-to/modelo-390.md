@@ -38,25 +38,7 @@ calculates it, and verifies it. The example uses 2025 because the annual return
 needs the year's four quarters already filed:
 
 ```{cli-sequence} modelo-390-annual-2025
-:seed: iva-year-2025
 :verify: Confirm the annual summary passed verification before you export it.
-@step Open the annual Modelo 390 work unit for 2025.
-aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
-@capture work_unit_id result.work_unit_id
-@step Calculate the annual summary from the year's ledger and the filed 303 quarters.
-aeat --format json app modelo work calculate {work_unit_id}
-@capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values["iva.anual.cuota-devengada-total"] == "1470.00"
-@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "1470.00"
-@expect result.casilla_values["iva.anual.cuota-deducible-total"] == "105.00"
-@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "105.00"
-@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "1365.00"
-@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1365.00"
-@step Verify the annual draft; the four filed 303 quarters satisfy the cross-period gate.
-@result aeat --format json app modelo work verify {calculation_revision_id}
-@expect result.granted_verificado_completo == true
-@expect result.completeness_status == "complete"
-@expect exit_code == 0
 ```
 
 Verify grants verified-complete and reports non-blocking advisories: the four
@@ -133,8 +115,6 @@ records the filing locally only; it does not submit to AEAT, and it refuses
 outside the obligation window:
 
 ```{cli-sequence} modelo-390-file-quarter
-@step Record the local filed marker for one 303 quarter, in its obligation window.
-@static aeat app modelo work file --modelo 303 --year 2025 --period 1T
 ```
 
 The second way is to capture or reconcile the official AEAT justificante for each
@@ -145,10 +125,6 @@ file` reads a local justificante PDF and never contacts AEAT, but it needs the
 real receipt:
 
 ```{cli-sequence} modelo-390-external-evidence
-@step Pull the filed sources straight from AEAT (a live read).
-@static aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
-@step Or reconcile a local justificante PDF against the filed quarter.
-@static aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
 ```
 
 If you cannot establish a quarter's evidence, do not force the annual return
@@ -176,10 +152,6 @@ or verified revision instead with `--select latest-verified` or `--select
 current`:
 
 ```{cli-sequence} modelo-390-review-303
-@step List a 303 quarter's saved revisions.
-@static aeat app modelo work revisions --modelo 303 --year 2025 --period 1T
-@step Inspect the filed revision for that quarter.
-@static aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select filed
 ```
 
 Repeat that review for `2T`, `3T`, and `4T`. Pay attention to the values that
@@ -208,14 +180,6 @@ frames:
 
 ```{cli-sequence} modelo-390-wallet
 :verify: Confirm the opening compensation balance seeds.
-@step Seed an opening compensation balance for a first Modelo 303 period.
-@result aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
-@expect result.amount == "0"
-@expect exit_code == 0
-@step Fix a wrong seed. This refuses once an already-filed 303 has consumed the basis, so it is a display frame.
-@static aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
-@step Review the AEAT-side compensation history (a live read).
-@static aeat app live iva-wallet pull-history --from-year 2024 --to-year 2025
 ```
 
 `pull-history` requires both `--from-year` and `--to-year`; it reads filed
@@ -233,28 +197,6 @@ sequence above:
 
 ```{cli-sequence} modelo-390-inspect
 :verify: Confirm the annual work unit's bindings and formulas read back.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
-@setup aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
-@setup aeat --format json app modelo work calculate --modelo 390 --year 2025 --period 0A
-@step List every saved work unit on the profile.
-aeat app modelo work list
-@step Check the annual ledger window with preflight and status.
-aeat app ledger preflight --year 2025 --period 0A
-aeat app ledger status --year 2025 --period 0A
-@step Inspect the annual work unit's status and bindings.
-aeat app modelo work status --modelo 390 --year 2025 --period 0A
-aeat app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
-@step List the annual casillas.
-aeat app modelo casillas 390 --period 0A
-@step List the annual revisions and inspect the current one.
-aeat app modelo work revisions --modelo 390 --year 2025 --period 0A
-aeat app modelo work revision --modelo 390 --year 2025 --period 0A
-@step Track the IVA compensation wallet across the year.
-aeat --format json app modelo iva-wallet balance --as-of-year 2025
-@step Explain how each annual formula is computed, with its legal references.
-@result aeat --format json app modelo formulas 390 --period 0A --explain
-@expect result.formula_count == 3
-@expect exit_code == 0
 ```
 
 The binding list shows ledger IVA aggregation bindings (source
@@ -277,8 +219,6 @@ explicitly. The reviewed sums come from your own 303 review, so this override is
 shown as a display frame:
 
 ```{cli-sequence} modelo-390-supply-binding
-@step Supply reviewed 303-derived values explicitly when the calculation lacks them.
-@static aeat app modelo work calculate --modelo 390 --year 2025 --period 0A --binding modelo-390-prev-303-cuota-devengada-total=<sum-from-303> --binding modelo-390-prev-303-cuota-deducible-total=<sum-from-303> --binding modelo-390-prev-303-resultado-regimen-general=<sum-from-303>
 ```
 
 Use reviewed numbers, not placeholders. If the reviewed 303 history is missing
@@ -308,8 +248,6 @@ and `verify` on the same target. The spreadsheet export reaches Google, so it is
 shown as a display frame:
 
 ```{cli-sequence} modelo-390-sheets-export
-@step Export the annual calculation surface to Google Sheets for a wider review.
-@static aeat config google sync calc export --modelo 390 --year 2025 --period 0A
 ```
 
 The spreadsheet workflow is a review surface; it does not submit to AEAT.
@@ -326,10 +264,6 @@ filing. Inspect the stored verification report by id when you need the detailed
 result:
 
 ```{cli-sequence} modelo-390-verification-report
-@step List the saved verification reports for a calculation revision.
-@static aeat app modelo verification-report list --calculation-revision-id <calculation-revision-id>
-@step View one verification report in full by id.
-@static aeat app modelo verification-report view <verification-report-id>
 ```
 
 Export the verified or locally filed revision. Export needs the four filed 303
@@ -337,12 +271,6 @@ quarters' evidence, which the single-seed sandbox demonstrates in the annual
 chain above, so the export and the post-portal steps here are display frames:
 
 ```{cli-sequence} modelo-390-export-file
-@step Export the verified revision to a local fichero-BOE.
-@static aeat app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
-@step After you upload at the portal, record the local filed marker.
-@static aeat app modelo work file --modelo 390 --year 2025 --period 0A
-@step Reconcile the justificante against the filed record.
-@static aeat app modelo reconcile file --modelo 390 --year 2025 --period 0A --file ./390-2025-justificante.pdf
 ```
 
 Upload the exported file through AEAT's official channel; the full checklist is
@@ -355,12 +283,6 @@ export workflow created with the audit commands. These address records and
 bundles by id, so they are display frames:
 
 ```{cli-sequence} modelo-390-records-audit
-@step Review the local filing records for the target.
-@static aeat app modelo filing-record list
-@step Import an external filing record from official evidence.
-@static aeat app modelo filing-record import <work-unit-id> --evidence-kind aeat_justificante_pdf --evidence-id <justificante-or-capture-id> --set <casilla>=<value>
-@step Inspect, check, export, and replay an evidence bundle by id.
-@static aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
 ```
 
 ## What Modelo 390 does not check for you

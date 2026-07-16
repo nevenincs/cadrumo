@@ -1,0 +1,2 @@
+@static aeat app ledger import ./statement.csv --provider auto --dry-run
+@static aeat app ledger import ./statement.csv --provider auto

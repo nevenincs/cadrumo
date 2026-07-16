@@ -1,0 +1,12 @@
+@step Confirm each dependency's evidence is satisfied.
+@static aeat app modelo work dependencies --modelo 100 --year 2026 --period 0A
+@step Create and calculate the annual declaration.
+@static aeat app modelo work create --modelo 100 --year 2026 --period 0A
+@static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A
+@step Find any manual casillas still missing.
+@static aeat app modelo bindings list --modelo 100 --year 2026 --period 0A --missing
+@step Verify, export, file, and reconcile, the same five moves that closed every quarter.
+@static aeat app modelo work verify --modelo 100 --year 2026 --period 0A
+@static aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./modelo-100-2026.boe
+@static aeat app modelo work file --modelo 100 --year 2026 --period 0A
+@static aeat app modelo reconcile pull --modelo 100 --year 2026 --period 0A

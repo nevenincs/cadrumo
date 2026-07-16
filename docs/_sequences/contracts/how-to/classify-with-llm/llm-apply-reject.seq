@@ -1,0 +1,4 @@
+@step Apply persists the reviewed suggestion.
+@static aeat app ledger classify <transaction-id> --llm claude --apply
+@step Reject records the model as wrong, with your reason, in history.
+@static aeat app ledger classify <transaction-id> --llm claude --reject --reason "this is personal"

@@ -16,10 +16,11 @@ import re
 import shutil
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -42,6 +43,8 @@ from dev.packaging.installed_tax_oracle import (
     assert_grounded_observations,
     isolated_product_environment,
 )
+
+_UTF_8: Final[str] = "utf-8"
 
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 _EXECUTE_TOOL = "execute"
@@ -252,16 +255,20 @@ async def _execute(
 async def _run_protocol(
     server: Path,
     *,
+    server_args: Sequence[str],
+    environment_overrides: Mapping[str, str],
     storage_root: Path,
     work_dir: Path,
     timeout_seconds: float,
 ) -> InstalledMcpEvidence:
     environment = isolated_mcp_environment(storage_root)
+    environment.update(environment_overrides)
     params = StdioServerParameters(
         command=str(server),
+        args=list(server_args),
         env=environment,
         cwd=str(work_dir),
-        encoding="utf-8",
+        encoding=_UTF_8,
         encoding_error_handler="strict",
     )
     calls: list[McpCallEvidence] = []
@@ -366,10 +373,7 @@ async def _run_protocol(
                 f"calculation returned an invalid revision id: {calculation_revision_id!r}",
             )
         casilla_values = calculate_result.get("casilla_values")
-        if (
-            not isinstance(casilla_values, dict)
-            or Decimal(str(casilla_values.get(TARGET_CASILLA))) != EXPECTED_VALUE
-        ):
+        if not isinstance(casilla_values, dict) or Decimal(str(casilla_values.get(TARGET_CASILLA))) != EXPECTED_VALUE:
             raise InstalledMcpOracleError(
                 f"calculation expected {TARGET_CASILLA}={EXPECTED_VALUE}, got {casilla_values!r}",
             )
@@ -377,8 +381,7 @@ async def _run_protocol(
         notice_codes = {str(notice.get("code")) for notice in notices}
         if notice_codes != EXPECTED_NOTICE_CODES:
             raise InstalledMcpOracleError(
-                f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, "
-                f"got {sorted(notice_codes)!r}",
+                f"calculation notices expected {sorted(EXPECTED_NOTICE_CODES)!r}, got {sorted(notice_codes)!r}",
             )
         if any(notice.get("severity") != "warning" for notice in notices):
             raise InstalledMcpOracleError(f"calculation notice severity drifted: {notices!r}")
@@ -392,10 +395,7 @@ async def _run_protocol(
                 f"{calculate_observations_resource!r}",
             )
         calculate_observations_count = calculate_result.get("observations_count")
-        if (
-            not isinstance(calculate_observations_count, int)
-            or calculate_observations_count <= 0
-        ):
+        if not isinstance(calculate_observations_count, int) or calculate_observations_count <= 0:
             raise InstalledMcpOracleError("calculation reported no persisted observations")
 
         observations_payload, call = await _execute(
@@ -495,7 +495,7 @@ def _observed_cli_attestation(storage_root: Path) -> tuple[str, dict[str, str]]:
             f"expected one MCP telemetry session, got {[path.name for path in telemetry_files]!r}",
         )
     executable_by_command: dict[str, str] = {}
-    for line in telemetry_files[0].read_text(encoding="utf-8").splitlines():
+    for line in telemetry_files[0].read_text(encoding=_UTF_8).splitlines():
         if not line.strip():
             continue
         row = json.loads(line)
@@ -529,6 +529,8 @@ def _observed_cli_attestation(storage_root: Path) -> tuple[str, dict[str, str]]:
 def run_installed_mcp_oracle(
     server: Path,
     *,
+    server_args: Sequence[str] = (),
+    environment_overrides: Mapping[str, str] | None = None,
     storage_root: Path,
     work_dir: Path,
     timeout_seconds: float = 180.0,
@@ -543,6 +545,8 @@ def run_installed_mcp_oracle(
     evidence = asyncio.run(
         _run_protocol(
             resolved_server,
+            server_args=server_args,
+            environment_overrides=environment_overrides or {},
             storage_root=storage_root,
             work_dir=resolved_work_dir,
             timeout_seconds=timeout_seconds,
@@ -593,7 +597,7 @@ def main() -> int:
     rendered = json.dumps(evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True)
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(f"{rendered}\n", encoding="utf-8")
+        args.output.write_text(f"{rendered}\n", encoding=_UTF_8)
     print(rendered)
     return 0
 

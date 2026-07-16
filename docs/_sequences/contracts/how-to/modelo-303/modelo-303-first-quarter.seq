@@ -1,0 +1,18 @@
+:seed: iva-evidence-2026
+@step Open a Modelo 303 draft for the first quarter.
+aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate the quarter's IVA from the classified ledger.
+aeat --format json app modelo work calculate {work_unit_id}
+@capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values.71 == "105.00"
+@step Verify the draft; verification captures the evidence over the contributing rows.
+aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@step Record the local filed marker after you upload through AEAT yourself.
+aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+@step Export the filed revision to a local fichero-BOE.
+@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303-1t.boe
+@expect result.file_sha256 == "c3286914c69801bab03607c0ed9718c3e39c031d9bd50b02f2e772aeceb13259"
+@expect result.byte_size == 7365
+@expect exit_code == 0

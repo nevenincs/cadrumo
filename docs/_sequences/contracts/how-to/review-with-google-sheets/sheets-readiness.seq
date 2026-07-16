@@ -1,0 +1,8 @@
+@step Import a quarter so there is data to check.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Run the period preflight.
+aeat app ledger preflight --year 2026 --period 1T
+@step Read the overall ledger state for the period.
+@result aeat --format json app ledger status --year 2026 --period 1T
+@expect result.active_count == 2
+@expect exit_code == 0

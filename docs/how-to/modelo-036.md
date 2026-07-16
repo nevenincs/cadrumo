@@ -32,29 +32,17 @@ Record an alta:
 
 ```{cli-sequence} modelo-036-record-alta
 :verify: Confirm the recorded alta is saved and readable by its id.
-@step Record the alta you filed at the sede, with the sede receipt number.
-aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justificante ACUSE-036-2026
-@capture declaration_id result.declaration_id
-@step Read the saved record back by its id to confirm it persisted.
-@result aeat --format json app modelo m036 view {declaration_id}
-@expect result.event_kind == "alta"
-@expect result.declared_on == "2026-01-10"
-@expect exit_code == 0
 ```
 
 Record a modificacion (the same record-and-view flow as the alta above, with a
 different event kind):
 
 ```{cli-sequence} modelo-036-record-modificacion
-@step Record the modificacion you filed at the sede, with the sede receipt number.
-@static aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
 ```
 
 Record a baja:
 
 ```{cli-sequence} modelo-036-record-baja
-@step Record the baja you filed at the sede, with the sede receipt number.
-@static aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
 ```
 
 `--declared-on` is required - the ISO date (year-month-day) you filed at the sede.
@@ -80,15 +68,6 @@ its id (the setup step records the same alta shown above so the list has a row):
 
 ```{cli-sequence} modelo-036-list-view
 :verify: Confirm the recorded declaration appears in the list and opens by its id.
-@setup aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justificante ACUSE-036-2026
-@capture declaration_id result.declaration_id
-@step List the declarations recorded in the active profile.
-aeat --format json app modelo m036 list
-@expect result.declaration_count == 1
-@step View one declaration in full by its id (or an unambiguous prefix of it).
-@result aeat --format json app modelo m036 view {declaration_id}
-@expect result.event_kind == "alta"
-@expect exit_code == 0
 ```
 
 The list shows each declaration's id, event kind, declared-on date, recorded-at

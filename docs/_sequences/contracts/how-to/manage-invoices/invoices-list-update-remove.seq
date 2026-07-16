@@ -1,0 +1,13 @@
+@step Record an issued invoice to manage.
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-nif B12345678 --counterparty-name "Cliente SL" --invoice-number FAC-2026-050 --invoice-date 2026-02-15 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --total-amount 1210
+@capture invoice_id result.invoice_id
+@step List every invoice, both kinds.
+aeat app ledger invoice list
+@step Filter the list to issued invoices only.
+aeat app ledger invoice list --kind issued
+@step Add a note to the invoice.
+aeat app ledger invoice update {invoice_id} --kind issued --notes "paid late"
+@step Remove the invoice, confirming with --yes.
+@result aeat --format json app ledger invoice remove {invoice_id} --kind issued --yes
+@expect result.notes == "paid late"
+@expect exit_code == 0

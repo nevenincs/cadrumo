@@ -1,0 +1,17 @@
+@step Import the quarter's movements so there are rows to review.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step List every row.
+aeat app ledger list
+@step Narrow the list with filters.
+aeat app ledger list --filter period=1T --filter year=2026
+@step List only the rows still needing a decision.
+aeat app ledger list --filter classification=NOT_YET_PROCESSED
+@step Inspect one row before changing it.
+aeat app ledger view 71a5db2b
+@step Read the event history for the row.
+aeat app ledger history 71a5db2b
+@step Track the same row.
+aeat app ledger track 71a5db2b
+@step Confirm the row is the imported income movement.
+@result aeat --format json app ledger view 71a5db2b
+@expect result.transaction.direction == "INCOMING"

@@ -17,13 +17,6 @@ ready for that modelo, year, and period:
 
 ```{cli-sequence} filing-readiness-report
 :verify: Confirm the readiness report resolves for the modelo, year, and period.
-@step Describe the modelo to read its resolved revision id.
-aeat --format json app modelo describe 303 --year 2026 --period 1T
-@capture revision_id result.revision
-@step Report whether the active profile is ready for that revision.
-@result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id {revision_id}
-@expect result.modelo == "303"
-@expect exit_code == 0
 ```
 
 The report covers two things:
@@ -48,14 +41,6 @@ to one modelo and period:
 
 ```{cli-sequence} filing-readiness-dependencies
 :verify: Confirm the dependency inventory resolves for the filing year.
-@step List the registry-declared dependencies for the filing year.
-aeat --format json app modelo work dependencies --year 2026
-@step Narrow the inventory to one modelo.
-aeat --format json app modelo work dependencies --year 2026 --modelo 390
-@step Narrow further to one modelo and period, which also evaluates its blockers.
-@result aeat --format json app modelo work dependencies --year 2026 --modelo 390 --period 0A
-@expect result.filing_year == 2026
-@expect exit_code == 0
 ```
 
 `--period` requires `--modelo`. With both set, the command also evaluates the
@@ -71,10 +56,6 @@ verification passes and refusals, filings, amendments, imports):
 
 ```{cli-sequence} filing-readiness-history
 :verify: Confirm the modelo history stream resolves for the filing year.
-@step Stream every recorded lifecycle event for the modelo and year.
-@result aeat --format json app modelo history --modelo 303 --year 2026
-@expect result.modelo == "303"
-@expect exit_code == 0
 ```
 
 Add `--period` to narrow to one period. This is the modelo-wide audit trail;
@@ -87,8 +68,6 @@ for the event stream of a single workspace, use
 See how this year's figures moved against last year's, box by box:
 
 ```{cli-sequence} filing-readiness-compare
-@step Compare a modelo's boxes across two filing years.
-@static aeat app modelo compare --modelo 100 --year 2024 --year 2025
 ```
 
 Pass `--year` exactly twice. Each row shows the box, its label and section,
@@ -107,8 +86,6 @@ If you file quarterly Modelo 130 instalments, project what the year-end
 Modelo 100 would look like from the quarters filed so far:
 
 ```{cli-sequence} filing-readiness-project
-@step Project the year-end Modelo 100 from the quarters filed so far.
-@static aeat app modelo project --year 2026 --ccaa cataluna
 ```
 
 `--ccaa` names your autonomous community of tax residence, which selects the
@@ -130,8 +107,6 @@ Refine the projection with values the quarters cannot know: withholdings,
 personal circumstances, or specific boxes:
 
 ```{cli-sequence} filing-readiness-project-refine
-@step Refine the projection with withholdings, personal circumstances, or specific boxes.
-@static aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
 ```
 
 Withholdings bindings default to zero when not supplied, so a projection
@@ -152,10 +127,6 @@ See [Review and supply calculation inputs](review-calculation-values.md):
 
 ```{cli-sequence} filing-readiness-formulas
 :verify: Confirm each computed box exposes its formula and grounding.
-@step Show the formulas for the modelo and period, with their legal references.
-@result aeat --format json app modelo formulas 303 --period 1T --explain
-@expect result.code == "303"
-@expect exit_code == 0
 ```
 
 Two more grounding surfaces round out the trace:

@@ -1,0 +1,6 @@
+:seed: autonomo-irpf-2026
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@step Supply the manual box and the three first-period bindings in one calculate call.
+@result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.casilla_values.06 == "100.00"
+@expect exit_code == 0

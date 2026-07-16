@@ -1,0 +1,10 @@
+:seed: intracomunitario-2026
+@setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
+@step Show which casillas are bound and which are missing.
+aeat --format json app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
+@step Show the saved revision with its per-operator detail rows.
+@result aeat --format json app modelo work revision --modelo 349 --year 2026 --period 1T
+@expect result.casilla_values["decl.numero-operadores"] == "2"
+@expect result.casilla_values["decl.importe-operaciones"] == "8000.00"
+@expect exit_code == 0

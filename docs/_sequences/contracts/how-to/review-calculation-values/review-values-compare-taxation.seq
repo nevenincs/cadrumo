@@ -1,0 +1,2 @@
+@step Compare filing jointly as a family unit against filing individually.
+  @static aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A

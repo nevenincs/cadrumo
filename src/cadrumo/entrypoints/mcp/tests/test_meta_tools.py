@@ -19,6 +19,7 @@ from .._annotations import McpAnnotations
 from .._input_schema import VerbInputSchema
 from .._meta_tools import (
     MetaDescribeResult,
+    ToolRunOutcome,
     describe_command,
     gate_refusal,
     meta_execute,
@@ -131,7 +132,7 @@ def test_gate_refusal_blocks_a_declared_live_write_command() -> None:
 
 
 def test_meta_execute_never_reaches_the_runner_on_a_blocked_command() -> None:
-    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> tuple[dict[str, object], bool]:
+    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> ToolRunOutcome:
         raise AssertionError("the runner must not be reached for a blocked command")
 
     blocked = _blocked_descriptor()
@@ -166,7 +167,7 @@ def test_gate_refusal_denies_the_handoff_boundary_to_a_non_verifier_persona() ->
 
 
 def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> None:
-    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> tuple[dict[str, object], bool]:
+    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> ToolRunOutcome:
         raise AssertionError("the runner must not be reached for a handoff-denied command")
 
     descriptors = build_tool_descriptors()

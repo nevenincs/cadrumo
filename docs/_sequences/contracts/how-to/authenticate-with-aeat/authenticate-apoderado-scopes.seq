@@ -1,0 +1,4 @@
+@step List the scope codes the tool accepts.
+@result aeat --format json config auth apoderado scopes list
+@expect result.catalogue_version == "2026.05.bootstrap"
+@expect exit_code == 0

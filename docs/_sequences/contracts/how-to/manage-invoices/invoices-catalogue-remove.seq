@@ -1,0 +1,7 @@
+@step Catalogue an invoice to remove.
+@setup aeat --format json app ledger invoice catalogue create --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-CAT-099 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
+@capture invoice_id result.invoice_id
+@step Remove the unlinked catalogue invoice.
+@result aeat --format json app ledger invoice catalogue remove {invoice_id} --yes
+@expect result.invoice_number == "EU-CAT-099"
+@expect exit_code == 0

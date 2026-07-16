@@ -18,17 +18,19 @@ You need:
 
 ## Install the CLI
 
-Cadrumo is published on the Python Package Index (PyPI). Install it with
-`pip`:
+Public package and plugin distribution is not available yet. Use an authorized
+source checkout:
 
 ```bash
-pip install cadrumo
+git clone https://github.com/nevenincs/cadrumo.git
+cd cadrumo
+uv sync
+uv run aeat --version
 ```
 
-Record the version you installed, as [Updates and downloads](updates.md)
-recommends. The [releases page](https://github.com/nevenincs/cadrumo/releases/latest)
-lists each release's notes and downloadable artifacts, including the Claude
-Desktop extension bundle covered below.
+Do not install Cadrumo from PyPI, a public plugin marketplace, Scoop, Homebrew,
+or a Desktop extension bundle until the project announces those channels as
+available.
 
 ## Confirm the install
 
@@ -36,36 +38,25 @@ No taxpayer profile is needed for these checks; you create one with
 `aeat config profile create` after installing. See
 [Set up a profile](how-to/profile-setup.md).
 
-Confirm the command is on your path, then ask `aeat` what is installed and
-what is missing. The report lists each external dependency, whether it is
-available, and the exact command to fix any gap; it exits with an error when
-a capability you turned on has a missing dependency, so the setup step below
-first turns off a capability this example machine does not provision. The
-last step shows the machine-readable form for scripted setups
-(`--format json` is a global flag, so it goes before the command):
+Confirm the command is on your path and the capability posture is readable.
+Then run the workstation check on your own machine. Its dependency and
+platform rows intentionally reflect that workstation, including tools on
+your path, installed browser assets, and operating-system settings. Use the
+machine-readable form for scripted setup checks (`--format json` is a global
+flag, so it goes before the command):
 
 ```{cli-sequence} install-confirm
 :verify: Confirm the installed command reports its version and its dependency report resolves.
-@step Confirm the command is on your path.
-aeat --version
-@step Turn off a capability whose dependency this machine does not have.
-@setup aeat config profile capabilities set llm_vision off
-@step Ask what is installed and what is missing.
-aeat config check
-@step Run the same check with machine-readable output for scripted setups.
-@result aeat --format json config check
-@expect result.ok == true
-@expect exit_code == 0
 ```
 
-## Install optional extras
+## Install optional extras from the checkout
 
 The core install is lean. Google export, the live AEAT browser, the
 Anthropic-API provider, OFX/QFX bank-statement import, and the agent surface
 are optional package extras. Name the extras you need when you install:
 
 ```bash
-pip install "cadrumo[google,browser]"
+uv sync --extra google --extra browser
 ```
 
 The available extras are `google`, `browser`, `anthropic`, `ofx`, `agent`, and
@@ -96,88 +87,32 @@ with that provider's flow. See
 
 Run `aeat config check` again after each change to confirm the gap is closed.
 
-## Install the AI-assistant surface (MCP)
+## Run the Model Context Protocol (MCP) surface
 
-Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, so an AI
+Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI
 assistant can operate the same local, gated commands the CLI exposes,
 together with an agent harness: the operator rules, taxpayer-situation
 skills, and scoped agent personas that keep the assistant inside the safety
-boundary. There are three ways to install the server, plus the harness
-workspace for project use. Pick what matches your client.
-[Connect an agent](how-to/connect-an-agent.md) walks through each in full and
-explains what the agent can and cannot do.
+boundary.
 
-### Before you start: uv and a Claude client
-
-The plugin and the Desktop extension bundle both launch the server through
-`uvx`, so install [uv](https://docs.astral.sh/uv/) first:
+Public plugin, Desktop extension, and package channels are not available yet.
+Run the server from the same authorized checkout:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync --extra agent
+uv run cadrumo-mcp --help
 ```
 
-On Windows:
-
-```pwsh
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-You also need a client. Claude Code, Claude Desktop, and Cowork all work
-(see [Claude's own install instructions](https://claude.com/claude-code)),
-and any other MCP-capable client connects through the plain server
-registration below.
-
-### Claude plugin (recommended for Claude Code, Claude Desktop, and Cowork)
-
-The plugin bundles the MCP server configuration together with the full agent
-harness. It launches the server itself through `uvx`, so with uv installed
-nothing else is needed beforehand. Add the marketplace once, then install
-the plugin:
-
-```text
-/plugin marketplace add nevenincs/neve-marketplace
-/plugin install cadrumo@neve
-```
-
-### Claude Desktop extension bundle (`.mcpb`)
-
-Claude Desktop can load Cadrumo as a Desktop Extension bundle. Download
-`cadrumo.mcpb` from the
-[releases page](https://github.com/nevenincs/cadrumo/releases/latest) and open
-it with Claude Desktop. The bundle installs the Cadrumo release it was built
-for: on first launch it runs the server through `uvx`, which fetches the
-pinned `cadrumo[agent]` package from PyPI. The only prerequisite is
-[uv](https://docs.astral.sh/uv/) on your `PATH`; no separate `pip install` is
-needed. The bundle is unsigned, so Claude Desktop shows its standard
-unsigned-extension prompt when you install it.
-
-### Any other MCP client
-
-Install the `agent` extra as above, confirm the server script is on your
-path:
-
-```bash
-cadrumo-mcp --help
-```
-
-then register `cadrumo-mcp` as a stdio server in your client's MCP
-configuration. The exact JSON is in
-[Connect an agent](how-to/connect-an-agent.md#connect-any-other-mcp-client).
+[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout
+registration and explains what the agent can and cannot do.
 
 ### Materialize the agent harness in a project workspace
 
-The plugin carries the harness for you. To place the same harness (rules,
-personas, skills, and a `CLAUDE.md`) directly into a project directory
-instead, materialize it with the CLI. Use `--layout plugin` to emit the
-one-click plugin form of the same content:
+To place the harness (rules, personas, skills, and a `CLAUDE.md`) directly
+into a project directory, materialize it with the CLI:
 
 ```{cli-sequence} install-agent-harness
-:verify: Confirm the operator harness materializes as a native Claude workspace.
-@step Write the operator harness into a workspace directory.
-@result aeat --format json app agent --output ./operator-workspace
-@expect result.layout == "workspace"
-@expect result.skills_written == 34
-@expect exit_code == 0
+:verify: Confirm the operator harness materializes into the chosen workspace.
 ```
 
 ## Next steps

@@ -1,0 +1,10 @@
+:seed: autonomo-irpf-2026
+@setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@step Calculate the quarter from the classified ledger.
+aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@step Review the saved revision.
+aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
+@step Verify the draft before you export it.
+@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
+@expect result.granted_verificado_completo == true
+@expect exit_code == 0

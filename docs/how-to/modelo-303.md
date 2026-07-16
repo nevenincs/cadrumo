@@ -27,25 +27,7 @@ calculates it, verifies it, records the local filed marker, and exports the
 fichero-BOE. Each load-bearing detail is explained under the sequence.
 
 ```{cli-sequence} modelo-303-first-quarter
-:seed: iva-evidence-2026
 :verify: Confirm the draft verifies, files locally, and exports a stable fichero.
-@step Open a Modelo 303 draft for the first quarter.
-aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@step Calculate the quarter's IVA from the classified ledger.
-aeat --format json app modelo work calculate {work_unit_id}
-@capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values.71 == "105.00"
-@step Verify the draft; verification captures the evidence over the contributing rows.
-aeat --format json app modelo work verify {calculation_revision_id}
-@expect result.granted_verificado_completo == true
-@step Record the local filed marker after you upload through AEAT yourself.
-aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
-@step Export the filed revision to a local fichero-BOE.
-@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303-1t.boe
-@expect result.file_sha256 == "c3286914c69801bab03607c0ed9718c3e39c031d9bd50b02f2e772aeceb13259"
-@expect result.byte_size == 7365
-@expect exit_code == 0
 ```
 
 Load-bearing details:
@@ -177,14 +159,7 @@ with `--year 2026` is January.
 Check that period before calculating:
 
 ```{cli-sequence} modelo-303-ledger-period
-:seed: autonomo-irpf-2026
 :verify: Confirm the quarter's ledger reads back ready to calculate.
-@step Preflight the quarter's ledger for tax-readiness.
-aeat --format json app ledger preflight --year 2026 --period 1T
-@step Show the quarter's ledger status.
-@result aeat --format json app ledger status --year 2026 --period 1T
-@expect result.active_count == 2
-@expect exit_code == 0
 ```
 
 The row window uses the transaction operation date: `raw.value_date` when
@@ -223,16 +198,7 @@ If the command reports missing bindings or missing casillas, inspect them
 before adding values:
 
 ```{cli-sequence} modelo-303-inspect-boxes
-:seed: autonomo-irpf-2026
 :verify: Confirm the draft's missing bindings and the modelo's required casillas read back.
-@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
-@step List which casillas are still missing a bound value.
-aeat --format json app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
-@step List the casillas the modelo requires.
-@result aeat --format json app modelo casillas 303 --period 1T --required
-@expect result.casilla_count == 2
-@expect exit_code == 0
 ```
 
 Only provide `--binding`, `--casilla`, `--relation`, or Modelo 303-specific
@@ -242,12 +208,6 @@ compensation amount:
 
 ```{cli-sequence} modelo-303-wallet
 :verify: Confirm the IVA compensation wallet seeds and reads back its balance.
-@step Seed the opening balance for a true first Modelo 303 period.
-aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
-@step Show the IVA compensation wallet balance for the year.
-@result aeat --format json app modelo iva-wallet balance --as-of-year 2026
-@expect result.total_balance == "0"
-@expect exit_code == 0
 ```
 
 Use `--amount 0` only for a true first Modelo 303 period with no previous
@@ -258,16 +218,7 @@ pending IVA compensation.
 List the saved revisions, then show the current revision's persisted values:
 
 ```{cli-sequence} modelo-303-revision
-:seed: autonomo-irpf-2026
 :verify: Confirm the saved revisions and the current revision's values read back.
-@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
-@step List the saved calculation revisions for the filing.
-aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
-@step Show the current revision's persisted casilla values and provenance.
-@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
-@expect result.casilla_values.71 == "105.00"
-@expect exit_code == 0
 ```
 
 The revision view exposes the revision id and state, persisted casilla values,

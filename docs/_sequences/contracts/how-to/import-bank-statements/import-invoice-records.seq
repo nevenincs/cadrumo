@@ -1,0 +1,8 @@
+@step Record a supplier's received invoice.
+aeat --format json app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21
+@capture invoice_id result.invoice_id
+@step List issued invoices.
+aeat app ledger invoice list --kind issued
+@step Confirm the received invoice is a payable invoice.
+@result aeat --format json app ledger invoice view {invoice_id} --kind received
+@expect result.source_kind == "payable_invoice"

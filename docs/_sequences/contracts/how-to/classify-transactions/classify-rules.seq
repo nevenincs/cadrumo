@@ -1,0 +1,10 @@
+@step Add a rule that classifies matching descriptions.
+aeat app ledger rule add --description-pattern "material" --classification BUSINESS --category-id material_oficina
+@step List the stored rules.
+aeat app ledger rule list
+@step Preview the effect without changing any rows.
+aeat app ledger rule apply --dry-run
+@step Apply the rule to matching rows.
+@result aeat --format json app ledger rule apply
+@expect result.rules_evaluated == 1
+@expect exit_code == 0

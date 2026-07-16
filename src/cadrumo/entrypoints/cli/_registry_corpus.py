@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from ...application.registry import (
-    CORPUS_SOURCES_INSTALL_HINT,
     RegistryCitationReferenceProjection,
     RegistryCitationShowCommand,
     RegistryCitationShowReport,
@@ -24,7 +22,6 @@ from ...application.registry import (
     RegistryManualsListReport,
     RegistryManualVerificationReport,
     RegistryManualVerifyCommand,
-    absent_corpus_companion_binaries,
     list_registry_citations,
     list_registry_manual_rules,
     list_registry_manuals,
@@ -34,10 +31,8 @@ from ...application.registry import (
     verify_registry_manual,
 )
 from ...core.i18n import tr
-from ...core.resources import bundled_path
 from ...domain.manuals import ManualPart
 from ._common import _emit_envelope
-from ._errors import CliRefusedBoundaryError
 from ._registry_corpus_payloads import (
     CitationListResult,
     CitationShowResult,
@@ -62,33 +57,6 @@ manuals_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
-
-
-def refuse_when_corpus_companion_absent(*, capability: str, missing_advisories: tuple[str, ...]) -> None:
-    """Refuse instructively when a verification verb needs absent companion binaries."""
-    if not missing_advisories:
-        return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.registry.errors.corpus_companion_absent",
-        context={"capability": capability, "install": CORPUS_SOURCES_INSTALL_HINT},
-    )
-
-
-def guard_corpus_companion(*, capability: str, registry_root: Path, source_root: Path) -> None:
-    """Scan the corpus source catalogue and refuse when companion binaries are absent.
-
-    The ``aeat app registry`` verification verbs read the bundled corpus source
-    binaries. In a split install without the ``cadrumo_data`` companion those
-    binaries are absent; rather than degrade silently or fail with a low-level
-    error, the verb refuses with a message naming the capability (a
-    pre-translated noun phrase supplied by the call site) and the exact install
-    command, per the CLI-gate-is-instructive rule. When the binaries are present
-    (full checkout or companion installed) the guard is a no-op.
-    """
-    refuse_when_corpus_companion_absent(
-        capability=capability,
-        missing_advisories=absent_corpus_companion_binaries(registry_root, source_root=source_root),
-    )
 
 
 @citations_app.command("list", help=tr("cli.registry.citations.list_help"))
@@ -220,11 +188,6 @@ def verify_manual_cmd(
     ] = ManualPart.SINGLE,
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
-    guard_corpus_companion(
-        capability=tr("cli.registry.errors.capability.manuals_verify"),
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-    )
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
     typed = ManualVerifyResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="registry.manuals.verify", result=typed, lines=_manual_verification_lines(report))
@@ -358,4 +321,4 @@ def _manual_verification_lines(report: RegistryManualVerificationReport) -> list
     return lines
 
 
-__all__ = ["citations_app", "guard_corpus_companion", "manuals_app", "refuse_when_corpus_companion_absent"]
+__all__ = ["citations_app", "manuals_app"]

@@ -9,7 +9,7 @@ import pytest
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...tests.secure_sql import isolated_profile_storage_root
 from .. import wizard as _wizard  # noqa: F401 - registers compiled profile keys
-from ..auth import clear_operator_auth, configure_operator_auth
+from ..auth import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..operator_surface import require_accepted_root
 from ..user_profile import profile_create_storage_span, register_minimal_profile
 from ..workflow import workflow_state_repository
@@ -42,15 +42,33 @@ def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     repository.update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL))
 
     configured = configure_operator_auth("certificate")
-    cleared = clear_operator_auth(provider="certificate")
+    repository.update(
+        lambda state: state.model_copy(
+            update={
+                "auth": state.auth.model_copy(
+                    update={
+                        "authenticated_at": state.updated_at,
+                        "subject": "CN=Operator",
+                    },
+                ),
+            },
+        ),
+    )
+    logged_out = logout_operator_auth(provider="certificate")
+    reset = reset_operator_auth(provider="certificate")
 
     reloaded = workflow_state_repository().load()
     events = [(event.action, event.bucket_id, event.object_id) for event in reloaded.bucket_events]
 
     assert configured.provider == "certificate"
-    assert cleared.cleared_workflow_state is True
+    assert logged_out.cleared_session_state is True
+    assert reset.cleared_provider_configuration is True
     assert ("auth.provider.configured", _BUCKET_ID, "certificate") in events
+    assert ("auth.session.cleared", _BUCKET_ID, "certificate") in events
     assert ("auth.provider.cleared", _BUCKET_ID, "certificate") in events
     assert events.index(("auth.provider.configured", _BUCKET_ID, "certificate")) < events.index(
+        ("auth.session.cleared", _BUCKET_ID, "certificate"),
+    )
+    assert events.index(("auth.session.cleared", _BUCKET_ID, "certificate")) < events.index(
         ("auth.provider.cleared", _BUCKET_ID, "certificate"),
     )

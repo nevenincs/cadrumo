@@ -202,6 +202,7 @@ def secure_object_record_from_row(
         schema_version=max_supported_version,
         written_at=row.written_at,
         payload=payload_plain,
+        revision_id=str(row.revision_id),
     )
 
 
@@ -351,4 +352,5 @@ def secure_object_list_item_from_raw_row(
         schema_version=max_supported_version,
         written_at=written_at,
         payload=payload_plain,
+        revision_id=str(row.revision_id),
     )

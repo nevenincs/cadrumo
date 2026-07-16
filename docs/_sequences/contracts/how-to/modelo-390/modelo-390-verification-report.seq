@@ -1,0 +1,4 @@
+@step List the saved verification reports for a calculation revision.
+@static aeat app modelo verification-report list --calculation-revision-id <calculation-revision-id>
+@step View one verification report in full by id.
+@static aeat app modelo verification-report view <verification-report-id>

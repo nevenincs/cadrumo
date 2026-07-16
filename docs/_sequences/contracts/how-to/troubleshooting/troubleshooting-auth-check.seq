@@ -1,0 +1,6 @@
+@step Show what authentication is configured.
+aeat config auth status
+@step Probe the stored credentials locally, without contacting AEAT.
+@result aeat --format json config auth test
+@expect result.configured == false
+@expect exit_code == 0

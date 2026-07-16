@@ -16,7 +16,7 @@ from pydantic import ConfigDict
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ...application.auth import AuthClearResult, AuthConfigureResult
+    from ...application.auth import AuthConfigureResult
 
 # Shared sub-models (not registered — used as nested types)
 
@@ -204,20 +204,6 @@ class ConfigSwitchResult(OutputSchema):
     """
 
     active_profile: str
-
-
-@register_schema("config.lock")
-class ConfigLockResult(OutputSchema):
-    """JSON envelope for ``aeat config lock``.
-
-    Confirms the profile whose local session material was locked and echoes the
-    remaining active pointer, if any. ``session_warning`` carries the local
-    secure-storage advisory shown by the command.
-    """
-
-    locked_profile: str
-    active_profile: str | None = None
-    session_warning: str
 
 
 @register_schema("config.rekey")
@@ -543,39 +529,27 @@ class AuthLoginPayload(OutputSchema):
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
-@register_schema("config.auth.clear")
-class AuthClearPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth clear``.
+@register_schema("config.auth.logout")
+class AuthLogoutPayload(OutputSchema):
+    """Secret-free JSON envelope for ``aeat config auth logout``."""
 
-    Field set is 1:1 with the application
-    :class:`AuthClearResult`; the envelope derives its
-    values via
-    :meth:`AuthClearPayload.from_result`
-    rather than the command handler re-declaring the field map inline (DB-26
-    S49).
-    """
-
+    bucket_id: str
+    providers: list[str]
     removed_sessions: int
-    cleared_workflow_state: bool
+    cleared_session_state: bool
+
+
+@register_schema("config.auth.reset")
+class AuthResetPayload(OutputSchema):
+    """Secret-free JSON envelope for ``aeat config auth reset``."""
+
+    bucket_id: str
+    providers: list[str]
+    removed_sessions: int
+    cleared_provider_configuration: bool
     cleared_locks: int
-
-    @classmethod
-    def from_result(cls, result: AuthClearResult) -> AuthClearPayload:
-        """Project the application clear result into this CLI envelope.
-
-        The mapping stays 1:1 with
-        :class:`AuthClearResult`.
-
-        Returns:
-            The projected
-            :class:`AuthClearPayload`
-            instance.
-        """
-        return cls(
-            removed_sessions=result.removed_sessions,
-            cleared_workflow_state=result.cleared_workflow_state,
-            cleared_locks=result.cleared_locks,
-        )
+    removed_certificate_sources: int
+    removed_certificate_secrets: int
 
 
 @register_schema("config.auth.apoderado.check")

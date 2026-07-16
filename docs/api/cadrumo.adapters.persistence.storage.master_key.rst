@@ -27,6 +27,7 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._master_key_io
    cadrumo.adapters.persistence.storage.master_key._master_key_records
    cadrumo.adapters.persistence.storage.master_key._master_key_tax_id
+   cadrumo.adapters.persistence.storage.master_key._provider_session
    cadrumo.adapters.persistence.storage.master_key._recovery
    cadrumo.adapters.persistence.storage.master_key._recovery_facade
    cadrumo.adapters.persistence.storage.master_key._recovery_record

@@ -1,0 +1,6 @@
+@step Review the local filing records for the target.
+@static aeat app modelo filing-record list
+@step Import an external filing record from official evidence.
+@static aeat app modelo filing-record import <work-unit-id> --evidence-kind aeat_justificante_pdf --evidence-id <justificante-or-capture-id> --set <casilla>=<value>
+@step Inspect, check, export, and replay an evidence bundle by id.
+@static aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip

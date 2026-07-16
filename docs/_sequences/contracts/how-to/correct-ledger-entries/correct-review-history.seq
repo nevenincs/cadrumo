@@ -1,0 +1,10 @@
+@step Split a payment so its history has several events.
+@setup aeat --format json app ledger add --date 2026-03-15 --amount 121.00 --direction OUTGOING --description "History example" --idempotency-key correct-history
+@capture transaction_id result.transaction_id
+@setup aeat --format json app ledger split {transaction_id} --child-amount 100.00 --child-description "part one" --child-amount 21.00 --child-description "part two" --reason "mixed receipt" --yes
+@step List every action on the transaction in order.
+aeat app ledger history {transaction_id}
+@step Follow the whole split family with the sibling flag.
+@result aeat --format json app ledger history {transaction_id} --include-split-siblings
+@expect result.events[0].event_type == "ledger.transaction.created"
+@expect exit_code == 0

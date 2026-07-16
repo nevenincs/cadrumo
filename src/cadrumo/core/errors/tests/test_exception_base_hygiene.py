@@ -44,13 +44,6 @@ _ALLOWLIST = {
         "otherwise ship a silent argument-free schema), not an operator-facing registry-bound "
         "filing error"
     ),
-    "cadrumo.application.auth._certificate_secret_backend.CertificateSecretBackendUnavailableError": (
-        "certificate-secret backend boundary error; translated by the auth command/service layer, not raised as a "
-        "registry-bound calculation or filing error"
-    ),
-    "cadrumo.application.auth._certificate_secret_backend.CertificateSecretNotFoundError": (
-        "certificate-secret backend absence signal; callers collapse it to optional secret state"
-    ),
     "cadrumo.application.auth._certificate_sources.CertificateSourceNoActiveBucketError": (
         "certificate-source mutation precondition signal for an uninitialised local profile bucket"
     ),

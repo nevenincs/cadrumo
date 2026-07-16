@@ -1,0 +1,6 @@
+@step Bring the quarter's bank movements into the ledger.
+aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Check that the quarter's ledger now holds both movements.
+@result aeat --format json app ledger list --year 2026 --period 1T
+@expect result.total == 2
+@expect exit_code == 0

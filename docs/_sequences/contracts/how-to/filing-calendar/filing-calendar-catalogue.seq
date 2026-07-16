@@ -1,0 +1,10 @@
+@step List the modelo catalogue.
+aeat --format json app modelo list
+@step Scope the catalogue to one filing year.
+aeat --format json app modelo list --year 2026
+@step Describe one modelo.
+aeat --format json app modelo describe 130
+@step Describe the same modelo for one period.
+@result aeat --format json app modelo describe 130 --period 1T
+@expect result.code == "130"
+@expect exit_code == 0

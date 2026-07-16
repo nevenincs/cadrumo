@@ -79,11 +79,16 @@ class AuthAcquisitionLockedError(AeatError):
     """Raised when another process is already acquiring AEAT auth."""
 
 
-def auth_acquisition_lock_path(settings: Settings, kind: AuthProviderKind) -> Path:
+def auth_acquisition_lock_path(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    bucket_id: str | None = None,
+) -> Path:
     """Return the profile/provider-scoped lock path."""
     from ...core import require_active_bucket_id
 
-    return settings.cadrumo_token_dir / f"{require_active_bucket_id()}-{kind.value}-auth.lock"
+    return settings.cadrumo_token_dir / f"{bucket_id or require_active_bucket_id()}-{kind.value}-auth.lock"
 
 
 def inspect_auth_acquisition_lock(
@@ -91,12 +96,13 @@ def inspect_auth_acquisition_lock(
     kind: AuthProviderKind,
     *,
     now: datetime | None = None,
+    bucket_id: str | None = None,
 ) -> AuthAcquisitionLockStatus:
     """Describe the current acquisition-lock health without mutating it.
 
     Returns an :class:`AuthAcquisitionLockStatus`.
     """
-    path = auth_acquisition_lock_path(settings, kind)
+    path = auth_acquisition_lock_path(settings, kind, bucket_id=bucket_id)
     reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     if not path.exists():
         return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path)
@@ -139,13 +145,14 @@ def clear_auth_acquisition_lock(
     kind: AuthProviderKind,
     *,
     reason: str = "operator-reset",
+    bucket_id: str | None = None,
 ) -> AuthAcquisitionLockStatus:
     """Remove the acquisition lock and return the pre-reset status.
 
     Returns an :class:`AuthAcquisitionLockStatus` reflecting the state
     observed immediately before the file was removed.
     """
-    status = inspect_auth_acquisition_lock(settings, kind)
+    status = inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id)
     if status.state is not AuthAcquisitionLockState.ABSENT:
         _remove_lock_file(status.path)
         return status.model_copy(

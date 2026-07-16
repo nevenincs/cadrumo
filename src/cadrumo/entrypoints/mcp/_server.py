@@ -42,6 +42,8 @@ import sysconfig
 import time
 import uuid
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as distribution_version
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -89,6 +91,8 @@ from ._identity_gate import (
 )
 from ._input_schema import cli_argv_for
 from ._meta_tools import (
+    ToolRunner,
+    ToolRunOutcome,
     build_command_search_index,
     describe_command,
     manage_toolsets,
@@ -141,6 +145,8 @@ if TYPE_CHECKING:
     from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[agent]'"
+_REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_VERSION"
+_RUNTIME_COHORT = (PRODUCT_IDENTITY.distribution, *PRODUCT_IDENTITY.companion_distributions)
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
 # toolsets. They are advertised alongside the per-verb tools and are never
@@ -169,6 +175,43 @@ def emit_missing_sdk_refusal() -> None:
     raise SystemExit(3)
 
 
+def enforce_required_runtime_cohort() -> None:
+    """Refuse when a plugin requires a different or incomplete installed cohort.
+
+    Direct standalone use leaves ``CADRUMO_MCP_REQUIRED_VERSION`` unset and is
+    unaffected. Distribution integrations set it to their own release version,
+    binding the client surface to one complete installed root-plus-data cohort.
+    """
+    required = os.environ.get(_REQUIRED_VERSION_ENV, "").strip()
+    if not required:
+        return
+
+    observed: dict[str, str] = {}
+    missing: list[str] = []
+    for distribution in _RUNTIME_COHORT:
+        try:
+            observed[distribution] = distribution_version(distribution)
+        except PackageNotFoundError:
+            missing.append(distribution)
+
+    mismatched = {name: installed for name, installed in observed.items() if installed != required}
+    if not missing and not mismatched:
+        return
+
+    details: list[str] = []
+    if missing:
+        details.append(f"missing: {', '.join(missing)}")
+    if mismatched:
+        rendered = ", ".join(f"{name}={installed}" for name, installed in sorted(mismatched.items()))
+        details.append(f"version mismatch: {rendered}")
+    sys.stderr.write(
+        "Cadrumo MCP runtime cohort does not satisfy the installed integration: "
+        f"required {required}; {'; '.join(details)}. "
+        f"Install cadrumo[agent]=={required} with both exact-version data companions.\n",
+    )
+    raise SystemExit(4)
+
+
 def serve() -> None:
     """Run the ``cadrumo-mcp`` stdio server, or refuse if the SDK is not installed.
 
@@ -177,6 +220,7 @@ def serve() -> None:
     :func:`~entrypoints.mcp._persona_scope.active_persona` error
     regardless of whether the optional SDK is installed.
     """
+    enforce_required_runtime_cohort()
     persona = active_persona()
     surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
@@ -298,9 +342,7 @@ def _installed_cli_executable() -> str:
         executable_name = f"{executable_name}.exe"
     executable = (scripts_dir / executable_name).resolve()
     if not executable.is_file():
-        message = (
-            f"Installed Cadrumo CLI executable is missing from the MCP server environment: {executable}"
-        )
+        message = f"Installed Cadrumo CLI executable is missing from the MCP server environment: {executable}"
         raise FileNotFoundError(message)
     return str(executable)
 
@@ -315,7 +357,7 @@ def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
 
 
 @dataclass(frozen=True)
-class SubprocessToolOutcome:
+class SubprocessToolOutcome(ToolRunOutcome):
     """One supervised CLI dispatch and the executable actually passed to it."""
 
     envelope: dict[str, object]
@@ -557,6 +599,30 @@ def _record_telemetry(
         )
 
 
+def _refused_tool_outcome(refusal: str) -> ToolRunOutcome:
+    """Return the common typed error outcome for a refused dispatch."""
+    return ToolRunOutcome(envelope={"status": "error", "refusal": refusal}, is_error=True)
+
+
+def _meta_execute_call_outcome(
+    arguments: dict[str, object],
+    *,
+    descriptors: tuple[McpToolDescriptor, ...],
+    persona: AgentPersona | None,
+    run: ToolRunner,
+) -> tuple[str | None, dict[str, object], dict[str, object], tuple[ResourceLinkRef, ...], bool]:
+    """Run and thin one meta-execute call without depending on MCP SDK result types."""
+    raw_args = arguments.get("arguments", {})
+    exec_args = dict(raw_args) if isinstance(raw_args, dict) else {}
+    command_key = str(arguments.get("command_key", "") or "")
+    outcome = meta_execute(command_key, exec_args, descriptors=descriptors, persona=persona, run=run)
+    if outcome.refused is not None:
+        return outcome.refused, {}, {}, (), True
+    envelope = outcome.envelope or {}
+    thinned_envelope, links = thin_envelope(command_key, envelope)
+    return None, envelope, thinned_envelope, links, outcome.is_error
+
+
 def build_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
@@ -660,8 +726,7 @@ def build_server(
     # in authoritative text, and neither tool mutates state.
     grounding_tools = [build_corpus_search_tool(), build_terminology_search_tool()]
 
-    # Per-session serving-path gates and telemetry: the
-    # grounding window accumulates this session's tool-result JSON in memory
+    # Per-session serving-path gates and telemetry accumulate tool-result JSON in memory
     # only; the telemetry writer (injected by the stdio runner; None in unit
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
@@ -673,7 +738,7 @@ def build_server(
     def _gated_subprocess_run(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
-    ) -> tuple[dict[str, object], bool]:
+    ) -> ToolRunOutcome:
         """The sync gate suite shared by the meta-execute path.
 
         A sync callable cannot elicit, so the degradation matrix runs with
@@ -688,12 +753,12 @@ def build_server(
             _record_telemetry(
                 telemetry, tool_name=descriptor.name, command_key=key, route="identity_block", is_error=True
             )
-            return ({"status": "error", "refusal": identity_refusal}, True)
+            return _refused_tool_outcome(identity_refusal)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
             _record_telemetry(telemetry, tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
-            return ({"status": "error", "refusal": refusal_message(route, command_key=key)}, True)
+            return _refused_tool_outcome(refusal_message(route, command_key=key))
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
         faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
         if faith.blocks:
@@ -705,7 +770,7 @@ def build_server(
                 is_error=True,
                 arguments_text=arguments_json,
             )
-            return ({"status": "error", "refusal": advisory_line(faith)}, True)
+            return _refused_tool_outcome(advisory_line(faith))
         started = time.monotonic()
         outcome = _run_subprocess_tool(descriptor, arguments)
         envelope = outcome.envelope
@@ -723,7 +788,7 @@ def build_server(
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
-        return (envelope, is_error)
+        return ToolRunOutcome(envelope=envelope, is_error=is_error)
 
     server: Server = Server(PRODUCT_IDENTITY.mcp_server)
 
@@ -888,25 +953,18 @@ def build_server(
                 isError=outcome.refused is not None,
             )
         if name == _META_EXECUTE_TOOL:
-            raw_args = arguments.get("arguments", {})
-            exec_args = dict(raw_args) if isinstance(raw_args, dict) else {}
-            outcome = meta_execute(
-                str(arguments.get("command_key", "") or ""),
-                exec_args,
+            refusal, envelope, thinned_envelope, links, is_error = _meta_execute_call_outcome(
+                arguments,
                 descriptors=descriptors,
                 persona=persona,
                 run=_gated_subprocess_run,
             )
-            if outcome.refused is not None:
-                return CallToolResult(content=[TextContent(type="text", text=outcome.refused)], isError=True)
-            envelope = outcome.envelope or {}
-            # Thin the executed verb's bulk arrays here too, so the meta
-            # `execute` path and the direct-call path emit one identical shape.
-            thinned_envelope, links = thin_envelope(str(arguments.get("command_key", "") or ""), envelope)
+            if refusal is not None:
+                return CallToolResult(content=[TextContent(type="text", text=refusal)], isError=True)
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(envelope, indent=2)), *_resource_links(links)],
                 structuredContent=thinned_envelope,
-                isError=outcome.is_error,
+                isError=is_error,
             )
         descriptor = by_name.get(name)
         if descriptor is None:

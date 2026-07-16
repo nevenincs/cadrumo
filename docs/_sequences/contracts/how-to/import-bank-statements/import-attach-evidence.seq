@@ -1,0 +1,12 @@
+@step Record the purchase invoice as encrypted evidence.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria SL" --invoice-number "2026-0142" --invoice-date 2026-03-21 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
+@capture evidence_id result.evidence_id
+@step Record the expense the invoice supports.
+@setup aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --category-id material_oficina --taxable-base 100 --iva-rate 0.21 --iva-amount 21 --idempotency-key import-attach
+@capture transaction_id result.transaction_id
+@step Attach the purchase evidence to the transaction.
+aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
+@step Confirm the transaction resolves after the attachment.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.purchase_invoice_evidence_id == "6509f06abb0c5756"
+@expect exit_code == 0

@@ -1,0 +1,4 @@
+@step Filter the ledger by period and year as two separate clauses.
+@result aeat --format json app ledger list --filter period=1T --filter year=2026
+@expect result.total == 0
+@expect exit_code == 0

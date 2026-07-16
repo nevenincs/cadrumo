@@ -145,7 +145,11 @@ from .compatibility_lifecycle import (
 )
 from .external_constants import M347_THRESHOLD_EUR
 from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
-from .secure_object_write import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
+from .secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    DEFAULT_WRITE_PROVENANCE,
+    SecureObjectWrite,
+)
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -179,6 +183,7 @@ if TYPE_CHECKING:
     from .locks import exclusive_file_lock
 
 __all__: list[str] = [
+    "ABSENT_SECURE_OBJECT_REVISION_ID",
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "AEAT_AUTHORITY_SHORT_NAME",
     "ANTHROPIC_EXTRA",

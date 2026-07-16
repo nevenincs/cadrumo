@@ -1,0 +1,90 @@
+"""Direct tests for the real Homebrew source-install harness."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from dev.packaging.smoke_homebrew import _assert_oracle_evidence, localize_formula
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: Path) -> None:
+    """Loopback acquisition preserves the generated formula outside cohort URLs."""
+    cohort = tmp_path / "cohort"
+    cohort.mkdir()
+    filenames = (
+        "cadrumo-0.2.1.tar.gz",
+        "cadrumo_data_manuals-0.2.1.tar.gz",
+        "cadrumo_data_official-0.2.1.tar.gz",
+    )
+    for filename in filenames:
+        (cohort / filename).write_bytes(filename.encode())
+    base = "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1"
+    formula = "\n".join(
+        (
+            "class Cadrumo < Formula",
+            f'  url "{base}/{filenames[0]}"',
+            '  resource "cadrumo-data-manuals" do',
+            f'    url "{base}/{filenames[1]}"',
+            "  end",
+            '  resource "cadrumo-data-official" do',
+            f'    url "{base}/{filenames[2]}"',
+            "  end",
+            '  resource "mcp" do',
+            '    url "https://files.pythonhosted.org/packages/mcp.tar.gz"',
+            "  end",
+            "end",
+            "",
+        ),
+    )
+
+    localized, replacements = localize_formula(
+        formula,
+        cohort_dir=cohort.resolve(),
+        server_base_url="http://127.0.0.1:43123",
+    )
+
+    assert len(replacements) == 3
+    assert "https://files.pythonhosted.org/packages/mcp.tar.gz" in localized
+    restored = localized
+    for original, replacement in replacements.items():
+        assert replacement in localized
+        restored = restored.replace(replacement, original)
+    assert restored == formula
+
+
+def test_localization_rejects_an_incomplete_cohort_formula(tmp_path: Path) -> None:
+    """The harness cannot silently test a formula missing one cohort member."""
+    cohort = tmp_path / "cohort"
+    cohort.mkdir()
+    artifact = cohort / "cadrumo-0.2.1.tar.gz"
+    artifact.write_bytes(b"root")
+    formula = (
+        "class Cadrumo < Formula\n"
+        '  url "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1/'
+        'cadrumo-0.2.1.tar.gz"\n'
+        "end\n"
+    )
+
+    with pytest.raises(SystemExit, match="expected root and two companion"):
+        localize_formula(
+            formula,
+            cohort_dir=cohort.resolve(),
+            server_base_url="http://127.0.0.1:43123",
+        )
+
+
+def test_oracle_evidence_requires_the_mcp_child_to_be_the_installed_cli() -> None:
+    """Compatible MCP output is insufficient when its invoked CLI identity differs."""
+    with pytest.raises(SystemExit, match="different CLI identity"):
+        _assert_oracle_evidence(
+            tax_document={"target_value": "23000.00"},
+            mcp_document={
+                "target_value": "23000.00",
+                "invoked_cli_sha256": "1" * 64,
+            },
+            aeat_path_sha256="2" * 64,
+        )

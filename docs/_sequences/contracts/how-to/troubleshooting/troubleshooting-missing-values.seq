@@ -1,0 +1,4 @@
+@step List the values still missing for the modelo, year, and period.
+@result aeat --format json app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+@expect result.missing_filter == true
+@expect exit_code == 0

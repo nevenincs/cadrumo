@@ -1,0 +1,15 @@
+:seed: renta-2025
+@step Open the annual Modelo 100 work unit for 2025.
+aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@capture work_unit_id result.work_unit_id
+@step Calculate, supplying this employee filer's salary income and withholdings by hand, with a zero prior-year negative-base carry for a first filing.
+aeat --format json app modelo work calculate {work_unit_id} --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values.0003 == "24000"
+@expect result.casilla_values.0012 == "24000.00"
+@expect result.casilla_values.0019 == "2000.00"
+@step Verify the annual declaration before you export it.
+@result aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@expect result.completeness_status == "complete"
+@expect exit_code == 0

@@ -262,7 +262,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     notices = unwrap_envelope_notices(invocation.output)
     warning = next(notice for notice in notices if notice["code"] == "modelo.requires.missing_profile_coefficient")
     assert warning["severity"] == "warning"
-    assert warning["suggestion"] == "aeat config profile ratios"
+    assert warning["suggestion"] == "aeat app ledger ratios set"
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 

@@ -1,0 +1,7 @@
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-income-categories actividad_economica
+@step Show the year's filing calendar.
+aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
+@step Explain why Modelo 130 applies this year.
+@result aeat --format json app overview explain 130 --year 2026
+@expect result.applicable == true
+@expect exit_code == 0

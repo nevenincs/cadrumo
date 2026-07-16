@@ -368,6 +368,34 @@ class TestAmbientEnvNeutralisation:
             assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
             assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
 
+    def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
+        """Real provider and browser probes cannot observe workstation installs."""
+        import os
+
+        from cadrumo.application.provisioning import (
+            probe_playwright_browser,
+            probe_subprocess_providers,
+        )
+
+        from .._runner import sequence_sandbox
+
+        original_path = os.environ.get("PATH")
+        with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
+            providers = probe_subprocess_providers()
+            browser = probe_playwright_browser()
+
+            assert providers
+            assert all(not status.available for status in providers)
+            assert all("PATH" in status.remediation for status in providers)
+            assert browser.available is False
+            assert browser.remediation == "playwright install chromium"
+            assert os.environ["PATH"] == str(tmp_path / "scope" / "external-tools")
+            assert os.environ["PLAYWRIGHT_BROWSERS_PATH"] == str(
+                tmp_path / "scope" / "playwright-browsers",
+            )
+
+        assert os.environ.get("PATH") == original_path
+
     def test_frames_execute_green_and_leak_free_under_ambient_operator_env(
         self,
         tmp_path: Path,

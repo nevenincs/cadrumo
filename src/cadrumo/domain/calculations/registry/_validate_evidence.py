@@ -12,7 +12,6 @@ from pathlib import Path
 
 from ....core.config import load_settings
 from ....core.resources import resolve_companion_binary
-from ._corpus_catalogue import is_companion_corpus_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
@@ -206,13 +205,6 @@ class EvidenceValidator:
             try:
                 source_text = self._source_text(source)
             except FileNotFoundError as exc:
-                if is_companion_corpus_binary(source):
-                    # Absent companion binary in a split install: the corpus
-                    # catalogue gate already surfaced the ONE loud advisory for
-                    # this file, and its required_text check is unevaluable
-                    # rather than failed. A PRESENT-but-unreadable file still
-                    # fails through the OSError branch below.
-                    continue
                 failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
                 continue
             except OSError as exc:
@@ -236,8 +228,8 @@ class EvidenceValidator:
         if source_root not in source_path.parents and source_path != source_root:
             raise OSError(f"source {source.id!r} escapes source root")
         if not source_path.is_file():
-            # A split install sheds the corpus source binaries from the runtime
-            # tree; the cadrumo_data companion supplies the same bytes at the
+            # The command-bearing wheel sheds corpus source binaries; the
+            # mandatory cadrumo_data namespace supplies the same bytes at the
             # mirrored relative path, keeping required_text verification
             # byte-identical to a full checkout.
             companion_path = resolve_companion_binary(*source.corpus_path.split("/"))

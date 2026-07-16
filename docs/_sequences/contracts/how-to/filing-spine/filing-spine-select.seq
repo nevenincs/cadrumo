@@ -1,0 +1,6 @@
+@step Select the latest draft revision explicitly.
+@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+@step Select the latest verified revision.
+@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+@step Select the filed revision.
+@static aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select filed

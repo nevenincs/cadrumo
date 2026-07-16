@@ -1,0 +1,4 @@
+@step Preview one child transaction per invoice line.
+@static aeat app ledger classify <transaction-id> --read-evidence --auto-split
+@step Apply the split, one entry per line.
+@static aeat app ledger classify <transaction-id> --read-evidence --auto-split --apply

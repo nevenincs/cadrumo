@@ -1,0 +1,2 @@
+@step Compare a modelo's boxes across two filing years.
+@static aeat app modelo compare --modelo 100 --year 2024 --year 2025

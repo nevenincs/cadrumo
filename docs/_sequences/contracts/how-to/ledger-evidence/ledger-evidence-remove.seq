@@ -1,0 +1,2 @@
+@step Remove an evidence record by id, confirming with --yes.
+@static aeat app ledger evidence remove <evidence-id> --yes

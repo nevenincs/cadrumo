@@ -1,0 +1,8 @@
+@step List the filed returns AEAT holds, without saving their box values.
+@static aeat app live filed list --modelo 303 --from-year 2020 --to-year 2026
+@step Download and save the full box values from a specific filed return.
+@static aeat app live filed pull --modelo 303 --year 2026 --period 1T
+@step Download all filed returns across a year range.
+@static aeat app live filed pull --from-year 2020 --to-year 2026
+@step Download the source declarations that a target filing depends on.
+@static aeat app live filed pull-sources --modelo 303 --year 2026 --period 1T

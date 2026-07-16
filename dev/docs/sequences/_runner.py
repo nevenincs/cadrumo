@@ -67,7 +67,7 @@ from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.config import load_settings, override_settings, suppress_operator_dotenv
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
-from cadrumo.tests.cli_runner import invoke_cached_cli
+from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
 from ._errors import SequenceExecutionError
@@ -388,6 +388,38 @@ def _neutralized_ambient_env() -> Iterator[None]:
 
 
 @contextmanager
+def _isolated_external_tool_env(sandbox_root: Path) -> Iterator[None]:
+    """Pin external-tool discovery to empty sandbox-owned directories.
+
+    ``PATH`` and the Playwright browser cache are workstation state just as
+    surely as ``CADRUMO_*`` settings are. Sequence execution must not discover
+    a contributor's provider CLIs or browser installation, so real probes see
+    stable absence with their real remediation while the process environment
+    is restored verbatim afterwards.
+    """
+    # Keep these beneath the sequence workdir so the existing golden path
+    # normaliser rewrites their per-run root to ``<sandbox-workdir>``.
+    empty_bin = sandbox_root / "workdir" / ".external-tools"
+    empty_browsers = sandbox_root / "workdir" / ".playwright-browsers"
+    empty_bin.mkdir(parents=True, exist_ok=True)
+    empty_browsers.mkdir(parents=True, exist_ok=True)
+    pins = {
+        "PATH": str(empty_bin),
+        "PLAYWRIGHT_BROWSERS_PATH": str(empty_browsers),
+    }
+    previous = {key: os.environ.get(key) for key in pins}
+    os.environ.update(pins)
+    try:
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+@contextmanager
 def sequence_sandbox(
     *,
     sequence_id: str,
@@ -433,6 +465,7 @@ def sequence_sandbox(
     dispose_engine()
     with (
         _neutralized_ambient_env(),
+        _isolated_external_tool_env(sandbox_root),
         suppress_operator_dotenv(),
         # The docs sandbox runs genuinely zero-auth: per the operator ruling,
         # auth-provider readiness binds only live/AEAT-touching purposes, never
@@ -440,16 +473,18 @@ def sequence_sandbox(
         # A taxpayer with no auth provider configured completes the whole local
         # artefact flow, and the docs gates prove that ruled behaviour in CI.
         override_settings(
+            cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat",
             cadrumo_output_language="en",
         ),
-        isolated_profile_storage_root(tmp_path=sandbox_root) as storage_root,
+        isolated_profile_storage_root(tmp_path=sandbox_root),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
     ):
         _provision_sandbox_profile()
+        effective_settings = load_settings()
         yield SequenceSandbox(
-            storage_root=storage_root,
-            workdir=workdir,
+            storage_root=Path(effective_settings.cadrumo_local_storage_root),
+            workdir=workdir.resolve(),
             profile_id=SANDBOX_PROFILE_ID,
             frozen_instant=SANDBOX_INSTANT,
         )
@@ -642,8 +677,8 @@ def _execute_frame(
     # this Click version is the COMBINED capture, so read the split
     # ``stdout``/``stderr`` properties — a refusal's error document (which
     # rides stderr) must be a first-class, golden-able artifact.
-    output = result.stdout
-    stderr = result.stderr
+    output = semantic_cli_text(result.stdout)
+    stderr = semantic_cli_text(result.stderr)
 
     expected_exit = _expected_exit_code(frame, sequence.sequence_id)
     if result.exit_code != expected_exit:

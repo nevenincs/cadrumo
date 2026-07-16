@@ -1,0 +1,2 @@
+@step Select the registered certificate you want active.
+@static aeat config auth certificate select --name apoderado-acme

@@ -1,0 +1,10 @@
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Add the expense row, then take its id from the output.
+aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key qs-compra
+@capture transaction_id result.transaction_id
+@step Classify the transaction as a business expense.
+aeat --format json app ledger classify {transaction_id} --classification BUSINESS --category-id material_oficina
+@step Check the quarter's rows are ready to calculate.
+@result aeat --format json app ledger preflight --year 2026 --period 1T
+@expect result.ready == true
+@expect exit_code == 0

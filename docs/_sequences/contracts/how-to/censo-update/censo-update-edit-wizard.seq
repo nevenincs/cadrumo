@@ -1,0 +1,2 @@
+@step Edit the active profile with the interactive wizard.
+@static aeat config profile edit <profile-name>

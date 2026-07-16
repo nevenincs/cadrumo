@@ -293,9 +293,7 @@ ignore_imports =
     cadrumo.application.auth -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.auth._apoderado -> cadrumo.adapters.persistence.storage
     cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.**
-    cadrumo.application.auth._certificate_sources_operator -> cadrumo.adapters.**
     cadrumo.application.auth._diagnostics -> cadrumo.adapters.**
-    cadrumo.application.auth._operator -> cadrumo.adapters.**
     cadrumo.application.auth._operator_probes -> cadrumo.adapters.**
     cadrumo.application.auth._operator_scope -> cadrumo.adapters.**
     cadrumo.application.auth._sessions -> cadrumo.adapters.**
@@ -487,7 +485,6 @@ ignore_imports =
     # ── buckets event-history repository ports-inversion (W01.P03.S05):
     #    the concrete BucketEventHistoryRepository moved to the persistence
     #    adapter behind BucketEventHistoryRepositoryProtocol ──
-    cadrumo.application.auth._operator -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.profile.buckets

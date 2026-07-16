@@ -1,0 +1,3 @@
+@step Check when and why Modelo 349 applies this year.
+  @result aeat --format json app overview explain 349 --year 2026
+  @expect exit_code == 0

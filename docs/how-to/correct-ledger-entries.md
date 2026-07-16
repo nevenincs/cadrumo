@@ -14,15 +14,6 @@ To find the transaction you want to fix, list your transactions and view one in 
 
 ```{cli-sequence} correct-find-transaction
 :verify: Confirm the inspected transaction is the one you want to fix.
-@step Record an example expense you will correct in the sections below.
-aeat --format json app ledger add --date 2026-03-15 --amount 210.00 --direction OUTGOING --description "Silla de oficina" --idempotency-key correct-find
-@capture transaction_id result.transaction_id
-@step List your transactions to find the one to fix.
-aeat app ledger list
-@step Inspect one transaction in detail before changing it.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.description == "Silla de oficina"
-@expect exit_code == 0
 ```
 
 The `view` command reports the id, amount, direction, description, and lifecycle state. The [transactions guide](import-bank-statements.md) covers listing and filtering in depth.
@@ -44,15 +35,6 @@ Change one or more fields directly. The sequence records a chair at the wrong pr
 
 ```{cli-sequence} correct-update-fields
 :verify: Confirm the update replaced the amount and description.
-@step Record a transaction with a wrong price to correct.
-aeat --format json app ledger add --date 2026-03-15 --amount 100.00 --direction OUTGOING --description "Office chair" --idempotency-key correct-update
-@capture transaction_id result.transaction_id
-@step Change the amount and description in one command.
-aeat app ledger update {transaction_id} --amount 121.00 --description "Office chair, corrected price"
-@step The original id still resolves; view it to confirm the correction.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.amount == "121"
-@expect result.transaction.description == "Office chair, corrected price"
 ```
 
 Each flag fully replaces that field - write the complete new value, not an addition to the old one. Write the amount as a positive figure - the direction field carries whether money came in or went out, and a negative amount is refused. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
@@ -67,17 +49,6 @@ Remove deletes a transaction from your active records. Preview it first with `--
 
 ```{cli-sequence} correct-remove-transaction
 :verify: Confirm the removed transaction no longer resolves.
-@step Record a transaction imported from the wrong file.
-aeat --format json app ledger add --date 2026-03-15 --amount 60.50 --direction OUTGOING --description "Wrong import" --idempotency-key correct-remove
-@capture transaction_id result.transaction_id
-@step Preview the removal without deleting anything.
-aeat app ledger remove {transaction_id} --reason "wrong file imported" --dry-run
-@step Remove it for real.
-aeat app ledger remove {transaction_id} --reason "wrong file imported" --yes
-@step Confirm the id no longer resolves.
-@result aeat --format json app ledger view {transaction_id}
-@expect error.category == "REFUSED"
-@expect exit_code == 2
 ```
 
 A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row.
@@ -88,16 +59,6 @@ When one payment covers two different things - for example, a card payment that 
 
 ```{cli-sequence} correct-split-transaction
 :verify: Confirm the split produced two active child parts.
-@step Record a card payment that mixes business and personal items.
-aeat --format json app ledger add --date 2026-03-15 --amount 121.00 --direction OUTGOING --description "Mixed receipt" --idempotency-key correct-split
-@capture transaction_id result.transaction_id
-@step Split the payment into two parts.
-aeat --format json app ledger split {transaction_id} --child-amount 100.00 --child-description "office supplies" --child-amount 21.00 --child-description "personal items" --reason "mixed receipt" --yes
-@capture first_part result.child_transactions[0].full_id
-@step Confirm the first part is an active transaction of its own.
-@result aeat --format json app ledger view {first_part}
-@expect result.transaction.amount == "100"
-@expect result.transaction.lifecycle_state == "ACTIVE"
 ```
 
 The original transaction becomes the split parent, and the parts carry the balance from then on. The split output prints one `child_transactions` row per part, each with a short `display_id` and a full `full_id`. Copy those ids - the merge command needs them to undo the split.
@@ -108,19 +69,6 @@ To undo a split, merge the parts back together using the child ids the split pri
 
 ```{cli-sequence} correct-merge-parts
 :verify: Confirm the merge produced a single active transaction carrying the full amount.
-@step Split a payment so there are parts to merge back.
-@setup aeat --format json app ledger add --date 2026-03-15 --amount 121.00 --direction OUTGOING --description "Split to undo" --idempotency-key correct-merge
-@capture transaction_id result.transaction_id
-@setup aeat --format json app ledger split {transaction_id} --child-amount 100.00 --child-description "part one" --child-amount 21.00 --child-description "part two" --reason "mixed receipt" --yes
-@capture first_child result.child_transactions[0].full_id
-@capture second_child result.child_transactions[1].full_id
-@step Merge the two parts back into one transaction, naming every sibling.
-aeat --format json app ledger merge --child-id {first_child} --child-id {second_child} --reason "undo split" --yes
-@capture merged result.merged_transaction_id
-@step Confirm the merged transaction is active and carries the full amount.
-@result aeat --format json app ledger view {merged}
-@expect result.transaction.amount == "121"
-@expect result.transaction.lifecycle_state == "ACTIVE"
 ```
 
 The parts and the original parent move to history, and the merge creates a fresh transaction in their place. If you no longer have the split output, the parts are active rows: run `aeat app ledger list` and read their ids from the listing.
@@ -131,14 +79,6 @@ Stash sets a transaction aside for later. A stashed transaction is kept out of o
 
 ```{cli-sequence} correct-stash-transaction
 :verify: Confirm the transaction moved to the stashed state.
-@step Record a transaction you are not ready to resolve.
-aeat --format json app ledger add --date 2026-03-15 --amount 80.00 --direction OUTGOING --description "Awaiting invoice" --idempotency-key correct-stash
-@capture transaction_id result.transaction_id
-@step Set it aside for later.
-aeat app ledger stash {transaction_id} --reason "waiting for invoice" --yes
-@step Confirm the lifecycle state now reads STASHED.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.lifecycle_state == "STASHED"
 ```
 
 Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active. The `stash` command prints the transaction's fields but not its new lifecycle state, so `view` is how you confirm the change took effect.
@@ -149,14 +89,6 @@ Archive keeps a transaction in history but out of ordinary work - it's the right
 
 ```{cli-sequence} correct-archive-transaction
 :verify: Confirm the duplicate moved to the archived state.
-@step Record a duplicate row you want to keep a trace of.
-aeat --format json app ledger add --date 2026-03-15 --amount 80.00 --direction OUTGOING --description "Duplicate import" --idempotency-key correct-archive
-@capture transaction_id result.transaction_id
-@step Archive it out of ordinary work.
-aeat app ledger archive {transaction_id} --reason "duplicate imported row" --yes
-@step Confirm the lifecycle state now reads ARCHIVED.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.lifecycle_state == "ARCHIVED"
 ```
 
 Like stash, the command prints the transaction's fields but not its new lifecycle state, so `view` confirms the row now reads `ARCHIVED`.
@@ -167,15 +99,6 @@ If you stashed or archived a transaction by mistake, restore it to active. Resto
 
 ```{cli-sequence} correct-restore-transaction
 :verify: Confirm the restored transaction is active again.
-@step Stash a transaction so there is something to restore.
-@setup aeat --format json app ledger add --date 2026-03-15 --amount 80.00 --direction OUTGOING --description "Stashed by mistake" --idempotency-key correct-restore
-@capture transaction_id result.transaction_id
-@setup aeat app ledger stash {transaction_id} --reason "waiting for invoice" --yes
-@step Return it to your everyday lists and totals.
-aeat app ledger restore {transaction_id} --reason "stashed by mistake" --yes
-@step Confirm the lifecycle state is ACTIVE again.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.lifecycle_state == "ACTIVE"
 ```
 
 Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to reset the whole ledger. List does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`.
@@ -188,16 +111,6 @@ Every correction is recorded. To see every action on a transaction in order, run
 
 ```{cli-sequence} correct-review-history
 :verify: Confirm the history records the transaction's events in order.
-@step Split a payment so its history has several events.
-@setup aeat --format json app ledger add --date 2026-03-15 --amount 121.00 --direction OUTGOING --description "History example" --idempotency-key correct-history
-@capture transaction_id result.transaction_id
-@setup aeat --format json app ledger split {transaction_id} --child-amount 100.00 --child-description "part one" --child-amount 21.00 --child-description "part two" --reason "mixed receipt" --yes
-@step List every action on the transaction in order.
-aeat app ledger history {transaction_id}
-@step Follow the whole split family with the sibling flag.
-@result aeat --format json app ledger history {transaction_id} --include-split-siblings
-@expect result.events[0].event_type == "ledger.transaction.created"
-@expect exit_code == 0
 ```
 
 The history lists each action in order with its timestamp and event reference. Details such as the reason and the new values are in the JSON output. To see a value before a change, read the earlier events in the history. The [CLI reference](../cli/index.rst) covers every field the history shows.
@@ -212,15 +125,6 @@ If the ledger is beyond repair - for example, after importing the wrong files re
 
 ```{cli-sequence} correct-reset-ledger
 :verify: Confirm the reset cleared the active ledger.
-@step Record a row so the ledger is not already empty.
-@setup aeat --format json app ledger add --date 2026-03-15 --amount 10.00 --direction OUTGOING --description "To be cleared" --idempotency-key correct-reset
-@step Preview the reset without clearing anything.
-aeat app ledger reset --reason "re-importing all statements" --dry-run
-@step Clear the whole ledger for the active profile.
-aeat app ledger reset --reason "re-importing all statements" --yes
-@step Confirm no transactions remain.
-@result aeat --format json app ledger list
-@expect result.total == 0
 ```
 
 Reset clears the whole ledger for the active profile. Use the [transactions guide](import-bank-statements.md) to rebuild it from your statements.

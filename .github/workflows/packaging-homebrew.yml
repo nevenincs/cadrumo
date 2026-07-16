@@ -1,0 +1,173 @@
+# Clean Homebrew acquisition gate for every platform/architecture row emitted
+# by packaging/homebrew/generate.py. Each job consumes one already-tested
+# immutable Python cohort and source-builds the exact same tap snapshot.
+
+name: Cadrumo Homebrew Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful Cadrumo Packaging Smoke run containing the tested cohort
+        required: true
+        type: string
+      source_commit:
+        description: Full commit SHA that produced the tested cohort
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  cadrumo-homebrew-acquisition:
+    name: Cadrumo / ${{ matrix.label }} / Homebrew source install
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: macos-intel
+            label: macOS Intel
+            runner: macos-15-intel
+            expected_os: Darwin
+            expected_arch: x86_64
+            brew: /usr/local/bin/brew
+          - id: macos-arm64
+            label: macOS arm64
+            runner: macos-15
+            expected_os: Darwin
+            expected_arch: arm64
+            brew: /opt/homebrew/bin/brew
+          - id: linux-x86_64
+            label: Linux x86_64
+            runner: ubuntu-24.04
+            expected_os: Linux
+            expected_arch: x86_64
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+          - id: linux-arm64
+            label: Linux arm64
+            runner: ubuntu-24.04-arm
+            expected_os: Linux
+            expected_arch: aarch64
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+
+    steps:
+      - name: Initialize current-run evidence root
+        id: initialize
+        env:
+          MATRIX_ID: ${{ matrix.id }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          root="${RUNNER_TEMP}/cadrumo-s24-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
+          rm -rf "$root"
+          mkdir -p "$root"
+          echo "CADRUMO_S24_ROOT=$root" >> "$GITHUB_ENV"
+          jq -n \
+            --arg source_commit "$SOURCE_COMMIT" \
+            --arg source_run_id "$SOURCE_RUN_ID" \
+            --arg matrix_id "$MATRIX_ID" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            '{
+              schema: "cadrumo.packaging.homebrew-workflow.v1",
+              status: "initialized",
+              source_commit: $source_commit,
+              source_run_id: $source_run_id,
+              matrix_id: $matrix_id,
+              github_run_id: $run_id,
+              github_run_attempt: $run_attempt
+            }' > "$root/run-context.json"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Verify declared Homebrew release row
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+          EXPECTED_ARCH: ${{ matrix.expected_arch }}
+          EXPECTED_OS: ${{ matrix.expected_os }}
+        run: |
+          test "$(uname -s)" = "$EXPECTED_OS"
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          test -x "$BREW_PATH"
+          "$BREW_PATH" --version
+
+      - name: Verify source workflow identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-fA-F]{40}$ ]]
+          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}")"
+          test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"
+          test "$(jq -r .path <<<"$run_json")" = ".github/workflows/packaging-smoke.yml"
+          test "$(jq -r .conclusion <<<"$run_json")" = "success"
+          test "$(jq -r .event <<<"$run_json")" = "push"
+          test "$(jq -r .head_branch <<<"$run_json")" = "main"
+          test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
+          source_commit_lower="$(printf '%s' "$SOURCE_COMMIT" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .head_sha <<<"$run_json")" = "$source_commit_lower"
+
+      - name: Checkout tested source commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Download tested Cadrumo Python cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-python-cohort
+          path: ${{ env.CADRUMO_S24_ROOT }}/cohort
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Verify and generate the cohort-bound tap snapshot
+        run: |
+          uv run --no-project --with packaging python -m dev.packaging.python_cohort verify \
+            --cohort-dir "$CADRUMO_S24_ROOT/cohort"
+          version="$(jq -r .version "$CADRUMO_S24_ROOT/cohort/python-cohort.json")"
+          uv run --no-project --with packaging python packaging/homebrew/generate.py \
+            --cohort-dir "$CADRUMO_S24_ROOT/cohort" \
+            --lock uv.lock \
+            --version "$version" \
+            --release-base-url \
+              "https://github.com/nevenincs/cadrumo/releases/download/v${version}" \
+            --output-dir "$CADRUMO_S24_ROOT/tap-snapshot"
+
+      - name: Audit install and exercise Cadrumo through Homebrew
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          uv run --no-project python dev/packaging/smoke_homebrew.py \
+            --formula "$CADRUMO_S24_ROOT/tap-snapshot/Formula/cadrumo.rb" \
+            --cohort-dir "$CADRUMO_S24_ROOT/cohort" \
+            --evidence-dir "$CADRUMO_S24_ROOT/evidence" \
+            --tap-name "cadrumo-smoke/${MATRIX_ID}" \
+            --brew "$BREW_PATH" \
+            --repo-root "$GITHUB_WORKSPACE"
+
+      - name: Upload Cadrumo Homebrew acquisition evidence
+        if: always() && steps.initialize.outputs.ready == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-homebrew-acquisition-${{ matrix.id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/cadrumo-s24-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.id }}/
+          if-no-files-found: error
+          retention-days: 14

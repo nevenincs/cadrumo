@@ -1,0 +1,4 @@
+@step Run the profile readiness preflight for Modelo 303, first quarter of 2026.
+@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@expect result.modelo == "303"
+@expect exit_code == 0

@@ -1,0 +1,8 @@
+@step Create and calculate the annual Modelo 390 summary.
+@static aeat app modelo work create --modelo 390 --year 2026 --period 0A
+@static aeat app modelo work calculate --modelo 390 --year 2026 --period 0A
+@step Verify, export, file, and reconcile the annual summary.
+@static aeat app modelo work verify --modelo 390 --year 2026 --period 0A
+@static aeat app modelo export --modelo 390 --year 2026 --period 0A --output ./modelo-390-2026.boe
+@static aeat app modelo work file --modelo 390 --year 2026 --period 0A
+@static aeat app modelo reconcile pull --modelo 390 --year 2026 --period 0A

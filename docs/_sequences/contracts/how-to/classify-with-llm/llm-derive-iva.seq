@@ -1,0 +1,7 @@
+@step Import a quarter so there is a business row to saturate.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Classify the row as business first.
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
+@step Derive the IVA fields from the official rate, without a provider.
+@result aeat --format json app ledger classify e3eeac5e --iva-category domestic_general_21 --saturate
+@expect result.transaction.iva_category == "domestic_general_21"

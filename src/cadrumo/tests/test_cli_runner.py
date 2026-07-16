@@ -13,7 +13,7 @@ import sys
 
 import pytest
 
-from .cli_runner import ClickInvokeKwargs, invoke_cached_cli
+from .cli_runner import ClickInvokeKwargs, invoke_cached_cli, semantic_cli_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -65,6 +65,13 @@ assert "--output-language" in semantic_cli_output(result)
     )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr
+
+
+def test_semantic_cli_text_removes_only_terminal_styling() -> None:
+    """Split-stream capture removes ANSI while preserving semantic text."""
+
+    styled = "\x1b[31m--provider\x1b[0m [auto|csv]\n"
+    assert semantic_cli_text(styled) == "--provider [auto|csv]\n"
 
 
 def test_click_invoke_kwargs_typed_dict_contains_expected_keys() -> None:

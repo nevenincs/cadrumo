@@ -115,7 +115,7 @@
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
-      "kind": "setup",
+      "kind": "command",
       "stderr_text": null,
       "text": "active_profile\tbruno-real\n"
     },

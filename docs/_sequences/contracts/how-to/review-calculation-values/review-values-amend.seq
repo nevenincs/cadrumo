@@ -1,0 +1,2 @@
+@step Amend an already-filed record as a complementaria.
+@static aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>

@@ -1,0 +1,8 @@
+@step View the official AEAT online portals and their authentication requirements.
+@static aeat app live portals list
+@step Narrow the list to the portals for one form.
+@static aeat app live portals list --modelo 303
+@step Narrow the list to one category.
+@static aeat app live portals list --category filing
+@step View one portal's details.
+@static aeat app live portals view <portal-id>

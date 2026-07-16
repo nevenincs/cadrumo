@@ -38,10 +38,6 @@ Register the Desktop OAuth client for the active profile and run the consent
 flow. Both reach Google, so they are display-only here:
 
 ```{cli-sequence} sheets-oauth
-@step Register the Desktop OAuth client for the active profile.
-@static aeat config google register --client-json ./client_secret.json
-@step Run the Google consent flow.
-@static aeat config google login
 ```
 
 Check the Google status and set the Drive folder where Cadrumo will create
@@ -51,22 +47,12 @@ reads back verbatim:
 
 ```{cli-sequence} sheets-folder
 :verify: Confirm the Drive folder binding reads back the value you set.
-@step Check the Google connection status for the active profile.
-aeat --format json config google status
-@step Set the Drive folder where Cadrumo will create spreadsheets.
-aeat config google folder set docs-folder-123
-@step Confirm the folder binding.
-@result aeat --format json config google folder get
-@expect result.root_folder_id == "docs-folder-123"
-@expect exit_code == 0
 ```
 
 Probe the connection once the OAuth client is registered. The probe reaches
 Google, so it is display-only here:
 
 ```{cli-sequence} sheets-probe
-@step Probe the Google connection.
-@static aeat config google sync probe
 ```
 
 The Google integration is profile-scoped. If you switch profiles, check Google
@@ -79,8 +65,6 @@ export creates a Google Sheets workbook inside the configured `cadrumo-vault/`
 area in Drive:
 
 ```{cli-sequence} sheets-export
-@step Export the calculation surface for one modelo, year, and period.
-@static aeat config google sync calc export --modelo 303 --year 2026 --period 1T
 ```
 
 It is a calculation review surface, not a bank statement export. Use `aeat app
@@ -98,8 +82,6 @@ edited row-level data assembled as structured observations. The command does
 not persist those observations:
 
 ```{cli-sequence} sheets-pull
-@step Pull typed edits back from the reviewed spreadsheet.
-@static aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 ```
 
 The pull command checks that the spreadsheet belongs to the current profile and
@@ -113,8 +95,6 @@ in the Sheet. It pulls the operator-edited cells, runs the calculation engine
 over them, and displays the result. It persists nothing:
 
 ```{cli-sequence} sheets-compute
-@step Compute casilla values from the operator-edited cells.
-@static aeat config google sync calc compute --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 ```
 
 The compute command checks that the spreadsheet matches the expected filing
@@ -128,10 +108,6 @@ de Administración Tributaria (AEAT) outputs, pass it explicitly with
 `--scenario`:
 
 ```{cli-sequence} sheets-verify
-@step Verify the spreadsheet calculation for the modelo, year, and period.
-@static aeat config google sync calc verify --modelo 303 --year 2026 --period 1T
-@step Verify against an explicit scenario JSON of inputs and expected outputs.
-@static aeat config google sync calc verify --modelo 303 --year 2026 --period 1T --scenario ./scenario.json
 ```
 
 Verification compares the calculation surfaces implemented by the app. It does
@@ -145,10 +121,6 @@ upload per storage area without changing anything. Narrow a large push with
 `--namespace` or `--limit`:
 
 ```{cli-sequence} sheets-backup-push
-@step Preview the encrypted backup to Drive without uploading.
-@static aeat config google sync push --dry-run
-@step Mirror the encrypted records to the Drive folder.
-@static aeat config google sync push
 ```
 
 Only ciphertext is uploaded. Your records leave the machine exactly as they
@@ -165,10 +137,6 @@ login` can sign in again without re-importing the Cloud Console JSON:
 
 ```{cli-sequence} sheets-logout
 :verify: Confirm the Google session clears for the active profile.
-@step Clear the Google session for the active profile.
-@result aeat --format json config google logout
-@expect result.client_preserved == true
-@expect exit_code == 0
 ```
 
 ## Where this fits
@@ -178,14 +146,6 @@ ready before you rely on the calculation workbook:
 
 ```{cli-sequence} sheets-readiness
 :verify: Confirm the period's readiness before relying on the workbook.
-@step Import a quarter so there is data to check.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@step Run the period preflight.
-aeat app ledger preflight --year 2026 --period 1T
-@step Read the overall ledger state for the period.
-@result aeat --format json app ledger status --year 2026 --period 1T
-@expect result.active_count == 2
-@expect exit_code == 0
 ```
 
 If the ledger still has missing categories, IVA fields, currency, or

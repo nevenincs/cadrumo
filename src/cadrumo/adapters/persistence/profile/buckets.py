@@ -116,6 +116,12 @@ class BucketEventHistoryRepository:
                 secure-object classification, envelope version, or payload
                 validation fails.
         """
+        catalogue, _revision_id = self.load_revisioned()
+        return catalogue
+
+    def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
+        """Load the catalogue and the exact secure-object revision observed."""
+        from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
         from ..storage import (
             ClassificationError,
             Envelope,
@@ -138,7 +144,7 @@ class BucketEventHistoryRepository:
                 or "errors.integrity.integrity_storage_validation",
             ) from exc
         if record is None:
-            return BucketEventHistoryCatalogue()
+            return BucketEventHistoryCatalogue(), ABSENT_SECURE_OBJECT_REVISION_ID
         try:
             envelope = Envelope[BucketEventHistoryCatalogue].model_validate_json(record.payload)
         except ValidationError as exc:
@@ -180,7 +186,7 @@ class BucketEventHistoryRepository:
                 },
                 translated_message="errors.integrity.integrity_storage_envelope_version",
             )
-        return envelope.payload
+        return envelope.payload, record.revision_id
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Persist ``catalogue`` atomically through the secure-object repository.
@@ -192,7 +198,12 @@ class BucketEventHistoryRepository:
         """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
 
-    def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
+    def to_secure_object_write(
+        self,
+        catalogue: BucketEventHistoryCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned
@@ -216,6 +227,7 @@ class BucketEventHistoryRepository:
             schema_version=_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            expected_revision_id=expected_revision_id,
         )
 
 
