@@ -27,7 +27,7 @@ You need:
 
   ```{cli-sequence} authenticate-profile
   :verify: Confirm a taxpayer profile can be created non-interactively.
-```
+  ```
 
 - the master-key passphrase that protects your local store; the tool
   prompts for it.

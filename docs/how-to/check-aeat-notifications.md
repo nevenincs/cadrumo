@@ -36,7 +36,7 @@ You need:
 
   ```{cli-sequence} check-notifications-profile
   :verify: Confirm a taxpayer profile can be created non-interactively.
-```
+  ```
 
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
 - the master-key passphrase that protects your local store; the tool

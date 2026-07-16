@@ -208,11 +208,11 @@ For specialized calculations, the CLI provides evaluation and comparison command
   `Ninguna unidad de trabajo activa`:
 
   ```{cli-sequence} review-values-m100-create
-```
+  ```
 
   
   ```{cli-sequence} review-values-compare-taxation
-```
+  ```
   
   This check does not save a draft. It shows the tax difference and a
   recommendation so you can decide which filing option costs less.
@@ -221,7 +221,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
   the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
   
   ```{cli-sequence} review-values-maritime
-```
+  ```
   
   The command shows which tax boxes are affected by the exemption and the
   amounts, with references to the applicable law. This applies only to maritime

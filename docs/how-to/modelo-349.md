@@ -29,7 +29,7 @@ profile](profile-setup.md).
 
   ```{cli-sequence} modelo-349-applicability
   :verify: Confirm the modelo's applicability and cadence read back.
-```
+  ```
 - Record the operations as invoice records, not bare ledger rows. The 349
   listing is built from your invoice catalogue: issued invoices to EU
   operators feed the entregas side, received invoices from EU suppliers feed

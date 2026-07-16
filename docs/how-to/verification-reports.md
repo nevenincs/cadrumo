@@ -162,7 +162,7 @@ expects you to do. The common kinds of blocking finding:
 
   ```{cli-sequence} verification-reports-scope-dependency
   :verify: Confirm setting the activity-start date on the profile succeeds.
-```
+  ```
 
 After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
