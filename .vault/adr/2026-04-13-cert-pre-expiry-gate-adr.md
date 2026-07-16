@@ -3,13 +3,13 @@ tags:
   - "#adr"
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
-modified: '2026-07-10'
+modified: '2026-07-16'
 title: "Certificate Pre-Expiry Health Check + Workflow Gate"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"
   - "[[2026-04-13-cert-pre-expiry-gate-plan]]"
-  - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-workflow-engine-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 
 # ADR: Certificate Pre-Expiry Health Check + Workflow Gate | (**status:** `accepted`)

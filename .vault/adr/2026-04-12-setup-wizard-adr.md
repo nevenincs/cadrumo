@@ -5,10 +5,10 @@ tags:
 date: '2026-04-12'
 related:
   - "[[2026-04-12-setup-wizard-research]]"
-  - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-deadline-engine-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 superseded_by: '2026-05-12-schema-driven-wizard-adr'
-modified: '2026-07-10'
+modified: '2026-07-16'
 title: First-run setup wizard — ADR
 issue: wgergely/aeat#61
 ---

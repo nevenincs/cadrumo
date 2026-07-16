@@ -3,11 +3,10 @@ tags:
   - "#research"
   - "#aeat-auth-providers"
 date: 2026-04-18
-modified: '2026-07-10'
+modified: '2026-07-16'
 related:
-  - "[[2026-04-12-cert-auth-research]]"
-  - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 ---
 
 # aeat-auth-providers-research

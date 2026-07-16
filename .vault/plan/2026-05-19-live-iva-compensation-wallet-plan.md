@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-iva-compensation-wallet'
 date: '2026-05-19'
-modified: '2026-07-12'
+modified: '2026-07-16'
 tier: L3
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
@@ -17,11 +17,11 @@ related:
   - '[[2026-05-26-modelo-130-relation-regression-plan]]'
   - '[[2026-04-17-aeat-access-gate-adr]]'
   - '[[2026-04-17-session-persistence-adr]]'
-  - '[[2026-04-16-live-cert-auth-adr]]'
   - '[[2026-05-26-live-iva-auth-read-acquisition-adr]]'
   - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
   - '[[2026-05-26-aeat-sede-constants-centralization-adr]]'
   - '[[2026-07-12-live-iva-compensation-wallet-audit]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 # `live-iva-compensation-wallet` `implementation` plan
 

@@ -3,12 +3,12 @@ tags:
   - "#research"
   - "#setup-wizard"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-16'
 title: First-run setup wizard — research
 related:
   - "[[2026-04-12-deadline-engine-research]]"
-  - "[[2026-04-12-cert-auth-research]]"
   - "[[2026-04-12-trilingual-i18n-research]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 issue: wgergely/aeat#61
 ---
 
