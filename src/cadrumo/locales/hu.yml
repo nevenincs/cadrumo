@@ -467,22 +467,22 @@ application:
         profile_tax_id_missing_next_action: Szerkessze az aktív profilt a `aeat config
           profile edit NÉV --tax-id DNI/NIE` paranccsal a hitelesítés előtt.
       errors:
-        cleanup_in_progress: Ennél a profilnál még folyamatban van egy hitelesítési
-          kijelentkezés vagy visszaállítás helyreállítása. A hitelesítési beállítások
-          módosítása előtt folytassa azt a műveletet.
-        certificate_secret_mutation_in_progress: Ennél a profilnál még folyamatban
-          van egy tanúsítványtitok-módosítás helyreállítása. A hitelesítési beállítások
-          módosítása előtt próbálja újra ugyanazt a titokparancsot.
         certificate_file_required: A tanúsítvány-szolgáltató tanúsítványfájlt igényel.
           Futtassa a `aeat config auth configure --provider certificate --file ÚTVONAL`
           parancsot.
         certificate_file_unresolved: A(z) %{certificate_path} tanúsítványútvonal nem
           oldódik fel létező fájlra. Futtassa a `aeat config auth configure --provider
           certificate --file ÚTVONAL` parancsot.
+        certificate_secret_mutation_in_progress: Ennél a profilnál még folyamatban
+          van egy tanúsítványtitok-módosítás helyreállítása. A hitelesítési beállítások
+          módosítása előtt próbálja újra ugyanazt a titokparancsot.
         certificate_source_not_found: A(z) '%{name}' tanúsítványforrás nincs regisztrálva.
           Futtassa a `aeat config auth certificate list` parancsot a regisztrált források
           megtekintéséhez, vagy a `aeat config auth certificate register --name %{name}
           --file UTVONAL` parancsot a regisztrálásához.
+        cleanup_in_progress: Ennél a profilnál még folyamatban van egy hitelesítési
+          kijelentkezés vagy visszaállítás helyreállítása. A hitelesítési beállítások
+          módosítása előtt folytassa azt a műveletet.
         dangling_active_profile: Az aktív profil mutató (%{active_profile}) nem oldódik
           fel regisztrált profil-bucket-re. Futtassa a `aeat config profile list`
           parancsot.
@@ -3492,16 +3492,21 @@ cli:
         megerositese.
       yes_help: Javítás megerősítése.
     reset:
-      help: Üzemeltető által megadott konfigurációs hatókörök visszaállítása.
-      invalid_scope: 'Érvénytelen hatókör: %{scope}. Érvényes hatókörök: %{valid}.'
-      requires_yes: A visszaállítás visszafordíthatatlan. Futtassa újra a --yes kapcsolóval
-        a megerősítéshez.
-      scope_help: 'Visszaállítandó hatókör. profile: minden profil törlése (manifesztek,
-        DEK-ek, bevallások, főkönyv és számlafelülvizsgálatok). auth: mentett AEAT/SEDE
-        hitelesítési munkamenet törlése. data: olvashatatlan biztonságos-objektum-sorok
-        karanténba helyezése minden névtérben. all: profile, auth és data együttes
-        alkalmazása.'
-      yes_help: A visszaállítási művelet explicit megerősítése.
+      help: Elindítja, megjeleníti vagy folytatja az összes helyben tárolt profil
+        visszafordíthatatlan visszaállítását.
+      operation_id_help: A műveletazonosító alapján kiválaszt egy pontos visszaállítási
+        műveletet; elhagyásakor automatikusan kiválasztja az alkalmazható műveletet.
+      override_retention_help: A kötelezettségek áttekintése után felülbírálja a jogi
+        megőrzési szünetet; nem üres --reason értéket igényel.
+      reason_help: Megadja a jogi megőrzési szünet felülbírálásának kötelező indokát.
+      requires_yes: A visszafordíthatatlan visszaállítás megerősítéséhez adja meg
+        a --yes kapcsolót.
+      resume_help: Folytat egy befejezetlen visszaállítási műveletet.
+      start_help: Új, minden helyben tárolt profilra kiterjedő visszafordíthatatlan
+        visszaállítást indít.
+      status_help: A helyi adatok módosítása nélkül megjeleníti a visszaállítási művelet
+        állapotát.
+      yes_help: Megerősíti az összes helyben tárolt profil visszafordíthatatlan törlését.
     set:
       help: Érték hozzárendelése egy konfigurációs kulcshoz.
       key_help: A hozzárendelendő kulcs (pl. iva.regime).
