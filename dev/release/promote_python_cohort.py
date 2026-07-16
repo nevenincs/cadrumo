@@ -98,7 +98,9 @@ def validate_promotion(
 
 def _write_outputs(path: Path, cohort: PythonCohort) -> None:
     rows = {
+        "manuals_sdist": cohort.manuals_sdist,
         "manuals_wheel": cohort.manuals_wheel,
+        "official_sdist": cohort.official_sdist,
         "official_wheel": cohort.official_wheel,
         "root_sdist": cohort.root_sdist,
         "root_wheel": cohort.root_wheel,

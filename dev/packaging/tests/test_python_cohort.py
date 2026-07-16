@@ -62,7 +62,9 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
         "cadrumo": "cadrumo-1.0.0-py3-none-any.whl",
         "cadrumo-sdist": "cadrumo-1.0.0.tar.gz",
         "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
+        "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
         "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
+        "cadrumo-data-official-sdist": "cadrumo_data_official-1.0.0.tar.gz",
     }
     sha256: dict[str, str] = {}
     for label, filename in names.items():

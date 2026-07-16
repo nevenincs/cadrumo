@@ -7,6 +7,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import tarfile
 import zipfile
 from dataclasses import dataclass
 from email.parser import Parser
@@ -42,7 +43,7 @@ print(json.dumps({
 
 @dataclass(frozen=True)
 class PythonCohort:
-    """One root wheel/sdist and its two mandatory exact-version data wheels."""
+    """One root wheel/sdist and two mandatory data wheel/sdist pairs."""
 
     directory: Path
     manifest: Path
@@ -51,7 +52,9 @@ class PythonCohort:
     root_wheel: Path
     root_sdist: Path
     manuals_wheel: Path
+    manuals_sdist: Path
     official_wheel: Path
+    official_sdist: Path
     sha256: dict[str, str]
 
     @property
@@ -115,6 +118,65 @@ def _wheel_identity(wheel: Path) -> tuple[str, str, tuple[str, ...]]:
     )
 
 
+def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
+    try:
+        with tarfile.open(sdist, mode="r:gz") as archive:
+            metadata_names = tuple(
+                member
+                for member in archive.getmembers()
+                if member.name.endswith("/PKG-INFO")
+            )
+            if len(metadata_names) != 1:
+                raise SystemExit(
+                    f"expected one PKG-INFO member in {sdist}; got "
+                    f"{[member.name for member in metadata_names]!r}",
+                )
+            handle = archive.extractfile(metadata_names[0])
+            if handle is None:
+                raise SystemExit(f"could not read PKG-INFO from {sdist}")
+            metadata = Parser().parsestr(handle.read().decode(_UTF_8))
+    except (tarfile.TarError, UnicodeDecodeError) as exc:
+        raise SystemExit(f"invalid source distribution {sdist}: {exc}") from exc
+    name = metadata.get("Name")
+    version = metadata.get("Version")
+    if not name or not version:
+        raise SystemExit(f"sdist metadata lacks Name or Version: {sdist}")
+    return (
+        name.casefold().replace("_", "-"),
+        version,
+        tuple(metadata.get_all("Requires-Dist") or ()),
+    )
+
+
+def _validate_companion_pins(
+    requirements: tuple[str, ...],
+    *,
+    version: str,
+    artifact_kind: str,
+) -> None:
+    parsed = tuple(Requirement(row) for row in requirements)
+    for companion in _DISTRIBUTIONS[1:]:
+        matches = tuple(
+            requirement
+            for requirement in parsed
+            if requirement.name.casefold().replace("_", "-") == companion
+        )
+        if len(matches) != 1:
+            raise SystemExit(
+                f"root {artifact_kind} must declare exactly one dependency on {companion}",
+            )
+        requirement = matches[0]
+        if (
+            requirement.extras
+            or requirement.marker is not None
+            or str(requirement.specifier) != f"=={version}"
+        ):
+            raise SystemExit(
+                f"root {artifact_kind} must require {companion}=={version} "
+                f"unconditionally and without extras; found {requirement}",
+            )
+
+
 def _validate_wheel_contract(
     root_wheel: Path,
     manuals_wheel: Path,
@@ -133,23 +195,50 @@ def _validate_wheel_contract(
             "Python cohort distribution identities or versions drifted: "
             f"expected {{name: {version!r} for name in {_DISTRIBUTIONS!r}}}, got {observed!r}",
         )
-    pins = {
-        requirement.name.casefold().replace("_", "-"): str(requirement.specifier)
-        for row in requirements
-        if (requirement := Requirement(row)).marker is None
-        and requirement.name.casefold().replace("_", "-") in _DISTRIBUTIONS[1:]
-    }
-    expected_pins = {name: f"=={version}" for name in _DISTRIBUTIONS[1:]}
-    if pins != expected_pins:
-        raise SystemExit(
-            f"root wheel companion pins must be exact: expected {expected_pins!r}, got {pins!r}",
-        )
+    _validate_companion_pins(
+        requirements,
+        version=version,
+        artifact_kind="wheel",
+    )
     for wheel in (root_wheel, manuals_wheel, official_wheel):
         if wheel.stat().st_size >= _PYPI_FILE_CAP_BYTES:
             raise SystemExit(
                 f"{wheel.name} exceeds PyPI's 100 MB per-file cap: {wheel.stat().st_size} bytes",
             )
     return version
+
+
+def _validate_sdist_contract(
+    root_sdist: Path,
+    manuals_sdist: Path,
+    official_sdist: Path,
+    *,
+    expected_version: str,
+) -> None:
+    root_name, root_version, requirements = _sdist_identity(root_sdist)
+    manuals_name, manuals_version, _ = _sdist_identity(manuals_sdist)
+    official_name, official_version, _ = _sdist_identity(official_sdist)
+    observed = {
+        root_name: root_version,
+        manuals_name: manuals_version,
+        official_name: official_version,
+    }
+    expected = {name: expected_version for name in _DISTRIBUTIONS}
+    if observed != expected:
+        raise SystemExit(
+            f"Python cohort sdist identities or versions drifted: expected {expected!r}, "
+            f"got {observed!r}",
+        )
+    _validate_companion_pins(
+        requirements,
+        version=expected_version,
+        artifact_kind="sdist",
+    )
+    for sdist in (root_sdist, manuals_sdist, official_sdist):
+        if sdist.stat().st_size >= _PYPI_FILE_CAP_BYTES:
+            raise SystemExit(
+                f"{sdist.name} exceeds PyPI's 100 MB per-file cap: {sdist.stat().st_size} bytes",
+            )
 
 
 def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
@@ -200,7 +289,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             cwd=root,
         )
         with zipfile.ZipFile(archive) as bundle:
-            bundle.extractall(build_root)
+            bundle.extractall(build_root)  # noqa: S202 - archive is produced by local Git.
         uv = shutil.which("uv")
         if uv is None:
             raise SystemExit("uv is required to build the Python cohort")
@@ -210,6 +299,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
                 uv,
                 "build",
                 "--wheel",
+                "--sdist",
                 "--project",
                 str(build_root / "packaging" / "cadrumo_data_manuals"),
                 "--out-dir",
@@ -222,6 +312,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
                 uv,
                 "build",
                 "--wheel",
+                "--sdist",
                 "--project",
                 str(build_root / "packaging" / "cadrumo_data_official"),
                 "--out-dir",
@@ -247,16 +338,34 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         "cadrumo_data_official-*.whl",
         label="official wheel",
     )
+    manuals_sdist = _single(
+        output,
+        "cadrumo_data_manuals-*.tar.gz",
+        label="manuals sdist",
+    )
+    official_sdist = _single(
+        output,
+        "cadrumo_data_official-*.tar.gz",
+        label="official sdist",
+    )
     version = _validate_wheel_contract(
         root_wheel,
         manuals_wheel,
         official_wheel,
     )
+    _validate_sdist_contract(
+        root_sdist,
+        manuals_sdist,
+        official_sdist,
+        expected_version=version,
+    )
     artifacts = {
         "cadrumo": root_wheel.name,
         "cadrumo-sdist": root_sdist.name,
         "cadrumo-data-manuals": manuals_wheel.name,
+        "cadrumo-data-manuals-sdist": manuals_sdist.name,
         "cadrumo-data-official": official_wheel.name,
+        "cadrumo-data-official-sdist": official_sdist.name,
     }
     sha256 = {name: _sha256(output / filename) for name, filename in artifacts.items()}
     manifest = output / _MANIFEST_NAME
@@ -301,7 +410,9 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         "cadrumo",
         "cadrumo-sdist",
         "cadrumo-data-manuals",
+        "cadrumo-data-manuals-sdist",
         "cadrumo-data-official",
+        "cadrumo-data-official-sdist",
     }
     if set(artifacts) != expected_keys or set(sha256) != expected_keys:
         raise SystemExit(
@@ -335,11 +446,12 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         raise SystemExit(
             f"cohort manifest version {version!r} != wheel version {observed_version!r}",
         )
-    if resolved["cadrumo-sdist"].stat().st_size >= _PYPI_FILE_CAP_BYTES:
-        raise SystemExit(
-            f"{resolved['cadrumo-sdist'].name} exceeds PyPI's 100 MB per-file cap: "
-            f"{resolved['cadrumo-sdist'].stat().st_size} bytes",
-        )
+    _validate_sdist_contract(
+        resolved["cadrumo-sdist"],
+        resolved["cadrumo-data-manuals-sdist"],
+        resolved["cadrumo-data-official-sdist"],
+        expected_version=version,
+    )
     return PythonCohort(
         directory=cohort_dir,
         manifest=manifest,
@@ -348,7 +460,9 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         root_wheel=resolved["cadrumo"],
         root_sdist=resolved["cadrumo-sdist"],
         manuals_wheel=resolved["cadrumo-data-manuals"],
+        manuals_sdist=resolved["cadrumo-data-manuals-sdist"],
         official_wheel=resolved["cadrumo-data-official"],
+        official_sdist=resolved["cadrumo-data-official-sdist"],
         sha256={str(name): str(digest) for name, digest in sha256.items()},
     )
 
