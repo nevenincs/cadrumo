@@ -26,7 +26,7 @@
     "storage_root": {
       "type": "directory",
       "title": "Cadrumo state directory",
-      "description": "Persistent, project-independent local state for the Cadrumo MCP service. The directory is never adopted from the retired aeat product.",
+      "description": "Persistent, project-independent local state for the Cadrumo MCP service.",
       "required": true
     },
     "persona": {
