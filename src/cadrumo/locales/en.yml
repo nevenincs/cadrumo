@@ -302,9 +302,6 @@ aggregation:
       unsupported_modelo: No aggregation contract is registered for the requested
         modelo.
   irnr_income_ledger:
-    errors:
-      official_tipo_renta_parameter_count: Modelo 210 revision %{revision_id} must
-        declare exactly one official tipo-renta code parameter.
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is foreign-source;
         TRLIRNR Art. 13 excludes it from the Modelo 210 Spanish-source gross-income
@@ -317,6 +314,9 @@ aggregation:
         income to this IRNR projection.
       tipo_renta_code_not_declared: Modelo 210 official tipo-renta code %{tipo_renta_code}
         is not declared for the selected revision and filing period %{period}.
+    errors:
+      official_tipo_renta_parameter_count: Modelo 210 revision %{revision_id} must
+        declare exactly one official tipo-renta code parameter.
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -471,6 +471,9 @@ application:
           profile create NAME.
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
+        provider_not_configured: No authentication provider is configured; specify
+          --provider or configure one first.
+        scope_conflict: Choose either --provider or --all, not both.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`
           before configuring authentication.
@@ -525,8 +528,8 @@ application:
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
-        corrupt_session: Your saved auth session is damaged and cannot be read. Run
-          `aeat config auth clear --sessions` and then `aeat config auth test`.
+        corrupt_session: Your saved authentication session is damaged and cannot be
+          read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
@@ -2628,6 +2631,8 @@ cli:
           calculate`, then verify the draft with `aeat app modelo work verify`.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
+        verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
+          is already verified; returned the existing verification report without changes.'
         verify_next_action_granted: Verification passed. Export the filing artefact
           with `aeat app modelo export`.
         verify_next_action_incomplete: Verification found blocking items (see the
@@ -2656,7 +2661,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id} is already verified; returned the existing verification report without changes.'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
@@ -2722,18 +2726,12 @@ cli:
             name_help: Registered certificate source whose passphrase should be removed
           remove_help: Remove the passphrase bound to a registered certificate source
           set:
-            backend_help: 'Secret backend: secure_storage (default, encrypted at rest)
-              or keyring (OS keychain)'
             name_help: Registered certificate source the passphrase is bound to
             secret_help: The PKCS#12 passphrase (prompted, hidden, never echoed)
           set_help: Set (or rotate) the passphrase for a registered certificate source
         select:
           name_help: Registered certificate source to activate
         select_help: Select the active certificate source
-      clear_all_help: Clear all configured auth providers
-      clear_help: Clear local authentication metadata
-      clear_locks_help: Clear auth acquisition locks
-      clear_sessions_help: Clear persisted AEAT auth sessions
       configure_help: Configure the active authentication provider
       diagnostics:
         help: Inspect encrypted auth diagnostics.
@@ -2752,6 +2750,8 @@ cli:
         AEAT session
       login_help: Acquire or verify a live AEAT session
       login_reset_lock_help: Clear a stale auth acquisition lock before starting
+      logout_all_help: End sessions for every known authentication provider
+      logout_help: End local authentication sessions without removing provider configuration
       no_active_bucket: No active profile. Run 'aeat config profile create NAME' before
         configuring authentication.
       output_language_help: Output language for the response text (es, en, ca, hu).
@@ -2762,6 +2762,12 @@ cli:
         status_unavailable_gloss: not available yet
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
+      reset_all_help: Reset every known authentication provider
+      reset_help: Remove local provider configuration, sessions, locks, certificate
+        registrations, and stored certificate secrets
+      reset_requires_yes: Authentication reset removes stored configuration and credentials.
+        Re-run with --yes to confirm.
+      reset_yes_help: Confirm the destructive authentication reset
       status_help: Show configured authentication state
       status_summary_configured: Authentication is configured but no live session
         is available yet.
@@ -2971,8 +2977,6 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
-    lock:
-      help: Lock the current profile by clearing the active profile pointer.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
@@ -3123,10 +3127,11 @@ cli:
         export --passphrase'.
       import_path_help: Path to the profile bundle file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
-      logout_help: Sign out of the active profile by clearing the local pointer
-      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
-        verbs in this terminal will refuse with NoActiveBucketSessionError until you
-        run aeat config switch NAME or open a new terminal and re-select.
+      logout_help: Close the active storage session, discard in-memory keys, dispose
+        bucket engines, and clear the local pointer
+      logout_session_warning: Logout closed the active storage session, discarded
+        in-memory key material, disposed bucket engines, and cleared the active-profile
+        pointer. Run aeat config switch NAME before another profile-bound command.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -4096,6 +4101,8 @@ cli:
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
+    canonicalize_product_identity:
+      locale_help: Update only this supported locale catalogue.
     modelo:
       app_help: Manage modelo schema-local translations.
       audit_help: Audit modelo schema translations.
@@ -4168,9 +4175,10 @@ cli:
         section_overview: Overview
         section_review_and_registry: Review and registry
       config:
-        auth_clear: Clear local authentication metadata.
         auth_configure: Configure an authentication provider.
+        auth_logout: End local authentication sessions while preserving provider configuration.
         auth_providers: List supported authentication providers.
+        auth_reset: Remove local authentication configuration and stored credentials.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
         diagnostics_logs: Show the configured log path and recent lines.
@@ -4415,14 +4423,6 @@ cli:
     diff_revisions_modelo_help: Modelo identifier to diff
     diff_revisions_to_year_help: Later filing year whose covering revision is compared
       against the baseline
-    errors:
-      capability:
-        manuals_verify: manual corpus verification
-        parity: registry parity verification
-        registry_verify: registry verification
-        workbooks_verify: workbook verification
-      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
-        Install {install} and retry.
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -4776,6 +4776,8 @@ errors:
       Review the authentication configuration.
     auth_auth_validation: The authentication parameters failed validation. Correct
       the values shown and try again.
+    auth_former_product_session_state: Cadrumo detected retired-product AEAT session
+      state and refuses to read, move, re-key, delete, or adopt it.
     auth_google: A Google authentication error occurred.
     auth_google_client_not_registered: No Google Desktop OAuth client is registered
       for the active profile. Register a client to use Google features.
@@ -4808,7 +4810,6 @@ errors:
       <WORDS>.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
-    auth_former_product_session_state: 'Cadrumo detected retired-product AEAT session state and refuses to read, move, re-key, delete, or adopt it.'
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'
@@ -5314,8 +5315,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
-    internal_active_profile_pointer_transaction: 'Internal error: active-profile
-      pointer transaction ownership is invalid.'
+    internal_active_profile_pointer_transaction: 'Internal error: active-profile pointer
+      transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -5384,6 +5385,9 @@ errors:
       no further operations.
     modelo_184_share_sum: Modelo 184 member share percentages must sum to exactly
       100%.
+    modelo_210_agrupacion_renta_rows: Modelo 210 annual grouped-renta rows must form
+      a lawful single grouping (one code, one rate, one identified property, and one
+      payer unless the multi-payer exception applies).
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
     modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
@@ -5602,6 +5606,8 @@ errors:
       profile. Use the profile UUID to disambiguate.
     refused_profile_lifo_forbidden: LIFO stock valuation is not admitted for tax purposes.
       Use FIFO, weighted average price, or average cost.
+    refused_profile_logout_override: Logout cannot change an active profile selected
+      by --profile or CADRUMO_ACTIVE_PROFILE. Remove the override and retry.
     refused_profile_not_configured: RENTA verification needs a tax-residence profile.
       Complete the profile before continuing.
     refused_profile_not_found: No profile exists with the identifier provided.
@@ -5675,7 +5681,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    modelo_210_agrupacion_renta_rows: 'Modelo 210 annual grouped-renta rows must form a lawful single grouping (one code, one rate, one identified property, and one payer unless the multi-payer exception applies).'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

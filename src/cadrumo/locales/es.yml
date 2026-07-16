@@ -340,9 +340,6 @@ aggregation:
       unsupported_modelo: No hay contrato de agregación registrado para el modelo
         solicitado.
   irnr_income_ledger:
-    errors:
-      official_tipo_renta_parameter_count: La revisión %{revision_id} del Modelo
-        210 debe declarar exactamente un parámetro de código oficial de tipo de renta.
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} es de
         fuente extranjera; el art. 13 del TRLIRNR la excluye de la proyección de rendimientos
@@ -356,6 +353,9 @@ aggregation:
       tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}
         del Modelo 210 no está declarado para la revisión y el período de presentación
         %{period} seleccionados.
+    errors:
+      official_tipo_renta_parameter_count: La revisión %{revision_id} del Modelo 210
+        debe declarar exactamente un parámetro de código oficial de tipo de renta.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -523,6 +523,9 @@ application:
           NAME o aeat config profile create NAME.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
+        provider_not_configured: No hay ningún proveedor de autenticación configurado;
+          indica --provider o configura uno primero.
+        scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
           Siguiente acción: %{next_action}.'
@@ -589,8 +592,7 @@ application:
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
-          leer. Ejecuta `aeat config auth clear --sessions` y después `aeat config
-          auth test`.
+          leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
           de leer datos AEAT.
         profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
@@ -2839,6 +2841,9 @@ cli:
         status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
           calculate` y luego verifica el borrador con `aeat app modelo work verify`.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
+        verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
+          cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
+          de verificación existente sin cambios.'
         verify_next_action_granted: La verificación se superó. Exporta el artefacto
           de presentación con `aeat app modelo export`.
         verify_next_action_incomplete: La verificación encontró elementos bloqueantes
@@ -2871,7 +2876,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe de verificación existente sin cambios.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
@@ -2937,8 +2941,6 @@ cli:
           remove_help: Elimina la contrasena vinculada a una fuente de certificado
             registrada
           set:
-            backend_help: 'Backend del secreto: secure_storage (por defecto, cifrado
-              en reposo) o keyring (llavero del sistema operativo)'
             name_help: Fuente de certificado registrada a la que se vincula la contrasena
             secret_help: La contrasena del PKCS#12 (se solicita, oculta, nunca se
               muestra)
@@ -2947,10 +2949,6 @@ cli:
         select:
           name_help: Registered certificate source to activate
         select_help: Select the active certificate source
-      clear_all_help: Limpiar todos los proveedores de autenticación configurados
-      clear_help: Limpiar metadatos locales de autenticación
-      clear_locks_help: Limpiar bloqueos de adquisición de autenticación
-      clear_sessions_help: Limpiar sesiones AEAT persistidas
       configure_help: Configurar el proveedor de autenticación activo
       diagnostics:
         help: Inspecciona los diagnósticos de autenticación cifrados.
@@ -2971,6 +2969,10 @@ cli:
       login_help: Adquirir o verificar una sesión AEAT en vivo.
       login_reset_lock_help: Eliminar un bloqueo de adquisición de autenticación obsoleto
         antes de empezar.
+      logout_all_help: Cerrar las sesiones de todos los proveedores de autenticación
+        conocidos
+      logout_help: Cerrar las sesiones locales de autenticación sin retirar la configuración
+        del proveedor
       no_active_bucket: No hay un perfil activo. Ejecuta 'aeat config profile create
         NAME' antes de configurar la autenticación.
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
@@ -2982,6 +2984,12 @@ cli:
       providers_help: Listar proveedores de autenticación soportados
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
         %{provider}.'
+      reset_all_help: Restablecer todos los proveedores de autenticación conocidos
+      reset_help: Retirar la configuración local del proveedor, las sesiones, los
+        bloqueos, los certificados registrados y sus secretos guardados
+      reset_requires_yes: El restablecimiento retira la configuración y las credenciales
+        guardadas. Vuelve a ejecutar el comando con --yes para confirmar.
+      reset_yes_help: Confirmar el restablecimiento destructivo de la autenticación
       status_help: Mostrar el estado de autenticación configurado
       status_summary_configured: La autenticación está configurada pero aún no hay
         una sesión activa disponible.
@@ -3218,8 +3226,6 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
-    lock:
-      help: Bloquear el perfil activo eliminando el puntero de perfil activo.
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
@@ -3380,11 +3386,12 @@ cli:
       import_path_help: Ruta al archivo del paquete de perfil
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
-      logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      logout_session_warning: El cierre de sesion limpio el puntero del perfil activo.
-        Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
-        hasta que ejecutes aeat config switch NAME o abras un nuevo terminal y vuelvas
-        a seleccionar.
+      logout_help: Cierra la sesión de almacenamiento activa, descarta las claves
+        en memoria, libera los motores del bucket y limpia el puntero local
+      logout_session_warning: El cierre de sesión cerró el almacenamiento activo,
+        descartó las claves en memoria, liberó los motores del bucket y limpió el
+        puntero del perfil activo. Ejecuta aeat config switch NAME antes de otro comando
+        que necesite un perfil.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
@@ -4419,6 +4426,8 @@ cli:
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
+    canonicalize_product_identity:
+      locale_help: Actualiza solo este catálogo de idioma compatible.
     modelo:
       app_help: Gestiona traducciones locales de esquemas de modelo.
       audit_help: Audita traducciones de esquemas de modelo.
@@ -4496,9 +4505,12 @@ cli:
         section_overview: Estado general
         section_review_and_registry: Revision y registro
       config:
-        auth_clear: Eliminar las credenciales de autenticacion almacenadas.
         auth_configure: Configurar el proveedor de autenticacion con la AEAT.
+        auth_logout: Cerrar las sesiones locales de autenticación y conservar la configuración
+          del proveedor.
         auth_providers: Listar los proveedores de autenticacion disponibles.
+        auth_reset: Retirar la configuración local de autenticación y las credenciales
+          guardadas.
         auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
         auth_test: Probar la autenticacion con la AEAT.
         diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
@@ -4766,14 +4778,6 @@ cli:
     diff_revisions_modelo_help: Identificador del modelo a comparar
     diff_revisions_to_year_help: Ejercicio fiscal posterior cuya revisión cubridora
       se compara con la base
-    errors:
-      capability:
-        manuals_verify: manual corpus verification
-        parity: registry parity verification
-        registry_verify: registry verification
-        workbooks_verify: workbook verification
-      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
-        Install {install} and retry.
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
@@ -5133,6 +5137,8 @@ errors:
       Revisa la configuración de autenticación.
     auth_auth_validation: Los parámetros de autenticación no superaron la validación.
       Corrige los valores indicados y vuelve a intentarlo.
+    auth_former_product_session_state: Cadrumo detectó estado de sesión de un producto
+      retirado y se niega a leerlo, moverlo, re-cifrarlo, eliminarlo o adoptarlo.
     auth_google: Se produjo un error en la autenticación con Google.
     auth_google_client_not_registered: No hay ningún cliente OAuth de escritorio de
       Google registrado para el perfil activo. Registra un cliente para usar funciones
@@ -5169,7 +5175,6 @@ errors:
       recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
-    auth_former_product_session_state: 'Cadrumo detectó estado de sesión de un producto retirado y se niega a leerlo, moverlo, re-cifrarlo, eliminarlo o adoptarlo.'
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el calculo de edad a fin de ejercicio
       no tiene ejercicio de declaracion.'
@@ -5798,6 +5803,9 @@ errors:
       no admite más operaciones.
     modelo_184_share_sum: Los porcentajes de participación de los miembros del Modelo
       184 deben sumar exactamente el 100 %.
+    modelo_210_agrupacion_renta_rows: Las rentas agrupadas anuales del Modelo 210
+      deben formar una agrupación única y válida (un código, un tipo, un bien identificado
+      y un pagador, salvo la excepción de múltiples pagadores).
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
     modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de pais {country_code}
@@ -6034,6 +6042,9 @@ errors:
     refused_profile_label_ambiguous: 'Rechazado: la etiqueta del perfil es ambigua.'
     refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
+    refused_profile_logout_override: El cierre de sesión no puede cambiar un perfil
+      activo seleccionado mediante --profile o CADRUMO_ACTIVE_PROFILE. Elimina la
+      selección explícita y vuelve a intentarlo.
     refused_profile_not_configured: La verificación de la declaración de la Renta
       necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.
@@ -6114,7 +6125,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    modelo_210_agrupacion_renta_rows: 'Las rentas agrupadas anuales del Modelo 210 deben formar una agrupación única y válida (un código, un tipo, un bien identificado y un pagador, salvo la excepción de múltiples pagadores).'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6239,8 +6249,8 @@ mcp:
         presenta por sí mismo.'
       no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
         la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI (`aeat`) directamente
-        en un terminal.'
+        hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI (`aeat`)
+        directamente en un terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
       que ningún resultado de herramienta de esta sesión ha producido. Verifica la
