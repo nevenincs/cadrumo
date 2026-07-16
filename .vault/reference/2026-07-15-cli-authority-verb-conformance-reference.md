@@ -405,6 +405,11 @@ auth login
   --> resolves the configured/default provider
   --> the same credential scope and Settings bridge
 
+central session/live/modelo callers
+  --> application auth select_provider
+  --> unchanged Settings
+      [HIGH: bypasses the operator credential scope]
+
 AeatAuthenticator
   --> reconstructs CertificateBundle from Settings
       [duplicate credential projection retained for W02.P07.S50]
@@ -426,12 +431,18 @@ secure-storage secret correctly resolves `password=None`, but the Settings
 bridge omits that override and therefore preserves an unrelated global
 password. Certificate check separately falls back to that global password, and
 status/test do not enter the certificate scope when the caller omits
-`--provider`. The green focused suite does not cover these paths.
+`--provider`. Central session acquisition, live-read callers, state projection,
+and modelo workflow construction also reach the application provider factory
+with unchanged Settings, so an operator-only scope fix would leave the same
+authority bypass available outside the CLI. The green focused suite does not
+cover these paths.
 
 Keep the approved Step boundaries explicit:
 
 - `W02.P07.S49` resolves the effective provider before status/test scoping and
-  transports an explicit absent password through the credential scope.
+  centralizes exact certificate projection in the application provider factory,
+  transporting explicit absent values to status, test, login, central session
+  acquisition, live reads, state projection, and modelo construction.
 - `W02.P07.S50` removes the authenticator's second credential projection by
   consuming the resolved typed credential directly.
 - `W02.P07.S52` routes certificate check through the same authority and proves
