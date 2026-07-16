@@ -83,14 +83,19 @@ def test_scoop_workflow_runs_the_real_sandbox_lifecycle_without_rebuilding() -> 
     assert "$env:RUNNER_TEMP" in initialize["run"]
     assert "$env:GITHUB_RUN_ATTEMPT" in initialize["run"]
     assert "run-context.json" in initialize["run"]
+    assert initialize["id"] == "initialize"
+    assert '"ready=true"' in initialize["run"]
     assert "installed_tax_oracle.py" in stage["run"]
     assert "installed_mcp_oracle.py" in stage["run"]
     assert '$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1' in smoke["run"]
     assert "-Mode Sandbox" in smoke["run"]
     assert "-TimeoutMinutes 60" in smoke["run"]
-    assert upload["if"] == "always()"
+    assert upload["if"] == "always() && steps.initialize.outputs.ready == 'true'"
     assert upload["with"]["if-no-files-found"] == "error"
-    assert upload["with"]["path"] == "${{ env.CADRUMO_S20_ROOT }}/"
+    assert upload["with"]["name"] == "cadrumo-scoop-acquisition-evidence-${{ github.run_attempt }}"
+    assert upload["with"]["path"] == (
+        "${{ runner.temp }}/cadrumo-s20-${{ github.run_id }}-${{ github.run_attempt }}/"
+    )
     assert "uv build" not in commands
     assert "python -m build" not in commands
     assert "hatch build" not in commands

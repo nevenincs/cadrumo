@@ -32,6 +32,7 @@ jobs:
 
     steps:
       - name: Initialize current-run evidence root
+        id: initialize
         shell: powershell
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
@@ -56,6 +57,7 @@ jobs:
           } |
             ConvertTo-Json |
             Set-Content -LiteralPath (Join-Path $root "run-context.json") -Encoding UTF8
+          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
       - name: Verify declared Windows Sandbox release row
         shell: powershell
@@ -184,10 +186,10 @@ jobs:
             -TimeoutMinutes 60
 
       - name: Upload Cadrumo Scoop acquisition evidence
-        if: always()
+        if: always() && steps.initialize.outputs.ready == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: cadrumo-scoop-acquisition-evidence
-          path: ${{ env.CADRUMO_S20_ROOT }}/
+          name: cadrumo-scoop-acquisition-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/cadrumo-s20-${{ github.run_id }}-${{ github.run_attempt }}/
           if-no-files-found: error
           retention-days: 14
