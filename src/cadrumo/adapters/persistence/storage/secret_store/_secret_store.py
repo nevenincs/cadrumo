@@ -68,6 +68,7 @@ _log = get_logger(__name__)
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
+_HKDF_CONTEXT_SECRET_VALUE_WITNESS = b"cadrumo.secret_store.value_witness.v1"
 
 
 class SecretRecord(BaseModel):
@@ -204,6 +205,17 @@ class SecretStore:
             length=KEY_SIZE,
         )
         return hmac.new(sub_key, key.encode(UTF_8_ENCODING), sha256).hexdigest()
+
+    def value_witness(self, *, key: str, value: bytes) -> str:
+        """Return a master-keyed, non-reversible witness for one key/value request."""
+        sub_key = derive_key(
+            key_material=self._master_key(),
+            salt=b"",
+            context=_HKDF_CONTEXT_SECRET_VALUE_WITNESS,
+            length=KEY_SIZE,
+        )
+        material = key.encode(UTF_8_ENCODING) + b"\x00" + value
+        return hmac.new(sub_key, material, sha256).hexdigest()
 
     def _index_path(self) -> Path:
         """Return the catalogue file path."""

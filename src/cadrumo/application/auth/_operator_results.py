@@ -220,6 +220,10 @@ class AuthCleanupInProgressError(AeatError):
     """Raised when a non-resume auth mutation meets durable cleanup intent."""
 
 
+class CertificateSecretMutationInProgressError(AeatError):
+    """Raised when another auth mutation meets durable certificate-secret intent."""
+
+
 class AuthProviderNotConfiguredError(AeatError, ValueError):
     """Raised when an auth operation has neither an explicit nor configured provider."""
 
@@ -379,6 +383,7 @@ __all__ = [
     "AuthResetResult",
     "AuthStatusResult",
     "AuthTestResult",
+    "CertificateSecretMutationInProgressError",
     "CertificateSourceCheckEntry",
     "CertificateSourceCheckReport",
     "CertificateSourceListResult",

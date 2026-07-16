@@ -510,6 +510,9 @@ application:
         cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
           para este perfil. Reanuda esa operación antes de cambiar la configuración
           de autenticación.
+        certificate_secret_mutation_in_progress: Aún se está recuperando un cambio
+          del secreto de certificado para este perfil. Reintenta el mismo comando
+          de secreto antes de cambiar la configuración de autenticación.
         certificate_file_required: El proveedor de certificado requiere un archivo
           de certificado. Ejecuta `aeat config auth configure --provider certificate
           --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).

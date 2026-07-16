@@ -11,6 +11,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -21,7 +22,11 @@ from ._operator_results import (
     AuthCleanupInProgressError,
     AuthOperationScopeConflictError,
     AuthProviderNotConfiguredError,
+    CertificateSecretMutationInProgressError,
 )
+
+if TYPE_CHECKING:
+    from ..workflow import WorkflowState
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "cadrumo_local_storage_root",
@@ -160,7 +165,7 @@ def auth_mutation_span(*, settings: Settings, bucket_id: str) -> Iterator[None]:
             del _AUTH_MUTATION_OWNERSHIP.current
 
 
-def assert_auth_cleanup_not_in_progress(state) -> None:
+def assert_auth_cleanup_not_in_progress(state: WorkflowState) -> None:
     """Refuse a new auth mutation while logout/reset recovery is pending."""
     intent = state.auth.cleanup_intent
     if intent is None:
@@ -172,6 +177,27 @@ def assert_auth_cleanup_not_in_progress(state) -> None:
             "bucket_id": intent.bucket_id,
         },
     )
+
+
+def assert_certificate_secret_mutation_not_in_progress(state: WorkflowState) -> None:
+    """Refuse an auth mutation while certificate-secret recovery is pending."""
+    intent = state.auth.certificate_secret_mutation_intent
+    if intent is None:
+        return
+    raise CertificateSecretMutationInProgressError(
+        translated_message="application.auth.operator.errors.certificate_secret_mutation_in_progress",
+        context={
+            "operation": intent.event_kind.value,
+            "name": intent.source_name,
+            "bucket_id": intent.bucket_id,
+        },
+    )
+
+
+def assert_auth_recovery_not_in_progress(state: WorkflowState) -> None:
+    """Refuse a new auth mutation while any durable auth recovery is pending."""
+    assert_auth_cleanup_not_in_progress(state)
+    assert_certificate_secret_mutation_not_in_progress(state)
 
 
 class AuthOperationScope(BaseModel):

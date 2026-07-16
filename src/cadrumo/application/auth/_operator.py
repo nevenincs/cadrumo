@@ -79,7 +79,10 @@ from ._operator_scope import (
     active_profile_storage_span as _active_profile_storage_span,
 )
 from ._operator_scope import (
-    assert_auth_cleanup_not_in_progress as _assert_auth_cleanup_not_in_progress,
+    assert_auth_recovery_not_in_progress as _assert_auth_recovery_not_in_progress,
+)
+from ._operator_scope import (
+    assert_certificate_secret_mutation_not_in_progress as _assert_certificate_secret_mutation_not_in_progress,
 )
 from ._operator_scope import auth_mutation_span as _auth_mutation_span
 from ._operator_scope import (
@@ -160,7 +163,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
             state_repo = workflow_state_repository()
 
             def mutate(current_state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
-                _assert_auth_cleanup_not_in_progress(current_state)
+                _assert_auth_recovery_not_in_progress(current_state)
                 profile_health = assess_active_profile_health(current_state)
                 active_bucket_id = profile_health.active_profile
                 if active_bucket_id is None:
@@ -653,7 +656,7 @@ async def login_operator_auth(
             )
         with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
             repository = workflow_state_repository()
-            _assert_auth_cleanup_not_in_progress(repository.load())
+            _assert_auth_recovery_not_in_progress(repository.load())
             with _active_certificate_credential_scope(resolved_settings, provider_kind) as session_settings:
                 result = await ensure_authenticated_aeat_session(
                     session_settings,
@@ -696,7 +699,7 @@ def _verified_session_update(
     event_type: BucketEventType,
 ) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
     """Prepare verified-session state and its append-only bucket event."""
-    _assert_auth_cleanup_not_in_progress(current)
+    _assert_auth_recovery_not_in_progress(current)
     return (
         _append_bucket_event(
             update_auth(
@@ -750,6 +753,7 @@ def logout_operator_auth(
             started_at = now()
 
             def prepare(state: WorkflowState) -> WorkflowState:
+                _assert_certificate_secret_mutation_not_in_progress(state)
                 existing = state.auth.cleanup_intent
                 if existing is not None:
                     _assert_logout_request_matches(
@@ -799,11 +803,14 @@ def logout_operator_auth(
                 intent.session_provider_ids,
                 bucket_id=bucket_id,
             )
+            operation_id = intent.operation_id
+            operation_started_at = intent.started_at
+
             def finalize(state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
                 current_intent = state.auth.cleanup_intent
                 if current_intent is None:
                     return state, ()
-                if current_intent.operation_id != intent.operation_id:
+                if current_intent.operation_id != operation_id:
                     raise RuntimeError("auth cleanup intent changed during a serialized logout")
                 clears_current = (
                     state.auth.provider in intent.provider_ids
@@ -813,18 +820,11 @@ def logout_operator_auth(
                 )
                 cleared_auth = state.auth.model_copy(
                     update={
-                        **(
-                            {"authenticated_at": None, "subject": None}
-                            if clears_current
-                            else {}
-                        ),
+                        **({"authenticated_at": None, "subject": None} if clears_current else {}),
                         "cleanup_intent": None,
                     },
                 )
-                clears_session_state = (
-                    clears_current
-                    and intent.had_session_state
-                )
+                clears_session_state = clears_current and intent.had_session_state
                 event_provider_ids = tuple(
                     dict.fromkeys(
                         (
@@ -846,9 +846,9 @@ def logout_operator_auth(
                         {
                             "provider_id": provider_id,
                             "operation": "logout",
-                            "operation_id": intent.operation_id,
+                            "operation_id": operation_id,
                         },
-                        intent.started_at,
+                        operation_started_at,
                     )
                     for provider_id in event_provider_ids
                 )
@@ -903,6 +903,7 @@ def reset_operator_auth(
             started_at = now()
 
             def prepare(state: WorkflowState) -> WorkflowState:
+                _assert_certificate_secret_mutation_not_in_progress(state)
                 existing = state.auth.cleanup_intent
                 if existing is not None:
                     _assert_reset_request_matches(
@@ -986,9 +987,7 @@ def reset_operator_auth(
                     ("auth.session.cleared", provider_id) for provider_id in intent.session_provider_ids
                 )
                 workflow_events.extend(("auth.lock.cleared", provider_id) for provider_id in intent.lock_provider_ids)
-                workflow_events.extend(
-                    ("auth.certificate_source.removed", name) for name in certificate_names
-                )
+                workflow_events.extend(("auth.certificate_source.removed", name) for name in certificate_names)
                 updated = _append_bucket_events(
                     state.model_copy(update={"auth": reset_auth}),
                     tuple(workflow_events),
@@ -1171,30 +1170,32 @@ def _build_auth_cleanup_intent(
     )
     secret_source_names = (
         tuple(
-            source.name
-            for source in certificate_sources
-            if _certificate_source_secret_exists(bucket_id, source.name)
+            source.name for source in certificate_sources if _certificate_source_secret_exists(bucket_id, source.name)
         )
         if certificate_targeted
         else ()
     )
-    provider_configuration_ids = tuple(
-        dict.fromkeys(
-            (
-                *((auth.provider,) if auth.provider is not None and auth.provider in provider_ids else ()),
-                *(
-                    (AuthProviderKind.CERTIFICATE.value,)
-                    if certificate_targeted
-                    and (
-                        auth.certificate_path is not None
-                        or auth.certificate_sources
-                        or auth.active_certificate_source is not None
-                    )
-                    else ()
+    provider_configuration_ids = (
+        tuple(
+            dict.fromkeys(
+                (
+                    *((auth.provider,) if auth.provider is not None and auth.provider in provider_ids else ()),
+                    *(
+                        (AuthProviderKind.CERTIFICATE.value,)
+                        if certificate_targeted
+                        and (
+                            auth.certificate_path is not None
+                            or auth.certificate_sources
+                            or auth.active_certificate_source is not None
+                        )
+                        else ()
+                    ),
                 ),
             ),
-        ),
-    ) if destructive_reset else ()
+        )
+        if destructive_reset
+        else ()
+    )
     operation_material = "|".join(
         (
             bucket_id,
@@ -1215,8 +1216,7 @@ def _build_auth_cleanup_intent(
         configured_at_at_start=auth.configured_at,
         authenticated_at_at_start=auth.authenticated_at,
         had_session_state=(
-            auth.provider in provider_ids
-            and (auth.authenticated_at is not None or auth.subject is not None)
+            auth.provider in provider_ids and (auth.authenticated_at is not None or auth.subject is not None)
         ),
         certificate_path_at_start=auth.certificate_path,
         active_certificate_source_at_start=auth.active_certificate_source,
@@ -1260,10 +1260,7 @@ def _apply_auth_cleanup_intent(
         if sources != auth.certificate_sources:
             updates["certificate_sources"] = sources
         active_source = auth.active_certificate_source
-        if (
-            active_source == intent.active_certificate_source_at_start
-            and active_source in removed_certificate_names
-        ):
+        if active_source == intent.active_certificate_source_at_start and active_source in removed_certificate_names:
             active_source = None
             updates["active_certificate_source"] = None
         surviving_active = active_source is not None and active_source in sources

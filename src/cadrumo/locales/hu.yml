@@ -470,6 +470,9 @@ application:
         cleanup_in_progress: Ennél a profilnál még folyamatban van egy hitelesítési
           kijelentkezés vagy visszaállítás helyreállítása. A hitelesítési beállítások
           módosítása előtt folytassa azt a műveletet.
+        certificate_secret_mutation_in_progress: Ennél a profilnál még folyamatban
+          van egy tanúsítványtitok-módosítás helyreállítása. A hitelesítési beállítások
+          módosítása előtt próbálja újra ugyanazt a titokparancsot.
         certificate_file_required: A tanúsítvány-szolgáltató tanúsítványfájlt igényel.
           Futtassa a `aeat config auth configure --provider certificate --file ÚTVONAL`
           parancsot.

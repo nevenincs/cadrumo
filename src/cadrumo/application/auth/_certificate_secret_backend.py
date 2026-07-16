@@ -39,7 +39,7 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Protocol, runtime_checkable
 
 from pydantic import SecretStr
@@ -75,6 +75,8 @@ secure storage — so this is a fixed descriptor for operator-facing result
 records, not a selector. No backend kind is persisted or chosen.
 """
 
+_MUTATION_OPERATION_ID_METADATA_KEY = "certificate_secret_mutation_operation_id"
+
 
 @runtime_checkable
 class CertificateSecretBackend(Protocol):
@@ -93,8 +95,15 @@ class CertificateSecretBackend(Protocol):
         """Return the persisted passphrase for source ``name``, or ``None`` when absent."""
         ...
 
-    def set(self, name: str, secret: SecretStr) -> None:
-        """Persist ``secret`` for source ``name``, overwriting any prior value (rotation)."""
+    def set(
+        self,
+        name: str,
+        secret: SecretStr,
+        *,
+        operation_id: str | None = None,
+        occurred_at: datetime | None = None,
+    ) -> None:
+        """Persist ``secret`` for ``name`` with an optional recovery witness."""
         ...
 
     def remove(self, name: str) -> bool:
@@ -104,6 +113,14 @@ class CertificateSecretBackend(Protocol):
             ``True`` when a secret was removed, ``False`` when none was
             registered (a no-op, not an error).
         """
+        ...
+
+    def mutation_operation_id(self, name: str) -> str | None:
+        """Return the non-secret operation id stamped on ``name``, when present."""
+        ...
+
+    def request_witness(self, name: str, secret: SecretStr) -> str:
+        """Return a master-keyed witness for matching a retried set request."""
         ...
 
 
@@ -157,16 +174,26 @@ class SecureStorageCertificateSecretBackend:
             return None
         return SecretStr(record.value.decode(UTF_8_ENCODING))
 
-    def set(self, name: str, secret: SecretStr) -> None:
+    def set(
+        self,
+        name: str,
+        secret: SecretStr,
+        *,
+        operation_id: str | None = None,
+        occurred_at: datetime | None = None,
+    ) -> None:
         """Persist (or rotate) the passphrase for ``name``."""
         store = self._resolved_store()
         key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        written_at = occurred_at or now()
+        metadata = {_MUTATION_OPERATION_ID_METADATA_KEY: operation_id} if operation_id is not None else {}
         record = SecretRecord(
             key=key,
             value=secret.get_secret_value().encode(UTF_8_ENCODING),
             classification=SensitivityClass.SECRET,
-            created_at=now(),
-            expires_at=now() + _SECRET_ROTATION_HORIZON,
+            metadata=metadata,
+            created_at=written_at,
+            expires_at=written_at + _SECRET_ROTATION_HORIZON,
         )
         store.put(record, overwrite=True)
 
@@ -179,6 +206,25 @@ class SecureStorageCertificateSecretBackend:
         except SecretNotFoundError:
             return False
         return True
+
+    def mutation_operation_id(self, name: str) -> str | None:
+        """Return the non-secret operation id stamped on ``name``, when present."""
+        store = self._resolved_store()
+        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        try:
+            record = store.get(key)
+        except SecretNotFoundError:
+            return None
+        return record.metadata.get(_MUTATION_OPERATION_ID_METADATA_KEY)
+
+    def request_witness(self, name: str, secret: SecretStr) -> str:
+        """Return a master-keyed witness for matching a retried set request."""
+        store = self._resolved_store()
+        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        return store.value_witness(
+            key=key,
+            value=secret.get_secret_value().encode(UTF_8_ENCODING),
+        )
 
 
 __all__ = [

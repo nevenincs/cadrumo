@@ -32,6 +32,7 @@ See Also:
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -59,6 +60,10 @@ from ._certificate_sources import (
 from ._certificate_sources import (
     active_certificate_source as _active_certificate_source,
 )
+from ._models import (
+    CertificateSecretMutationEventKind,
+    CertificateSecretMutationIntent,
+)
 from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
 from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
 from ._operator_results import (
@@ -75,12 +80,14 @@ from ._operator_results import (
 from ._operator_scope import (
     active_profile_storage_span,
     assert_auth_cleanup_not_in_progress,
+    assert_auth_recovery_not_in_progress,
+    assert_certificate_secret_mutation_not_in_progress,
     auth_mutation_span,
 )
 
 if TYPE_CHECKING:
-    from ...domain.buckets import BucketEventType
-    from ..workflow import WorkflowState
+    from ...domain.buckets import BucketEvent, BucketEventType
+    from ..workflow import WorkflowState, WorkflowStateRepository
 
 
 class ActiveCertificateCredentials(BaseModel):
@@ -162,7 +169,7 @@ def _gate_active_bucket() -> str:
 
 
 @contextmanager
-def _certificate_mutation_span() -> Iterator[str]:
+def _certificate_mutation_span(*, resume_certificate_secret: bool = False) -> Iterator[str]:
     """Open the active bucket and serialize one certificate auth mutation."""
     settings = load_settings()
     with active_profile_storage_span(settings) as bucket_id:
@@ -174,7 +181,11 @@ def _certificate_mutation_span() -> Iterator[str]:
             active_bucket_id = _gate_active_bucket()
             from ..workflow import workflow_state_repository
 
-            assert_auth_cleanup_not_in_progress(workflow_state_repository().load())
+            current = workflow_state_repository().load()
+            if resume_certificate_secret:
+                assert_auth_cleanup_not_in_progress(current)
+            else:
+                assert_auth_recovery_not_in_progress(current)
             yield active_bucket_id
 
 
@@ -192,7 +203,7 @@ def _persist_with_event(
     state_repo = workflow_state_repository()
     return state_repo.update_with_bucket_events(
         lambda current: (
-            transform(_state_without_pending_cleanup(current)),
+            transform(_state_without_pending_auth_recovery(current)),
             build_auth_bucket_events(
                 bucket_id=active_bucket_id,
                 events=(
@@ -208,9 +219,9 @@ def _persist_with_event(
     )
 
 
-def _state_without_pending_cleanup(state: WorkflowState) -> WorkflowState:
-    """Return ``state`` only when no resumable auth cleanup owns the bucket."""
-    assert_auth_cleanup_not_in_progress(state)
+def _state_without_pending_auth_recovery(state: WorkflowState) -> WorkflowState:
+    """Return ``state`` only when no resumable auth operation owns the bucket."""
+    assert_auth_recovery_not_in_progress(state)
     return state
 
 
@@ -232,6 +243,7 @@ def register_operator_certificate_source(
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
     from ...domain.buckets import BucketEventType
+
     with _certificate_mutation_span() as active_bucket_id:
         _persist_with_event(
             active_bucket_id=active_bucket_id,
@@ -294,6 +306,7 @@ def select_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
         A :class:`~application.auth.CertificateSourceMutationResult`.
     """
     from ...domain.buckets import BucketEventType
+
     normalized_name = name.strip()
     with _certificate_mutation_span() as active_bucket_id:
         from ..workflow import workflow_state_repository
@@ -536,36 +549,34 @@ def set_operator_certificate_source_secret(
     Returns:
         A :class:`~application.auth.CertificateSourceSecretMutationResult`.
     """
-    from ...domain.buckets import BucketEventType
     from ..workflow import workflow_state_repository
 
     normalized_name = name.strip()
-    with _certificate_mutation_span() as active_bucket_id:
-        state = workflow_state_repository().load()
-        if normalized_name not in _auth_state_certificate_sources(state):
-            raise CertificateSourceNotFoundError(
-                translated_message="application.auth.operator.errors.certificate_source_not_found",
-                context={"name": normalized_name},
-            )
+    with _certificate_mutation_span(resume_certificate_secret=True) as active_bucket_id:
         backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
-        rotated = backend.get(normalized_name) is not None
-        backend.set(normalized_name, secret)
-        event_type = (
-            BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED
-            if rotated
-            else BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET
-        )
-        _record_certificate_secret_event(
+        repository = workflow_state_repository()
+        intent = _prepare_certificate_secret_mutation(
+            repository=repository,
+            backend=backend,
             active_bucket_id=active_bucket_id,
-            event_type=event_type,
-            object_id=normalized_name,
-            payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
+            source_name=normalized_name,
+            removing=False,
+            secret=secret,
         )
+        if intent is None:
+            raise RuntimeError("certificate secret set prepared no durable mutation intent")
+        _complete_certificate_secret_mutation(
+            repository=repository,
+            backend=backend,
+            intent=intent,
+            secret=secret,
+        )
+        _finalize_certificate_secret_mutation(repository=repository, intent=intent)
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
         backend=SECURE_STORAGE_BACKEND_LABEL,
         has_secret=True,
-        rotated=rotated,
+        rotated=intent.event_kind is CertificateSecretMutationEventKind.ROTATED,
     )
 
 
@@ -587,24 +598,33 @@ def remove_operator_certificate_source_secret(*, name: str) -> CertificateSource
     Returns:
         A :class:`~application.auth.CertificateSourceSecretMutationResult`.
     """
-    from ...domain.buckets import BucketEventType
-
     normalized_name = name.strip()
-    with _certificate_mutation_span() as active_bucket_id:
+    with _certificate_mutation_span(resume_certificate_secret=True) as active_bucket_id:
+        from ..workflow import workflow_state_repository
+
         backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
-        removed = backend.remove(normalized_name)
-        if removed:
-            _record_certificate_secret_event(
-                active_bucket_id=active_bucket_id,
-                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
-                object_id=normalized_name,
-                payload={"name": normalized_name, "backend": SECURE_STORAGE_BACKEND_LABEL},
+        repository = workflow_state_repository()
+        intent = _prepare_certificate_secret_mutation(
+            repository=repository,
+            backend=backend,
+            active_bucket_id=active_bucket_id,
+            source_name=normalized_name,
+            removing=True,
+            secret=None,
+        )
+        if intent is not None:
+            _complete_certificate_secret_mutation(
+                repository=repository,
+                backend=backend,
+                intent=intent,
+                secret=None,
             )
+            _finalize_certificate_secret_mutation(repository=repository, intent=intent)
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
         backend=SECURE_STORAGE_BACKEND_LABEL,
         has_secret=False,
-        removed=removed,
+        removed=intent is not None and intent.prior_present,
     )
 
 
@@ -612,40 +632,175 @@ def _auth_state_certificate_sources(state: WorkflowState) -> dict[str, object]:
     return dict(_auth_state(state).certificate_sources)
 
 
-def _record_certificate_secret_event(
+def _prepare_certificate_secret_mutation(
     *,
+    repository: WorkflowStateRepository,
+    backend: SecureStorageCertificateSecretBackend,
     active_bucket_id: str,
-    event_type: BucketEventType,
-    object_id: str,
-    payload: dict[str, str],
+    source_name: str,
+    removing: bool,
+    secret: SecretStr | None,
+) -> CertificateSecretMutationIntent | None:
+    """Persist or resume the secret-free intent for one certificate-secret mutation."""
+    started_at = now()
+
+    def prepare(state: WorkflowState) -> WorkflowState:
+        assert_auth_cleanup_not_in_progress(state)
+        existing = state.auth.certificate_secret_mutation_intent
+        if existing is not None:
+            matching_kind = (
+                existing.event_kind is CertificateSecretMutationEventKind.REMOVED
+                if removing
+                else existing.event_kind
+                in {
+                    CertificateSecretMutationEventKind.SET,
+                    CertificateSecretMutationEventKind.ROTATED,
+                }
+            )
+            matching_request = (
+                True
+                if removing
+                else (secret is not None and existing.request_witness == backend.request_witness(source_name, secret))
+            )
+            if existing.source_name != source_name or not matching_kind or not matching_request:
+                assert_certificate_secret_mutation_not_in_progress(state)
+                raise AssertionError("pending certificate-secret intent did not refuse")
+            return state
+        if not removing and source_name not in _auth_state_certificate_sources(state):
+            raise CertificateSourceNotFoundError(
+                translated_message="application.auth.operator.errors.certificate_source_not_found",
+                context={"name": source_name},
+            )
+        prior_present = backend.get(source_name) is not None
+        if removing and not prior_present:
+            return state
+        event_kind = (
+            CertificateSecretMutationEventKind.REMOVED
+            if removing
+            else (
+                CertificateSecretMutationEventKind.ROTATED if prior_present else CertificateSecretMutationEventKind.SET
+            )
+        )
+        operation_material = "|".join(
+            (
+                active_bucket_id,
+                source_name,
+                event_kind.value,
+                started_at.isoformat(),
+            ),
+        )
+        intent = CertificateSecretMutationIntent(
+            operation_id=hashlib.sha256(operation_material.encode("utf-8")).hexdigest(),
+            bucket_id=active_bucket_id,
+            source_name=source_name,
+            event_kind=event_kind,
+            started_at=started_at,
+            prior_present=prior_present,
+            request_witness=(None if secret is None else backend.request_witness(source_name, secret)),
+        )
+        return state.model_copy(
+            update={
+                "auth": state.auth.model_copy(
+                    update={"certificate_secret_mutation_intent": intent},
+                ),
+            },
+        )
+
+    prepared = repository.update(prepare)
+    return prepared.auth.certificate_secret_mutation_intent
+
+
+def _complete_certificate_secret_mutation(
+    *,
+    repository: WorkflowStateRepository,
+    backend: SecureStorageCertificateSecretBackend,
+    intent: CertificateSecretMutationIntent,
+    secret: SecretStr | None,
 ) -> None:
-    """Append a bucket event for a certificate-secret mutation.
+    """Complete the secure-storage effect and persist its non-secret witness."""
+    if intent.completion_witness is None:
+        if intent.event_kind is CertificateSecretMutationEventKind.REMOVED:
+            backend.remove(intent.source_name)
+            completion_witness = f"secret-absent:{intent.operation_id}"
+        else:
+            if secret is None:
+                raise RuntimeError("certificate secret set recovery requires the retried secret")
+            if intent.request_witness != backend.request_witness(intent.source_name, secret):
+                raise RuntimeError("certificate secret retry does not match durable intent")
+            if backend.mutation_operation_id(intent.source_name) != intent.operation_id:
+                backend.set(
+                    intent.source_name,
+                    secret,
+                    operation_id=intent.operation_id,
+                    occurred_at=intent.started_at,
+                )
+            completion_witness = f"secret-record:{intent.operation_id}"
 
-    Certificate secrets are NOT part of :class:`~application.workflow.WorkflowState`
-    (they live only in the :class:`~application.auth.CertificateSecretBackend`), so this
-    records only the bucket-event audit trail — there is no
-    ``WorkflowState`` write to co-persist, unlike
-    :func:`~application.auth._certificate_sources_operator._persist_with_event`.
-    """
-    occurred_at = now()
-    from ..workflow import workflow_state_repository
-
-    workflow_state_repository().update_with_bucket_events(
-        lambda state: (
-            state,
-            build_auth_bucket_events(
-                bucket_id=active_bucket_id,
-                events=(
-                    AuthBucketEventSpec(
-                        event_type,
-                        object_id,
-                        payload,
-                        occurred_at,
+        def mark_completed(state: WorkflowState) -> WorkflowState:
+            current = state.auth.certificate_secret_mutation_intent
+            if current is None or current.operation_id != intent.operation_id:
+                raise RuntimeError("certificate-secret mutation intent changed during completion")
+            if current.completion_witness is not None:
+                return state
+            completed = current.model_copy(
+                update={"completion_witness": completion_witness},
+            )
+            return state.model_copy(
+                update={
+                    "auth": state.auth.model_copy(
+                        update={"certificate_secret_mutation_intent": completed},
                     ),
+                },
+            )
+
+        repository.update(mark_completed)
+
+
+def _finalize_certificate_secret_mutation(
+    *,
+    repository: WorkflowStateRepository,
+    intent: CertificateSecretMutationIntent,
+) -> None:
+    """Atomically append the original stable event and clear its durable intent."""
+    from ...domain.buckets import BucketEventType
+
+    event_types = {
+        CertificateSecretMutationEventKind.SET: BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET,
+        CertificateSecretMutationEventKind.ROTATED: BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED,
+        CertificateSecretMutationEventKind.REMOVED: BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
+    }
+
+    def finalize(state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
+        current = state.auth.certificate_secret_mutation_intent
+        if current is None or current.operation_id != intent.operation_id:
+            raise RuntimeError("certificate-secret mutation intent changed during finalization")
+        if current.completion_witness is None:
+            raise RuntimeError("certificate-secret mutation has no completion witness")
+        updated = state.model_copy(
+            update={
+                "auth": state.auth.model_copy(
+                    update={"certificate_secret_mutation_intent": None},
+                ),
+            },
+        )
+        events = build_auth_bucket_events(
+            bucket_id=current.bucket_id,
+            events=(
+                AuthBucketEventSpec(
+                    event_types[current.event_kind],
+                    current.source_name,
+                    {
+                        "name": current.source_name,
+                        "backend": SECURE_STORAGE_BACKEND_LABEL,
+                        "operation_id": current.operation_id,
+                    },
+                    current.started_at,
                 ),
             ),
-        ),
-    )
+        )
+        return updated, events
+
+    repository.update_with_bucket_events(finalize)
 
 
 __all__ = [

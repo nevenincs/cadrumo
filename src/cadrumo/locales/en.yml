@@ -457,6 +457,9 @@ application:
       errors:
         cleanup_in_progress: An authentication logout or reset is still being recovered
           for this profile. Resume that operation before changing authentication configuration.
+        certificate_secret_mutation_in_progress: A certificate secret change is
+          still being recovered for this profile. Retry that same secret command
+          before changing authentication configuration.
         certificate_file_required: The certificate provider requires a certificate
           file. Run `aeat config auth configure --provider certificate --file PATH`
           with the path to your PKCS#12 (.p12/.pfx) bundle.
