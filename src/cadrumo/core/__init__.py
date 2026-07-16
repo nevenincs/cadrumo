@@ -69,9 +69,15 @@ from ._amendment_kind_regime import (
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
+from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._config_state_root import FormerProductStateError
+from ._config_support import (
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+    AEAT_CERTIFICATE_PROTECTED_PATH,
+    AEAT_CERTIFICATE_PROTECTED_URL,
+)
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import (
@@ -186,6 +192,9 @@ __all__: list[str] = [
     "ABSENT_SECURE_OBJECT_REVISION_ID",
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "AEAT_AUTHORITY_SHORT_NAME",
+    "AEAT_CERTIFICATE_PROTECTED_ORIGIN",
+    "AEAT_CERTIFICATE_PROTECTED_PATH",
+    "AEAT_CERTIFICATE_PROTECTED_URL",
     "ANTHROPIC_EXTRA",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
@@ -213,6 +222,8 @@ __all__: list[str] = [
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "Art104TresExclusion",
+    "AuthProviderDescription",
+    "AuthProviderKind",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
