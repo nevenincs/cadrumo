@@ -24,7 +24,6 @@ the reviewed harness markdown (no secrets, no tax data) and computes no value.
 
 from __future__ import annotations
 
-import filecmp
 import json
 import shutil
 from collections.abc import Sequence
