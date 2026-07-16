@@ -23,16 +23,6 @@ manual ones), and inspect its formulas with their legal and source references:
 
 ```{cli-sequence} review-values-inspect
 :verify: Confirm the describe, casillas, and formulas surfaces resolve.
-@step Describe the modelo and its available revisions.
-aeat --format json app modelo describe 130 --period 1T
-@step List the modelo's casillas.
-aeat --format json app modelo casillas 130 --period 1T
-@step Show only the required manual casillas.
-aeat --format json app modelo casillas 130 --period 1T --input-kind manual --required
-@step Inspect the formulas with their legal and source references.
-@result aeat --format json app modelo formulas 130 --period 1T --explain
-@expect result.code == "130"
-@expect exit_code == 0
 ```
 
 The `casillas` command shows the registry casilla id, printed form number,
@@ -52,18 +42,7 @@ persisted casilla values, then verify the current draft (the setup steps create
 and calculate the draft the reads below inspect):
 
 ```{cli-sequence} review-values-review-saved
-:seed: autonomo-irpf-2026
 :verify: Confirm the saved calculation lists, shows values, and verifies.
-@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
-@setup aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@step List the calculation revisions for the filing.
-aeat --format json app modelo work revisions --modelo 130 --year 2026 --period 1T
-@step Show the current revision's persisted casilla values.
-aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
-@step Verify the current draft.
-@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
-@expect result.granted_verificado_completo == true
-@expect exit_code == 0
 ```
 
 Verification output reports whether completeness was granted, how many casillas
@@ -90,13 +69,7 @@ the same calculate call. This example sets box `06` (Retenciones e ingresos a
 cuenta, a manual box) and seeds the three first-period bindings:
 
 ```{cli-sequence} review-values-manual-casilla
-:seed: autonomo-irpf-2026
 :verify: Confirm the manual box and first-period bindings calculate a draft.
-@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
-@step Supply the manual box and the three first-period bindings in one calculate call.
-@result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@expect result.casilla_values.06 == "100.00"
-@expect exit_code == 0
 ```
 
 Do not enter a box value without checking the list first. Read the label so
@@ -113,19 +86,7 @@ what a value would produce without saving, then supply the first-period bindings
 during calculation:
 
 ```{cli-sequence} review-values-bindings
-:seed: autonomo-irpf-2026
 :verify: Confirm the bindings list, preview, and calculation resolve the fields.
-@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
-@step List every field the modelo binds, with its source and readiness label.
-aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
-@step Focus on the fields that have no value yet.
-aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
-@step Preview what a value would produce, without saving anything.
-aeat --format json app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
-@step Supply the first-period bindings during calculation.
-@result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@expect result.saved == true
-@expect exit_code == 0
 ```
 
 
@@ -184,14 +145,6 @@ opening balance, then correct it if you seeded the wrong amount:
 
 ```{cli-sequence} review-values-iva-wallet
 :verify: Confirm the IVA compensation wallet seeds and corrects an opening balance.
-@step Inspect the local IVA compensation wallet balance.
-aeat --format json app modelo iva-wallet balance --as-of-year 2026
-@step Seed a first-period opening balance of zero.
-aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
-@step Correct the seeded opening amount, recording the reason.
-@result aeat --format json app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
-@expect result.amount == "1200.50"
-@expect exit_code == 0
 ```
 
 Use `--amount 0` only for a true first Modelo 303 period with no previous IVA
@@ -210,8 +163,6 @@ For registry relation values, calculation accepts repeatable
 registry/help text identifies the relation you need:
 
 ```{cli-sequence} review-values-relation
-@step Supply a registry relation value during calculation.
-@static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
 ```
 
 ## Add rows for list-based forms (184, 232, 347, 349)
@@ -224,10 +175,6 @@ Supply each record with a repeatable `--row` input.
 Each `--row` starts with the record type, followed by its fields:
 
 ```{cli-sequence} review-values-rows
-@step Open the list-based work unit for the informational modelo.
-@static aeat app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
-@step Calculate, supplying each record as a repeatable --row input.
-@static aeat app modelo work calculate <work-unit-id> --row 'miembro nif=45678912S porcentaje=60 importe=10000' --row 'miembro nif=00000001R porcentaje=40 importe=5000'
 ```
 
 Take `<work-unit-id>` from the `work_unit_id` field that `work create` prints.
@@ -261,15 +208,11 @@ For specialized calculations, the CLI provides evaluation and comparison command
   `Ninguna unidad de trabajo activa`:
 
   ```{cli-sequence} review-values-m100-create
-  @step Create the Modelo 100 draft the comparison needs.
-  @static aeat app modelo work create --modelo 100 --year 2026 --period 0A
-  ```
+```
 
   
   ```{cli-sequence} review-values-compare-taxation
-  @step Compare filing jointly as a family unit against filing individually.
-  @static aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
-  ```
+```
   
   This check does not save a draft. It shows the tax difference and a
   recommendation so you can decide which filing option costs less.
@@ -278,9 +221,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
   the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
   
   ```{cli-sequence} review-values-maritime
-  @step Preview the IRPF exemption for maritime workers.
-  @static aeat app modelo work preview-maritime-exemption
-  ```
+```
   
   The command shows which tax boxes are affected by the exemption and the
   amounts, with references to the applicable law. This applies only to maritime
@@ -293,8 +234,6 @@ command. Do not recalculate the same period. That would not create the
 correct complementaria (supplementary return) record:
 
 ```{cli-sequence} review-values-amend
-@step Amend an already-filed record as a complementaria.
-@static aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
 ```
 
 Before using this command, you must have imported the {term}`justificante` for the filing you are correcting. The amendment command does not

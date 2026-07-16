@@ -1,0 +1,6 @@
+@step Record a 121.00 purchase to classify by hand.
+@setup aeat --format json app ledger add --date 2026-03-10 --amount 121.00 --direction OUTGOING --description "Compra tipo reducido" --idempotency-key llm-manual
+@capture transaction_id result.transaction_id
+@step Classify manually with the reduced-rate IVA figures.
+@result aeat --format json app ledger classify {transaction_id} --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
+@expect result.transaction.iva_category == "domestic_reduced_10"

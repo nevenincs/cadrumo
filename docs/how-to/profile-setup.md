@@ -25,20 +25,11 @@ under a different name. To understand why the tool is local-first and
 human-gated, see the [explanation guides](../explanation/index.md).
 
 List your profiles with `aeat config profile list`, see which one is active,
-add a second taxpayer, then switch to it. The card runs the whole flow: it
+add a second taxpayer, then switch to it. The example runs the whole flow: it
 lists the profiles, adds a second one, and switches the active context to it.
 
 ```{cli-sequence} profile-setup-multiple
 :verify: Confirm you can list profiles, add a second taxpayer, and switch the active context to it.
-@step List the profiles and see which one is active.
-aeat config profile list
-@step Add a second taxpayer profile.
-@setup aeat config profile create my-other-profile --quiet --entity-type natural_person --tax-id 87654321X --name "Otra" --surnames "Persona Ejemplo"
-@step Switch the active context to the second profile.
-aeat config switch my-other-profile
-@result aeat --format json config profile status
-@expect result.tax_id_present == true
-@expect exit_code == 0
 ```
 
 Switching changes which local ledger, modelo drafts, and filing markers `aeat
@@ -60,7 +51,7 @@ rest of setup follows:
 - **What the taxpayer does.** The economic activity and which kinds of income
   apply: business or professional activity, salaried work, rental income,
   investment income, capital gains, or a pension.
-- **Which IVA regime applies.** IVA (Value Added Tax) determines whether the
+- **Which VAT regime applies.** Value Added Tax (IVA) determines whether the
   taxpayer charges and declares it, and how. The general regime files IVA
   through Modelo 303.
 - **Where the taxpayer is resident.** The autonomous community for a Spanish
@@ -72,10 +63,6 @@ decisions. For the complete, current list of flags and their accepted values,
 run `aeat config profile create --help` and `aeat config profile edit --help`:
 
 ```{cli-sequence} profile-setup-flag-help
-@step List every flag the create command accepts.
-@static aeat config profile create --help
-@step List every flag the edit command accepts.
-@static aeat config profile edit --help
 ```
 
 ## Create your profile
@@ -85,21 +72,18 @@ Create a profile interactively, or non-interactively with flags.
 Run the guided wizard when you're setting up a profile for the first time:
 
 ```{cli-sequence} profile-setup-interactive-create
-@step Start the guided wizard for a new profile.
-@static aeat config profile create my-profile
 ```
 
-The wizard asks the questions described in this guide. Its prompt labels are
-Spanish (for example `Tipo de entidad`, `Categorias de renta IRPF`), because
-they mirror the AEAT forms; the values you choose are stable command tokens that
-don't change with `--language`.
+The wizard asks the questions described in this guide. Prompt labels follow the
+selected output language, while official AEAT terms and stable command tokens
+remain recognizable across languages.
 
 The wizard prompts for your master-key passphrase before it stores
 anything. For unattended runs, see
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
-`cadrumo` prints its prompts, refusals, and error messages in Spanish. The output
-blocks quoted below are English translations of those messages.
+Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also
+store its default output language.
 
 Use flags with `--quiet` when you want a repeatable, scriptable setup, passing
 the entity type, tax id, name, and surnames to `aeat config profile create`. The
@@ -126,13 +110,6 @@ economic activity, then inspects and validates it before you rely on it:
 
 ```{cli-sequence} profile-setup-worked-example
 :verify: Confirm the scripted create produces a natural-person profile that validates.
-@step Create the natural-person profile with activity and residence facts.
-aeat config profile create ana-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 11111111H --name "Ana" --surnames "Garcia Lopez" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --output-language en
-@step Inspect the stored facts.
-aeat config profile show ana-2026
-@result aeat --format json config profile validate ana-2026
-@expect result.valid == true
-@expect exit_code == 0
 ```
 
 ## The facts setup asks for
@@ -237,21 +214,12 @@ fact is undeclared, the readiness check reports the related form as *incomplete*
 ## Check your facts before you calculate
 
 A wrong or missing fact produces a wrong filing. Confirm the profile before you
-calculate a modelo. The card shows the active profile's readiness summary and
+calculate a modelo. The example shows the active profile's readiness summary and
 stored facts, validates them against the schema, then checks whether the profile
 holds the facts a specific form needs for a specific filing context:
 
 ```{cli-sequence} profile-setup-inspect
 :verify: Confirm the active profile's facts validate and see what a specific filing still needs.
-@step Show the active profile's readiness summary.
-aeat config profile status
-@step Show the stored facts in full.
-aeat config profile show
-@step Validate the facts against the schema.
-aeat config profile validate
-@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
-@expect result.ready == true
-@expect exit_code == 0
 ```
 
 `preflight` names the missing fields for that `(modelo, filing-year, period)`
@@ -284,29 +252,14 @@ profile and the registry rules. To see what applies to your profile, use
 
 ## Maintain your profile
 
-The card runs the maintenance lifecycle on one profile: it edits a fact,
-renames the profile, duplicates it, deletes the duplicate, then exports the
-profile to a portable JSON file:
+The following steps edit a fact, rename the profile, duplicate it, delete the
+duplicate, and export the profile to a portable JSON file:
 
 ```{cli-sequence} profile-setup-maintain
-:verify: Confirm a profile survives an edit, rename, duplicate, delete, and export.
-@setup aeat config profile create bruno-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 22222222J --name "Bruno" --surnames "Martin Ruiz" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid
-@step Edit a fact with the flags you want to change.
-aeat config profile edit bruno-2026 --quiet --address-postcode 28013
-@step Rename the profile; the active-profile pointer follows the rename.
-aeat config profile rename bruno-2026 bruno-real
-@step Duplicate it to start a second profile from the same facts.
-aeat config profile duplicate bruno-real bruno-copy
-@step Delete the duplicate; deletion is local and irreversible.
-aeat config profile delete bruno-copy --yes
-@setup aeat config switch bruno-real
-@step Export the profile to a portable cleartext JSON file.
-@result aeat --format json config profile export bruno-real --to bruno-real-profile.json --cleartext-local
-@expect result.schema_version == 3
-@expect exit_code == 0
+:verify: Confirm the profile survives an edit, rename, duplicate, delete, and export.
 ```
 
-Read the frames in order:
+What each step does:
 
 - **Edit** changes only the flags you pass. Run `show`, `status`, or `validate`
   again after editing.
@@ -326,43 +279,29 @@ holds the same profile refuses the import on the profile's identifier, so import
 is for restoring into a different storage root:
 
 ```{cli-sequence} profile-setup-import
-@step Restore a saved profile file under a fresh label.
-@static aeat config profile import ./bruno-real-profile.json --label bruno-restored
 ```
 
 A portable profile file contains taxpayer data, including the tax identifier,
 activity, and local filing history. Store it as sensitive tax data, and don't
 attach it to a support request unless you've removed personal details.
 
-Clear the active profile without deleting it using `aeat config profile logout`.
-The card confirms the active pointer is cleared afterward:
+Sign out without deleting the profile using `aeat config profile logout`.
+Logout closes the active storage session, discards its in-memory keys, disposes
+the bucket engines, and clears the local active-profile pointer:
 
 ```{cli-sequence} profile-setup-logout
-:verify: Confirm logout clears the active profile without deleting it.
-@step Clear the active profile.
-aeat config profile logout
-@result aeat --format json config profile status
-@expect result.configured == false
-@expect exit_code == 0
+:verify: Confirm logout closes the active session without deleting the profile.
 ```
 
 ## Choose your service capabilities
 
 Each profile carries its own opt-in for three optional services. The setup
 wizard asks these questions when you create or edit a profile, and you can
-change them at any time. The card shows the resolved posture, turns one
-capability off, then shows the posture again:
+change them at any time. These steps show the current posture, turn one
+capability off, then show the posture again:
 
 ```{cli-sequence} profile-setup-capabilities
-:verify: Confirm a capability toggle updates the active profile's posture.
-@setup aeat config profile create caps-demo --quiet --entity-type natural_person --tax-id 33333333P --name "Caps" --surnames "Demo Perez"
-@step Show the resolved capability posture.
-aeat config profile capabilities show
-@step Turn the on-host vision model off for the active profile.
-aeat config profile capabilities set llm_vision off
-@result aeat --format json config profile capabilities show
-@expect result.capabilities[1].enabled == false
-@expect exit_code == 0
+:verify: Confirm a capability change updates the active profile.
 ```
 
 The three capabilities are:
@@ -372,10 +311,9 @@ The three capabilities are:
 - `llm_vision` - read invoices with the on-host vision model. On by default.
 - `google_export` - export calculations to Google Sheets. On by default.
 
-Turn any capability on or off for the active profile the same way with
-`aeat config profile capabilities set`. The card above turns `llm_vision` off;
-pass `cloud_evidence_upload on` to enable cloud upload. A capability whose
-package extra is not installed refuses with the exact install command. See
+Turn any capability on or off with `aeat config profile capabilities set`.
+The example turns `llm_vision` off. Pass `cloud_evidence_upload on` to enable
+cloud upload. Missing package extras produce the exact install command. See
 [Install Cadrumo](../workstation-setup.md) for the extras.
 
 ## See what changed
@@ -383,24 +321,11 @@ package extra is not installed refuses with the exact install command. See
 Every change to a profile - creation, edits, imports, classifications,
 calculations, and filings - is recorded as an event in that profile's
 append-only history (a log you can read but not alter). Reading history needs an
-active profile, so switch to it first if you ran `logout`. The card creates a
-profile, renames and edits it to generate events, then browses the full history
-and narrows it with filters that combine:
+active profile, so switch to it first after logout. The example creates,
+renames, and edits a profile before browsing and filtering its history:
 
 ```{cli-sequence} profile-setup-history
 :verify: Confirm the profile history records each change and can be filtered.
-@setup aeat config profile create carla-2026 --quiet --entity-type natural_person --tax-id 44444444A --name "Carla" --surnames "Lopez Sanz"
-@setup aeat config profile rename carla-2026 carla-real
-@setup aeat config profile edit carla-real --quiet --address-postcode 28013
-@step Browse the full change history.
-aeat config profile history carla-real
-@step Filter to a single event type.
-aeat config profile history carla-real --event-type profile.renamed
-@step Filter by date range.
-aeat config profile history carla-real --since 2026-01-01 --until 2026-03-31
-@result aeat --format json config profile history carla-real --actor operator
-@expect result.actor == "operator"
-@expect exit_code == 0
 ```
 
 Repeat `--event-type` to include several types. An unknown type is refused with
@@ -418,7 +343,8 @@ working under the wrong profile, see
 [Diagnose and repair your local setup](troubleshooting.md).
 
 When the troubleshooting steps don't resolve it, follow
-[Prepare a privacy-safe support request](troubleshooting.md) on that page. It
+[Prepare a privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-support-request).
+It
 names the outputs to include and the personal data to leave out before you take
 the issue to the project's issue tracker.
 

@@ -34,11 +34,6 @@ Confirm the IVA obligations:
 
 ```{cli-sequence} iva-lifecycle-applicability
 :verify: Confirm why Modelo 303 applies this year.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
-@step Explain why and how often Modelo 303 applies this year.
-@result aeat --format json app overview explain 303 --year 2026
-@expect result.modelo == "303"
-@expect exit_code == 0
 ```
 
 Ordinary non-exempt profiles file Modelo 303 quarterly; monthly
@@ -56,12 +51,6 @@ Ana started her activity this year, so her true opening balance is zero:
 
 ```{cli-sequence} iva-lifecycle-wallet
 :verify: Confirm the opening IVA credit balance is recorded and reads back.
-@step Seed the opening balance as zero for a taxpayer starting this year.
-aeat --format json app modelo iva-wallet seed --filing-year 2025 --period 4T --amount 0 --confirm
-@step Show the wallet balance as of the filing year.
-@result aeat --format json app modelo iva-wallet balance --as-of-year 2026
-@expect result.total_balance == "0"
-@expect exit_code == 0
 ```
 
 If you migrate to the tool mid-history, seed the credit you were actually
@@ -82,23 +71,7 @@ detail (the sequence seeds them). Create, calculate, verify, file, and export
 Modelo 303 for the quarter:
 
 ```{cli-sequence} iva-lifecycle-q1
-:seed: iva-evidence-2026
 :verify: Confirm the first quarter's IVA return verifies, files, and exports.
-@step Open the first-quarter Modelo 303 draft.
-aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@step Calculate the quarter's IVA from the classified, evidenced ledger.
-aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
-@expect result.casilla_values.71 == "105.00"
-@step Verify the draft; verification captures the evidence over the contributing rows.
-aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
-@expect result.granted_verificado_completo == true
-@step Record the local filed marker after you upload through AEAT yourself.
-aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
-@step Export the filed revision to a local fichero-BOE.
-@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303-2026-1T.boe
-@expect result.byte_size == 7365
-@expect exit_code == 0
-@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T
 ```
 
 Calculation routes the classified rows into the IVA boxes: the sale's 210 of
@@ -125,16 +98,6 @@ filed first quarter and inside the July presentation window, which the frozen
 documentation sandbox cannot reproduce, so the chain is shown as display frames:
 
 ```{cli-sequence} iva-lifecycle-q2
-@step Record the equipment purchase whose deductible IVA exceeds the quarter's charged IVA.
-@static aeat app ledger add --date 2026-05-12 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id equipamiento_informatico --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
-@step Create and calculate the second-quarter return.
-@static aeat app modelo work create --modelo 303 --year 2026 --period 2T
-@static aeat app modelo work calculate --modelo 303 --year 2026 --period 2T
-@step Verify, export, file, and reconcile the credit quarter.
-@static aeat app modelo work verify --modelo 303 --year 2026 --period 2T
-@static aeat app modelo export --modelo 303 --year 2026 --period 2T --output ./modelo-303-2026-2T.boe
-@static aeat app modelo work file --modelo 303 --year 2026 --period 2T
-@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 2T
 ```
 
 In the third quarter the carry shows itself: the same chain with `3T` brings the
@@ -159,8 +122,6 @@ worth checking against the VIES register first. That check is a live read from
 AEAT, so it is shown as a display frame:
 
 ```{cli-sequence} iva-lifecycle-vies
-@step Check an EU VAT number against the VIES register (a live AEAT read).
-@static aeat app live verify nif-iva DE123456789
 ```
 
 The full workflow - invoice records, the operation keys, rectifications of
@@ -185,14 +146,6 @@ registry revision, published for the 2027 filing season after this documentation
 is built, so the chain is shown as display frames:
 
 ```{cli-sequence} iva-lifecycle-annual
-@step Create and calculate the annual Modelo 390 summary.
-@static aeat app modelo work create --modelo 390 --year 2026 --period 0A
-@static aeat app modelo work calculate --modelo 390 --year 2026 --period 0A
-@step Verify, export, file, and reconcile the annual summary.
-@static aeat app modelo work verify --modelo 390 --year 2026 --period 0A
-@static aeat app modelo export --modelo 390 --year 2026 --period 0A --output ./modelo-390-2026.boe
-@static aeat app modelo work file --modelo 390 --year 2026 --period 0A
-@static aeat app modelo reconcile pull --modelo 390 --year 2026 --period 0A
 ```
 
 The per-box detail is

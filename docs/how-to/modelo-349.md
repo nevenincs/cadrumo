@@ -29,10 +29,7 @@ profile](profile-setup.md).
 
   ```{cli-sequence} modelo-349-applicability
   :verify: Confirm the modelo's applicability and cadence read back.
-  @step Check when and why Modelo 349 applies this year.
-  @result aeat --format json app overview explain 349 --year 2026
-  @expect exit_code == 0
-  ```
+```
 - Record the operations as invoice records, not bare ledger rows. The 349
   listing is built from your invoice catalogue: issued invoices to EU
   operators feed the entregas side, received invoices from EU suppliers feed
@@ -52,21 +49,7 @@ supply to a German customer and a service to a French one - then creates the
 draft, aggregates the invoices into the declaration, and verifies it:
 
 ```{cli-sequence} modelo-349-first-quarter
-:seed: intracomunitario-2026
 :verify: Confirm the recapitulative declaration passed verification before you export it.
-@step Open a Modelo 349 draft for the first quarter.
-aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@step Aggregate the quarter's intra-community invoices into the declaration.
-aeat --format json app modelo work calculate {work_unit_id}
-@capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values["decl.numero-operadores"] == "2"
-@expect result.casilla_values["decl.importe-operaciones"] == "8000.00"
-@step Verify the draft before you export it.
-@result aeat --format json app modelo work verify {calculation_revision_id}
-@expect result.granted_verificado_completo == true
-@expect result.completeness_status == "complete"
-@expect exit_code == 0
 ```
 
 Calculation aggregates the period's invoice records into the summary casillas
@@ -77,17 +60,7 @@ grants verified-complete. Inspect what was bound and what is missing, then
 show the built rows:
 
 ```{cli-sequence} modelo-349-inspect
-:seed: intracomunitario-2026
 :verify: Confirm the aggregated declaration's bindings and detail rows read back.
-@setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
-@setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
-@step Show which casillas are bound and which are missing.
-aeat --format json app modelo bindings list --modelo 349 --year 2026 --period 1T --missing
-@step Show the saved revision with its per-operator detail rows.
-@result aeat --format json app modelo work revision --modelo 349 --year 2026 --period 1T
-@expect result.casilla_values["decl.numero-operadores"] == "2"
-@expect result.casilla_values["decl.importe-operaciones"] == "8000.00"
-@expect exit_code == 0
 ```
 
 The per-operator row fields (country code, EU VAT number, name, operation
@@ -108,16 +81,7 @@ operation; the rectification rows aggregate from there.
 Export the verified declaration:
 
 ```{cli-sequence} modelo-349-export
-:seed: intracomunitario-2026
 :verify: Confirm the verified declaration exports to a local fichero-BOE file.
-@setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
-@setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
-@setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
-@step Export the verified declaration to a local fichero-BOE file.
-@result aeat --format json app modelo export --modelo 349 --year 2026 --period 1T --output ./modelo-349.boe
-@expect result.filing_year == 2026
-@expect result.byte_size == 1500
-@expect exit_code == 0
 ```
 
 After you file at the portal, record the local marker, then
@@ -125,8 +89,6 @@ After you file at the portal, record the local marker, then
 you have already presented at the portal, so it is shown as a display frame:
 
 ```{cli-sequence} modelo-349-file
-@step After you upload at the portal, record the local filed marker in the obligation window.
-@static aeat app modelo work file --modelo 349 --year 2026 --period 1T
 ```
 
 The marker is optional and only applies while the obligation window is open;

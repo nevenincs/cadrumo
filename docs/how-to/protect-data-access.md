@@ -6,8 +6,8 @@ passphrase and have no recovery key, the data cannot be decrypted by anyone,
 including you.
 
 Use this guide to set up a recovery key before you need it, change your
-passphrase, recover access after a lost passphrase, lock the session, and, as a
-last resort, wipe local state and start over.
+passphrase, recover access after a lost passphrase, log out safely, and reset
+local state only as a last resort.
 
 ## Before you start
 
@@ -16,19 +16,19 @@ You need:
 - An active profile - see [set up your taxpayer profile](profile-setup.md). The
   first command below refuses without one (`No se pudo determinar ningún bucket
   activo. Selecciona un perfil y vuelve a intentarlo.`).
-- Your master-key passphrase. These commands open the encrypted store, so
-  they prompt for the passphrase. The recovery and rekey commands below
-  replace which passphrase opens the key.
+- Your current master-key passphrase for recovery-key creation, rotation, and
+  passphrase changes.
+- Your recovery words for verification or recovery after a lost passphrase.
+  Recovery sets a new passphrase without requiring the lost one.
 
-The runtime emits help, prompts, and messages in Spanish.
+Use `--language en`, `es`, `ca`, or `hu` when you need a specific output
+language.
 
 ## Create your recovery key first
 
 Do this once, right after setup, while your passphrase still works:
 
 ```{cli-sequence} protect-data-access-show-recovery
-@step Create or confirm the recovery key.
-@static aeat config show-recovery
 ```
 
 If no recovery key exists yet, the command creates one and prints a
@@ -44,8 +44,6 @@ exists, the command reports its status and does not print the words again.
 Verify the words you wrote down without changing anything:
 
 ```{cli-sequence} protect-data-access-verify-recovery
-@step Verify the recovery words without changing anything.
-@static aeat config verify-recovery --recovery-key "word1 word2 word3 ..."
 ```
 
 The command reports `verified yes` or `verified no` and exits with a failure
@@ -58,8 +56,6 @@ If the written words may have been seen by someone else, mint a fresh
 recovery key:
 
 ```{cli-sequence} protect-data-access-rotate-recovery
-@step Mint a fresh recovery key and retire the previous words.
-@static aeat config show-recovery --rotate
 ```
 
 New words are printed exactly once. The previous recovery words stop working
@@ -70,8 +66,6 @@ immediately. Store the new words as before.
 To change the passphrase while you still know the current one:
 
 ```{cli-sequence} protect-data-access-rekey
-@step Change the passphrase that opens the master key.
-@static aeat config rekey
 ```
 
 The command asks for the current passphrase if the store is not already
@@ -85,8 +79,6 @@ together with `--confirm-new-passphrase`.
 If you forgot the passphrase but have your recovery words:
 
 ```{cli-sequence} protect-data-access-recover
-@step Unlock the master key from the recovery words and set a new passphrase.
-@static aeat config recover --recovery-key "word1 word2 word3 ..."
 ```
 
 The command prompts twice (hidden) for a new passphrase, unlocks the master
@@ -101,35 +93,26 @@ which deletes it.
 
 ## Run without a passphrase prompt
 
-Automation cannot answer a prompt - an agent server, a scheduled job, a
-script. For those runs, set the `CADRUMO_SECRET_PASSPHRASE` environment
-variable to your passphrase before the command starts. Treat that value
-like the passphrase itself: set it only in the environment of the process
-that needs it, and never write it into a shared shell profile, a script
-you commit, or a log.
+Automation cannot answer an interactive passphrase prompt. For an agent server,
+scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for that process.
+Treat the value like the passphrase itself. Never put it in a shared shell
+profile, committed script, or log.
 
-Interactive use never needs this - every command prompts.
+Interactive commands prompt when they need the current passphrase. Recovery
+commands use the recovery words and ask for a new passphrase instead.
 
-## Lock the session
+## Log out of the active profile
 
-Clear the active-profile selection with `aeat config lock` so commands stop
-operating on your data until a profile is selected again. The card confirms a
-profile is active, locks the session, then shows that the active selection is
-cleared:
+Use `aeat config profile logout` when you finish working with a profile. Logout
+closes the active storage session, discards in-memory key material, disposes the
+bucket engines, and clears the active-profile selection:
 
-```{cli-sequence} protect-data-access-lock
-:verify: Confirm locking clears the active-profile selection without deleting anything.
-@step Confirm a profile is currently active.
-aeat config profile status
-@step Clear the active-profile selection.
-aeat config lock
-@result aeat --format json config profile status
-@expect result.configured == false
-@expect exit_code == 0
+```{cli-sequence} protect-data-access-logout
+:verify: Confirm logout closes the active session without deleting the profile.
 ```
 
-Nothing is deleted. Locking only clears the active-profile pointer. Select
-a profile again with `aeat config switch <name>` when you return.
+Nothing in the profile is deleted. Select it again with
+`aeat config switch <name>` when you return.
 
 ## Reset local state (last resort)
 
@@ -137,8 +120,6 @@ Reset deletes operator-local state. It is not recoverable. The command
 refuses to run without `--yes`:
 
 ```{cli-sequence} protect-data-access-reset
-@step Delete operator-local state for the chosen scope.
-@static aeat config reset --scope profile --yes
 ```
 
 Pick the scope deliberately:

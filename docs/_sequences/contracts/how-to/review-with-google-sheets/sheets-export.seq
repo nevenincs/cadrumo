@@ -1,0 +1,2 @@
+@step Export the calculation surface for one modelo, year, and period.
+@static aeat config google sync calc export --modelo 303 --year 2026 --period 1T

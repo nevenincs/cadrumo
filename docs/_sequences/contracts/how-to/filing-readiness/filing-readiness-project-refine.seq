@@ -1,0 +1,2 @@
+@step Refine the projection with withholdings, personal circumstances, or specific boxes.
+@static aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE

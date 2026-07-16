@@ -27,11 +27,7 @@ You need:
 
   ```{cli-sequence} authenticate-profile
   :verify: Confirm a taxpayer profile can be created non-interactively.
-  @step Create a taxpayer profile non-interactively (use your own NIF, CIF, DNI, or NIE).
-  @result aeat --format json config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
-  @expect result.profile_name == "me"
-  @expect exit_code == 0
-  ```
+```
 
 - the master-key passphrase that protects your local store; the tool
   prompts for it.
@@ -42,10 +38,6 @@ List providers:
 
 ```{cli-sequence} authenticate-providers
 :verify: Confirm the tool lists the supported authentication providers.
-@step List the supported authentication providers and their availability.
-@result aeat --format json config auth providers
-@expect result.providers[0].id == "certificate"
-@expect exit_code == 0
 ```
 
 The list marks each provider as `disponible` (available now) or `reservado (no
@@ -67,8 +59,6 @@ Configure one of the available providers.
 Configure the provider you use:
 
 ```{cli-sequence} authenticate-configure
-@step Configure a provider that needs a file, such as your digital certificate.
-@static aeat config auth configure --provider certificate --file ./certificate.p12
 ```
 
 Use `--file` for providers that need a file, such as your digital certificate.
@@ -80,12 +70,6 @@ Check what is configured:
 
 ```{cli-sequence} authenticate-readiness
 :verify: Confirm the tool reports what is configured and probes it locally.
-@step Show what authentication is configured.
-aeat config auth status
-@step Probe the stored credentials locally, without contacting AEAT.
-@result aeat --format json config auth test
-@expect result.configured == false
-@expect exit_code == 0
 ```
 
 If you want to inspect a specific provider, use `--provider` with either
@@ -101,10 +85,6 @@ Check the remaining validity:
 
 ```{cli-sequence} authenticate-check-validity
 :verify: Confirm the local probe reports the certificate's remaining validity.
-@step Read the certificate's remaining validity from the local probe.
-@result aeat --format json config auth test
-@expect result.configured == false
-@expect exit_code == 0
 ```
 
 The report tells you how the certificate stands:
@@ -125,26 +105,18 @@ Download the renewed certificate file (`.p12` or `.pfx`) to your machine.
 Point the tool at the renewed file:
 
 ```{cli-sequence} authenticate-configure-renewed
-@step Point the tool at the renewed certificate file.
-@static aeat config auth configure --provider certificate --file ./renewed-certificate.p12
 ```
 
 If the renewed certificate uses a new password, rotate the stored
 passphrase for its source:
 
 ```{cli-sequence} authenticate-secret-set
-@step Rotate the stored passphrase for the certificate source.
-@static aeat config auth certificate secret set --name personal
 ```
 
 Confirm the new expiry:
 
 ```{cli-sequence} authenticate-confirm-expiry
 :verify: Confirm the local probe reports the renewed certificate's later expiry.
-@step Read the renewed certificate's expiry from the local probe.
-@result aeat --format json config auth test
-@expect result.configured == false
-@expect exit_code == 0
 ```
 
 The report now shows the renewed certificate's later expiry date.
@@ -157,37 +129,23 @@ reconfigure `aeat config auth configure --file` every time you switch.
 Register each certificate under a name:
 
 ```{cli-sequence} authenticate-certificate-register
-@step Register a certificate under a name.
-@static aeat config auth certificate register --name personal --file ./personal.p12
-@step Register another certificate with a friendly name.
-@static aeat config auth certificate register --name apoderado-acme --file ./acme.p12 --friendly-name "ACME SL"
 ```
 
 List every registered certificate:
 
 ```{cli-sequence} authenticate-certificate-list
 :verify: Confirm the tool lists the registered certificates.
-@step List every registered certificate.
-@result aeat --format json config auth certificate list
-@expect result.active_source == ""
-@expect exit_code == 0
 ```
 
 Select the one you want active:
 
 ```{cli-sequence} authenticate-certificate-select
-@step Select the registered certificate you want active.
-@static aeat config auth certificate select --name apoderado-acme
 ```
 
 Remove a registered certificate you no longer need:
 
 ```{cli-sequence} authenticate-certificate-remove
 :verify: Confirm the tool removes a registered certificate by name.
-@step Remove a registered certificate you no longer need.
-@result aeat --format json config auth certificate remove --name personal
-@expect result.name == "personal"
-@expect exit_code == 0
 ```
 
 ### Check every registered certificate's expiry
@@ -197,10 +155,6 @@ certificates in one pass, not only the active one:
 
 ```{cli-sequence} authenticate-certificate-check
 :verify: Confirm the tool checks every registered certificate's expiry in one pass.
-@step Check every registered certificate's expiry.
-@result aeat --format json config auth certificate check
-@expect result.has_warnings == false
-@expect exit_code == 0
 ```
 
 The report lists each registered certificate with its status:
@@ -214,8 +168,6 @@ Renew an expiring or expired certificate with the body that issued it, then
 re-register it under its existing name:
 
 ```{cli-sequence} authenticate-certificate-reregister
-@step Re-register a renewed certificate under its existing name.
-@static aeat config auth certificate register --name apoderado-acme --file ./renewed-acme.p12
 ```
 
 Re-run `aeat config auth certificate check` to confirm the new expiry date.
@@ -225,53 +177,37 @@ Re-run `aeat config auth certificate check` to confirm the new expiry date.
 When you are ready to use a live-read command:
 
 ```{cli-sequence} authenticate-login
-@step Acquire or verify a live AEAT session.
-@static aeat config auth login
 ```
 
 If you need to intentionally reauthenticate, force a fresh authentication:
 
 ```{cli-sequence} authenticate-login-fresh
-@step Force a fresh authentication.
-@static aeat config auth login --fresh
 ```
 
 If a previous login was interrupted and left the authentication step stuck, use
 `--reset-lock`. Run it when `login` reports another login is in progress but it
 is not.
 
-## Clear saved authentication
+## End sessions or reset authentication
 
-Clear one provider:
+To end the local certificate-provider session without removing its
+configuration:
 
-```{cli-sequence} authenticate-clear-provider
-:verify: Confirm the tool clears the saved authentication for one provider.
-@step Clear the saved authentication for one provider.
-@result aeat --format json config auth clear --provider certificate
-@expect result.removed_sessions == 0
-@expect exit_code == 0
+```{cli-sequence} authenticate-logout-provider
+:verify: Confirm logout ends the local session while preserving the provider configuration.
 ```
 
-Clear sessions or locks:
+To remove one provider's local configuration, sessions, acquisition lock,
+registered certificates, and stored certificate secrets:
 
-```{cli-sequence} authenticate-clear-sessions
-:verify: Confirm the tool clears saved sessions and locks.
-@step Clear saved sessions.
-aeat config auth clear --sessions
-@step Clear saved locks.
-@result aeat --format json config auth clear --locks
-@expect result.removed_sessions == 0
-@expect exit_code == 0
+```{cli-sequence} authenticate-reset-provider
+:verify: Confirm reset removes the selected provider's local authentication state.
 ```
 
-If you intend to reset authentication setup, clear all configured providers:
+To remove local authentication state for every configured provider:
 
-```{cli-sequence} authenticate-clear-all
-:verify: Confirm the tool clears all configured providers.
-@step Clear all configured providers.
-@result aeat --format json config auth clear --all
-@expect result.removed_sessions == 0
-@expect exit_code == 0
+```{cli-sequence} authenticate-reset-all
+:verify: Confirm reset removes local authentication state for all configured providers.
 ```
 
 ## Act for someone else (apoderado)
@@ -292,10 +228,6 @@ List the scope codes the tool accepts:
 
 ```{cli-sequence} authenticate-apoderado-scopes
 :verify: Confirm the tool lists the accepted apoderamiento scope codes.
-@step List the scope codes the tool accepts.
-@result aeat --format json config auth apoderado scopes list
-@expect result.catalogue_version == "2026.05.bootstrap"
-@expect exit_code == 0
 ```
 
 Each scope is an AEAT apoderamiento area. Examples include:
@@ -314,10 +246,6 @@ the scopes that match the grant at AEAT:
 
 ```{cli-sequence} authenticate-apoderado-configure
 :verify: Confirm the tool records the represented party and scopes locally.
-@step Record who you represent and the scopes that match the grant at AEAT.
-@result aeat --format json config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
-@expect result.catalogue_version == "2026.05.bootstrap"
-@expect exit_code == 0
 ```
 
 Repeat `--scope` for each code. The CLI rejects a comma-separated list. Scope
@@ -333,11 +261,6 @@ Show what is recorded for the active profile:
 
 ```{cli-sequence} authenticate-apoderado-status
 :verify: Confirm the tool shows the apoderado configuration recorded locally.
-@setup aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
-@step Show the apoderado configuration recorded for the active profile.
-@result aeat --format json config auth apoderado status
-@expect result.configured == true
-@expect exit_code == 0
 ```
 
 `aeat config auth apoderado check` is the live-verification verb, but the
@@ -349,11 +272,6 @@ Remove the configuration when the representation ends:
 
 ```{cli-sequence} authenticate-apoderado-clear
 :verify: Confirm the tool removes the local apoderado record.
-@setup aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
-@step Remove the local apoderado record when the representation ends.
-@result aeat --format json config auth apoderado clear
-@expect result.cleared == true
-@expect exit_code == 0
 ```
 
 Clearing removes only the local record. The apoderamiento at AEAT is

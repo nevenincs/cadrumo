@@ -35,8 +35,6 @@ Create the profile with `aeat config profile`, as
 sandbox provisions its own profile, so this create is shown as a display frame:
 
 ```{cli-sequence} irpf-lifecycle-profile
-@step Create the taxpayer profile with the identity and activity-start facts.
-@static aeat config profile create ana --quiet --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
 ```
 
 The `--name` and `--surnames` are required: the export step refuses without
@@ -49,13 +47,6 @@ Confirm what the year will ask of Ana:
 
 ```{cli-sequence} irpf-lifecycle-agenda
 :verify: Confirm the year's filing calendar and Modelo 130 applicability read back.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-income-categories actividad_economica
-@step Show the year's filing calendar.
-aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
-@step Explain why Modelo 130 applies this year.
-@result aeat --format json app overview explain 130 --year 2026
-@expect result.applicable == true
-@expect exit_code == 0
 ```
 
 The calendar lists the four Modelo 130 windows (April, July, October,
@@ -79,22 +70,6 @@ filed history, not the sandbox):
 
 ```{cli-sequence} irpf-lifecycle-q1
 :verify: Confirm the first instalment verifies before you export it.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
-@setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key irpf-q1-venta
-@setup aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key irpf-q1-compra
-@step Create the first instalment draft.
-aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
-@step Calculate it with the three first-period carries passed as zeros.
-aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
-@expect result.casilla_values.03 == "500.00"
-@expect result.casilla_values.04 == "100.00"
-@step Verify the instalment before exporting it.
-@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
-@expect result.granted_verificado_completo == true
-@expect exit_code == 0
-@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
-@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
-@static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T
 ```
 
 The key figures show the year so far: 1000 earned, 500 spent, and an
@@ -134,19 +109,6 @@ July presentation window, neither of which the frozen documentation sandbox can
 reproduce, so the chain is shown as display frames:
 
 ```{cli-sequence} irpf-lifecycle-q2
-@step Record the second quarter's three movements.
-@static aeat app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
-@static aeat app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-@static aeat app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50
-@step Create the second-quarter draft.
-@static aeat app modelo work create --modelo 130 --year 2026 --period 2T
-@step Calculate it with no binding zeros; the carries resolve from the filed first quarter.
-@static aeat app modelo work calculate --modelo 130 --year 2026 --period 2T
-@step Verify, export, file, and reconcile, exactly as in the first quarter.
-@static aeat app modelo work verify --modelo 130 --year 2026 --period 2T
-@static aeat app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
-@static aeat app modelo work file --modelo 130 --year 2026 --period 2T
-@static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T
 ```
 
 Read the revision and compare it with the first quarter's:
@@ -177,12 +139,6 @@ Check the year's IRPF position at any point:
 
 ```{cli-sequence} irpf-lifecycle-position
 :verify: Confirm the year's IRPF position and work-unit list read back.
-@step Show the year's overall obligation status.
-aeat --format json app overview status
-@step List the modelo work units on record.
-@result aeat --format json app modelo work list
-@expect result.operation == "modelo.work.list"
-@expect exit_code == 0
 ```
 
 ## Stage 5: the annual Renta declaration
@@ -196,14 +152,6 @@ for the annual period runs locally:
 
 ```{cli-sequence} irpf-lifecycle-annual-preflight
 :verify: Confirm the year's ledger reads back clean for the annual period.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --irpf-income-categories actividad_economica
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
-@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-@step Run the annual-period ledger preflight.
-@result aeat --format json app ledger preflight --year 2026 --period 0A
-@expect result.ready == true
-@expect exit_code == 0
 ```
 
 The rest of the annual chain resolves the four filed instalments and the 2026
@@ -218,18 +166,6 @@ ledger cannot know about is supplied as manual casillas, found with `bindings
 list --missing`:
 
 ```{cli-sequence} irpf-lifecycle-annual
-@step Confirm each dependency's evidence is satisfied.
-@static aeat app modelo work dependencies --modelo 100 --year 2026 --period 0A
-@step Create and calculate the annual declaration.
-@static aeat app modelo work create --modelo 100 --year 2026 --period 0A
-@static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A
-@step Find any manual casillas still missing.
-@static aeat app modelo bindings list --modelo 100 --year 2026 --period 0A --missing
-@step Verify, export, file, and reconcile, the same five moves that closed every quarter.
-@static aeat app modelo work verify --modelo 100 --year 2026 --period 0A
-@static aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./modelo-100-2026.boe
-@static aeat app modelo work file --modelo 100 --year 2026 --period 0A
-@static aeat app modelo reconcile pull --modelo 100 --year 2026 --period 0A
 ```
 
 How every value arrives, and how to trace any figure to its rule and its

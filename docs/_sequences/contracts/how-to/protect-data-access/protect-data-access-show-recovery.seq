@@ -1,0 +1,2 @@
+@step Create or confirm the recovery key.
+@static aeat config show-recovery

@@ -1,0 +1,11 @@
+@step Record a transaction imported from the wrong file.
+aeat --format json app ledger add --date 2026-03-15 --amount 60.50 --direction OUTGOING --description "Wrong import" --idempotency-key correct-remove
+@capture transaction_id result.transaction_id
+@step Preview the removal without deleting anything.
+aeat app ledger remove {transaction_id} --reason "wrong file imported" --dry-run
+@step Remove it for real.
+aeat app ledger remove {transaction_id} --reason "wrong file imported" --yes
+@step Confirm the id no longer resolves.
+@result aeat --format json app ledger view {transaction_id}
+@expect error.category == "REFUSED"
+@expect exit_code == 2

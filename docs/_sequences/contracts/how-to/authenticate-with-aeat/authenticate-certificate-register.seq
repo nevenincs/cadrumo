@@ -1,0 +1,4 @@
+@step Register a certificate under a name.
+@static aeat config auth certificate register --name personal --file ./personal.p12
+@step Register another certificate with a friendly name.
+@static aeat config auth certificate register --name apoderado-acme --file ./acme.p12 --friendly-name "ACME SL"

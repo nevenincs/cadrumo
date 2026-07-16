@@ -1,0 +1,12 @@
+@setup aeat config profile create carla-2026 --quiet --entity-type natural_person --tax-id 44444444A --name "Carla" --surnames "Lopez Sanz"
+@setup aeat config profile rename carla-2026 carla-real
+@setup aeat config profile edit carla-real --quiet --address-postcode 28013
+@step Browse the full change history.
+aeat config profile history carla-real
+@step Filter to a single event type.
+aeat config profile history carla-real --event-type profile.renamed
+@step Filter by date range.
+aeat config profile history carla-real --since 2026-01-01 --until 2026-03-31
+@result aeat --format json config profile history carla-real --actor operator
+@expect result.actor == "operator"
+@expect exit_code == 0

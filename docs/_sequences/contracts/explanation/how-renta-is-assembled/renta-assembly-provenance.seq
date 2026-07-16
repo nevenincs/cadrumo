@@ -1,0 +1,12 @@
+:seed: renta-2025
+@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@step Read the saved observations behind the calculated figures.
+aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
+@step Show the saved revision's persisted values.
+aeat --format json app modelo work revision --modelo 100 --year 2025 --period 0A
+@step Look up one box's definition, with its legal references.
+@result aeat --format json app modelo casilla 100 0003 --period 0A
+@expect result.casilla_id == "0003"
+@expect result.legal_refs[0] == "ley-35-2006:art-17"
+@expect exit_code == 0

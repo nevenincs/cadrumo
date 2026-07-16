@@ -19,13 +19,6 @@ means 21 %:
 
 ```{cli-sequence} ledger-evidence-add
 :verify: Confirm the evidence record stored the supplier and invoice details.
-@step Record the invoice file and its details as encrypted evidence.
-aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --notes "Office supplies, March"
-@capture evidence_id result.evidence_id
-@step Confirm the stored record carries the details you typed.
-@result aeat --format json app ledger evidence view {evidence_id}
-@expect result.supplier == "Papelería Sol SL"
-@expect result.invoice_number == "2026-0142"
 ```
 
 The command prints the evidence ID. Note the full ID down - later commands need it. Add what you know now; update the rest later.
@@ -37,18 +30,6 @@ an evidence file and an expense, then attaches one to the other:
 
 ```{cli-sequence} ledger-evidence-attach
 :verify: Confirm the purchase-invoice evidence attached to the transaction.
-@step Record the purchase invoice as encrypted evidence.
-@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
-@capture evidence_id result.evidence_id
-@step Record the deductible expense the invoice supports.
-@setup aeat --format json app ledger add --date 2026-03-10 --amount 121.00 --direction OUTGOING --description "Material de oficina" --category-id material_oficina --taxable-base 100 --iva-rate 0.21 --iva-amount 21 --idempotency-key evidence-attach
-@capture transaction_id result.transaction_id
-@step Attach the evidence record to the transaction it supports.
-aeat app ledger attach {transaction_id} --purchase-invoice-evidence-id {evidence_id}
-@step Confirm the transaction now carries the purchase-invoice evidence.
-@result aeat --format json app ledger view {transaction_id}
-@expect result.transaction.purchase_invoice_evidence_id == "40241ba7308fb7df"
-@expect exit_code == 0
 ```
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
@@ -62,8 +43,6 @@ The `attach` command also has an `--attachment-id` option (repeatable) for a gen
 When the document lives in Google Drive, pull it straight into encrypted evidence storage. This command reaches Google Drive, so it runs against your own authorized account rather than in the documentation sandbox:
 
 ```{cli-sequence} ledger-evidence-doclink
-@step Pull the Drive document straight into encrypted evidence storage.
-@static aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
 The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
@@ -73,8 +52,6 @@ The command downloads the Drive file, stores its bytes encrypted with the transa
 Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time. Like `doclink`, this command reaches Google Drive and runs against your own authorized account:
 
 ```{cli-sequence} ledger-evidence-pull-folder
-@step Fetch every PDF and image invoice in one Drive folder at once.
-@static aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
 ```
 
 The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>` or `aeat app ledger link`.
@@ -100,25 +77,11 @@ it, changes the supplier, and confirms the change:
 
 ```{cli-sequence} ledger-evidence-manage
 :verify: Confirm the evidence record's supplier was updated.
-@step Record an evidence file to manage.
-@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00
-@capture evidence_id result.evidence_id
-@step List every stored evidence record.
-aeat app ledger evidence list
-@step View one evidence record in full.
-aeat app ledger evidence view {evidence_id}
-@step Update a detail on the record - the same optional flags as add.
-aeat app ledger evidence update {evidence_id} --supplier "Papelería Central SL"
-@step Confirm the supplier now reads the updated value.
-@result aeat --format json app ledger evidence view {evidence_id}
-@expect result.supplier == "Papelería Central SL"
 ```
 
 Remove an evidence record you no longer need, addressing it by id:
 
 ```{cli-sequence} ledger-evidence-remove
-@step Remove an evidence record by id, confirming with --yes.
-@static aeat app ledger evidence remove <evidence-id> --yes
 ```
 
 Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).

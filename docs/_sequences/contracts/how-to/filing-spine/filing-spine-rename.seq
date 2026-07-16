@@ -1,0 +1,2 @@
+@step Add or update a friendly display name for the work unit.
+  @static aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"

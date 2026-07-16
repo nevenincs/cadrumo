@@ -40,7 +40,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "dry_run\tFalse\ncleared_pointer\tTrue\nactive_profile\t\nsource\tnone\nstatus\tnone\nregistered_bucket\tFalse\nprofile_record_present\tFalse\nrepairable_by_clearing_pointer\tFalse\nnext_action\taeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>\n"
+      "text": "dry_run\tTrue\ncleared_pointer\tFalse\nactive_profile\t<profile-id>\nsource\tpointer\nstatus\tready\nregistered_bucket\tTrue\nprofile_record_present\tTrue\nrepairable_by_clearing_pointer\tFalse\nnext_action\taeat app overview status\n"
     },
     {
       "argv": [

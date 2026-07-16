@@ -22,8 +22,10 @@ Submodules
    cadrumo.application.workflow._events
    cadrumo.application.workflow._models
    cadrumo.application.workflow._persistence
+   cadrumo.application.workflow._profile_bucket_models
    cadrumo.application.workflow._profile_bucket_scan
    cadrumo.application.workflow._profile_health
    cadrumo.application.workflow._protocols
    cadrumo.application.workflow._resume
    cadrumo.application.workflow._utils
+   cadrumo.application.workflow._workflow_abort

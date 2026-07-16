@@ -1,0 +1,6 @@
+@step Seed the opening balance as zero for a taxpayer starting this year.
+aeat --format json app modelo iva-wallet seed --filing-year 2025 --period 4T --amount 0 --confirm
+@step Show the wallet balance as of the filing year.
+@result aeat --format json app modelo iva-wallet balance --as-of-year 2026
+@expect result.total_balance == "0"
+@expect exit_code == 0

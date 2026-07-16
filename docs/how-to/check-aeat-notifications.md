@@ -36,11 +36,7 @@ You need:
 
   ```{cli-sequence} check-notifications-profile
   :verify: Confirm a taxpayer profile can be created non-interactively.
-  @step Create a taxpayer profile non-interactively (use your own NIF, CIF, DNI, or NIE).
-  @result aeat --format json config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
-  @expect result.profile_name == "me"
-  @expect exit_code == 0
-  ```
+```
 
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
 - the master-key passphrase that protects your local store; the tool
@@ -58,14 +54,6 @@ saved download by its reference number, and latest shows the most recent
 snapshot in the active profile.
 
 ```{cli-sequence} check-notifications-dehu
-@step Download your notifications and save them locally.
-@static aeat app live notifications pull
-@step Download your current DEHu notifications.
-@static aeat app live notifications list
-@step View a specific saved download by its reference number.
-@static aeat app live notifications view <snapshot-id>
-@step Show the most recent snapshot in the active profile.
-@static aeat app live notifications latest
 ```
 
 ---
@@ -82,16 +70,6 @@ downloads, view opens one download's details (individual declarations, status,
 dates, and links to justificantes), and latest shows the most recent snapshot.
 
 ```{cli-sequence} check-notifications-expedientes
-@step Download the declaration history for a specific form and year.
-@static aeat app live expedientes pull --modelo 100 --year 2026
-@step Download history for a range of years.
-@static aeat app live expedientes pull --from-year 2020 --to-year 2026 --modelo 303
-@step List saved downloads.
-@static aeat app live expedientes list
-@step View a specific download's details.
-@static aeat app live expedientes view <snapshot-id>
-@step Show the most recent expedientes snapshot.
-@static aeat app live expedientes latest
 ```
 
 ---
@@ -109,14 +87,6 @@ depends on (for example, the Modelo 303 returns a Modelo 390 annual summary
 needs).
 
 ```{cli-sequence} check-notifications-filed
-@step List the filed returns AEAT holds, without saving their box values.
-@static aeat app live filed list --modelo 303 --from-year 2020 --to-year 2026
-@step Download and save the full box values from a specific filed return.
-@static aeat app live filed pull --modelo 303 --year 2026 --period 1T
-@step Download all filed returns across a year range.
-@static aeat app live filed pull --from-year 2020 --to-year 2026
-@step Download the source declarations that a target filing depends on.
-@static aeat app live filed pull-sources --modelo 303 --year 2026 --period 1T
 ```
 
 ---
@@ -134,16 +104,6 @@ compare against an expected result). `verify list` shows past verifications,
 latest observation for a NIF.
 
 ```{cli-sequence} check-notifications-verify
-@step Check whether a foreign EU VAT number is valid.
-@static aeat app live verify nif-iva ESB12345678
-@step Check whether a Spanish NIF or NIE appears in the Spanish ROI register.
-@static aeat app live verify tgvi 12345678A
-@step List past verifications you have run.
-@static aeat app live verify list --surface tgvi
-@step View details of a specific verification.
-@static aeat app live verify view <observation-id>
-@step Show the latest verification observation for a NIF.
-@static aeat app live verify latest --surface nif_iva --nif ESB12345678
 ```
 
 ---
@@ -158,14 +118,6 @@ accepted categories are `auth`, `filing`, `censo`, `consultation`, `borrador`,
 they are mutually exclusive. `portals view` opens one portal's details.
 
 ```{cli-sequence} check-notifications-portals
-@step View the official AEAT online portals and their authentication requirements.
-@static aeat app live portals list
-@step Narrow the list to the portals for one form.
-@static aeat app live portals list --modelo 303
-@step Narrow the list to one category.
-@static aeat app live portals list --category filing
-@step View one portal's details.
-@static aeat app live portals view <portal-id>
 ```
 
 ---
@@ -178,12 +130,6 @@ snapshots, view opens one borrador's box values, and latest shows the latest
 active draft for a filing year.
 
 ```{cli-sequence} check-notifications-borrador
-@step Download and list the active borrador snapshots.
-@static aeat app live borrador 100 list --state active
-@step View a specific borrador's box values.
-@static aeat app live borrador 100 view <snapshot-id>
-@step Show the latest active draft for a filing year.
-@static aeat app live borrador 100 latest --filing-year 2026
 ```
 
 ---
@@ -199,14 +145,6 @@ evidence in a single read-only run, and `history` lists the persisted balances
 and decisions held locally.
 
 ```{cli-sequence} check-notifications-iva-wallet
-@step Download and track your current IVA compensation balance.
-@static aeat app live iva-wallet pull --year 2026 --period 4T
-@step Reconstruct the history of past compensation decisions.
-@static aeat app live iva-wallet pull-history --from-year 2020 --to-year 2026
-@step Capture past returns and the current IVA evidence in one read-only run.
-@static aeat app live iva-wallet pull-evidence --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
-@step List the persisted compensation balances and decisions.
-@static aeat app live iva-wallet history --as-of-year 2026
 ```
 
 ---

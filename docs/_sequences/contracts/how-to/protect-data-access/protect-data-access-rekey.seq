@@ -1,0 +1,2 @@
+@step Change the passphrase that opens the master key.
+@static aeat config rekey

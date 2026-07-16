@@ -1,0 +1,7 @@
+@step Record the invoice file and its details as encrypted evidence.
+aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --notes "Office supplies, March"
+@capture evidence_id result.evidence_id
+@step Confirm the stored record carries the details you typed.
+@result aeat --format json app ledger evidence view {evidence_id}
+@expect result.supplier == "Papelería Sol SL"
+@expect result.invoice_number == "2026-0142"

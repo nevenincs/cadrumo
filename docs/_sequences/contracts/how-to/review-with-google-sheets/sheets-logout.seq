@@ -1,0 +1,4 @@
+@step Clear the Google session for the active profile.
+@result aeat --format json config google logout
+@expect result.client_preserved == true
+@expect exit_code == 0

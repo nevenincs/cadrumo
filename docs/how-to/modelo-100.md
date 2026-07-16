@@ -38,10 +38,7 @@ profile](profile-setup.md).
 
   ```{cli-sequence} modelo-100-preflight
   :verify: Confirm the year's ledger reads back clean for the annual period.
-  @step Run the annual-period ledger preflight for the income year.
-  @result aeat --format json app ledger preflight --year 2025 --period 0A
-  @expect exit_code == 0
-  ```
+```
 - File and evidence the year's quarterly instalments first. Modelo 100 folds
   in your Modelo 130/131 payments on account and the retenciones reported on
   modelos 111, 123, 190, and 193 where they exist. Check what this
@@ -49,12 +46,7 @@ profile](profile-setup.md).
 
   ```{cli-sequence} modelo-100-dependencies
   :verify: Confirm the declaration's required source filings and dependencies read back.
-  @step List what Modelo 100 requires for the year.
-  aeat --format json app modelo requires 100 --year 2025 --period 0A
-  @step Show each source filing the declaration folds in and whether its evidence is satisfied.
-  @result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
-  @expect exit_code == 0
-  ```
+```
 
   `dependencies` names each source filing and whether its clean-state
   evidence is satisfied; an unfiled or unevidenced quarter blocks the annual
@@ -71,22 +63,7 @@ instalments, they fold in as payments on account - see [Prepare a Modelo 130
 IRPF instalment](modelo-130.md).
 
 ```{cli-sequence} modelo-100-renta-2025
-:seed: renta-2025
 :verify: Confirm the annual declaration passed verification before you export it.
-@step Open the annual Modelo 100 work unit for 2025.
-aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
-@capture work_unit_id result.work_unit_id
-@step Calculate, supplying this employee filer's salary income and withholdings by hand, with a zero prior-year negative-base carry for a first filing.
-aeat --format json app modelo work calculate {work_unit_id} --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
-@capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values.0003 == "24000"
-@expect result.casilla_values.0012 == "24000.00"
-@expect result.casilla_values.0019 == "2000.00"
-@step Verify the annual declaration before you export it.
-@result aeat --format json app modelo work verify {calculation_revision_id}
-@expect result.granted_verificado_completo == true
-@expect result.completeness_status == "complete"
-@expect exit_code == 0
 ```
 
 Calculation reads the year's classified ledger, the profile facts, the prior
@@ -103,17 +80,7 @@ ledger cannot know (employment income details, capital income, deductions).
 Find what applies to you and what is still missing:
 
 ```{cli-sequence} modelo-100-inspect-inputs
-:seed: renta-2025
 :verify: Confirm the declaration's missing bindings, required casillas, and observations read back.
-@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
-@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
-@step List which bound casillas are still missing a value.
-aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A --missing
-@step List the casillas the declaration requires.
-aeat --format json app modelo casillas 100 --period 0A --required
-@step Show the saved observations behind the calculated figures.
-@result aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
-@expect exit_code == 0
 ```
 
 Supply a manual casilla and recalculate by passing `--casilla 0003=24000` on
@@ -142,12 +109,6 @@ marker records a portal submission and the reconcile pull is a live read from
 AEAT:
 
 ```{cli-sequence} modelo-100-export-file
-@step Export the verified declaration to a local fichero-BOE.
-@static aeat app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
-@step After you upload at the portal, record the local filed marker.
-@static aeat app modelo work file --modelo 100 --year 2025 --period 0A
-@step Pull the justificante and reconcile it against the filed record (a live AEAT read).
-@static aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
 ```
 
 See [Reconcile a filing](reconcile.md) for the reconciliation verdicts.

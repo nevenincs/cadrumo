@@ -46,22 +46,7 @@ saves a report whether or not the draft passes, and `verification-report view`
 reopens it by id:
 
 ```{cli-sequence} verification-reports-modelo-303
-:seed: autonomo-irpf-2026
 :verify: Confirm the verification report shows the draft is complete.
-@step Open a Modelo 303 draft for the first quarter.
-aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@capture work_unit_id result.work_unit_id
-@step Calculate the draft from the classified ledger.
-aeat --format json app modelo work calculate {work_unit_id}
-@capture calculation_revision_id result.calculation_revision_id
-@step Verify the draft; the run saves a report you can reopen.
-aeat --format json app modelo work verify {calculation_revision_id}
-@capture verification_report_id result.verification_report_id
-@step Open the saved verification report and read its findings.
-@result aeat --format json app modelo verification-report view {verification_report_id}
-@expect result.granted_verificado_completo == true
-@expect result.completeness_status == "complete"
-@expect exit_code == 0
 ```
 
 Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to `12`
@@ -149,12 +134,6 @@ kind a box is, then supply the value for a manual one and recalculate:
 
 ```{cli-sequence} verification-reports-incomplete
 :verify: Confirm you can read each box's input kind before supplying a manual value.
-@step Check which input kind each box is; only manual boxes accept --casilla.
-@result aeat --format json app modelo casillas 303 --period 1T
-@expect result.modelo == "303"
-@expect exit_code == 0
-@step Supply a manual casilla's value and recalculate.
-@static aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
 ```
 
 Then [re-run verification](#after-any-fix-re-run-verification). For the full
@@ -183,12 +162,7 @@ expects you to do. The common kinds of blocking finding:
 
   ```{cli-sequence} verification-reports-scope-dependency
   :verify: Confirm setting the activity-start date on the profile succeeds.
-  @setup aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
-  @step Set the activity-start date so an unstarted prior period is scoped out.
-  @result aeat --format json config profile edit me --quiet --activity-start-date 2026-01-01
-  @expect result.profile_name == "me"
-  @expect exit_code == 0
-  ```
+```
 
 After each fix, [re-run verification](#after-any-fix-re-run-verification).
 
@@ -204,14 +178,6 @@ verified-complete:
 
 ```{cli-sequence} verification-reports-export-check
 :verify: Confirm you can read where a filing stands before exporting.
-@setup aeat config switch docs-sequence-sandbox
-@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@step Check where your filing stands.
-@result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
-@expect result.modelo == "303"
-@expect exit_code == 0
-@step Once verification grants verified-complete, retry the export.
-@static aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 ## More than one filing matches
@@ -227,16 +193,7 @@ To confirm which filing a command touched, check its state and the actions taken
 on it:
 
 ```{cli-sequence} verification-reports-work-history
-:seed: autonomo-irpf-2026
 :verify: Confirm the work unit's state and action history read back.
-@setup aeat config switch docs-sequence-sandbox
-@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@step Show the work unit's current state.
-aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
-@step Show the actions taken on the work unit.
-@result aeat --format json app modelo work history --modelo 303 --year 2026 --period 1T
-@expect result.operation == "modelo.work.history"
-@expect exit_code == 0
 ```
 
 ## The filing deadline has passed

@@ -1,0 +1,2 @@
+@step Fetch every PDF and image invoice in one Drive folder at once.
+@static aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"

@@ -1,0 +1,4 @@
+@step Restart an interrupted command using the filing details.
+  @static aeat app modelo work resume --modelo 303 --year 2026 --period 1T
+  @step Or restart using the run or work-unit reference number.
+  @static aeat app modelo work resume <run-id-or-work-unit-id>
