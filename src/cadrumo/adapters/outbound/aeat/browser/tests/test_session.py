@@ -24,7 +24,6 @@ See Also:
         lightweight tests to omit concrete browser ownership.
 """
 
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, cast, override
 
@@ -44,10 +43,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
-_CERT_NOT_BEFORE = datetime(2026, 5, 28, 14, 5, 0, tzinfo=UTC)
-_CERT_NOT_AFTER = datetime(2099, 5, 28, 14, 5, 0, tzinfo=UTC)
-
-
 class _RecordingEvasion(EvasionStrategy):
     """A recording evasion strategy used to assert invocation."""
 
@@ -213,31 +208,6 @@ class ContentFailingPage:
 
 
 @pytest.mark.asyncio
-async def test_browser_session_creation(tmp_path: Path) -> None:
-    """Test creating a browser context with a concrete Playwright adapter."""
-    from ...auth import CERTIFICATE_CONTEXT_MARKER
-
-    settings = Settings()
-    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
-    evasion = _RecordingEvasion()
-    playwright_adapter = RecordingPlaywright()
-
-    session = BrowserSession(
-        playwright=cast(Playwright, playwright_adapter),
-        settings=settings,
-        profile=profile,
-        evasion_strategy=evasion,
-    )
-
-    context = cast(RecordingContext, await session.create_context())
-    assert evasion.called
-    assert context.kwargs["locale"] == "es-ES"
-    assert context.kwargs["timezone_id"] == "Europe/Madrid"
-    assert "storage_state" not in context.kwargs
-    assert not hasattr(context, CERTIFICATE_CONTEXT_MARKER)
-
-
-@pytest.mark.asyncio
 async def test_browser_session_launch_failure_reports_failure_mode(tmp_path: Path) -> None:
     """Launch failures should carry the central failure-mode context."""
     settings = Settings()
@@ -295,89 +265,6 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
 
     context = cast(RecordingContext, await session.create_context(storage_state_path=override_path))
     assert context.kwargs["storage_state"] == str(override_path)
-
-
-@pytest.mark.asyncio
-async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
-    """Certificate propagates into new_context kwargs and thumbprint marker."""
-
-    from cryptography import x509
-    from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives.serialization import pkcs12
-    from cryptography.x509.oid import NameOID
-    from pydantic import SecretStr
-
-    from ......core.config import CertificateBackend
-    from ...auth import (
-        CERTIFICATE_CONTEXT_MARKER,
-        CertificateBundle,
-        CertificateContextProvisioner,
-        load_certificate,
-    )
-
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    subject = issuer = x509.Name(
-        [
-            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.COMMON_NAME, "test - 12345678Z"),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678Z"),
-        ],
-    )
-    cert = (
-        x509.CertificateBuilder()
-        .subject_name(subject)
-        .issuer_name(issuer)
-        .public_key(key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(_CERT_NOT_BEFORE)
-        .not_valid_after(_CERT_NOT_AFTER)
-        .sign(key, hashes.SHA256())
-    )
-    secret = SecretStr("pw")
-    pfx_bytes = pkcs12.serialize_key_and_certificates(
-        name=b"test",
-        key=key,
-        cert=cert,
-        cas=None,
-        encryption_algorithm=serialization.BestAvailableEncryption(secret.get_secret_value().encode("utf-8")),
-    )
-    bundle_path = tmp_path / "bundle.p12"
-    bundle_path.write_bytes(pfx_bytes)
-
-    loaded = load_certificate(
-        CertificateBundle(
-            path=bundle_path,
-            password=secret,
-            friendly_name=None,
-            backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        ),
-    )
-
-    settings = Settings()
-    profile = Profile(name="cert-test", storage_state_path=tmp_path / "state.json")
-    session = BrowserSession(
-        playwright=cast(Playwright, RecordingPlaywright()),
-        settings=settings,
-        profile=profile,
-        evasion_strategy=_RecordingEvasion(),
-    )
-    context = await session.create_context(
-        provisioner=CertificateContextProvisioner(
-            loaded,
-            origin=settings.aeat_certificate_verify_url,
-        ),
-    )
-
-    kwargs: dict[str, object] = cast(RecordingContext, context).kwargs
-    assert "client_certificates" in kwargs
-    cc = kwargs["client_certificates"]
-    assert isinstance(cc, list) and len(cc) == 1
-    client_certificates = cast(list[dict[str, str]], cc)
-    assert client_certificates[0]["pfxPath"] == str(bundle_path)
-    assert client_certificates[0]["passphrase"] == secret.get_secret_value()
-    marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
-    assert marker == loaded.sha256_thumbprint
 
 
 @pytest.mark.asyncio

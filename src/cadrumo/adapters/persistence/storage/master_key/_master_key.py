@@ -872,9 +872,11 @@ def _provider_enter(
     :class:`NoActiveProfileError` so the CLI root callback can refuse
     the verb with a translated message.
 
-    Stores the opened session and the activation context manager on
-    ``provider._session`` and ``provider._activation_cm`` so the
-    matching :func:`exit_provider_session` can tear them down.
+    Stores the opened session and activation context manager on the provider so
+    :func:`exit_provider_session` can tear them down. Provider activation is a
+    custody/read boundary, not a mutation lock: application mutation spans own
+    canonical bucket locking so read-only sessions remain concurrent and the
+    pointer-first lock order remains intact.
     """
     from .....core.config import load_settings
     from ..bucket import NoActiveBucketError
@@ -894,8 +896,8 @@ def _provider_enter(
             "decrypt stored records.",
         )
 
-    key_bytes = provider.get_master_key()
     settings = load_settings()
+    key_bytes = provider.get_master_key()
     if isinstance(provider, UnsecuredMasterKeyProvider):
         dek_bytes = key_bytes
     else:
@@ -917,6 +919,7 @@ def _provider_enter(
         idle_minutes=idle_minutes,
         opened_at=now(),
         unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
+        storage_root=settings.cadrumo_local_storage_root,
     )
     activation = activate_session(session)
     activation.__enter__()

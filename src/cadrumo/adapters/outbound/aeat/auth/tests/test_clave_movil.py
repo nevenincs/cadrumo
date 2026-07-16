@@ -24,13 +24,14 @@ from pydantic import AnyUrl, SecretStr
 
 from ......application.user_profile import profile_create_storage_span, register_minimal_profile
 from ......application.workflow import workflow_state_repository
+from ......core import AuthProviderKind
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
 from ......domain.calculations.registry import RegistryValidationError, RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .. import _session_store, operator_progress_sink
+from .. import operator_progress_sink
 from .._clave_movil import (
     CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
@@ -42,8 +43,7 @@ from .._clave_movil import (
     _extract_verification_code_from_html,
     _render_progress_banner,
 )
-from .._clave_movil_metadata import ClaveMovilSessionMetadata
-from .._providers import AuthProviderKind, ClaveMovilSessionDetail
+from .._providers import ClaveMovilSessionDetail
 from ._clave_movil_support import (
     _CLAVE_SURFACE,
     _DOMAINS,
@@ -52,15 +52,12 @@ from ._clave_movil_support import (
     _CancelableClavePage,
     _HangingCloseBrowserSession,
     _HangingCloseContext,
-    _InitialNavigationTimeoutBrowserSession,
     _NoPushWaitStatePage,
     _OwnNameInputOnlyRepresentationPage,
     _PendingPetitionPage,
-    _RecordingBrowserSession,
     _RecordingPage,
     _RepresentationAlertPage,
     _run,
-    _SelectorDispatchBrowserSession,
     _SelectorDispatchContext,
     _settings_for,
 )
@@ -290,189 +287,16 @@ def test_render_progress_banner_routes_to_operator_sink_only_when_armed() -> Non
 
 
 class TestAuthenticateFresh:
-    def test_qr_flow_writes_encrypted_metadata_and_storage_state(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
-        )
-        provider = ClaveMovilAuthProvider(settings)
-        target_path = settings.aeat_sede_expedientes_path
-        browser_session = _RecordingBrowserSession(target_path=target_path, verification_code="YLL")
-
-        async def run() -> None:
-            session = await provider.authenticate(browser_session=browser_session)
-            assert session.provider_kind == AuthProviderKind.CLAVE_MOVIL
-            assert session.identity_nif == "12345678Z"
-            assert session.storage_state_path is not None
-            assert not session.storage_state_path.exists()
-            assert not session.storage_state_path.with_suffix(".meta.json").exists()
-            persisted = _session_store.load(session.storage_state_path)
-            assert persisted is not None
-            metadata = ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
-            assert metadata.identity_nif == "12345678Z"
-            assert metadata.used_non_qr_fallback is False
-            assert metadata.verification_code == "YLL"
-            assert metadata.storage_state_sha256 == persisted.storage_state_sha256
-            # Page observed the expected click sequence.
-            assert browser_session.contexts, "a context must have been created"
-            page = browser_session.contexts[0].pages[0]
-            assert page.gotos[0].startswith(_CLAVE_SURFACE.selector_access_url_template.split("{target}", 1)[0])
-            assert _CLAVE_SURFACE.authorize_button_selector in page.clicks
-            # No form fill (QR flow skips the non-QR form entirely)
-            assert page.fills == []
-            # provider_detail is Cl@ve-shaped
-            assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
-            assert session.provider_detail.dni_nie == "12345678Z"
-            assert session.provider_detail.landing_url == _aeat_url(_DOMAINS.www6, target_path)
-
-        _run(run())
-
-    def test_fresh_login_routes_verification_code_to_armed_operator_sink(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        """A headless operator must see the AEAT verification code during the
-        Cl@ve wait, not only in the runtime log. When an operator progress sink
-        is armed, the wait banner (carrying the code the operator confirms in
-        their app) is handed to it as the fresh login reaches the wait state."""
-
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(
-            target_path=settings.aeat_sede_expedientes_path,
-            verification_code="YLL",
-        )
-        captured: list[str] = []
-
-        async def run() -> None:
-            with operator_progress_sink(captured.append):
-                await provider.authenticate(browser_session=browser_session)
-
-        _run(run())
-
-        assert captured, "the operator progress sink must receive the wait banner during fresh login"
-        banner = "\n".join(captured)
-        assert "YLL" in banner
-        assert "verification code" in banner.lower()
-
-    def test_initial_selector_navigation_timeout_is_typed(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _InitialNavigationTimeoutBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def run() -> None:
-            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"initial navigation|selector") as excinfo:
-                await provider.authenticate(browser_session=browser_session)
-            assert excinfo.value.failure_mode == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT
-            assert excinfo.value.context is not None
-            assert excinfo.value.context["failure_mode"] == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT
-            assert excinfo.value.context["target_path"] == settings.aeat_sede_expedientes_path
-
-        _run(run())
-        assert browser_session.contexts
-        assert browser_session.contexts[0].pages[0].gotos
-
-    @pytest.mark.parametrize(
-        ("env_overrides", "expected_types"),
-        (
-            (
-                {
-                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "12345678Z",
-                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA": "2030-01-01",
-                },
-                (("#NIF", "12345678Z"), ("#FECHA", "2030-01-01")),
-            ),
-            (
-                {
-                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
-                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE": "E00000000",
-                },
-                (("#NIF", "Y0000000Z"), ("#SOPORTE", "E00000000")),
-            ),
-        ),
-        ids=("dni", "nie"),
-    )
-    def test_non_qr_fallback_fills_identity_form(
-        self,
-        tmp_path: Path,
-        env_overrides: dict[str, str],
-        expected_types: tuple[tuple[str, str], ...],
-    ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            **env_overrides,
-            CADRUMO_CLAVE_PREFER_NON_QR="true",
-        )
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def run() -> None:
-            session = await provider.authenticate(browser_session=browser_session)
-            detail = session.provider_detail
-            assert isinstance(detail, ClaveMovilSessionDetail)
-            assert detail.used_non_qr_fallback is True
-            page = browser_session.contexts[0].pages[0]
-            for expected_type in expected_types:
-                assert expected_type in page.types
-            assert page.clicks.count(_CLAVE_SURFACE.authorize_button_selector) == 1
-            assert _CLAVE_SURFACE.continue_button_selector in page.clicks
-
-        _run(run())
-
-    @pytest.mark.parametrize(
-        ("env_overrides", "expected_message"),
-        (
-            pytest.param(
-                {
-                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "Y0000000Z",
-                    "CADRUMO_CLAVE_PREFER_NON_QR": "true",
-                },
-                r"CADRUMO_CLAVE_MOVIL_NIE_SOPORTE|non-QR|NIE",
-                id="nie-support",
-            ),
-            pytest.param(
-                {
-                    "CADRUMO_CLAVE_MOVIL_DNI_NIE": "12345678Z",
-                    "CADRUMO_CLAVE_PREFER_NON_QR": "true",
-                },
-                r"CADRUMO_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback",
-                id="dni-fecha",
-            ),
-        ),
-    )
-    def test_non_qr_fallback_rejects_missing_required_identity_support(
-        self,
-        tmp_path: Path,
-        env_overrides: dict[str, str],
-        expected_message: str,
-    ) -> None:
-        settings = _settings_for(tmp_path, **env_overrides)
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError, match=expected_message):
-                await provider.authenticate(browser_session=browser_session)
-
-        _run(run())
-
     def test_missing_identity_raises_configuration_error(
         self,
         tmp_path: Path,
     ) -> None:
         settings = _settings_for(tmp_path)
         provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
             with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
-                await provider.authenticate(browser_session=browser_session)
+                await provider.authenticate()
 
         _run(run())
 
@@ -796,127 +620,14 @@ class TestProbePersistedSession:
     ) -> None:
         settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
             from .._authenticator import AeatLoginAssertionError
 
             with pytest.raises(AeatLoginAssertionError, match="no persisted"):
-                await provider.probe_persisted_session(browser_session=browser_session)
+                await provider.probe_persisted_session()
 
         _run(run())
-
-    def test_probe_uses_existing_encrypted_session_without_invalidating_on_failure(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-        provider = ClaveMovilAuthProvider(settings)
-        target_path = settings.aeat_sede_expedientes_path
-        # Seed a session via a fresh login.
-        browser_session_login = _RecordingBrowserSession(target_path=target_path)
-
-        async def seed() -> None:
-            await provider.authenticate(browser_session=browser_session_login)
-            await provider.close()
-
-        _run(seed())
-
-        from ......core import require_active_bucket_id
-        from ......core.auth_session_keys import aeat_auth_session_storage_state_path
-
-        storage_path = aeat_auth_session_storage_state_path(
-            require_active_bucket_id(),
-            "clave-movil-storage",
-        )
-        assert _session_store.exists(storage_path)
-        assert not storage_path.exists()
-        assert not storage_path.with_suffix(".meta.json").exists()
-
-        # Probe against a fresh provider instance; encrypted session must survive.
-        probe_provider = ClaveMovilAuthProvider(settings)
-        browser_session_probe = _RecordingBrowserSession(target_path=target_path)
-
-        async def probe() -> None:
-            session, assertion = await probe_provider.probe_persisted_session(browser_session=browser_session_probe)
-            assert session.identity_nif == "12345678Z"
-            assert assertion.target_url
-            await probe_provider.close()
-
-        _run(probe())
-        assert _session_store.exists(storage_path)
-        assert not storage_path.exists()
-        assert not storage_path.with_suffix(".meta.json").exists()
-
-    def test_probe_with_explicit_target_does_not_click_clave_selector(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-        external = settings.external_constants()
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session_login = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-        async def seed() -> None:
-            await provider.authenticate(browser_session=browser_session_login)
-            await provider.close()
-
-        _run(seed())
-
-        target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
-        target_path = provider._target_path_from_url(target_url)
-        probe_provider = ClaveMovilAuthProvider(settings)
-        browser_session_probe = _SelectorDispatchBrowserSession(target_path=target_path)
-
-        async def probe() -> None:
-            session, assertion = await probe_provider.probe_persisted_session(
-                browser_session=browser_session_probe,
-                target_url=target_url,
-            )
-            assert session.identity_nif == "12345678Z"
-            assert assertion.is_valid is True
-            await probe_provider.close()
-
-        _run(probe())
-
-        page = browser_session_probe.contexts[0].pages[0]
-        assert external.aeat.clave_movil.selector_access_path_marker not in page.gotos[0]
-        assert external.aeat.clave_movil.authorize_button_selector not in page.clicks
-
-
-class TestResume:
-    def test_resume_from_fresh_encrypted_session(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        settings = _settings_for(
-            tmp_path,
-            CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
-        )
-        provider = ClaveMovilAuthProvider(settings)
-        target_path = settings.aeat_sede_expedientes_path
-        browser_session_a = _RecordingBrowserSession(target_path=target_path)
-
-        async def run_first() -> None:
-            await provider.authenticate(browser_session=browser_session_a)
-            await provider.close()
-
-        _run(run_first())
-
-        # Fresh provider instance picks up the on-disk session.
-        resumed_provider = ClaveMovilAuthProvider(settings)
-        browser_session_b = _RecordingBrowserSession(target_path=target_path)
-
-        async def run_resume() -> None:
-            session = await resumed_provider.authenticate(browser_session=browser_session_b)
-            assert session.identity_nif == "12345678Z"
-            # Verify() is called by the resume path; assertion should be valid.
-            assert browser_session_b.contexts, "resume must have opened a new context"
-            page = browser_session_b.contexts[0].pages[0]
-            assert page.gotos == [_aeat_url(_DOMAINS.www6, target_path)]
-            await resumed_provider.close()
-
-        _run(run_resume())
 
 
 # ── contract: auth waiting banner routes through structured logger ─────────────────

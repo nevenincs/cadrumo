@@ -181,6 +181,7 @@ def open_session_from_recovery(
     kek: bytes,
     idle_minutes: int,
     opened_at: datetime,
+    storage_root: Path | None = None,
 ) -> BucketSession:
     """Compose mnemonic-unwrap with `BucketSession.open` and return a :class:`BucketSession`.
 
@@ -196,6 +197,7 @@ def open_session_from_recovery(
         dek=dek,
         idle_minutes=idle_minutes,
         opened_at=opened_at,
+        storage_root=storage_root,
     )
 
 

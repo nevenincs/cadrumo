@@ -47,15 +47,15 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
-from .....core import require_active_bucket_id
+from .....core import AuthProviderDescription, AuthProviderKind, require_active_bucket_id
 from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
@@ -72,6 +72,7 @@ from ._authenticator_types import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
+from ._browser_lifecycle import close_owned_browser_session
 from ._clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ._clave_permanente_support import ClavePermanenteFailureMode
 from ._clave_permanente_support import classify_identity as _classify_identity
@@ -79,8 +80,6 @@ from ._clave_permanente_support import clave_permanente_configuration_error as _
 from ._clave_permanente_support import clave_permanente_login_error as _login_error
 from ._errors import AeatLoginAssertionError, AuthConfigurationError
 from ._providers import (
-    AuthProviderDescription,
-    AuthProviderKind,
     ClavePermanenteLoginAssertionDetail,
     ClavePermanenteSessionDetail,
 )
@@ -91,7 +90,9 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().cadrumo_browser_navigation_timeout_ms
+_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
+    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+)
 # Environment variable names referenced in operator-facing error messages.
 # Named constants so grepping for the env-var name surfaces every usage site.
 _CLAVE_PERMANENTE_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_PERMANENTE_DNI_NIE"
@@ -129,7 +130,6 @@ class ClavePermanenteAuthProvider:
     async def authenticate(
         self,
         *,
-        browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
         """Run the Cl@ve Permanente login flow and return an :class:`~adapters.outbound.aeat.auth.AeatSession`.
@@ -154,7 +154,6 @@ class ClavePermanenteAuthProvider:
                 try:
                     return await self._resume_locked(
                         resume_path,
-                        browser_session=browser_session,
                         target_url=target_url,
                     )
                 except AeatLoginAssertionError as exc:
@@ -168,7 +167,6 @@ class ClavePermanenteAuthProvider:
                 dni_nie=dni_nie,
                 password=password,
                 storage_state_path=resume_path,
-                browser_session=browser_session,
                 target_url=target_url,
             )
 
@@ -263,7 +261,7 @@ class ClavePermanenteAuthProvider:
         )
 
     def describe(self) -> AuthProviderDescription:
-        """Return an :class:`~adapters.outbound.aeat.auth._providers.AuthProviderDescription`.
+        """Return the provider's :class:`core.AuthProviderDescription`.
 
         A missing identity or missing password is an undeclared state
         (``info``), a malformed identity is a real configuration fault
@@ -308,8 +306,8 @@ class ClavePermanenteAuthProvider:
         """Tear down any retained :class:`~adapters.outbound.aeat.auth.BrowserContextLike` and browser session."""
         async with self._lock:
             await self._drop_context()
-            await self._close_browser_session(self._browser_session)
-            self._browser_session = None
+            if await self._close_browser_session(self._browser_session):
+                self._browser_session = None
             self._active_session = None
 
     # ── Identity + target helpers ───────────────────────────────────────────
@@ -398,22 +396,14 @@ class ClavePermanenteAuthProvider:
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
-    async def _resolve_browser_session(
-        self,
-        *,
-        browser_session: BrowserSessionLike | None,
-    ) -> tuple[BrowserSessionLike, bool]:
-        if browser_session is not None:
-            return browser_session, False
+    async def _resolve_browser_session(self) -> BrowserSessionLike:
         if self._browser_session_factory is None:
             raise AeatLoginAssertionError(
                 "ClavePermanenteAuthProvider was constructed without a browser "
                 "session factory; pass one via select_provider(..., "
-                "browser_session_factory=...) or provide a live "
-                "BrowserSessionLike to authenticate().",
+                "browser_session_factory=...).",
             )
-        session = await self._browser_session_factory(self._settings)
-        return session, True
+        return await self._browser_session_factory(self._settings)
 
     async def _drop_context(self) -> None:
         context = self._context
@@ -444,26 +434,13 @@ class ClavePermanenteAuthProvider:
                 exc_info=True,
             )
 
-    async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
-        if session is None:
-            return
-        close = getattr(session, "close", None)
-        if not callable(close):
-            return
-        try:
-            result = close()
-            if asyncio.iscoroutine(result):
-                await asyncio.wait_for(
-                    result,
-                    timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
-                )
-        except TimeoutError:
-            log.warning(
-                "ClavePermanenteAuthProvider: browser session close exceeded %d ms",
-                self._settings.cadrumo_browser_close_timeout_ms,
-            )
-        except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
-            log.warning("ClavePermanenteAuthProvider: browser session close failed", exc_info=True)
+    async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
+        return await close_owned_browser_session(
+            session,
+            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            logger=log,
+            owner="ClavePermanenteAuthProvider",
+        )
 
     # ── Encrypted session state ────────────────────────────────────────────
 
@@ -550,13 +527,16 @@ class ClavePermanenteAuthProvider:
         click = getattr(page, "click", None)
         content = getattr(page, "content", None)
         if callable(fill):
-            await fill(surface.username_input_selector, dni_nie)
-            await fill(surface.password_input_selector, password)
+            fill_page = cast(Callable[..., Awaitable[object]], fill)
+            await fill_page(surface.username_input_selector, dni_nie)
+            await fill_page(surface.password_input_selector, password)
         if callable(click):
-            await click(surface.submit_button_selector)
+            click_page = cast(Callable[..., Awaitable[object]], click)
+            await click_page(surface.submit_button_selector)
         if not callable(content):
             return
-        html = (await content()) or ""
+        content_page = cast(Callable[[], Awaitable[object]], content)
+        html = cast(str, (await content_page()) or "")
         normalized = html.casefold()
         if surface.elevation_sms_marker.casefold() in normalized:
             raise _login_error(
@@ -591,7 +571,8 @@ class ClavePermanenteAuthProvider:
         wait_for_url = getattr(page, "wait_for_url", None)
         if not callable(wait_for_url):
             return
-        await wait_for_url(f"**{target_path}**", timeout=timeout_ms)
+        wait_for_page_url = cast(Callable[..., Awaitable[object]], wait_for_url)
+        await wait_for_page_url(f"**{target_path}**", timeout=timeout_ms)
 
     async def _fresh_login_locked(
         self,
@@ -599,14 +580,13 @@ class ClavePermanenteAuthProvider:
         dni_nie: str,
         password: str,
         storage_state_path: Path,
-        browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
         target = target_url or self._default_target_url()
         target_path = self._target_path_from_url(target)
         selector_url = self._selector_url(target_path)
 
-        session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+        session_like = await self._resolve_browser_session()
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
@@ -653,8 +633,8 @@ class ClavePermanenteAuthProvider:
                         _exc,
                         exc_info=True,
                     )
-            if owns_session:
-                await self._close_browser_session(session_like)
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
         authenticated_at = now()
@@ -696,7 +676,6 @@ class ClavePermanenteAuthProvider:
         self,
         storage_state_path: Path,
         *,
-        browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
@@ -711,7 +690,7 @@ class ClavePermanenteAuthProvider:
                 "Cl@ve Permanente storage-state hash mismatch",
             )
 
-        session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
+        session_like = await self._resolve_browser_session()
         context: BrowserContextLike | None = None
         try:
             context = await session_like.create_context(storage_state=persisted.storage_state)
@@ -773,8 +752,8 @@ class ClavePermanenteAuthProvider:
             self._browser_session = None
             self._context = None
             self._active_session = None
-            if owns_session:
-                await self._close_browser_session(session_like)
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
 

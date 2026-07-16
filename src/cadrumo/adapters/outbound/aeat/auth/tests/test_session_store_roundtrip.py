@@ -24,6 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time import now
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from ......tests.secure_sql import isolated_runtime_profile
@@ -33,7 +34,6 @@ from .. import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "session-roundtrip"
-_HANDSHAKE_AT = datetime(2026, 5, 28, 13, 50, 0, tzinfo=UTC)
 _NON_JSON_CAPTURED_AT = datetime(2026, 5, 28, 13, 55, 0, tzinfo=UTC)
 
 
@@ -80,7 +80,7 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
         metadata = {
             "certificate_thumbprint": "AA:BB:CC:DD:EE:FF:00:11:22:33",
             "certificate_subject": "CN=AEAT Test User",
-            "handshake_at": _HANDSHAKE_AT.isoformat(),
+            "protected_resource_url": AEAT_CERTIFICATE_PROTECTED_URL,
             "renewal_count": 0,
         }
         sha_at_save = _session_store.storage_state_sha256(storage_state)

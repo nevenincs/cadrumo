@@ -63,6 +63,7 @@ class _RecordingPage:
         self.url = url
 
         class _RecordingResponse:
+            ok = True
             status = 200
 
         return _RecordingResponse()

@@ -18,7 +18,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......core.config import CertificateBackend
 from ......core.errors import AeatError
 from .. import (
     CertificateBundle,
@@ -95,7 +94,6 @@ def _loaded_cert_for_window(
         path=p12,
         password=SecretStr(_SECRET),
         friendly_name=None,
-        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     return load_certificate(bundle)
 

@@ -22,17 +22,20 @@ from cryptography.x509.oid import NameOID
 from ......application.auth import (
     AuthProvider as AuthProvider,
 )
-from ......application.auth import (
-    AuthProviderDescription as AuthProviderDescription,
+from ......application.auth_credentials import unnamed_certificate_credentials
+from ......core import AuthProviderDescription as AuthProviderDescription
+from ......core import AuthProviderKind as AuthProviderKind
+from ......core.config import (
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+    AEAT_CERTIFICATE_PROTECTED_PATH,
+    AEAT_CERTIFICATE_PROTECTED_URL,
+    Settings,
 )
-from ......application.auth import AuthProviderKind as AuthProviderKind
-from ......core.config import CertificateBackend, Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .. import (
     AEAT_SESSION_IDLE_TTL,
-    CERTIFICATE_CONTEXT_MARKER,
     AeatAuthenticator,
     AeatLoginAssertion,
     AeatLoginAssertionError,
@@ -40,10 +43,10 @@ from .. import (
     AeatSessionExpiredError,
     AuthConfigurationError,
     BrowserContextLike,
+    BrowserContextProvisioner,
     BrowserSessionLike,
     CertificateLoginAssertionDetail,
     CertificateSessionDetail,
-    HandshakeResult,
     LoadedCertificate,
     _session_store,
     extract_nif_from_subject,
@@ -81,7 +84,7 @@ _SENSITIVE_NAVIGATION_PAYLOAD = "12345678Z private browser payload"
 
 _SENSITIVE_HEALTH_PAYLOAD = "C:/Users/operator/private-cert-12345678Z.p12"
 
-_SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
+_SEDE_ORIGIN = AEAT_CERTIFICATE_PROTECTED_ORIGIN
 
 
 @pytest.fixture(autouse=True)
@@ -193,23 +196,28 @@ def _load_cert(
         path=bundle_path,
         password=SecretStr(SECRET_PASSPHRASE),
         friendly_name=None,
-        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     return load_certificate(bundle)
 
 
 class _RecordingBrowserContext:
-    """Stand-in Playwright context that honours the marker contract."""
+    """In-process browser context implementing the production auth protocol."""
 
     def __init__(
         self,
-        cert: LoadedCertificate,
         recognised: bool = True,
         *,
+        final_url: str | None = None,
+        status: int | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> None:
-        setattr(self, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
         self._recognised = recognised
+        self._final_url = (
+            final_url
+            if final_url is not None
+            else (AEAT_CERTIFICATE_PROTECTED_URL if recognised else f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}/")
+        )
+        self._status = status if status is not None else (200 if recognised else 401)
         if storage_state is None:
             self._storage_state: Mapping[str, object] = {"cookies": [], "origins": []}
         else:
@@ -218,7 +226,7 @@ class _RecordingBrowserContext:
         self.closed = False
 
     async def new_page(self) -> _RecordingPage:
-        page = _RecordingPage(recognised=self._recognised)
+        page = _RecordingPage(final_url=self._final_url, status=self._status)
         self._pages.append(page)
         return page
 
@@ -230,11 +238,16 @@ class _RecordingBrowserContext:
 
 
 class _RecordingPage:
-    def __init__(self, recognised: bool) -> None:
-        self._recognised = recognised
+    def __init__(self, *, final_url: str, status: int) -> None:
+        self._final_url = final_url
+        self._status = status
+        self.url = ""
 
     async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
-        return _RecordingResponse(200 if self._recognised else 401)
+        del timeout
+        del url
+        self.url = self._final_url
+        return _RecordingResponse(self._status)
 
     async def close(self) -> None:
         return None
@@ -243,9 +256,12 @@ class _RecordingPage:
 class _RecordingResponse:
     def __init__(self, status: int) -> None:
         self.status = status
+        self.ok = 200 <= status <= 299
 
 
 class _RaisingPage:
+    url = AEAT_CERTIFICATE_PROTECTED_URL
+
     async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
         raise RuntimeError(f"navigation failed for {_SENSITIVE_NAVIGATION_PAYLOAD}")
 
@@ -275,15 +291,20 @@ class _RecordingBrowserSession:
         self,
         cert_ok: bool = True,
         *,
+        final_url: str | None = None,
+        status: int | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> None:
         self._cert_ok = cert_ok
+        self._final_url = final_url
+        self._status = status
         if storage_state is None:
             self._storage_state: Mapping[str, object] = {"cookies": [], "origins": []}
         else:
             self._storage_state = storage_state
         self.created: list[_RecordingBrowserContext] = []
         self.storage_state_paths: list[Path | None] = []
+        self.closed = False
 
     async def create_context(
         self,
@@ -293,44 +314,37 @@ class _RecordingBrowserSession:
         storage_state: Mapping[str, object] | None = None,
     ) -> _RecordingBrowserContext:
         assert provisioner is not None
-        cert = self._resolve_cert(provisioner)
+        assert isinstance(provisioner, BrowserContextProvisioner)
+        context_kwargs = provisioner.build_context_kwargs()
+        client_certificates = context_kwargs["client_certificates"]
+        assert len(client_certificates) == 1
+        client_certificate = client_certificates[0]
+        assert client_certificate["origin"] == AEAT_CERTIFICATE_PROTECTED_ORIGIN
+        assert Path(client_certificate["pfxPath"]).name == "bundle.p12"
+        assert client_certificate["passphrase"] == SECRET_PASSPHRASE
         self.storage_state_paths.append(storage_state_path)
         if storage_state is not None:
             self._storage_state = storage_state
         ctx = _RecordingBrowserContext(
-            cert,
             recognised=self._cert_ok,
+            final_url=self._final_url,
+            status=self._status,
             storage_state=self._storage_state,
         )
         self.created.append(ctx)
         return ctx
 
-    @staticmethod
-    def _resolve_cert(provisioner: object) -> LoadedCertificate:
-        cert = getattr(provisioner, "_cert", None)
-        assert isinstance(cert, LoadedCertificate)
-        return cert
+    async def close(self) -> None:
+        self.closed = True
 
 
-def _successful_handshake() -> HandshakeResult:
-    return HandshakeResult(
-        success=True,
-        status_code=200,
-        server_cert_chain=(),
-        elapsed_ms=10,
-        attempted_at=datetime.now(UTC),
-        error_message=None,
-    )
+def _factory_returning(session: BrowserSessionLike):
+    """Return a browser-session factory bound to one protocol implementation."""
 
+    async def factory(_settings: Settings) -> BrowserSessionLike:
+        return session
 
-class _HandshakeVerifier:
-    def __init__(self, result: HandshakeResult | None = None) -> None:
-        self.calls = 0
-        self.result = result or _successful_handshake()
-
-    def __call__(self, _cert: LoadedCertificate, _target: str) -> HandshakeResult:
-        self.calls += 1
-        return self.result
+    return factory
 
 
 def _certificate_session(
@@ -350,14 +364,13 @@ def _certificate_session(
         provider_detail=CertificateSessionDetail(
             certificate_thumbprint=thumbprint,
             certificate_subject=subject,
-            handshake=_successful_handshake(),
         ),
     )
 
 
 def _certificate_assertion() -> AeatLoginAssertion:
     return AeatLoginAssertion(
-        target_url="https://sede/",
+        target_url=AEAT_CERTIFICATE_PROTECTED_URL,
         is_valid=True,
         identity_nif="12345678Z",
         status_code=200,
@@ -365,8 +378,8 @@ def _certificate_assertion() -> AeatLoginAssertion:
         attempted_at=datetime.now(UTC),
         error_message=None,
         assertion_detail=CertificateLoginAssertionDetail(
-            handshake_success=True,
-            certificate_recognised=True,
+            final_url=AEAT_CERTIFICATE_PROTECTED_URL,
+            response_successful=True,
             parsed_subject="CN=NOMBRE",
         ),
     )
@@ -379,8 +392,8 @@ def _settings_factory():
     Delegates the async-context-safe ContextVar mutation to
     :func:`aeat-tests.settings_scope.settings_factory`, then wraps the
     generic factory with this module's certificate-bundle defaults
-    (path, passphrase, backend, verify URL, token-dir derived from the
-    bundle path). Tests pass the bundle ``Path`` as the single
+    (path, passphrase, and token-dir derived from the bundle path).
+    Tests pass the bundle ``Path`` as the single
     positional argument; extra Settings overrides go through ``**``.
     """
     from ......tests.settings_scope import settings_factory as _scoped_factory
@@ -389,15 +402,11 @@ def _settings_factory():
 
         def factory(
             path: Path,
-            *,
-            verify_url: str = "https://127.0.0.1:1/",
             **extra_overrides: object,
         ) -> Settings:
             overrides: dict[str, object] = {
                 "cadrumo_certificate_path": path,
                 "cadrumo_certificate_password_secret": SECRET_PASSPHRASE,
-                "cadrumo_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
-                "aeat_certificate_verify_url": verify_url,
                 "cadrumo_token_dir": path.parent / ".tokens",
             }
             overrides.update(extra_overrides)
@@ -417,10 +426,9 @@ async def _seed_persisted_session(
     settings = settings_factory(bundle_path)
     persisted_path = storage_state_path or (tmp_path / "persisted-storage.json")
 
-    seed_auth = AeatAuthenticator(settings)
+    seed_auth = AeatAuthenticator(settings, credentials=unnamed_certificate_credentials(settings))
     cert = seed_auth.load_certificate()
     context = _RecordingBrowserContext(
-        cert,
         storage_state={
             "cookies": [{"name": "AEATSESSID", "value": "resume-ok"}],
             "origins": [{"origin": _SEDE_ORIGIN, "localStorage": []}],
@@ -449,10 +457,9 @@ async def test_capture_storage_state_writes_storage_and_metadata(
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
     storage_state_path = tmp_path / "captured-storage.json"
-    auth = AeatAuthenticator(settings)
+    auth = AeatAuthenticator(settings, credentials=unnamed_certificate_credentials(settings))
     cert = auth.load_certificate()
     context = _RecordingBrowserContext(
-        cert,
         storage_state={
             "cookies": [{"name": "AEATSESSID", "value": "ok"}],
             "origins": [{"origin": _SEDE_ORIGIN, "localStorage": []}],
@@ -490,24 +497,23 @@ async def test_capture_storage_state_writes_storage_and_metadata(
 
 
 @pytest.mark.asyncio
-async def test_resume_from_storage_state_reuses_persisted_session_without_handshake(
+async def test_resume_from_storage_state_reuses_persisted_session_with_live_protected_probe(
     tmp_path: Path,
     _settings_factory,
 ) -> None:
     settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, _settings_factory)
 
-    verifier = _HandshakeVerifier()
     browser_session = _RecordingBrowserSession(cert_ok=True)
-    auth = AeatAuthenticator(settings, handshake_verifier=verifier)
-
-    resumed = await auth.resume_from_storage_state(
-        storage_state_path,
-        browser_session=cast(BrowserSessionLike, browser_session),
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=_factory_returning(browser_session),
     )
+
+    resumed = await auth.resume_from_storage_state(storage_state_path)
 
     assert resumed.certificate_thumbprint == cert.sha256_thumbprint
     assert resumed.storage_state_path == storage_state_path
-    assert verifier.calls == 0
     assert browser_session.storage_state_paths == [None]
 
 
@@ -655,14 +661,15 @@ async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
     settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, _settings_factory)
     mutator(storage_state_path, cert)
 
-    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
     browser_session = _RecordingBrowserSession(cert_ok=True)
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=_factory_returning(browser_session),
+    )
 
     with pytest.raises(AeatLoginAssertionError, match=r"storage|session|cert|login|probe"):
-        await auth.resume_from_storage_state(
-            storage_state_path,
-            browser_session=cast(BrowserSessionLike, browser_session),
-        )
+        await auth.resume_from_storage_state(storage_state_path)
 
     assert not _session_store.exists(storage_state_path), case_id
     assert not storage_state_path.exists(), case_id
@@ -676,14 +683,15 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
 ) -> None:
     settings, storage_state_path, _cert = await _seed_persisted_session(tmp_path, _settings_factory)
 
-    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
     browser_session = _RecordingBrowserSession(cert_ok=False)
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=_factory_returning(browser_session),
+    )
 
     with pytest.raises(AeatLoginAssertionError, match=r"storage|session|cert|login|probe"):
-        await auth.resume_from_storage_state(
-            storage_state_path,
-            browser_session=cast(BrowserSessionLike, browser_session),
-        )
+        await auth.resume_from_storage_state(storage_state_path)
 
     assert not _session_store.exists(storage_state_path)
     assert not storage_state_path.exists()
@@ -698,7 +706,10 @@ async def test_run_login_probe_redacts_navigation_exception_text(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
     cert = auth.load_certificate()
     now = datetime.now(UTC)
     session = _certificate_session(
@@ -713,7 +724,6 @@ async def test_run_login_probe_redacts_navigation_exception_text(
     assertion = await auth._run_login_probe(
         cast(BrowserContextLike, _RaisingBrowserContext()),
         session,
-        settings.aeat_certificate_verify_url,
     )
 
     assert assertion.is_valid is False
@@ -724,6 +734,53 @@ async def test_run_login_probe_redacts_navigation_exception_text(
     assert _SENSITIVE_NAVIGATION_PAYLOAD not in log_text
     assert "target=<aeat-login-probe>" in log_text
     assert "failure=RuntimeError" in log_text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("final_url", "status", "expected_valid"),
+    [
+        (AEAT_CERTIFICATE_PROTECTED_URL, 200, True),
+        (AEAT_CERTIFICATE_PROTECTED_URL, 500, False),
+        (f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}/", 200, False),
+        (
+            f"{Settings.external_constants().aeat.domains.www1}{AEAT_CERTIFICATE_PROTECTED_PATH}",
+            200,
+            False,
+        ),
+    ],
+    ids=["canonical-success", "unsuccessful-response", "wrong-path", "wrong-host"],
+)
+async def test_protected_probe_requires_success_and_exact_final_resource(
+    tmp_path: Path,
+    _settings_factory,
+    final_url: str,
+    status: int,
+    expected_valid: bool,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
+    cert = auth.load_certificate()
+    attempted_at = datetime.now(UTC)
+    session = _certificate_session(
+        authenticated_at=attempted_at,
+        idle_deadline=attempted_at + AEAT_SESSION_IDLE_TTL,
+        thumbprint=cert.sha256_thumbprint,
+        subject=cert.subject,
+        identity_nif=extract_nif_from_subject(cert),
+    )
+    context = _RecordingBrowserContext(final_url=final_url, status=status)
+
+    assertion = await auth._run_login_probe(cast(BrowserContextLike, context), session)
+
+    assert assertion.is_valid is expected_valid
+    assert assertion.target_url == AEAT_CERTIFICATE_PROTECTED_URL
+    assert assertion.final_url == final_url
+    assert assertion.response_successful is (200 <= status <= 299)
 
 
 @pytest.mark.asyncio
@@ -741,24 +798,26 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
         storage_state_path,
         storage_state=stale_storage_state,
         metadata={
-            "schema_version": 1,
+            "schema_version": 2,
             "certificate_thumbprint": "stale-thumbprint",
             "certificate_subject": "CN=STALE",
             "certificate_nif": "12345678Z",
             "authenticated_at": datetime.now(UTC).isoformat(),
             "idle_deadline": (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
             "storage_state_sha256": _session_store.storage_state_sha256(stale_storage_state),
-            "handshake": _successful_handshake().model_dump(mode="json"),
+            "protected_resource_url": AEAT_CERTIFICATE_PROTECTED_URL,
         },
     )
 
-    verifier = _HandshakeVerifier()
     browser_session = _RecordingBrowserSession(cert_ok=True)
-    auth = AeatAuthenticator(settings, handshake_verifier=verifier)
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=_factory_returning(browser_session),
+    )
 
-    session = await auth.authenticate(browser_session=cast(BrowserSessionLike, browser_session))
+    session = await auth.authenticate()
 
-    assert verifier.calls == 1
     assert session.storage_state_path == storage_state_path
     assert browser_session.storage_state_paths == [None]
     assert not storage_state_path.exists()
@@ -774,16 +833,16 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_factory) -> None:
     """Synchronous helpers work under the async context manager.
 
-    ``authenticate()`` is not exercised here because
-    ``verify_handshake`` reaches the network and cannot succeed
-    against the local closed-port verify URL; the full path is covered by the
-    live test suite. This unit test asserts the helpers that do
-    not require network access are usable through the same
-    authenticator instance.
+    This unit test asserts the certificate helpers that do not require
+    protected browser access are usable through the same authenticator
+    instance.
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    async with AeatAuthenticator(settings) as auth:
+    async with AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ) as auth:
         cert = auth.load_certificate()
         nif = extract_nif_from_subject(cert)
         assert nif == "12345678Z"
@@ -793,7 +852,10 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_facto
 async def test_verify_raises_on_stale_session(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    async with AeatAuthenticator(settings) as auth:
+    async with AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ) as auth:
         now = datetime.now(UTC)
         stale = _certificate_session(
             authenticated_at=now - timedelta(hours=1),
@@ -809,7 +871,10 @@ async def test_verify_raises_on_stale_session(tmp_path: Path, _settings_factory)
 async def test_verify_raises_without_context(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    async with AeatAuthenticator(settings) as auth:
+    async with AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ) as auth:
         now = datetime.now(UTC)
         session = _certificate_session(
             authenticated_at=now,
@@ -836,8 +901,10 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    verifier = _HandshakeVerifier()
-    async with AeatAuthenticator(settings, handshake_verifier=verifier) as auth:
+    async with AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ) as auth:
         # Build a session to pass to reauthenticate. The call will fail
         # at the network-free browser-session resolution step, so we
         # assert that reauthenticate completes without deadlocking
@@ -855,11 +922,6 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factor
         # the call returns in bounded time (no deadlock).
         with pytest.raises(AuthConfigurationError, match=r"browser.*session factory"):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
-    # The handshake runs before browser-session resolution inside
-    # authenticate(), so the verifier is invoked once (for the delegated
-    # authenticate() call) even though that call ultimately fails at the
-    # later missing-factory step.
-    assert verifier.calls == 1
 
 
 @pytest.mark.asyncio
@@ -879,7 +941,10 @@ async def test_close_latch_blocks_concurrent_verify(tmp_path: Path, _settings_fa
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    authenticator = AeatAuthenticator(settings)
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
 
     # Install a recording context so the lock-protected snapshot would
     # otherwise succeed — we want the latch to be the cause of the
@@ -889,7 +954,7 @@ async def test_close_latch_blocks_concurrent_verify(tmp_path: Path, _settings_fa
 
     from .. import BrowserContextLike
 
-    context = _RecordingBrowserContext(cert, recognised=True)
+    context = _RecordingBrowserContext(recognised=True)
     authenticator._context = cast(BrowserContextLike, context)
     authenticator._closing = True
 
@@ -926,15 +991,20 @@ async def test_concurrent_close_and_verify_race(tmp_path: Path, _settings_factor
 
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    authenticator = AeatAuthenticator(settings)
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
 
     proceed = asyncio.Event()
 
     class _SuspendingPage:
+        url = AEAT_CERTIFICATE_PROTECTED_URL
+
         async def goto(self, url: str, *, timeout: float | None = None) -> object:
             # Block until the test releases us; proves close() waits.
             await proceed.wait()
-            return type("R", (), {"status": 200})()
+            return type("R", (), {"status": 200, "ok": True})()
 
         async def close(self) -> None:
             return None
@@ -946,9 +1016,11 @@ async def test_concurrent_close_and_verify_race(tmp_path: Path, _settings_factor
         async def close(self) -> None:
             return None
 
+        async def storage_state(self) -> dict[str, object]:
+            return {"cookies": [], "origins": []}
+
     cert = authenticator.load_certificate()
     ctx = _SuspendingContext()
-    setattr(ctx, CERTIFICATE_CONTEXT_MARKER, cert.sha256_thumbprint)
     authenticator._context = cast(BrowserContextLike, ctx)
 
     now = datetime.now(UTC)
@@ -976,7 +1048,7 @@ async def test_concurrent_close_and_verify_race(tmp_path: Path, _settings_factor
     assertion = await asyncio.wait_for(verify_task, timeout=5.0)
     await asyncio.wait_for(close_task, timeout=5.0)
     # verify saw a live context and a successful goto.
-    assert assertion.certificate_recognised is True
+    assert assertion.response_successful is True
     # close() cleanly reset state.
     assert authenticator._closing is False
     assert authenticator._context is None
@@ -986,6 +1058,6 @@ async def test_concurrent_close_and_verify_race(tmp_path: Path, _settings_factor
 async def test_close_is_idempotent(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    auth = AeatAuthenticator(settings)
+    auth = AeatAuthenticator(settings, credentials=unnamed_certificate_credentials(settings))
     await auth.close()
     await auth.close()  # must not raise

@@ -56,6 +56,7 @@ class _RecordingPage:
             self.url = url
 
         class _RecordingResponse:
+            ok = True
             status = 200
 
         return _RecordingResponse()
@@ -135,6 +136,7 @@ class _SelectorDispatchPage(_RecordingPage):
         self.url = url
 
         class _RecordingResponse:
+            ok = True
             status = 200
 
         return _RecordingResponse()

@@ -99,16 +99,15 @@ class BrowserSession:
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
-        When ``provisioner`` is supplied, it can inject auth-provider-
-        specific ``browser.new_context(...)`` kwargs and tag the
-        resulting context after construction. Certificate auth uses this
-        hook through :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`;
+        When ``provisioner`` is supplied, it injects auth-provider-specific
+        ``browser.new_context(...)`` kwargs. Certificate auth uses this hook
+        through
+        :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`;
         Cl@ve Móvil usually passes only persisted in-memory storage state.
 
         Args:
             provisioner: Optional :class:`BrowserContextProvisioner` used to
-                decorate the new context call and annotate the returned
-                context.
+                decorate the new context call.
             storage_state_path: Optional path to a Playwright storage-state
                 JSON file; passed directly to ``browser.new_context``.
             storage_state: Optional in-memory storage state mapping passed
@@ -123,8 +122,8 @@ class BrowserSession:
 
         Raises:
             BrowserError: If the browser cannot be launched, the context cannot
-                be created, evasion setup fails, annotation fails, or this
-                session already owns a live browser.
+                be created, evasion setup fails, or this session already owns a
+                live browser.
         """
         async with self._lifecycle_lock:
             if self._browser is not None:
@@ -151,8 +150,6 @@ class BrowserSession:
                 )
                 context = await self._create_playwright_context(browser, context_kwargs)
                 await self._apply_evasion(context)
-                if provisioner is not None:
-                    self._annotate_context_via_provisioner(context, provisioner)
                 logger.info("browser context create succeeded profile=%s", self.profile.name)
                 return context
             except BrowserError:
@@ -313,33 +310,6 @@ class BrowserSession:
                 context={
                     "profile": self.profile.name,
                     "evasion_strategy": type(self.evasion_strategy).__name__,
-                    "cause_type": type(exc).__name__,
-                },
-            ) from exc
-
-    def _annotate_context_via_provisioner(
-        self,
-        context: BrowserContext,
-        provisioner: BrowserContextProvisioner,
-    ) -> None:
-        """Run the provisioner's post-construct annotation hook with typed error envelope."""
-        try:
-            provisioner.annotate_context(context)
-        except Exception as exc:
-            logger.error(
-                "browser context annotation failed failure_mode=%s profile=%s provisioner=%s exc_type=%s",
-                BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
-                self.profile.name,
-                type(provisioner).__name__,
-                type(exc).__name__,
-                exc_info=True,
-            )
-            raise BrowserError(
-                f"Failed to annotate browser context: {exc}",
-                failure_mode=BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
-                context={
-                    "profile": self.profile.name,
-                    "provisioner": type(provisioner).__name__,
                     "cause_type": type(exc).__name__,
                 },
             ) from exc

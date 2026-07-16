@@ -10,12 +10,14 @@ from pathlib import Path
 import pytest
 
 from ......core.classification import SensitivityClass
+from ......core.config import Settings
 from ...errors import SecretNotFoundError, StorageValidationError
 from ...master_key import EphemeralMasterKeyProvider
 from ...secret_store import SecretRecord, SecretStore
 from .. import EncryptedBlobStore
 from .._materialisation import (
     export_to_temp_path,
+    get_secret_store,
     materialise_secret,
     override_secret_store,
 )
@@ -63,6 +65,54 @@ def _put_secret(store: SecretStore, key: str, value: bytes) -> None:
             expires_at=_SECRET_EXPIRES_AT,
         ),
     )
+
+
+def test_secret_store_factory_caches_each_explicit_route_independently(tmp_path: Path) -> None:
+    """A second Settings route never inherits the first route's cached store."""
+    settings_a = Settings(
+        cadrumo_secret_store_dir=tmp_path / "root-a" / "secrets",
+        cadrumo_blob_store_dir=tmp_path / "root-a" / "blobs",
+    )
+    settings_b = Settings(
+        cadrumo_secret_store_dir=tmp_path / "root-b" / "secrets",
+        cadrumo_blob_store_dir=tmp_path / "root-b" / "blobs",
+    )
+    settings_c = Settings(
+        cadrumo_secret_store_dir=settings_a.cadrumo_secret_store_dir,
+        cadrumo_blob_store_dir=tmp_path / "root-c" / "blobs",
+    )
+    override_secret_store(None)
+    try:
+        store_a = get_secret_store(settings=settings_a)
+        store_b = get_secret_store(settings=settings_b)
+        store_c = get_secret_store(settings=settings_c)
+
+        assert store_a is get_secret_store(settings=settings_a)
+        assert store_b is get_secret_store(settings=settings_b)
+        assert store_a is not store_b
+        assert store_a is not store_c
+        assert store_a.store_dir == settings_a.cadrumo_secret_store_dir
+        assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
+        assert store_c.store_dir == settings_c.cadrumo_secret_store_dir
+
+        provider = EphemeralMasterKeyProvider()
+        override = SecretStore(
+            store_dir=tmp_path / "override" / "secrets",
+            blob_store=EncryptedBlobStore(
+                root_dir=tmp_path / "override" / "blobs",
+                master_key_provider=provider,
+            ),
+            master_key_provider=provider,
+        )
+        override_secret_store(override)
+        assert get_secret_store(settings=settings_a) is override
+
+        override_secret_store(None)
+        recreated_a = get_secret_store(settings=settings_a)
+        assert recreated_a is not store_a
+        assert recreated_a.store_dir == settings_a.cadrumo_secret_store_dir
+    finally:
+        override_secret_store(None)
 
 
 def test_rejects_path_bearing_tempfile_affixes(secret_store: SecretStore) -> None:
