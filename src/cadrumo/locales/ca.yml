@@ -5094,6 +5094,8 @@ errors:
       Cl@ve Móvil o són incorrectes. Revisa la configuració de Cl@ve.
     auth_auth_configuration: Falten ajustos d'autenticació obligatoris o són incorrectes.
       Revisa la configuració d'autenticació.
+    auth_auth_provider_cleanup: El proveïdor d'autenticació no ha pogut alliberar tots
+      els recursos del navegador. Torna a provar el tancament abans d'iniciar una altra sessió.
     auth_auth_validation: Els paràmetres d'autenticació no han superat la validació.
       Corregeix els valors indicats i torna-ho a provar.
     auth_former_product_session_state: Cadrumo ha detectat estat de sessió d'un producte

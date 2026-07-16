@@ -172,7 +172,7 @@ class _ProviderProbeOutcome(BaseModel):
 class ProviderConfigurationProbe(BaseModel):
     """Public per-provider local configuration readiness verdict.
 
-    Wraps the pure-local :func:`_probe_configured_provider` (no network,
+    Wraps the pure-local :func:`probe_provider_credentials` (no network,
     no active-profile requirement) so the workstation doctor
     (``aeat config check``) can render one certificate / Cl@ve Móvil
     readiness row per :class:`core.AuthProviderKind`
@@ -210,11 +210,27 @@ def probe_provider_configuration(
         if provider == AuthProviderKind.CERTIFICATE.value
         else None
     )
-    outcome = _probe_configured_provider(
+    return probe_provider_credentials(
         provider,
         "",
         settings=resolved_settings,
         certificate_credentials=credentials,
+    )
+
+
+def probe_provider_credentials(
+    provider: str,
+    certificate_path: str,
+    *,
+    settings: Settings | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
+) -> ProviderConfigurationProbe:
+    """Probe one provider using the caller's already-resolved credential snapshot."""
+    outcome = _probe_configured_provider(
+        provider,
+        certificate_path,
+        settings=settings,
+        certificate_credentials=certificate_credentials,
     )
     return ProviderConfigurationProbe(
         provider=provider,

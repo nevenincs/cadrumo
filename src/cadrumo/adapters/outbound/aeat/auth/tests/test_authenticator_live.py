@@ -76,7 +76,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
 
     Requires Playwright to be installed and AEAT to be reachable.
     Uses the real ``BrowserSession`` factory via a thin adapter so
-    zero monkey-patching is involved.
+    no runtime substitution is involved.
     """
     requires_live_enabled()
     settings = Settings()

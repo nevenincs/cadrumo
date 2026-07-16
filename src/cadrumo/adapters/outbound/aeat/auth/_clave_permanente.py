@@ -72,13 +72,13 @@ from ._authenticator_types import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
-from ._browser_lifecycle import close_owned_browser_session
+from ._browser_lifecycle import close_owned_browser_context, close_owned_browser_session
 from ._clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ._clave_permanente_support import ClavePermanenteFailureMode
 from ._clave_permanente_support import classify_identity as _classify_identity
 from ._clave_permanente_support import clave_permanente_configuration_error as _configuration_error
 from ._clave_permanente_support import clave_permanente_login_error as _login_error
-from ._errors import AeatLoginAssertionError, AuthConfigurationError
+from ._errors import AeatLoginAssertionError, AuthConfigurationError, AuthProviderCleanupError
 from ._providers import (
     ClavePermanenteLoginAssertionDetail,
     ClavePermanenteSessionDetail,
@@ -146,6 +146,11 @@ class ClavePermanenteAuthProvider:
                 raise AeatLoginAssertionError(
                     "ClavePermanenteAuthProvider already has an active session; "
                     "call close() before authenticating again",
+                )
+            if self._context is not None or self._browser_session is not None:
+                raise AuthProviderCleanupError(
+                    "ClavePermanenteAuthProvider retained browser resources after close",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
                 )
             dni_nie = self._require_identity()
             password = self._require_password()
@@ -305,10 +310,16 @@ class ClavePermanenteAuthProvider:
     async def close(self) -> None:
         """Tear down any retained :class:`~adapters.outbound.aeat.auth.BrowserContextLike` and browser session."""
         async with self._lock:
-            await self._drop_context()
-            if await self._close_browser_session(self._browser_session):
+            context_closed = await self._drop_context()
+            browser_session_closed = await self._close_browser_session(self._browser_session)
+            if browser_session_closed:
                 self._browser_session = None
             self._active_session = None
+        if not context_closed or not browser_session_closed:
+            raise AuthProviderCleanupError(
+                "ClavePermanenteAuthProvider retained browser resources after close",
+                translated_message="errors.auth.auth_auth_provider_cleanup",
+            )
 
     # ── Identity + target helpers ───────────────────────────────────────────
 
@@ -405,34 +416,20 @@ class ClavePermanenteAuthProvider:
             )
         return await self._browser_session_factory(self._settings)
 
-    async def _drop_context(self) -> None:
+    async def _drop_context(self) -> bool:
         context = self._context
-        self._context = None
-        if context is None:
-            return
-        await self._close_context(context, reason="_drop_context")
+        closed = await self._close_context(context, reason="_drop_context")
+        if closed:
+            self._context = None
+        return closed
 
-    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> None:
-        if context is None:
-            return
-        try:
-            await asyncio.wait_for(
-                context.close(),
-                timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
-            )
-        except TimeoutError:
-            log.warning(
-                "ClavePermanenteAuthProvider: context.close in %s exceeded %d ms",
-                reason,
-                self._settings.cadrumo_browser_close_timeout_ms,
-            )
-        except Exception as _exc:
-            log.debug(
-                "ClavePermanenteAuthProvider: context.close in %s suppressed: %s",
-                reason,
-                _exc,
-                exc_info=True,
-            )
+    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> bool:
+        return await close_owned_browser_context(
+            context,
+            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            logger=log,
+            owner=f"ClavePermanenteAuthProvider:{reason}",
+        )
 
     async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
         return await close_owned_browser_session(
@@ -624,15 +621,8 @@ class ClavePermanenteAuthProvider:
             landing_url = getattr(page, "url", None)
             await page.close()
         except Exception:
-            if context is not None:
-                try:
-                    await self._close_context(context, reason="fresh-login cleanup")
-                except Exception as _exc:
-                    log.debug(
-                        "ClavePermanenteAuthProvider: context.close in fresh-login cleanup suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
+            if not await self._close_context(context, reason="fresh-login cleanup"):
+                self._context = context
             if not await self._close_browser_session(session_like):
                 self._browser_session = session_like
             raise
@@ -657,6 +647,10 @@ class ClavePermanenteAuthProvider:
                     _cleanup_exc,
                     exc_info=True,
                 )
+            if not await self._close_context(context, reason="persist-failure cleanup"):
+                self._context = context
+            if not await self._close_browser_session(session_like):
+                self._browser_session = session_like
             raise
 
         session = self._fresh_login_session(
@@ -740,17 +734,9 @@ class ClavePermanenteAuthProvider:
             )
             return refreshed
         except Exception:
-            if context is not None:
-                try:
-                    await self._close_context(context, reason="resume cleanup")
-                except Exception as _exc:
-                    log.debug(
-                        "ClavePermanenteAuthProvider: context.close in resume cleanup suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
+            context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None
-            self._context = None
+            self._context = None if context_closed else context
             self._active_session = None
             if not await self._close_browser_session(session_like):
                 self._browser_session = session_like

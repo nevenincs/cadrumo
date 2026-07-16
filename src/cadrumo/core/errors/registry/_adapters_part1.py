@@ -637,6 +637,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.outbound.aeat.auth._errors.AuthProviderCleanupError",
+        ErrorCode(
+            code="AUTH_AUTH_PROVIDER_CLEANUP",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_auth_provider_cleanup",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.aeat.auth._errors.AuthConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CONFIGURATION",

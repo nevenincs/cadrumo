@@ -214,6 +214,8 @@ from ._certificate_sources_operator import (
     set_operator_certificate_source_secret,
 )
 from ._credential_resolution import (
+    ActiveAuthProjectionSnapshot,
+    active_auth_projection_span,
     project_active_certificate_credentials,
     resolve_active_certificate_credentials,
     resolve_certificate_source_secret,
@@ -243,6 +245,7 @@ from ._operator_probes import (
     ProviderConfigurationProbe,
     ProviderProbeResult,
     probe_provider_configuration,
+    probe_provider_credentials,
 )
 from ._operator_results import (
     AuthCleanupInProgressError,
@@ -290,6 +293,7 @@ __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
     "SECURE_STORAGE_BACKEND_LABEL",
+    "ActiveAuthProjectionSnapshot",
     "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationNotSetError",
@@ -345,6 +349,7 @@ __all__ = [
     "StateCertificateSourceNotFoundError",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
+    "active_auth_projection_span",
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "build_live_auth_preflight_report",
@@ -368,6 +373,7 @@ __all__ = [
     "logout_operator_auth",
     "persisted_session_exists",
     "probe_provider_configuration",
+    "probe_provider_credentials",
     "project_active_certificate_credentials",
     "record_auth_diagnostic_phone_state",
     "register_operator_certificate_source",

@@ -4781,6 +4781,8 @@ errors:
       are missing or malformed. Review the Cl@ve configuration.
     auth_auth_configuration: Required authentication settings are missing or malformed.
       Review the authentication configuration.
+    auth_auth_provider_cleanup: The authentication provider could not release all
+      browser resources. Retry cleanup before starting another session.
     auth_auth_validation: The authentication parameters failed validation. Correct
       the values shown and try again.
     auth_former_product_session_state: Cadrumo detected retired-product AEAT session

@@ -712,17 +712,35 @@ async def _provider_lifecycle(provider: AuthProvider) -> AsyncIterator[None]:
         yield
     except BaseException:
         try:
-            await provider.close()
+            await _close_provider_with_retry(provider)
         except Exception as close_error:  # BROAD-EXCEPT-RATIONALE-PRESERVE-PRIMARY-AUTH-FAILURE
             _logger.warning(
-                "provider close failed while preserving primary auth failure failure=%s",
+                "provider close failed while preserving primary auth failure close_failure=%s",
                 type(close_error).__name__,
             )
         raise
     else:
         try:
-            await provider.close()
+            await _close_provider_with_retry(provider)
         except Exception as exc:
             raise AuthSessionUnavailableError(
                 translated_message="application.auth.sessions.errors.provider_close_failed",
             ) from exc
+
+
+async def _close_provider_with_retry(provider: AuthProvider) -> None:
+    """Give a provider one bounded retry while its cleanup handles remain owned."""
+    try:
+        await provider.close()
+    except Exception as first_error:
+        _logger.warning(
+            "provider close failed; retrying once close_failure=%s",
+            type(first_error).__name__,
+        )
+        try:
+            await provider.close()
+        except Exception as retry_error:
+            retry_error.add_note(
+                f"initial provider close failure: {type(first_error).__name__}",
+            )
+            raise

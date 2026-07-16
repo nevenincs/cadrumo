@@ -1,9 +1,9 @@
 ---
 tags:
-  - "#adr"
-  - "#aeat-auth-providers"
+  - '#adr'
+  - '#aeat-auth-providers'
 date: '2026-04-18'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - "[[2026-04-18-aeat-auth-providers-research]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
@@ -26,7 +26,12 @@ gate stays as the policy layer regardless of provider).
 
 ## context
 
-`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/` today implements PKCS#12 certificate authentication as the sole AEAT Sede Electrónica login mechanism. The code models a `CertificateBundle`, a `LoadedCertificate`, four `CertificateBackend` enum values, and an `AeatSession` record four of whose fields are cert-specific. `AeatAuthenticator.__init__` unconditionally constructs a cert bundle.
+`src/cadrumo/adapters/outbound/aeat/auth/` began with PKCS#12 certificate
+authentication as the sole AEAT Sede Electrónica login mechanism. The
+certificate provider now loads one typed certificate identity, supplies
+Playwright context kwargs, and returns the shared `AeatSession` envelope with
+certificate-specific detail. Provider selection and browser proof are separate
+concerns.
 
 The AEAT Sede accepts EIGHT distinct identification methods. Kent (our Spanish autónomo user) may have a digital certificate — or may have Cl@ve (most common for individuals who haven't gone through FNMT enrollment) — or both. Restricting the tool to cert auth excludes a large fraction of autónomos.
 
@@ -63,11 +68,7 @@ class AuthProvider(Protocol):
 
     kind: AuthProviderKind  # CERTIFICATE, CLAVE_PERMANENTE, or CLAVE_MOVIL
 
-    async def authenticate(
-        self,
-        browser_session: BrowserSessionLike,
-        settings: Settings,
-    ) -> AeatSession:
+    async def authenticate(self) -> AeatSession:
         """Produce an authenticated context + session record."""
         ...
 
@@ -77,6 +78,10 @@ class AuthProvider(Protocol):
 
     async def verify(self, session: AeatSession) -> AeatLoginAssertion:
         """Re-probe that the session is still valid for this provider."""
+        ...
+
+    async def close(self) -> None:
+        """Release every browser resource owned by this provider."""
         ...
 ```
 
@@ -97,7 +102,12 @@ class AeatSession(BaseModel, frozen=True):
         return self.provider_detail.kind
 ```
 
-`provider_kind` is derived from the discriminated union rather than stored separately, eliminating the desync risk of two parallel fields. Cert-specific fields (`certificate_thumbprint`, `certificate_subject`, `handshake`) move to `CertificateSessionDetail`. Other providers have their own detail types.
+`provider_kind` is derived from the discriminated union rather than stored
+separately, eliminating the desync risk of two parallel fields. Cert-specific
+fields (`certificate_thumbprint`, `certificate_subject`, and the canonical
+protected-resource URL) move to `CertificateSessionDetail`. Other providers
+have their own detail types. The related protected-browser certificate-auth
+decision owns the certificate proof contract.
 
 ### browser session generalisation
 
@@ -110,7 +120,11 @@ class BrowserSessionLike(Protocol):
         ...
 ```
 
-`BrowserContextProvisioner` is a callable that knows how to decorate a Playwright `new_context(**kwargs)` call — for cert providers it injects `client_certificates=[...]`; for Cl@ve providers it is a no-op at `create_context` time (Cl@ve auth happens after context creation via form drive).
+`BrowserContextProvisioner` is a callable that contributes Playwright
+`new_context(**kwargs)` values only. For certificate auth it injects
+`client_certificates=[...]` for the canonical protected AEAT origin. Cl@ve
+providers need no provisioner because
+their authentication happens after context creation via form drive.
 
 ### `AeatAccessGate` stays provider-agnostic
 
@@ -156,14 +170,12 @@ operator-facing catalogue and verbs.
 
 **Negative / cost:**
 
-- Breaking type change on `AeatSession`, `BrowserSessionLike.create_context`, and downstream consumers (`aeat.adapters.outbound.aeat.browser`, `aeat.adapters.outbound.aeat.export`, `aeat.application.workflow` stubs).
+- Breaking type change on `AeatSession`, `BrowserSessionLike.create_context`,
+  and downstream `cadrumo` application and outbound-adapter consumers.
 - Test matrix grows: each provider needs unit + live tests; `live_read` marker now applies per provider.
-- Cl@ve Permanente password storage is a new secret surface (treat like the cert passphrase: env var, optional OS keyring).
+- Cl@ve Permanente password configuration is a `SecretStr` boundary and never
+  enters session records or logs.
 - Cl@ve Móvil UX requires a polling + "approve on your phone" prompt that is new to the CLI.
-
-**Neutral:**
-
-- `LoadedCertificate` stub in `aeat.adapters.outbound.aeat.export._protocols` and `aeat.application.workflow._protocols` still needs the rebase-swap per the existing TODO comments; this ADR is a good anchor to do it.
 
 ## rollout
 

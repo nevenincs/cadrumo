@@ -58,7 +58,6 @@ from ._operator_probes import (
     _live_auth_identity_kind,
     _live_auth_identity_state,
     _live_auth_mode,
-    _probe_configured_provider,
     _probe_local_session,
 )
 from ._operator_results import (
@@ -461,28 +460,14 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
             include_pending_obligations=False,
         )
         status = _auth_status_from_projection(projection)
-        certificate_credentials = None
-        try:
-            reported_provider_kind = AuthProviderKind(status.provider)
-        except ValueError:
-            pass
-        else:
-            if reported_provider_kind is AuthProviderKind.CERTIFICATE:
-                certificate_credentials = resolve_active_certificate_credentials(settings=resolved_settings)
         session_probe = _probe_local_session(status.provider, settings=resolved_settings)
-        provider_probe = _probe_configured_provider(
-            status.provider,
-            status.certificate_path,
-            settings=resolved_settings,
-            certificate_credentials=certificate_credentials,
-        )
         return AuthTestResult(
             **status.model_dump(),
             persisted_session_present=session_probe.present,
             persisted_session_expired=session_probe.expired,
             persisted_session_state=session_probe.state,
-            probe_summary=provider_probe.summary or session_probe.summary,
-            probe_result=provider_probe.result,
+            probe_summary=projection.auth.probe_summary or session_probe.summary,
+            probe_result=projection.auth.probe_result,
         )
 
 
@@ -515,11 +500,6 @@ def build_live_auth_preflight_report(
             provider_kind = _configured_or_default_provider(resolved_settings)
         except ValueError:
             provider_kind = None
-    certificate_credentials = (
-        resolve_active_certificate_credentials(settings=resolved_settings)
-        if provider_kind is AuthProviderKind.CERTIFICATE
-        else None
-    )
     probe = test_operator_auth(
         provider_kind.value if provider_kind is not None else provider,
         settings=resolved_settings,
@@ -528,11 +508,7 @@ def build_live_auth_preflight_report(
         provider_kind,
         settings=resolved_settings,
     )
-    certificate_path = (
-        certificate_credentials.certificate_path
-        if certificate_credentials is not None
-        else resolved_settings.cadrumo_certificate_path
-    )
+    certificate_path = Path(probe.certificate_path) if probe.certificate_path else None
     return LiveAuthPreflightReport(
         provider=probe.provider,
         configured=probe.configured,

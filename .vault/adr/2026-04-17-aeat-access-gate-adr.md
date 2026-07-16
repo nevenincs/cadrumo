@@ -1,9 +1,9 @@
 ---
 tags:
-  - "#adr"
-  - "#aeat-access-gate"
+  - '#adr'
+  - '#aeat-access-gate'
 date: 2026-04-17
-modified: '2026-07-16'
+modified: '2026-07-17'
 title: "Live AEAT Access Blocker & Verification Gate"
 related:
   - "[[2026-04-17-aeat-access-gate-research]]"
@@ -21,21 +21,21 @@ Accepted — 2026-04-17. Implements GitHub issue #167.
 
 ## Context
 
-See `[[2026-04-17-aeat-access-gate-research]]`. The project has a
+The related access-gate research establishes that the project has a
 working PKCS#12 cert loader (#8), a pre-expiry gate (#94), and a
 nine-point live-write safety gate (#116 R1–R6 + #117). What it does
 **not** yet have is:
 
 1. A single entry point that binds the cert, the browser, and the
    write-gate together for future remote-read work to depend on.
-2. A post-handshake **identity assertion**: proof that the cert AEAT
-   accepts at TLS belongs to the expected taxpayer (parsed NIF from
-   cert subject + reachable post-auth portal).
+2. A protected-resource **identity assertion**: proof that the configured
+   certificate identity can reach the exact authenticated AEAT resource
+   (parsed NIF from the certificate subject + successful canonical browser
+   navigation).
 3. Cert propagation into the Playwright context. The current
    `BrowserSession.create_context()` accepts an `auth_backend` arg
-   and discards it (stub from #8). Any caller that wires the backend
-   correctly is blocked by the missing thumbprint marker on the
-   context.
+   and discards it (stub from #8). The certificate must instead be supplied
+   through construction-time Playwright `client_certificates` context kwargs.
 4. A read-side gate usable by future live-read call-sites
    (#168–#171 are the next wave), mirroring the write-gate already
    in place.
@@ -48,16 +48,20 @@ wiring side.
 
 ## Decision
 
-### D1 — `AeatAuthenticator` facade in `aeat.adapters.outbound.aeat.auth`
+### D1 — `AeatAuthenticator` facade in `cadrumo.adapters.outbound.aeat.auth`
 
 New class `AeatAuthenticator` lives in
-`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py` and is re-exported from
-`aeat.adapters.outbound.aeat.auth.__init__`. It owns the composition of:
+`src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py` and is re-exported from
+`cadrumo.adapters.outbound.aeat.auth`. It owns the composition of:
 
-- `Settings` (the sole input; no per-call args).
+- `Settings` for non-credential policy and typed
+  `ActiveCertificateCredentials` selected by application orchestration; no
+  per-call auth inputs.
 - `CertificateBundle` / `LoadedCertificate` (via the existing
   `load_certificate` + `health` entry points; **not re-implemented**).
-- An optional `BrowserSessionFactory` callable for Playwright wiring.
+- A `BrowserSessionFactory` supplied by application orchestration for async
+  Playwright operations. Constructor omission is valid only for synchronous
+  certificate helpers.
 - A single `_lock: asyncio.Lock` guarding concurrent
   `authenticate()` calls within a process.
 
@@ -72,30 +76,24 @@ class AeatAuthenticator:
     depend on this class rather than re-implementing the wiring.
     """
 
-    def __init__(self, settings: Settings) -> None: ...
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        credentials: ActiveCertificateCredentials,
+        browser_session_factory: BrowserSessionFactory | None = None,
+    ) -> None: ...
 
     def load_certificate(self) -> LoadedCertificate: ...
     def health(self, *, now: datetime | None = None) -> CertificateHealth: ...
-    def verify_handshake(self) -> HandshakeResult: ...
-
-    async def authenticate(
-        self,
-        *,
-        browser_session: BrowserSessionLike | None = None,
-        target_url: str | None = None,
-    ) -> AeatSession: ...
+    async def authenticate(self) -> AeatSession: ...
 
     async def reauthenticate(
         self,
         session: AeatSession,
     ) -> AeatSession: ...
 
-    async def verify(
-        self,
-        session: AeatSession,
-        *,
-        target_url: str | None = None,
-    ) -> AeatLoginAssertion: ...
+    async def verify(self, session: AeatSession) -> AeatLoginAssertion: ...
 
     def extract_nif_from_subject(
         self,
@@ -106,11 +104,12 @@ class AeatAuthenticator:
 ```
 
 `reauthenticate(session)` is the recovery path when a downstream
-call sees a 401 / 403 or `verify()` returns
-`certificate_recognised=False`. Semantics:
+call sees a 401 / 403 or `verify()` returns an invalid canonical
+protected-resource assertion. Semantics:
 
 - Drops the current Playwright context and `storage_state`.
-- Re-runs `authenticate()` with the same cert and target URL.
+- Re-runs `authenticate()` with the same certificate identity and canonical
+  protected-resource assertion.
 - Returns a new `AeatSession` with a fresh `authenticated_at` +
   `idle_deadline`.
 - Enforces a **hard cap of one retry per downstream call-site** to
@@ -123,26 +122,24 @@ call sees a 401 / 403 or `verify()` returns
 
 Behavioural contract:
 
-- `load_certificate()` / `health()` / `verify_handshake()` are thin
-  forwarders to the existing module-level functions, parameterised by
-  `self.settings`. They let callers use the authenticator without
-  Playwright at all (e.g. the doctor row, CLI cert checks).
+- `load_certificate()` / `health()` are thin forwarders to the existing
+  certificate functions, parameterised by `self.settings`. They let callers
+  use the authenticator without Playwright (for example, the doctor row and
+  CLI certificate checks).
 - `authenticate()` is the **only** entry point that drives
   Playwright. It loads the cert (raising on expiry / missing env
-  var), builds the client-cert kwarg via the Playwright backend,
-  constructs a `BrowserContext`, and stamps the
-  `_aeat_certificate_thumbprint` marker that
-  `preload_into_browser_context()` validates.
-- `verify()` navigates the authenticated context to
-  `target_url` (defaulting to
-  `Settings.aeat_certificate_verify_url`) and parses the
-  surfaced NIF from the cert subject + the HTTP response code.
-  Returns an `AeatLoginAssertion`.
+  var), contributes `client_certificates` while constructing the
+  `BrowserContext`, and proves the session by navigating to
+  `https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt`.
+- `verify()` uses that same fixed navigation. Success requires a successful
+  response and the exact final scheme, host, and path; it is not configurable
+  per call. The returned `AeatLoginAssertion` also carries the NIF and subject
+  derived from the loaded certificate.
 - `close()` releases the context + browser cleanly.
 
 ### D2 — `AeatSession` pydantic record
 
-New record in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_authenticator.py`:
+New record in `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py`:
 
 ```python
 class AeatSession(BaseModel):
@@ -150,39 +147,35 @@ class AeatSession(BaseModel):
         strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True,
     )
 
-    certificate_thumbprint: str
-    certificate_subject: str
-    certificate_nif: str
     authenticated_at: datetime
     idle_deadline: datetime
     storage_state_path: Path | None
-    handshake: HandshakeResult
+    identity_nif: str
+    provider_detail: CertificateSessionDetail
 
     def is_stale(self, now: datetime | None = None) -> bool: ...
 ```
 
 Fields:
 
-- `certificate_thumbprint` — SHA-256 hex of the cert's DER encoding
-  (same value used by the browser context marker). Ties the session
-  to a specific bundle.
-- `certificate_subject` — RFC-4514 subject DN.
-- `certificate_nif` — NIF extracted from the cert subject by
+- `provider_detail.certificate_thumbprint` — SHA-256 hex of the cert's DER
+  encoding. Ties the session to a specific bundle.
+- `provider_detail.certificate_subject` — RFC-4514 subject DN.
+- `identity_nif` — NIF extracted from the cert subject by
   `extract_nif_from_subject()`. See D5 for the parser.
+- `provider_detail.protected_resource_url` — the fixed protected resource
+  whose successful exact navigation established this certificate session.
 - `authenticated_at` — UTC timestamp of `authenticate()` return.
 - `idle_deadline` — timezone-aware UTC timestamp beyond which the
   session MUST be re-authenticated before further use. Derived as
   `authenticated_at + AEAT_SESSION_IDLE_TTL`. The TTL is a
-  module-level constant in `aeat.adapters.outbound.aeat.auth._authenticator`
+  module-level constant in `cadrumo.adapters.outbound.aeat.auth._authenticator`
   (`AEAT_SESSION_IDLE_TTL = timedelta(minutes=18)`); **not a new env
   var** (per the anti-fragmentation mandate — AEAT's observed idle
   window is ~20 minutes and 18 minutes gives a safety margin, but
   the value is a code-level constant, not an operator knob).
 - `storage_state_path` — Playwright `storage_state` JSON location
   (or None if the caller chose not to persist).
-- `handshake` — embedded `HandshakeResult` proving the TLS leg
-  succeeded. Kept as a field so callers can inspect `elapsed_ms`
-  etc. without re-running the probe.
 
 `is_stale(now)` returns `now > self.idle_deadline`; default `now`
 is `datetime.now(UTC)`. The session carries **no secret material**.
@@ -212,29 +205,26 @@ class AeatLoginAssertion(BaseModel):
 
     target_url: str
     is_valid: bool
-    handshake_success: bool
-    certificate_recognised: bool
-    parsed_nif: str | None
-    parsed_subject: str | None
+    identity_nif: str | None
     status_code: int
     elapsed_ms: int
     attempted_at: datetime
     error_message: str | None
+    assertion_detail: CertificateLoginAssertionDetail
 ```
 
-- `handshake_success` — TLS handshake succeeded (via
-  `verify_handshake()` leg).
-- `certificate_recognised` — AEAT portal returned a non-challenge
-  response for the cert. Determined by the Playwright navigation
-  returning HTTP 2xx/3xx with the cert supplied, versus 401/403 or a
-  cert-challenge page.
-- `parsed_nif` / `parsed_subject` — from the cert itself, not from
+- `target_url` is always
+  `https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt`.
+- `assertion_detail.response_successful` records Playwright's response-success
+  signal, while `assertion_detail.final_url` must have the exact canonical
+  scheme, host, and path.
+- `identity_nif` / `assertion_detail.parsed_subject` are from the cert itself, not from
   scraped AEAT HTML (HTML surface is too volatile; the cert subject
   is authoritative and immutable per bundle).
-- `is_valid` — `handshake_success AND certificate_recognised AND
-  parsed_nif is not None`. Predicate field name (not a verb);
+- `is_valid` — successful response, exact canonical final location, and
+  `identity_nif is not None`. Predicate field name (not a verb);
   downstream code reads `if assertion.is_valid: ...`.
-- When `is_valid` is False and `certificate_recognised` is False,
+- When `is_valid` is False,
   callers may invoke `AeatAuthenticator.reauthenticate()` **once**
   and re-verify; a second consecutive failure MUST raise
   `AeatSessionExpiredError` upwards rather than loop.
@@ -248,8 +238,8 @@ fragile HTML scraper.
 
 ### D4 — `AeatAccessGate` unified read+write precondition
 
-New callable in `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/_gate.py`, re-exported from
-`aeat.adapters.outbound.aeat.auth`:
+The provider-agnostic gate lives in `src/cadrumo/core/access_gate/__init__.py`
+and is re-exported from `cadrumo.core`:
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -291,13 +281,11 @@ never injected via `SubmissionEngine.__init__`, never stored on
 cannot swap the gate for a no-op because there is no seam to swap
 through.
 
-**Cross-cutting home rationale:** `aeat.adapters.outbound.aeat.auth._gate` lives in
-`aeat.adapters.outbound.aeat.auth` rather than `aeat.adapters.outbound.aeat.export` because the gate is
-cross-cutting (it serves both live-reads via
-`require_live_read()` and live-writes via `require_live_write()`).
-`aeat.adapters.outbound.aeat.export` imports from `aeat.adapters.outbound.aeat.auth` via the subpackage root
-(`from aeat.adapters.outbound.aeat.auth import AeatAccessGate`) per the project's public-
-API discipline.
+**Cross-cutting home rationale:** `cadrumo.core.access_gate` lives in the core
+policy layer rather than the outbound auth or export adapters because the gate
+serves both live reads and the permanent live-write refusal. Outbound readers
+import `AeatAccessGate` from the top-level `cadrumo.core` re-export per the
+project's public-boundary convention.
 
 ### D5 — NIF extraction from FNMT cert subject
 
@@ -336,21 +324,18 @@ CIF (rejected), empty subject (rejected), missing `serialNumber` OID
 
 ### D6 — Fix the BrowserSession cert-propagation regression
 
-`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py:BrowserSession.create_context()`:
+`src/cadrumo/adapters/outbound/aeat/browser/session.py:BrowserSession.create_context()`:
 
-- The `auth_backend: object | None` parameter is renamed to
-  `cert: LoadedCertificate | None` (typed, not `object`). Type is
-  the real type.
-- When `cert is not None`, call
-  `build_client_certificates_kwarg(cert, self.settings.aeat_certificate_verify_url)`
-  (a small helper moved out of `_playwright_context.py` for direct
-  reuse) and merge the result into `context_kwargs` **before**
-  `browser.new_context(**context_kwargs)`.
-- After the context exists, set
-  `setattr(context, "_aeat_certificate_thumbprint", cert.sha256_thumbprint)`
-  so the `PlaywrightContextBackend.preload()` validation passes.
-- Unit test asserts the thumbprint attribute is present on the
-  returned context when a cert is supplied, and absent otherwise.
+- Replace the dormant `auth_backend` parameter with the typed
+  `BrowserContextProvisioner` seam.
+- `CertificateContextProvisioner` builds Playwright `client_certificates`
+  kwargs for the exact protected AEAT origin. `BrowserSession.create_context()`
+  merges those kwargs **before** `browser.new_context(**context_kwargs)`.
+- No out-of-band context attribute participates in authentication. Certificate
+  identity remains in the typed session detail and encrypted persisted-state
+  metadata.
+- Unit tests assert the exact context kwargs and canonical protected-resource
+  navigation contract.
 
 This is **a small, targeted fix, not a rewrite**. The evasion /
 profile / site-health wiring in `BrowserSession` is untouched.
@@ -396,7 +381,7 @@ the comment to the charter.
 
 ### D9 — Live test: single `@pytest.mark.live` item
 
-A new live test `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator_live.py`:
+A live test `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_live.py`:
 
 - Marker: `@pytest.mark.live` (the only registered marker; the
   handover prompt's `live_read` / `domain_aeat_remote` are **not**
@@ -407,7 +392,6 @@ A new live test `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/tes
     are unset.
 - Exercises:
   - `AeatAuthenticator(Settings()).health()` returns OK severity.
-  - `AeatAuthenticator(...).verify_handshake()` succeeds.
   - `extract_nif_from_subject()` returns a valid NIF shape.
   - Under a real Playwright run,
     `await authenticator.authenticate()` returns an `AeatSession`,
@@ -439,7 +423,8 @@ The nine-point gate stays as-is; we only change:
 
 ### D11 — Error surface additions
 
-All added to `aeat.core.errors`-rooted hierarchy via `aeat.adapters.outbound.aeat.auth`:
+All added to the `cadrumo.core.errors`-rooted hierarchy via
+`cadrumo.adapters.outbound.aeat.auth`:
 
 - `AeatLiveReadNotEnabledError(AeatError)` — raised by
   `AeatAccessGate.require_live_read()` when `AEAT_LIVE_TESTS_ENABLED`
@@ -449,8 +434,8 @@ All added to `aeat.core.errors`-rooted hierarchy via `aeat.adapters.outbound.aea
   error, page missing before Playwright can parse it).
 - `AeatSessionExpiredError(CertificateError)` — raised when an
   `AeatSession.is_stale()` check trips, or when a single
-  `reauthenticate()` attempt still yields
-  `certificate_recognised=False`. Downstream callers propagate the
+  `reauthenticate()` attempt still yields an invalid canonical
+  protected-resource assertion. Downstream callers propagate the
   error upwards rather than loop on reauthenticate.
 - `CertificateNifParseError(CertificateError)` — raised by
   `extract_nif_from_subject()` when the subject DN carries no
@@ -465,9 +450,8 @@ Existing errors are not renamed or re-homed.
 - Single entry point for all future remote-read modules: they depend
   on `AeatAuthenticator` instead of rewiring cert + browser + env
   checks per call-site.
-- Mathematically verifiable identity assertion: cert-derived NIF +
-  TLS proof + post-auth portal reachability, captured in a frozen
-  pydantic record.
+- Verifiable identity assertion: cert-derived NIF plus successful navigation
+  to the exact protected AEAT resource, captured in a frozen pydantic record.
 - Closes the `BrowserSession` regression that would have blocked
   any real Playwright-based live read with a cert.
 - Adds a symmetric read-side gate mirroring the existing write
@@ -477,10 +461,9 @@ Existing errors are not renamed or re-homed.
 
 ### Negative / accepted
 
-- `BrowserSession.create_context(auth_backend=...)` is now
-  `BrowserSession.create_context(cert=...)`. The old param was
-  unused (stub), and no production call-site passes it; the change
-  is API-clean. Callers that were ignoring the stub keep working.
+- `BrowserSession.create_context(auth_backend=...)` is replaced by the typed
+  provisioner seam. The old parameter was unused, and no compatibility alias
+  remains.
 - `AeatAuthenticator` holds a Playwright `Browser` + `BrowserContext`
   across `authenticate()` and `close()`. Callers must use it as an
   async context manager or wrap the call-site in a `try/finally`.
@@ -498,7 +481,7 @@ Existing errors are not renamed or re-homed.
 
 - No re-home of the certificate loader.
 - No new subpackage (per user's anti-fragmentation mandate;
-  everything lands inside `aeat.adapters.outbound.aeat.auth`).
+  everything lands inside `cadrumo.adapters.outbound.aeat.auth`).
 - No new env vars.
 - No changes to the R1–R6 write-gate semantics; only the env
   snapshot re-read is consolidated.
@@ -513,10 +496,9 @@ When a future live-read module fails:
    the new authenticator is involved, the doctor row gains a
    "Live access gate" sub-row (OK / WARN / MISSING) sourced from
    `AeatAccessGate.snapshot_env()`.
-2. If the assertion's `certificate_recognised` is False, check
-   cert registration at FNMT / AEAT. The TLS handshake can pass
-   while AEAT still rejects the cert for a specific taxpayer
-   profile.
+2. If the canonical protected-resource assertion fails, check certificate
+   registration at FNMT / AEAT and confirm the final URL has the exact expected
+   scheme, host, and path.
 3. If `parsed_nif` does not match the expected taxpayer NIF, the
    operator has the wrong cert configured. Re-check
    `AEAT_CERTIFICATE_PATH`.

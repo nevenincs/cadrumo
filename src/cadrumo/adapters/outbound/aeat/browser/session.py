@@ -228,7 +228,7 @@ class BrowserSession:
         storage_state: Mapping[str, object] | None,
         provisioner: BrowserContextProvisioner | None,
     ) -> dict[str, Any]:
-        """Compose the ``browser.new_context(**kwargs)`` dict from profile + storage + provisioner.
+        """Compose ``browser.new_context(**kwargs)`` from explicit storage and provisioner inputs.
 
         ``dict[str, Any]`` is the irreducible adapter shape: the dict is
         spread into ``new_context(**context_kwargs)`` whose typed kwargs
@@ -237,8 +237,6 @@ class BrowserSession:
         stubs; this is a third-party-API boundary where ``Any`` is the
         right type.
         """
-        self.profile.ensure_storage_dir()
-        effective_storage_state_path = storage_state_path or self.profile.storage_state_path
         context_kwargs: dict[str, Any] = {
             "locale": self.profile.locale,
             "timezone_id": self.profile.timezone_id,
@@ -247,8 +245,8 @@ class BrowserSession:
             context_kwargs["user_agent"] = self.profile.user_agent
         if storage_state is not None:
             context_kwargs["storage_state"] = storage_state
-        elif effective_storage_state_path.exists():
-            context_kwargs["storage_state"] = str(effective_storage_state_path)
+        elif storage_state_path is not None and storage_state_path.exists():
+            context_kwargs["storage_state"] = str(storage_state_path)
         if provisioner is not None:
             context_kwargs.update(dict(provisioner.build_context_kwargs()))
         return context_kwargs

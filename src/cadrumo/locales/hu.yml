@@ -5053,6 +5053,8 @@ errors:
       hiányoznak vagy hibásak. Tekintse át a Cl@ve konfigurációt.
     auth_auth_configuration: A szükséges hitelesítési beállítások hiányoznak vagy
       hibásak. Tekintse át a hitelesítési konfigurációt.
+    auth_auth_provider_cleanup: A hitelesítési szolgáltató nem tudta felszabadítani
+      az összes böngésző-erőforrást. Új munkamenet előtt próbálja meg újra a lezárást.
     auth_auth_validation: A hitelesítési paraméterek nem mentek át az érvényesítésen.
       Javítsa a megjelenített értékeket, és próbálja újra.
     auth_former_product_session_state: A Cadrumo egy megszuent termek munkamenet-allapotat

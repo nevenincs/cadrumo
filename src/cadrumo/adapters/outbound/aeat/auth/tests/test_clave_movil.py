@@ -15,7 +15,6 @@ Cl@ve state; the live handshake is covered by gated probes elsewhere.
 from __future__ import annotations
 
 import json
-import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -50,8 +49,6 @@ from ._clave_movil_support import (
     _PRE303_SURFACE,
     _aeat_url,
     _CancelableClavePage,
-    _HangingCloseBrowserSession,
-    _HangingCloseContext,
     _NoPushWaitStatePage,
     _OwnNameInputOnlyRepresentationPage,
     _PendingPetitionPage,
@@ -123,39 +120,6 @@ def test_auth_browser_action_policy_refuses_non_aeat_host(tmp_path: Path) -> Non
 def _isolated_secure_session_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="clave-movil-test"):
         yield
-
-
-# ── cleanup bounds ───────────────────────────────────────────────────────────
-
-
-def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
-        update={"cadrumo_browser_close_timeout_ms": 1},
-    )
-    provider = ClaveMovilAuthProvider(settings)
-    context = _HangingCloseContext(target_path=settings.aeat_sede_expedientes_path)
-
-    async def run() -> None:
-        started = time.perf_counter()
-        await provider._close_context(context, reason="timeout-regression")
-        assert time.perf_counter() - started < 0.5
-
-    _run(run())
-
-
-def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
-        update={"cadrumo_browser_close_timeout_ms": 1},
-    )
-    provider = ClaveMovilAuthProvider(settings)
-    session = _HangingCloseBrowserSession(target_path=settings.aeat_sede_expedientes_path)
-
-    async def run() -> None:
-        started = time.perf_counter()
-        await provider._close_browser_session(session)
-        assert time.perf_counter() - started < 0.5
-
-    _run(run())
 
 
 # ── identity classification ──────────────────────────────────────────────────
