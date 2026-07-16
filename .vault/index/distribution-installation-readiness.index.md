@@ -15,6 +15,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S10]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S61]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S62]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S63]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -42,6 +43,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-S10` - Prove both installed commands originate from one environment and one cohort
 - `2026-07-15-distribution-installation-readiness-W01-P02-S61` - Make MCP identity reads unlock profiles created by sibling CLI subprocesses
 - `2026-07-15-distribution-installation-readiness-W01-P02-S62` - Keep master-key unlock failures non-repairable and preserve the active pointer
+- `2026-07-15-distribution-installation-readiness-W01-P02-S63` - Harden installed oracles for direct MCP dispatch exact legal grounding resource identity and diagnostic failure
 
 ### plan
 

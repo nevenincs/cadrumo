@@ -45,7 +45,9 @@ from dev.packaging.installed_tax_oracle import (
 
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 _EXECUTE_TOOL = "execute"
+_TOOLSETS_TOOL = "toolsets"
 _WHOAMI_TOOL = "cadrumo_whoami"
+_WORK_CALCULATE_TOOL = "cadrumo_modelo_work_calculate"
 
 
 class InstalledMcpOracleError(RuntimeError):
@@ -183,15 +185,17 @@ def _assert_envelope(payload: dict[str, Any], *, command_key: str) -> dict[str, 
     return result
 
 
-def _assert_no_warning_notices(payload: dict[str, Any], *, command_key: str) -> None:
-    warnings = [
+def _assert_no_diagnostic_notices(payload: dict[str, Any], *, command_key: str) -> None:
+    if payload.get("status") != "success":
+        raise InstalledMcpOracleError(f"{command_key} expected success status: {payload!r}")
+    diagnostics = [
         notice
         for notice in payload["notices"]
-        if isinstance(notice, dict) and notice.get("severity") == "warning"
+        if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
     ]
-    if warnings:
+    if diagnostics:
         raise InstalledMcpOracleError(
-            f"{command_key} emitted unexpected warning notices: {warnings!r}",
+            f"{command_key} emitted unexpected diagnostic notices: {diagnostics!r}",
         )
 
 
@@ -258,14 +262,29 @@ async def _run_protocol(
         async with asyncio.timeout(timeout_seconds):
             initialized = await session.initialize()
             listed = await session.list_tools()
-        advertised_tools = tuple(sorted(tool.name for tool in listed.tools))
+        floor_tools = tuple(sorted(tool.name for tool in listed.tools))
         if initialized.serverInfo.name != "cadrumo":
             raise InstalledMcpOracleError(
                 f"expected MCP server name 'cadrumo', got {initialized.serverInfo.name!r}",
             )
-        if not {_EXECUTE_TOOL, _WHOAMI_TOOL} <= set(advertised_tools):
+        if not {_EXECUTE_TOOL, _TOOLSETS_TOOL, _WHOAMI_TOOL} <= set(floor_tools):
             raise InstalledMcpOracleError(
-                f"installed MCP surface lacks required tools: {advertised_tools!r}",
+                f"installed MCP floor lacks required tools: {floor_tools!r}",
+            )
+        _, call = await _call_tool(
+            session,
+            tool_name=_TOOLSETS_TOOL,
+            arguments={"action": "activate", "name": "modelo-lifecycle"},
+            command_key=None,
+            timeout_seconds=timeout_seconds,
+        )
+        calls.append(call)
+        async with asyncio.timeout(timeout_seconds):
+            listed = await session.list_tools()
+        advertised_tools = tuple(sorted(tool.name for tool in listed.tools))
+        if _WORK_CALCULATE_TOOL not in advertised_tools:
+            raise InstalledMcpOracleError(
+                f"installed MCP modelo-lifecycle toolset lacks the direct calculation tool: {advertised_tools!r}",
             )
 
         profile_payload, call = await _execute(
@@ -276,7 +295,7 @@ async def _run_protocol(
         )
         calls.append(call)
         _assert_envelope(profile_payload, command_key="config.profile.create")
-        _assert_no_warning_notices(
+        _assert_no_diagnostic_notices(
             profile_payload,
             command_key="config.profile.create",
         )
@@ -310,17 +329,18 @@ async def _run_protocol(
         )
         calls.append(call)
         create_result = _assert_envelope(create_payload, command_key="modelo.work.create")
-        _assert_no_warning_notices(create_payload, command_key="modelo.work.create")
+        _assert_no_diagnostic_notices(create_payload, command_key="modelo.work.create")
         work_unit_id = str(create_result.get("work_unit_id", ""))
         if not _REVISION_ID.fullmatch(work_unit_id):
             raise InstalledMcpOracleError(
                 f"work creation returned an invalid work unit id: {work_unit_id!r}",
             )
 
-        calculate_payload, call = await _execute(
+        calculate_payload, call = await _call_tool(
             session,
-            "modelo.work.calculate",
-            work_calculate_arguments(work_unit_id),
+            tool_name=_WORK_CALCULATE_TOOL,
+            arguments=work_calculate_arguments(work_unit_id),
+            command_key="modelo.work.calculate",
             timeout_seconds=timeout_seconds,
         )
         calls.append(call)
@@ -355,9 +375,11 @@ async def _run_protocol(
         calculate_observations_resource = str(
             calculate_result.get("observations_resource", ""),
         )
-        if not calculate_observations_resource.startswith("cadrumo://observations/"):
+        expected_observations_resource = f"cadrumo://observations/{calculation_revision_id}"
+        if calculate_observations_resource != expected_observations_resource:
             raise InstalledMcpOracleError(
-                f"calculation returned no observations resource: {calculate_result!r}",
+                "calculation returned an observation resource for a different revision: "
+                f"{calculate_observations_resource!r}",
             )
         calculate_observations_count = calculate_result.get("observations_count")
         if (
@@ -377,7 +399,7 @@ async def _run_protocol(
             observations_payload,
             command_key="modelo.work.observations",
         )
-        _assert_no_warning_notices(
+        _assert_no_diagnostic_notices(
             observations_payload,
             command_key="modelo.work.observations",
         )
@@ -412,6 +434,10 @@ async def _run_protocol(
         if len(resource.contents) != 1 or not isinstance(resource.contents[0], TextResourceContents):
             raise InstalledMcpOracleError(
                 f"observations resource returned unexpected contents: {resource.contents!r}",
+            )
+        if str(resource.contents[0].uri) != expected_observations_resource:
+            raise InstalledMcpOracleError(
+                f"observations resource contents identified a different URI: {resource.contents[0].uri!r}",
             )
         try:
             observations = json.loads(resource.contents[0].text)
