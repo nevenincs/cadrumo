@@ -286,44 +286,57 @@ def _resource_declaration(resource: Resource, *, indent: int) -> str:
     )
 
 
-def _resource_block(resource: Resource) -> str:
-    all_targets = frozenset(_TARGETS)
-    if resource.platforms == all_targets:
-        return _resource_declaration(resource, indent=1)
-
+def _platform_resource_body(
+    resources: tuple[Resource, ...],
+    *,
+    platform: str,
+) -> str:
+    platform_targets = frozenset(target for target in _TARGETS if target.startswith(f"{platform}-"))
     blocks: list[str] = []
-    covered: set[str] = set()
-    for platform in ("macos", "linux"):
-        platform_targets = frozenset(target for target in _TARGETS if target.startswith(f"{platform}-"))
+    for resource in resources:
         selected = resource.platforms & platform_targets
-        covered.update(selected)
-        if not selected:
-            continue
         if selected == platform_targets:
-            blocks.append(
-                f"  on_{platform} do\n{_resource_declaration(resource, indent=2)}  end\n",
-            )
-            continue
-        if len(selected) != 1:
+            blocks.append(_resource_declaration(resource, indent=2))
+        elif selected and len(selected) != 1:
             raise SystemExit(
                 f"Homebrew resource closure has an unsupported target subset for "
                 f"{resource.name}: {sorted(resource.platforms)!r}",
             )
-        target = next(iter(selected))
-        architecture = "arm" if target.endswith("arm64") else "intel"
-        blocks.append(
-            f"  on_{platform} do\n"
-            f"    on_{architecture} do\n"
-            f"{_resource_declaration(resource, indent=3)}"
-            "    end\n"
-            "  end\n",
+    for architecture, suffix in (("arm", "arm64"), ("intel", "x86_64")):
+        target = f"{platform}-{suffix}"
+        selected_resources = tuple(
+            resource for resource in resources if resource.platforms & platform_targets == frozenset({target})
         )
-    if frozenset(covered) != resource.platforms:
-        raise SystemExit(
-            f"Homebrew resource closure names an unsupported target for "
-            f"{resource.name}: {sorted(resource.platforms)!r}",
-        )
+        if selected_resources:
+            declarations = "".join(_resource_declaration(resource, indent=3) for resource in selected_resources)
+            blocks.append(
+                f"    on_{architecture} do\n{declarations}    end\n",
+            )
     return "".join(blocks)
+
+
+def _resource_blocks(resources: tuple[Resource, ...]) -> str:
+    all_targets = frozenset(_TARGETS)
+    common = tuple(resource for resource in resources if resource.platforms == all_targets)
+    conditional = tuple(resource for resource in resources if resource.platforms != all_targets)
+    for resource in conditional:
+        if not resource.platforms <= all_targets:
+            raise SystemExit(
+                f"Homebrew resource closure names an unsupported target for "
+                f"{resource.name}: {sorted(resource.platforms)!r}",
+            )
+
+    blocks: list[str] = []
+    macos = _platform_resource_body(conditional, platform="macos").rstrip()
+    if macos:
+        blocks.append(f"  on_macos do\n{macos}\n  end")
+    linux = _platform_resource_body(conditional, platform="linux").rstrip()
+    linux_body = '    depends_on "zlib-ng-compat"'
+    if linux:
+        linux_body = f"{linux_body}\n\n{linux}"
+    blocks.append(f"  on_linux do\n{linux_body}\n  end")
+    blocks.extend(_resource_declaration(resource, indent=1).rstrip() for resource in common)
+    return "\n\n".join(blocks)
 
 
 def generate_formula(
@@ -361,7 +374,7 @@ def generate_formula(
         for artifact in companions
     )
     resources = (*companion_resources, *_locked_resources(lock_path.resolve(strict=True)))
-    resource_text = "\n".join(_resource_block(resource).rstrip() for resource in resources)
+    resource_text = _resource_blocks(resources)
     return f'''class Cadrumo < Formula
   include Language::Python::Virtualenv
 
@@ -372,19 +385,16 @@ def generate_formula(
   license "Apache-2.0"
 
   depends_on "cmake" => :build
+  depends_on "pkgconf" => :build
+  depends_on "rust" => :build
   depends_on "jpeg-turbo"
   depends_on "libyaml"
   depends_on "openssl@3"
-  depends_on "pkgconf" => :build
   depends_on "python@3.13"
   depends_on "qpdf"
-  depends_on "rust" => :build
+  uses_from_macos "libffi"
   uses_from_macos "libxml2"
   uses_from_macos "libxslt"
-
-  on_linux do
-    depends_on "zlib-ng-compat"
-  end
 
 {resource_text}
 

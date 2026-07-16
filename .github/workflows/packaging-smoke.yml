@@ -49,27 +49,20 @@ jobs:
       - name: Cadrumo packaging preflight command tests
         run: just packaging-smoke-preflight-tests
 
-      - name: Cadrumo fresh development dependency smoke
-        run: just packaging-smoke-dev
+      - name: Cadrumo immutable-cohort packaging campaign
+        run: just packaging-smoke-ci
 
-      - name: Cadrumo host Linux core packaging smoke
-        run: just packaging-smoke-linux
-
-      - name: Cadrumo split-distribution packaging smoke
-        run: just packaging-smoke-split
-
-      - name: Cadrumo installed CLI and MCP cohort oracle
-        run: uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
-
-      - name: Checkpoint host packaging evidence and release ephemeral disk
-        run: uv run --no-sync python -m dev.packaging.evidence --prune-completed
-
-      - name: Cadrumo clean Docker image packaging smoke
-        run: just packaging-smoke-docker
-
-      - name: Checkpoint Docker packaging evidence
+      - name: Checkpoint packaging evidence
         if: always()
         run: uv run --no-sync python -m dev.packaging.evidence
+
+      - name: Upload tested Cadrumo Python cohort
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-python-cohort
+          path: var/packaging-smoke-cohort/python/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload Cadrumo packaging smoke evidence
         if: always()

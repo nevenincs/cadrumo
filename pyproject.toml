@@ -209,6 +209,17 @@ include = [
   "SECURITY.md",
   "PRIVACY.md",
 ]
+exclude = [
+  "src/cadrumo/tests",
+  "src/cadrumo/tests/**",
+  "src/cadrumo/**/tests",
+  "src/cadrumo/**/tests/**",
+  "src/cadrumo/_data/corpus/**/*.pdf",
+  "src/cadrumo/_data/corpus/**/*.docx",
+  "src/cadrumo/_data/corpus/**/*.xls",
+  "src/cadrumo/_data/corpus/**/*.xlsx",
+  "src/cadrumo/_data/corpus/**/*.zip",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cadrumo"]

@@ -1,9 +1,9 @@
 # Releasing Cadrumo
 
-This runbook is for maintainers who version, publish, verify, or recover a
-Cadrumo release. Every push, publication, yank, and patch decision is manual.
-The publish workflow uses Python Package Index (PyPI) Trusted Publishing through
-OpenID Connect (OIDC). It never uses a repository token.
+This runbook is for maintainers who prepare, verify, or recover a Cadrumo
+release candidate. Public publication is not implemented yet. The retained
+candidate workflow validates tested Python artifacts but has no upload
+permission, publishing environment, or package-index command.
 
 ## Current release blockers
 
@@ -12,7 +12,7 @@ local release authorities and tooling. The `cadrumo/cadrumo` organization move
 is deferred. If it ever happens, re-register every Trusted Publisher first,
 because PyPI matches the exact owner and repository claim in the OIDC token.
 
-Workflow dispatch and every PyPI publication remain blocked while the
+Every PyPI publication remains blocked while the
 [`S61 external reservation gate (W05.P11.S61)`](.vault/plan/2026-07-12-cadrumo-product-rename-plan.md)
 is open. S61 closes only after a named reviewer
 confirms the required records in the release-reservation evidence issue.
@@ -23,20 +23,20 @@ confirms the required records in the release-reservation evidence issue.
   `cadrumo-data-manuals`, and `cadrumo-data-official` Trusted Publishers,
   marketplace identifiers, executable expectations, domains, and trademark
   review.
-- The former-name PyPI projects `aeat-data-manuals` and `aeat-data-official`
-  still expose unyanked 0.1.0 and 0.1.1 releases. Yank every release, remove
-  their publishers and pending registrations, and preserve the project pages
-  as tombstones. Follow [Former-name package cleanup](#former-name-package-cleanup).
+- Former-name PyPI cleanup is complete. Deletion is the accepted stronger
+  state, not pending yank or tombstone work. Follow
+  [Former-name package cleanup](#former-name-package-cleanup) for the recorded
+  completion evidence and monitor both names for reappearance.
 - The
   [`S73 release-note gate (W05.P13.S73)`](.vault/plan/2026-07-12-cadrumo-product-rename-plan.md)
   remains open. It updates and verifies the release template, checklist, and
   current release evidence. It does not block PyPI publication; after all three
   PyPI distributions are published, it blocks only GitHub Release creation.
 
-Don't dispatch [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
-or publish any PyPI distribution until S61 is reviewed and closed. Local
-builds, green tests, name-availability searches, and a successful readiness
-command don't clear S61.
+The manual [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
+dispatch is validation-only. It cannot publish. Local builds, green tests,
+name-availability searches, and a successful readiness command do not create
+publication authority.
 
 ## Release authorities and references
 
@@ -53,8 +53,9 @@ release mechanics:
 
 - [`docs/_release_checklist.yaml`](docs/_release_checklist.yaml) defines soak,
   versioning, hotfix timing, rollback triggers, and readiness checks.
-- [`.github/workflows/publish.yml`](.github/workflows/publish.yml) defines the
-  only OIDC publication jobs and artifact guards.
+- [`.github/workflows/publish.yml`](.github/workflows/publish.yml) validates a
+  retained tested Python candidate and deliberately contains no publication
+  job.
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml)
   defines the clean Linux artifact checks and retained evidence.
 - [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
@@ -70,16 +71,29 @@ The release comprises three version-locked PyPI distributions:
 | `cadrumo-data-manuals` | 0.2.1 | Reviewed manual corpus | None |
 | `cadrumo-data-official` | 0.2.1 | Reviewed official and normative corpus | None |
 
-Version and publish all three distributions as one release cohort. The core
-distribution's `corpus-sources` extra pins both companions to the same version.
+Version and publish all three distributions as one immutable tested Python
+cohort. The core distribution's mandatory base dependencies pin both data
+distributions to the same exact version.
 
-The workflow builds one wheel per dispatch and refuses artifacts over PyPI's
-100 megabytes (MB) per-file limit. The core wheel must not contain companion
-sources in Portable Document Format (PDF), legacy Microsoft Excel Spreadsheet
-(XLS), or Microsoft Excel Open XML Spreadsheet (XLSX) formats.
+A successful `Cadrumo Packaging Smoke` run builds the cohort once from a clean
+source snapshot. It retains three wheels, the root source distribution,
+`python-cohort.json`, and the installed CLI and MCP oracle evidence for 14
+days. The manifest binds the source commit, version, filenames, and SHA-256
+digest of every distribution file. A future publication authority must consume
+those retained bytes without rebuilding them.
+
+Every artifact must remain below PyPI's 100 megabytes (MB) per-file limit. The
+core wheel must not contain companion sources in Portable Document Format
+(PDF), legacy Microsoft Excel Spreadsheet (XLS), or Microsoft Excel Open XML
+Spreadsheet (XLSX) formats.
 The companion parity gate
 `dev/packaging/tests/test_cadrumo_data_distribution.py::test_companion_version_matches_root_distribution`
 must prove that both companion versions match the core distribution.
+
+This workflow covers Python candidate validation only. Publication remains
+blocked until the plugin, MCPB, Scoop, Homebrew, marketplace, GitHub Release,
+Python, client, platform, and public-reacquisition evidence form one complete
+release authority.
 
 ## Publication prerequisites
 
@@ -132,49 +146,13 @@ An availability search isn't reservation evidence. If an authoritative record
 is absent, expired, or names a different owner, repository, identifier,
 environment, domain, executable, or trademark scope, stop.
 
-### Trusted Publisher configuration
+### Publication authority
 
-Configure each PyPI project or pending project with its own Trusted Publisher.
-For a pending project, PyPI identifies the publisher by GitHub owner,
-repository, workflow filename, and environment. The project name isn't part of
-that tuple.
-
-Therefore, each distribution requires a distinct GitHub environment.
-The workflow selects the environment from the dispatched distribution.
-
-Register these exact values:
-
-| PyPI project | GitHub owner | Repository | Workflow | Environment |
-| --- | --- | --- | --- | --- |
-| `cadrumo` | `nevenincs` | `cadrumo` | `publish.yml` | `pypi` |
-| `cadrumo-data-manuals` | `nevenincs` | `cadrumo` | `publish.yml` | `pypi-data-manuals` |
-| `cadrumo-data-official` | `nevenincs` | `cadrumo` | `publish.yml` | `pypi-data-official` |
-
-All three GitHub environments must exist. On the current private-repository
-billing plan, required-reviewer protection isn't available on any of them.
-Therefore, manual `workflow_dispatch` is the sole human approval gate for all
-three environments.
-
-Issue #612 must record that accepted limitation. If the
-billing plan or repository visibility changes, update all three environments
-and this runbook before the next release.
-
-The publish job must retain `id-token: write` and `contents: read`. Trusted
-Publishing supplies a short-lived OIDC credential.
-The job must publish with `uv publish --trusted-publishing always`.
-
-Don't create or store a PyPI application programming interface (API) token for
-this release path. Don't add a PyPI token or `UV_PUBLISH_TOKEN` to GitHub, a
-local file, or a maintainer profile.
-
-The `just publish` and `just publish-data` recipes are stale local-token
-helpers. They can publish when deliberately invoked with a token and
-confirmation, so don't run them. They remain forbidden until removed or
-reconciled with the approved Trusted Publishing workflow.
-
-Before the first public release, confirm all three pending publishers in PyPI.
-After PyPI creates each project, confirm the publisher appears on that
-project's **Publishing** page.
+No publication authority currently exists. Do not configure a workflow,
+environment, local recipe, API token, or Trusted Publisher as a substitute.
+The future implementation must be a protected, manual, retained-byte authority
+for the complete cross-channel cohort and must pass the open distribution
+readiness plan before this section gains operational commands.
 
 ### Workstation and repository
 
@@ -300,8 +278,8 @@ required result for each command. If the observed result differs, stop.
    - `src/cadrumo/__init__.py`
    - `CHANGELOG.md`
 
-   Update the exact companion pins in the root `corpus-sources` extra at the
-   same time. Then rerun:
+   Update the two mandatory exact companion dependency pins in the root
+   `[project].dependencies` array at the same time. Then rerun:
 
    ```console
    just release-readiness
@@ -314,7 +292,7 @@ required result for each command. If the observed result differs, stop.
    `just release-readiness` must report `PASS` for project names, version
    surfaces, and changelog. `uv lock --check` and both test commands must exit
    zero. The core distribution, companions, manifest, import package, exact
-   companion pins, lockfile, and changelog must all name `X.Y.Z`. If any surface
+   base dependency pins, lockfile, and changelog must all name `X.Y.Z`. If any surface
    names another version, stop.
 
 5. Stage and commit all seven release surfaces together. The seventh is the
@@ -395,118 +373,17 @@ Every non-hotfix release soaks locally for 48 to 72 hours. Release-candidate
 Emergency hotfixes may skip the soak. Use the cycle times in
 `docs/_release_checklist.yaml` and record why the exception was necessary.
 
-## Publish with Trusted Publishing
+## Publication is blocked
 
-If an immediate pre-push recheck of the
-[release-reservation evidence issue #612](https://github.com/nevenincs/cadrumo/issues/612)
-doesn't show S61 as reviewed and closed, don't push or dispatch a workflow.
+Do not push a final release tag, dispatch an upload workflow, create a public
+package release, publish a marketplace entry, or attach an extension bundle.
+The current workflow may be dispatched only to validate one retained Python
+candidate. It does not authorize or perform publication.
 
-1. Push only the reviewed `main` commit and the one final tag:
-
-   ```console
-   git push origin main
-   git push origin refs/tags/vX.Y.Z
-   ```
-
-   Before running either command, confirm no `vX.Y.Z-rc.N` tag exists on the
-   remote. Never use `git push --tags`.
-
-2. Dispatch the core distribution from the final tag:
-
-   ```console
-   gh workflow run publish.yml --repo nevenincs/cadrumo --ref vX.Y.Z -f distribution=cadrumo
-   ```
-
-3. Inspect the `pypi` environment deployment. If any of these states isn't
-   visible, stop:
-
-   - The job uses the reviewed `vX.Y.Z` commit.
-   - The build produces exactly one `cadrumo-*.whl`.
-   - The artifact guard passes.
-   - Trusted Publishing obtains the short-lived OIDC credential.
-   - An authorized maintainer started the manual workflow dispatch.
-
-4. Verify the core index entry before publishing either companion:
-
-   ```console
-   uvx --refresh --from cadrumo==X.Y.Z aeat --version
-   ```
-
-   If the command resolves from a local path, reports another version, or prints
-   another product name, don't publish either companion. It must resolve from
-   PyPI and print `CADRUMO X.Y.Z`.
-
-5. Dispatch the manuals companion:
-
-   ```console
-   gh workflow run publish.yml --repo nevenincs/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-manuals
-   ```
-
-   If the job fails to use `vX.Y.Z`, build one
-   `cadrumo_data_manuals-*.whl`, pass the size guard, complete the OIDC exchange,
-   or publish version `X.Y.Z` to `cadrumo-data-manuals`, stop.
-
-6. After the manuals job passes, dispatch the official companion:
-
-   ```console
-   gh workflow run publish.yml --repo nevenincs/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-official
-   ```
-
-   If the job fails to use `vX.Y.Z`, build one
-   `cadrumo_data_official-*.whl`, pass the size guard, complete the OIDC exchange,
-   or publish version `X.Y.Z` to `cadrumo-data-official`, stop.
-
-7. Verify all three index pages show `X.Y.Z` and their uploaded wheel hashes.
-   Then verify dependency resolution and corpus integrity from the public index:
-
-   ```console
-   uvx --refresh --from "cadrumo[corpus-sources]==X.Y.Z" aeat app registry verify
-   ```
-
-   The command must resolve the core distribution and both companions from PyPI
-   at `X.Y.Z`. The registry verification must complete successfully. A local
-   path, missing companion, version mismatch, or refusal blocks the release.
-
-8. After S61 confirms the external plugin identifier, generate the Claude
-   plugin from the published version. Run `claude plugin validate --strict`.
-
-   The validator must report success. The generated MCP plugin must launch
-   `cadrumo-mcp`, and every human CLI instruction must use `aeat`. A skipped
-   validator, missing Claude executable, `cadrumo` human command, or ambiguous
-   result blocks marketplace publication.
-
-9. If S73 remains open, don't create the GitHub Release. After S73 closes,
-   create it from the verified template. If filing behavior changed, update
-   `docs/updates.md`.
-
-10. Build the Claude Desktop extension bundle and attach it to the GitHub
-    Release. The bundle self-installs `cadrumo[agent]` from PyPI via
-    `uvx --from cadrumo[agent]==X.Y.Z cadrumo-mcp`, so build it only AFTER the
-    core PyPI distribution is live (steps 1–7); its version and uvx pin are
-    stamped from `pyproject.toml` at build time and held to the release by the
-    `version-surfaces-agree` readiness gate.
-
-    ```console
-    python packaging/mcpb/build.py
-    gh release upload vX.Y.Z dist/cadrumo.mcpb --repo nevenincs/cadrumo
-    ```
-
-    The build prints whether the bundle is `signed` or `UNSIGNED`. Cadrumo has no
-    bundle signing identity configured, so it is UNSIGNED — attach it labeled as
-    such; the builder never fabricates a signature. Confirm the attached bundle's
-    pin resolves the just-published release from PyPI:
-
-    ```console
-    uvx --refresh --from "cadrumo[agent]==X.Y.Z" cadrumo-mcp --help
-    ```
-
-    The end-user story: download `cadrumo.mcpb` from the GitHub Release, open it
-    with Claude Desktop, and `uv` bootstraps `cadrumo[agent]` from PyPI on first
-    run — the host needs only `uv` on `PATH`, no prior `pip install`.
-
-PyPI distributions are immutable. If a distribution job succeeded, never rerun
-it for the same version. If a job's outcome is unclear, inspect its PyPI project
-and release files before deciding whether a retry is safe.
+Publication instructions belong here only after the distribution readiness
+plan has complete cohort, client, platform, acquisition, evidence aggregation,
+protected promotion, and public reacquisition records. Until then, stop after
+candidate preparation and preserve the validation evidence.
 
 ## Report release problems
 
@@ -579,9 +456,9 @@ regression, or a supported-environment miscalculation.
    mitigation, and corrected version. Until coordinated disclosure is approved,
    keep embargoed security details private.
 
-The approved OIDC workflow is human-dispatched and never publishes
-automatically. Readiness and rollback helpers perform no outward action. The
-stale token-based publish helpers can publish when deliberately invoked and are
-forbidden pending removal or reconciliation. The release tooling never files
-with AEAT, automatically executes a rollback, yanks a release, or migrates
-former-product state.
+The successful packaging-smoke run is the build authority for the retained
+Python candidate. Readiness and rollback helpers perform no outward action,
+and there is no local or CI package upload path. The release tooling never
+files with AEAT, automatically executes a rollback, yanks a release, or
+migrates former-product state. Public promotion remains unimplemented until
+all release channels share one complete evidence-backed authority.
