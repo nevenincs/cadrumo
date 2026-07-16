@@ -250,12 +250,45 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.config_reset.ConfigResetUnconfirmedError",
+        "cadrumo.application.config_reset.ConfigResetError",
         ErrorCode(
-            code="REFUSED_CONFIG_RESET_UNCONFIRMED",
+            code="ERROR_CONFIG_RESET",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.config_reset.ConfigResetConfirmationRequiredError",
+        ErrorCode(
+            code="REFUSED_CONFIG_RESET_CONFIRMATION_REQUIRED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_config_reset_unconfirmed",
-            default_suggestion="aeat config reset --scope all --yes",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.config_reset.ConfigResetAlreadyRunningError",
+        ErrorCode(
+            code="LOCKED_CONFIG_RESET_ALREADY_RUNNING",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_lock_acquisition",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.config_reset.ConfigResetOperationNotFoundError",
+        ErrorCode(
+            code="ERROR_CONFIG_RESET_OPERATION_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aeat_core_not_found",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

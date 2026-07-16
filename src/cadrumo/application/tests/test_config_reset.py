@@ -1,9 +1,10 @@
-"""Per-scope tests for ``aeat config reset``."""
+"""Real-behavior tests for durable all-profile configuration reset."""
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -11,31 +12,32 @@ from pydantic import SecretStr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+_PROFILE_A_ID = "11111111-1111-4111-8111-111111111111"
 _PROFILE_B_ID = "22222222-2222-4222-8222-222222222222"
-_PROFILE_LABEL = "operator"
+_PROFILE_C_ID = "33333333-3333-4333-8333-333333333333"
+_DANGLING_ID = "44444444-4444-4444-8444-444444444444"
+_OVERRIDE_REASON = "Court order requiring erasure before the statutory retention date."
 
 
 @contextmanager
-def _isolated_workflow(tmp_path: Path) -> Iterator[None]:
-    """Isolate workflow state behind a real active profile custody span."""
-
+def _isolated_reset_root(tmp_path: Path) -> Generator[Path]:
     from ...tests.secure_sql import isolated_profile_storage_root
-    from ..user_profile import profile_create_storage_span
 
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span(_PROFILE_ID),
-    ):
-        yield
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        yield root
 
 
-def _profile_facts(overrides: Mapping[str, object] | None = None):
+def _profile_facts(
+    *,
+    tax_id: str,
+    name: str,
+    overrides: Mapping[str, object] | None = None,
+):
     from ...domain.user_profile import UserProfileFact
 
     values: dict[str, object] = {
-        "identity.tax_id": "00000000T",
-        "identity.name": "Test Operator",
+        "identity.tax_id": tax_id,
+        "identity.name": name,
         "tax_residence.ccaa": "madrid",
         "tax_residence.jurisdiction_scope": "common_regime",
         "iva.regime": "GENERAL",
@@ -43,106 +45,139 @@ def _profile_facts(overrides: Mapping[str, object] | None = None):
     }
     if overrides:
         values.update(overrides)
-    return tuple(UserProfileFact.model_validate({"path": path, "value": value}) for path, value in values.items())
+    return tuple(
+        UserProfileFact.model_validate({"path": path, "value": value})
+        for path, value in values.items()
+    )
 
 
-def _register_profile(
-    label: str,
+def _create_profile(
+    profile_id: str,
     *,
-    profile_id: str = _PROFILE_ID,
-    overrides: Mapping[str, object] | None = None,
+    label: str,
+    tax_id: str,
 ) -> None:
-    from ..user_profile import register_active_profile
-    from ..workflow import workflow_state_repository
-
-    workflow_state_repository().update(
-        lambda current: register_active_profile(
-            current,
-            profile_id=profile_id,
-            display_name=label,
-            facts=_profile_facts(overrides),
-        ),
-    )
-
-
-def _profile_exists(profile_id: str, *, bucket_id: str | None = None) -> bool:
-    from ..user_profile import UserProfileLifecycleRepository
-
-    return UserProfileLifecycleRepository(bucket_id=bucket_id or profile_id).exists(profile_id)
-
-
-def _registered_profile_names() -> tuple[str, ...]:
-    from ..workflow import list_profile_buckets
-
-    return tuple(sorted(pointer.label for pointer in list_profile_buckets().values()))
-
-
-def test_reset_config_refuses_without_confirmation(
-    tmp_path: Path,
-) -> None:
-    """The function must raise ConfigResetUnconfirmedError when confirmed=False."""
-    from ..config_reset import ConfigResetScope, ConfigResetUnconfirmedError, reset_config
-
-    with (
-        _isolated_workflow(tmp_path),
-        pytest.raises(ConfigResetUnconfirmedError) as excinfo,
-    ):
-        reset_config(ConfigResetScope.ALL, confirmed=False)
-    from ...core.errors import build_error_envelope, resolve_error_message
-
-    rendered = resolve_error_message(excinfo.value)
-    assert excinfo.value.translated_message == "errors.refused.refused_config_reset_unconfirmed"
-    assert excinfo.value.context == {"scope": "ALL"}
-    assert rendered != excinfo.value.translated_message
-    assert "refused_config_reset_unconfirmed" not in rendered
-    assert "config reset refused" not in rendered.lower()
-
-    envelope = build_error_envelope(excinfo.value, trace_id=None)
-    assert envelope.code == "REFUSED_CONFIG_RESET_UNCONFIRMED"
-    assert envelope.message == rendered
-
-
-def test_reset_profile_only_clears_active_profile_record(
-    tmp_path: Path,
-) -> None:
-    """PROFILE scope removes all profile entries."""
-    from ..config_reset import ConfigResetReport, ConfigResetScope, reset_config
-
-    with _isolated_workflow(tmp_path):
-        _register_profile(_PROFILE_LABEL, overrides={"identity.name": "Design Operator"})
-
-        report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
-        assert isinstance(report, ConfigResetReport)
-        assert report.scope is ConfigResetScope.PROFILE
-        assert _PROFILE_ID in report.removed_profile_ids
-        assert report.removed_auth_session is False
-
-        assert _registered_profile_names() == ()
-        assert not _profile_exists(_PROFILE_ID)
-
-
-def test_reset_auth_only_clears_session(
-    tmp_path: Path,
-) -> None:
-    """AUTH scope uses canonical auth reset for sessions, sources, and secrets."""
-    from ...adapters.outbound.aeat.auth import _session_store
-    from ..auth import AuthProviderKind, configure_operator_auth
-    from ..auth._certificate_sources_operator import (
-        register_operator_certificate_source,
-        resolve_certificate_source_secret,
-        set_operator_certificate_source_secret,
-    )
-    from ..auth._sessions import storage_state_paths
-    from ..config_reset import ConfigResetScope, reset_config
+    from ..user_profile import profile_create_storage_span, register_active_profile
     from ..wizard import WIZARD_FLOWS
     from ..workflow import workflow_state_repository
 
-    with _isolated_workflow(tmp_path):
-        assert WIZARD_FLOWS
-        _register_profile(_PROFILE_LABEL, overrides={"identity.name": "Design Operator"})
+    assert WIZARD_FLOWS
+    with profile_create_storage_span(profile_id):
+        workflow_state_repository().update(
+            lambda current: register_active_profile(
+                current,
+                profile_id=profile_id,
+                display_name=label,
+                facts=_profile_facts(tax_id=tax_id, name=label),
+            ),
+        )
+
+
+def _write_active_pointer(root: Path, bucket_id: str) -> None:
+    from ...core import BucketPointer, write_pointer
+
+    write_pointer(
+        root,
+        BucketPointer(bucket_id=bucket_id, schema_version=1),
+    )
+
+
+def _persist_filing(
+    bucket_id: str,
+    *,
+    filing_year: int,
+    seed: str,
+) -> None:
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ...core import Period
+    from ...domain.modelos import (
+        ModeloCode,
+        ModeloRecord,
+        ModeloRecordCatalogue,
+        derive_filing_record_id,
+    )
+    from ..user_profile import profile_storage_session
+
+    work_unit_id = (seed * 64)[:64]
+    revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
+    record_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="aeat.cli.modelo.file",
+    )
+    record = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, "2T"),
+        filed_at=datetime(filing_year, 7, 1, tzinfo=UTC),
+        filed_by="aeat.cli.modelo.file",
+    )
+    with profile_storage_session(bucket_id):
+        repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id)
+        catalogue = repository.load()
+        repository.save(
+            ModeloRecordCatalogue(
+                records={**catalogue.records, record_id: record},
+            ),
+        )
+
+
+def _fingerprint(bucket_id: str) -> str:
+    from ..bucket_maintenance import AssessBucketDeletionCommand, BucketMaintenanceService
+
+    assessment = BucketMaintenanceService().assess_deletion(
+        AssessBucketDeletionCommand(bucket_id=bucket_id),
+    )
+    assert assessment.fingerprint is not None
+    return assessment.fingerprint.digest
+
+
+def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
+    from ..config_reset import (
+        ConfigResetConfirmationRequiredError,
+        resume_config_reset,
+        start_config_reset,
+    )
+
+    with _isolated_reset_root(tmp_path):
+        with pytest.raises(ConfigResetConfirmationRequiredError):
+            start_config_reset(confirmed=False)
+        with pytest.raises(ConfigResetConfirmationRequiredError):
+            resume_config_reset("a" * 64, confirmed=False)
+
+
+def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
+    tmp_path: Path,
+) -> None:
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...core import pointer_path
+    from ...core.config import load_settings
+    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetTargetPhase
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..auth import AuthProviderKind
+    from ..auth._acquisition_lock import (
+        acquire_auth_acquisition_lock,
+        auth_acquisition_lock_path,
+    )
+    from ..auth._certificate_sources_operator import (
+        register_operator_certificate_source,
+        set_operator_certificate_source_secret,
+    )
+    from ..config_reset import start_config_reset
+    from ..user_profile import delete_profile_with_lifecycle_span
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        delete_profile_with_lifecycle_span(_PROFILE_B_ID)
+
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"test certificate")
-        configure_operator_auth("certificate", certificate_path=certificate_path)
+        _write_active_pointer(root, _PROFILE_A_ID)
         register_operator_certificate_source(
             name="personal",
             certificate_path=certificate_path,
@@ -151,181 +186,208 @@ def test_reset_auth_only_clears_session(
             name="personal",
             secret=SecretStr("test-passphrase"),
         )
-        session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-        _session_store.save(
-            session_path,
-            storage_state={},
-            metadata={"provider_kind": "certificate"},
-        )
-        state_before = workflow_state_repository().load()
-        assert _session_store.exists(session_path)
-        assert resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_ID) is not None
-
-        report = reset_config(ConfigResetScope.AUTH, confirmed=True)
-        assert report.scope is ConfigResetScope.AUTH
-        assert report.removed_auth_session is True
-        assert report.removed_profile_ids == ()
-
-        state_after = workflow_state_repository().load()
-        assert state_after.auth.provider is None
-        assert state_after.auth.certificate_sources == {}
-        assert _session_store.exists(session_path) is False
-        assert resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_ID) is None
-        new_events = state_after.bucket_events[len(state_before.bucket_events) :]
-        assert ("auth.provider.cleared", "certificate") in [
-            (event.action, event.object_id) for event in new_events
-        ]
-        assert ("auth.session.cleared", "certificate") in [
-            (event.action, event.object_id) for event in new_events
-        ]
-        assert ("auth.certificate_source.removed", "personal") in [
-            (event.action, event.object_id) for event in new_events
-        ]
-        assert _PROFILE_LABEL in _registered_profile_names()
-        assert _profile_exists(_PROFILE_ID)
-
-
-def test_reset_auth_without_active_bucket_refuses_through_canonical_auth_error(
-    tmp_path: Path,
-) -> None:
-    """AUTH scope never falls through to ambient or cold-bootstrap state."""
-    from ...tests.secure_sql import isolated_profile_storage_root
-    from ..auth import AuthConfigureNoActiveBucketError
-    from ..config_reset import ConfigResetScope, reset_config
-
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        with pytest.raises(AuthConfigureNoActiveBucketError):
-            reset_config(ConfigResetScope.AUTH, confirmed=True)
-        assert _registered_profile_names() == ()
-
-
-def test_reset_profile_deletes_registered_bucket_record(
-    tmp_path: Path,
-) -> None:
-    """PROFILE scope deletes the persisted bucket record, not just a state key."""
-    from ..config_reset import ConfigResetScope, reset_config
-
-    with _isolated_workflow(tmp_path):
-        _register_profile(_PROFILE_LABEL)
-        assert _profile_exists(_PROFILE_ID)
-
-        report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
-
-        assert _PROFILE_ID in report.removed_profile_ids
-        assert not _profile_exists(_PROFILE_ID)
-        assert _registered_profile_names() == ()
-
-
-def test_reset_data_invokes_quarantine_pipeline(
-    tmp_path: Path,
-) -> None:
-    """DATA scope returns a quarantine count; profile + auth untouched."""
-    from ..config_reset import ConfigResetScope, reset_config
-
-    with _isolated_workflow(tmp_path):
-        _register_profile(_PROFILE_LABEL)
-
-        report = reset_config(ConfigResetScope.DATA, confirmed=True)
-        assert report.scope is ConfigResetScope.DATA
-        assert report.removed_profile_ids == ()
-        assert report.removed_auth_session is False
-        # No unreadable rows in a fresh temp DB -> quarantine count is 0.
-        assert report.quarantined_namespace_count == 0
-
-        assert _PROFILE_LABEL in _registered_profile_names()
-        assert _profile_exists(_PROFILE_ID)
-
-
-def test_reset_all_combines_all_scopes(
-    tmp_path: Path,
-) -> None:
-    """ALL scope clears target auth custody before deleting every profile."""
-    from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...core.config import load_settings
-    from ..auth import AuthProviderKind, configure_operator_auth
-    from ..auth._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
-    from ..config_reset import ConfigResetScope, reset_config
-    from ..user_profile import (
-        delete_profile_with_lifecycle_span,
-        profile_create_storage_span,
-        profile_storage_session,
-    )
-    from ..wizard import WIZARD_FLOWS
-    from ..workflow import list_profile_buckets
-
-    with _isolated_workflow(tmp_path):
-        assert WIZARD_FLOWS
-        _register_profile(_PROFILE_LABEL, overrides={"identity.name": "Design Operator"})
-        configure_operator_auth("certificate")
-        with profile_create_storage_span(_PROFILE_B_ID):
-            _register_profile(
-                "second-operator",
-                profile_id=_PROFILE_B_ID,
-                overrides={
-                    "identity.name": "Second Operator",
-                    "identity.tax_id": "00000001R",
-                },
-            )
-            configure_operator_auth("clave_permanente")
-        delete_profile_with_lifecycle_span(_PROFILE_B_ID)
-        assert _PROFILE_B_ID in list_profile_buckets(include_tombstoned=True)
-        assert _PROFILE_B_ID not in list_profile_buckets()
 
         settings = load_settings()
-        second_lock_path = auth_acquisition_lock_path(
+        secret_blob_root = settings.cadrumo_blob_store_dir / "blobs"
+        assert any(path.is_file() for path in secret_blob_root.rglob("*"))
+        _write_active_pointer(root, _PROFILE_B_ID)
+        lock_path = auth_acquisition_lock_path(
             settings,
             AuthProviderKind.CLAVE_PERMANENTE,
             bucket_id=_PROFILE_B_ID,
         )
-        with (
-            profile_storage_session(_PROFILE_B_ID),
-            acquire_auth_acquisition_lock(
-                settings,
-                AuthProviderKind.CLAVE_PERMANENTE,
-                ttl_seconds=60,
-                operation="test-config-reset-all",
-            ),
+        with acquire_auth_acquisition_lock(
+            settings,
+            AuthProviderKind.CLAVE_PERMANENTE,
+            ttl_seconds=60,
+            operation="test-config-reset",
         ):
-            assert second_lock_path.is_file()
-            report = reset_config(ConfigResetScope.ALL, confirmed=True)
-            assert second_lock_path.exists() is False
+            assert lock_path.is_file()
+            _write_active_pointer(root, _DANGLING_ID)
+            operation = start_config_reset(confirmed=True)
+            assert lock_path.exists() is False
 
-        assert report.scope is ConfigResetScope.ALL
-        assert _PROFILE_ID in report.removed_profile_ids
-        assert _PROFILE_B_ID in report.removed_profile_ids
-        assert report.removed_auth_session is True
+        assert operation.status is ConfigResetOperationStatus.COMPLETE
+        assert tuple(target.bucket_id for target in operation.targets) == (
+            _PROFILE_A_ID,
+            _PROFILE_B_ID,
+            _DANGLING_ID,
+        )
+        assert operation.pointer_snapshot.present is True
+        assert operation.pointer_snapshot.bucket_id == _DANGLING_ID
+        assert operation.pointer_snapshot.content_sha256 is not None
+        assert operation.summary is not None
+        assert operation.summary.target_count == 3
+        assert operation.summary.deleted_count == 2
+        assert operation.summary.already_absent_count == 1
+        for target in operation.targets:
+            assert target.phase is ConfigResetTargetPhase.DELETED
+            assert target.completed_at is not None
+            if target.exists_at_snapshot:
+                assert target.deletion_marker is not None
+                assert target.fingerprint is not None
+                assert target.deletion_marker.operation_id == operation.operation_id
+                assert target.deletion_marker.fingerprint == target.fingerprint.digest
+            else:
+                assert target.deletion_marker is None
 
-        assert _registered_profile_names() == ()
-        assert bucket_paths(settings.cadrumo_local_storage_root, _PROFILE_ID).bucket_dir.exists() is False
-        assert bucket_paths(settings.cadrumo_local_storage_root, _PROFILE_B_ID).bucket_dir.exists() is False
+        assert pointer_path(root).exists() is False
+        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+        assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
+        assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
+        assert tuple(path for path in secret_blob_root.rglob("*") if path.is_file()) == ()
+        assert ConfigResetJournalRepository().load(operation.operation_id) == operation
 
 
-def test_reset_all_refuses_dangling_pointer_without_recreating_target(
+def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
     tmp_path: Path,
 ) -> None:
-    """ALL scope leaves a missing pointer target absent for later S62/S65 repair."""
-    from ...adapters.persistence.storage import StorageValidationError
-    from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...core import BucketPointer, pointer_path, write_pointer
-    from ...core.config import load_settings
-    from ...tests.secure_sql import isolated_profile_storage_root
-    from ..config_reset import ConfigResetScope, reset_config
+    from ...core import pointer_path
+    from .._config_reset_models import (
+        ConfigResetOperationStatus,
+        ConfigResetPauseReason,
+        ConfigResetTargetPhase,
+    )
+    from ..config_reset import (
+        ConfigResetAlreadyRunningError,
+        resume_config_reset,
+        start_config_reset,
+    )
 
-    missing_bucket_id = "33333333-3333-4333-8333-333333333333"
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        settings = load_settings()
-        write_pointer(
-            settings.cadrumo_local_storage_root,
-            BucketPointer(bucket_id=missing_bucket_id, schema_version=1),
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
+        _write_active_pointer(root, _PROFILE_A_ID)
+        pointer_before = pointer_path(root).read_bytes()
+        fingerprints_before = {
+            _PROFILE_A_ID: _fingerprint(_PROFILE_A_ID),
+            _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
+        }
+
+        operation = start_config_reset(confirmed=True)
+
+        assert operation.status is ConfigResetOperationStatus.PAUSED
+        assert operation.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
+        assert operation.paused_target_ids == (_PROFILE_B_ID,)
+        assert pointer_path(root).read_bytes() == pointer_before
+        assert {
+            _PROFILE_A_ID: _fingerprint(_PROFILE_A_ID),
+            _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
+        } == fingerprints_before
+        phases = {target.bucket_id: target.phase for target in operation.targets}
+        assert phases == {
+            _PROFILE_A_ID: ConfigResetTargetPhase.RETENTION_APPROVED,
+            _PROFILE_B_ID: ConfigResetTargetPhase.SNAPSHOTTED,
+        }
+        assert all(target.retention is not None for target in operation.targets)
+
+        with pytest.raises(ConfigResetAlreadyRunningError) as raised:
+            start_config_reset(confirmed=True)
+        assert raised.value.context == {"operation_id": operation.operation_id}
+
+        completed = resume_config_reset(
+            operation.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
         )
-        pointer_before = pointer_path(settings.cadrumo_local_storage_root).read_bytes()
-        missing_bucket = bucket_paths(
-            settings.cadrumo_local_storage_root,
-            missing_bucket_id,
-        ).bucket_dir
+        assert completed.status is ConfigResetOperationStatus.COMPLETE
+        assert completed.summary is not None
+        assert completed.summary.retention_override_count == 1
 
-        with pytest.raises(StorageValidationError):
-            reset_config(ConfigResetScope.ALL, confirmed=True)
 
-        assert missing_bucket.exists() is False
-        assert pointer_path(settings.cadrumo_local_storage_root).read_bytes() == pointer_before
+def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..config_reset import config_reset_status, start_config_reset
+
+    with _isolated_reset_root(tmp_path):
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="c")
+        operation = start_config_reset(confirmed=True)
+        repository = ConfigResetJournalRepository()
+        journal_path = repository.path_for(operation.operation_id)
+        before = journal_path.read_bytes()
+
+        assert config_reset_status(operation.operation_id) == operation
+        assert config_reset_status() == operation
+        assert journal_path.read_bytes() == before
+
+
+def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapshot(
+    tmp_path: Path,
+) -> None:
+    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
+    from ..config_reset import resume_config_reset, start_config_reset
+
+    with _isolated_reset_root(tmp_path):
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="e")
+        operation = start_config_reset(confirmed=True)
+        original_fingerprint = operation.targets[0].fingerprint
+        assert original_fingerprint is not None
+
+        _persist_filing(_PROFILE_A_ID, filing_year=2024, seed="1")
+        changed = resume_config_reset(
+            operation.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
+        )
+
+        assert changed.status is ConfigResetOperationStatus.PAUSED
+        assert changed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
+        assert changed.paused_target_ids == (_PROFILE_A_ID,)
+        assert changed.targets[0].fingerprint is not None
+        assert changed.targets[0].fingerprint.digest != original_fingerprint.digest
+
+        completed = resume_config_reset(
+            operation.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
+        )
+        assert completed.status is ConfigResetOperationStatus.COMPLETE
+
+
+def test_resume_adds_changed_pointer_target_under_the_same_operation(
+    tmp_path: Path,
+) -> None:
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
+    from ..config_reset import resume_config_reset, start_config_reset
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="3")
+        operation = start_config_reset(confirmed=True)
+
+        _create_profile(_PROFILE_C_ID, label="Gamma operator", tax_id="00000002W")
+        changed = resume_config_reset(
+            operation.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
+        )
+
+        assert changed.status is ConfigResetOperationStatus.PAUSED
+        assert changed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
+        assert changed.paused_target_ids == (_PROFILE_C_ID,)
+        assert tuple(target.bucket_id for target in changed.targets) == (
+            _PROFILE_A_ID,
+            _PROFILE_C_ID,
+        )
+        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
+        assert bucket_paths(root, _PROFILE_C_ID).bucket_dir.is_dir()
+
+        completed = resume_config_reset(
+            operation.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
+        )
+        assert completed.status is ConfigResetOperationStatus.COMPLETE
+        assert tuple(target.bucket_id for target in completed.targets) == (
+            _PROFILE_A_ID,
+            _PROFILE_C_ID,
+        )

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -50,6 +52,10 @@ class ConfigResetJournalOwnershipError(ConfigResetJournalError):
     """Raised when a journal lacks the required target deletion evidence."""
 
 
+class ConfigResetJournalIncompleteError(ConfigResetJournalError):
+    """Raised when a new operation would overlap an incomplete reset."""
+
+
 class ConfigResetJournalRepository:
     """Persist credential-free journals as atomic individual files.
 
@@ -87,6 +93,22 @@ class ConfigResetJournalRepository:
             if path.exists():
                 raise ConfigResetJournalAlreadyExistsError(operation.operation_id)
             self._write(path, operation)
+
+    def create_exclusive(self, operation: ConfigResetOperation) -> None:
+        """Create a journal only when no incomplete reset operation exists."""
+        self._ensure_root()
+        path = self.path_for(operation.operation_id)
+        with exclusive_file_lock(self._lock_target):
+            self._raise_if_incomplete()
+            if path.exists():
+                raise ConfigResetJournalAlreadyExistsError(operation.operation_id)
+            self._write(path, operation)
+
+    def refuse_if_incomplete(self) -> None:
+        """Refuse before preflight when another reset journal is incomplete."""
+        self._ensure_root()
+        with exclusive_file_lock(self._lock_target):
+            self._raise_if_incomplete()
 
     def save(self, operation: ConfigResetOperation) -> None:
         """Atomically write or replace the complete journal for ``operation``."""
@@ -149,6 +171,13 @@ class ConfigResetJournalRepository:
         """Return the last journal in repository ordering, or ``None``."""
         operations = self.list()
         return operations[-1] if operations else None
+
+    @contextmanager
+    def operation_lock(self, operation_id: str) -> Generator[None]:
+        """Serialize start or resume execution for one operation identifier."""
+        self._ensure_root()
+        with exclusive_file_lock(self.path_for(operation_id)):
+            yield
 
     def verify_deletion_ownership(
         self,
@@ -255,6 +284,15 @@ class ConfigResetJournalRepository:
         except OSError as exc:
             raise ConfigResetJournalError("cannot restrict reset journal file permissions") from exc
 
+    def _raise_if_incomplete(self) -> None:
+        incomplete = tuple(
+            candidate
+            for candidate in self.list()
+            if candidate.status is not ConfigResetOperationStatus.COMPLETE
+        )
+        if incomplete:
+            raise ConfigResetJournalIncompleteError(incomplete[-1].operation_id)
+
 
 def _validate_operation_id(operation_id: str) -> None:
     if _OPERATION_ID_PATTERN.fullmatch(operation_id) is None:
@@ -270,6 +308,7 @@ __all__ = [
     "ConfigResetJournalAlreadyExistsError",
     "ConfigResetJournalCorruptError",
     "ConfigResetJournalError",
+    "ConfigResetJournalIncompleteError",
     "ConfigResetJournalNotFoundError",
     "ConfigResetJournalOwnershipError",
     "ConfigResetJournalRepository",
