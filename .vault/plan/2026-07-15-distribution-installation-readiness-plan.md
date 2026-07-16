@@ -63,7 +63,7 @@ Make wheel, sdist, companion, default, agent, and all-extra installations consum
 
 Create a versioned Scoop product artifact with both commands and exercise it in a clean Windows acquisition environment.
 
-- [ ] `W02.P04.S17` - Generate a versioned Scoop manifest with immutable cohort URLs hashes persistence and both command shims; `packaging/scoop/generate.py`.
+- [x] `W02.P04.S17` - Generate a versioned Scoop manifest with immutable cohort URLs hashes persistence and both command shims; `packaging/scoop/generate.py`.
 - [ ] `W02.P04.S18` - Prove Scoop generation matches the cohort and exposes both installed commands; `packaging/scoop/tests/test_generate.py`.
 - [ ] `W02.P04.S19` - Install from the intended bucket in Windows Sandbox and execute CLI MCP update and persistence behavior; `dev/packaging/smoke_scoop.ps1`.
 - [ ] `W02.P04.S20` - Run the clean Scoop acquisition gate on the declared Windows release row; `.github/workflows/packaging-scoop.yml`.
