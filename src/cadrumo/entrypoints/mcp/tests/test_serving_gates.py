@@ -195,6 +195,7 @@ def test_telemetry_records_payload_free_rows(tmp_path: Path) -> None:
     raw = writer.path.read_text(encoding="utf-8")
     records = read_session_records(writer.path)
     assert len(records) == 2
+    assert any(len(record.executable_sha256) == 64 for record in records)
     # A content hash is present ...
     assert any(len(record.arguments_sha256) == 64 for record in records)
     # ... but neither the raw amount argument nor the contract result payload is.
