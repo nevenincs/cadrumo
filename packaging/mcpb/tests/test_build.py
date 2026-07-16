@@ -146,9 +146,19 @@ def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
         "command": "uv",
         "args": ["run", "--directory", "${__dirname}", "src/server.py"],
         "env": {
+            "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
             "CADRUMO_MCP_PERSONA": "${user_config.persona}",
             "CADRUMO_MCP_SURFACE": "${user_config.surface}",
         },
+    }
+    assert manifest["user_config"]["storage_root"] == {
+        "type": "directory",
+        "title": "Cadrumo state directory",
+        "description": (
+            "Persistent, project-independent local state for the Cadrumo MCP service. "
+            "The directory is never adopted from the retired aeat product."
+        ),
+        "required": True,
     }
     assert manifest["compatibility"] == {
         "runtimes": {"python": ">=3.13,<3.14"},
@@ -212,6 +222,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
     env = manifest["server"]["mcp_config"]["env"]
     assert json.loads(env["CADRUMO_MCP_COHORT_SHA256"]) == expected_sha256
     assert env["CADRUMO_MCP_REQUIRED_VERSION"] == cohort.version
+    assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == "${user_config.storage_root}"
     assert env["UV_PROJECT_ENVIRONMENT"] == (f"${{__dirname}}/.cadrumo-runtime-{BUILD._runtime_identity(cohort)}")
     assert "distribution(name)" in launcher
     assert 'read_text("direct_url.json")' in launcher

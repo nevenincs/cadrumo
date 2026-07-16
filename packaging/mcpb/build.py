@@ -42,6 +42,7 @@ _CONSOLE_SCRIPT: Final[str] = "cadrumo-mcp"
 _REQUIRED_VERSION_ENV: Final[str] = "CADRUMO_MCP_REQUIRED_VERSION"
 _REQUIRED_COHORT_ENV: Final[str] = "CADRUMO_MCP_COHORT_SHA256"
 _UV_PROJECT_ENVIRONMENT: Final[str] = "UV_PROJECT_ENVIRONMENT"
+_STORAGE_ROOT_ENV: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
 _SERVER_ENTRY_POINT: Final[str] = "src/server.py"
 _SERVER_SOURCE: Final[str] = """\
 from __future__ import annotations
@@ -137,7 +138,11 @@ def load_manifest() -> dict[str, object]:
     env = mcp_config.get("env")
     if not isinstance(env, dict):
         raise ManifestError("manifest server.mcp_config.env must be an object")
-    if set(env) != {"CADRUMO_MCP_PERSONA", "CADRUMO_MCP_SURFACE"}:
+    if set(env) != {
+        _STORAGE_ROOT_ENV,
+        "CADRUMO_MCP_PERSONA",
+        "CADRUMO_MCP_SURFACE",
+    }:
         raise ManifestError("the committed manifest env must contain only user-config passthrough")
     compatibility = data.get("compatibility")
     if compatibility != {"runtimes": {"python": ">=3.13,<3.14"}}:

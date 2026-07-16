@@ -16,12 +16,19 @@
       "command": "uv",
       "args": ["run", "--directory", "${__dirname}", "src/server.py"],
       "env": {
+        "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
         "CADRUMO_MCP_PERSONA": "${user_config.persona}",
         "CADRUMO_MCP_SURFACE": "${user_config.surface}"
       }
     }
   },
   "user_config": {
+    "storage_root": {
+      "type": "directory",
+      "title": "Cadrumo state directory",
+      "description": "Persistent, project-independent local state for the Cadrumo MCP service. The directory is never adopted from the retired aeat product.",
+      "required": true
+    },
     "persona": {
       "type": "string",
       "title": "Operator persona",
