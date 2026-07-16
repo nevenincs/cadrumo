@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Annotated, Any, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings.sources import EnvPrefixTarget
 
 from . import _config_live_tests as _live_test_config
 from ._auth_provider import AuthProviderKind as _AuthProviderKind
@@ -200,13 +201,23 @@ class Settings(AeatIntegrationSettings):
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         """Keep the hard-cut dotenv filter while preserving strict unknown-key validation."""
         assert isinstance(dotenv_settings, DotEnvSettingsSource)
+        env_prefix_target: EnvPrefixTarget
+        match dotenv_settings.env_prefix_target:
+            case "variable":
+                env_prefix_target = "variable"
+            case "alias":
+                env_prefix_target = "alias"
+            case "all":
+                env_prefix_target = "all"
+            case invalid_target:
+                raise CoreValidationError(f"invalid environment prefix target: {invalid_target!r}")
         filtered_dotenv_settings = _CadrumoDotEnvSettingsSource(
             settings_cls,
             env_file=dotenv_settings.env_file,
             env_file_encoding=dotenv_settings.env_file_encoding,
             case_sensitive=dotenv_settings.case_sensitive,
             env_prefix=dotenv_settings.env_prefix,
-            env_prefix_target=dotenv_settings.env_prefix_target,
+            env_prefix_target=env_prefix_target,
             env_nested_delimiter=dotenv_settings.env_nested_delimiter,
             env_nested_max_split=dotenv_settings.env_nested_max_split,
             env_ignore_empty=dotenv_settings.env_ignore_empty,

@@ -31,6 +31,7 @@ from ...user_profile import (
 from ...workflow import (
     AuthCleanupOperationKind,
     CertificateSecretMutationEventKind,
+    WorkflowState,
     WorkflowStateRepository,
     workflow_state_repository,
 )
@@ -76,7 +77,7 @@ def _seed_cleanup_intent(*, operation_kind: AuthCleanupOperationKind) -> None:
     settings = load_settings()
     repository = workflow_state_repository()
 
-    def prepare(state):
+    def prepare(state: WorkflowState) -> WorkflowState:
         intent = _build_auth_cleanup_intent(
             settings=settings,
             bucket_id=_BUCKET_ID,
@@ -158,7 +159,7 @@ def test_workflow_state_update_retries_real_revision_conflict_without_losing_cha
         concurrent = WorkflowStateRepository(objects=profile.repository)
         first_attempt = True
 
-        def transform(state):
+        def transform(state: WorkflowState) -> WorkflowState:
             nonlocal first_attempt
             if first_attempt:
                 first_attempt = False
@@ -191,7 +192,7 @@ def test_concurrent_first_workflow_writers_retry_absent_row_collision(
         def provider_write() -> None:
             first_attempt = True
 
-            def transform(state):
+            def transform(state: WorkflowState) -> WorkflowState:
                 nonlocal first_attempt
                 if first_attempt:
                     first_attempt = False
@@ -203,7 +204,7 @@ def test_concurrent_first_workflow_writers_retry_absent_row_collision(
         def certificate_write() -> None:
             first_attempt = True
 
-            def transform(state):
+            def transform(state: WorkflowState) -> WorkflowState:
                 nonlocal first_attempt
                 if first_attempt:
                     first_attempt = False

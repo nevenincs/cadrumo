@@ -1117,7 +1117,10 @@ class SecureObjectRepository:
             )
             session.flush()
         except IntegrityError as exc:
-            if expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID:
+            if (
+                expected_revision_id is not None
+                and expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
+            ):
                 raise self._revision_conflict(
                     namespace=namespace,
                     expected_revision_id=expected_revision_id,

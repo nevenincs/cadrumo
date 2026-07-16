@@ -38,7 +38,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, override
 
-import click
 import typer
 from typer._click.core import Command as TyCommand
 
@@ -46,8 +45,7 @@ from typer._click.core import Command as TyCommand
 from typer._click.core import Context as TyContext
 
 # TyperGroup is built on typer's vendored click, so its resolve_command raises
-# the vendored UsageError — a distinct class that is NOT a subclass of the
-# top-level ``click.UsageError``. The synonym-hint catch must name both.
+# the vendored UsageError rather than top-level click's distinct exception.
 from typer._click.exceptions import UsageError as TyUsageError
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
@@ -260,12 +258,12 @@ class CadrumoTyperGroup(TyperGroup):
     ) -> tuple[str | None, TyCommand | None, list[str]]:
         try:
             return super().resolve_command(ctx, args)
-        except (click.UsageError, TyUsageError) as exc:
+        except TyUsageError as exc:
             if args:
                 hint = _synonym_hint(self.name, args[0])
                 if hint is not None and "Did you mean" not in (exc.message or ""):
                     message = (exc.message or "").rstrip(".")
-                    exc.message = f"{message}. {hint}"
+                    raise TyUsageError(f"{message}. {hint}", ctx=exc.ctx) from exc
             raise
 
 

@@ -23,7 +23,6 @@ import functools
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from cryptography import x509
@@ -40,6 +39,9 @@ from ......tests.secure_sql import isolated_runtime_profile
 from .. import (
     AeatAuthenticator,
     AeatLoginAssertionError,
+    BrowserContextLike,
+    BrowserPageLike,
+    BrowserResponseLike,
     BrowserSessionLike,
 )
 
@@ -115,14 +117,14 @@ def _settings_for(bundle_path: Path) -> Settings:
 
 
 class _RecordingBrowserContext:
-    """Minimal browser context stand-in that applies the certificate marker from the provisioner."""
+    """Minimal browser context stand-in for translated-message boundary tests."""
 
     def __init__(self, *, protected_resource_matches: bool) -> None:
         self._storage: dict[str, object] = {"cookies": [], "origins": []}
         self.closed = False
         self._protected_resource_matches = protected_resource_matches
 
-    async def new_page(self) -> _RecordingPage:
+    async def new_page(self) -> BrowserPageLike:
         return _RecordingPage(protected_resource_matches=self._protected_resource_matches)
 
     async def storage_state(self) -> dict[str, object]:
@@ -135,19 +137,21 @@ class _RecordingBrowserContext:
 class _RecordingPage:
     def __init__(self, *, protected_resource_matches: bool) -> None:
         self.url = ""
+        self.status = 200
+        self.ok = True
         self._protected_resource_matches = protected_resource_matches
 
-    async def goto(self, url: str, *, timeout: float | None = None) -> SimpleNamespace:
+    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike:
         del timeout
         self.url = url if self._protected_resource_matches else f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}/"
-        return SimpleNamespace(status=200, ok=True)
+        return self
 
     async def close(self) -> None:
         pass
 
 
 class _RecordingBrowserSession:
-    """Browser session stand-in that creates contexts and applies the provisioner marker."""
+    """Browser session stand-in that creates contexts for translated-message tests."""
 
     def __init__(self, *, protected_resource_matches: bool = True) -> None:
         self.closed = False
@@ -160,7 +164,7 @@ class _RecordingBrowserSession:
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
-    ) -> _RecordingBrowserContext:
+    ) -> BrowserContextLike:
         del storage_state_path, storage_state
         assert provisioner is not None
         return _RecordingBrowserContext(

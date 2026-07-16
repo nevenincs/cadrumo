@@ -141,14 +141,15 @@ def test_bbox_anchor_miss_fails_coverage_rather_than_mis_extracting() -> None:
 
     # Mutate one target's anchor pattern to a box number that is never printed
     # on the committed synthetic fixture, forcing a genuine anchor miss.
-    mutated_targets = tuple(
-        target.model_copy(
-            update={"bbox_anchor": target.bbox_anchor.model_copy(update={"box_number_pattern": "^999$"})},
-        )
-        if target.casilla_id == _casilla_id("01")
-        else target
-        for target in profile.target_casillas
-    )
+    mutated_targets = []
+    for target in profile.target_casillas:
+        if target.casilla_id == _casilla_id("01"):
+            bbox_anchor = target.bbox_anchor
+            assert bbox_anchor is not None
+            target = target.model_copy(
+                update={"bbox_anchor": bbox_anchor.model_copy(update={"box_number_pattern": "^999$"})},
+            )
+        mutated_targets.append(target)
     mutated_profile = profile.model_copy(update={"target_casillas": mutated_targets})
     profiles = dict(snapshot.extraction_profiles)
     profiles[profile.id] = mutated_profile

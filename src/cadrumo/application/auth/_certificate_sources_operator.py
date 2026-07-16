@@ -68,8 +68,6 @@ from ._certificate_sources import (
     active_certificate_source as _active_certificate_source,
 )
 from ._credential_resolution import (
-    resolve_active_certificate_credentials,
-    resolve_active_certificate_credentials_from_state,
     resolve_certificate_source_secret,
 )
 from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
@@ -712,8 +710,6 @@ __all__ = [
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
-    "resolve_active_certificate_credentials",
-    "resolve_active_certificate_credentials_from_state",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "set_operator_certificate_source_secret",

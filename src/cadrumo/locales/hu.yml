@@ -33,10 +33,9 @@ adapters:
           allitast.
         capture_requires_active_session: A capture_storage_state() az aktuálisan aktív
           hitelesített munkamenetet igényli.
-        capture_requires_certificate: A capture_storage_state() tanúsítványalapú munkamenetet
-          és kézfogás-metaadatokat igényel.
+        capture_requires_certificate: A capture_storage_state() aktív tanúsítványalapú
+          munkamenetet és védett erőforrás-metaadatokat igényel.
         closing: A hitelesítő zárás alatt áll; új verify_login műveletek nem engedélyezettek.
-        context_marker_missing: A böngészőkontextus nem tartalmazza a várt tanúsítványjelölőt.
         metadata_parse_failed: A mentett metaadatok nem eredmenyeztek elemzett modellt.
         no_active_context: Nincs aktív böngészőkontextus; először hívja meg az authenticate()
           metódust.
@@ -5038,8 +5037,6 @@ errors:
     auth_auth_certificate: Tanúsítvány-hitelesítési hiba történt.
     auth_auth_certificate_expired: A digitális tanúsítvány lejárt. Hitelesítés előtt
       újítsa meg a tanúsítványt.
-    auth_auth_certificate_handshake: A TLS-kézfogás bemenete érvénytelen. Ellenőrizze
-      a megadott URL-t.
     auth_auth_certificate_load: A PKCS#12 tanúsítványadatok nem elemezhetők. Ellenőrizze,
       hogy a fájl nem sérült-e.
     auth_auth_certificate_nif_parse: Nem sikerült NIF-et vagy NIE-t kinyerni a tanúsítvány
