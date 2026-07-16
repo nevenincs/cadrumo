@@ -32,7 +32,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S` | int | `180` | Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows |
 | `CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S` | int | `90` | Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the acquisition lock TTL |
 | `CADRUMO_AUTH_PROVIDER` | AuthProviderKind | unset | Default auth provider for `aeat config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
-| `CADRUMO_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for AEAT authentication probes in milliseconds |
+| `CADRUMO_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for protected AEAT authentication in milliseconds |
 | `CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS` | str | `en` | Authoritative language for internal code and documentation |
 | `CADRUMO_BLOB_STORE_DIR` | Path | (derived) | Directory containing the encrypted blob store (content-addressed, classification-aware) |
 | `CADRUMO_BROWSER_BUSCAR_SETTLE_MS` | int | `3000` | Settle delay (ms) after the AEAT 'Buscar' button before reading the results table |
