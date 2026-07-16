@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#error-code-registry'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-16'
+modified: '2026-07-16'
 related:
   - '[[2026-04-25-error-code-registry-adr]]'
   - '[[2026-04-25-error-code-registry-code-review-exec]]'

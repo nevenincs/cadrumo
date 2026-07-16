@@ -11,7 +11,17 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 
-<!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S184 -->
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
+<!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S115, S117, S127, S184 -->
 
 # `cli-authority-verb-conformance` plan
 
@@ -83,7 +93,7 @@ Create one atomic pointer boundary and make profile logout close every session, 
 
 Separate session termination from destructive provider and credential reset while preserving scoped idempotency and events.
 
-- [ ] `W02.P06.S37` - Atomically replace broad auth clear with typed target-scoped logout_operator_auth and reset_operator_auth operations, results, scope resolution, session deletion, acquisition-lock cleanup, public exports, distinct state/event semantics, and migration of the existing workflow-event consumer; `src/cadrumo/application/auth/_operator_results.py; src/cadrumo/application/auth/_operator_scope.py; src/cadrumo/application/auth/_sessions.py; src/cadrumo/application/auth/_acquisition_lock.py; src/cadrumo/application/auth/_operator.py; src/cadrumo/application/auth/__init__.py; src/cadrumo/application/tests/test_cli_workflow_verification.py`.
+- [x] `W02.P06.S37` - Atomically replace broad auth clear across backend and live CLI contracts with typed target-scoped logout_operator_auth and reset_operator_auth, complete provider session coverage, safe secret and lock cleanup, distinct schemas and events, exact contract/risk/help/write metadata, four-locale help, and real workflow and command tests without a compatibility wrapper; `src/cadrumo/application/auth/_operator_results.py; src/cadrumo/application/auth/_operator_scope.py; src/cadrumo/application/auth/_sessions.py; src/cadrumo/application/auth/_acquisition_lock.py; src/cadrumo/application/auth/_operator.py; src/cadrumo/application/auth/__init__.py; src/cadrumo/application/tests/test_cli_workflow_verification.py; src/cadrumo/application/auth/tests/test_operator_storage_session.py; src/cadrumo/entrypoints/cli/_config/_auth.py; src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/application/storage_write_policy.py; src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_risk_table.py; src/cadrumo/application/operator_surface/_help.py; src/cadrumo/core/errors/registry/_application_part1.py; src/cadrumo/locales/en.yml; src/cadrumo/locales/es.yml; src/cadrumo/locales/ca.yml; src/cadrumo/locales/hu.yml; src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py; src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py; src/cadrumo/entrypoints/cli/tests/test_output_language_parity.py; src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [ ] `W02.P06.S43` - Prove logout preserves provider and certificate-source configuration while clearing real sessions; `src/cadrumo/application/auth/tests/test_operator_storage_session.py`.
 - [ ] `W02.P06.S44` - Prove reset removes provider state, sessions, locks, registrations, and secrets only for the explicit target; `src/cadrumo/application/auth/tests/test_operator.py`.
 - [ ] `W02.P06.S45` - Prove provider and all-provider deletion leave unrelated bucket session files byte-identical; `src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py`.
@@ -265,11 +275,9 @@ Replace rekey and overloaded recovery spellings with the accepted secure interac
 
 Expose distinct auth logout/reset and secure-storage-only certificate secret operations without clear or backend aliases.
 
-- [ ] `W04.P13.S115` - Remove auth clear and register only login, logout, and destructive reset with mutually exclusive provider or all scope; `src/cadrumo/entrypoints/cli/_config/_auth.py`.
 - [ ] `W04.P13.S116` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
-- [ ] `W04.P13.S117` - Prove provider and all logout and reset semantics plus reset confirmation; `src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py`.
 - [ ] `W04.P13.S118` - Prove certificate secret set and remove against real secure storage and reject backend selection, keyring spellings, and migration or fallback behavior; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
-- [ ] `W04.P13.S119` - Require yes for auth reset and reset start and resume while keeping logout and status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
+- [ ] `W04.P13.S119` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
 
 ### Phase `W04.P14` - Cut over ledger and audit commands
 
@@ -291,7 +299,6 @@ Update typed envelopes, operation mappings, write-policy tokens, and static comm
 
 - [ ] `W05.P15.S125` - Remove schema registrations for lock, rekey, legacy recovery, and sandbox-use commands; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `W05.P15.S126` - Define secret-free schemas for passphrase change, recovery status, create, rotate, verify, and flat recover; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `W05.P15.S127` - Replace auth clear with distinct auth logout and reset schemas and scope rules; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `W05.P15.S128` - Replace flat scoped reset with reset start, status, and resume schemas; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `W05.P15.S129` - Remove evidence-link input and evidence-update output fields from ledger link; `src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
 - [ ] `W05.P15.S130` - Remove modelo audit replay result schema and public command key; `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`.
@@ -315,9 +322,9 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 - [ ] `W05.P16.S142` - Replace removed command, option, help, risk, and error nodes with accepted Hungarian grammar; `src/cadrumo/locales/hu.yml`.
 - [ ] `W05.P16.S143` - Reconcile intentional identical-locale declarations after the grammar migration; `src/cadrumo/locales/_intentional_identical.json`.
 - [ ] `W05.P16.S144` - Require four-locale parity and reject orphaned locale nodes for removed grammar; `src/cadrumo/locales/tests/test_audit.py`.
-- [ ] `W05.P16.S145` - Classify passphrase, recovery, auth reset, reset start and resume, portable profile export, and subject-access export under exact risk keys, with both cleartext export purposes carrying the same handoff classification; `src/cadrumo/application/operator_surface/_risk_table.py`.
-- [ ] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, auth, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
-- [ ] `W05.P16.S147` - Update operator-surface contract notes to the accepted grammar and authority semantics; `src/cadrumo/application/operator_surface/_contract.py`.
+- [ ] `W05.P16.S145` - Classify passphrase, recovery, reset start and resume, portable profile export, and subject-access export under exact risk keys, with both cleartext export purposes carrying the same handoff classification; `src/cadrumo/application/operator_surface/_risk_table.py`.
+- [ ] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
+- [ ] `W05.P16.S147` - Update remaining operator-surface contract notes to the accepted grammar and authority semantics; `src/cadrumo/application/operator_surface/_contract.py`.
 - [ ] `W05.P16.S148` - Replace flat reset and legacy custody next actions with registered accepted commands; `src/cadrumo/core/errors/registry/_application_part1.py`.
 - [ ] `W05.P16.S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
 - [ ] `W05.P16.S150` - Prove suggestions resolve only to accepted registered commands; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.

@@ -3,16 +3,41 @@ tags:
   - '#plan'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-04'
+modified: '2026-07-16'
 tier: L3
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
+  - '[[2026-07-15-distribution-installation-readiness-adr]]'
+  - '[[2026-07-15-distribution-installation-readiness-plan]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `claude-ecosystem-packaging` plan
 
 Ship the aeat CLI plus the aeat-mcp harness as the first real product install: a slim published wheel, a corpus-binaries companion, and a one-click Claude plugin verified end to end on a real client.
+
+## Current authority note (2026-07-16)
+
+This plan is retained as execution history, not as the current distribution
+contract. The accepted
+`[[2026-07-15-distribution-installation-readiness-adr]]` and its plan preserve
+the physical wheel split, plugin, marketplace, and integrity-boundary work, but
+retire the `corpus-sources` optional extra, the supported root-only/advisory
+installation mode, and local token publication. Current command-bearing
+installs require both exact-version data companions, and release promotion
+consumes one immutable fully tested cohort through the sole protected OIDC
+authority. Completed steps below record what this campaign implemented at the
+time; they do not override that later authority.
 
 ## Wave `W01` - Product-run foundations
 
@@ -37,7 +62,12 @@ Demote the developer-only vaultspec-rag search stack out of the base dependency 
 
 ## Wave `W02` - Wheel split and integrity-gate tolerance
 
-Split the single 171.8 MB wheel into a slim aeat runtime wheel (corpus source binaries excluded) plus an aeat-data companion carrying exactly those binaries with mirrored paths, add a corpus locator resolution seam that reads either root, and make the always-on registry integrity gate companion-aware (present -> byte-exact hash unchanged; absent-but-companion-declared -> one loud advisory plus install hint; verification verbs refuse instructively). Gates Wave W04: no release lane can publish until the split builds and the gate tolerates absence honestly.
+Historical campaign scope: split the single 171.8 MB wheel into a slim runtime
+file plus companion data files with mirrored paths, add a corpus locator
+resolution seam that reads either root, and make the always-on registry
+integrity gate companion-aware. The successor keeps the physical split and
+byte-exact enforcement but requires every command-bearing installation to
+resolve the full cohort.
 
 ### Phase `W02.P03` - Two-distribution wheel split build config
 
@@ -66,11 +96,13 @@ Give the registry source-verification gate the companion-aware absent branch: pr
 - [x] `W02.P05.S18` - Add an anti-tautology test that a corrupted PRESENT corpus binary still hard-fails the byte-exact hash gate; `src/aeat/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
 - [x] `W02.P05.S19` - Add an anti-tautology test that an absent companion binary surfaces a loud advisory and is never silently accepted; `src/aeat/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
 
-### Phase `W02.P06` - corpus-sources extra and split-install smoke lane
+### Phase `W02.P06` - historical corpus-sources extra and split-install smoke lane
 
-Add the corpus-sources extra pinning aeat-data and a split-install packaging-smoke lane proving the advisory path without the companion and the byte-identical path with it.
+Historical scope: add the corpus-sources extra and prove both the root-only
+diagnostic and complete split installation. The optional extra and supported
+root-only mode are now retired.
 
-- [x] `W02.P06.S20` - Add the corpus-sources optional extra pinning aeat-data at an exact version; `pyproject.toml`.
+- [x] `W02.P06.S20` - Add the historical corpus-sources optional extra pinning aeat-data at an exact version; `pyproject.toml`.
 - [x] `W02.P06.S21` - Add a split-install packaging-smoke lane proving the advisory path with the core wheel alone and the byte-identical path with the companion installed; `dev/packaging/smoke_split_install.py`.
 - [x] `W02.P06.S22` - Wire the split-install smoke lane into the just packaging-smoke recipe set; `justfile`.
 
@@ -120,7 +152,10 @@ Define the marketplace repository layout and marketplace.json, and have the gene
 
 ### Phase `W04.P11` - Publish recipes and release sequencing
 
-Add LOCAL-ONLY HUMAN-GATED just publish recipes over uv publish plus a scoped token, the name-claim and aeat-data grant sequencing, and the RELEASING.md checklist.
+Historical implementation: add LOCAL-ONLY HUMAN-GATED just publish recipes over
+uv publish plus a scoped token, the name-claim and aeat-data grant sequencing,
+and the RELEASING.md checklist. The successor ADR retires this publication
+authority in favour of immutable tested-cohort OIDC promotion.
 
 - [x] `W04.P11.S39` - Add a LOCAL-ONLY HUMAN-GATED just publish recipe over uv publish with a scoped PyPI token, refusing to run in CI and mirroring the release-please discipline; `justfile`.
 - [x] `W04.P11.S40` - Document the name-claim sequencing: publish the slim aeat wheel first (no grant needed) to claim the name; `RELEASING.md`.
@@ -131,20 +166,25 @@ Add LOCAL-ONLY HUMAN-GATED just publish recipes over uv publish plus a scoped to
 
 The acceptance gate: a real-client install proof from the marketplace into Claude Code CLI (the confirmed floor), Claude Desktop, and Cowork (resolving the cloud-vs-local MCP execution question), and the golden regularizar-atrasos itinerary run end-to-end through the installed plugin per the R7 live-measurement harness, closing with a recorded verified support matrix. Depends on every prior Wave and gates campaign close. Steps needing a real PyPI account, token, or a live client install are operator-gated.
 
+The checkboxes in this historical wave record the campaign's proof artifacts,
+not current public-acquisition acceptance. The close-honesty audit retained the
+operator-gated live-client and first-publication gaps, and the successor plan
+owns their executable cohort-bound closure.
+
 ### Phase `W05.P12` - Real-client install proof
 
 Install the plugin from the marketplace into Claude Code CLI, Claude Desktop, and Cowork, resolving the cloud-vs-local MCP execution question; operator-gated where a real client or account is required.
 
-- [x] `W05.P12.S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor); `docs/verification/claude-code-install-proof.md`.
-- [x] `W05.P12.S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install); `docs/verification/claude-desktop-install-proof.md`.
-- [x] `W05.P12.S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install); `docs/verification/cowork-install-proof.md`.
+- [ ] `W05.P12.S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor); `docs/verification/claude-code-install-proof.md`.
+- [ ] `W05.P12.S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install); `docs/verification/claude-desktop-install-proof.md`.
+- [ ] `W05.P12.S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install); `docs/verification/cowork-install-proof.md`.
 
 ### Phase `W05.P13` - Golden itinerary and support matrix
 
 Run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 harness and record the verified support matrix the userdocs will state.
 
-- [x] `W05.P13.S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness; `docs/verification/regularizar-atrasos-itinerary-proof.md`.
-- [x] `W05.P13.S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state; `docs/verification/support-matrix.md`.
+- [ ] `W05.P13.S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness; `docs/verification/regularizar-atrasos-itinerary-proof.md`.
+- [ ] `W05.P13.S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state; `docs/verification/support-matrix.md`.
 
 ## Description
 
@@ -157,22 +197,20 @@ Claude plugin generated from the single authored harness source, a marketplace
 and a local human-gated publish lane, and a real-client install proof as the
 acceptance gate.
 
-The work is grounded in the ADR's four decision axes and the research findings.
-D1c forces the wheel split: the corpus source binaries are 94% of the wheel's
+The work was grounded in the ADR's four decision axes and the research findings.
+D1c forced the physical wheel split: the corpus source binaries are 94% of the wheel's
 weight (research F8) yet serve only the always-on registry integrity hash chain
 and the opt-in `aeat app registry` verification verbs at runtime (F10), so a
 grant-free slim wheel of roughly 36 MB decouples the plugin delivery from PyPI's
-SLA-less file-size grant queue. That split is viable only with principled gate
-tolerance: every present binary stays byte-exact hash-enforced, an absent
-companion binary yields a loud advisory naming the missing set and the
-`aeat[corpus-sources]` install hint, and the verification verbs refuse
-instructively - never a silent degradation. D2a picks `uvx aeat` at a pinned
+SLA-less file-size grant queue. The successor decision keeps the split but makes
+all three files one mandatory command-bearing installation. Every present
+binary stays byte-exact hash-enforced, and an absent required companion is an
+incomplete-install refusal rather than a supported advisory mode. D2a picks `uvx aeat` at a pinned
 version as the bootstrap for machines with Node but no Python. D3a makes the
 Claude plugin the consumer vehicle (superseding the harness-refoundation R8
 `.mcpb`), generated by re-targeting the existing `aeat app agent` materialiser.
-D4a keeps publication LOCAL-ONLY and HUMAN-GATED over `uv publish` with a scoped
-token, extending the accepted release-please discipline within the GitHub-Actions
-ban.
+D4a's local publication ruling was implemented historically and is now
+superseded by the successor ADR's sole protected OIDC promotion authority.
 
 A blocking product-run defect is fixed first: `Settings.aeat_local_storage_root`
 defaults to `PROJECT_ROOT / var / storage`, which under an installed wheel
@@ -231,13 +269,16 @@ with a passing gate. The load-bearing acceptance criteria:
   `just packaging-smoke-dependencies` and `deptry` are clean after the
   `vaultspec-rag` demotion; the mcpb manifest carries the Apache-2.0 SPDX
   expression.
-- W02: a real `uv build` of the `aeat` wheel ships zero corpus `.pdf`/`.xls`/
+- W02 historical proof: a real `uv build` of the `aeat` wheel ships zero corpus `.pdf`/`.xls`/
   `.xlsx` members (verified by `test_wheel_content_boundary.py`) while keeping the
   extracted-text, normative-html, registry, and agent payload; the `aeat-data`
   wheel packages exactly those binaries under `aeat_data` with mirrored paths; the
   resolution seam resolves a binary from either root; the integrity gate keeps
   every present binary byte-exact (a corrupted present binary still hard-fails)
-  and surfaces a loud, never-silent advisory for an absent companion binary; the
+  and historically surfaced a loud, never-silent advisory for an absent
+  companion binary. Current acceptance instead requires every command-bearing
+  install to resolve both exact-version companions and treats absence as an
+  incomplete-install failure; the
   `_data` size-budget gate stays meaningful per distribution; the split-install
   smoke lane proves both the advisory path (core alone) and the byte-identical
   path (with companion).
@@ -248,10 +289,10 @@ with a passing gate. The load-bearing acceptance criteria:
   validate --strict` passes where the CLI is available; every CONFIRM-tier tool
   carries the `anthropic/requiresUserInteraction` annotation and read-only tools
   do not.
-- W04: the generator emits a schema-shaped marketplace tree whose `plugins[]`
-  entry resolves to the emitted plugin; the `just` publish recipe is LOCAL-ONLY
-  and HUMAN-GATED and refuses to run in CI; RELEASING.md documents the name-claim
-  sequencing, the `aeat-data` grant flow, and the full release checklist.
+- W04 historical proof: the generator emits a schema-shaped marketplace tree
+  whose `plugins[]` entry resolves to the emitted plugin. The local publish
+  recipe evidence is historical; the successor plan owns the immutable-cohort
+  OIDC release proof.
 - W05 (acceptance gate): the plugin installs from the marketplace into the Claude
   Code CLI and the local `aeat-mcp` server runs; the Claude Desktop and Cowork
   install proofs are recorded (operator-gated) resolving the cloud-vs-local MCP
