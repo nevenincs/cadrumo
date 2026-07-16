@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-15'
+modified: '2026-07-16'
 tier: L4
 related:
   - '[[2026-07-12-cadrumo-product-rename-research]]'
   - '[[2026-07-12-cadrumo-product-rename-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cadrumo-product-rename` plan
 
@@ -176,7 +186,7 @@ Converge developer automation, CI, release tooling, and external publication gat
 - [x] `W05.P11.S58` - Retarget CI source paths and named product jobs; `.github/workflows/ci.yml`.
 - [x] `W05.P11.S59` - Retarget agent-harness evaluation to cadrumo-mcp; `.github/workflows/agent-harness-eval.yml`.
 - [x] `W05.P11.S60` - Update release-readiness project-name parsing and real behavior tests; `dev/release`.
-- [ ] `W05.P11.S61` - Block publication until all three PyPI Trusted Publishers and remaining reservation evidence are confirmed; `issue #476 release gate evidence`.
+- [x] `W05.P11.S61` - Block publication until all three PyPI Trusted Publishers and remaining reservation evidence are confirmed; `issue #476 release gate evidence`.
 
 ### Phase `W05.P12` - regenerate locale-owned product copy
 
@@ -229,7 +239,7 @@ Resolve review findings, reverify, audit ownership, and close the Epic associati
 - [x] `W06.P15.S82` - Resolve every actionable formal-review finding without introducing compatibility shims; `formal review remediation set`.
 - [x] `W06.P15.S83` - Rerun affected focused and artifact gates after review remediation; `post-review verification evidence`.
 - [x] `W06.P15.S84` - Confirm every edited path is owned, every unrelated dirty path remains untouched, and commits use explicit pathspecs; `shared-worktree delivery audit`.
-- [ ] `W06.P15.S85` - Close issue #476 and the chore-476 restructure execution association only after all Steps and external release gates are complete; `Epic project-management association`.
+- [x] `W06.P15.S85` - Close issue #476 and the chore-476 restructure execution association only after all Steps and external release gates are complete; `Epic project-management association`.
 
 ## Parallelization
 
