@@ -11,16 +11,6 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `distribution-installation-readiness` plan
 
 ## Wave `W01` - Make the Python product complete
@@ -36,7 +26,7 @@ documenting availability.
 Make the command-bearing distribution require its runtime data and generate one hash-bound cohort once from a clean tagged source archive.
 
 - [x] `W01.P01.S01` - Require exact-version manuals and official companions for every command-bearing install; `pyproject.toml`.
-- [ ] `W01.P01.S02` - Lock the complete runtime dependency closure after metadata changes; `uv.lock`.
+- [x] `W01.P01.S02` - Lock the complete runtime dependency closure after metadata changes; `uv.lock`.
 - [ ] `W01.P01.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
 - [ ] `W01.P01.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
 - [ ] `W01.P01.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
