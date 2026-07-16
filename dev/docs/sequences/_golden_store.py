@@ -84,6 +84,12 @@ SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display place
 #: way as the per-run sandbox paths.
 REPO_ROOT_TOKEN: str = "<repo-root>"  # noqa: S105 - a display placeholder, not a secret
 
+_PATH_TOKENS: tuple[str, ...] = (
+    SANDBOX_STORAGE_ROOT_TOKEN,
+    SANDBOX_WORKDIR_TOKEN,
+    REPO_ROOT_TOKEN,
+)
+
 
 def _repo_root() -> Path:
     """Return the repository checkout root (the golden/fixtures/data anchor).
@@ -117,6 +123,21 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
         if posix != native:
             replacements.append((posix, token))
     return sorted(replacements, key=lambda pair: len(pair[0]), reverse=True)
+
+
+def _normalise_token_path_separators(text: str) -> str:
+    """Canonicalise separators only in paths rooted at a known stable token.
+
+    Exact root replacement intentionally leaves the path suffix visible.  A
+    Windows writer therefore produces ``<repo-root>\\src\\...`` while a POSIX
+    checker produces ``<repo-root>/src/...`` unless that suffix is normalised.
+    The token anchor keeps unrelated operator paths byte-exact.
+    """
+    normalised = text
+    for token in _PATH_TOKENS:
+        token_path = re.compile(rf"{re.escape(token)}(?:[\\/][^\s\"'<>]*)+")
+        normalised = token_path.sub(lambda match: match.group(0).replace("\\", "/"), normalised)
+    return normalised
 
 
 #: A page identifier: the docname-style path of the enrolled docs page relative
@@ -271,7 +292,7 @@ def normalise_text_output(
     normalised = text
     for needle, token in sorted(replacements, key=lambda pair: len(pair[0]), reverse=True):
         normalised = normalised.replace(needle, token)
-    return normalised
+    return _normalise_token_path_separators(normalised)
 
 
 def normalise_document_paths(
@@ -300,7 +321,7 @@ def normalise_document_paths(
         if isinstance(node, str):
             for needle, token in replacements:
                 node = node.replace(needle, token)
-            return node
+            return _normalise_token_path_separators(node)
         if isinstance(node, Mapping):
             return {str(key): _norm(value) for key, value in node.items()}
         if isinstance(node, list):

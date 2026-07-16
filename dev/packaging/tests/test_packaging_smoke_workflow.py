@@ -51,7 +51,7 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
-    """The real workflow retains the core, split-distribution, and Docker gates."""
+    """The workflow runs one aggregate so every lane consumes the same bytes."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["name"] == "Cadrumo Packaging Smoke"
     assert set(document["jobs"]) == {"cadrumo-packaging-smoke"}
@@ -60,21 +60,22 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     assert job["name"] == "Cadrumo / Ubuntu / Python 3.13 / wheel artifacts"
     commands = {step["run"] for step in job["steps"] if "run" in step}
     assert {
-        "just packaging-smoke-linux",
-        "just packaging-smoke-split",
-        "just packaging-smoke-docker",
-        'uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py',
-        "uv run --no-sync python -m dev.packaging.evidence --prune-completed",
+        "just packaging-smoke-ci",
         "uv run --no-sync python -m dev.packaging.evidence",
     } <= commands
+    assert "just packaging-smoke-linux" not in commands
+    assert "just packaging-smoke-split" not in commands
+    assert "just packaging-smoke-docker" not in commands
 
 
 def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> None:
     """Labels use Cadrumo, artifacts use cadrumo, and commands keep the aeat boundary."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     job = document["jobs"]["cadrumo-packaging-smoke"]
-    upload = next(step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@"))
-    docker = next(step for step in job["steps"] if step.get("run") == "just packaging-smoke-docker")
+    uploads = [step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
+    upload = next(step for step in uploads if step["with"]["name"] == "cadrumo-packaging-smoke-evidence")
+    cohort_upload = next(step for step in uploads if step["with"]["name"] == "cadrumo-python-cohort")
+    campaign = next(step for step in job["steps"] if step.get("run") == "just packaging-smoke-ci")
     checkpoint = next(
         step for step in job["steps"] if step.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
     )
@@ -85,9 +86,13 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
         "var/packaging-smoke-evidence/*.json",
         "var/distribution-install-readiness/installed-cohorts/**/evidence.json",
     ]
+    assert cohort_upload["with"]["path"] == "var/packaging-smoke-cohort/python/"
+    assert cohort_upload["with"]["if-no-files-found"] == "error"
     assert checkpoint["if"] == "always()"
     assert upload["if"] == "always()"
-    assert job["steps"].index(docker) < job["steps"].index(checkpoint) < job["steps"].index(upload)
+    assert job["steps"].index(campaign) < job["steps"].index(checkpoint)
+    assert job["steps"].index(checkpoint) < job["steps"].index(cohort_upload)
+    assert job["steps"].index(cohort_upload) < job["steps"].index(upload)
 
     label_surface = "\n".join(
         (

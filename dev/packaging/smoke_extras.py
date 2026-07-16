@@ -6,11 +6,16 @@ import argparse
 import sys
 from pathlib import Path
 
+from .python_cohort import (
+    PythonCohort,
+    assert_installed_cohort,
+    install_targets,
+    load_python_cohort,
+)
 from .smoke_core import (
     _assert_cadrumo_version_output,
     _assert_installed_data,
     _assert_wheel_metadata_matches_pyproject,
-    _build_wheel,
     _clean_product_env,
     _executable,
     _manifest_path,
@@ -21,13 +26,20 @@ from .smoke_core import (
     _work_dir,
     _write_smoke_manifest,
 )
-from .smoke_pip_core import _create_pip_venv, _install_target_with_pip
+from .smoke_pip_core import _create_pip_venv, _install_targets_with_pip
 
 
-def _install_all_extras_with_pip(work_dir: Path, wheel: Path, venv_path: Path) -> None:
-    """Install the built wheel through the public ``all`` extra."""
-    target = f"cadrumo[all] @ {wheel.resolve().as_uri()}"
-    _install_target_with_pip(work_dir, target, venv_path)
+def _install_all_extras_with_pip(
+    work_dir: Path,
+    cohort: PythonCohort,
+    venv_path: Path,
+) -> None:
+    """Install the supplied root and companion artifacts through ``all``."""
+    _install_targets_with_pip(
+        work_dir,
+        install_targets(cohort, root_artifact=cohort.root_wheel, extras=("all",)),
+        venv_path,
+    )
 
 
 def _assert_all_extra_imports(work_dir: Path, venv_path: Path) -> None:
@@ -78,6 +90,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--work-dir", help="Empty directory for wheel, venv, and optional-extra artifacts.")
     parser.add_argument(
+        "--cohort-dir",
+        required=True,
+        type=Path,
+        help="Directory containing the prebuilt immutable Python cohort.",
+    )
+    parser.add_argument(
         "--skip-export-checks",
         action="store_true",
         help="Skip frozen uv export surface checks and run only the installed-wheel smoke.",
@@ -93,13 +111,20 @@ def main(argv: list[str] | None = None) -> int:
         print("validating frozen dependency exports", flush=True)
         _validate_frozen_exports(repo_root, uv)
 
-    print("building wheel", flush=True)
-    wheel = _build_wheel(repo_root, work_dir, uv)
+    cohort = load_python_cohort(args.cohort_dir)
+    wheel = cohort.root_wheel
+    print("using supplied immutable Python cohort", flush=True)
     _assert_wheel_metadata_matches_pyproject(repo_root, wheel)
 
     print("creating stdlib venv and installing wheel[all] with pip", flush=True)
     venv_path = _create_pip_venv(work_dir, args.python)
-    _install_all_extras_with_pip(work_dir, wheel, venv_path)
+    _install_all_extras_with_pip(work_dir, cohort, venv_path)
+    assert_installed_cohort(
+        _venv_python(venv_path),
+        cohort,
+        root_artifact=wheel,
+        cwd=work_dir,
+    )
     _assert_installed_data(work_dir, venv_path)
     _assert_all_extra_imports(work_dir, venv_path)
     _assert_cli_version(work_dir, venv_path)
@@ -121,10 +146,12 @@ def main(argv: list[str] | None = None) -> int:
         lane="all-extras-wheel",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
+            "data_wheel_manuals": _manifest_path(work_dir, cohort.manuals_wheel),
+            "data_wheel_official": _manifest_path(work_dir, cohort.official_wheel),
             "venv": _manifest_path(work_dir, venv_path),
         },
         checks=tuple(checks),
-        details={"python": args.python},
+        details={"cohort_version": cohort.version, "python": args.python},
     )
 
     print(f"all-extras packaging smoke passed: {wheel}", flush=True)

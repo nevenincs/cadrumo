@@ -32,14 +32,29 @@ def _render_recipe(recipe: str, *args: str) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
+def _recipe_summary() -> set[str]:
+    just = shutil.which("just")
+    assert just is not None
+    result = subprocess.run(  # noqa: S603 - resolved real just binary.
+        [just, "--summary"],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return set(result.stdout.split())
+
+
 def test_release_apply_names_every_version_authority_and_only_the_named_tag() -> None:
     """The rendered apply guide covers the cohort, lock, and explicit final tag."""
     rendered = _render_recipe("release-apply")
 
     assert "packaging/cadrumo_data_manuals/pyproject.toml" in rendered
     assert "packaging/cadrumo_data_official/pyproject.toml" in rendered
+    assert "mandatory base dependency pins" in rendered
     assert "cadrumo-data-manuals==X.Y.Z" in rendered
     assert "cadrumo-data-official==X.Y.Z" in rendered
+    assert "corpus-sources" not in rendered
     assert "uv lock" in rendered
     assert "uv lock --check" in rendered
     assert "just release-readiness" in rendered
@@ -65,3 +80,30 @@ def test_doctor_invokes_the_aeat_human_cli() -> None:
 
     assert "aeat config check" in rendered
     assert "cadrumo config check" not in rendered
+
+
+def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
+    """A fresh aggregate cannot reach a smoke lane before cohort construction."""
+    rendered = _render_recipe("packaging-smoke")
+    build = "python -m dev.packaging.python_cohort build"
+    assert rendered.count(build) == 1
+    build_position = rendered.index(build)
+    for module in (
+        "dev.packaging.smoke_core",
+        "dev.packaging.smoke_pip_core",
+        "dev.packaging.smoke_sdist_core",
+        "dev.packaging.smoke_extras",
+        "dev.packaging.smoke_split_install",
+        "dev.packaging.smoke_browser",
+    ):
+        assert build_position < rendered.index(module)
+    assert "--cohort-dir var/packaging-smoke-cohort/python" in rendered
+
+
+def test_local_upload_authority_is_absent_from_just() -> None:
+    """Diagnostic release recipes remain, but local PyPI upload verbs do not."""
+    recipes = _recipe_summary()
+    assert "publish" not in recipes
+    assert "publish-data" not in recipes
+    assert "release" in recipes
+    assert "release-readiness" in recipes

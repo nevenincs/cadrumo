@@ -22,6 +22,7 @@ from typing import Any, Final
 from packaging.requirements import Requirement
 
 from .installed_tax_oracle import run_installed_tax_oracle
+from .python_cohort import assert_installed_cohort, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
@@ -36,8 +37,8 @@ _TRACKED_DATA_ROOTS = (
 )
 _SOURCE_DATA_PREFIX = "src/cadrumo/_data/"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
-# Corpus source binaries excluded from the slim ``cadrumo`` wheel by the wheel-split
-# build config; they ship in the two ``cadrumo-data-*`` companion distributions. A
+# Corpus source binaries excluded from the compact command-bearing ``cadrumo`` wheel
+# by the build config; they ship in the two mandatory ``cadrumo-data-*`` distributions. A
 # tracked source path is one of these when it lives under ``_data/corpus`` and
 # carries a binary suffix, so the wheel-bundling parity check must not expect it
 # in the
@@ -395,10 +396,7 @@ def _assert_complete_wheel_cohort(
         "cadrumo-data-manuals": data_wheel_manuals,
         "cadrumo-data-official": data_wheel_official,
     }
-    identities = {
-        expected_name: _wheel_identity(artifact)
-        for expected_name, artifact in named_companions.items()
-    }
+    identities = {expected_name: _wheel_identity(artifact) for expected_name, artifact in named_companions.items()}
     mislabeled = {
         expected_name: observed_name
         for expected_name, (observed_name, _version) in identities.items()
@@ -411,11 +409,7 @@ def _assert_complete_wheel_cohort(
     root_name, root_version = _wheel_identity(wheel)
     if root_name != "cadrumo":
         raise SystemExit(f"command wheel identity is {root_name!r}, expected 'cadrumo'")
-    mismatched = {
-        name: version
-        for name, (_observed_name, version) in identities.items()
-        if version != root_version
-    }
+    mismatched = {name: version for name, (_observed_name, version) in identities.items() if version != root_version}
     if mismatched:
         raise SystemExit(
             f"companion versions do not match cadrumo {root_version!r}: {mismatched!r}",
@@ -424,8 +418,7 @@ def _assert_complete_wheel_cohort(
     exact_pins = {
         _normalize_name(requirement.name): str(requirement.specifier)
         for row in requirements
-        if (requirement := Requirement(row)).marker is None
-        and _normalize_name(requirement.name) in named_companions
+        if (requirement := Requirement(row)).marker is None and _normalize_name(requirement.name) in named_companions
     }
     expected_pins = {name: f"=={root_version}" for name in named_companions}
     if exact_pins != expected_pins:
@@ -526,11 +519,11 @@ def _assert_split_files_have_companion_owners(repo_root: Path, paths: set[str]) 
 
 
 def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
-    """Return expected bundled-data paths inside the slim ``cadrumo`` wheel archive.
+    """Return expected bundled-data paths inside the command-bearing wheel.
 
     Corpus source binaries declared by the root Hatch exclusion list are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
-    two ``cadrumo-data-*`` companions, so they are legitimately absent from the
+    two mandatory ``cadrumo-data-*`` distributions, so they are absent from the
     archive.
     Test modules under a ``_data`` ``tests/`` folder are excluded by the
     data-budget wheel boundary (tests serve no installed consumer) and are
@@ -1053,20 +1046,10 @@ def main(argv: list[str] | None = None) -> int:
         print("validating frozen dependency exports", flush=True)
         _validate_frozen_exports(repo_root, uv)
 
-    cohort_dir = args.cohort_dir.resolve(strict=True)
-    if not cohort_dir.is_dir():
-        parser.error(f"--cohort-dir is not a directory: {cohort_dir}")
-    wheel = _cohort_wheel(cohort_dir, "cadrumo-*.whl", label="cadrumo")
-    data_wheel_manuals = _cohort_wheel(
-        cohort_dir,
-        "cadrumo_data_manuals-*.whl",
-        label="cadrumo-data-manuals",
-    )
-    data_wheel_official = _cohort_wheel(
-        cohort_dir,
-        "cadrumo_data_official-*.whl",
-        label="cadrumo-data-official",
-    )
+    cohort = load_python_cohort(args.cohort_dir)
+    wheel = cohort.root_wheel
+    data_wheel_manuals = cohort.manuals_wheel
+    data_wheel_official = cohort.official_wheel
     companion_wheels = (data_wheel_manuals, data_wheel_official)
     print("using supplied complete wheel cohort", flush=True)
     _assert_wheel_contains_tracked_data(repo_root, wheel)
@@ -1085,6 +1068,12 @@ def main(argv: list[str] | None = None) -> int:
         uv,
         args.python,
         companion_wheels=companion_wheels,
+    )
+    assert_installed_cohort(
+        _venv_python(venv),
+        cohort,
+        root_artifact=wheel,
+        cwd=work_dir,
     )
     _assert_installed_data(work_dir, venv)
     _assert_attachment_and_llm_surfaces(work_dir, venv)

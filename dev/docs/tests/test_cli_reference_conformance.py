@@ -25,6 +25,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import typer
+from typer.main import get_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
@@ -101,6 +103,28 @@ def _rendered_doc_registry_keys() -> set[str]:
 # ---------------------------------------------------------------------------
 
 
+def test_typer_positional_renders_as_argument() -> None:
+    """A real Typer positional renders as an ``Argument``, never an ``Option``."""
+    from dev.docs.cli_reference import _render_param_table
+
+    app = typer.Typer()
+
+    @app.command()
+    def view(transaction_id: str = typer.Argument(..., help="The ledger transaction id.")) -> None:
+        """Inspect a ledger transaction."""
+
+    command = get_command(app)
+    if hasattr(command, "commands"):
+        command = next(iter(command.commands.values()))
+
+    rendered = _render_param_table(list(command.params))
+
+    assert "transaction_id" in rendered
+    positional_line = next(line for line in rendered.splitlines() if "Argument" in line or "Option" in line)
+    assert "*Argument, required.*" in positional_line
+    assert "Option" not in positional_line
+
+
 def test_every_live_leaf_is_documented() -> None:
     """Every non-retired live leaf command must appear in the generated reference.
 
@@ -108,8 +132,7 @@ def test_every_live_leaf_is_documented() -> None:
     pinning) to enumerate the full leaf set, then checks that every normalised
     registry key is present in the generated reference.
 
-    Failures indicate that a command was added to the tree but the reference
-    was not regenerated and committed.
+    Failures indicate that the build-time renderer omitted a live command.
     """
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
@@ -127,8 +150,7 @@ def test_every_live_leaf_is_documented() -> None:
 def test_every_documented_path_resolves_to_a_live_command() -> None:
     """Every registry key in the generated reference must map to a live CLI leaf.
 
-    Failures indicate that a command was removed from the tree but the reference
-    was not regenerated — a stale documentation entry.
+    Failures indicate that the build-time renderer emitted a stale command entry.
     """
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
@@ -250,8 +272,8 @@ def test_documented_schema_classes_match_registry() -> None:
 
     For each command that has a schema, the generated reference page states
     the fully-qualified class name.  This gate verifies that the documented
-    class name matches the actual registered schema class — catching renames
-    or migrations that updated the registry without regenerating the reference.
+    class name matches the actual registered schema class — catching a renderer
+    projection that disagrees with the live registry.
     """
     from cadrumo.core.json_contract import SCHEMA_REGISTRY
     from cadrumo.entrypoints.cli import (

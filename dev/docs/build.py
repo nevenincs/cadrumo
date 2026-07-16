@@ -724,13 +724,16 @@ def main(argv: list[str] | None = None) -> int:
             if args.single_page
             else ([Path(path) for path in args.paths] if args.paths else changed_paths(repo_root, args.base))
         )
-    plan = planned_doc_targets(repo_root, paths)
-    if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
-        raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
-    if args.single_page and _is_generated_doc(repo_root / "docs", plan.targets[0]):
+    if args.single_page and _is_generated_doc(
+        repo_root / "docs",
+        (repo_root / args.single_page).resolve(),
+    ):
         raise SystemExit(
             "--single-page does not support generated API/CLI pages; use the explicit generator or full docs build.",
         )
+    plan = planned_doc_targets(repo_root, paths)
+    if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
+        raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
     if not plan.full_build_required and not plan.targets:
         print("No changed documentation targets detected.", flush=True)
         if args.rag_index:

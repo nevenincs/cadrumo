@@ -30,9 +30,7 @@ def test_scoop_workflow_declares_the_sandbox_release_row() -> None:
         "X64",
         "cadrumo-windows-sandbox",
     ]
-    preflight = next(
-        step for step in job["steps"] if step["name"] == "Verify declared Windows Sandbox release row"
-    )
+    preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows Sandbox release row")
     assert "Containers-DisposableClientVM" in preflight["run"]
     assert "WindowsSandbox.exe" in preflight["run"]
     assert 'PROCESSOR_ARCHITECTURE -ne "AMD64"' in preflight["run"]
@@ -87,15 +85,13 @@ def test_scoop_workflow_runs_the_real_sandbox_lifecycle_without_rebuilding() -> 
     assert '"ready=true"' in initialize["run"]
     assert "installed_tax_oracle.py" in stage["run"]
     assert "installed_mcp_oracle.py" in stage["run"]
-    assert '$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1' in smoke["run"]
+    assert "$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1" in smoke["run"]
     assert "-Mode Sandbox" in smoke["run"]
     assert "-TimeoutMinutes 60" in smoke["run"]
     assert upload["if"] == "always() && steps.initialize.outputs.ready == 'true'"
     assert upload["with"]["if-no-files-found"] == "error"
     assert upload["with"]["name"] == "cadrumo-scoop-acquisition-evidence-${{ github.run_attempt }}"
-    assert upload["with"]["path"] == (
-        "${{ runner.temp }}/cadrumo-s20-${{ github.run_id }}-${{ github.run_attempt }}/"
-    )
+    assert upload["with"]["path"] == ("${{ runner.temp }}/cadrumo-s20-${{ github.run_id }}-${{ github.run_attempt }}/")
     assert "uv build" not in commands
     assert "python -m build" not in commands
     assert "hatch build" not in commands

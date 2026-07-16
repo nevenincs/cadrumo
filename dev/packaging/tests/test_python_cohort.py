@@ -1,0 +1,86 @@
+"""Real repository and artifact tests for immutable Python cohort construction."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from dev.packaging.python_cohort import load_python_cohort, source_snapshot_drift
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    git = shutil.which("git")
+    assert git is not None
+    return subprocess.run(  # noqa: S603 - resolved Git with test-owned declarative argv.
+        [git, *args],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+
+
+def test_source_snapshot_drift_detects_worktree_index_and_untracked_bytes(
+    tmp_path: Path,
+) -> None:
+    """A HEAD archive cannot be labelled current while any source byte is excluded."""
+    _git(tmp_path, "init")
+    _git(tmp_path, "config", "user.email", "cohort-test@example.invalid")
+    _git(tmp_path, "config", "user.name", "Cohort Test")
+    tracked = tmp_path / "tracked.txt"
+    tracked.write_text("committed\n", encoding="utf-8")
+    _git(tmp_path, "add", "tracked.txt")
+    _git(tmp_path, "commit", "-m", "seed")
+    assert source_snapshot_drift(tmp_path) == ()
+
+    tracked.write_text("working\n", encoding="utf-8")
+    untracked = tmp_path / "untracked.txt"
+    untracked.write_text("untracked\n", encoding="utf-8")
+    working = source_snapshot_drift(tmp_path)
+    assert " M tracked.txt" in working
+    assert "?? untracked.txt" in working
+
+    _git(tmp_path, "add", "tracked.txt")
+    staged = source_snapshot_drift(tmp_path)
+    assert "M  tracked.txt" in staged
+    assert "?? untracked.txt" in staged
+
+
+def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
+    tmp_path: Path,
+) -> None:
+    """A changed retained artifact fails closed before it could be promoted."""
+    names = {
+        "cadrumo": "cadrumo-1.0.0-py3-none-any.whl",
+        "cadrumo-sdist": "cadrumo-1.0.0.tar.gz",
+        "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
+        "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
+    }
+    sha256: dict[str, str] = {}
+    for label, filename in names.items():
+        payload = f"{label}\n".encode()
+        (tmp_path / filename).write_bytes(payload)
+        sha256[label] = hashlib.sha256(payload).hexdigest()
+    (tmp_path / "python-cohort.json").write_text(
+        json.dumps(
+            {
+                "artifacts": names,
+                "sha256": sha256,
+                "source_commit": "a" * 40,
+                "version": "1.0.0",
+            },
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / names["cadrumo"]).write_bytes(b"changed")
+
+    with pytest.raises(SystemExit, match="digest mismatch"):
+        load_python_cohort(tmp_path)
