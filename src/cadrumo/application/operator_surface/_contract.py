@@ -44,7 +44,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         owns_operational_workflow=False,
         required_children=(
             "profile",
-            "lock",
             "switch",
             "rekey",
             "recover",
@@ -125,15 +124,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="lock",
-        operator_question="seal active profile custody for profile-bound backend workflows",
-        service_owner="cadrumo.application.user_profile",
-        commands=("lock",),
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.CUSTODY,
-        root=RootSurfaceName.CONFIG,
         child="switch",
         operator_question="switch the active taxpayer profile for profile-bound backend workflows",
         service_owner="cadrumo.application.user_profile",
@@ -187,7 +177,8 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "configure",
             "status",
             "test",
-            "clear",
+            "logout",
+            "reset",
             "apoderado",
             "diagnostics",
             "login",

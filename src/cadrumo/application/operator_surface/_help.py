@@ -341,8 +341,12 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.auth_test"),
                     ),
                     HelpEntry(
-                        command="aeat config auth clear",
-                        description=tr("cli.operator_surface.help.config.auth_clear"),
+                        command="aeat config auth logout",
+                        description=tr("cli.operator_surface.help.config.auth_logout"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth reset",
+                        description=tr("cli.operator_surface.help.config.auth_reset"),
                     ),
                 ),
             ),

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.transactions import LedgerClassificationRule
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
     BucketEvent,
@@ -255,11 +255,12 @@ def _apply_bulk_classify_rows(
             all_event_ids.extend(event.event_id for event in events)
             applied += 1
         except (AeatError, ValidationError, ValueError) as exc:
+            reason = resolve_error_message(exc) if isinstance(exc, AeatError) else str(exc)
             apply_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,
                     transaction_id=row.transaction_id,
-                    reason=str(exc),
+                    reason=reason or type(exc).__name__,
                 ),
             )
 

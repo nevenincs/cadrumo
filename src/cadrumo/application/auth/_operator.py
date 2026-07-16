@@ -48,15 +48,16 @@ from ._operator_probes import (
     _probe_local_session,
 )
 from ._operator_results import (
-    AuthClearResult,
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
     AuthConfigureResult,
     AuthLoginNotEnabledError,
     AuthLoginPreconditionError,
     AuthLoginResult,
+    AuthLogoutResult,
     AuthProviderReservedError,
     AuthProvidersReport,
+    AuthResetResult,
     AuthStatusResult,
     AuthTestResult,
     LiveAuthPreflightReport,
@@ -67,6 +68,7 @@ from ._operator_scope import (
 from ._operator_scope import (
     auth_operator_settings_scope as _auth_operator_settings_scope,
 )
+from ._operator_scope import resolve_auth_operation_scope
 from ._sessions import (
     delete_persisted_session,
     ensure_authenticated_aeat_session,
@@ -74,7 +76,7 @@ from ._sessions import (
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
-    from ..workflow import WorkflowState, WorkflowStateRepository
+    from ..workflow import WorkflowState
 
 
 def list_operator_auth_providers() -> AuthProvidersReport:
@@ -683,145 +685,248 @@ async def login_operator_auth(
     )
 
 
-def clear_operator_auth(
+def logout_operator_auth(
     *,
     provider: str | None = None,
     all_providers: bool = False,
-    sessions: bool = False,
-    locks: bool = False,
+    target_bucket_id: str | None = None,
     settings: Settings | None = None,
-) -> AuthClearResult:
-    """Clear workflow auth state, persisted sessions, and acquisition locks.
-
-    Returns an :class:`AuthClearResult` after resetting
-    :class:`application.auth.AuthState` in
-    :class:`application.workflow.WorkflowState` when the requested target
-    matches the currently configured provider. Session and lock removals append
-    bucket events through the same workflow-state event trail.
-    """
+) -> AuthLogoutResult:
+    """Terminate persisted sessions while preserving provider configuration."""
     if settings is not None:
         with _auth_operator_settings_scope(settings):
-            return clear_operator_auth(
+            return logout_operator_auth(
                 provider=provider,
                 all_providers=all_providers,
-                sessions=sessions,
-                locks=locks,
+                target_bucket_id=target_bucket_id,
                 settings=None,
             )
-    provider_kind = _provider_kind_or_none(provider)
     resolved_settings = load_settings()
-    removed_sessions: list[Path] = []
-    session_event_count = 0
-    if sessions or all_providers:
-        with _active_profile_storage_span(resolved_settings):
-            removed_sessions = delete_persisted_session(
-                resolved_settings,
-                kind=None if all_providers else provider_kind,
+    with _active_profile_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
+        if bucket_id is None:
+            raise AuthConfigureNoActiveBucketError(
+                translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        session_event_count = len(removed_sessions)
-
-    cleared_locks = _clear_acquisition_locks(
-        resolved_settings,
-        provider_kind=provider_kind,
-        all_providers=all_providers,
-        locks_requested=locks,
-    )
-
-    with _active_profile_storage_span(resolved_settings):
         from ..workflow import workflow_state_repository
 
         repository = workflow_state_repository()
-        current_provider = repository.load().auth.provider
-        should_clear_workflow_state = provider_kind is None or all_providers or current_provider == provider_kind.value
-        _apply_auth_clear_to_repository(
-            repository=repository,
-            provider_kind=provider_kind,
-            current_provider=current_provider,
-            should_clear_workflow_state=should_clear_workflow_state,
-            session_event_count=session_event_count,
-            cleared_locks=cleared_locks,
+        current = repository.load()
+        scope = resolve_auth_operation_scope(
+            bucket_id=bucket_id,
+            current_provider=current.auth.provider,
+            provider=provider,
+            all_providers=all_providers,
         )
-
-    return AuthClearResult(
-        removed_sessions=len(removed_sessions),
-        cleared_workflow_state=should_clear_workflow_state,
-        cleared_locks=cleared_locks,
+        removed_sessions, session_provider_ids = _delete_scoped_sessions(
+            resolved_settings,
+            scope.provider_ids,
+            bucket_id=bucket_id,
+        )
+        clears_current = current.auth.provider in scope.provider_ids
+        cleared_auth = (
+            current.auth.model_copy(update={"authenticated_at": None, "subject": None})
+            if clears_current
+            else current.auth
+        )
+        cleared_session_state = cleared_auth != current.auth
+        if cleared_session_state or removed_sessions:
+            event_provider_ids = tuple(
+                dict.fromkeys(
+                    (
+                        *((current.auth.provider,) if cleared_session_state and current.auth.provider else ()),
+                        *session_provider_ids,
+                    ),
+                ),
+            )
+            repository.update(
+                lambda state: _append_bucket_events(
+                    state.model_copy(update={"auth": cleared_auth}),
+                    tuple(("auth.session.cleared", provider_id) for provider_id in event_provider_ids),
+                ),
+            )
+    return AuthLogoutResult(
+        bucket_id=scope.bucket_id,
+        providers=scope.provider_ids,
+        removed_sessions=removed_sessions,
+        cleared_session_state=cleared_session_state,
     )
 
 
-def _clear_acquisition_locks(
-    settings: Settings,
+def reset_operator_auth(
     *,
-    provider_kind: AuthProviderKind | None,
-    all_providers: bool,
-    locks_requested: bool,
-) -> int:
-    """Clear acquisition locks for the targeted provider(s) and return the cleared count.
+    provider: str | None = None,
+    all_providers: bool = False,
+    target_bucket_id: str | None = None,
+    settings: Settings | None = None,
+) -> AuthResetResult:
+    """Remove provider configuration, sessions, locks, and certificate secrets."""
+    if settings is not None:
+        with _auth_operator_settings_scope(settings):
+            return reset_operator_auth(
+                provider=provider,
+                all_providers=all_providers,
+                target_bucket_id=target_bucket_id,
+                settings=None,
+            )
+    resolved_settings = load_settings()
+    with _active_profile_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
+        if bucket_id is None:
+            raise AuthConfigureNoActiveBucketError(
+                translated_message="application.auth.operator.errors.no_active_bucket",
+            )
+        from ..workflow import workflow_state_repository
 
-    With ``locks_requested`` or ``all_providers`` set, the target lock
-    kinds are every provider (if ``all_providers`` or no specific
-    ``provider_kind`` was supplied) or the single requested kind. A
-    lock that was already absent does not count toward the cleared
-    total.
-    """
-    if not (locks_requested or all_providers):
-        return 0
-    lock_kinds = list(AuthProviderKind) if all_providers or provider_kind is None else [provider_kind]
+        repository = workflow_state_repository()
+        current = repository.load()
+        scope = resolve_auth_operation_scope(
+            bucket_id=bucket_id,
+            current_provider=current.auth.provider,
+            provider=provider,
+            all_providers=all_providers,
+        )
+        certificate_targeted = AuthProviderKind.CERTIFICATE.value in scope.provider_ids
+        certificate_names = tuple(current.auth.certificate_sources) if certificate_targeted else ()
+        removed_certificate_secrets = _delete_certificate_source_secrets(bucket_id, certificate_names)
+        removed_sessions, session_provider_ids = _delete_scoped_sessions(
+            resolved_settings,
+            scope.provider_ids,
+            bucket_id=bucket_id,
+        )
+        cleared_locks, lock_provider_ids = _clear_scoped_locks(
+            resolved_settings,
+            scope.provider_ids,
+            bucket_id=bucket_id,
+        )
+        cleared_provider_ids: tuple[str, ...] = tuple(
+            dict.fromkeys(
+                (
+                    *(
+                        (current.auth.provider,)
+                        if current.auth.provider is not None and current.auth.provider in scope.provider_ids
+                        else ()
+                    ),
+                    *(
+                        (AuthProviderKind.CERTIFICATE.value,)
+                        if certificate_targeted
+                        and (
+                            current.auth.certificate_path is not None
+                            or current.auth.certificate_sources
+                            or current.auth.active_certificate_source is not None
+                        )
+                        else ()
+                    ),
+                ),
+            ),
+        )
+        reset_auth = _reset_auth_state(
+            current.auth,
+            provider_ids=scope.provider_ids,
+            all_providers=all_providers,
+        )
+        cleared_configuration = reset_auth != current.auth
+        events: list[tuple[str, str]] = []
+        events.extend(("auth.provider.cleared", provider_id) for provider_id in cleared_provider_ids)
+        events.extend(("auth.session.cleared", provider_id) for provider_id in session_provider_ids)
+        events.extend(("auth.lock.cleared", provider_id) for provider_id in lock_provider_ids)
+        events.extend(("auth.certificate_source.removed", name) for name in certificate_names)
+        if cleared_configuration or events:
+            repository.update(
+                lambda state: _append_bucket_events(
+                    state.model_copy(update={"auth": reset_auth}),
+                    tuple(events),
+                ),
+            )
+    return AuthResetResult(
+        bucket_id=scope.bucket_id,
+        providers=scope.provider_ids,
+        removed_sessions=removed_sessions,
+        cleared_provider_configuration=cleared_configuration,
+        cleared_locks=cleared_locks,
+        removed_certificate_sources=len(certificate_names),
+        removed_certificate_secrets=removed_certificate_secrets,
+    )
+
+
+def _implemented_kind(provider_id: str) -> AuthProviderKind | None:
+    try:
+        return AuthProviderKind(provider_id)
+    except ValueError:
+        return None
+
+
+def _delete_scoped_sessions(
+    settings: Settings,
+    provider_ids: tuple[str, ...],
+    *,
+    bucket_id: str,
+) -> tuple[int, tuple[str, ...]]:
+    removed = 0
+    affected: list[str] = []
+    for provider_id in provider_ids:
+        kind = _implemented_kind(provider_id)
+        if kind is None:
+            continue
+        removed_for_provider = len(delete_persisted_session(settings, kind=kind, bucket_id=bucket_id))
+        removed += removed_for_provider
+        if removed_for_provider:
+            affected.append(provider_id)
+    return removed, tuple(affected)
+
+
+def _clear_scoped_locks(
+    settings: Settings,
+    provider_ids: tuple[str, ...],
+    *,
+    bucket_id: str,
+) -> tuple[int, tuple[str, ...]]:
     cleared = 0
-    for kind in lock_kinds:
-        status = clear_auth_acquisition_lock(settings, kind, reason="operator-clear")
+    affected: list[str] = []
+    for provider_id in provider_ids:
+        kind = _implemented_kind(provider_id)
+        if kind is None:
+            continue
+        status = clear_auth_acquisition_lock(
+            settings,
+            kind,
+            reason="operator-auth-reset",
+            bucket_id=bucket_id,
+        )
         if status.state is not AuthAcquisitionLockState.ABSENT:
             cleared += 1
-    return cleared
+            affected.append(provider_id)
+    return cleared, tuple(affected)
 
 
-def _apply_auth_clear_to_repository(
+def _delete_certificate_source_secrets(bucket_id: str, names: tuple[str, ...]) -> int:
+    from ._certificate_secret_backend import SecureStorageCertificateSecretBackend
+
+    backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
+    return sum(backend.remove(name) for name in names)
+
+
+def _reset_auth_state(
+    auth: AuthState,
     *,
-    repository: WorkflowStateRepository,
-    provider_kind: AuthProviderKind | None,
-    current_provider: str | None,
-    should_clear_workflow_state: bool,
-    session_event_count: int,
-    cleared_locks: int,
-) -> None:
-    """Apply the operator-clear transition to the workflow-state repository.
-
-    When ``should_clear_workflow_state`` is set, the auth state is
-    reset and a ``auth.provider.cleared`` event is appended; the
-    session-cleared and lock-cleared events are appended whenever
-    their counters are non-zero. When the workflow state is left
-    untouched, only the non-zero session / lock events are emitted —
-    and only if at least one was actually performed.
-    """
-    if should_clear_workflow_state:
-        event_object = current_provider or (provider_kind.value if provider_kind is not None else "all")
-        events = (
-            ("auth.provider.cleared", event_object),
-            *_optional_clear_events(event_object, session_event_count, cleared_locks),
+    provider_ids: tuple[str, ...],
+    all_providers: bool,
+) -> AuthState:
+    if all_providers:
+        return AuthState()
+    updates: dict[str, object] = {}
+    if auth.provider in provider_ids:
+        updates.update(
+            provider=None,
+            configured_at=None,
+            authenticated_at=None,
+            subject=None,
         )
-        repository.update(
-            lambda current: _append_bucket_events(current.model_copy(update={"auth": AuthState()}), events),
+    if AuthProviderKind.CERTIFICATE.value in provider_ids:
+        updates.update(
+            certificate_path=None,
+            certificate_sources={},
+            active_certificate_source=None,
         )
-        return
-    if not (session_event_count or cleared_locks):
-        return
-    event_object = provider_kind.value if provider_kind is not None else "all"
-    events = _optional_clear_events(event_object, session_event_count, cleared_locks)
-    repository.update(lambda current: _append_bucket_events(current, events))
-
-
-def _optional_clear_events(
-    event_object: str,
-    session_event_count: int,
-    cleared_locks: int,
-) -> tuple[tuple[str, str], ...]:
-    """Build the variable-length tail of clear events keyed on non-zero counters."""
-    events: list[tuple[str, str]] = []
-    if session_event_count:
-        events.append(("auth.session.cleared", event_object))
-    if cleared_locks:
-        events.append(("auth.lock.cleared", event_object))
-    return tuple(events)
+    return auth.model_copy(update=updates)
 
 
 def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKind) -> None:
