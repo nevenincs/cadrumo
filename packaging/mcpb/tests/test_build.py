@@ -220,7 +220,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
     assert json.loads(env["CADRUMO_MCP_COHORT_SHA256"]) == expected_sha256
     assert env["CADRUMO_MCP_REQUIRED_VERSION"] == cohort.version
     assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == "${user_config.storage_root}"
-    assert env["UV_PROJECT_ENVIRONMENT"] == (f"${{__dirname}}/.cadrumo-runtime-{BUILD._runtime_identity(cohort)}")
+    assert "UV_PROJECT_ENVIRONMENT" not in env
     assert "distribution(name)" in launcher
     assert 'read_text("direct_url.json")' in launcher
     assert "UNSIGNED; assembly only; client installation unproved" in capsys.readouterr().out
@@ -255,11 +255,11 @@ def test_mixed_companion_identity_is_rejected(
         BUILD.load_cohort(candidate)
 
 
-def test_foreign_same_version_bytes_get_a_distinct_runtime_identity(
+def test_foreign_same_version_bytes_get_a_distinct_cohort_binding(
     tmp_path: Path,
     real_cohort: Path,
 ) -> None:
-    """A second same-version cohort cannot reuse the first cohort's UV runtime."""
+    """A second same-version cohort cannot satisfy the first cohort binding."""
     original = BUILD.load_cohort(real_cohort)
     candidate = _copy_cohort(real_cohort, tmp_path / "foreign")
     document = json.loads(
@@ -272,11 +272,11 @@ def test_foreign_same_version_bytes_get_a_distinct_runtime_identity(
     foreign = BUILD.load_cohort(candidate)
     assert foreign.version == original.version
     assert foreign.sha256["cadrumo-data-official"] != original.sha256["cadrumo-data-official"]
-    assert BUILD._runtime_identity(foreign) != BUILD._runtime_identity(original)
     original_env = BUILD.stamped_manifest(original)["server"]["mcp_config"]["env"]
     foreign_env = BUILD.stamped_manifest(foreign)["server"]["mcp_config"]["env"]
     assert original_env["CADRUMO_MCP_COHORT_SHA256"] != foreign_env["CADRUMO_MCP_COHORT_SHA256"]
-    assert original_env["UV_PROJECT_ENVIRONMENT"] != foreign_env["UV_PROJECT_ENVIRONMENT"]
+    assert "UV_PROJECT_ENVIRONMENT" not in original_env
+    assert "UV_PROJECT_ENVIRONMENT" not in foreign_env
 
 
 def test_real_check_cli_reports_the_v04_template() -> None:

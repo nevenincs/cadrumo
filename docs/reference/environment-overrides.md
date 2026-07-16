@@ -18,7 +18,6 @@ the process environment wins over the `.env` file.
 | --- | --- | --- | --- |
 | `AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS` | str | `es` | Authoritative language for domain terminology (modelos, registry definitions, references). |
 | `AEAT_BASE_URL` | str | (derived) | AEAT sede electrónica base URL |
-| `AEAT_CERTIFICATE_VERIFY_URL` | str | (derived) | Target URL for cadrumo.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test |
 | `AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page used by the Cl@ve Permanente login flow. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
 | `AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
 | `AEAT_MANUALS_ROOT` | Path | (derived) | Root directory for the structured AEAT Manual práctico corpus |
@@ -32,7 +31,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_AUDIT_DIR` | Path | (derived) | Directory for the governed audit sink (redacted, classification-aware) |
 | `CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S` | int | `180` | Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows |
 | `CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S` | int | `90` | Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the acquisition lock TTL |
-| `CADRUMO_AUTH_PROVIDER` | AuthProviderKindSetting | unset | Default auth provider for `aeat config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
+| `CADRUMO_AUTH_PROVIDER` | AuthProviderKind | unset | Default auth provider for `aeat config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
 | `CADRUMO_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for AEAT authentication probes in milliseconds |
 | `CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS` | str | `en` | Authoritative language for internal code and documentation |
 | `CADRUMO_BLOB_STORE_DIR` | Path | (derived) | Directory containing the encrypted blob store (content-addressed, classification-aware) |
@@ -53,7 +52,6 @@ the process environment wins over the `.env` file.
 | `CADRUMO_CALC_SHEETS_RECALC_DELAY_S` | float | `2.0` | Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls |
 | `CADRUMO_CERT_CRITICAL_DAYS` | int | `14` | Critical threshold (days) for the certificate pre-expiry gate: certificates with <= this many days remaining are CRITICAL and must be renewed before authenticated AEAT work continues |
 | `CADRUMO_CERT_WARN_DAYS` | int | `60` | Warning threshold (days) for the certificate pre-expiry gate: certificates with <= this many days remaining are surfaced as WARN |
-| `CADRUMO_CERTIFICATE_BACKEND` | CertificateBackend | `playwright_context` | Which certificate backend to use: playwright_context or httpx_fallback |
 | `CADRUMO_CERTIFICATE_FRIENDLY_NAME` | str | unset | Optional human-readable label for the certificate |
 | `CADRUMO_CERTIFICATE_PASSWORD_SECRET` | SecretStr | (secret) | PKCS#12 passphrase (env only, never logged or persisted) |
 | `CADRUMO_CERTIFICATE_PATH` | Path | unset | Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle |
