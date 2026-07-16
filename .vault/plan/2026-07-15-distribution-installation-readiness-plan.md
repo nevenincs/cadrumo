@@ -9,6 +9,8 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
+  - '[[2026-07-16-distribution-harness-identity-adr]]'
+  - '[[2026-07-16-distribution-harness-identity-research]]'
 ---
 
 <!-- LINK RULES:
@@ -91,6 +93,9 @@ Create a pinned Python virtualenv formula and tap snapshot and exercise every pl
 
 Generate plugin marketplace and MCPB artifacts then freeze every Python Scoop Homebrew and Claude member into one immutable cohort before real client installation.
 
+Steps `S67` and `S68` only inspect and report. They do not authorize renaming or
+translation. A failed check leaves its row open for a separate approved implementation.
+
 - [ ] `W02.P06.S25` - Generate plugin bootstrap configuration that resolves the complete cohort; `src/cadrumo/agent/_workspace.py`.
 - [ ] `W02.P06.S26` - Byte-compare the complete generated marketplace plugin tree with its source authority; `src/cadrumo/agent/tests/test_marketplace_generation.py`.
 - [ ] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
@@ -100,6 +105,8 @@ Generate plugin marketplace and MCPB artifacts then freeze every Python Scoop Ho
 - [ ] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
 - [ ] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [ ] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
+- [ ] `W02.P06.S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple; `dev/packaging/verify_distribution_identity.py, src/cadrumo/_data/agent, src/cadrumo/agent, src/cadrumo/entrypoints/mcp`.
+- [ ] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin marketplace MCPB and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
 
 ## Wave `W03` - Prove platforms and clients
 
@@ -124,6 +131,7 @@ Run clean platform and client rows against exact cohort hashes and reject absent
 - [ ] `W03.P08.S38` - Install the cohort plugin in Claude Code and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
 - [ ] `W03.P08.S39` - Install the cohort plugin or MCPB in Claude Desktop and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
 - [ ] `W03.P08.S40` - Install the supported artifact in Cowork and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
+- [ ] `W03.P08.S69` - Capture each real Claude client's harness identifier inventory, MCP server name, and both MCP product descriptions and compare them with the exact cohort; `.github/workflows/packaging-claude.yml, var/distribution-install-readiness`.
 
 ## Wave `W04` - Promote and reacquire exact bytes
 
@@ -148,6 +156,7 @@ Install from the actual public endpoints and repeat both command and tax-work be
 - [ ] `W04.P10.S48` - Acquire Cadrumo through the public Homebrew tap and repeat installed behavior; `dev/packaging/acquire_homebrew.py`.
 - [ ] `W04.P10.S49` - Acquire the public marketplace plugin through Claude and repeat the MCP tax-work call; `dev/packaging/acquire_claude_plugin.py`.
 - [ ] `W04.P10.S50` - Acquire the published MCPB through each claimed client and repeat the MCP tax-work call; `dev/packaging/acquire_mcpb.py`.
+- [ ] `W04.P10.S70` - Reacquire every public Claude artifact and verify its `cadrumo-` harness namespace and English and Spanish MCP product descriptions against the cohort manifest; `dev/packaging/acquire_claude_plugin.py, dev/packaging/acquire_mcpb.py`.
 
 ## Wave `W05` - Document measured reality and close
 
@@ -172,6 +181,7 @@ Run feature-scoped quality, architecture, documentation, and honest-close review
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
 - [ ] `W05.P12.S59` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
+- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and English-Spanish MCP product-description parity; leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 
 ## Description
 
@@ -206,6 +216,11 @@ matching reacquisition Step passes.
 
 - One clean tagged source archive produces one complete cohort manifest whose recorded
   SHA-256 digests remain unchanged through testing, publication, and reacquisition.
+- Every authored, generated, installed, and publicly reacquired agent/persona, skill,
+  and rule identifier, including its prompt and resource projections, carries
+  `cadrumo-`. MCP server, executable, tool-prefix, and URI identities match the accepted
+  Cadrumo tuple. Every user-facing MCP product description carries equivalent English
+  and Spanish text in the representation its artifact format supports.
 - Default, agent, all-extra, wheel, and sdist installation resolves the same exact root,
   manuals, and official distribution versions without checkout imports.
 - Installed `aeat` completes the Modelo 200 2024 oracle and reports
