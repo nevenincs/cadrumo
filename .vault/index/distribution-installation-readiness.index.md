@@ -12,6 +12,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S07]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S08]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S09]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S10]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S61]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-S07` - Execute the public MCP protocol itinerary and assert the same grounded Modelo 200 result
 - `2026-07-15-distribution-installation-readiness-W01-P02-S08` - Resolve the CLI subprocess from the MCP server installation instead of ambient PATH
 - `2026-07-15-distribution-installation-readiness-W01-P02-S09` - Prove installed MCP execution succeeds without checkout imports or executable paths
+- `2026-07-15-distribution-installation-readiness-W01-P02-S10` - Prove both installed commands originate from one environment and one cohort
 - `2026-07-15-distribution-installation-readiness-W01-P02-S61` - Make MCP identity reads unlock profiles created by sibling CLI subprocesses
 
 ### plan
