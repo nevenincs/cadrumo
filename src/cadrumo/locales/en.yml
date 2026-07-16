@@ -455,21 +455,21 @@ application:
         profile_tax_id_missing_next_action: Edit the active profile with 'aeat config
           profile edit NAME --tax-id DNI/NIE' before authenticating.
       errors:
-        cleanup_in_progress: An authentication logout or reset is still being recovered
-          for this profile. Resume that operation before changing authentication configuration.
-        certificate_secret_mutation_in_progress: A certificate secret change is
-          still being recovered for this profile. Retry that same secret command
-          before changing authentication configuration.
         certificate_file_required: The certificate provider requires a certificate
           file. Run `aeat config auth configure --provider certificate --file PATH`
           with the path to your PKCS#12 (.p12/.pfx) bundle.
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_secret_mutation_in_progress: A certificate secret change is still
+          being recovered for this profile. Retry that same secret command before
+          changing authentication configuration.
         certificate_source_not_found: Certificate source '%{name}' is not registered.
           Run `aeat config auth certificate list` to see registered sources, or `aeat
           config auth certificate register --name %{name} --file PATH` to register
           it.
+        cleanup_in_progress: An authentication logout or reset is still being recovered
+          for this profile. Resume that operation before changing authentication configuration.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
           resolve to a registered profile bucket. Run aeat config profile list to
           inspect registered profiles, then aeat config switch NAME or aeat config
@@ -3304,14 +3304,18 @@ cli:
       reset_progress_yes_help: Confirm clearing saved interrupted-command progress
       yes_help: Confirm repair.
     reset:
-      help: Reset operator-entered configuration scopes
-      invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
-      requires_yes: Reset is destructive. Re-run with --yes to confirm.
-      scope_help: 'Scope to reset. profile: delete every profile (manifests, DEKs,
-        declarations, ledger and invoice reviews). auth: clear the persisted AEAT/SEDE
-        auth session. data: quarantine unreadable secure-object rows across all namespaces.
-        all: apply profile, auth, and data together.'
-      yes_help: Explicitly confirm the reset operation
+      help: Start, inspect, or resume the irreversible reset of all locally stored
+        profiles.
+      operation_id_help: Select an exact reset operation by operation ID; omit to
+        select the applicable operation automatically.
+      override_retention_help: Override a legal-retention pause after reviewing your
+        duties; requires a non-empty --reason.
+      reason_help: Give the required reason for overriding a legal-retention pause.
+      requires_yes: Pass --yes to confirm this irreversible reset.
+      resume_help: Continue an incomplete reset operation.
+      start_help: Start a new irreversible reset of every locally stored profile.
+      status_help: Show reset operation status without changing local data.
+      yes_help: Confirm irreversible deletion of every locally stored profile.
     set:
       help: Assign a value to one configuration key
       key_help: Key to assign (e.g. iva.regime)

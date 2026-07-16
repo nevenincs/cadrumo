@@ -500,22 +500,22 @@ application:
         profile_tax_id_missing_next_action: Edita el perfil actiu amb 'aeat config
           profile edit NOM --tax-id DNI/NIE' abans d'autenticar.
       errors:
-        cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
-          per a aquest perfil. Reprèn aquesta operació abans de canviar la configuració
-          d'autenticació.
-        certificate_secret_mutation_in_progress: Encara s'està recuperant un canvi
-          del secret de certificat per a aquest perfil. Torna a provar la mateixa
-          ordre de secret abans de canviar la configuració d'autenticació.
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
           --file RUTA` amb la ruta al teu paquet PKCS#12 (.p12/.pfx).
         certificate_file_unresolved: La ruta del certificat '%{certificate_path}'
           no resol a un fitxer existent. Executa `aeat config auth configure --provider
           certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
+        certificate_secret_mutation_in_progress: Encara s'està recuperant un canvi
+          del secret de certificat per a aquest perfil. Torna a provar la mateixa
+          ordre de secret abans de canviar la configuració d'autenticació.
         certificate_source_not_found: L'origen de certificat '%{name}' no està registrat.
           Executeu `aeat config auth certificate list` per veure els orígens registrats,
           o `aeat config auth certificate register --name %{name} --file RUTA` per
           registrar-lo.
+        cleanup_in_progress: Encara s'està recuperant un tancament o reinici d'autenticació
+          per a aquest perfil. Reprèn aquesta operació abans de canviar la configuració
+          d'autenticació.
         dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
           resol a un bucket de perfil registrat. Executa aeat config profile list
           per inspeccionar els perfils registrats i despres aeat config switch NAME
@@ -3535,15 +3535,22 @@ cli:
         interrompuda
       yes_help: Confirmar la reparació.
     reset:
-      help: Reiniciar àmbits de configuració introduïts per l'operador
-      invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
-      requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
-      scope_help: 'Àmbit a reiniciar. profile: esborra tots els perfils (manifests,
-        DEKs, declaracions, revisions de llibre major i factures). auth: neteja la
-        sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena les
-        files d''objectes segurs il·legibles a tots els espais de noms. all: aplica
-        profile, auth i data junts.'
-      yes_help: Confirmar explícitament l'operació de reinici
+      help: Inicia, consulta o reprèn el reinici irreversible de tots els perfils
+        emmagatzemats localment.
+      operation_id_help: Selecciona una operació de reinici exacta pel seu ID; omet-lo
+        per seleccionar automàticament l'operació aplicable.
+      override_retention_help: Anul·la una pausa per conservació legal després de
+        revisar les teves obligacions; requereix un valor no buit per a --reason.
+      reason_help: Indica el motiu obligatori per anul·lar una pausa per conservació
+        legal.
+      requires_yes: Fes servir --yes per confirmar aquest reinici irreversible.
+      resume_help: Reprèn una operació de reinici incompleta.
+      start_help: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
+        localment.
+      status_help: Mostra l'estat d'una operació de reinici sense modificar dades
+        locals.
+      yes_help: Confirma la supressió irreversible de tots els perfils emmagatzemats
+        localment.
     set:
       help: Assignar un valor a una clau de configuració
       key_help: Clau a assignar (ex. iva.regime)

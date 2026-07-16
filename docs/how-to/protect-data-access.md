@@ -116,26 +116,33 @@ Nothing in the profile is deleted. Select it again with
 
 ## Reset local state (last resort)
 
-Reset deletes operator-local state. It is not recoverable. The command
-refuses to run without `--yes`:
+Export every profile you want to keep before continuing. Reset permanently deletes
+every profile stored locally, related local authentication state, and the active
+profile selection. It doesn't delete exports stored elsewhere. You can't undo
+the reset.
 
 ```{cli-sequence} protect-data-access-reset
 ```
 
-Pick the scope deliberately:
+1. Use `start` only when you intend to remove all local profiles. Confirm the
+   reset explicitly. It checks retention requirements before deleting anything
+   and refuses to start while another reset is incomplete.
+2. Use the read-only `status` command to inspect the latest operation without
+   changing local data. Provide an operation ID to inspect an exact operation.
+   Status reports an incomplete, paused, or complete operation. Its output
+   includes the operation ID and any pause reason.
+3. Use `resume` after an interruption or pause. Confirm the reset again. It
+   continues the same incomplete operation instead of creating another. Provide
+   an operation ID to resume an exact operation. After deletion starts, resuming
+   the reset doesn't restore deleted data.
 
-- `--scope profile` - deletes every profile and its stored data, including
-  archived profiles.
-- `--scope auth` - clears the saved AEAT session and provider settings.
-  Stored profiles and records are untouched.
-- `--scope data` - quarantines unreadable encrypted rows only. Readable
-  records are not deleted.
-- `--scope all` - all three of the above: a full wipe. There is no default
-  scope; the command refuses to run without an explicit `--scope`.
+If legal retention requirements pause the reset, stop if you must keep the
+affected records. Override the pause only after reviewing and accepting the
+legal retention consequence, and always provide a non-empty reason. If you
+provide a reason without the override, the command refuses to continue.
 
-Before any reset, export profiles you want to keep with
-`aeat config profile export`. See
-[Set up your taxpayer profile](profile-setup.md).
+See [Set up your taxpayer profile](profile-setup.md) for profile export
+instructions.
 
 ## Next steps
 

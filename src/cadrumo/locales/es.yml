@@ -507,22 +507,22 @@ application:
         profile_tax_id_missing_next_action: Edita el perfil activo con 'aeat config
           profile edit NOMBRE --tax-id DNI/NIE' antes de la autenticación.
       errors:
-        cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
-          para este perfil. Reanuda esa operación antes de cambiar la configuración
-          de autenticación.
-        certificate_secret_mutation_in_progress: Aún se está recuperando un cambio
-          del secreto de certificado para este perfil. Reintenta el mismo comando
-          de secreto antes de cambiar la configuración de autenticación.
         certificate_file_required: El proveedor de certificado requiere un archivo
           de certificado. Ejecuta `aeat config auth configure --provider certificate
           --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).
         certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
           no resuelve a un archivo existente. Ejecuta `aeat config auth configure
           --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
+        certificate_secret_mutation_in_progress: Aún se está recuperando un cambio
+          del secreto de certificado para este perfil. Reintenta el mismo comando
+          de secreto antes de cambiar la configuración de autenticación.
         certificate_source_not_found: El origen de certificado '%{name}' no está registrado.
           Ejecute `aeat config auth certificate list` para ver los orígenes registrados,
           o `aeat config auth certificate register --name %{name} --file RUTA` para
           registrarlo.
+        cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
+          para este perfil. Reanuda esa operación antes de cambiar la configuración
+          de autenticación.
         dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
           resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
           para inspeccionar los perfiles registrados y despues aeat config switch
@@ -3574,15 +3574,22 @@ cli:
         interrumpido
       yes_help: Confirmar la reparación.
     reset:
-      help: Reiniciar ámbitos de configuración introducidos por el operador
-      invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
-      requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
-      scope_help: 'Ámbito a reiniciar. profile: borra todos los perfiles (manifiestos,
-        DEKs, declaraciones, revisiones de libro mayor y facturas). auth: limpia la
-        sesión de autenticación AEAT/SEDE persistida. data: pone en cuarentena las
-        filas de objetos seguros ilegibles en todos los espacios de nombres. all:
-        aplica profile, auth y data juntos.'
-      yes_help: Confirmar explícitamente la operación de reinicio
+      help: Inicia, consulta o reanuda el reinicio irreversible de todos los perfiles
+        almacenados localmente.
+      operation_id_help: Selecciona una operación de reinicio exacta por su ID; omítelo
+        para seleccionar automáticamente la operación aplicable.
+      override_retention_help: Anula una pausa por conservación legal después de revisar
+        tus obligaciones; requiere un valor no vacío para --reason.
+      reason_help: Indica el motivo obligatorio para anular una pausa por conservación
+        legal.
+      requires_yes: Usa --yes para confirmar este reinicio irreversible.
+      resume_help: Continúa una operación de reinicio incompleta.
+      start_help: Inicia un nuevo reinicio irreversible de todos los perfiles almacenados
+        localmente.
+      status_help: Muestra el estado de una operación de reinicio sin modificar datos
+        locales.
+      yes_help: Confirma el borrado irreversible de todos los perfiles almacenados
+        localmente.
     set:
       help: Asignar un valor a una clave de configuración
       key_help: Clave a asignar (ej. iva.regime)
