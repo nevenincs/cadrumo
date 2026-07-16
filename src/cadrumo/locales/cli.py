@@ -140,7 +140,7 @@ def canonicalize_product_identity(
     ctx: typer.Context,
     locale: Annotated[
         OutputLanguage | None,
-        typer.Option("--locale", help="Update only this supported locale catalogue."),
+        typer.Option("--locale", help=tr("cli.locales.canonicalize_product_identity.locale_help")),
     ] = None,
 ) -> None:
     """Normalize stale command prefixes in selected catalogues."""

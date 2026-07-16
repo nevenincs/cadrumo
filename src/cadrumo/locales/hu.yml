@@ -317,9 +317,6 @@ aggregation:
     errors:
       unsupported_modelo: Nincs regisztrált összesítési szerződés a kért modellhez.
   irnr_income_ledger:
-    errors:
-      official_tipo_renta_parameter_count: Az M210-es modell %{revision_id} felülvizsgálatának
-        pontosan egy hivatalos tipo-renta kódparamétert kell deklarálnia.
     diagnostics:
       foreign_source_out_of_scope: A source_jurisdiction %{source_jurisdiction} külföldi
         forrást jelöl; a TRLIRNR 13. cikke kizárja az M210-es modell spanyol forrású
@@ -333,6 +330,9 @@ aggregation:
       tipo_renta_code_not_declared: Az M210-es modell %{tipo_renta_code} hivatalos
         tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
         és benyújtási időszakhoz.
+    errors:
+      official_tipo_renta_parameter_count: Az M210-es modell %{revision_id} felülvizsgálatának
+        pontosan egy hivatalos tipo-renta kódparamétert kell deklarálnia.
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
@@ -482,6 +482,9 @@ application:
           parancsot.
         no_active_bucket: Nincs aktív profil bucket; az auth konfigurálása előtt futtassa
           a `aeat config profile create NÉV` parancsot.
+        provider_not_configured: Nincs beállított hitelesítési szolgáltató; adja meg
+          a --provider értékét, vagy előbb állítson be egyet.
+        scope_conflict: Válassza a --provider vagy a --all lehetőséget, de ne mindkettőt.
         unreadable_active_profile: 'Az aktív profil (%{active_profile}) rendelkezik
           bucket-manifeszttel, de nincs olvasható profil-rekorddal (állapot=%{status}).
           Futtassa: %{next_action}.'
@@ -541,8 +544,7 @@ application:
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil
           adóazonosítóját.
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
-          Futtassa a `aeat config auth clear --sessions` majd a `aeat config auth
-          login` parancsot.
+          Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`
           parancsot az AEAT adatok olvasása előtt.
         profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
@@ -2755,6 +2757,9 @@ cli:
           app modelo work verify` paranccsal.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
+        verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
+          számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul
+          lett visszaadva.'
         verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási
           dokumentumot a `aeat app modelo export` paranccsal.
         verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
@@ -2787,7 +2792,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id} számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul lett visszaadva.'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
@@ -2855,8 +2859,6 @@ cli:
               tavolitani
           remove_help: Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot
           set:
-            backend_help: 'Titok-hattertar: secure_storage (alapertelmezett, titkositva
-              tarolva) vagy keyring (operacios rendszer kulcstartoja)'
             name_help: A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik
             secret_help: A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik
               meg)
@@ -2864,10 +2866,6 @@ cli:
         select:
           name_help: Registered certificate source to activate
         select_help: Select the active certificate source
-      clear_all_help: Minden konfigurált hitelesítési szolgáltató törlése.
-      clear_help: Helyi hitelesítési metaadatok törlése.
-      clear_locks_help: Hitelesítésszerzési zárolások törlése.
-      clear_sessions_help: Mentett AEAT-hitelesítési munkamenetek törlése.
       configure_help: Az aktív hitelesítési szolgáltató konfigurálása.
       diagnostics:
         help: Titkosított hitelesítési diagnosztika vizsgálata.
@@ -2887,6 +2885,9 @@ cli:
         újrafelhasználása helyett.
       login_help: Élő AEAT-munkamenet megszerzése vagy ellenőrzése.
       login_reset_lock_help: Elavult hitelesítésszerzési zárolás törlése indítás előtt.
+      logout_all_help: Minden ismert hitelesítési szolgáltató munkameneteinek lezárása
+      logout_help: A helyi hitelesítési munkamenetek lezárása a szolgáltató beállításainak
+        megőrzésével
       no_active_bucket: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV` a hitelesítés konfigurálása előtt.'
       output_language_help: A válasz szövegének nyelve (es, en, ca, hu).
@@ -2898,6 +2899,12 @@ cli:
       providers_help: Támogatott hitelesítési szolgáltatók listázása.
       reserved_provider: 'A hitelesítési szolgáltató fenntartott, de nem elérhető:
         %{provider}.'
+      reset_all_help: Minden ismert hitelesítési szolgáltató visszaállítása
+      reset_help: A helyi szolgáltatóbeállítások, munkamenetek, zárolások, tanúsítvány-regisztrációk
+        és tárolt titkok eltávolítása
+      reset_requires_yes: A visszaállítás eltávolítja a tárolt beállításokat és hitelesítő
+        adatokat. A megerősítéshez futtassa újra a --yes kapcsolóval.
+      reset_yes_help: A destruktív hitelesítési visszaállítás megerősítése
       status_help: Beállított hitelesítési állapot megjelenítése.
       status_summary_configured: A hitelesítés be van állítva, de még nincs elérhető
         aktív munkamenet.
@@ -3133,8 +3140,6 @@ cli:
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
-    lock:
-      help: Az aktiv profil zarolasa az aktivprofil-mutato torlesevel.
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
@@ -3296,11 +3301,12 @@ cli:
         paranccsal exportált csomaghoz.
       import_path_help: A profilcsomag fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
-      logout_help: Kijelentkezés az aktív profilból a helyi mutató törlésével.
-      logout_session_warning: A kijelentkezes torolte az aktiv profil mutatot. Ebben
-        a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak,
-        amig nem futtatod a aeat config switch NAME parancsot, vagy nem nyitsz uj
-        terminalt es valasztasz ujra.
+      logout_help: Az aktív tárolási munkamenet bezárása, a memóriában lévő kulcsok
+        törlése, a bucket-motorok lezárása és a helyi mutató törlése.
+      logout_session_warning: A kijelentkezés bezárta az aktív tárolási munkamenetet,
+        törölte a memóriában lévő kulcsokat, lezárta a bucket-motorokat és törölte
+        az aktív profil mutatóját. Profilhoz kötött parancs előtt futtassa az aeat
+        config switch NAME parancsot.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -4345,6 +4351,8 @@ cli:
         előtag).
   locales:
     app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
+    canonicalize_product_identity:
+      locale_help: Csak ezt a támogatott nyelvi katalógust frissítse.
     modelo:
       app_help: Modellsema helyi forditasok kezelese.
       audit_help: Modellsema forditasok auditja.
@@ -4421,9 +4429,11 @@ cli:
         section_overview: Áttekintés
         section_review_and_registry: Felülvizsgálat és nyilvántartás
       config:
-        auth_clear: Helyi hitelesítési metaadatok törlése.
         auth_configure: Hitelesítési szolgáltató konfigurálása.
+        auth_logout: A helyi hitelesítési munkamenetek lezárása a szolgáltató beállításainak
+          megőrzésével.
         auth_providers: Támogatott hitelesítési szolgáltatók listázása.
+        auth_reset: A helyi hitelesítési beállítások és tárolt hitelesítő adatok eltávolítása.
         auth_status: Beállított hitelesítési állapot megjelenítése.
         auth_test: Helyi hitelesítési készség ellenőrzése.
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
@@ -4677,14 +4687,6 @@ cli:
     diff_revisions_modelo_help: Az összehasonlítandó modelo azonosítója
     diff_revisions_to_year_help: A későbbi adóév, amelynek fedő revízióját az alaphoz
       hasonlítjuk
-    errors:
-      capability:
-        manuals_verify: manual corpus verification
-        parity: registry parity verification
-        registry_verify: registry verification
-        workbooks_verify: workbook verification
-      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
-        Install {install} and retry.
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
@@ -5043,6 +5045,9 @@ errors:
       hibásak. Tekintse át a hitelesítési konfigurációt.
     auth_auth_validation: A hitelesítési paraméterek nem mentek át az érvényesítésen.
       Javítsa a megjelenített értékeket, és próbálja újra.
+    auth_former_product_session_state: A Cadrumo egy megszuent termek munkamenet-allapotat
+      eszlelte, es megtagadja annak olvasasat, athelyezeset, ujrakulcsolasat, torleset
+      vagy atvetelet.
     auth_google: Google-hitelesítési hiba történt.
     auth_google_client_not_registered: Az aktív profilhoz nem regisztráltak Google
       Desktop OAuth-klienst. Regisztráljon egy klienst a Google-funkciók használatához.
@@ -5074,7 +5079,6 @@ errors:
       Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
-    auth_former_product_session_state: 'A Cadrumo egy megszuent termek munkamenet-allapotat eszlelte, es megtagadja annak olvasasat, athelyezeset, ujrakulcsolasat, torleset vagy atvetelet.'
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'
@@ -5653,6 +5657,9 @@ errors:
       további műveleteket.
     modelo_184_share_sum: A Modelo 184 tagi részesedési százalékainak pontosan 100%-ot
       kell kitenniük.
+    modelo_210_agrupacion_renta_rows: A 210-es nyomtatvany eves csoportositott jovedelem-sorainak
+      egyetlen jogszeru csoportot kell alkotniuk (egy kod, egy kulcs, egy azonositott
+      ingatlan, es egy kifizeto, kiveve a tobb kifizetos kivetelt).
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
     modelo_349_country_prefix_context: 'A 349-es Modelo elutasitja a(z) {country_code}
@@ -5874,6 +5881,9 @@ errors:
       A profil UUID-jával egyértelműsítse.
     refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
+    refused_profile_logout_override: A kijelentkezés nem módosíthat --profile vagy
+      CADRUMO_ACTIVE_PROFILE használatával kiválasztott aktív profilt. Távolítsa el
+      a felülbírálást, majd próbálja újra.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
       szükséges. A folytatás előtt töltse ki a profilt.
     refused_profile_not_found: Nem létezik profil a megadott azonosítóval.
@@ -5948,7 +5958,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    modelo_210_agrupacion_renta_rows: 'A 210-es nyomtatvany eves csoportositott jovedelem-sorainak egyetlen jogszeru csoportot kell alkotniuk (egy kod, egy kulcs, egy azonositott ingatlan, es egy kifizeto, kiveve a tobb kifizetos kivetelt).'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6071,7 +6080,8 @@ mcp:
         tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
       no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
         támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
-        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI (`aeat`) parancsot közvetlenül a terminálban.
+        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI (`aeat`) parancsot közvetlenül
+        a terminálban.
   faithfulness:
     advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
       hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított
