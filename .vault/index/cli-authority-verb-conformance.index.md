@@ -53,6 +53,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
   - '[[2026-07-15-cli-authority-verb-conformance-research]]'
+  - '[[2026-07-16-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
 ---
@@ -70,6 +71,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 ### audit
 
 - `2026-07-15-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Wave W01 atomic Step reviews`
+- `2026-07-16-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `S43 auth logout preservation review`
 - `2026-07-16-cli-authority-verb-conformance-duplication-authority-audit` - `cli-authority-verb-conformance` audit: `Duplication authority and CLI conformance campaign`
 - `2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit` - `cli-authority-verb-conformance` audit: `S37 auth logout/reset cutover review`
 
