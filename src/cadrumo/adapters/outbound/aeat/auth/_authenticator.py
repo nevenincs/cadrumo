@@ -604,20 +604,26 @@ class AeatAuthenticator:
                 available=False,
                 health_summary=f"{_CERT_PASSWORD_SECRET_ENV} not set",
             )
-        # CertificateBundle now carries the passphrase as a SecretStr
-        # directly. The authenticator passes the settings-resolved
-        # secret straight through; the OpenSSL-binding env channel is
-        # gone, so the secret never enters os.environ.
+        # Consume the single resolved typed credential bundle. The
+        # certificate path and passphrase are the settings-resolved
+        # credential (a per-source secure-storage secret is threaded in by
+        # the application login/status/test path via the settings scope);
+        # `describe` reads them through the same `CertificateBundle`
+        # `load_certificate` does rather than re-reading individual
+        # settings fields, so the load and health paths cannot diverge. The
+        # OpenSSL-binding env channel is gone, so the secret never enters
+        # os.environ. `cadrumo_certificate_backend` here is the PKCS#12
+        # loading backend, distinct from any secret-storage concern.
         _deferred_error: AuthValidationError | None = None
         try:
-            backend = self._settings.cadrumo_certificate_backend
+            bundle = self._require_bundle()
             health = self._certificate_health_check(
-                self._settings.cadrumo_certificate_path,
-                password=self._settings.cadrumo_certificate_password_secret,
+                bundle.path,
+                password=bundle.password,
                 warn_days=self._settings.cadrumo_cert_warn_days,
                 critical_days=self._settings.cadrumo_cert_critical_days,
-                backend=backend,
-                friendly_name=self._settings.cadrumo_certificate_friendly_name,
+                backend=bundle.backend,
+                friendly_name=bundle.friendly_name,
             )
             identity_nif: str | None = None
             try:
@@ -629,9 +635,9 @@ class AeatAuthenticator:
                         not_after=health.not_after,
                         serial_number=health.serial_number,
                         sha256_thumbprint="",
-                        source_path=self._settings.cadrumo_certificate_path,
-                        friendly_name=self._settings.cadrumo_certificate_friendly_name,
-                        backend=backend,
+                        source_path=bundle.path,
+                        friendly_name=bundle.friendly_name,
+                        backend=bundle.backend,
                     ),
                 )
             except CertificateNifParseError:
