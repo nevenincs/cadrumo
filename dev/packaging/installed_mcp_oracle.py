@@ -16,7 +16,7 @@ import re
 import shutil
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -48,6 +48,14 @@ _EXECUTE_TOOL = "execute"
 _TOOLSETS_TOOL = "toolsets"
 _WHOAMI_TOOL = "cadrumo_whoami"
 _WORK_CALCULATE_TOOL = "cadrumo_modelo_work_calculate"
+_ATTESTED_COMMAND_KEYS = frozenset(
+    {
+        "config.profile.create",
+        "modelo.work.create",
+        "modelo.work.calculate",
+        "modelo.work.observations",
+    },
+)
 
 
 class InstalledMcpOracleError(RuntimeError):
@@ -84,6 +92,8 @@ class InstalledMcpEvidence:
     notice_codes: tuple[str, ...]
     advertised_tools: tuple[str, ...]
     calls: tuple[McpCallEvidence, ...]
+    invoked_cli_sha256: str
+    invoked_cli_sha256_by_command: dict[str, str]
 
     def to_jsonable(self) -> dict[str, Any]:
         """Return a JSON-compatible evidence mapping."""
@@ -473,7 +483,47 @@ async def _run_protocol(
         notice_codes=tuple(sorted(notice_codes)),
         advertised_tools=advertised_tools,
         calls=tuple(calls),
+        invoked_cli_sha256="",
+        invoked_cli_sha256_by_command={},
     )
+
+
+def _observed_cli_attestation(storage_root: Path) -> tuple[str, dict[str, str]]:
+    telemetry_files = tuple(sorted((storage_root.resolve() / "telemetry").glob("*.jsonl")))
+    if len(telemetry_files) != 1:
+        raise InstalledMcpOracleError(
+            f"expected one MCP telemetry session, got {[path.name for path in telemetry_files]!r}",
+        )
+    executable_by_command: dict[str, str] = {}
+    for line in telemetry_files[0].read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if not isinstance(row, dict):
+            raise InstalledMcpOracleError("MCP telemetry row is not a JSON object")
+        command_key = row.get("command_key")
+        if command_key not in _ATTESTED_COMMAND_KEYS:
+            continue
+        if command_key in executable_by_command:
+            raise InstalledMcpOracleError(f"duplicate MCP telemetry attestation for {command_key!r}")
+        executable_sha256 = str(row.get("executable_sha256", ""))
+        if not _REVISION_ID.fullmatch(executable_sha256):
+            raise InstalledMcpOracleError(
+                f"MCP telemetry did not attest the child executable for {command_key!r}",
+            )
+        executable_by_command[command_key] = executable_sha256
+    observed_command_keys = frozenset(executable_by_command)
+    if observed_command_keys != _ATTESTED_COMMAND_KEYS:
+        raise InstalledMcpOracleError(
+            "MCP telemetry command coverage drifted: "
+            f"expected {sorted(_ATTESTED_COMMAND_KEYS)!r}, got {sorted(observed_command_keys)!r}",
+        )
+    executable_hashes = set(executable_by_command.values())
+    if len(executable_hashes) != 1:
+        raise InstalledMcpOracleError(
+            f"MCP calls used different child executable identities: {sorted(executable_hashes)!r}",
+        )
+    return executable_hashes.pop(), dict(sorted(executable_by_command.items()))
 
 
 def run_installed_mcp_oracle(
@@ -490,13 +540,19 @@ def run_installed_mcp_oracle(
         raise InstalledMcpOracleError(f"installed MCP server is not a file: {resolved_server}")
     resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
-    return asyncio.run(
+    evidence = asyncio.run(
         _run_protocol(
             resolved_server,
             storage_root=storage_root,
             work_dir=resolved_work_dir,
             timeout_seconds=timeout_seconds,
         ),
+    )
+    invoked_cli_sha256, invoked_cli_sha256_by_command = _observed_cli_attestation(storage_root)
+    return replace(
+        evidence,
+        invoked_cli_sha256=invoked_cli_sha256,
+        invoked_cli_sha256_by_command=invoked_cli_sha256_by_command,
     )
 
 

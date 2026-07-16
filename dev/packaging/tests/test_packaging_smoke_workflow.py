@@ -63,6 +63,7 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         "just packaging-smoke-linux",
         "just packaging-smoke-split",
         "just packaging-smoke-docker",
+        'uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py',
         "uv run --no-sync python -m dev.packaging.evidence --prune-completed",
         "uv run --no-sync python -m dev.packaging.evidence",
     } <= commands
@@ -80,7 +81,10 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
 
     assert upload["name"] == "Upload Cadrumo packaging smoke evidence"
     assert upload["with"]["name"] == "cadrumo-packaging-smoke-evidence"
-    assert upload["with"]["path"] == "var/packaging-smoke-evidence/*.json"
+    assert upload["with"]["path"].splitlines() == [
+        "var/packaging-smoke-evidence/*.json",
+        "var/distribution-install-readiness/installed-cohorts/**/evidence.json",
+    ]
     assert checkpoint["if"] == "always()"
     assert upload["if"] == "always()"
     assert job["steps"].index(docker) < job["steps"].index(checkpoint) < job["steps"].index(upload)

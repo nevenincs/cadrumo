@@ -42,7 +42,7 @@ Create the shared real-behavior oracle and remove ambient checkout and PATH depe
 - [x] `W01.P02.S63` - Harden installed oracles for direct MCP dispatch exact legal grounding resource identity and diagnostic failure; `dev/packaging, src/cadrumo/entrypoints/mcp`.
 - [x] `W01.P02.S64` - Run the full grounded MCP oracle in the scrubbed installed-environment regression; `src/cadrumo/entrypoints/mcp/tests/test_installed_cli_resolution.py`.
 - [x] `W01.P02.S66` - Record the actual MCP child executable through payload-free runtime telemetry; `src/cadrumo/entrypoints/mcp`.
-- [ ] `W01.P02.S65` - Record invoked CLI origin source snapshot artifact digests and an automatic cohort gate; `dev/packaging/tests/test_installed_oracles.py`.
+- [x] `W01.P02.S65` - Record invoked CLI origin source snapshot artifact digests and an automatic cohort gate; `dev/packaging, .github/workflows, pyproject.toml`.
 
 ## Wave `W02` - Generate every claimed distribution
 

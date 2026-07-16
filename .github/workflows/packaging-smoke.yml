@@ -58,6 +58,9 @@ jobs:
       - name: Cadrumo split-distribution packaging smoke
         run: just packaging-smoke-split
 
+      - name: Cadrumo installed CLI and MCP cohort oracle
+        run: uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+
       - name: Checkpoint host packaging evidence and release ephemeral disk
         run: uv run --no-sync python -m dev.packaging.evidence --prune-completed
 
@@ -73,6 +76,8 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: cadrumo-packaging-smoke-evidence
-          path: var/packaging-smoke-evidence/*.json
+          path: |
+            var/packaging-smoke-evidence/*.json
+            var/distribution-install-readiness/installed-cohorts/**/evidence.json
           if-no-files-found: warn
           retention-days: 14
