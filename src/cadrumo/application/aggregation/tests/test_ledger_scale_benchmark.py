@@ -508,6 +508,7 @@ def test_single_transaction_save_reports_write_path_latency(scale_bucket: Secure
     )
 
 
+@pytest.mark.serial
 def test_iva_quarterly_aggregation_partitioned_p95_latency(
     scale_bucket: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,

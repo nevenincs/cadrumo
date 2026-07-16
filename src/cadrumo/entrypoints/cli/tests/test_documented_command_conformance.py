@@ -26,7 +26,7 @@ only because a human ran the commands by hand:
 
 This gate closes that blind spot. It walks the *live* Typer/click command tree
 **in process** (no shell-out, no ``uv``) and, for every ``aeat ...`` invocation
-cited in a user-facing doc, asserts:
+cited in a user-facing doc or its keyed private sequence contract, asserts:
 
 - **(a) Command-path resolution.** The leading verb tokens resolve to a real
   command in the tree.
@@ -41,8 +41,10 @@ cited in a user-facing doc, asserts:
 
 Scope is *all* user-facing docs — the flat ``docs/*.md`` pages and the root
 ``README.md`` that the educational-surface gate never covered, plus the
-Diataxis trees the sibling gate already binds — so the same class of error is
-caught wherever a command is documented.
+Diataxis trees the sibling gate already binds — and every private
+``docs/_sequences/contracts/**/*.seq`` execution contract. The private
+contracts are authoritative for command execution metadata, while Markdown
+remains reader-facing.
 
 **Limitation: missing-required-positional is deliberately NOT enforced.**
 The original ``profile create`` defect (a required ``PROFILE_NAME`` positional
@@ -130,6 +132,16 @@ def _flat_docs() -> list[Path]:
     if readme.is_file():
         docs.append(readme)
     return docs
+
+
+def _sequence_contracts() -> list[Path]:
+    """Return every private CLI sequence contract in stable path order."""
+    return sorted((PROJECT_ROOT / "docs" / "_sequences" / "contracts").rglob("*.seq"))
+
+
+def _command_surfaces() -> list[Path]:
+    """Return reader docs plus their private executable contracts."""
+    return [*_flat_docs(), *_sequence_contracts()]
 
 
 # ---------------------------------------------------------------------------
@@ -445,6 +457,14 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
     return out
 
 
+def _surface_commands(path: Path) -> list[_CitedCommand]:
+    """Extract invocations from one reader doc or private sequence contract."""
+    text = path.read_text(encoding="utf-8")
+    if path.suffix == ".seq":
+        return _cited_commands(f"```\n{text}\n```")
+    return _cited_commands(text)
+
+
 # ---------------------------------------------------------------------------
 # Enrollment detection
 # ---------------------------------------------------------------------------
@@ -749,6 +769,8 @@ def test_doc_surface_present() -> None:
     names = {d.name for d in docs}
     assert "README.md" in names, "root README.md must be in the gate's scope"
     assert "index.md" in names, "docs/index.md must be in the gate's scope"
+    contracts = _sequence_contracts()
+    assert contracts, "no private CLI sequence contracts found"
 
 
 # The floor below which the gate is presumed vacuous. The live doc surface
@@ -770,7 +792,7 @@ def test_gate_scans_a_realistic_invocation_count() -> None:
     fails loudly if the parsed-invocation count ever collapses back toward zero,
     so the vacuity regression cannot recur silently behind a green suite.
     """
-    total = sum(len(_cited_commands(doc.read_text(encoding="utf-8"))) for doc in _flat_docs())
+    total = sum(len(_surface_commands(surface)) for surface in _command_surfaces())
     assert total >= _VACUITY_FLOOR, (
         f"documented-command gate parsed only {total} aeat invocations across the "
         f"doc surface (floor {_VACUITY_FLOOR}); the invocation-token anchor "
@@ -862,15 +884,14 @@ def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
     assert "totally-fake-subcommand" in flagged[0]
 
 
-@pytest.mark.parametrize("doc", _flat_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
-def test_documented_commands_conform(doc) -> None:
+@pytest.mark.parametrize("surface", _command_surfaces(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
+def test_documented_commands_conform(surface: Path) -> None:
     """Every cited ``aeat`` command resolves with valid options and arguments."""
-    text = doc.read_text(encoding="utf-8")
     violations: list[str] = []
-    for cited in _cited_commands(text):
+    for cited in _surface_commands(surface):
         violations.extend(_validate_command(cited))
     assert not violations, (
-        f"{doc.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
+        f"{surface.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
     )
 
