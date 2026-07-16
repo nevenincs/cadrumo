@@ -58,6 +58,8 @@ class ToolCallTelemetryRecord(BaseModel):
             and refusal rates are computable from telemetry alone.
         is_error: Whether the call returned an error result.
         duration_ms: Wall-clock round-trip duration.
+        executable_sha256: SHA-256 of the exact executable path supplied to
+            the supervised runtime; empty when no child was launched.
         arguments_sha256: SHA-256 of the canonical arguments JSON.
         result_sha256: SHA-256 of the result text; empty for refused calls
             that never ran.
@@ -72,6 +74,7 @@ class ToolCallTelemetryRecord(BaseModel):
     route: str = ""
     is_error: bool = False
     duration_ms: int = Field(ge=0, default=0)
+    executable_sha256: str = ""
     arguments_sha256: str = ""
     result_sha256: str = ""
 
@@ -202,6 +205,7 @@ class SessionTelemetryWriter:
         route: str = "",
         is_error: bool = False,
         duration_ms: int = 0,
+        executable_text: str = "",
         arguments_text: str = "",
         result_text: str = "",
     ) -> ToolCallTelemetryRecord:
@@ -218,6 +222,7 @@ class SessionTelemetryWriter:
             route=route,
             is_error=is_error,
             duration_ms=duration_ms,
+            executable_sha256=content_sha256(executable_text) if executable_text else "",
             arguments_sha256=content_sha256(arguments_text) if arguments_text else "",
             result_sha256=content_sha256(result_text) if result_text else "",
         )

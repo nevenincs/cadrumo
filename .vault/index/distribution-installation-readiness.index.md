@@ -17,6 +17,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S62]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S63]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S64]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-S66]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-S62` - Keep master-key unlock failures non-repairable and preserve the active pointer
 - `2026-07-15-distribution-installation-readiness-W01-P02-S63` - Harden installed oracles for direct MCP dispatch exact legal grounding resource identity and diagnostic failure
 - `2026-07-15-distribution-installation-readiness-W01-P02-S64` - Run the full grounded MCP oracle in the scrubbed installed-environment regression
+- `2026-07-15-distribution-installation-readiness-W01-P02-S66` - Record the actual MCP child executable through payload-free runtime telemetry
 
 ### plan
 
