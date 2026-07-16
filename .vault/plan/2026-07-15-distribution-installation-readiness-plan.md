@@ -38,6 +38,10 @@ Create the shared real-behavior oracle and remove ambient checkout and PATH depe
 - [x] `W01.P02.S07` - Execute the public MCP protocol itinerary and assert the same grounded Modelo 200 result; `dev/packaging/installed_mcp_oracle.py`.
 - [x] `W01.P02.S09` - Prove installed MCP execution succeeds with checkout imports and unrelated executable paths removed; `src/cadrumo/entrypoints/mcp/tests/test_installed_cli_resolution.py`.
 - [x] `W01.P02.S10` - Prove both installed commands originate from one environment and one cohort; `dev/packaging/tests/test_installed_oracles.py`.
+- [x] `W01.P02.S62` - Keep master-key unlock failures non-repairable and preserve the active pointer; `src/cadrumo/application/workflow`.
+- [ ] `W01.P02.S63` - Harden installed oracles for direct MCP dispatch exact legal grounding resource identity and diagnostic failure; `dev/packaging`.
+- [ ] `W01.P02.S64` - Run the full grounded MCP oracle in the scrubbed installed-environment regression; `src/cadrumo/entrypoints/mcp/tests/test_installed_cli_resolution.py`.
+- [ ] `W01.P02.S65` - Record invoked CLI origin source snapshot artifact digests and an automatic cohort gate; `dev/packaging/tests/test_installed_oracles.py`.
 
 ## Wave `W02` - Generate every claimed distribution
 

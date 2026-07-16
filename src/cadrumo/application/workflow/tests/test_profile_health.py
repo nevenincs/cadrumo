@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from ....adapters.persistence.storage import SecureObjectRepository, has_active_bucket_session
 from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
@@ -138,6 +139,42 @@ def test_profile_health_opens_a_cold_session_for_a_sibling_process_profile(tmp_p
     assert health.source == "pointer"
     assert health.profile_record_present is True
     assert health.repairable_by_clearing_pointer is False
+    assert has_active_bucket_session() is False
+
+
+def test_profile_repair_preserves_pointer_when_master_key_unlock_fails(tmp_path: Path) -> None:
+    """Keep a valid pointer when the active profile secret store cannot be unlocked."""
+    pointer = BucketPointer(bucket_id=_BUCKET_ID, schema_version=1)
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
+    ) as profile:
+        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
+        write_pointer(profile.storage_root, pointer)
+        storage_root = profile.storage_root
+        secret_store_backend = profile.settings.cadrumo_secret_store_backend
+        secret_store_dir = profile.settings.cadrumo_secret_store_dir
+
+    assert has_active_bucket_session() is False
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=None,
+        cadrumo_secret_store_backend=secret_store_backend,
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=SecretStr("definitely-wrong-passphrase"),
+    ):
+        health = assess_active_profile_health_with_session()
+        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+
+    assert health.status == "profile_record_unreadable"
+    assert "MasterKeyPassphraseMismatchError" in health.profile_record_error
+    assert health.repairable_by_clearing_pointer is False
+    assert health.next_action == "restore access to the active profile secret store, then retry"
+    assert repaired.dry_run is True
+    assert repaired.cleared_pointer is False
+    assert repaired.after is None
+    assert read_pointer(storage_root) == pointer
     assert has_active_bucket_session() is False
 
 
