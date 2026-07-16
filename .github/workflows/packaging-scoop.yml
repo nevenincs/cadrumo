@@ -1,0 +1,143 @@
+# Clean Scoop acquisition gate for the immutable Cadrumo Python cohort.
+# This workflow requires a Windows x64 self-hosted runner with Windows Sandbox
+# enabled; GitHub-hosted Windows runners do not satisfy that isolation contract.
+
+name: Cadrumo Scoop Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful Cadrumo Packaging Smoke workflow run containing the tested cohort
+        required: true
+        type: string
+      source_commit:
+        description: Full commit SHA that produced the tested cohort
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  cadrumo-scoop-acquisition:
+    name: Cadrumo / Windows 11 / x64 / Scoop Sandbox
+    runs-on: [self-hosted, Windows, X64, cadrumo-windows-sandbox]
+    timeout-minutes: 90
+
+    steps:
+      - name: Verify declared Windows Sandbox release row
+        shell: powershell
+        run: |
+          if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
+            throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
+          }
+          $feature = Get-WindowsOptionalFeature `
+            -Online `
+            -FeatureName Containers-DisposableClientVM
+          if ($feature.State -ne "Enabled") {
+            throw "Containers-DisposableClientVM must be enabled"
+          }
+          if (-not (Get-Command WindowsSandbox.exe -ErrorAction SilentlyContinue)) {
+            throw "WindowsSandbox.exe is unavailable"
+          }
+
+      - name: Verify source workflow identity
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          if ($env:SOURCE_COMMIT -notmatch "^[0-9a-fA-F]{40}$") {
+            throw "source_commit must be one full Git commit SHA"
+          }
+          if ($env:SOURCE_RUN_ID -notmatch "^[1-9][0-9]*$") {
+            throw "source_run_id must be one positive workflow run id"
+          }
+          $headers = @{
+            Accept = "application/vnd.github+json"
+            Authorization = "Bearer $env:GH_TOKEN"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $run = Invoke-RestMethod `
+            -Headers $headers `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN_ID"
+          if ($run.name -ne "Cadrumo Packaging Smoke") {
+            throw "source run is not the Cadrumo Packaging Smoke workflow"
+          }
+          if ($run.conclusion -ne "success") {
+            throw "source packaging run did not succeed"
+          }
+          if ($run.event -ne "push" -or $run.head_branch -ne "main") {
+            throw "source packaging run must be one trusted push to main"
+          }
+          if ($run.head_repository.full_name -ne $env:GITHUB_REPOSITORY) {
+            throw "source packaging run does not belong to this repository"
+          }
+          if ($run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()) {
+            throw "source packaging run commit does not match source_commit"
+          }
+
+      - name: Checkout tested source commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Download tested Cadrumo Python cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-python-cohort
+          path: var/packaging-smoke-cohort/python
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Generate cohort-bound Scoop source manifest
+        shell: powershell
+        run: |
+          $version = uv run --no-project python -c `
+            "import pathlib,tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
+          if ($LASTEXITCODE -ne 0 -or -not $version) {
+            throw "could not resolve the tested source version"
+          }
+          $output = "var/distribution-install-readiness/s20-scoop/source-manifest.json"
+          uv run --no-project --with packaging python packaging/scoop/generate.py `
+            --cohort-dir var/packaging-smoke-cohort/python `
+            --version $version.Trim() `
+            --release-base-url "https://github.com/nevenincs/cadrumo/releases/download/v$($version.Trim())" `
+            --output $output
+          if ($LASTEXITCODE -ne 0) {
+            throw "Scoop source manifest generation failed"
+          }
+
+      - name: Install and exercise Cadrumo inside Windows Sandbox
+        shell: powershell
+        run: |
+          & dev/packaging/smoke_scoop.ps1 `
+            -Mode Sandbox `
+            -CohortDir var/packaging-smoke-cohort/python `
+            -ManifestPath var/distribution-install-readiness/s20-scoop/source-manifest.json `
+            -EvidenceDir var/distribution-install-readiness/s20-scoop/evidence `
+            -AppName cadrumo-s20-acquisition `
+            -TimeoutMinutes 60
+
+      - name: Upload Cadrumo Scoop acquisition evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-scoop-acquisition-evidence
+          path: var/distribution-install-readiness/s20-scoop/
+          if-no-files-found: error
+          retention-days: 14
