@@ -19,10 +19,12 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S64]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S65]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S66]]'
+  - '[[2026-07-15-distribution-installation-readiness-W01-P02-summary]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
   - '[[2026-07-15-distribution-installation-readiness-research]]'
+  - '[[2026-07-16-distribution-installation-readiness-p02-review-audit]]'
 ---
 
 # `distribution-installation-readiness` feature index
@@ -30,6 +32,10 @@ related:
 Auto-generated index of all documents tagged with `#distribution-installation-readiness`.
 
 ## Documents
+
+### audit
+
+- `2026-07-16-distribution-installation-readiness-p02-review-audit` - `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
 
 ### adr
 
@@ -50,6 +56,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-S64` - Run the full grounded MCP oracle in the scrubbed installed-environment regression
 - `2026-07-15-distribution-installation-readiness-W01-P02-S65` - Record invoked CLI origin source snapshot artifact digests and an automatic cohort gate
 - `2026-07-15-distribution-installation-readiness-W01-P02-S66` - Record the actual MCP child executable through payload-free runtime telemetry
+- `2026-07-15-distribution-installation-readiness-W01-P02-summary` - `distribution-installation-readiness` `W01.P02` summary
 
 ### plan
 
