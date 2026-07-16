@@ -39,6 +39,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S31]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S32]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S33]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S34]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -95,6 +96,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S31` - Introduce one public idempotent active-session eviction boundary that closes the currently bound BucketSession before clearing ContextVar visibility, route idle-expiry and interpreter-exit cleanup through it, and re-export it through the master-key and storage facades
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S32` - Centralize provider teardown in the shared exit boundary so production and ephemeral providers atomically detach their bookkeeping, close only their exact owned BucketSession before unwinding activation, reuse that boundary after failed entry, and do not recreate the retired OS-keyring cache
 - `2026-07-15-cli-authority-verb-conformance-W02-P04-S33` - Prove repeated active-session eviction removes current and boolean ContextVar visibility after the existing key zeroization and engine disposal, preserves nested outer-session restoration, and clears an already sealed binding
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S34` - Prove same-object file-provider eviction closes real bucket-routed storage, clears provider and active-session bookkeeping, and permits a clean fresh reopen with the persisted bucket DEK and distinct session and engine handles
 
 ### plan
 
