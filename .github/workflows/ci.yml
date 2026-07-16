@@ -59,7 +59,6 @@ jobs:
         run: |
           uv sync
           uv run vaultspec-core install --force
-          just env-setup
 
       - name: Lint
         run: |

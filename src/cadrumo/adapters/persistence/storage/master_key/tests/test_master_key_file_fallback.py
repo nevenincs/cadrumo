@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from sqlalchemy import text
 
 from ......core.config import SecretStoreBackend, override_settings
 from ......core.errors import build_error_envelope
@@ -21,8 +22,17 @@ from ...errors import (
     MasterKeyUnavailableError,
     SecretStoreError,
 )
-from .. import FileFallbackMasterKeyProvider, MasterKeyProvider, activate_master_key_provider
-from .._active_session import get_active_master_key
+from .. import (
+    FileFallbackMasterKeyProvider,
+    MasterKeyProvider,
+    activate_master_key_provider,
+    load_or_mint_bucket_dek,
+)
+from .._active_session import (
+    current_active_bucket_session,
+    get_active_master_key,
+    has_active_bucket_session,
+)
 from .._master_key import _b64decode, _KdfParameters
 from ._master_key_support import _settings_with_store, _write_registered_bucket
 
@@ -125,6 +135,66 @@ class TestFileFallbackProvider:
             activate_master_key_provider(second, fallback_bucket_id="alpha"),
         ):
             assert get_active_master_key() == first_dek
+
+    def test_same_provider_exit_closes_real_storage_and_reopens_fresh(self, tmp_path: Path) -> None:
+        """File-provider exit evicts real bucket storage before same-object reentry."""
+        bucket_id = "provider-reopen"
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.cadrumo_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        master_key = provider.provision_master_key()
+        expected_dek = load_or_mint_bucket_dek(
+            kek=master_key,
+            storage_root=settings.cadrumo_local_storage_root,
+            bucket_id=bucket_id,
+            allow_bootstrap_mint=True,
+        )
+        _write_registered_bucket(
+            settings.cadrumo_local_storage_root,
+            bucket_id,
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
+        )
+
+        with override_settings(
+            cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+            cadrumo_active_profile=bucket_id,
+            cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+            cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        ) as active_settings:
+            with activate_master_key_provider(provider):
+                first_session = current_active_bucket_session()
+                assert first_session is not None
+                assert has_active_bucket_session() is True
+                assert get_active_master_key() == expected_dek
+                first_engine = first_session.acquire_engine(active_settings)
+                with first_engine.connect() as connection:
+                    assert connection.execute(text("SELECT 1")).scalar_one() == 1
+
+            assert current_active_bucket_session() is None
+            assert has_active_bucket_session() is False
+            assert first_session.sealed is True
+            assert provider._session is None
+            assert provider._activation_cm is None
+
+            with activate_master_key_provider(provider):
+                second_session = current_active_bucket_session()
+                assert second_session is not None
+                assert second_session is not first_session
+                assert second_session.sealed is False
+                assert has_active_bucket_session() is True
+                assert get_active_master_key() == expected_dek
+                second_engine = second_session.acquire_engine(active_settings)
+                assert second_engine is not first_engine
+                with second_engine.connect() as connection:
+                    assert connection.execute(text("SELECT 1")).scalar_one() == 1
+
+            assert current_active_bucket_session() is None
+            assert has_active_bucket_session() is False
+            assert second_session.sealed is True
+            assert provider._session is None
+            assert provider._activation_cm is None
 
     def test_tampered_bucket_dek_raises_localized_master_key_unavailable_without_path(
         self,

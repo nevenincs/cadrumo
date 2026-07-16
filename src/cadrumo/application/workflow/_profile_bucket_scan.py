@@ -55,7 +55,7 @@ from ...adapters.persistence.storage.bucket import (
 )
 from ...core.logging import get_logger
 from ._errors import ProfileLabelAmbiguousError
-from ._models import ProfileBucketPointer
+from ._profile_bucket_models import ProfileBucketPointer
 
 _log = get_logger(__name__)
 
