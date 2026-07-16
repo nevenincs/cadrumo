@@ -6,7 +6,7 @@ from the ONE source tree at ``src/cadrumo/_data/corpus`` and mapped to the mirro
 ``cadrumo_data/_data/corpus`` layout the runtime corpus-locator seam resolves. It is
 one of two disjoint sub-cap companions (the other, ``cadrumo-data-official``, ships
 ``corpus/aeat_official`` and ``corpus/normatives``); together they cover every
-corpus source binary the slim ``cadrumo`` wheel excludes, each staying under PyPI's
+corpus source binary the compact ``cadrumo`` wheel excludes, each staying under PyPI's
 100 MB per-file cap so no size grant is needed.
 
 Both companions ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit
@@ -36,8 +36,8 @@ See Also:
         Runtime corpus locator seam that reads the mirrored ``cadrumo_data`` tree
         produced by this hook.
     :mod:`~dev.packaging.smoke_split_install`
-        Split-install smoke lane proving the slim wheel degrades loudly and both
-        companions restore byte parity.
+        Three-wheel cohort lane proving the command-bearing wheel declares and
+        installs both mandatory companion portions.
 """
 
 from __future__ import annotations

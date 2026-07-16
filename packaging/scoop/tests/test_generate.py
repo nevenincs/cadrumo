@@ -74,9 +74,7 @@ def _conditional_companion_pin_wheel(
 ) -> None:
     with zipfile.ZipFile(source) as source_archive:
         members = tuple(source_archive.infolist())
-        metadata_members = tuple(
-            member for member in members if member.filename.endswith(".dist-info/METADATA")
-        )
+        metadata_members = tuple(member for member in members if member.filename.endswith(".dist-info/METADATA"))
         assert len(metadata_members) == 1
         metadata_name = metadata_members[0].filename
         original = f"Requires-Dist: cadrumo-data-manuals=={version}"
@@ -140,9 +138,7 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert "post_install" not in manifest
     assert set(manifest["architecture"]) == {"64bit"}
     architecture = manifest["architecture"]["64bit"]
-    assert architecture["url"] == [
-        f"{built_cohort.release_base}/{artifact.name}" for artifact in artifacts
-    ]
+    assert architecture["url"] == [f"{built_cohort.release_base}/{artifact.name}" for artifact in artifacts]
     assert architecture["hash"] == [_sha256(artifact) for artifact in artifacts]
     assert manifest["depends"] == ["python", "uv"]
     assert manifest["bin"] == [["aeat.cmd", "aeat"], ["cadrumo-mcp.cmd", "cadrumo-mcp"]]
@@ -159,10 +155,7 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert "uv pip check" in hooks[3]
     assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
     for executable, hook in zip(("aeat", "cadrumo-mcp"), hooks[4:], strict=True):
-        assert (
-            "if not defined CADRUMO_LOCAL_STORAGE_ROOT "
-            "set `\"CADRUMO_LOCAL_STORAGE_ROOT=$state`\""
-        ) in hook
+        assert ('if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"') in hook
         assert f"venv\\Scripts\\{executable}.exe" in hook
         assert "%*" in hook
         assert f"Join-Path $dir '{executable}.cmd'" in hook
@@ -253,9 +246,7 @@ def test_generator_rejects_distribution_and_version_mismatches(
 
     command = _generator_command(built_cohort)
     command[command.index("--version") + 1] = "999.0.0"
-    command[command.index("--release-base-url") + 1] = (
-        "https://github.com/nevenincs/cadrumo/releases/download/v999.0.0"
-    )
+    command[command.index("--release-base-url") + 1] = "https://github.com/nevenincs/cadrumo/releases/download/v999.0.0"
     with pytest.raises(SystemExit):
         _run([*command, "--output", str(tmp_path / "version.json")], cwd=_REPO_ROOT)
 

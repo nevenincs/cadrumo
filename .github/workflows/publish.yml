@@ -1,101 +1,84 @@
-# PyPI publish via Trusted Publishing (OIDC) — HUMAN-GATED: manual dispatch only.
-#
-# Operator-approved exception (2026-07-03) to the local-token publish lane in
-# RELEASING.md: the operator registered this exact workflow (publish.yml) and
-# the `pypi` environment as a pending Trusted Publisher on PyPI. Each of the
-# three Cadrumo distributions must register this exact workflow/environment
-# independently; the release gate blocks dispatch until all three are confirmed.
-# There is NO automatic trigger — no tag push, no schedule — a human presses
-# the button, matching the LOCAL-ONLY HUMAN-GATED release discipline's intent.
-#
-# `cadrumo` publishes WHEEL-ONLY: the sdist packs the full source tree including
-# the corpus source binaries (~180 MB, over PyPI's 100 MB default cap). The
-# guards below refuse a fat artifact outright, so dispatching from a branch
-# without the wheel-split build config fails loudly instead of uploading.
-#
-# The corpus source binaries ship in TWO sub-cap companions — `cadrumo-data-manuals`
-# and `cadrumo-data-official` — each built from its own in-repo project and each
-# under the 100 MB cap, so no PyPI size grant is required.
-name: publish
+# Publication remains intentionally absent until the complete cross-channel
+# cohort and its blocking evidence are implemented. This manual workflow is a
+# retained-byte readiness diagnostic only; it has no upload authority.
+name: Validate retained release candidate
 
 on:
   workflow_dispatch:
     inputs:
-      distribution:
-        description: "Distribution to publish"
-        type: choice
-        options:
-          - cadrumo
-          - cadrumo-data-manuals
-          - cadrumo-data-official
-        default: cadrumo
+      packaging_run_id:
+        description: "Successful Cadrumo Packaging Smoke run containing the tested cohort"
+        required: true
+        type: string
 
 permissions:
+  actions: read
   contents: read
 
+env:
+  COHORT_DIR: var/promotion/cohort
+  EVIDENCE_DOWNLOAD: var/promotion/evidence
+  PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
+
 jobs:
-  publish:
+  validate:
+    name: Validate immutable tested Python candidate
     runs-on: ubuntu-latest
-    # One environment per distribution: PyPI's PENDING trusted publishers are
-    # unique on (owner, repo, workflow, environment) EXCLUDING the project
-    # name, so three pending registrations from this one workflow must each
-    # carry a distinct environment.
-    environment: ${{ fromJSON('{"cadrumo":"pypi","cadrumo-data-manuals":"pypi-data-manuals","cadrumo-data-official":"pypi-data-official"}')[inputs.distribution] }}
-    permissions:
-      id-token: write
-      contents: read
+    outputs:
+      source_commit: ${{ steps.validate.outputs.source_commit }}
+      version: ${{ steps.validate.outputs.version }}
     steps:
+      - name: Require one successful packaging-smoke authority run
+        id: source-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PACKAGING_RUN_ID}")"
+          conclusion="$(jq -r .conclusion <<<"$run_json")"
+          workflow_path="$(jq -r .path <<<"$run_json")"
+          source_commit="$(jq -r .head_sha <<<"$run_json")"
+          if [[ "$conclusion" != "success" ]]; then
+            echo "packaging run did not succeed: $conclusion" >&2
+            exit 1
+          fi
+          if [[ "$workflow_path" != ".github/workflows/packaging-smoke.yml" ]]; then
+            echo "run is not the packaging-smoke authority: $workflow_path" >&2
+            exit 1
+          fi
+          echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source-run.outputs.source_commit }}
 
       - uses: astral-sh/setup-uv@v5
 
-      - name: Build cadrumo (wheel only)
-        if: ${{ inputs.distribution == 'cadrumo' }}
-        run: uv build --wheel --out-dir dist
-
-      - name: Build cadrumo-data-manuals companion
-        if: ${{ inputs.distribution == 'cadrumo-data-manuals' }}
-        run: uv build --wheel --project packaging/cadrumo_data_manuals --out-dir dist
-
-      - name: Build cadrumo-data-official companion
-        if: ${{ inputs.distribution == 'cadrumo-data-official' }}
-        run: uv build --wheel --project packaging/cadrumo_data_official --out-dir dist
-
-      - name: Guard the artifact (size cap, slim-wheel split)
+      - name: Download tested cohort and installed evidence
         env:
-          SELECTED_DISTRIBUTION: ${{ inputs.distribution }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          python - <<'EOF'
-          import os, pathlib, sys, zipfile
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-python-cohort --dir "$COHORT_DIR"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence --dir "$EVIDENCE_DOWNLOAD"
 
-          wheels = sorted(pathlib.Path("dist").glob("*.whl"))
-          if len(wheels) != 1:
-              sys.exit(f"expected exactly one wheel in dist/, found {[w.name for w in wheels]}")
-          wheel = wheels[0]
-          expected_prefix = {
-              "cadrumo": "cadrumo-",
-              "cadrumo-data-manuals": "cadrumo_data_manuals-",
-              "cadrumo-data-official": "cadrumo_data_official-",
-          }[os.environ["SELECTED_DISTRIBUTION"]]
-          if not wheel.name.startswith(expected_prefix):
-              sys.exit(f"expected {expected_prefix}*.whl, found {wheel.name}")
-          size_mb = wheel.stat().st_size / 1e6
-          print(f"{wheel.name}: {size_mb:.1f} MB")
-          # Every artifact must clear PyPI's 100 MB per-file cap now: the slim cadrumo
-          # wheel AND both sub-cap corpus companions. There is no size grant on
-          # the critical path — a fat artifact means the wheel-split build config
-          # is missing (cadrumo) or the corpus seam partition needs rebalancing
-          # (a companion).
-          if size_mb > 100:
-              sys.exit(f"{wheel.name} exceeds the 100 MB PyPI cap ({size_mb:.1f} MB) - was this dispatched "
-                       "from a branch without the wheel-split build config, or has a companion grown over cap?")
-          if wheel.name.startswith("cadrumo-"):
-              leaked = [n for n in zipfile.ZipFile(wheel).namelist()
-                        if n.startswith("cadrumo/_data/corpus/")
-                        and n.lower().endswith((".pdf", ".xls", ".xlsx"))]
-              if leaked:
-                  sys.exit(f"slim cadrumo wheel leaked {len(leaked)} corpus source binaries")
-          EOF
+      - name: Validate exact hashes and both installed public transports
+        id: validate
+        env:
+          EXPECTED_SOURCE_COMMIT: ${{ steps.source-run.outputs.source_commit }}
+        run: |
+          evidence_file="$(find "$EVIDENCE_DOWNLOAD" -path "*/${EXPECTED_SOURCE_COMMIT}/evidence.json" -print -quit)"
+          if [[ -z "$evidence_file" ]]; then
+            echo "installed cohort evidence is absent for $EXPECTED_SOURCE_COMMIT" >&2
+            exit 1
+          fi
+          uv run --frozen python -m dev.release.promote_python_cohort \
+            --cohort-dir "$COHORT_DIR" \
+            --evidence-file "$evidence_file" \
+            --expected-source-commit "$EXPECTED_SOURCE_COMMIT" \
+            --check-pypi \
+            --github-output "$GITHUB_OUTPUT"
 
-      - name: Publish to PyPI (Trusted Publishing)
-        run: uv publish --trusted-publishing always dist/*
+      - name: Keep publication blocked
+        run: |
+          echo "The retained Python candidate is valid."
+          echo "Publication remains blocked until the full plugin, MCPB, Scoop, Homebrew,"
+          echo "GitHub release, Python, platform, client, and reacquisition evidence set exists."

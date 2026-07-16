@@ -119,6 +119,7 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert 'depends_on "cmake" => :build' in formula
     assert 'depends_on "jpeg-turbo"' in formula
     assert 'depends_on "qpdf"' in formula
+    assert 'uses_from_macos "libffi"' in formula
     assert 'on_linux do\n    depends_on "zlib-ng-compat"' in formula
     assert 'virtualenv_install_with_resources using: "python3.13"' in formula
     assert 'assert_predicate bin/"aeat", :executable?' in formula
@@ -138,11 +139,13 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert "tzdata" not in resources
     assert len(resources) == 69
     assert all(url.startswith("https://") for url, _digest in resources.values())
-    assert '  on_linux do\n    resource "secretstorage" do' in formula
-    assert '  on_linux do\n    resource "jeepney" do' in formula
-    assert ('  on_macos do\n    on_intel do\n      resource "greenlet" do') in formula
-    assert '  on_linux do\n    resource "greenlet" do' in formula
-    assert ('  on_macos do\n    on_arm do\n      resource "greenlet" do') not in formula
+    assert formula.count("  on_macos do\n") == 1
+    assert formula.count("  on_linux do\n") == 1
+    assert '    resource "secretstorage" do' in formula
+    assert '    resource "jeepney" do' in formula
+    assert '    on_intel do\n      resource "greenlet" do' in formula
+    assert '    resource "greenlet" do' in formula
+    assert '    on_arm do\n      resource "greenlet" do' not in formula
 
 
 def test_formula_resources_match_the_locked_pypi_sdists(

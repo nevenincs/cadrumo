@@ -49,14 +49,11 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
     matches = tuple(sorted(cohort_dir.glob(wheel_glob)))
     if len(matches) != 1:
         raise SystemExit(
-            f"expected one {distribution} wheel matching {wheel_glob!r}; "
-            f"got {[path.name for path in matches]!r}",
+            f"expected one {distribution} wheel matching {wheel_glob!r}; got {[path.name for path in matches]!r}",
         )
     wheel = matches[0].resolve(strict=True)
     with zipfile.ZipFile(wheel) as archive:
-        metadata_names = tuple(
-            name for name in archive.namelist() if name.endswith(".dist-info/METADATA")
-        )
+        metadata_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
         if len(metadata_names) != 1:
             raise SystemExit(f"expected one METADATA member in {wheel}: {metadata_names!r}")
         metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
@@ -66,8 +63,7 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
         raise SystemExit(f"wheel metadata lacks Name or Version: {wheel}")
     if _normalize_name(observed_name) != distribution:
         raise SystemExit(
-            f"wheel {wheel.name!r} declares {_normalize_name(observed_name)!r}, "
-            f"expected {distribution!r}",
+            f"wheel {wheel.name!r} declares {_normalize_name(observed_name)!r}, expected {distribution!r}",
         )
     return WheelArtifact(
         distribution=distribution,
@@ -86,9 +82,7 @@ def _validate_companion_pins(
     requirements = [Requirement(value) for value in root.requirements]
     for companion in (manuals, official):
         matches = [
-            requirement
-            for requirement in requirements
-            if _normalize_name(requirement.name) == companion.distribution
+            requirement for requirement in requirements if _normalize_name(requirement.name) == companion.distribution
         ]
         if len(matches) != 1:
             raise SystemExit(
@@ -123,7 +117,7 @@ def _wrapper_script(executable: str) -> str:
     return (
         "$state = Join-Path $persist_dir 'state'; "
         '$wrapper = "@echo off`r`n'
-        'if not defined CADRUMO_LOCAL_STORAGE_ROOT '
+        "if not defined CADRUMO_LOCAL_STORAGE_ROOT "
         'set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"`r`n'
         f'`"%~dp0venv\\Scripts\\{executable}.exe`" %*`r`n"; '
         f"Set-Content -LiteralPath (Join-Path $dir '{executable}.cmd') "
@@ -139,8 +133,7 @@ def generate_manifest(
 ) -> dict[str, object]:
     """Return one Scoop manifest bound to exact cohort filenames and hashes."""
     artifacts = tuple(
-        _wheel_artifact(cohort_dir, distribution, wheel_glob)
-        for distribution, wheel_glob in _DISTRIBUTIONS
+        _wheel_artifact(cohort_dir, distribution, wheel_glob) for distribution, wheel_glob in _DISTRIBUTIONS
     )
     observed_versions = {artifact.version for artifact in artifacts}
     if observed_versions != {version}:
@@ -160,8 +153,7 @@ def generate_manifest(
         f"& uv pip install --python {python_path} --no-cache $root "
         f"(Join-Path $dir '{manuals.path.name}') (Join-Path $dir '{official.path.name}'); "
         "if ($LASTEXITCODE -ne 0) { throw 'uv pip install failed' }",
-        f"& uv pip check --python {python_path}; "
-        "if ($LASTEXITCODE -ne 0) { throw 'uv pip check failed' }",
+        f"& uv pip check --python {python_path}; if ($LASTEXITCODE -ne 0) {{ throw 'uv pip check failed' }}",
         _wrapper_script("aeat"),
         _wrapper_script("cadrumo-mcp"),
     ]
