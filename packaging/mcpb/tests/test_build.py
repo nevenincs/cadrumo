@@ -154,10 +154,7 @@ def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
     assert manifest["user_config"]["storage_root"] == {
         "type": "directory",
         "title": "Cadrumo state directory",
-        "description": (
-            "Persistent, project-independent local state for the Cadrumo MCP service. "
-            "The directory is never adopted from the retired aeat product."
-        ),
+        "description": "Persistent, project-independent local state for the Cadrumo MCP service.",
         "required": True,
     }
     assert manifest["compatibility"] == {
