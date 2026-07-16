@@ -20,6 +20,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S65]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-S66]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P02-summary]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P03-S11]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -57,6 +58,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W01-P02-S65` - Record invoked CLI origin source snapshot artifact digests and an automatic cohort gate
 - `2026-07-15-distribution-installation-readiness-W01-P02-S66` - Record the actual MCP child executable through payload-free runtime telemetry
 - `2026-07-15-distribution-installation-readiness-W01-P02-summary` - `distribution-installation-readiness` `W01.P02` summary
+- `2026-07-15-distribution-installation-readiness-W02-P03-S11` - Make the core wheel lane install and exercise a supplied complete cohort
 
 ### plan
 
