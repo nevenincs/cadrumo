@@ -14,6 +14,16 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `duplication-evidence-repair` plan
 
 ## Description
@@ -32,7 +42,7 @@ The decision record keeps the clone count advisory, so the goal is honest eviden
 - [x] `S04` - Delete the duplicate jscpd invocation and parsing path from the health report so the typed runner is the only execution authority; `dev/audit/report.py`.
 - [x] `S05` - Replace the shell pipeline with a direct Python duplication runner invocation so Windows and POSIX execute the same authority and retain stdout, stderr, return code, and timeout evidence; `justfile`.
 - [x] `S06` - Prove real zero-clone, clone, unavailable executable, non-zero, timeout, stderr, and unparseable outcomes cannot become false green and that report and direct runner render the same typed result; `src/cadrumo/tests/test_dev_audit_report.py`.
-- [ ] `S07` - Record an explicit disposition for every observed clone group as cluster-owned, intentional, or advisory residue without treating the count as an elimination mandate; `dev/audit/duplication_dispositions.toml`.
+- [x] `S07` - Record an explicit disposition for every observed clone group as cluster-owned, intentional, or advisory residue without treating the count as an elimination mandate; `dev/audit/duplication_dispositions.toml`.
 ## Parallelization
 
 The runner steps carry hard ordering: the typed runner and its platform-neutral path rendering must exist before the report or the Just recipe can consume it, and the duplicate report path can only be deleted once the report consumes the runner. The false-green proof runs against the finished runner and report together. The clone-group triage step is independent of the runner work and may proceed in parallel with it; its output is a disposition record, not a code change.
