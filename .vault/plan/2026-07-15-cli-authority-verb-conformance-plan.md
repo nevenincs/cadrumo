@@ -11,16 +11,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S115, S117, S127, S184 -->
 
 # `cli-authority-verb-conformance` plan
@@ -136,16 +126,16 @@ Replace scope reset with a durable target-scoped roll-forward operation composed
 
 Expose explicit passphrase and recovery lifecycle operations while keeping mnemonic material off argv, output envelopes, and non-file custody backends.
 
-- [ ] `W02.P21.S71` - Expose distinct recovery status, create, rotate, verify, and recover application operations; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
-- [ ] `W02.P21.S72` - Make recovery create refuse an existing enrollment and rotate require an existing enrollment; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
-- [ ] `W02.P21.S73` - Preserve the prior recovery envelope until a candidate mnemonic has been fully verified; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
-- [ ] `W02.P21.S74` - Restrict recovery to file custody and return typed refusals for keyring and unsecured custody; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
-- [ ] `W02.P21.S75` - Preserve the established recovery fingerprint across verification and recovery operations; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_record.py`.
-- [ ] `W02.P21.S76` - Prove create refusal, rotate preconditions, candidate verification, and old-envelope survival with real encrypted files; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery_facade.py`.
-- [ ] `W02.P21.S77` - Prove mnemonic verification and recovery never serialize secret material; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery.py`.
-- [ ] `W02.P21.S78` - Prove file-only custody and typed keyring or unsecured refusals across the custody matrix; `src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py`.
-- [ ] `W02.P21.S79` - Prove passphrase change preserves encrypted data and survives failed candidate confirmation; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py`.
-- [ ] `W02.P21.S80` - Re-export only the explicit passphrase and recovery lifecycle operations; `src/cadrumo/adapters/persistence/storage/master_key/__init__.py`.
+- [x] `W02.P21.S71` - Expose distinct recovery status, create, rotate, verify, and recover application operations; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
+- [x] `W02.P21.S72` - Make recovery create refuse an existing enrollment and rotate require an existing enrollment; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
+- [x] `W02.P21.S73` - Preserve the prior recovery envelope until a candidate mnemonic has been fully verified; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
+- [x] `W02.P21.S74` - Restrict recovery to file custody and return typed refusals for keyring and unsecured custody; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
+- [x] `W02.P21.S75` - Preserve the established recovery fingerprint across verification and recovery operations; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_record.py`.
+- [x] `W02.P21.S76` - Prove create refusal, rotate preconditions, candidate verification, and old-envelope survival with real encrypted files; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery_facade.py`.
+- [x] `W02.P21.S77` - Prove mnemonic verification and recovery never serialize secret material; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery.py`.
+- [x] `W02.P21.S78` - Prove file-only custody and typed keyring or unsecured refusals across the custody matrix; `src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py`.
+- [x] `W02.P21.S79` - Prove passphrase change preserves encrypted data and survives failed candidate confirmation; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py`.
+- [x] `W02.P21.S80` - Re-export only the explicit passphrase and recovery lifecycle operations; `src/cadrumo/adapters/persistence/storage/master_key/__init__.py`.
 
 ## Wave `W03` - Consolidate remaining duplicated backend services
 
