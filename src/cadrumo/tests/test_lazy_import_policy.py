@@ -519,6 +519,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.ledger._actions_common", "application.ledger._evidence"),
             ImportEdge("application.ledger._actions_common", "core.config"),
             ImportEdge("application.ledger._actions_import", "adapters.inbound.financial.providers"),
+            ImportEdge("application.ledger._actions_manual", "application.invoices"),
             ImportEdge("application.ledger._business_operation_invoice", "core.config"),
             ImportEdge("application.ledger._business_operation_invoice", "domain.buckets"),
             ImportEdge("application.ledger._evidence", "core.config"),
@@ -767,7 +768,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 528,  # +8 mcp warm-serving + user_profile bundle-export/orchestration deferrals (was 520)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 529,  # +1 ledger._actions_manual->invoices cycle-break (was 528)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -778,7 +779,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
 _ALLOWLIST_EDGE_CEILING: int = (
-    472  # +8 mcp warm-serving + user_profile bundle-export/orchestration deferrals (was 464).
+    473  # +1 ledger._actions_manual->invoices cycle-break (was 472).
 )
 
 

@@ -148,8 +148,8 @@ def test_interactive_create_under_json_keeps_stdout_parseable() -> None:
     assert result.output.lstrip().startswith("{"), result.output
 
 
-# The pinned profile-create prompted-question inventory (see the P07.S20 decision
-# note in the cli-authority-quality-backlog plan): the full declared question set
+# The pinned profile-create prompted-question inventory (see the question-count
+# decision note in the cli-authority-quality-backlog plan): the full declared question set
 # of the setup flow, which is exactly the ``supplied_question_ids`` frozenset the
 # ``create`` path writes to the payload. This is the single place the inventory is
 # pinned; a legitimate add or drop updates this set here, and any silent change

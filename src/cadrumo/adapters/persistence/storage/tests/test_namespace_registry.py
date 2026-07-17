@@ -795,6 +795,8 @@ def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
             "adapters.persistence.storage._namespace_registry",
             "persistence.storage",
             "persistence.storage._namespace_registry",
+            "storage",
+            "storage._namespace_registry",
             "_namespace_registry",
         }
     )
