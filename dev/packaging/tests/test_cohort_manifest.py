@@ -29,6 +29,7 @@ def _build_identity(*, python: str = "3.13.11") -> BuildIdentity:
         uv="uv 0.8.0",
         platform="Windows",
         architecture="AMD64",
+        build_constraints_sha256="d" * 64,
     )
 
 

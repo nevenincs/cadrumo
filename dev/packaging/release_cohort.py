@@ -30,6 +30,7 @@ from dev.packaging.cohort_manifest import (  # noqa: E402
     SourceIdentity,
     create_manifest,
     load_release_cohort,
+    sha256_file,
     write_manifest,
 )
 from dev.packaging.python_cohort import (  # noqa: E402
@@ -41,6 +42,9 @@ from dev.packaging.python_cohort import (  # noqa: E402
 _UTF_8: Final[str] = "utf-8"
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
 _RELEASE_BASE: Final[str] = "https://github.com/nevenincs/cadrumo/releases/download"
+_REQUIRED_PYTHON_VERSION: Final[str] = "3.13.11"
+_REQUIRED_UV_VERSION: Final[str] = "0.11.29"
+_BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 
 def _run(
@@ -238,13 +242,27 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
     if uv is None:
         raise SystemExit("uv is required to construct the release cohort")
     uv_version = _run([uv, "--version"], cwd=clean_root).stdout.strip()
+    observed_uv = uv_version.split(maxsplit=2)
+    if len(observed_uv) < 2 or observed_uv[:2] != ["uv", _REQUIRED_UV_VERSION]:
+        raise SystemExit(
+            f"release cohort requires uv {_REQUIRED_UV_VERSION}, got {uv_version!r}",
+        )
+    python_version = platform.python_version()
+    if platform.python_implementation() != "CPython" or python_version != _REQUIRED_PYTHON_VERSION:
+        raise SystemExit(
+            "release cohort requires "
+            f"CPython {_REQUIRED_PYTHON_VERSION}, got "
+            f"{platform.python_implementation()} {python_version}",
+        )
+    constraints = (clean_root / _BUILD_CONSTRAINTS).resolve(strict=True)
     return BuildIdentity(
         implementation="dev.packaging.release_cohort",
         format_version=1,
-        python=platform.python_version(),
+        python=python_version,
         uv=uv_version,
         platform=platform.system(),
         architecture=platform.machine(),
+        build_constraints_sha256=sha256_file(constraints),
     )
 
 
@@ -268,8 +286,14 @@ def build_from_clean_source(
     output.mkdir(parents=True)
 
     source_epoch = _git(root, "show", "-s", "--format=%ct", commit)
+    builder = _build_identity(root)
+    build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
     os.environ["SOURCE_DATE_EPOCH"] = source_epoch
     os.environ["PYTHONHASHSEED"] = "0"
+    os.environ["UV_BUILD_CONSTRAINT"] = str(build_constraints)
+    os.environ["UV_REQUIRE_HASHES"] = "1"
+    os.environ["UV_PYTHON"] = sys.executable
+    os.environ["UV_PYTHON_DOWNLOADS"] = "never"
     env = os.environ.copy()
     env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
 
@@ -300,7 +324,7 @@ def build_from_clean_source(
         version=cohort.version,
         source=SourceIdentity(commit=commit, tag=tag),
         created_at=datetime.now(UTC),
-        builder=_build_identity(root),
+        builder=builder,
         artifacts=(
             ("cadrumo-wheel", ArtifactKind.PYTHON_WHEEL, cohort.root_wheel),
             ("cadrumo-sdist", ArtifactKind.PYTHON_SDIST, cohort.root_sdist),
@@ -366,13 +390,22 @@ def build_release_cohort(
             f"expected commit does not equal the currently checked-out HEAD: expected {commit}, got {head}",
         )
     var = (root / "var").resolve()
-    with tempfile.TemporaryDirectory(prefix="cadrumo-release-source-", dir=var) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
         clean_root = Path(temporary) / "source"
         git = shutil.which("git")
         if git is None:
             raise SystemExit("git is required to construct the release cohort")
         _run(
-            [git, "clone", "--no-hardlinks", "--quiet", str(root), str(clean_root)],
+            [
+                git,
+                "-c",
+                "core.longpaths=true",
+                "clone",
+                "--no-hardlinks",
+                "--quiet",
+                str(root),
+                str(clean_root),
+            ],
             cwd=root,
         )
         cloned_commit = _git(clean_root, "rev-parse", "HEAD")
