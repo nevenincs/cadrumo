@@ -116,7 +116,7 @@ Run cohort-bound acceptance on declared operating systems and real clients, with
 
 Replace fragmented lane manifests with a schema that binds source, hashes, environment, commands, results, and destinations to one cohort.
 
-- [ ] `W03.P07.S31` - Record cohort source digests runtime platform client command transcript result and destination; `dev/packaging/evidence.py`.
+- [x] `W03.P07.S31` - Record cohort source digests runtime platform client command transcript result and destination; `dev/packaging/evidence.py`.
 - [ ] `W03.P07.S32` - Require a complete same-cohort evidence set in release readiness; `dev/release/readiness.py`.
 - [ ] `W03.P07.S33` - Reject stale skipped ambient mismatched and incomplete release evidence; `dev/release/tests/test_distribution_readiness.py`.
 
