@@ -158,3 +158,89 @@ Final focused verification: Ruff passed; the direct production test module passe
 unprefixed harness while all 18 projection-parity checks and every accepted MCP product
 identity check passed. This is the intended S67 verification-only outcome and does not
 approve or perform the later rename.
+
+## S68 review scope
+
+Reviewed commit `08a038ed24` and `W02.P06.S68` against the accepted bilingual MCP
+product-description decision and its research record. The review covered the production
+description verifier, its direct real-surface tests, the generated Claude plugin and
+marketplace metadata, both MCPB product-description fields, and the S68 execution record.
+The commit does not mutate any identifier, description source, generator output, or
+model-facing operational copy. Focused Ruff passed and the direct production test module
+passed `5/5`; the production verifier reproduced exit status `1` and the execution
+record's report digest
+`6102d5a48d3c162b95776757ec813e271721d9713d9200463188f3ec9f375205`.
+
+## S68 findings
+
+### bilingual-claim-semantics | high | Keyword presence can approve the inverse of every required product claim
+
+`_product_description_observation` treats each claim as present when a small set of
+unscoped regular expressions matches. It does not account for negation, subject, or
+relationship between the matched phrases. A direct review probe using the production
+function supplied labeled English and Spanish sections that explicitly deny Cadrumo's
+tax capability, read-only safety, provider privacy boundary, on-host storage, human
+confirmation, and never-files-live boundary. All six claim rows and the complete
+observation nevertheless returned compliant. This is a release-gate false-pass for the
+decision's semantic parity requirement. The five focused tests cover only today's
+English-only failure and do not exercise a compliant description or an adversarial
+semantic contradiction.
+
+### language-label-contract | medium | The parser rejects natural Spanish-language section labels without an approved label grammar
+
+The label parser accepts only `English`, `EN`, `Spanish`, and `ES`. A schema-supported
+single string labeled `English:` and `Español:` is reported as having no Spanish
+section, while `Inglés:` and `Español:` produces no recognized sections at all. The
+accepted decision requires explicitly distinguishable English and Spanish text but does
+not prescribe English-only label words. This undocumented grammar can reject valid
+approved bilingual copy and is not covered by tests of the success path.
+
+### model-facing-boundary | medium | The English-only operational-description boundary is declared but not observed
+
+The report emits a constant list saying MCP argument, prompt, resource, and tool
+descriptions are not localization targets. It never inventories those real production
+descriptions or makes their English-only state participate in the verdict. The focused
+test therefore proves only that the constant serializes. A later drift in any actual
+model-facing description would remain invisible even though S68 expressly preserves
+that existing contract.
+
+## S68 disposition
+
+**Revision required.** The current shipped descriptions are correctly reported as
+English-only and the implementation is read-only, but the verifier is not yet safe as a
+blocking bilingual-parity gate. Resolve the high-severity semantic false-pass, define
+and test the accepted language-label grammar, and bind the model-facing exclusion to the
+real operational description inventory. Add direct success, semantic-contradiction, and
+supported-label tests before treating the S68 evidence as reviewed.
+
+## S68 final remediation disposition
+
+**Pass.** A read-only re-review of the remediated shared implementation found no
+remaining S68 code-review finding. The earlier rolling findings are retained above as
+the audit history; their final dispositions are:
+
+- `bilingual-claim-semantics`: resolved. A client-display field can pass only when its
+  exact extracted English and Spanish pair is present in the product-review approval
+  set for that specific surface and field. The accepted verification-only scope has no
+  approved pairs, so keyword matches cannot approve any copy. The direct adversarial
+  test supplies semantically inverted text matching the claim vocabulary and confirms
+  that all six parity verdicts and the observation remain false.
+- `language-label-contract`: resolved. The closed grammar now supports `English` and
+  `Spanish`, `EN` and `ES`, accented `Inglés` and `Español`, and unaccented `Ingles` and
+  `Espanol`. Direct review probes confirmed all four pairs extract exactly one nonempty
+  English section and one nonempty Spanish section; the focused tests exercise the
+  natural localized form.
+- `model-facing-boundary`: resolved. The isolated production MCP projection inventories
+  the real tool, prompt, resource, and nested argument descriptions. The report contains
+  1,625 nonempty rows (296 tool, 35 prompt, 54 resource, and 1,240 argument rows), rejects
+  language-section labels, and freezes the canonical inventory at SHA-256
+  `5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0`.
+  This observed contract participates in `DistributionIdentityReport.ok`.
+
+Final focused verification: Ruff passed; the direct production test module passed
+`7/7`; the production verifier exited `1` and emitted report SHA-256
+`8ac51513f603545fcaf26142efd0388508413aac65ac1be5050a6feea81c3fdc`.
+The five shipped client-display fields still correctly fail because the accepted
+verification-only scope has zero approved translation pairs. The implementation review
+passes; it does not approve copy, close S68, or change the required failed distribution
+verdict.

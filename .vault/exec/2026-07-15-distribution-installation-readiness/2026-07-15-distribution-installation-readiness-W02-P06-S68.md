@@ -69,10 +69,10 @@ related:
 
 ## Outcome
 
-The verification implementation passes focused Ruff and five focused real-behavior
+The verification implementation passes focused Ruff and seven focused real-behavior
 tests. The production command exits `1`, as required for the current distribution, and
 writes a retained report whose SHA-256 is
-`6102d5a48d3c162b95776757ec813e271721d9713d9200463188f3ec9f375205`.
+`8ac51513f603545fcaf26142efd0388508413aac65ac1be5050a6feea81c3fdc`.
 
 The report inventories five real client-display fields: the generated Claude plugin
 description, generated marketplace description, marketplace-served plugin description,
@@ -81,6 +81,18 @@ unlabelled English copy, no explicitly labelled English section, and no Spanish 
 The MCPB long description carries all six claims in English; the other shorter surfaces
 carry only subsets. No field has English/Spanish claim parity, so the product-description
 verdict is false.
+
+No translation wording has been approved by this verification-only step, so keyword
+similarity cannot make a description pass. Compliance requires an exact, separately
+product-reviewed pair for the specific surface and field; the approved-pair inventory is
+currently empty. Tests prove that natural `Inglés:` and `Español:` labels parse while a
+deliberately contradictory bilingual sample remains noncompliant.
+
+The English-only model-facing boundary is observed rather than declared. The verifier
+inventories 1,625 real tool, prompt, resource, and argument descriptions, requires every
+row to be nonempty and free of product-language section labels, and byte-compares the
+canonical inventory digest
+`5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0`.
 
 The inspection did not change any identifier, description, generator, manifest, or
 artifact. Model-facing operational descriptions remain English-only and outside this
@@ -93,7 +105,9 @@ verification-only and requires a failed bilingual result to remain open for a se
 approved translation and artifact migration. The retained report lives under the ignored
 distribution-readiness evidence tree; its command status and digest are recorded above.
 
-A formal code-review agent was invoked after the focused gates, then bounded and
-interrupted when it did not return a disposition within the execution window. No formal
-review pass is claimed in this record; the pending review remains a handoff gate before
-the verifier can be treated as release-blocking evidence.
+A formal review initially found a semantic false-pass, an undocumented language-label
+grammar, and a declared-but-unobserved model-facing boundary. The implementation now
+requires exact product-review approval, supports localized label forms, inventories the
+real operational copy, and adds direct success-path and contradiction coverage. The
+rolling audit retains those findings and records a passing final remediation review with
+no remaining S68 implementation finding.
