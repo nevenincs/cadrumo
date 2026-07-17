@@ -1278,6 +1278,11 @@ def apply_evidence_split(
             patch_fields["iva_rate"] = child.iva_rate
             patch_fields["iva_amount"] = child.iva_amount
         patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
+        # A split child is a fresh row that inherits the parent's validated
+        # evidence link. That inheritance is a trusted evidence write, so it
+        # threads the private `_evidence_authority` flag through the manual-write
+        # door (which otherwise refuses evidence fields). P02 relocates this into
+        # the atomic split writer; here it keeps the single-write child state.
         update_manual_transaction_fields(
             bucket_id=bucket_id,
             transaction_id=child_txn.transaction_id,
@@ -1288,6 +1293,7 @@ def apply_evidence_split(
             transaction_repository=repository,
             bucket_event_repository=bucket_event_repository,
             occurred_at=occurred_at,
+            _evidence_authority=True,
         )
         classified += 1
 
@@ -1364,11 +1370,11 @@ def apply_evidence_classification(
             context={"transaction_id": suggestion.transaction_id},
         )
     child = suggestion.children[0]
+    # In-place classification on the PARENT: the parent already carries its own
+    # evidence, which the manual-write replacement preserves verbatim. Evidence
+    # is therefore never re-set through this generic-classification patch —
+    # evidence mutation is reserved for `aeat app ledger attach`.
     patch_fields: dict[str, object] = {"business_classification": BusinessClassification.BUSINESS}
-    if parent.purchase_invoice_evidence_id is not None:
-        patch_fields["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
-    elif parent.attachment_ids:
-        patch_fields["attachment_ids"] = parent.attachment_ids
     if child.category is not None:
         patch_fields["category_id"] = child.category.value
     if child.iva_category is not None:
