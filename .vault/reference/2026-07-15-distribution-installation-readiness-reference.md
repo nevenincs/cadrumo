@@ -193,4 +193,37 @@ Relevant upstream contracts are `https://docs.brew.sh/Python-for-Formula-Authors
 The current packaging workflow has one Ubuntu job at
 `.github/workflows/packaging-smoke.yml:22-24`. Windows, macOS, architecture, Python,
 Claude client, Homebrew, and MCPB claims require explicit cohort-bound rows.
+
+### Installation guide information architecture and claim boundaries
+
+The user-facing installation surface is four documents with one shared rule: an
+acquisition instruction may name a channel only after that channel's public
+reacquisition evidence passes for the promoted cohort; until then the channel is
+described as unavailable, staged, or source-only, never as an install command.
+
+- `README.md` carries the shortest proven acquisition path per audience (taxpayer
+  workstation, agent operator) and links onward; it never enumerates the full
+  matrix.
+- `docs/workstation-setup.md` owns clean installation, verification, update, and
+  removal for the Python, Scoop, and Homebrew channels, one channel per section,
+  each section landing only with its evidence row.
+- `docs/how-to/connect-an-agent.md` owns the Claude Code, Claude Desktop, and
+  Cowork plugin plus MCPB acquisition paths, including the real verification
+  commands an operator runs after install.
+- `docs/updates.md` publishes the measured support matrix: operating system,
+  architecture, Python, acquisition mechanism, client version, and the behavior
+  proved — rows appear exactly as evidenced, and unexecuted rows are labelled
+  unsupported per the accepted decision.
+
+Claim boundaries are machine-enforced, not editorial. Each channel-identifying
+instruction pattern (pip/PyPI, `uvx`, `scoop install`, `brew install`/tap,
+marketplace plugin, `.mcpb` download) maps to its distribution rows from the
+release-readiness required-row set, and `dev/docs/tests/test_distribution_claims.py`
+fails any page that advertises a channel lacking matching acquisition evidence,
+naming the file, the claim, and the missing rows. Verification commands quoted in
+the guides must resolve against the live CLI surface through the documented-command
+conformance gate, and every numeric or behavioral support claim cites its retained
+evidence record rather than asserting intent. Documentation therefore trails
+evidence by construction: the writing order for W05 is matrix rows first
+(`docs/updates.md`), channel sections second, README last.
 Platform-neutral metadata is not a substitute for executed support.

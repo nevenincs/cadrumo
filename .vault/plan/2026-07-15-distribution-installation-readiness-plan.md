@@ -13,6 +13,16 @@ related:
   - '[[2026-07-16-distribution-harness-identity-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `distribution-installation-readiness` plan
 
 ## Wave `W01` - Make the Python product complete
@@ -86,14 +96,14 @@ Generate plugin marketplace and MCPB artifacts then freeze every Python Scoop Ho
 Steps `S67` and `S68` only inspect and report. They do not authorize renaming or
 translation. A failed check leaves its row open for a separate approved implementation.
 
-- [ ] `W02.P06.S25` - Generate plugin bootstrap configuration that resolves the complete cohort; `src/cadrumo/agent/_workspace.py`.
-- [ ] `W02.P06.S26` - Byte-compare the complete generated marketplace plugin tree with its source authority; `src/cadrumo/agent/tests/test_marketplace_generation.py`.
+- [x] `W02.P06.S25` - Generate plugin bootstrap configuration that resolves the complete cohort; `src/cadrumo/agent/_workspace.py`.
+- [x] `W02.P06.S26` - Byte-compare the complete generated marketplace plugin tree with its source authority; `src/cadrumo/agent/tests/test_marketplace_generation.py`.
 - [x] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
 - [ ] `W02.P06.S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort; `packaging/mcpb/build.py`.
-- [ ] `W02.P06.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
+- [x] `W02.P06.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
 - [x] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
-- [ ] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
-- [ ] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
+- [x] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
+- [x] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [ ] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
 - [ ] `W02.P06.S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple; `dev/packaging/verify_distribution_identity.py, src/cadrumo/_data/agent, src/cadrumo/agent, src/cadrumo/entrypoints/mcp`.
 - [ ] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
@@ -132,7 +142,7 @@ Publish only the tested cohort through one authority, then reacquire from every 
 Make the protected manual OIDC workflow consume stored tested artifacts and remove competing publication paths.
 
 - [ ] `W04.P09.S41` - Promote stored cohort bytes through protected manual OIDC publication without rebuilding; `.github/workflows/publish.yml`.
-- [ ] `W04.P09.S42` - Verify cohort hashes evidence completeness and destination versions before any upload; `dev/release/promote_python_cohort.py`.
+- [x] `W04.P09.S42` - Verify cohort hashes evidence completeness and destination versions before any upload; `dev/release/promote_python_cohort.py`.
 - [x] `W04.P09.S43` - Remove local release upload authority while retaining diagnostic build recipes; `justfile`.
 - [ ] `W04.P09.S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts; `dev/release/tests/test_publish_workflow.py`.
 
@@ -161,7 +171,7 @@ Align README and user guides with the measured support matrix and prevent docume
 - [ ] `W05.P11.S53` - Document clean installation verification update and removal for Python Scoop and Homebrew; `docs/workstation-setup.md`.
 - [ ] `W05.P11.S54` - Document Claude Code Desktop Cowork plugin and MCPB acquisition with real verification commands; `docs/how-to/connect-an-agent.md`.
 - [ ] `W05.P11.S55` - Publish the measured platform client and channel support matrix; `docs/updates.md`.
-- [ ] `W05.P11.S56` - Fail documentation checks when an advertised channel lacks matching acquisition evidence; `dev/docs/tests/test_distribution_claims.py`.
+- [x] `W05.P11.S56` - Fail documentation checks when an advertised channel lacks matching acquisition evidence; `dev/docs/tests/test_distribution_claims.py`.
 
 ### Phase `W05.P12` - Review and audit delivery
 
@@ -171,7 +181,7 @@ Run feature-scoped quality, architecture, documentation, and honest-close review
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
 - [ ] `W05.P12.S59` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
-- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
+- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; `leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 
 ## Description
 
