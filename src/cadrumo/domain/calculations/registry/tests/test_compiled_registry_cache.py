@@ -1,4 +1,4 @@
-"""Strict-validation contract for the compiled-registry cache (ADR mcp-call-latency D3).
+"""Strict-validation contract for the compiled-registry cache.
 
 The cache persists the compiled ``(modelos, catalogues)`` set so a warm process
 skips the TOML parse, but it must never become a second authority: a hit may only
@@ -106,7 +106,7 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
 def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_toml(tmp_path: Path) -> None:
     """Through the loader: a mutated on-disk cache is refused and TOML is recompiled.
 
-    This is the never-a-second-authority proof (ADR D3, S10). A cold
+    This is the never-a-second-authority proof. A cold
     ``load_registry_tree`` compiles from TOML and writes the cache; that result
     is the independent oracle. The on-disk cache is then mutated. A second load,
     with the in-process memo cleared so it must consult disk, must refuse the
