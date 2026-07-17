@@ -124,9 +124,9 @@ Extract the manual-PDF corpus text once at release build time, ship it content-k
 
 Persist the compiled ModeloDefinition set fingerprint-keyed so warm processes skip the TOML parse, strict-validated on load and deleted on any mismatch.
 
-- [ ] `P03.S08` - Add a compiled ModeloDefinition-set cache keyed by the registry-tree fingerprint, strict-validated on deserialisation and deleted on any mismatch or deserialisation failure, exercised against the real bundled tree; `src/cadrumo/domain/calculations/registry/_compiled_cache.py`.
-- [ ] `P03.S09` - Load the compiled cache when the tree fingerprint matches so warm processes skip the TOML parse, and write the cache after a fresh compile, wired through the loader; `src/cadrumo/domain/calculations/registry/_loader.py`.
-- [ ] `P03.S10` - Prove with a real-behavior test that mutating the compiled cache on disk makes strict load refuse and rebuild from TOML, so the cache is never a second authority; `src/cadrumo/domain/calculations/registry/tests/test_compiled_registry_cache.py`.
+- [x] `P03.S08` - Add a compiled ModeloDefinition-set cache keyed by the registry-tree fingerprint, strict-validated on deserialisation and deleted on any mismatch or deserialisation failure, exercised against the real bundled tree; `src/cadrumo/domain/calculations/registry/_compiled_cache.py`.
+- [x] `P03.S09` - Load the compiled cache when the tree fingerprint matches so warm processes skip the TOML parse, and write the cache after a fresh compile, wired through the loader; `src/cadrumo/domain/calculations/registry/_loader.py`.
+- [x] `P03.S10` - Prove with a real-behavior test that mutating the compiled cache on disk makes strict load refuse and rebuild from TOML, so the cache is never a second authority; `src/cadrumo/domain/calculations/registry/tests/test_compiled_registry_cache.py`.
 
 ### Phase `P04` - Warm in-process MCP serving (D4)
 
