@@ -31,9 +31,9 @@ Give bucket maintenance a target-scoped deletion assessment and an operation-own
 
 Persist non-secret reset operation state atomically outside target directories so every phase boundary resumes honestly.
 
-- [ ] `P02.S06` - Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models; `src/cadrumo/application/_config_reset_models.py`.
-- [ ] `P02.S07` - Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal; `src/cadrumo/application/_config_reset_repository.py`.
-- [ ] `P02.S08` - Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload; `src/cadrumo/application/tests/test_config_reset_repository.py`.
+- [x] `P02.S06` - Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models; `src/cadrumo/application/_config_reset_models.py`.
+- [x] `P02.S07` - Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal; `src/cadrumo/application/_config_reset_repository.py`.
+- [x] `P02.S08` - Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload; `src/cadrumo/application/tests/test_config_reset_repository.py`.
 
 ### Phase `P03` - Reset orchestration over all targets
 

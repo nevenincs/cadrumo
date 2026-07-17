@@ -11,6 +11,9 @@ related:
   - '[[2026-07-17-all-profile-reset-P01-S03]]'
   - '[[2026-07-17-all-profile-reset-P01-S04]]'
   - '[[2026-07-17-all-profile-reset-P01-S05]]'
+  - '[[2026-07-17-all-profile-reset-P02-S06]]'
+  - '[[2026-07-17-all-profile-reset-P02-S07]]'
+  - '[[2026-07-17-all-profile-reset-P02-S08]]'
   - '[[2026-07-17-all-profile-reset-adr]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
 ---
@@ -32,6 +35,9 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 - `2026-07-17-all-profile-reset-P01-S03` - Define the authoritative deletion-relevant bucket fingerprint for assessment and resume
 - `2026-07-17-all-profile-reset-P01-S04` - Prove deletion assessment reports real retention blockers without mutating the bucket
 - `2026-07-17-all-profile-reset-P01-S05` - Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence
+- `2026-07-17-all-profile-reset-P02-S06` - Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models
+- `2026-07-17-all-profile-reset-P02-S07` - Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal
+- `2026-07-17-all-profile-reset-P02-S08` - Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload
 
 ### plan
 
