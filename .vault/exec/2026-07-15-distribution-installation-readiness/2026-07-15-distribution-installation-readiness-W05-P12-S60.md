@@ -9,9 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-
-
-
 # Create step execution records rebuild the feature index and close only evidenced rows
 
 ## Scope

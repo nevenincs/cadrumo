@@ -81,8 +81,8 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 
 ### audit
 
-- `2026-07-15-distribution-installation-readiness-code-review-audit` - `distribution-installation-readiness` audit: `distribution installation readiness code review`
 - `2026-07-15-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `Distribution close: harness identity and publish guardrail disposition`
+- `2026-07-15-distribution-installation-readiness-code-review-audit` - `distribution-installation-readiness` audit: `distribution installation readiness code review`
 - `2026-07-16-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `Packaging ADR reconciliation`
 - `2026-07-16-distribution-installation-readiness-p02-review-audit` - `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
 - `2026-07-17-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `S67 distribution identity verifier code review`

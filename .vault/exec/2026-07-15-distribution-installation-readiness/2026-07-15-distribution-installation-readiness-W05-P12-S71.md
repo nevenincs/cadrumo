@@ -9,9 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-
-
-
 # Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions
 
 ## Scope
