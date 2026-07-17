@@ -1294,6 +1294,7 @@ class Settings(CadrumoIntegrationSettings):
         "aeat_normatives_root",
         "cadrumo_iva_catalogue_root",
         "cadrumo_corpus_text_cache_dir",
+        "cadrumo_validation_verdict_cache_dir",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
