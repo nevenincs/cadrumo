@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-16'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -86,7 +86,7 @@ Create a pinned Python virtualenv formula and tap snapshot and exercise every pl
 
 - [x] `W02.P05.S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort; `packaging/homebrew/generate.py`.
 - [x] `W02.P05.S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort; `packaging/homebrew/tests/test_generate.py`.
-- [ ] `W02.P05.S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot; `dev/packaging/smoke_homebrew.py`.
+- [x] `W02.P05.S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot; `dev/packaging/smoke_homebrew.py`.
 - [ ] `W02.P05.S24` - Run the Homebrew acquisition gate on every claimed macOS and Linux row; `.github/workflows/packaging-homebrew.yml`.
 
 ### Phase `W02.P06` - Generate Claude artifacts and seal the cohort

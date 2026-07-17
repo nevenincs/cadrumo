@@ -19,9 +19,10 @@ from typing import Final, override
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"
-_RELEASE_URL = re.compile(
-    r'(?P<prefix>\s+url ")(?P<base>https://[^"]+/releases/download/v[^/"]+)'
-    r'/(?P<filename>[^/"]+\.tar\.gz)"',
+_RELEASE_ARTIFACT = re.compile(
+    r'(?P<url_prefix>\s+url ")(?P<base>https://[^"]+/releases/download/v[^/"]+)'
+    r'/(?P<filename>[^/"]+\.tar\.gz)"(?P<separator>\r?\n)'
+    r'(?P<sha_prefix>\s+sha256 ")(?P<sha256>[0-9a-f]{64})"',
 )
 
 
@@ -129,12 +130,21 @@ def localize_formula(
         artifact = (cohort_dir / filename).resolve(strict=True)
         if artifact.parent != cohort_dir:
             raise SystemExit(f"formula cohort artifact escapes its directory: {artifact}")
+        expected_sha256 = match.group("sha256")
+        actual_sha256 = _sha256(artifact)
+        if actual_sha256 != expected_sha256:
+            raise SystemExit(
+                f"formula cohort artifact digest mismatch: {filename} expected {expected_sha256}, got {actual_sha256}",
+            )
         original = f"{match.group('base')}/{filename}"
         localized = f"{server_base_url.rstrip('/')}/{filename}"
         replacements[original] = localized
-        return f'{match.group("prefix")}{localized}"'
+        return (
+            f'{match.group("url_prefix")}{localized}"'
+            f'{match.group("separator")}{match.group("sha_prefix")}{expected_sha256}"'
+        )
 
-    localized = _RELEASE_URL.sub(replace, formula)
+    localized = _RELEASE_ARTIFACT.sub(replace, formula)
     if len(replacements) != 3:
         raise SystemExit(
             f"expected root and two companion release sdists in the generated formula; got {sorted(replacements)!r}",
@@ -256,6 +266,14 @@ def run_homebrew_smoke(
         cohort_dir=cohort,
         server_base_url=server_base,
     )
+    cohort_artifacts = [
+        {
+            "filename": Path(original).name,
+            "sha256": _sha256(cohort / Path(original).name),
+            "size": (cohort / Path(original).name).stat().st_size,
+        }
+        for original in replacements
+    ]
 
     qualified = f"{tap_name}/{_FORMULA_NAME}"
     installed_prefix: Path | None = None
@@ -450,6 +468,7 @@ def run_homebrew_smoke(
             "localized_formula": str(staged_formula),
             "localized_formula_sha256": _sha256(staged_formula),
             "cohort_url_replacements": replacements,
+            "cohort_artifacts": cohort_artifacts,
             "installed_prefix": str(installed_prefix),
             "installed_formulae": list(installed_formulae),
             "aeat_command": str(aeat),
