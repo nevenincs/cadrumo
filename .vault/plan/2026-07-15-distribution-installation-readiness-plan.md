@@ -166,7 +166,7 @@ Publish acquisition guidance only for passing channels, formally review the impl
 
 Align README and user guides with the measured support matrix and prevent documentation from leading artifact availability.
 
-- [ ] `W05.P11.S51` - Define the installation guide information architecture and evidence-backed claim boundaries; `.vault/reference/2026-07-15-distribution-installation-readiness-reference.md`.
+- [x] `W05.P11.S51` - Define the installation guide information architecture and evidence-backed claim boundaries; `.vault/reference/2026-07-15-distribution-installation-readiness-reference.md`.
 - [ ] `W05.P11.S52` - Publish only currently proven acquisition commands and support claims; `README.md`.
 - [ ] `W05.P11.S53` - Document clean installation verification update and removal for Python Scoop and Homebrew; `docs/workstation-setup.md`.
 - [ ] `W05.P11.S54` - Document Claude Code Desktop Cowork plugin and MCPB acquisition with real verification commands; `docs/how-to/connect-an-agent.md`.
@@ -181,7 +181,7 @@ Run feature-scoped quality, architecture, documentation, and honest-close review
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
 - [ ] `W05.P12.S59` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
-- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
+- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; `leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 
 ## Description
 
