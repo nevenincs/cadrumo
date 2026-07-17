@@ -107,10 +107,10 @@ Persist a fingerprint-keyed validation verdict so a green tree skips runtime re-
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Add a validation-verdict record keyed by the complete registry-tree, convenio, and source-evidence fingerprint tuples plus package version and outcome, with load, store, and delete-on-mismatch helpers using real filesystem behavior; `src/cadrumo/domain/calculations/registry/_validate_verdict.py`.
-- [ ] `P01.S02` - Read the verdict at authority load so a fingerprint match constructs with validation marked done and skips validate_registry, persist a fresh verdict after a green validate_registry, and delete the verdict then re-validate on any mismatch; `src/cadrumo/domain/calculations/registry/_authority.py`.
-- [ ] `P01.S03` - Stamp the bundled-tree verdict into the release build so the first end-user touch skips runtime validation, keyed by the same fingerprint tuples; `packaging/cadrumo_data_official/hatch_build.py`.
-- [ ] `P01.S04` - Pin the regression contract with real-behavior tests proving authority-boundary validation performs exactly one corpus-cache write, a direct RegistryValidator call performs zero, a verdict-cache hit skips validation including modelo list, and a fingerprint mismatch re-validates; `src/cadrumo/domain/calculations/registry/tests/test_validation_verdict_cache.py`.
+- [x] `P01.S01` - Add a validation-verdict record keyed by the complete registry-tree, convenio, and source-evidence fingerprint tuples plus package version and outcome, with load, store, and delete-on-mismatch helpers using real filesystem behavior; `src/cadrumo/domain/calculations/registry/_validate_verdict.py`.
+- [x] `P01.S02` - Read the verdict at authority load so a fingerprint match constructs with validation marked done and skips validate_registry, persist a fresh verdict after a green validate_registry, and delete the verdict then re-validate on any mismatch; `src/cadrumo/domain/calculations/registry/_authority.py`.
+- [x] `P01.S03` - Stamp the bundled-tree verdict into the release build so the first end-user touch skips runtime validation, keyed by the same fingerprint tuples; `packaging/cadrumo_data_official/hatch_build.py`.
+- [x] `P01.S04` - Pin the regression contract with real-behavior tests proving authority-boundary validation performs exactly one corpus-cache write, a direct RegistryValidator call performs zero, a verdict-cache hit skips validation including modelo list, and a fingerprint mismatch re-validates; `src/cadrumo/domain/calculations/registry/tests/test_validation_verdict_cache.py`.
 
 ### Phase `P02` - Shipped corpus text (D2)
 
