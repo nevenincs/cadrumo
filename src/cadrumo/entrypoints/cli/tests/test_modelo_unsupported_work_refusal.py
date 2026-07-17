@@ -8,9 +8,7 @@ and Settings override context; no mocks, patches, or monkeypatches are involved.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass
-from pathlib import Path
 
 import pytest
 
@@ -18,19 +16,13 @@ from ....core.config import Settings, override_settings
 from ....core.resources import resources
 from ....tests.aeat_literal_fixtures import aeat_host
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._errors import CliRefusedBoundaryError
 from .._modelo_work_lifecycle_cli import guard_unsupported_work_modelo
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SEDE_HOST = aeat_host("sede")
-
-
-@pytest.fixture(autouse=True)
-def isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 @dataclass(frozen=True)

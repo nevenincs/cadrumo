@@ -49,50 +49,23 @@ from .._stdio import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-class _ReconfigurableStream(io.StringIO):
-    """A StringIO that records the kwargs it was reconfigured with."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.reconfigure_calls: list[dict[str, str]] = []
-
-    def reconfigure(self, **kwargs: str) -> None:
-        self.reconfigure_calls.append(kwargs)
-
-
-class _NonReconfigurableStream(io.StringIO):
-    """A StringIO that does not expose ``reconfigure``."""
-
-    # Strict no-reconfigure: the attribute genuinely does not exist.
-    # ``hasattr(self, "reconfigure")`` returns False for this class.
-
-
-class _ReconfigureRefusingStream(io.StringIO):
-    """A StringIO whose ``reconfigure`` raises (mid-run pipe refusal)."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.reconfigure_calls = 0
-
-    def reconfigure(self, **kwargs: str) -> None:
-        del kwargs
-        self.reconfigure_calls += 1
-        raise OSError("stream refused mid-run reconfiguration")
-
-
-def test_reconfigurable_streams_receive_utf8_replace() -> None:
+def test_reconfigurable_streams_receive_utf8_replace(tmp_path: Path) -> None:
     """A stream exposing ``reconfigure`` must end up on UTF-8 with the
     ``replace`` error policy. The replace policy degrades non-
     encodable characters to ``?`` rather than crashing — the right
     trade-off when the underlying terminal cannot represent the
     character anyway."""
 
-    stdout = _ReconfigurableStream()
-    stderr = _ReconfigurableStream()
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    with (
+        (tmp_path / "stdout.txt").open("w", encoding="cp1252", errors="strict") as stdout,
+        (tmp_path / "stderr.txt").open("w", encoding="cp1252", errors="strict") as stderr,
+    ):
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
-    assert stdout.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
-    assert stderr.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
+        assert stdout.encoding == "utf-8"
+        assert stdout.errors == "replace"
+        assert stderr.encoding == "utf-8"
+        assert stderr.errors == "replace"
 
 
 def test_non_reconfigurable_streams_are_skipped_silently() -> None:
@@ -100,24 +73,34 @@ def test_non_reconfigurable_streams_are_skipped_silently() -> None:
     custom wrappers) must be left untouched. The helper must not
     raise."""
 
-    stdout = _NonReconfigurableStream()
-    stderr = _NonReconfigurableStream()
+    stdout = io.StringIO()
+    stderr = io.StringIO()
     assert not hasattr(stdout, "reconfigure")
 
     configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
 
-def test_reconfigure_failure_is_swallowed() -> None:
+def test_reconfigure_failure_is_swallowed(tmp_path: Path) -> None:
     """A stream that raises on ``reconfigure`` (e.g. a pipe that
     refuses mid-run encoding changes) must not crash the CLI
     startup."""
 
-    stdout = _ReconfigureRefusingStream()
-    stderr = _ReconfigureRefusingStream()
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    stdout_path = tmp_path / "stdout.txt"
+    stderr_path = tmp_path / "stderr.txt"
+    stdout_path.write_text("already read", encoding="cp1252")
+    stderr_path.write_text("already read", encoding="cp1252")
+    with (
+        stdout_path.open("r", encoding="cp1252", errors="strict") as stdout,
+        stderr_path.open("r", encoding="cp1252", errors="strict") as stderr,
+    ):
+        assert stdout.read(1) == "a"
+        assert stderr.read(1) == "a"
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
-    assert stdout.reconfigure_calls == 1
-    assert stderr.reconfigure_calls == 1
+        assert stdout.encoding == "cp1252"
+        assert stdout.errors == "strict"
+        assert stderr.encoding == "cp1252"
+        assert stderr.errors == "strict"
 
 
 def test_configure_stdio_for_utf8_handles_none_streams() -> None:
@@ -129,24 +112,23 @@ def test_configure_stdio_for_utf8_handles_none_streams() -> None:
     assert result is None
 
 
-def test_configure_stdio_for_utf8_is_idempotent() -> None:
+def test_configure_stdio_for_utf8_is_idempotent(tmp_path: Path) -> None:
     """Calling the helper more than once must not raise. The Typer
     callback re-imports the entrypoint package in some test setups;
     the helper must survive that."""
 
-    stdout = _ReconfigurableStream()
-    stderr = _ReconfigurableStream()
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    with (
+        (tmp_path / "stdout.txt").open("w", encoding="cp1252", errors="strict") as stdout,
+        (tmp_path / "stderr.txt").open("w", encoding="cp1252", errors="strict") as stderr,
+    ):
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
-    # Both calls reach the underlying reconfigure call.
-    assert stdout.reconfigure_calls == [
-        {"encoding": "utf-8", "errors": "replace"},
-        {"encoding": "utf-8", "errors": "replace"},
-    ]
+        assert stdout.encoding == "utf-8"
+        assert stdout.errors == "replace"
 
 
-def test_configure_stdio_for_utf8_accepts_explicit_streams() -> None:
+def test_configure_stdio_for_utf8_accepts_explicit_streams(tmp_path: Path) -> None:
     """Tests can pass stdout/stderr directly instead of mutating sys.
 
     The helper's primary contract — reconfigure each stream to UTF-8
@@ -154,21 +136,22 @@ def test_configure_stdio_for_utf8_accepts_explicit_streams() -> None:
     when the caller provides explicit streams.
     """
 
-    out = _ReconfigurableStream()
-    err = _ReconfigurableStream()
+    with (
+        (tmp_path / "out.txt").open("w", encoding="cp1252", errors="strict") as out,
+        (tmp_path / "err.txt").open("w", encoding="cp1252", errors="strict") as err,
+    ):
+        configure_stdio_for_utf8(stdout=out, stderr=err)
 
-    configure_stdio_for_utf8(stdout=out, stderr=err)
-
-    assert out.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
-    assert err.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
+        assert out.encoding == "utf-8"
+        assert err.encoding == "utf-8"
 
 
 def test_configure_stdio_for_utf8_tolerates_non_reconfigurable_explicit_streams() -> None:
     """Explicit streams without ``reconfigure`` are skipped silently,
     matching the default-streams behavior."""
 
-    out = _NonReconfigurableStream()
-    err = _NonReconfigurableStream()
+    out = io.StringIO()
+    err = io.StringIO()
 
     # Must not raise.
     configure_stdio_for_utf8(stdout=out, stderr=err)

@@ -31,8 +31,8 @@ from ....core.resources import resources
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit,
     _create_gb_non_resident_profile,
+    _create_m130_work_unit,
     _create_profile,
-    _create_work_unit,
     _invoke,
 )
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
@@ -46,7 +46,7 @@ def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> Non
     ``modelo.work_unit.created`` event - not an empty stream."""
 
     _create_profile()
-    work_unit_id = _create_work_unit()
+    work_unit_id = _create_m130_work_unit()
 
     history = _invoke(["--format", "json", "app", "modelo", "work", "history", work_unit_id])
     assert history.exit_code == 0, history.output
@@ -69,7 +69,7 @@ def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_ba
     bindings-list discovery command - not a bare refusal."""
 
     _create_profile()
-    work_unit_id = _create_work_unit()
+    work_unit_id = _create_m130_work_unit()
 
     result = _invoke(["app", "modelo", "work", "calculate", work_unit_id])
     assert result.exit_code != 0
@@ -93,7 +93,7 @@ def test_work_revisions_accepts_a_positional_work_unit_id(_isolated_cli_backend:
     `revisions` demanded `--work-unit-id` is gone."""
 
     _create_profile()
-    work_unit_id = _create_work_unit()
+    work_unit_id = _create_m130_work_unit()
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "revisions", work_unit_id])
     assert result.exit_code == 0, result.output
@@ -105,7 +105,7 @@ def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Pat
     """`work status` accepts the operator-facing modelo/year/period target."""
 
     _create_profile()
-    work_unit_id = _create_work_unit()
+    work_unit_id = _create_m130_work_unit()
 
     result = _invoke(
         [

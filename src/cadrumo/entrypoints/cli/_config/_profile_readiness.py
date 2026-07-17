@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ....core.errors import AeatError as _AeatError
-from ....core.logging import get_logger as _get_logger
-from .._common import _emit
-from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from .._common import _emit_envelope
 from ._repair_profile import (
     profile_record_missing_next_action as _profile_record_missing_next_action,
 )
@@ -15,107 +12,31 @@ from ._repair_profile import (
     profile_record_unreadable_next_action as _profile_record_unreadable_next_action,
 )
 
-_log = _get_logger(__name__)
-
-
-def _locked_store_refusal(error: BaseException) -> _AeatError | None:
-    """Return the locked-store refusal wrapped in ``error``, if any."""
-    from ....adapters.persistence.storage.errors import SecretStoreError
-
-    seen: set[int] = set()
-    current: BaseException | None = error
-    depth = 0
-    while current is not None and depth < 16:
-        if isinstance(current, SecretStoreError):
-            return current
-        if id(current) in seen:
-            return None
-        seen.add(id(current))
-        depth += 1
-        nxt = getattr(current, "orig", None)
-        if not isinstance(nxt, BaseException):
-            nxt = current.__cause__ or current.__context__
-        current = nxt
-    return None
-
-
-def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
-    from ....domain.user_profile import ProfileNotFoundError
-
-    try:
-        _read_profile_record(profile_id=profile_id, bucket_id=bucket_id)
-    except ProfileNotFoundError:
-        _emit_profile_record_missing(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label)
-        raise typer.Exit(code=2) from None
-    except _AeatError as exc:
-        locked = _locked_store_refusal(exc)
-        if locked is not None:
-            _activate_bucket_output_language_hint(ctx, bucket_id=bucket_id)
-            raise locked from exc
-        _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
-        raise typer.Exit(code=2) from exc
-    except Exception as exc:
-        locked = _locked_store_refusal(exc)
-        if locked is not None:
-            _activate_bucket_output_language_hint(ctx, bucket_id=bucket_id)
-            raise locked from exc
-        _log.debug("config profile readiness wrapped unexpected profile-record exception", exc_info=True)
-        boundary = _ConfigBoundaryError(exc)
-        _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=boundary)
-        raise typer.Exit(code=2) from boundary
-
-
-def _activate_bucket_output_language_hint(ctx: typer.Context, *, bucket_id: str) -> None:
-    """Pin render language to the failed target bucket when no explicit language was supplied."""
-    if _settings_has_explicit_output_language():
-        return
-
-    from ....application.user_profile import resolve_profile_output_language_hint
-    from ....core.config import override_settings
-    from ....core.i18n import clear_output_language_cache
-
-    language = resolve_profile_output_language_hint(bucket_id)
-    if language is None:
-        return
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()
-
-
-def _settings_has_explicit_output_language() -> bool:
-    from ....core.config import load_settings
-    from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-
-    try:
-        settings = load_settings()
-    except (AttributeError, KeyError, ValueError):
-        return False
-    if "cadrumo_output_language" not in settings.model_fields_set:
-        return False
-    raw = str(getattr(settings.cadrumo_output_language, "value", settings.cadrumo_output_language)).strip().lower()
-    return raw in SUPPORTED_OUTPUT_LANGUAGES
-
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
-    payload = {
-        "profile_id": profile_id,
-        "bucket_id": bucket_id,
-        "display_name": label,
-        "registered_bucket": True,
-        "profile_record_present": False,
-        "configured": False,
-        "next_action": _profile_record_missing_next_action(profile_id, label=label),
-    }
-    _emit(
+    from .._config_payloads import ConfigProfileShowResult
+
+    result = ConfigProfileShowResult(
+        profile_id=profile_id,
+        bucket_id=bucket_id,
+        display_name=label,
+        registered_bucket=True,
+        profile_record_present=False,
+        configured=False,
+        next_action=_profile_record_missing_next_action(profile_id, label=label),
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.profile.show",
+        result=result,
+        lines=(
             "readiness\tmissing_profile_record",
             f"profile_id\t{profile_id}",
             f"bucket_id\t{bucket_id}",
             f"display_name\t{label}",
             "registered_bucket\tpresent",
             "profile_record\tmissing",
-            f"next_action\t{payload['next_action']}",
+            f"next_action\t{result.next_action}",
         ),
     )
 
@@ -129,27 +50,30 @@ def _emit_profile_record_unreadable(
     error: Exception,
 ) -> None:
     message = str(error).splitlines()[0] if str(error) else type(error).__name__
-    payload = {
-        "profile_id": profile_id,
-        "bucket_id": bucket_id,
-        "display_name": label,
-        "registered_bucket": True,
-        "profile_record_present": False,
-        "status": "profile_record_unreadable",
-        "error": f"{type(error).__name__}: {message}",
-        "next_action": _profile_record_unreadable_next_action(profile_id, label=label),
-    }
-    _emit(
+    from .._config_payloads import ConfigProfileShowResult
+
+    result = ConfigProfileShowResult(
+        profile_id=profile_id,
+        bucket_id=bucket_id,
+        display_name=label,
+        registered_bucket=True,
+        profile_record_present=False,
+        status="profile_record_unreadable",
+        error=f"{type(error).__name__}: {message}",
+        next_action=_profile_record_unreadable_next_action(profile_id, label=label),
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.profile.show",
+        result=result,
+        lines=(
             "readiness\tprofile_record_unreadable",
             f"profile_id\t{profile_id}",
             f"bucket_id\t{bucket_id}",
             f"display_name\t{label}",
             "registered_bucket\tpresent",
             "profile_record\tunreadable",
-            f"next_action\t{payload['next_action']}",
+            f"next_action\t{result.next_action}",
         ),
     )
 
@@ -168,9 +92,7 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
 
 
 __all__ = [
-    "_assert_profile_record_present",
     "_emit_profile_record_missing",
     "_emit_profile_record_unreadable",
-    "_locked_store_refusal",
     "_read_profile_record",
 ]

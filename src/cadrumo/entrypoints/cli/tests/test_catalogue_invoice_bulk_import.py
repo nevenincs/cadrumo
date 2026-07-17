@@ -34,10 +34,12 @@ from pathlib import Path
 import pytest
 
 from ....application.invoices import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .envelope_helpers import require_schema_envelope as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,16 +68,6 @@ def _line_value(output: str, key: str) -> str:
         if sep and head.strip() == key:
             return tail.strip()
     raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
-
-
-def _json_result(output: str) -> dict[str, object]:
-    envelope: dict[str, object] = json.loads(output)
-    result = envelope["result"]
-    assert isinstance(result, dict), f"Expected dict, got {type(result)}"
-    # A decoded JSON object always has str keys; the isinstance check above narrows the
-    # runtime class but (correctly) cannot verify the key type, so key/value pairs are
-    # re-keyed through str() to prove the dict[str, object] shape to the type checker.
-    return {str(key): value for key, value in result.items()}
 
 
 def _get_list_value(payload: dict[str, object], key: str) -> list[object]:

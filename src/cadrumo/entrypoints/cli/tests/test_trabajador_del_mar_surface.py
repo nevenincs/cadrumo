@@ -18,7 +18,7 @@ contract is the typed observations.
 contract — the RETMAR mandatory-filing warning surface is the
 ``ProfileCompletenessError`` registered with the central error-code
 registry. The CLI error boundary (``cadrumo.entrypoints.cli._errors``)
-renders any ``AeatError`` via its registered ``message_key``. This
+renders any ``CadrumoError`` via its registered ``message_key``. This
 test verifies the registered code is correct and that the Spanish
 translation includes the RETMAR anchor and the LIRPF art. 96 BOE
 reference, proving end-to-end that any CLI verb raising the error

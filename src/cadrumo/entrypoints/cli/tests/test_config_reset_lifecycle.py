@@ -10,11 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....application.user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-)
+from ....application.user_profile import profile_create_storage_span, profile_storage_session
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
@@ -26,6 +22,7 @@ from ....domain.modelos import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from .._bootstrap_exempt import is_bootstrap_exempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

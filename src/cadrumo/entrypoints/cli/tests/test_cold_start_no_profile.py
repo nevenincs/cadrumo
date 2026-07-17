@@ -15,6 +15,7 @@ Click command, the same harness every other CLI test uses.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -135,3 +136,35 @@ def test_overview_period_status_uses_refusal_boundary(_fresh_storage_root: Path)
     assert result.exit_code != 0, result.output
     assert "Invalid value" not in result.output
     assert "profile create" in result.output.replace("\n", " ")
+
+
+def test_bindings_list_missing_conservatively_lists_profile_bindings_without_active_profile(
+    _fresh_storage_root: Path,
+) -> None:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--missing",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    bindings = payload["result"]["bindings"]
+    assert bindings, result.output
+    assert all(binding["source"] != "constant_value" for binding in bindings)
+    assert any(
+        binding["binding_id"] == "modelo-303-autoconsumo-promotor-base" and binding["source"] == "profile"
+        for binding in bindings
+    ), result.output

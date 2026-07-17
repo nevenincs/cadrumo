@@ -27,12 +27,12 @@ from pathlib import Path
 import pytest
 
 from ....application.operator_surface import command_classification
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ProfileConfirmationScenario, check_profile_confirmation_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,10 +57,6 @@ _MUTATING_COMMANDS = (
 )
 
 
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
-
-
 def _create_profile() -> None:
     result = invoke_cached_cli(
         [
@@ -81,7 +77,7 @@ def _dispatch_confirmation() -> str | None:
     """Dispatch the real ``config profile status`` and return the reported active profile."""
     result = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
     assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     return payload["active_profile"]
 
 
@@ -188,7 +184,7 @@ def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: Path) 
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=tuple(trajectory),
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert result.passed, result.failures
@@ -215,7 +211,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=unconfirmed_trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -245,7 +241,7 @@ def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolat
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=late_confirmation_trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -266,7 +262,7 @@ def test_runner_rejects_a_scenario_with_no_mutating_step() -> None:
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -292,7 +288,7 @@ def test_runner_rejects_an_unresolvable_confirmation_command() -> None:
     result = check_profile_confirmation_scenario(
         scenario,
         trajectory=trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed

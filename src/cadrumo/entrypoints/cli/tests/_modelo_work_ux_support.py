@@ -11,8 +11,8 @@ from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from .envelope_helpers import unwrap_schema_envelope as _payload
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _PROFILE_ID = "operator"
@@ -113,17 +113,22 @@ def _attempt_incomplete_profile_create():
     )  # fmt: skip
 
 
-def _create_work_unit() -> str:
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
+def _create_m130_work_unit(*, period: str = "1T") -> str:
+    return create_modelo_work_unit_via_cli(
+        modelo="130",
+        filing_year=2025,
+        period=period,
+        revision="2019-y-siguientes",
+    )
+
+
+def _create_m303_work_unit() -> str:
+    return create_modelo_work_unit_via_cli(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        revision="2023-y-siguientes",
+    )
 
 
 def _seed_m111_retencion_observation() -> None:
@@ -165,14 +170,11 @@ def _create_calculable_work_unit() -> str:
     ``retenciones_aggregation`` source resolves the quarter; the calc path
     then needs no further operator-supplied casilla inputs.
     """
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="111",
+        filing_year=2025,
+        period="1T",
+        revision="2019-y-siguientes",
+    )
     _seed_m111_retencion_observation()
-    return _payload(result.output)["work_unit_id"]
+    return work_unit_id

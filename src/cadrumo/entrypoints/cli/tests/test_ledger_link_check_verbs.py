@@ -12,6 +12,7 @@ from click.testing import Result
 from ....core import Period
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -22,7 +23,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+    from ....application.user_profile import profile_create_storage_span
     from ....application.workflow import workflow_state_repository
 
     with (

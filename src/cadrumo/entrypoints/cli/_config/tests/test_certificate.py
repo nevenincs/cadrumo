@@ -23,11 +23,11 @@ from cryptography.x509.oid import NameOID
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.storage import (
     EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
     SecretStore,
     activate_master_key_provider,
     get_master_key_provider,
     override_secret_store,
+    secure_object_repository_for_active_bucket,
 )
 from .....application.auth import resolve_certificate_source_secret
 from .....application.user_profile import profile_storage_session
@@ -35,6 +35,7 @@ from .....application.workflow import workflow_state_repository
 from .....core import resolve_active_bucket_id
 from .....domain.buckets import BucketEvent, BucketEventType
 from .....tests.cli_runner import invoke_typer_app
+from .....tests.master_key import EphemeralMasterKeyProvider
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
 
@@ -109,8 +110,11 @@ def _certificate_secret_events(
     event_type: BucketEventType,
 ) -> tuple[BucketEvent, ...]:
     with profile_storage_session(bucket_id):
+        objects = secure_object_repository_for_active_bucket()
         return tuple(
-            event for event in BucketEventHistoryRepository().load().events.values() if event.event_type is event_type
+            event
+            for event in BucketEventHistoryRepository(objects=objects).load().events.values()
+            if event.event_type is event_type
         )
 
 

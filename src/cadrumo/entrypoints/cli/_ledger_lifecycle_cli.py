@@ -22,8 +22,6 @@ from ...application.ledger import (
     attach_manual_transaction_evidence,
     compute_display_id_width,
     is_llm_provider_available,
-    ledger_transaction_payload,
-    ledger_transaction_review_status,
     mark_transaction_reviewed_excluded,
     merge_transactions,
     remove_manual_transaction,
@@ -42,13 +40,11 @@ from ...domain.attachments import AttachmentSource, DocumentLinkSource
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifierError,
-    Transaction,
     TransactionValidationError,
     is_classified,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
-from ._ledger_support import _resolve_id
-from ._schemas import OutputSchema
+from ._ledger_support import _emit_update_result, _resolve_id
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerSplitChildIdPayload
@@ -95,40 +91,6 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     location = ".".join(str(part) for part in item.get("loc", ()) if part is not None) or "ledger"
     message = str(item.get("msg") or error)
     return _bad(f"{location}: {message}")
-
-
-def _emit_update_result(
-    ctx: typer.Context,
-    result_transaction: Transaction,
-    bucket_id: str,
-    events: tuple[str, ...],
-    *,
-    command: str,
-    result_cls: type[OutputSchema],
-) -> None:
-    transaction_payload = ledger_transaction_payload(result_transaction)
-    review_status = ledger_transaction_review_status(result_transaction)
-    result = result_cls.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "transaction_id": result_transaction.transaction_id,
-            "bucket_event_ids": list(events),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    _emit_envelope(
-        ctx,
-        command=command,
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
-    )
 
 
 def ledger_attach(

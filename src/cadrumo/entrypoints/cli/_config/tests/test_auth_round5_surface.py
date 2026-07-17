@@ -27,11 +27,12 @@ from .....application.auth import (
     login_operator_auth,
 )
 from .....application.auth import test_operator_auth as probe_operator_auth
-from .....application.user_profile import profile_create_storage_span, register_minimal_profile
+from .....application.user_profile import profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core.config import load_settings, override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .....tests.cli_runner import invoke_typer_app, semantic_cli_output
+from .....tests.user_profile import register_minimal_profile
 from .. import app as config_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

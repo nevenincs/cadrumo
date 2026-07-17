@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from .. import load_scenario, run_golden_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -23,17 +24,11 @@ _SCENARIO = _SCENARIOS_DIR / "modelo_130.toml"
 _ALL_SCENARIOS = sorted(_SCENARIOS_DIR.glob("*.toml"))
 
 
-def _valid_commands() -> frozenset[str]:
-    from ....entrypoints.cli import command_schema_refs
-
-    return frozenset(ref.command for ref in command_schema_refs())
-
-
 @pytest.mark.parametrize("scenario_path", _ALL_SCENARIOS, ids=lambda p: p.stem)
 def test_every_golden_scenario_passes_all_dimensions(scenario_path: Path) -> None:
     # Covers the full lifecycle for every shipped scenario (modelo 130 and 303);
     # adding a scenario TOML auto-extends this gate.
-    result = run_golden_scenario(load_scenario(scenario_path), valid_commands=_valid_commands())
+    result = run_golden_scenario(load_scenario(scenario_path), valid_commands=valid_cli_commands())
     assert result.passed, f"{scenario_path.stem} failures: {result.failures}"
     assert result.trajectory_resolves
     assert result.lifecycle_ordered
@@ -71,7 +66,7 @@ def test_runner_rejects_a_fabricated_verb() -> None:
     scenario = load_scenario(_SCENARIO).model_copy(
         update={"expected_trajectory": ("modelo.work.create", "modelo.work.fabricated")}
     )
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert not result.passed
     assert not result.trajectory_resolves
 
@@ -80,7 +75,7 @@ def test_runner_rejects_out_of_order_lifecycle() -> None:
     scenario = load_scenario(_SCENARIO).model_copy(
         update={"expected_trajectory": ("modelo.work.verify", "modelo.work.calculate")}
     )
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert not result.passed
     assert not result.lifecycle_ordered
 
@@ -107,6 +102,6 @@ def test_runner_rejects_an_ungrounded_expected_computed_casilla() -> None:
     # Anti-tautology: a casilla id that is NOT in the registry's AEAT-grounded
     # computed set must fail the verification dimension.
     scenario = load_scenario(_SCENARIO).model_copy(update={"expected_computed_casillas": ("9999",)})
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert not result.passed
     assert not result.verification_grounded
