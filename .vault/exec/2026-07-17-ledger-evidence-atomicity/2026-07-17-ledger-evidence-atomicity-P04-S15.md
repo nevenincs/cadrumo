@@ -60,4 +60,4 @@ related:
 
 ## Notes
 
-- This is the source-surface absence proof; the generated CLI reference/tree regenerate against the live surface (already green) and the doc `.seq` citation of `link --evidence-id` was removed in S07. The locale-value absence of `--evidence-id` in the `link` help/error strings is part of the deferred S13 locale cleanup (serialized behind exec-authcert-p04's live locale WIP).
+- This is the source-surface absence proof; the generated CLI reference/tree regenerate against the live surface (already green) and the doc `.seq` citation of `link --evidence-id` was removed in S07. The locale-value absence of `--evidence-id` in the `link` help/error strings is part of the deferred S13 locale cleanup, held own-keys-only until the operator commits the live P04-door locale WIP and the `.yml` goes clean.
