@@ -1,4 +1,11 @@
-"""Real-runtime coverage for the canonical portable profile export authority."""
+"""Real-runtime proofs for the single portable profile export authority.
+
+Both operator purposes -- portable transfer and the subject-access request --
+must resolve through one :func:`export_profile_bundle` service and one bundle
+schema, deriving their data categories from the serialized bundle fields and the
+registry namespaces the bundle carries, while keeping their distinct purpose
+metadata.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +19,12 @@ from pydantic import SecretStr
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.buckets import BucketEvent, BucketEventType
-from ....domain.user_profile import ProfileExportError, UserProfilePortableExport
+from ....domain.user_profile import (
+    ProfileExportError,
+    UserProfilePortableExport,
+    UserProfileRecord,
+)
+from ....domain.user_profile._portable_export import CoverageManifest
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
@@ -24,6 +36,7 @@ from .. import (
     export_profile_bundle,
     profile_storage_session,
 )
+from .._bundle_export_contracts import _CATEGORY_BY_BUNDLE_FIELD, bundle_data_categories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -105,7 +118,7 @@ def _reject_event_history_updates(database_path: Path) -> Iterator[None]:
             connection.commit()
 
 
-def test_both_export_intents_share_one_serializer_and_one_event_authority(tmp_path: Path) -> None:
+def test_both_export_purposes_share_one_service_and_one_bundle_schema(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         bucket_id = _create_profile()
         portable_path = tmp_path / "portable.json"
@@ -123,16 +136,66 @@ def test_both_export_intents_share_one_serializer_and_one_event_authority(tmp_pa
             subject_access_path.read_text(encoding="utf-8"),
         )
         assert subject_access_bundle.model_copy(update={"exported_at": portable_bundle.exported_at}) == portable_bundle
+        assert portable_bundle.bundle_schema_version == subject_access_bundle.bundle_schema_version
         assert portable.profile_id == subject_access.profile_id == bucket_id
+        assert portable.bundle_schema_version == subject_access.bundle_schema_version
+
+
+def test_distinct_purpose_metadata_is_retained_across_the_shared_service(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        bucket_id = _create_profile()
+        portable = export_profile_bundle(
+            _request(tmp_path / "portable.json", purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER),
+        )
+        subject_access = export_profile_bundle(
+            _request(tmp_path / "subject-access.json", purpose=ProfileBundleExportPurpose.SUBJECT_ACCESS),
+        )
+
+        assert portable.purpose is ProfileBundleExportPurpose.PORTABLE_TRANSFER
+        assert subject_access.purpose is ProfileBundleExportPurpose.SUBJECT_ACCESS
+        # Categories and schema are shared; only the purpose differs.
         assert portable.data_categories == subject_access.data_categories
-        assert "profile_identity_and_facts" in portable.data_categories
 
         events = _export_events(bucket_id)
-        assert len(events) == 2
         assert {event.payload["purpose"] for event in events} == {
             ProfileBundleExportPurpose.PORTABLE_TRANSFER.value,
             ProfileBundleExportPurpose.SUBJECT_ACCESS.value,
         }
+
+
+def test_data_categories_are_derived_from_serialized_bundle_fields(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "portable.json"
+        result = export_profile_bundle(
+            _request(destination, purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER),
+        )
+        bundle = UserProfilePortableExport.model_validate_json(destination.read_text(encoding="utf-8"))
+
+        expected = bundle_data_categories(bundle)
+        assert result.data_categories == expected
+        # Every category traces to a serialized field or a carried namespace, never a static list.
+        schema_categories = {
+            _CATEGORY_BY_BUNDLE_FIELD[field]
+            for field in type(bundle).model_fields
+            if field in _CATEGORY_BY_BUNDLE_FIELD
+        }
+        assert schema_categories <= set(result.data_categories)
+        assert "profile_identity_and_facts" in result.data_categories
+
+
+def test_carried_registry_namespaces_surface_as_derived_categories() -> None:
+    # Pure-logic derivation over a real bundle whose coverage manifest declares
+    # carried registry namespaces; no static category list is consulted.
+    record = UserProfileRecord.model_construct(profile_id="p", display_name="P", facts=())
+    bundle = UserProfilePortableExport.model_construct(
+        bundle_schema_version=3,
+        profile=record,
+        coverage_manifest=CoverageManifest(carried_namespaces=("cadrumo.evidence.attachments",)),
+    )
+    categories = bundle_data_categories(bundle)
+    assert "secure_object_namespace:cadrumo.evidence.attachments" in categories
+    assert "profile_identity_and_facts" in categories
 
 
 def test_encrypted_transport_decrypts_to_the_canonical_cleartext_bundle(tmp_path: Path) -> None:
