@@ -45,11 +45,11 @@ Make evidence-driven splitting persist parent, children, evidence links, provena
 
 Restrict ledger link to invoice-only linkage and remove the duplicate backend replay route entirely.
 
-- [ ] `P03.S06` - Remove EvidenceBundleService replay, its public export, and backend tests while preserving evidence check and unrelated observability replay facilities; `src/cadrumo/application/evidence/_service.py`.
+- [x] `P03.S06` - Remove EvidenceBundleService replay, its public export, and backend tests while preserving evidence check and unrelated observability replay facilities; `src/cadrumo/application/evidence/_service.py`.
 - [ ] `P03.S07` - Restrict ledger link to invoice-only linkage, route it through the atomic application writer, and remove evidence-id and evidence-update result paths; `src/cadrumo/entrypoints/cli/_ledger.py`.
-- [ ] `P03.S08` - Remove modelo audit replay and every call to the backend replay method while retaining only genuine evidence audit check; `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`.
+- [x] `P03.S08` - Remove modelo audit replay and every call to the backend replay method while retaining only genuine evidence audit check; `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`.
 - [ ] `P03.S09` - Prove attach remains the sole evidence mutation, invoice link is atomic and invoice-only, and link rejects every removed evidence grammar; `src/cadrumo/entrypoints/cli/tests/test_ledger_link_check_verbs.py`.
-- [ ] `P03.S10` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events; `src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
+- [x] `P03.S10` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events; `src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
 
 ### Phase `P04` - Contract migration for the evidence family
 
