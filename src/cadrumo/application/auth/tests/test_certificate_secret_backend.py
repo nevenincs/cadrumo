@@ -47,7 +47,6 @@ from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the Pro
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import (
-    SECURE_STORAGE_BACKEND_LABEL,
     CertificateSourceNotFoundError,
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
@@ -215,7 +214,6 @@ def test_set_then_resolve_roundtrips_the_secret(tmp_path: Path) -> None:
     assert result.name == "personal"
     assert result.has_secret is True
     assert result.rotated is False
-    assert result.backend == SECURE_STORAGE_BACKEND_LABEL
 
     resolved = resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID)
     assert resolved is not None
@@ -307,10 +305,13 @@ def test_retired_keyring_symbol_absent_from_auth_facade(symbol: str) -> None:
 
 
 def test_secure_storage_backend_is_the_only_public_backend() -> None:
-    """The module exposes exactly the secure-storage backend, its protocol, and the label."""
+    """The module exposes exactly the secure-storage backend and its protocol.
+
+    No backend-descriptor label survives: named certificate secrets have a
+    single storage authority, so there is no backend name to select or project.
+    """
     assert set(_backend_module.__all__) == {
-        "SECURE_STORAGE_BACKEND_LABEL",
         "CertificateSecretBackend",
         "SecureStorageCertificateSecretBackend",
     }
-    assert SECURE_STORAGE_BACKEND_LABEL == "secure_storage"
+    assert not hasattr(_backend_module, "SECURE_STORAGE_BACKEND_LABEL")
