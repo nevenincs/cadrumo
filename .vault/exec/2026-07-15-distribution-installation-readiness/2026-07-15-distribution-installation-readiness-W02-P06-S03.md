@@ -9,39 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace distribution-installation-readiness with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-07-15-distribution-installation-readiness-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive and ## Scope
-
-- `dev/packaging/release_cohort.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive
 
 ## Scope
@@ -68,7 +35,7 @@ related:
   the Scoop manifest, the Homebrew formula, and the release manifest — all
   digest-bound, with no undeclared file.
 - The builder defect fix landed as commit `044e48450e` (one file,
-  `dev/packaging/python_cohort.py`); the focused cohort gates passed 5/5 and
+  `dev/packaging/python_cohort.py`); the focused cohort gates passed 5/5 across `dev/packaging/tests/test_python_cohort.py` and `dev/packaging/tests/test_release_cohort.py` combined, and
   the full reproducibility integration proof passed afterwards.
 
 ## Notes
