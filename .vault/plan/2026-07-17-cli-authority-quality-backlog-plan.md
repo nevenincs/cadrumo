@@ -12,6 +12,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+  - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
 ---
 
 
@@ -83,7 +84,7 @@ Remove the shared-temp-dir race that flakes the acceptance-wall meta-test under 
 
 Turn two honestly-flagged coverage gaps into non-vacuous gates: the law-determined revision-resolution enforcement across select_revision callers, and a binding validator-dispatch completeness assertion.
 
-- [ ] `P09.S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it; `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`.
+- [x] `P09.S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it; `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`.
 - [x] `P09.S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated; `src/cadrumo/domain/calculations/registry/tests/test_binding_build_validation.py`.
 
 ### Phase `P10` - Entrypoints structural-duplication triage
@@ -91,6 +92,12 @@ Turn two honestly-flagged coverage gaps into non-vacuous gates: the law-determin
 The duplication-authority audit flags two low-severity structural duplications on the entrypoints surface (repeated iterator shapes and thin synchronous wrappers) as optional, non-blocking review candidates that are actionable only if exact current-tree evidence shows duplicated policy, state ownership, or persistence behavior rather than incidental structural similarity. Confirm each against the tree and either record it as intentionally distinct or consolidate it behind one substitutable shared abstraction.
 
 - [ ] `P10.S25` - Triage the two low-severity entrypoints structural duplications the duplication-authority audit surfaced (repeated iterator shapes and thin synchronous wrappers): confirm each on the current tree by exact declaration, caller, and writer-path inspection, then either record a disposition note classifying it as intentionally distinct incidental similarity or consolidate it behind one shared abstraction proven substitutable against every consumer contract, so no duplicated policy, state ownership, or persistence behavior survives unclassified; `src/cadrumo/entrypoints/`.
+
+### Phase `P11` - Publish-guardrail build/publish denylist hardening
+
+The S58 distribution close review found the publish-workflow guardrail test enforces its no-build/no-publish claim only through exact-substring not-in-workflow-text guards, so a differently-spelled build or publish command inside the validate job would slip past both the substring guard and the parsed-YAML presence checks. Harden the guardrail with a structural assertion over every validate-job step.
+
+- [ ] `P11.S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step's run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards; `the gate is that the guardrail test fails if any validate-job step invokes a build or publish tool; `dev/release/tests/test_publish_workflow.py`.
 
 ## Description
 
