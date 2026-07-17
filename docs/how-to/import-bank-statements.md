@@ -187,11 +187,8 @@ then attaches one to the other:
 :verify: Confirm the purchase-invoice evidence attached to the transaction.
 ```
 
-The same purchase-evidence link is also available through the `link` command,
-addressing the transaction and evidence by id:
-
-```{cli-sequence} import-link-evidence
-```
+`attach` is the single door for purchase evidence. The `link` command binds a
+transaction to a reconciliation-catalogue invoice only.
 
 The `link --invoice-id` option expects an id from the reconciliation invoice
 catalogue (populated by the import and reconcile flows), not an id from `aeat app
