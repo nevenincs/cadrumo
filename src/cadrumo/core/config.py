@@ -990,6 +990,15 @@ class Settings(AeatIntegrationSettings):
         ge=1,
         description="Retention window in days for per-run trace directories; older run directories are pruned",
     )
+    cadrumo_runs_max_total_bytes: int = Field(
+        default=256 * 1024 * 1024,
+        ge=1,
+        description=(
+            "Total on-disk size cap (bytes) for the per-run trace store; after the "
+            "age-based prune, oldest run directories are removed until the store "
+            "fits under this ceiling (the newest run directory is always kept)"
+        ),
+    )
 
     # ── Justificante parser ─────────────────────────────────────────────────
     cadrumo_justificantes_dir: Path = Field(
