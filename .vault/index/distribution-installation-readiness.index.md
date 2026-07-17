@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#distribution-installation-readiness'
-date: '2026-07-16'
-modified: '2026-07-16'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S01]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S02]]'
@@ -31,6 +31,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S19]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S21]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S22]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P06-S67]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P08-S39]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -39,6 +40,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-16-distribution-installation-readiness-audit]]'
   - '[[2026-07-16-distribution-installation-readiness-p02-review-audit]]'
+  - '[[2026-07-17-distribution-installation-readiness-audit]]'
 ---
 
 # `distribution-installation-readiness` feature index
@@ -55,6 +57,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 
 - `2026-07-16-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `Packaging ADR reconciliation`
 - `2026-07-16-distribution-installation-readiness-p02-review-audit` - `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
+- `2026-07-17-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `S67 distribution identity verifier code review`
 
 ### exec
 
@@ -84,6 +87,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P05-S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort
 - `2026-07-15-distribution-installation-readiness-W02-P05-S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S43` - Remove local release upload authority while retaining diagnostic build recipes
+- `2026-07-15-distribution-installation-readiness-W02-P06-S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple
 - `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
 
 ### plan
