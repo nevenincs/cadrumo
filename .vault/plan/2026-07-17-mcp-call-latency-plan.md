@@ -144,7 +144,7 @@ Serve MCP tool calls through one warm in-process runtime with a concurrency cap 
 
 Re-run the empirical benchmark table as acceptance thresholds, re-run installed oracles, and record exec closure.
 
-- [ ] `P05.S18` - Add a durable serving-path benchmark driver that measures the research call table against isolated encrypted state and asserts the projected end-state thresholds as acceptance gates, warm calculate at or under three seconds subprocess and one point five seconds server with reads and simple writes sub-second in server mode; `dev/packaging/serving_path_benchmark.py`.
+- [x] `P05.S18` - Add a durable serving-path benchmark driver that measures the research call table against isolated encrypted state and asserts the projected end-state thresholds as acceptance gates, warm calculate at or under three seconds subprocess and one point five seconds server with reads and simple writes sub-second in server mode; `dev/packaging/serving_path_benchmark.py`.
 - [ ] `P05.S19` - Re-run the installed tax and MCP oracles after D1 through D4 land and capture the corrected warm serving behavior as installed evidence; `dev/packaging/installed_mcp_oracle.py`.
 - [ ] `P05.S20` - Rebuild the release cohort so the v0.2.1 train re-runs installed-behavior evidence against the new caches and warm serving; `dev/packaging/release_cohort.py`.
 
