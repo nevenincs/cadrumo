@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-04'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-04-live-filing-data-capture-research]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
@@ -38,17 +38,17 @@ provenance evidence rather than full calculation data.
 
 The codebase already has several necessary pieces:
 
-- `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` authenticates via
+- `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py` authenticates via
   Cl@ve Movil and stores a session state.
-- `src/aeat/adapters/outbound/aeat/sede/_declarations.py` queries
+- `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py` queries
   `Consultar declaraciones presentadas` and captures justificante PDFs.
-- `src/aeat/adapters/outbound/aeat/sede/_walker.py` captures justificantes
+- `src/cadrumo/adapters/outbound/aeat/sede/_walker.py` captures justificantes
   through `Mis Expedientes` as a second read path.
-- `src/aeat/adapters/inbound/justificante/_parser.py` parses receipt metadata.
-- `src/aeat/adapters/inbound/declaracion/_parser.py` detects declaration
+- `src/cadrumo/adapters/inbound/justificante/_parser.py` parses receipt metadata.
+- `src/cadrumo/adapters/inbound/declaracion/_parser.py` detects declaration
   templates but intentionally refuses because registry-backed extraction is not
   implemented.
-- `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`
+- `src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`
   proves PDF casilla extraction is possible, but only for a narrow Modelo 100
   summary surface.
 

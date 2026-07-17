@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-06-oracle-environment-consistency-adr]]'
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'
@@ -126,7 +126,7 @@ does not require consulting two files.
 
 ## Implementation Direction
 
-Extend `src/aeat/domain/calculations/registry/_live_parity.py`:
+Extend `src/cadrumo/domain/calculations/registry/_live_parity.py`:
 
 - Add `_COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]]` at
   module level, populated with the five pairs listed above.
@@ -141,7 +141,7 @@ Extend `src/aeat/domain/calculations/registry/_live_parity.py`:
   that want to extend the table do so by editing this constant in
   the same commit that introduces the new surface combination.
 
-Add `src/aeat/domain/calculations/registry/test_audit_oracle_surface_compatibility.py`
+Add `src/cadrumo/domain/calculations/registry/test_audit_oracle_surface_compatibility.py`
 with the following coverage:
 
 - A binding whose (surface, surface_kind) pair is in the allow-list

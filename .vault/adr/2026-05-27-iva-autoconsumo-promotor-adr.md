@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-autoconsumo-promotor'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-17-modelo-formulas-adr]]"
@@ -64,7 +64,7 @@ carried through to M390.
 ### D2.3 — Add legal authority sources in `iva-flow.toml`
 
 Add `art-9` and `art-79` LISIVA legal authority entries to
-`src/aeat/_data/registry/aeat/legal/iva-flow.toml` so the binding and
+`src/cadrumo/_data/registry/aeat/legal/iva-flow.toml` so the binding and
 formula declarations can cite them as `legal_refs`.
 
 ### D2.4 — CLI injection via `--autoconsumo-promotor-base`

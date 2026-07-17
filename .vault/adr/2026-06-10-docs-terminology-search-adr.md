@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-docs-terminology-search-research]]"
 ---
@@ -66,7 +66,7 @@ concerns of this decision.
   scaffolded from those sources AND hand-curated (definitions, scope
   notes, aliases). Regeneration must never clobber curation. The canonical
   prior art is GNU gettext `msgmerge`: preserve / scaffold-empty /
-  retire-as-tombstone. The house precedents are `aeat.locales scaffold`
+  retire-as-tombstone. The house precedents are `cadrumo.locales scaffold`
   and `dev.docs.apidocs scaffold --check`.
 - **Search engine candidates** (full survey in the research document):
   Pagefind (MIT; native es/ca/hu stemming with per-language index splits;
@@ -135,7 +135,7 @@ Three layers, strictly separated by commit status:
 (NOT committed, regenerated every docs build)`.
 
 **D1 — The Terminology Handbook is a TOML authoring tree** under
-`src/aeat/_data/terminology/`, one fragment per concept, shipped in the
+`src/cadrumo/_data/terminology/`, one fragment per concept, shipped in the
 wheel like its registry sibling, compiled by a strict loader into typed
 pydantic records (the registry authoring-compiler house pattern). The
 authoring surface is data, reviewable in diffs, continuously improved —
@@ -161,7 +161,9 @@ synonym surface declaratively: "pro rata" and "prorrateo" are admitted
 terms on the `prorrata` concept.
 
 **D3 — Scaffold lifecycle with the msgmerge three-outcome contract**,
-operated by a `python -m aeat.terminology` CLI mirroring `aeat.locales`:
+operated by the contributor-only
+`python -m dev.docs.terminology_handbook` CLI while runtime locale authoring
+remains under `cadrumo.locales`:
 `scaffold` walks the enrolment sources (registry snapshots via the
 authority, core enums, legal catalogue, topics, CLI tree introspection,
 locale catalogues, plus Tier-A external seeds) and (1) preserves every
@@ -230,7 +232,7 @@ would run live, and materialising the outputs. Four sub-decisions:
   scores); the compiler resolves them through a chunk-to-target map:
   registry casilla fragments resolve to the casilla's projected search
   record; legal catalogue entries and corpus HTML resolve to the legal
-  grounding surface; `src/aeat` modules resolve to their generated API
+  grounding surface; `src/cadrumo` modules resolve to their generated API
   stubs; docs sources resolve to built page anchors; CLI modules resolve
   to the generated CLI reference. Wrangling also applies the documented
   corrections: casilla-revision dedupe, locale-quadruplet collapse,

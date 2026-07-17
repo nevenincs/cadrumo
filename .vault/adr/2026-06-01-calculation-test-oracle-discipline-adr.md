@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#calculation-test-oracle-discipline'
 date: '2026-06-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-01-calculation-test-oracle-discipline-research]]"
 ---
@@ -36,7 +36,7 @@ behavior.
 ## Constraints
 
 The rule applies to numeric Decimal assertions against engine output
-in `src/aeat/**/test_*.py`. It does not apply to graph wiring tests,
+in `src/cadrumo/**/test_*.py`. It does not apply to graph wiring tests,
 validation-error tests, provenance tests, schema-shape tests, or
 primitive evaluator contracts: those test structural properties the
 registry does not author and can fail meaningfully without an

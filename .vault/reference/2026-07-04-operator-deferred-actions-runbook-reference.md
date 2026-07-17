@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#operator-deferred-actions-runbook'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-17'
 related: []
 ---
 
@@ -46,9 +46,9 @@ repository's tracker.
   outward), regenerate + push the Claude plugin/marketplace (step 6, outward),
   announce (step 7).
 - Release-readiness gates confirmed green at HEAD:
-  - `src/aeat/tests/test_release_config.py` — 5/5 passed (config well-formed,
+  - `src/cadrumo/tests/test_release_config.py` — 5/5 passed (config well-formed,
     manifest well-formed, changelog non-empty, the three version surfaces
-    (`pyproject.toml [project].version`, `src/aeat/__init__.py __version__`,
+    (`pyproject.toml [project].version`, `src/cadrumo/__init__.py __version__`,
     `.release-please-manifest.json`) agree at `0.1.1`, and no
     `.github/workflows/release-please.yml` exists — GitHub Actions stays
     permanently disabled on this repo).
@@ -114,7 +114,7 @@ checkout.
   boundaries, in-scope/out-of-scope), the security posture (local-only
   processing, no live AEAT submission, encrypted-at-rest sensitive data,
   master-key handling), and a pointer to the bundled-data disposition at
-  `src/aeat/_data/SECURITY.md`.
+  `src/cadrumo/_data/SECURITY.md`.
 - README.md and CONTRIBUTING.md were checked for a disclosure-channel
   cross-reference. No `CONTRIBUTING.md` exists in this repository (contributor
   guidance lives in the README's "For contributors" section and in
@@ -157,56 +157,60 @@ channel section names a real, monitored email address (Option 2).
 
 - The offline safety and read-gate surface is complete at HEAD:
   - `core.access_gate.AeatAccessGate` — `require_live_read()` refuses a
-    pytest-driven live read unless `AEAT_LIVE_TESTS_ENABLED` is exactly `"1"`;
+    pytest-driven live read unless `CADRUMO_LIVE_TESTS_ENABLED` is exactly
+    `"1"`;
     `require_live_write()` always raises `LiveSubmitForbiddenError`
     unconditionally (no code path can ever perform a live AEAT write).
   - `adapters.outbound.aeat.export._submitters` is a deliberately empty
-    namespace — no remote submitter implementation exists anywhere in the tree.
+      namespace — no remote submitter implementation exists anywhere in the tree.
   - `core.external_constants.AeatDomains` is a strict, frozen pydantic model
     (every hostname field `Field(min_length=1)`) holding every AEAT/Cl@ve/BOE
     origin as registry data, not scattered literals.
-  - `src/aeat/tests/live_gate.py` provides the one shared
+  - `src/cadrumo/tests/live_gate.py` provides the one shared
     `requires_live_enabled()` / `requires_live_google_enabled()` gate every
     `aeat_live`-marked test calls; both read `core.config.Settings` (never a
     raw `os.environ` re-implementation).
   - The `aeat_live` marker is registered in `pyproject.toml`, is skip-by-default
     (the default `addopts` selects `-m 'unit'`), and is documented in
-    `src/aeat/tests/README.md` (marker taxonomy, live-read opt-in, banned
+    `src/cadrumo/tests/README.md` (marker taxonomy, live-read opt-in, banned
     imports for live-test files).
-- 36 test modules across the tree are `aeat_live`-marked (certificate handshake,
-  Cl@ve permanente, OAuth, Google Drive, declaration/notification/expediente
-  reads, browser evasion, NIF/IVA and GROI checks, IVA compensation wallet,
-  Renta WEB Open capture replay, and more) — this is the redacted-fixture and
-  real-external-read coverage the offline surface is built to gate.
-- `.vault/adr/2026-04-21-live-cert-auth-supersession-adr.md` documents that the
-  full end-to-end live flow (health severity gate, real mTLS handshake, cert
-  load + NIF extraction, full async `authenticate()`/`verify_login()` against
-  a real `async_playwright` session, no mocks/patches) already exists at
-  `adapters/outbound/aeat/auth/tests/test_authenticator_live.py`, gated on
-  `AEAT_LIVE_TESTS_ENABLED=1`.
+- Live-marked modules cover certificate and Cl@ve authentication, OAuth, Google
+  Drive, declaration/notification/expediente reads, browser evasion, NIF/IVA
+  and GROI checks, IVA compensation wallet, Renta WEB Open capture replay, and
+  other real external reads.
+- `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_live.py`
+  contains the certificate acceptance oracle. Its synchronous case checks
+  certificate health and subject-derived identity. Its asynchronous case uses
+  the production Playwright browser factory and accepts authentication only
+  when navigation succeeds at the exact protected resource
+  `https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt`, with the
+  final URL and parsed identity bound to the active session. A direct TLS or
+  mTLS handshake, a public page, a context marker, or historical session
+  metadata is not live authentication proof.
 - Full-tree collection is clean at HEAD: `uv run --no-sync pytest
-  --collect-only -q src/aeat` collects 12,560 tests with zero collection
-  errors (2,737 deselected by the default `unit`-only marker filter, which
-  includes every `aeat_live` module).
+  --collect-only -q src/cadrumo` collects without collection errors; the
+  default unit-only marker filter does not execute `aeat_live` tests.
 
 **No further autonomous prep is possible.** Exercising the live path requires
 a real AEAT certificate + password and a real network round-trip against the
 AEAT sede, which this environment does not hold and must not perform.
 
-**Operator action:** provision `AEAT_CERTIFICATE_PATH` +
-`AEAT_CERTIFICATE_PASSWORD_SECRET` (or the configured cert-source backend) for
-a real FNMT/AEAT certificate, then run:
+**Operator action:** provision `CADRUMO_CERTIFICATE_PATH` +
+`CADRUMO_CERTIFICATE_PASSWORD_SECRET` for a real FNMT/AEAT certificate, then
+run:
 
 ```
-AEAT_LIVE_TESTS_ENABLED=1 uv run pytest -m aeat_live
+CADRUMO_LIVE_TESTS_ENABLED=1 uv run pytest -m aeat_live
 ```
 
 or a narrower slice, e.g.
-`AEAT_LIVE_TESTS_ENABLED=1 uv run pytest -m aeat_live adapters/outbound/aeat`.
+`CADRUMO_LIVE_TESTS_ENABLED=1 uv run pytest -m aeat_live
+src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_live.py`.
 
 **Acceptance signal:** the `aeat_live` suite runs (not skipped) and passes —
-in particular `test_authenticator_live.py`'s full handshake + login flow, and
-`test_certificate_live.py`'s lower-level handshake path.
+in particular `test_authenticator_live.py` proves certificate health and the
+full browser authentication flow at the exact protected resource. Lower-level
+handshake success is neither required nor sufficient.
 
 ## Item 4 — real-PDF specimens for provisional `declaracion_pdf` extraction profiles (issues #332-#337)
 
@@ -224,7 +228,7 @@ in particular `test_authenticator_live.py`'s full handshake + login flow, and
   `provisional_pending_specimen` is set.
 - At HEAD, only ONE `declaracion_pdf` profile carries
   `provisional_pending_specimen = true`: Modelo 202
-  (`src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/extraction_profiles/0001-modelo-202-declaracion-pdf.toml`).
+  (`src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/extraction_profiles/0001-modelo-202-declaracion-pdf.toml`).
   Its own in-file comment names the reason precisely: it is the only profile
   using `bbox_anchored` matching (anchor on the printed box number, read the
   value to its right), because the bundled AEAT Diseño de Registro confirms
@@ -234,7 +238,7 @@ in particular `test_authenticator_live.py`'s full handshake + login flow, and
   real-corpus acquisition for this modelo family.
 - The five OTHER modelos named in the commissioning prompt (M036, M232 both
   revisions, M369, M720, M840) do NOT carry the provisional flag at HEAD. Each
-  has a corpus fixture PDF under `src/aeat/tests/fixtures/justificantes/<modelo>/`,
+  has a corpus fixture PDF under `src/cadrumo/tests/fixtures/justificantes/<modelo>/`,
   each is stamped `corpus_round_trip_verified = true` and
   `verification_source = "synthetic_from_aeat_published_text"`, and each
   fixture's sidecar honestly declares `"provenance": "synthetic_generated"`
@@ -248,7 +252,7 @@ in particular `test_authenticator_live.py`'s full handshake + login flow, and
   `core._modelo.Modelo.M037` exists as an enum member with an explicit
   docstring noting it is "retired ... censo simplificada, suppressed by Orden
   HAC/1526/2024" and is a member of `NON_REGISTRY_MODELOS` — no registry
-  directory exists for it (`src/aeat/_data/registry/aeat/modelos/037` is
+  directory exists for it (`src/cadrumo/_data/registry/aeat/modelos/037` is
   absent) and none may be created; a gate test in
   `core/tests/test_modelo.py` pins this. This is a real-world regulatory
   retirement (AEAT suppressed the form), not application code legacy — the
@@ -290,7 +294,7 @@ that confirmation cannot be faked without misrepresenting provenance.
   issue #333 as such if not already reflected on the board.
 
 **Acceptance signal:** for a lifted modelo, the registry build (`uv run
---no-sync pytest src/aeat/domain/calculations/registry -m unit`) still passes
+--no-sync pytest src/cadrumo/domain/calculations/registry -m unit`) still passes
 with `provisional_pending_specimen = false` and a real-corpus-provenance
 sidecar in place; `python -m aeat.locales modelo audit`-style provenance
 reports (or a direct `rg 'provisional_pending_specimen = true'` sweep) no
@@ -325,7 +329,7 @@ longer name that modelo.
   - Locale strings scaffolded and translated across all four catalogues
     (`en`/`es`/`ca`/`hu`), including the two new error codes
     (`FAIL_GOOGLE_ADC_UNAVAILABLE`, `REFUSED_GOOGLE_IMPERSONATION`).
-  - Hermetic test coverage: `src/aeat/adapters/outbound/google/tests
+  - Hermetic test coverage: `src/cadrumo/adapters/outbound/google/tests
     /test_impersonation.py` (unit-marked) exercises the real
     `DefaultCredentialsError` failure path (pointing
     `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent file — a genuine,
@@ -344,7 +348,7 @@ longer name that modelo.
   environment does not hold.
 
 **Small buildable prep landed:** a live-gated test skeleton,
-`src/aeat/adapters/outbound/google/tests/test_impersonation_live.py`
+`src/cadrumo/adapters/outbound/google/tests/test_impersonation_live.py`
 (`pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]`),
 mirroring `test_oauth_live.py`'s established shape exactly. It skips
 unconditionally without `AEAT_LIVE_TESTS_GOOGLE=1` (confirmed:
@@ -369,7 +373,7 @@ it against a real SA remains.
 
 ```
 AEAT_LIVE_TESTS_GOOGLE=1 AEAT_IMPERSONATION_TARGET_PRINCIPAL=<target-sa-email> \
-  uv run pytest -m aeat_live src/aeat/adapters/outbound/google/tests/test_impersonation_live.py
+  uv run pytest -m aeat_live src/cadrumo/adapters/outbound/google/tests/test_impersonation_live.py
 ```
 
 **Acceptance signal:** the test passes (not skipped), proving a real,
@@ -419,9 +423,9 @@ structurally inert.**
     is passed AND an endpoint is configured — the acknowledgement is never
     sticky and must be re-affirmed on every invocation).
 - Hermetic test coverage: 65/65 tests passed across
-  `src/aeat/core/telemetry` (consent, emit, workspace hashing, settings
+  `src/cadrumo/core/telemetry` (consent, emit, workspace hashing, settings
   fields, schema allowlist, producers, HTTP sink) plus
-  `src/aeat/entrypoints/cli/tests/test_app_diagnostics_telemetry.py`.
+  `src/cadrumo/entrypoints/cli/tests/test_app_diagnostics_telemetry.py`.
 - By design, this residual is not a gap to close — it is the intended
   default-off posture. Nothing further should be built to "activate" telemetry
   automatically; activation is deliberately an explicit, per-deployment,
@@ -452,11 +456,11 @@ outside this repository).
 
 - `README.md` — added one line to "Getting help" cross-linking `SECURITY.md`
   for vulnerability reports (item 2).
-- `src/aeat/adapters/outbound/google/tests/test_impersonation_live.py` — new
+- `src/cadrumo/adapters/outbound/google/tests/test_impersonation_live.py` — new
   live-gated (`aeat_live`, skip-by-default) test closing the "author the live
   SA-impersonation test" portion of item 5's residual.
 
-Verified before landing: `uv run --no-sync pytest --collect-only -q src/aeat`
+Verified before landing: `uv run --no-sync pytest --collect-only -q src/cadrumo`
 collects cleanly (12,560 tests, 0 errors); the new live test collects and
 skips correctly without opt-in; `ruff check` is clean on the new test file;
 the full telemetry + impersonation focused suites pass (65 + impersonation

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
@@ -141,6 +141,13 @@ Trusted Publishing. A single authority and evidence contract are required.
 - Existing packaging and generation foundations are stable enough to reuse. Their
   evidence aggregation, client coverage, and publication boundaries are not stable
   enough to authorize release.
+- A non-hotfix cohort completes a 48–72 hour soak after all pre-publication
+  blocking rows pass. Soak reruns consume the same manifest and hashes; a
+  failure invalidates the cohort rather than authorizing an in-place rebuild.
+- Rollback never replaces bytes under an existing version. Promotion stops,
+  affected channel guidance is withdrawn, the bad version is yanked or disabled
+  where supported, and channel pointers return to the last fully evidenced
+  cohort. A fix is a new version and cohort.
 
 ## Implementation
 
@@ -181,6 +188,11 @@ fetches the stored cohort, verifies manifest/hashes and the complete blocking ev
 set, and publishes those exact bytes. It never builds or generates. Marketplace, GitHub
 release, MCPB, Scoop, Homebrew, root Python package, and companions are coordinated for
 one version and cohort.
+
+Before that dispatch, a non-hotfix cohort remains frozen through the 48–72 hour
+release-candidate soak defined by the release-readiness ADR. Scheduled or
+operator-triggered installed-artifact lanes append cohort-bound observations;
+they do not rebuild. Any blocking regression ends promotion for that cohort.
 
 After publication, verification lanes acquire from the advertised PyPI, GitHub,
 marketplace, MCPB, Scoop, and Homebrew paths and rerun installed behavior, including the
@@ -227,6 +239,9 @@ while retaining an explicit human release decision.
   eliminating competing authorities.
 - The first public release requires staged channel bootstrapping and delayed
   documentation promotion.
+- Normal releases include the immutable-candidate soak. Rollback restores the
+  last fully evidenced cohort and publishes repaired bytes only under a new
+  version.
 - Support scope becomes narrower but defensible: only measured matrix rows are supported.
 - Scoop remains Windows-only; Homebrew, Python, and Claude surfaces carry independently
   proved platform claims.

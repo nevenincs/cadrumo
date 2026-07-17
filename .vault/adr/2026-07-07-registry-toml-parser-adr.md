@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#registry-toml-parser'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-07-10-registry-toml-parser-research]]'
 ---
@@ -14,7 +14,7 @@ related:
 
 A cold registry compile costs ~14.45s, of which ~8.6s is pure-Python `tomllib`
 parsing the 16,310 fragmented registry TOML files under
-`src/aeat/_data/registry/` (`read_toml` in `core/_toml.py`, ~7.1s inside
+`src/cadrumo/_data/registry/` (`read_toml` in `core/_toml.py`, ~7.1s inside
 `tomllib.loads`/`tomllib.load` itself). This is the "backed library
 regression" flagged during the ledger-perf-optimization / root-suite-slowness
 campaign: a pure-Python parser sitting on a hot compile path that every fresh
@@ -126,7 +126,7 @@ the swap and the delta reported alongside this ADR's research numbers.
 
 Full-corpus, non-sampled correctness proof: a deep structural (type AND
 value) comparison of `rtoml.load()` against `tomllib.load()` output across
-ALL 16,260 real registry TOML files under `src/aeat/_data/registry/` found
+ALL 16,260 real registry TOML files under `src/cadrumo/_data/registry/` found
 ZERO mismatches. This is stronger evidence than a representative sample —
 every fragment the registry actually ships was independently re-parsed by
 both parsers and found byte-for-byte structurally identical. Targeted

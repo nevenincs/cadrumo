@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#iva-complexity-hardening-scope'
+  - "#adr"
+  - "#iva-complexity-hardening-scope"
 date: '2026-07-01'
-modified: '2026-07-03'
 related:
-  - '[[2026-07-01-iva-complexity-hardening-scope-research]]'
-  - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
-  - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]'
+  - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
+  - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
+  - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
+superseded_by: '2026-07-07-iva-prorrata-complexity-adr'
+modified: '2026-07-17'
 ---
-
-# `iva-complexity-hardening-scope` adr: `Prorrata definitiva annual regularizacion (LIVA arts 105-106): provisional-carry + Q4 regularisation feeding M303 casilla 44 and M390` | (**status:** `proposed`)
+# `iva-complexity-hardening-scope` adr: `Prorrata definitiva annual regularizacion (LIVA arts 105-106): provisional-carry + Q4 regularisation feeding M303 casilla 44 and M390` | (**status:** `superseded`)
 
 ## Problem Statement
 

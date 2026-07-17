@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#pension-rescate-dt12-classification'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-pension-rescate-dt12-classification-research]]'
   - '[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
 ---
 
-# `pension-rescate-dt12-classification` adr: `DT 12a rescate-type axis and apartado-4 time-window eligibility` | (**status:** `proposed`)
+# `pension-rescate-dt12-classification` adr: `DT 12a rescate-type axis and apartado-4 time-window eligibility` | (**status:** `accepted`)
 
 ## Problem Statement
 

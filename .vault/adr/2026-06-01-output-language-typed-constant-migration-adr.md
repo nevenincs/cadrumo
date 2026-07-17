@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#output-language-typed-constant-migration'
 date: '2026-06-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
@@ -20,7 +20,7 @@ Authored via the Write tool — same bash-quoting-corruption constraint as the M
 
 Sibling ADR to the RegistryPeriodCode CLI-boundary work (committed `68e36a134`). The output-language axis is the OTHER constant-like axis that the S801 α-survey-and-beyond audits surfaced as candidate for typed-constant migration.
 
-Ground-truth at `src/aeat/core/external_constants.py`:
+Ground-truth at `src/cadrumo/core/external_constants.py`:
 
 - Line 329: `class OutputLanguage(StrEnum)` — closed 4-member enum (`ES`, `EN`, `CA`, `HU`).
 - Line 345: `DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES`.
@@ -35,9 +35,9 @@ The StrEnum is ALREADY in place. The question is consumer-side coverage: 11 cons
 
 **Roundtrip discipline (`aeat-roundtrip-discipline`)**: persisted boundary fields carrying language must roundtrip through the encrypted-envelope identical to in-memory form. StrEnum values JSON-serialise as their underlying string ("es" / "en" / "ca" / "hu"); pydantic v2 deserialises them back to enum members via the StrEnum-as-value coercion. Roundtrip is clean.
 
-**Settings interaction**: pydantic-settings reads `AEAT_OUTPUT_LANGUAGE` env var as `str | None` today (the field at `src/aeat/core/config.py`). The settings layer historically uses bare `str` for env-var-sourced fields because the env-var value can be anything an operator passes. Typing the settings field as `OutputLanguage | None` would refuse malformed env-var values at settings-load time rather than at use-time. That's a behaviour change the team should opt into deliberately.
+**Settings interaction**: pydantic-settings reads `AEAT_OUTPUT_LANGUAGE` env var as `str | None` today (the field at `src/cadrumo/core/config.py`). The settings layer historically uses bare `str` for env-var-sourced fields because the env-var value can be anything an operator passes. Typing the settings field as `OutputLanguage | None` would refuse malformed env-var values at settings-load time rather than at use-time. That's a behaviour change the team should opt into deliberately.
 
-**Existing fallback semantics**: per `src/aeat/core/i18n/_render.py:172, 180`, an invalid `aeat_output_language` value (anything outside the supported set) normalises to `None` via `_normalise_supported_language()` and falls back to `DEFAULT_OUTPUT_LANGUAGE`. The renderer is forgiving by design — operators with mistyped language codes still get Spanish output rather than a hard refusal. This fallback is documented operator-friendly behaviour (test_render_override.py:28-38 pins it). Typing the field as `OutputLanguage | None` AT THE PYDANTIC LAYER would refuse load with ValidationError, breaking the forgiving fallback.
+**Existing fallback semantics**: per `src/cadrumo/core/i18n/_render.py:172, 180`, an invalid `aeat_output_language` value (anything outside the supported set) normalises to `None` via `_normalise_supported_language()` and falls back to `DEFAULT_OUTPUT_LANGUAGE`. The renderer is forgiving by design — operators with mistyped language codes still get Spanish output rather than a hard refusal. This fallback is documented operator-friendly behaviour (test_render_override.py:28-38 pins it). Typing the field as `OutputLanguage | None` AT THE PYDANTIC LAYER would refuse load with ValidationError, breaking the forgiving fallback.
 
 **Migration cost**: 11 consumer files. The CLI sites (~3-4 of them via Typer `--output-language` flags) get clean `OutputLanguage` typing. The internal data-class fields (~3-4 of them) get clean `OutputLanguage | None`. The settings-layer field (1) and the resolver-internal `_cached_output_language` cache key (1) are the tricky ones — they touch the forgiving-fallback semantics.
 
@@ -102,18 +102,18 @@ Per `aeat-architecture-boundaries`: this is the documented direction; the langua
 
 Two specific sites stay nuanced:
 
-**Settings field at `src/aeat/core/config.py`**: type the field as `OutputLanguage | None = None` with a `BeforeValidator` named `_coerce_output_language_setting` that:
+**Settings field at `src/cadrumo/core/config.py`**: type the field as `OutputLanguage | None = None` with a `BeforeValidator` named `_coerce_output_language_setting` that:
 - Accepts any string input.
 - Lower-cases and strips.
 - Returns the matching `OutputLanguage` member OR `None` for invalid input (preserving the forgiving fallback).
 
 The settings field stays operator-friendly: malformed `AEAT_OUTPUT_LANGUAGE` env vars normalise to `None` and fall through to `DEFAULT_OUTPUT_LANGUAGE` at resolution time, NOT raising at settings-load. The type signature stays clean (`OutputLanguage | None`) while the validator preserves the existing behaviour.
 
-**Cache key at `_cached_output_language` (`src/aeat/core/i18n/_render.py`)**: the lru_cache key is a tuple of hashable values used as a memoisation key. Internal helper; no public surface. Leave as `str` per the existing implementation; the cache must handle any input including invalid forms because the cache is consulted BEFORE `_normalise_supported_language` resolves the final value. Cosmetic migration here would be net-negative (risk of reintroducing the forgiving-fallback bypass for zero type-safety gain).
+**Cache key at `_cached_output_language` (`src/cadrumo/core/i18n/_render.py`)**: the lru_cache key is a tuple of hashable values used as a memoisation key. Internal helper; no public surface. Leave as `str` per the existing implementation; the cache must handle any input including invalid forms because the cache is consulted BEFORE `_normalise_supported_language` resolves the final value. Cosmetic migration here would be net-negative (risk of reintroducing the forgiving-fallback bypass for zero type-safety gain).
 
 ### D3 — Add a regression-test ratchet (the Candidate 2 gate adapted)
 
-Author a new test under `src/aeat/core/i18n/test_output_language_typed_consumers.py` that asserts every public-surface field referencing the language axis (settings, profile, CLI arguments, data-class fields) consumes `OutputLanguage` directly OR carries an explicit exemption comment citing this ADR. Internal helpers (cache keys, normalisation functions) are exempt by name.
+Author a new test under `src/cadrumo/core/i18n/test_output_language_typed_consumers.py` that asserts every public-surface field referencing the language axis (settings, profile, CLI arguments, data-class fields) consumes `OutputLanguage` directly OR carries an explicit exemption comment citing this ADR. Internal helpers (cache keys, normalisation functions) are exempt by name.
 
 The ratchet prevents future drift: a new feature that adds a bare `str` language field gets caught at PR review (test failure), not after merge.
 

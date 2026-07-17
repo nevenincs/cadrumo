@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#recipient-encryption'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-17'
 related:
   - "[[2026-07-04-recipient-encryption-research]]"
 ---
@@ -109,7 +109,7 @@ this slice and stay open on #421.
 
 ## Implementation
 
-**Recipient fingerprint registry** (`aeat.application.modelo._recipient_registry`
+**Recipient fingerprint registry** (`cadrumo.application.modelo._recipient_registry`
 or a comparably-scoped new module): a typed, frozen `RecipientFingerprintRegister`
 (tuple of `RecipientFingerprintRecord`) persisted as one `FINANCIAL`-sensitivity
 secure object per bucket, following the exact shape of
@@ -128,7 +128,7 @@ sensitive collaborator metadata, one tier below the taxpayer's own SECRET
 private key).
 
 **Encrypt-for-recipient primitive** (a new module, e.g.
-`aeat.application.modelo._review_package_recipient_encryption`): a function
+`cadrumo.application.modelo._review_package_recipient_encryption`): a function
 `encrypt_review_package_for_recipient(package_path, *, recipient_public_key_hex)
 -> bytes` that (1) reads the package bytes into memory, (2) generates a fresh
 ephemeral X25519 keypair, (3) performs ECDH against the recipient's public key,

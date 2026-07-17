@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#descendant-profile-axis'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
@@ -87,12 +87,10 @@ the per-child disability grade required by Art. 60.
 
 ## D4 — Trade-offs
 
-- **Schema migration.** Existing persisted `RentaFamilyProfile` records that
-  carry `hijos_menores_25` as a scalar integer need a migration shim to
-  construct an equivalent `descendientes` tuple. This is handled by a
-  `model_validator(mode="before")` that converts the legacy scalar to an
-  equivalent tuple of generic `DescendantInfo` records with
-  `discapacidad_grado=0` and `convive_con_contribuyente=True`.
+- **Canonical schema.** Persisted `RentaFamilyProfile` records carry only the
+  structured `descendientes` tuple. The retired scalar cannot be reconstructed
+  without inventing per-descendant evidence, so it is rejected rather than
+  migrated.
 - **Test oracle sourcing.** Art. 58 thresholds (€2,400 / €2,700 / €4,000 /
   €4,500 / €3,000 disability supplement) are taken directly from the AEAT
   2024 registry parameters rather than hand-computed, satisfying the no-
@@ -103,9 +101,8 @@ the per-child disability grade required by Art. 60.
 
 ## D5 — Consequences
 
-- `RentaFamilyProfile` gains `descendientes: tuple[DescendantInfo, ...]`.
-  Legacy `hijos_menores_25` is consumed in a `model_validator(mode="before")`
-  and does not appear in the schema surface.
+- `RentaFamilyProfile` exposes `descendientes: tuple[DescendantInfo, ...]` as
+  its only descendant input; no scalar read path or migration validator exists.
 - Registry bindings `renta-2024-profile-descendientes-count` and
   `renta-2024-profile-descendientes-minimos-aggregate` are added and wired
   into the M100 mínimo calculation chain.

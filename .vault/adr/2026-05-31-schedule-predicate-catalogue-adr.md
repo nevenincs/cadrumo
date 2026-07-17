@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-research]]'
 ---
@@ -66,9 +66,9 @@ are needed. Adding the eager validate_registry() call will not break any committ
 ## Files in scope
 
 Edit only:
-- src/aeat/domain/calculations/registry/_authority.py (gap 1)
-- src/aeat/domain/calculations/registry/test_filing_schedule_selection.py (gap 2)
-- src/aeat/domain/calculations/registry/_schedules.py (gap 3)
+- src/cadrumo/domain/calculations/registry/_authority.py (gap 1)
+- src/cadrumo/domain/calculations/registry/test_filing_schedule_selection.py (gap 2)
+- src/cadrumo/domain/calculations/registry/_schedules.py (gap 3)
 
 Do NOT touch application/, adapter code, or _registry_contract.py (already correct).
 

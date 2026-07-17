@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-research]]"
   - "[[2026-05-26-modelo-130-relation-regression-audit]]"
@@ -32,7 +32,7 @@ applied to a 1T target produces (year_delta=-1, period="4T") — i.e.
 instruction.
 
 **Silent zero fallback for bound casillas.** `_initial_values` in
-`src/aeat/domain/calculations/registry/_formula_runtime.py` treats
+`src/cadrumo/domain/calculations/registry/_formula_runtime.py` treats
 every non-computed casilla uniformly with
 `inputs.get(casilla.id, _ZERO)`. A casilla whose `input_kind =
 "bound"` and whose binding fails to resolve at runtime (because the
@@ -119,7 +119,7 @@ raises.
   The current BOE consolidated art. 110 has no vigente apartado 5, so the
   remediation must not revive the retired art. 110.5 premise.
 - Shared-worktree discipline. The fix touches
-  `src/aeat/domain/calculations/registry/_bindings.py`,
+  `src/cadrumo/domain/calculations/registry/_bindings.py`,
   `_formula_runtime.py`, `_data/registry/aeat/modelos/130.toml`,
   and adds a new test file. Every touched file must be path-staged
   via `git commit -- <paths>`.
@@ -354,7 +354,7 @@ plan:
    `max_year_delta = 0`.
 5. Three real-behaviour M130 tests (first-period suppression,
    second-period carry-forward, bound-input-rejection) live in
-   `src/aeat/domain/calculations/registry/test_modelo_130_registry.py`
+   `src/cadrumo/domain/calculations/registry/test_modelo_130_registry.py`
    and pass.
 6. Pre-flip sweep audit document enumerates every bound casilla
    across every modelo and the resolution status of its binding;

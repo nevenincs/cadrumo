@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#manual-practico'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-12-manual-practico-research]]'
   - '[[2026-04-12-manual-practico-plan]]'
   - '[[2026-04-12-trilingual-i18n-adr]]'
-  - '[[2026-04-12-base-module-structure-adr]]'
 ---
 
 # `manual-practico` adr: structured trilingual AEAT handbook corpus + v1 schema-first delivery | (**status:** `accepted`)
@@ -32,16 +31,16 @@ Two structural constraints collide inside the original `#25` scope:
    populated by a real human; the `aeat manual verify` CLI must reject
    records lacking these fields. LLM output is a draft accelerant,
    never the source of truth.
-2. The rule-extraction, chapter-tree extraction, and translation phases
-   depend on `aeat.adapters.outbound.llm` (`#21`), which has not landed yet and is stubbed
-   via `Protocol` on this branch. An autonomous run on `#25` therefore
-   cannot honestly produce real extracted content, and cannot sign
-   reviewer metadata without fabricating it.
+2. Rule extraction, chapter-tree extraction, and translation may use the
+   canonical `cadrumo.adapters.outbound.llm` boundary, but generated output is
+   always draft material. An autonomous run cannot sign reviewer metadata or
+   promote generated content without a real human review.
 
-This ADR resolves that collision by reducing the v1 scope to the
-schema, loader, CLI skeleton, settings, and real raw-PDF manifests, and
-deferring the extraction / translation phases to follow-up issues that
-run with a live human reviewer after `#21` lands.
+This ADR resolves that collision by making schema, loader, verified source
+manifests, and the human review gate authoritative. Extraction and translation
+may ship only as complete integrations backed by the real provider boundary
+and a real human reviewer; placeholder command paths are not an accepted
+delivery mechanism.
 
 ## Considerations
 
@@ -50,9 +49,9 @@ run with a live human reviewer after `#21` lands.
 The original `#25` deliverable has three layers:
 
 - **Layer A — structure**: schema types, loader, query API, error
-  hierarchy, deterministic rule-id generator, settings, CLI skeleton,
-  Protocol stubs for `aeat.corpus`/`aeat.adapters.outbound.llm`/`aeat.domain.modelos`, unit tests.
-  No dependency on LLM output or human review.
+  hierarchy, deterministic rule-id generator, settings, and verified CLI
+  operations. Dependencies resolve through the canonical public resource,
+  LLM, and modelo contracts. This layer does not depend on generated content.
 - **Layer B — raw corpus**: fetched source PDFs, sha256-verified
   `manifest.json` per manual part, git-ignored PDF blobs (binary policy
   is `#17`'s). No dependency on LLM output or human review.
@@ -71,7 +70,7 @@ record.
 Reinforced on `#25` itself: every record, every manifest, every fixture
 must be a strict pydantic v2 model. Closed catalogues are
 `enum.StrEnum`. Internal-only value objects may remain plain dataclasses,
-but `aeat.domain.manuals`' public surface exposes pydantic models exclusively.
+but `cadrumo.domain.manuals`' public surface exposes pydantic models exclusively.
 No bare `dict[str, Any]` in public signatures or persisted files. Where
 frozen is compatible with the usage, `ConfigDict(strict=True,
 frozen=True)` is used; where the loader needs to reshape a field during
@@ -82,28 +81,18 @@ validation, strict mode is retained and frozen is relaxed.
 `aeat manual verify` enforces a hard review gate. It rejects any
 `Manual`, `Section`, or `Rule` record missing `reviewed_by` or
 `reviewed_at`. The gate is controlled by
-`AEAT_MANUALS_REVIEW_REQUIRED` which defaults to `true`. Setting the
+`CADRUMO_MANUALS_REVIEW_REQUIRED` which defaults to `true`. Setting the
 flag to `false` downgrades the rejection to a warning but is never the
 default and is never the CI default. This is the structural guarantee
 that draft LLM output cannot land in the committed corpus.
 
-### Dependency-graph stubbing
+### Dependency authority
 
-On this branch neither `aeat.adapters.outbound.llm` nor `aeat.corpus.Fetcher` exists. To
-keep `aeat.domain.manuals` compiling and testable today without reaching into
-sibling branch territory, the `aeat.domain.manuals._stubs` module declares
-three `typing.Protocol`s:
-
-- `LLMClientProtocol` — matches `#21`'s planned `LLMClient.complete`
-  surface.
-- `TranslatorProtocol` / `BulkTranslatorProtocol` — match `#21`'s
-  planned single and batch translation surfaces.
-- `FetcherProtocol` — matches `#17`'s planned `Fetcher.fetch` surface.
-
-Modelo identifiers are accepted as string fields validated against the
-regex `^MODELO_[0-9]{3}(?::[0-9A-Z_]+)?$`, not imported from
-`aeat.domain.modelos`. When `#6` lands, a follow-up PR replaces the string
-constraint with a real `ModeloId` cross-reference.
+`cadrumo.domain.manuals` consumes resources, LLM execution, translation, and
+modelo identity only through their canonical public package contracts. It does
+not define substitute implementations or duplicate identifiers. Persisted
+manual records use the canonical modelo identity vocabulary and validation
+owned by `cadrumo.domain.modelos`.
 
 ### Primary structuring surface (PDF vs HTML)
 
@@ -153,19 +142,17 @@ before any follow-up lands structured content.
 
 ## Constraints
 
-- Python `>=3.13`. All new code under `src/aeat/`. Public API
-  discipline: callers import from `aeat.domain.manuals` only.
+- Python `>=3.13`. All new code under `src/cadrumo/`. Public API
+  discipline: callers import from `cadrumo.domain.manuals` only.
 - No new runtime dependencies beyond what is already in
   `pyproject.toml`. `httpx`, `pydantic`, `pydantic-settings`, and
   `typer` cover the entire v1 implementation surface. PDF-parsing
   libraries are deferred until the follow-up that actually needs them.
-- No hard imports from `aeat.corpus`, `aeat.adapters.outbound.llm`, `aeat.domain.modelos`, or
-  `aeat.adapters.persistence.storage`. Only `aeat.core.config`, `aeat.core.errors`, `aeat.core.logging`,
-  and `aeat.core.i18n` are consumed from the wider project.
-- All tests are `@pytest.mark.unit`, colocated under
-  `src/aeat/domain/manuals/`. No mocks, patches, fakes, stubs, shadows, or
-  skips. One opt-in `@pytest.mark.live` test is scoped but not
-  implemented for v1, because it would need the real `#21` LLM client.
+- Cross-package dependencies are imported from their canonical public facades;
+  private submodule reaches and parallel implementations are prohibited.
+- Offline tests exercise real schema, loader, verification, manifest, and
+  filesystem behavior. Provider-backed verification is an explicit opt-in
+  surface and failures remain failures when it is enabled.
 - `just lint && just typecheck && just test && just hooks` must be
   green on Windows before the PR opens.
 - `tests/test_config.py` must stay green: every new `Settings` field
@@ -180,59 +167,59 @@ The implementation is laid out in detail by the companion plan
 (`2026-04-12-manual-practico-plan`). High-level slices, in the order
 they will be executed:
 
-1. **Schema package** under `src/aeat/domain/manuals/_schema.py` containing
+1. **Schema package** under `src/cadrumo/domain/manuals/_schema.py` containing
    `ManualId`, `ManualPart`, `RuleKind` (`enum.StrEnum`), and the
    pydantic v2 strict models `LLMProvenance`, `SectionSource`,
    `RuleSource`, `Paragraph`, `Rule`, `SectionRef`, `Section`,
    `Chapter`, and `Manual`. Every required-review record exposes
    `reviewed_by: str` and `reviewed_at: date`. Every translatable field
-   uses `aeat.core.i18n.Translatable`.
-2. **Stubs** under `src/aeat/domain/manuals/_stubs.py` with the three
-   Protocols. Clearly marked `TODO(#17)`, `TODO(#21)`, `TODO(#6)`.
-3. **Errors** under `src/aeat/domain/manuals/errors.py` exposing
-   `ManualError(AeatError)`, `ManualParseError(ManualError)`,
+   uses `cadrumo.core.i18n.Translatable`.
+2. **Dependency boundaries** bind directly to the canonical public resource,
+   LLM, translation, and modelo surfaces. No substitute module or duplicate
+   authority is part of this package.
+3. **Errors** under `src/cadrumo/domain/manuals/errors.py` exposing
+   `ManualError(CadrumoError)`, `ManualParseError(ManualError)`,
    `RuleExtractionError(ManualError)`,
    `ManualNotFoundError(ManualError)`, and
    `ManualReviewRequiredError(ManualError)`.
-4. **IDs** under `src/aeat/domain/manuals/_ids.py` exposing
+4. **IDs** under `src/cadrumo/domain/manuals/_ids.py` exposing
    `generate_rule_id(manual_id, year, part, chapter_id, section_id,
    ordinal) -> str`.
-5. **Loader** under `src/aeat/domain/manuals/_loader.py` exposing
+5. **Loader** under `src/cadrumo/domain/manuals/_loader.py` exposing
    `load_manual(manual_id, year, part=SINGLE) -> Manual` and
    `ManualCatalogue` plus `find_rules(catalogue, *, casilla_id=None,
    kind=None, lang=None) -> Iterator[Rule]`. The loader reads from the
    directory hierarchy above, walks the chapter tree, and constructs
    strict pydantic models from committed JSON files.
-6. **Verification** under `src/aeat/domain/manuals/_verify.py` exposing
+6. **Verification** under `src/cadrumo/domain/manuals/_verify.py` exposing
    `verify_manual_dir(path, *, review_required=True) ->
    VerificationReport`. The report is a pydantic model; the function
    walks the directory, validates every JSON file against the schema,
    and records dangling cross-references and missing reviewer fields.
-7. **Fetch + manifest** under `src/aeat/domain/manuals/_fetch.py` exposing
+7. **Fetch + manifest** under `src/cadrumo/domain/manuals/_fetch.py` exposing
    `fetch_manual_part(manual_id, year, part, *, dest, settings) ->
    FetchedManualPart`. Uses `httpx` synchronously, streams the PDF,
    computes sha256, writes `manifest.json`, and returns a strict
    pydantic model describing the fetched file. A `PartSpec` table
-   (`aeat.domain.manuals._fetch.PART_SPECS`) hard-codes the verified AEAT
+   (`cadrumo.domain.manuals._fetch.PART_SPECS`) hard-codes the verified AEAT
    URLs for the three v1 parts.
-8. **Public `__init__.py`** under `src/aeat/domain/manuals/__init__.py`
+8. **Public `__init__.py`** under `src/cadrumo/domain/manuals/__init__.py`
    re-exports: `Manual`, `Chapter`, `Section`, `SectionRef`, `Rule`,
    `Paragraph`, `LLMProvenance`, `SectionSource`, `RuleSource`,
    `ManualCatalogue`, `ManualId`, `ManualPart`, `RuleKind`,
    `load_manual`, `find_rules`, `generate_rule_id`,
    `verify_manual_dir`, `fetch_manual_part`, and the error hierarchy.
-9. **CLI** under `src/aeat/entrypoints/cli/manual.py` defines a `typer.Typer`
-   `app` with seven subcommands. `fetch`, `verify`, `list`, and `show`
-   are fully functional. `structure`, `extract-rules`, and `translate`
-   raise `RuleExtractionError("pending #21 — not yet implemented")`
-   so the interface is locked but the implementation is gated on the
-   LLM client landing. `src/aeat/entrypoints/cli/__init__.py` grows an
-   `app.add_typer(manual_module.app, name="manual", help="...")` line.
-10. **Settings** extends `aeat.core.config.Settings` with `aeat_manuals_
+9. **CLI** under `src/cadrumo/entrypoints/cli/manual.py` exposes the fully
+   implemented `fetch`, `verify`, `list`, and `show` operations. Structuring,
+   rule extraction, and translation commands are registered only when they
+   have a complete provider-backed implementation and preserve the mandatory
+   human review gate. A command that exists only to report unfinished work is
+   not part of the accepted surface.
+10. **Settings** extends `cadrumo.core.config.Settings` with `aeat_manuals_
     root: Path = Field(default=PROJECT_ROOT / "corpus" / "manuals", ...)`
-    and `aeat_manuals_review_required: bool = Field(default=True, ...)`.
+    and `cadrumo_manuals_review_required: bool = Field(default=True, ...)`.
     Matching entries land in `env/.env.example`.
-11. **Unit tests** colocated under `src/aeat/domain/manuals/`: one per module
+11. **Unit tests** colocated under `src/cadrumo/domain/manuals/`: one per module
     under test. Coverage: loader round-trip on a temp-directory fixture,
     malformed-record rejection, cross-reference validator, trilingual
     completeness, deterministic rule ID, verify rejects unreviewed,
@@ -261,13 +248,10 @@ Why this shape over the alternatives:
   if the structured content is empty. Locking the shape early also
   forces follow-ups to respect the review gate; they cannot bypass it
   by landing ad-hoc JSON.
-- **Why Protocol stubs rather than direct imports.** The worktree has
-  confirmed `aeat.adapters.outbound.llm` does not exist yet. Directly importing would
-  break the branch build and fail ty. Protocols let the schema and
-  the `extract-rules`/`translate` commands declare their dependency on
-  `#21` in type-checked form without reaching across the branch
-  boundary. When `#21` lands, a follow-up PR replaces `LLMClientProtocol`
-  with the real `LLMClient` in a single diff.
+- **Why canonical public dependencies.** Manual ingestion is legal-source
+  infrastructure. It must use the same resource, modelo, and LLM authorities
+  as the rest of the codebase so there is one behavior to review and no
+  alternate path that can bypass provenance or review enforcement.
 - **Why `httpx` for fetching rather than `pdfplumber`/`pypdf`.** The
   v1 fetcher only needs to stream a PDF and sha256 it; it does not
   parse the body. `httpx` is already a dependency. Adding a PDF-parser
@@ -312,22 +296,14 @@ Why this shape over the alternatives:
   extracted, translated, reviewed). Follow-up issues must explicitly
   track that work with a real human reviewer. The deferral is
   documented here and called out in the PR body.
-- `aeat manual structure`, `aeat manual extract-rules`, and `aeat
-  manual translate` raise `RuleExtractionError` until `#21` lands.
-  Callers must be aware the interfaces are defined but not yet
-  implemented; the error message points at `#21`.
-- The Protocol stubs create a small maintenance burden: when `#21`
-  (and later `#17` and `#6`) lands, a follow-up PR must rebase
-  `aeat.domain.manuals` onto the real surfaces. That follow-up is expected
-  to be small and mechanical.
+- Structuring, extraction, and translation remain outside the accepted CLI
+  surface until their complete implementations are grounded in the canonical
+  provider and resource contracts and retain human review.
 - The raw PDFs are git-ignored. A fresh clone needs to run `aeat
   manual fetch --manual renta --year 2025 --part parte1` (and
   siblings) to materialise the blobs. The CLI verifies the resulting
   PDFs against the committed manifest sha256, so tampering is
   detectable.
-- The `#17` corpus fetcher is not yet available, so the v1 fetcher is
-  implemented directly on top of `httpx` in `aeat.domain.manuals._fetch`.
-  When `#17` lands the real `Fetcher`, a follow-up PR re-wires
-  `_fetch.py` to delegate through the real fetcher and drops the
-  local `httpx` usage. The `FetcherProtocol` in `_stubs.py` is the
-  forcing function for that refactor.
+- Fetching uses the canonical resource-fetch boundary and preserves the
+  committed URL, content hash, byte length, and retrieval timestamp. A second
+  manual-specific network path is prohibited.

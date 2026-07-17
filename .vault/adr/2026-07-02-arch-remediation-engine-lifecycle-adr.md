@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
-  - "[[2026-04-30-secure-persistence-foundation-adr]]"
   - '[[2026-07-06-arch-remediation-engine-lifecycle-research]]'
 ---
 # `arch-remediation-engine-lifecycle` adr: `engine and bucket-session lifecycle unification` | (**status:** `accepted`)
@@ -67,7 +66,7 @@ and the operator directed deferrals into regression scope.
   (idle-timeout refusal), or the readiness taxonomy — the typed readiness
   codes and `SessionExpiredError` contract are frozen surfaces other layers
   cite.
-- The shared test harness (`aeat.tests.secure_sql`) and the ephemeral
+- The shared test harness (`cadrumo.tests.secure_sql`) and the ephemeral
   synthetic-session path must be swept in the same change; the harness is
   in-package and ships with the wheel, so its contract is production
   surface for this purpose.

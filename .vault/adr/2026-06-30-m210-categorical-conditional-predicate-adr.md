@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m210-categorical-conditional-predicate'
 date: '2026-06-30'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
@@ -20,10 +20,10 @@ branch's silent-zero risk is the highest-value gap of the whole campaign (the
 most common M210 filing scenario — a non-resident owning Spanish real estate
 with no rental income still owes imputed-rent IRNR) but the trigger is a
 categorical equality on `tipo_renta` (`data_type = "text"`,
-`src/aeat/_data/registry/aeat/modelos/210/revisions/2025/casillas/0001-casillas.toml:23-31`),
+`src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/casillas/0001-casillas.toml:23-31`),
 not a numeric antecedent. The shipped `implies_nonzero` DSL operator reads only
 `Decimal` casilla values (`casilla_values: Mapping[CasillaId, Decimal]`,
-`src/aeat/application/modelo/_verification_actions.py:306-310`), so it cannot
+`src/cadrumo/application/modelo/_verification_actions.py:306-310`), so it cannot
 express "when `tipo_renta == "inmobiliaria"`, `base_imponible` must be
 non-zero." Plan `2026-06-30-modelo-verify-nonzero-guards-plan` Wave `W02`
 Phase `P07` (Steps `S20`-`S23`) requires this gap to be resolved — implemented
@@ -33,9 +33,9 @@ if feasible, or formally deferred and tracked, never silently dropped.
 
 - **The base-imponible formula is the formal authority for the inmobiliaria
   branch.** `m210-base-imponible-2025`
-  (`src/aeat/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml`)
+  (`src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml`)
   resolves `base_imponible` via the `m210_resolve_base_imponible` custom op
-  (`src/aeat/domain/calculations/registry/_formula_runtime.py:817-900`). Every
+  (`src/cadrumo/domain/calculations/registry/_formula_runtime.py:817-900`). Every
   inmobiliaria-branch input casilla (`valor_catastral`,
   `coeficiente_imputacion_inmobiliaria`, `dias_imputacion`,
   `valor_adquisicion`, `valor_comprobado_administracion`) is
@@ -60,11 +60,11 @@ if feasible, or formally deferred and tracked, never silently dropped.
   the post-review correction in Rationale), with zero widening of the
   Decimal-only formula/calculate boundary.**
   `CalculationRevision.input_values_by_casilla_id: Mapping[CasillaId, str]`
-  (`src/aeat/domain/modelos/_calculation_revision.py:310`) carries every
+  (`src/cadrumo/domain/modelos/_calculation_revision.py:310`) carries every
   operator-entered raw string, independently of the Decimal
   `casilla_values` projection. `_collect_revision_verification_findings`
   already reads `target.input_values_by_casilla_id`
-  (`src/aeat/application/modelo/_verification_actions.py:1207`) at exactly
+  (`src/cadrumo/application/modelo/_verification_actions.py:1207`) at exactly
   the call site that invokes `_evaluate_verification_predicates`
   (`_verification_actions.py:1230-1237`), in the same function, a few lines
   above. The formula-evaluation context independently proves the same shape
@@ -90,7 +90,7 @@ if feasible, or formally deferred and tracked, never silently dropped.
   precedent.** `roll_forward_balances` is a four-casilla-id operator with a
   bespoke arity/casilla-existence validator
   (`_roll_forward_balances_predicate_arity_failures`,
-  `src/aeat/domain/calculations/registry/_validate_surfaces.py:170-193`)
+  `src/cadrumo/domain/calculations/registry/_validate_surfaces.py:170-193`)
   rather than routing through the generic
   `_casilla_list_predicate_failures` (which validates every bracketed token
   as a casilla id — wrong for our middle literal token). The new operator's
@@ -147,7 +147,7 @@ if feasible, or formally deferred and tracked, never silently dropped.
 - The literal comparison is exact-string equality against the operator's
   raw, whitespace-stripped input (`CalculationRevision` strips
   `input_values_by_casilla_id` values at construction,
-  `src/aeat/domain/modelos/_calculation_revision.py:175-176`); the predicate
+  `src/cadrumo/domain/modelos/_calculation_revision.py:175-176`); the predicate
   does not normalise case or accents. `"inmobiliaria"` is already the exact
   literal the `m210_resolve_base_imponible` custom op compares against
   (`_formula_runtime.py:840`), so no new literal vocabulary is introduced.

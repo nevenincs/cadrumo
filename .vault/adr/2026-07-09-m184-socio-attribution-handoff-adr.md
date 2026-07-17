@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#m184-socio-attribution-handoff'
 date: '2026-07-09'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
   - '[[2026-07-10-m184-socio-attribution-handoff-research]]'
 ---
 
-# `m184-socio-attribution-handoff` adr: `M184 attributed-base handoff to socio M100 via typed profile facts` | (**status:** `proposed`)
+# `m184-socio-attribution-handoff` adr: `M184 attributed-base handoff to socio M100 via typed profile facts` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -184,16 +184,16 @@ transport upgrade rather than a redesign.
 
 ## Code-surface footprint
 
-- `src/aeat/_data/registry/aeat/user_profile/schema.toml` (fact group)
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/bindings/` and
+- `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` (fact group)
+- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/` and
   `revisions/2025/bindings/` (profile bindings onto atribucion casillas)
-- `src/aeat/application/modelo/_profile_binding.py` (fact projection, if the
+- `src/cadrumo/application/modelo/_profile_binding.py` (fact projection, if the
   repeating-group shape needs a selector extension)
-- `src/aeat/application/modelo/_verification_actions.py` /
+- `src/cadrumo/application/modelo/_verification_actions.py` /
   `_verification_predicates.py` (omission advisory)
-- `src/aeat/entrypoints/cli/_modelo.py` + `_modelo_rendering.py` (M184 handoff
+- `src/cadrumo/entrypoints/cli/_modelo.py` + `_modelo_rendering.py` (M184 handoff
   Notices)
-- `src/aeat/application/wizard/` + `src/aeat/locales/` (capture prompts,
+- `src/cadrumo/application/wizard/` + `src/cadrumo/locales/` (capture prompts,
   locale keys)
 
 ## Addendum (2026-07-09): casilla-1577 binding reconciliation

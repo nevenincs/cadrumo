@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#bucket-custody-completeness'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-bucket-custody-completeness-research]]"
   - '[[2026-05-27-profile-portability-adr]]'
   - '[[2026-06-03-bucket-sealed-archive-adr]]'
   - '[[2026-06-03-cli-workflow-redesign-adr]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
-  - '[[2026-06-30-agent-harness-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
 # `bucket-custody-completeness` adr: `full per-bucket export/import custody` | (**status:** `accepted`)
@@ -21,19 +21,19 @@ Per-bucket export/import does not round-trip the full durable bucket. Both
 custody transports — the cleartext `aeat config profile export`/`import` and the
 sealed recovery-archive `BucketMaintenanceService.export`/`import_` — share one
 payload builder, `serialize_profile_bundle`
-(`src/aeat/application/user_profile/_bundle.py:47-88`), that carries exactly five
+(`src/cadrumo/application/user_profile/_bundle.py:47-88`), that carries exactly five
 categories (profile, work units, ledger transactions, calculation revisions,
 filing records). Every other durable per-bucket secure-object store is silently
 dropped. A "restore" therefore returns a structurally-incomplete profile:
 
 - **Evidence is broken.** Attachment/evidence bytes and manifests
-  (`aeat.domain.attachments.blobs`/`.manifests`) are not carried, yet
+  (`cadrumo.domain.attachments.blobs`/`.manifests`) are not carried, yet
   transactions and revisions reference evidence by id only
   (`Transaction.attachment_ids`, `LedgerEvidenceRow`). After restore those ids
   resolve to `AttachmentNotFoundError` — violating `ledger-evidence-bytes-not-links`
   and `ledger-derived-revisions-bundle-evidence`.
 - **Cross-period calculation inputs are orphaned.** Filed-revision observations
-  (`aeat.calculations.observations`), IVA compensation history, and IVA-wallet
+  (`cadrumo.calculations.observations`), IVA compensation history, and IVA-wallet
   reconciliation decisions are the 303 carry-forward inputs. Dropping them
   silently corrupts every future-period calculation after the restore — a
   silent under-declaration class.
@@ -55,7 +55,7 @@ only the decided shape and the resolution of four open questions.
 
 **The canonical namespace registry is the design lever.** Every secure-object
 namespace is declared once in `STORAGE_NAMESPACE_REGISTRY`
-(`src/aeat/adapters/persistence/storage/_namespace_registry.py:865`) with a
+(`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:865`) with a
 `scope` field (`PROFILE_LOCAL`/`BUCKET_LOCAL`/`PROCESS_LOCAL`). That field
 authoritatively answers "is this store keyed by `{bucket_id}`?" and is the
 natural enumeration source for both the carry set and a coverage gate. The
@@ -121,7 +121,7 @@ bucket id is out of scope.
   invariant and the meaning of the trail. Rejected.
 - **Chosen — preserve original event ids and timestamps verbatim.**
   `derive_bucket_event_id` content-addresses the id over seven fields
-  (`src/aeat/domain/buckets/_event.py:213-233`) and `_enforce_derived_id`
+  (`src/cadrumo/domain/buckets/_event.py:213-233`) and `_enforce_derived_id`
   (`:269-282`) rejects any id that does not match its content, so an event can
   only be carried *with* its original fields; the catalogue merge is idempotent
   by id and nothing references ids as foreign keys. The import's own

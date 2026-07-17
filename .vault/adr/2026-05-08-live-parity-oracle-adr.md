@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-06-live-parity-oracle-backend-research]]"
   - "[[2026-05-07-live-parity-oracle-adr]]"
@@ -46,11 +46,9 @@ Extend `LiveCrossReferenceDecision` with two optional fields:
 - `applicability_predicates: tuple[ProfilePredicateDefinition, ...]`
 - `applicability_condition_mode: Literal["all", "any"] = "all"`
 
-Both default to the empty / `"all"` shape so every binding declared
-before this gate landed remains unconditionally applicable
-(backwards-compat is non-negotiable; the registry hosts dozens of
-cross-references and a forced-migration would be a regression
-vector).
+An empty predicate tuple means "unconditionally applicable" as a current
+schema semantic. It is not a migration alias: every registry binding is
+validated directly against the one current shape.
 
 Add a typed pydantic-strict result `CrossReferenceApplicability`:
 fields `cross_reference_id`, `applicable: bool`,
@@ -87,10 +85,10 @@ A typed `CrossReferenceApplicability` rather than a bare bool:
 - Aligns with the project pydantic mandate (every boundary record
   is pydantic v2 strict frozen).
 
-The empty-predicates default = unconditionally applicable preserves
-every existing binding's semantics. The sweep onto IXVI and OSS
-bindings is a separate slice that proceeds binding-by-binding
-rather than via a forced migration.
+The empty-predicates rule gives universal bindings an explicit canonical
+representation. IXVI, OSS, and future optional bindings declare their own
+source-grounded predicates directly; no alternate legacy representation is
+accepted.
 
 ## Alternatives considered
 
@@ -116,9 +114,10 @@ Positive:
   side conditional logic.
 - The audit-oracles JSON gains a typed signal for which bindings
   are profile-gated.
-- Live tests skip when the profile says off, eliminating false-
-  failure noise from runs against subjects who do not use the
-  feature.
+- Applicability-negative tests assert that the oracle is not invoked and that
+  the typed reason identifies the unmet profile facts. Enabled live tests fail
+  on real boundary errors; inapplicability is a domain result, not an ignored
+  test outcome.
 
 Negative:
 - Each new predicate adds fixture surface. Mitigated by the

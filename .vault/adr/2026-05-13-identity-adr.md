@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#identity'
 date: '2026-05-13'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-13-identity-research]]"
 ---
@@ -75,7 +75,7 @@ Placement options considered:
 
 ## Implementation
 
-The implementation lives in `src/aeat/core/identity/`:
+The implementation lives in `src/cadrumo/core/identity/`:
 
 - `_tax_id.py` — the `validate_spanish_tax_id(value)` function and
   the three private helpers `_validate_nif`, `_validate_nie`,
@@ -140,10 +140,10 @@ implementation — it forwards directly to the `core` symbol.
   rules. The identity module itself has no dedicated `test_tax_id`
   file because the invoice validator's coverage is exhaustive.
 
-- **Future consumers should import from `aeat.core.identity` or
-  `aeat.adapters.inbound.identity`** depending on their layer.
+- **Future consumers should import from `cadrumo.core.identity` or
+  `cadrumo.adapters.inbound.identity`** depending on their layer.
   Adapter-layer code that needs the validator must NOT reach across
-  the boundary into `aeat.core.identity` directly — go through the
+  the boundary into `cadrumo.core.identity` directly — go through the
   inbound-adapter re-export.
 
 - **The `_SYNTHETIC_TAX_IDS` allow-list lives in the master-key

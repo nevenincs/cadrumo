@@ -3,13 +3,11 @@ tags:
   - "#adr"
   - "#deadline-engine"
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 title: Filing-Deadline Computation Engine
 related:
   - "[[2026-04-12-deadline-engine-research]]"
   - "[[2026-04-12-deadline-engine-plan]]"
-  - "[[2026-04-12-self-healing-sync-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
 issue: wgergely/aeat#38
 ---
 
@@ -24,18 +22,18 @@ opens/closes/payment dates and a current `ObligationStatus`. The engine
 is read-only — it never touches the storage layer, never files, never
 mutates the catalogue/corpus/manuals.
 
-Multiple dependent subpackages are still in flight on sibling branches:
-- #6 `aeat.domain.modelos` — modelo catalogue (Protocol stub here)
-- #17 `aeat.corpus` — year-specific overrides (Protocol stub here)
-- #25 `aeat.domain.manuals` — narrative deadline rules (Protocol stub here)
+The engine consumes the canonical modelo catalogue, registry-backed deadline
+windows, and profile applicability facts through their public package
+contracts. It does not carry local substitute catalogues or dormant resolver
+paths.
 
 ## decision
 
-1. **Single subpackage: `src/aeat/domain/deadlines/`.** Public API is
-   exported from `aeat.domain.deadlines.__init__`. Internal modules are
+1. **Single subpackage: `src/cadrumo/domain/deadlines/`.** Public API is
+   exported from `cadrumo.domain.deadlines.__init__`. Internal modules are
    `_`-prefixed (`_models.py`, `_engine.py`, `_protocols.py`,
    `_errors.py`, `_calendar.py`, `_applies.py`). External callers
-   import only from `aeat.domain.deadlines`.
+   import only from `cadrumo.domain.deadlines`.
 
 2. **Pydantic v2 strict everywhere.** Every boundary-crossing type —
    `AutonomoProfile`, `FilingObligation`, `Schedule` — is a strict
@@ -48,10 +46,9 @@ Multiple dependent subpackages are still in flight on sibling branches:
 
 3. **Pure-function engine.** `DeadlineEngine.compute(profile, year, *,
    today=None) -> Schedule` performs **no I/O** after construction.
-   The engine takes a Protocol-stubbed catalogue loader and an
-   optional Protocol-stubbed corpus reader at construction time; the
-   `compute` call only reads from those interfaces and from in-memory
-   constants. Inputs are never mutated. The same `(profile, year,
+   The engine reads its authoritative catalogue and deadline data through
+   typed public contracts; the `compute` call performs no external writes.
+   Inputs are never mutated. The same `(profile, year,
    today)` always produces an equal `Schedule` (modulo
    `generated_at`).
 
@@ -74,20 +71,20 @@ Multiple dependent subpackages are still in flight on sibling branches:
    never produced by the engine in v1; they are reserved for
    downstream consumers (#10 storage, #11 sync runner).
 
-7. **Errors inherit from `aeat.core.errors.AeatError`.** The hierarchy is
+7. **Errors inherit from `cadrumo.core.errors.CadrumoError`.** The hierarchy is
    `DeadlineError → ProfileError | ScheduleComputationError`. No
    stdlib exceptions cross the public API.
 
-8. **Logging.** Only `aeat.core.logging.get_logger(__name__)`. The engine
+8. **Logging.** Only `cadrumo.core.logging.get_logger(__name__)`. The engine
    logs at DEBUG only — it must not be chatty when called from the
    CLI or from `#11` sync.
 
 9. **CLI surface.** A new typer sub-app `aeat deadlines` mounted on
-   the existing root `aeat` CLI from `chore/4`. Subcommands: `list`,
-   `next`, `explain`. The CLI is pure glue — it parses arguments,
-   constructs an in-process catalogue stub, and calls `DeadlineEngine`.
+   the existing root `aeat` CLI. Subcommands: `list`, `next`, `explain`.
+   The CLI is pure glue: it parses arguments, resolves the canonical
+   authorities, and calls `DeadlineEngine`.
 
-10. **Settings.** Two additive fields in `aeat.core.config.Settings`:
+10. **Settings.** Two additive fields in `cadrumo.core.config.Settings`:
     `aeat_default_profile_path: Path | None` and
     `aeat_deadline_due_soon_days: int = 14`. Both documented in
     `env/.env.example`; alignment enforced by `tests/test_config.py`.
@@ -98,8 +95,7 @@ Multiple dependent subpackages are still in flight on sibling branches:
 - Filing anything (read-only engine).
 - Notifications / alerts.
 - Web UI.
-- Hard imports from `aeat.domain.modelos`, `aeat.corpus`, `aeat.domain.manuals` —
-  Protocol stubs replaced on rebase.
+- Parallel local copies of modelo, corpus, or manual authority.
 - Modelos outside the autónomo set listed in the research note.
 - Estimación objetiva (modelo 131) — not a v1 path.
 
@@ -113,11 +109,8 @@ issue landing and on `#11` being on `main`.
 
 ## consequences
 
-- The engine is consumable today by anyone holding a Protocol-conforming
-  catalogue stub. The CLI ships the stub.
-- Rebasing onto #6/#17/#25 is a single focused commit per dependency:
-  drop the local Protocol, import the real type. The strict pydantic
-  surface guarantees the rebase fails loudly if the real shape drifts.
+- The engine is consumable through the canonical public catalogue and
+  registry contracts. There is no bundled substitute authority.
 - The in-code calendar table will need a yearly maintenance commit
   until #17 corpus carries the override stream. That commit is small
   and obvious — every entry has a citation.

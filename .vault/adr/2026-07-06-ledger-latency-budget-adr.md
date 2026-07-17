@@ -1,14 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#ledger-latency-budget'
+  - "#adr"
+  - "#ledger-latency-budget"
 date: '2026-07-06'
-modified: '2026-07-10'
 related:
   - "[[2026-07-06-ledger-perf-optimization-research]]"
+superseded_by: '2026-07-06-ledger-perf-optimization-adr'
+modified: '2026-07-17'
 ---
-
-# `ledger-latency-budget` adr: `dirty-set save semantics` | (**status:** `proposed`)
+# `ledger-latency-budget` adr: `dirty-set save semantics` | (**status:** `superseded`)
 
 ## Problem Statement
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---
@@ -46,7 +46,7 @@ substitution must be behaviour-preserving or registry-grounded.
 
 ## Implementation
 
-A `Modelo` `StrEnum` in `aeat.core` enumerates every modelo identifier the
+A `Modelo` `StrEnum` in `cadrumo.core` enumerates every modelo identifier the
 codebase references. A registry-parity gate binds the registry-backed members
 to `registry_modelo_codes()`; a documented `NON_REGISTRY_MODELOS` carve-out
 (currently the retired `M037`) is excluded from that parity and pinned to its
@@ -54,7 +54,7 @@ to `registry_modelo_codes()`; a documented `NON_REGISTRY_MODELOS` carve-out
 the enum, and an AST CI gate (`test_modelo_string_usage.py`) forbids bare code
 strings in identifier positions while structurally excluding docstrings,
 `Decimal()` percentages, and `Literal[...]` annotations. Regulatory leaf values
-are centralised in `aeat.core.external_constants` with binding-provision
+are centralised in `cadrumo.core.external_constants` with binding-provision
 docstrings; dated rates prefer the registry-resolver pattern, a registry
 parameter read with a leaf-constant fallback.
 
@@ -84,6 +84,6 @@ the registry-resolver pattern is the template for further rate centralisation.
 
 - **Rule slug:** `modelo-identifiers-use-core-enum`.
   **Rule:** Production code MUST reference AEAT modelo identifiers through the
-  `aeat.core.Modelo` enum, never as bare three-digit string literals; the
+  `cadrumo.core.Modelo` enum, never as bare three-digit string literals; the
   `test_modelo_string_usage.py` AST gate enforces this and any genuine
   exception is recorded in its allowlist with a reason.

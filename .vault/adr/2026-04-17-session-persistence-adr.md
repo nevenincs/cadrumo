@@ -5,77 +5,82 @@ tags:
 date: "2026-04-17"
 modified: '2026-07-17'
 related:
-  - "[[2026-04-16-session-persistence-research]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
-  - "[[2026-04-17-session-persistence-review-audit]]"
   - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 ---
 
 # `session-persistence` adr: `persist encrypted playwright storage_state with bound aeat metadata` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Establishing a fresh AEAT protected-browser session is expensive and makes both local runs and Playwright-backed tests slower and less stable than necessary. The auth foundation from issue #167/#181 already models a live AEAT session, but it does not yet persist a verified browser session so a later process can attempt a bound resume.
+AEAT authentication is expensive enough to justify session reuse, but
+Playwright storage state contains cookies and origin data that must never become
+a plaintext cache file or cross an active-profile boundary. Resume must also
+prove that persisted state still belongs to the selected provider identity and
+still reaches that provider's authenticated resource.
 
-## Considerations
+## Decision
 
-- The persisted artifact must remain outside git in encrypted, profile-scoped
-  secure storage.
-- Playwright already defines the canonical cross-process browser-session format through `storage_state`; duplicating that schema inside AEAT code would create drift.
-- AEAT-specific reuse checks require more than raw browser cookies. We must also bind the persisted state to the certificate that created it, the idle-TTL contract, and the last successful auth evidence.
-- Resume must be opportunistic, not trusted blindly. Any malformed, expired, mismatched, or login-invalid persisted state must be discarded automatically and replaced with a fresh certificate-backed session.
+AEAT browser sessions are persisted only as encrypted, active-bucket-scoped
+secure objects. `aeat_auth_session_storage_state_path(bucket_id, storage_stem)`
+defines the logical object-key grammar, and application
+`storage_state_paths()` selects the provider stem. The resulting `Path` value is
+an object identity; it is never a filesystem destination and is independent of
+the token-directory setting.
 
-## Constraints
+The outbound session adapter wraps the Playwright storage-state mapping and
+provider metadata in one `PersistedBrowserSession`. It stores that envelope in
+`AEAT_BROWSER_SESSION_NAMESPACE` through the active bucket's
+`SecureObjectRepository`, using the namespace's `SESSION` sensitivity class and
+current schema version. The repository encrypts the payload and digests the
+logical object key at the storage boundary.
 
-- Browser storage state and its metadata must be stored only through the
-  encrypted session repository; plaintext token-directory JSON is forbidden.
-- The implementation must not rely on mocks or monkey-patched global state for its core tests; disk behavior should be exercised with real temp files.
-- The feature must integrate into the existing `AeatAuthenticator` boundary rather than creating a second auth stack.
+Browser state remains an in-memory mapping at the browser boundary.
+`BrowserContext.storage_state()` returns the mapping captured after successful
+authentication, and resume passes the validated mapping directly to
+`BrowserSession.create_context(storage_state=...)`. The browser layer does not
+discover, open, or preload a storage-state file.
 
-## Implementation
+Provider metadata is stored beside the state in the same encrypted envelope.
+Its shared fields bind provider kind, authenticated identity, authentication
+time, idle deadline, and a canonical storage-state hash. Certificate metadata
+also binds certificate thumbprint and subject. Provider-specific metadata may
+retain the authenticated landing or proof resource required by that provider.
 
-- Use the active bucket's canonical certificate-session object key as the
-  `storage_state_path` identity. It names encrypted repository state rather
-  than a readable filesystem sidecar.
-- Store the Playwright state and its metadata together inside the encrypted,
-  integrity-bound current-schema envelope. The metadata records:
-  - `schema_version`
-  - `certificate_thumbprint`
-  - `certificate_subject`
-  - `certificate_nif`
-  - `authenticated_at`
-  - `idle_deadline`
-  - `storage_state_sha256`
-  - the canonical protected-resource URL
-- Extend `AeatAuthenticator` with `capture_storage_state(session)` and `resume_from_storage_state(path)`.
-- `authenticate()` should attempt resume first when a persisted state is present. Only when resume is unavailable or invalid should it delete that state and enter the one fresh certificate-backed protected-browser flow.
-- Application orchestration supplies validated persisted state explicitly when constructing a resume context. Missing state means “fresh context”; `BrowserSession` does not discover or preload profile state implicitly.
-- The encrypted repository is the sole persistence writer and retains the
-  secure-storage atomicity and permissions contract.
+## Validation and invalidation
 
-## Invalidation Logic
+Resume is opportunistic and fail-closed. A provider deletes or refuses the
+encrypted record when its envelope, JSON shape, schema, storage-state hash,
+provider kind, identity evidence, idle deadline, or provider-specific metadata
+is missing or invalid. Certificate resume additionally requires the currently
+selected certificate thumbprint and subject to match the persisted identity.
 
-- Invalidate and delete the persisted encrypted state when any of the following is true:
-  - the encrypted persisted object is missing
-  - its current-schema metadata is missing or malformed
-  - the Playwright JSON does not have the expected top-level `cookies` and `origins` arrays
-  - the storage-state SHA-256 does not match the integrity-bound metadata
-  - the persisted idle deadline has elapsed
-  - the current loaded certificate thumbprint differs from the persisted thumbprint
-  - the resumed browser context fails `verify()`
-- After structural and certificate-identity validation, resume must navigate to
-  `https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt` and require a
-  successful response plus the exact final scheme, host, and path. A failed
-  resume is deleted before the canonical fresh path runs once.
-- After invalidation, run the fresh certificate-bound context path and capture
-  new state only after the same canonical protected-resource assertion succeeds.
+Local validation never substitutes for live proof. Certificate authentication
+must navigate to the fixed protected resource defined by the protected-browser
+decision and require a successful response at the exact final scheme, host, and
+path. Cl@ve providers perform their own authenticated landing probe. Failed
+resume state is removed before one fresh authentication attempt captures a new
+encrypted envelope.
+
+Former-product session keys and arbitrary caller-supplied filesystem paths are
+not migrated, adopted, re-keyed, or treated as alternate session authorities.
 
 ## Rationale
 
-This design keeps the persisted browser artifact compatible with Playwright while binding AEAT-specific trust metadata inside one encrypted current-schema envelope. It also keeps failure handling simple: persisted state is structurally valid, identity-bound, and confirmed by the canonical protected-resource assertion, or it is deleted before a single fresh attempt.
+One encrypted envelope keeps browser state and the metadata that validates it
+under the same bucket route and repository transaction. A logical key preserves
+stable provider identity without exposing cookies, origin storage, taxpayer
+identity, or metadata in a filename. Passing only in-memory state to Playwright
+also prevents a generic browser helper from becoming a second persistence path.
 
 ## Consequences
 
-- Subsequent AEAT runs can avoid fresh login work when the persisted session still passes every resume gate and the canonical protected-resource assertion.
-- The persisted session remains bound to the certificate that created it, reducing the chance of replaying state under the wrong identity.
-- Corrupt or stale artifacts self-heal by being discarded and regenerated instead of poisoning future runs.
+- Session reuse is partitioned by active bucket and provider.
+- `SecureObjectRepository` is the only persistence writer for AEAT browser
+  state; token-directory JSON, sidecars, atomic raw-file writers, and
+  permission-based plaintext schemes are forbidden.
+- Session tests exercise real encrypted repository round trips and real browser
+  state mappings rather than mirrored persistence logic.
+- Corrupt, stale, mismatched, or live-invalid state self-heals by deletion and
+  one fresh authentication attempt.

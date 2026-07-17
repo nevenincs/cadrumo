@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -11,7 +11,7 @@ related:
   - '[[2026-07-10-prorrata-art104-tres-exclusions-research]]'
 ---
 
-# `prorrata-art104-tres-exclusions` adr: `Prorrata art 104.Tres denominator exclusions: ledger auto-classification boundary and reconciliation-vs-authority for the annual volume rollup` | (**status:** `proposed`)
+# `prorrata-art104-tres-exclusions` adr: `Prorrata art 104.Tres denominator exclusions: ledger auto-classification boundary and reconciliation-vs-authority for the annual volume rollup` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -179,27 +179,27 @@ avoids baking a stale exclusion into a regulated denominator.
 Files the implementation will touch (for wave-clustering; see the ADR-vs-ADR overlap
 report):
 
-- `src/aeat/core/` (a new `_prorrata_exclusions.py` or the IVA core module) — the new
+- `src/cadrumo/core/` (a new `_prorrata_exclusions.py` or the IVA core module) — the new
   `Art104TresExclusion` StrEnum (six leaves). Unique to this ADR.
-- `src/aeat/domain/transactions/_models.py` — the operator-declared exclusion tag on the
+- `src/cadrumo/domain/transactions/_models.py` — the operator-declared exclusion tag on the
   ledger row. **SHARED with `prorrata-especial` (input_classification) and
   `prorrata-sectores-diferenciados` (sector reference).**
-- `src/aeat/application/calculations/_prorrata_regularizacion.py` — the rollup applies the
+- `src/cadrumo/application/calculations/_prorrata_regularizacion.py` — the rollup applies the
   exclusions; the divergence/pre-fill advisory. **SHARED with `prorrata-especial` (the
   +10% mandatory-especial advisory lives here).**
-- `src/aeat/application/aggregation/_iva_ledger.py` — exclusion filtering at the annual
+- `src/cadrumo/application/aggregation/_iva_ledger.py` — exclusion filtering at the annual
   volume rollup. **SHARED with `prorrata-especial` (regime routing) and
   `prorrata-sectores-diferenciados` (sector routing) — hottest shared surface.**
-- `src/aeat/domain/iva/_prorrata.py` — the exclusion set is registry-grounded; substrate
+- `src/cadrumo/domain/iva/_prorrata.py` — the exclusion set is registry-grounded; substrate
   consumes it in the definitive-percentage computation. **SHARED (additive) with the
   sibling ADRs.**
-- `src/aeat/adapters/persistence/profile/bienes_inversion.py` (or its facade) — read-only
+- `src/cadrumo/adapters/persistence/profile/bienes_inversion.py` (or its facade) — read-only
   cross-read for the (3) bienes-de-inversión exclusion. Crosses the bienes-inversión peer
   surface (read-only).
-- `src/aeat/_data/registry/aeat/legal/iva.toml` / `legal/iva-flow.toml` — art. 7 /
+- `src/cadrumo/_data/registry/aeat/legal/iva.toml` / `legal/iva-flow.toml` — art. 7 /
   art. 9.1.d `legal_refs` on the exclusion assertions (art. 104 entry already exists).
   **SHARED (additive, distinct blocks) with the sibling ADRs.**
-- `src/aeat/_data/registry/aeat/modelos/303/**` — exclusion metadata on the volume
+- `src/cadrumo/_data/registry/aeat/modelos/303/**` — exclusion metadata on the volume
   casillas. **SHARED with `prorrata-especial` and `prorrata-sectores-diferenciados`.**
 - CLI ledger surface / a `prorrata` verb group — operator exclusion tagging. **SHARED with
   `prorrata-especial` and `prorrata-sectores-diferenciados`.**

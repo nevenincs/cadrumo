@@ -3,9 +3,8 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: '2026-04-22'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-22-ruleset-architecture-adr]]"
   - "[[2026-04-22-real-pdf-import-wave-64-exhaustive-audit]]"
   - "[[2026-04-22-real-pdf-import-wave-66-exhaustive-audit]]"
   - "[[2026-04-22-real-pdf-import-wave-68-exhaustive-audit]]"
@@ -16,7 +15,7 @@ related:
 ## status
 
 Accepted — 2026-04-22. Ships in wave 69 of EPIC #305 as
-`src/aeat/domain/modelos/_citation_registry.py` + a `LegalCitation` model
+`src/cadrumo/domain/calculations/registry/_citation_blocklist.py` plus the typed registry citation model
 validator.
 
 ## context
@@ -66,7 +65,7 @@ prevent what the author didn't think to double-check.
 
 ### 1. Known-bad blocklist (this ADR)
 
-Ship `src/aeat/domain/modelos/_citation_registry.py` with a frozen
+Ship `src/cadrumo/domain/calculations/registry/_citation_blocklist.py` with a frozen
 `_KNOWN_BAD_CITATIONS` tuple of `(source, article, role_substring)`
 triples. Every triple corresponds to a documented prior miscite.
 `LegalCitation`'s model validator refuses construction when the
@@ -154,9 +153,9 @@ When a future audit surfaces a new citation error:
 
 ## references
 
-- `src/aeat/domain/modelos/_citation_registry.py` — blocklist
-- `src/aeat/domain/modelos/_citations.py` — `LegalCitation` validator
-- `src/aeat/domain/modelos/test_citation_registry.py` — coverage
+- `src/cadrumo/domain/calculations/registry/_citation_blocklist.py` — blocklist
+- `src/cadrumo/domain/calculations/registry/_schema.py` — citation validation
+- `src/cadrumo/domain/calculations/registry/tests/` — coverage
 - Wave 64, 66, 68 audit docs — surfacing miscites
-- `[[2026-04-22-ruleset-architecture-adr]]` §External-anchoring
+- `retired architecture decision` §External-anchoring
   convention — the author checklist that complements this blocklist

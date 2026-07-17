@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#locale-scaffold-fstring'
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-31-locale-scaffold-fstring-research]]"
 ---
@@ -31,7 +31,7 @@ Two approaches were evaluated:
    and import errors during scan; cannot handle `replace('_', '-')` transforms cleanly.
 
 2. **Explicit registration surface**: a dedicated `_fstring_registry.py` module in
-   `src/aeat/locales/` declares a list of `FStringKeyRegistration` entries. Each entry
+   `src/cadrumo/locales/` declares a list of `FStringKeyRegistration` entries. Each entry
    carries the key template (a callable `(value) -> str`), the enumerable source
    (any `Iterable[str]`), and a human-readable description. The scaffold calls
    `get_registered_keys()` to expand all registrations into concrete keys before
@@ -41,15 +41,15 @@ Chosen: explicit registration surface.
 
 ## Constraints
 
-- Edit only `src/aeat/locales/` for implementation. Do not touch production application
+- Edit only `src/cadrumo/locales/` for implementation. Do not touch production application
   code that uses `tr()`.
 - No shims, no compatibility paths, no deprecation markers.
-- The registration module may import from `src/aeat/` domain and core modules to
+- The registration module may import from `src/cadrumo/` domain and core modules to
   resolve enum values — these are real imports at scaffold time, not AST introspection.
 
 ## Implementation
 
-A `FStringKeyRegistration` dataclass in `src/aeat/locales/_fstring_registry.py` holds:
+A `FStringKeyRegistration` dataclass in `src/cadrumo/locales/_fstring_registry.py` holds:
 - `description: str` — human-readable name, for error messages only.
 - `key_factory: Callable[[str], str]` — maps one iterable value to a dotted locale key.
 - `values: Iterable[str]` — the bounded value set (enum `.value` sequences, frozensets).

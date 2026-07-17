@@ -5,33 +5,26 @@ tags:
 date: '2026-07-16'
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-research]]'
-supersedes:
-  - '2026-04-12-cert-auth-adr'
-  - '2026-04-16-live-cert-auth-adr'
-  - '2026-04-21-live-cert-auth-supersession-adr'
-modified: '2026-07-16'
+modified: '2026-07-17'
 ---
 # `protected-browser-certificate-auth` adr: `protected browser navigation is the sole certificate-session proof` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Certificate authentication currently carries two competing proof paths: a
-direct HTTPX handshake record and a Playwright navigation assertion. The direct
-path now fails closed because secure handling forbids plaintext PEM and private
-key temporary files, yet fresh authentication, persisted metadata, assertions,
-settings, tests, and older ADRs still depend on `HandshakeResult`, backend
-selection, configurable probe URLs, and a self-authored context marker.
-
-Those surfaces create false confidence and duplicate the only behavior that
-matters: whether a browser context constructed with the selected PKCS#12
-certificate can reach an authenticated AEAT resource.
+Certificate authentication previously carried a direct HTTPX handshake record
+beside the Playwright navigation assertion. The direct path could not establish
+browser authentication without unsafe plaintext key material, while its
+backend selector, configurable probe, persisted result, and self-authored
+context marker duplicated the only behavior that matters: whether a browser
+context constructed with the selected PKCS#12 certificate can reach an
+authenticated AEAT resource. Those retired surfaces are absent from current
+code and remain described here only as the rejected architecture.
 
 This decision makes protected browser navigation the single certificate-auth
-proof. It fully supersedes `2026-04-12-cert-auth-adr`,
-`2026-04-16-live-cert-auth-adr`, and
-`2026-04-21-live-cert-auth-supersession-adr`. Conflicting handshake, backend,
-marker, verification-URL, and persisted-handshake clauses in related ADRs are
-no longer authoritative.
+proof. The retired handshake, backend, marker, verification-URL, and
+persisted-handshake designs were deleted from the live and archived Vault
+corpus. Their history remains available through git, but no resident document
+can be interpreted as current authority.
 
 ## Considerations
 
@@ -45,8 +38,9 @@ no longer authoritative.
   is authenticated.
 - Certificate credentials have one typed application boundary through
   `ActiveCertificateCredentials`.
-- PKCS#12 passwords use `SecretStr` and are materialised only at the Playwright
-  context-construction boundary.
+- PKCS#12 passwords use `SecretStr` and are materialised only at two necessary
+  credential-use boundaries: PKCS#12 decode and Playwright context
+  construction.
 - Certificate health, expiry, thumbprint, subject, and subject-derived NIF/NIE
   remain required identity evidence.
 - Browser storage state and its metadata remain encrypted and integrity-bound.
@@ -59,21 +53,21 @@ no longer authoritative.
 
 ## Considered options
 
-- **Protected browser navigation only — chosen.** Uses the same real browser,
+- **Protected browser navigation only - chosen.** Uses the same real browser,
   certificate, cookies, origin, and protected resource that downstream reads
   require.
-- **Direct handshake followed by browser navigation — rejected.** Duplicates
+- **Direct handshake followed by browser navigation - rejected.** Duplicates
   network work, requires dead backend machinery, and makes a weaker preliminary
   signal part of the validity predicate.
-- **Browser navigation plus a thumbprint marker — rejected.** The marker is
+- **Browser navigation plus a thumbprint marker - rejected.** The marker is
   written by the same code that later reads it and proves only
   self-consistency, not certificate presentation or AEAT acceptance.
-- **Configurable origin or probe URL — rejected.** Permits public, selector,
+- **Configurable origin or probe URL - rejected.** Permits public, selector,
   wrong-host, or unprotected targets to be represented as authentication proof.
-- **Trust persisted historical proof without a live protected probe —
+- **Trust persisted historical proof without a live protected probe -
   rejected.** Cookies can expire or be invalidated independently of metadata
   integrity and idle time.
-- **Retain retired backends and records for compatibility — rejected.** There
+- **Retain retired backends and records for compatibility - rejected.** There
   are no released callers or durability requirements that justify carrying
   contradictory architecture.
 
@@ -122,11 +116,19 @@ receives `ActiveCertificateCredentials`, constructs `CertificateBundle`,
 applies certificate health and expiry policy, and extracts the certificate
 NIF/NIE. `CertificateBundle.password` remains `SecretStr`.
 
+Certificate loading materialises the `SecretStr` only for the PKCS#12 decoder,
+then retains the validated PKCS#12 bytes and certificate identity without
+retaining a separate plaintext password value.
+
 Certificate context provisioning contributes only the Playwright
-`client_certificates` argument. Its `origin` is the canonical exact origin,
-`pfxPath` is the selected typed credential path, and `passphrase` is
-materialised from `SecretStr` immediately before `browser.new_context(...)`.
-The materialised context argument is discarded immediately after construction.
+`client_certificates` argument. Its `origin` is the canonical exact origin and
+its `pfx` value is the immutable PKCS#12 byte sequence already loaded, parsed,
+and fingerprinted into the selected `LoadedCertificate`. Playwright therefore
+receives the same certificate identity that the session metadata records; it
+must never re-read the credential path after validation. The `passphrase` is
+materialised from `SecretStr` at the second and only other necessary boundary,
+immediately before `browser.new_context(...)`; the materialised context
+argument is discarded immediately after construction.
 
 `BrowserContextProvisioner` remains the construction seam but loses context
 annotation. Certificate context markers, marker validation, post-hoc preload
@@ -154,12 +156,11 @@ certificate thumbprint, certificate subject, identity NIF/NIE, timestamps,
 storage-state integrity, and protected-resource evidence. They do not contain
 `HandshakeResult`, handshake-success flags, backend names, or marker evidence.
 
-Delete `verify_handshake`, `HandshakeResult`, `CertificateBackend`, the HTTPX
-fallback, backend dispatch, `cadrumo_certificate_backend`,
-`aeat_certificate_verify_url`, context markers, annotation, assertions, and
-all tests or documentation that exist only for those surfaces. The current
-persisted certificate-session schema replaces the handshake-bearing schema
-outright; older pre-release envelopes are refused and deleted.
+The retired handshake function and result, certificate-backend taxonomy, HTTPX
+fallback, backend dispatch, backend and verification-URL settings, context
+markers, annotation, and marker assertions must remain absent. The current
+persisted certificate-session schema replaces the historical handshake-bearing
+schema outright; older pre-release envelopes are refused and deleted.
 
 `BrowserSessionLike` and `AuthProvider` declare mandatory `async close()`.
 Providers directly await deterministic browser-session teardown while

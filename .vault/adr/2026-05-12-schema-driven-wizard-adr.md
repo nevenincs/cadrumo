@@ -6,9 +6,7 @@ date: '2026-05-12'
 related:
   - "[[2026-05-12-schema-driven-wizard-research]]"
   - "[[2026-05-12-schema-driven-wizard-reference]]"
-supersedes:
-  - '2026-04-12-setup-wizard-adr'
-modified: '2026-07-10'
+modified: '2026-07-17'
 ---
 # `schema-driven-wizard` adr: `schema-driven-wizard-adr` | (**status:** `accepted`)
 
@@ -37,7 +35,7 @@ shape obsoletes in the same change.
 
 ### A. Descriptor schema shape
 
-The wizard descriptor lives under `aeat.application.wizard` as a
+The wizard descriptor lives under `cadrumo.application.wizard` as a
 new subpackage. Five strict frozen pydantic v2 models compose the
 descriptor: `WizardFlow`, `WizardSection`, `WizardQuestion`,
 `WizardChoice`, and `WizardCondition`. A flow is a closed tuple of
@@ -142,7 +140,7 @@ is joint).
 ### B. Source-of-truth direction
 
 The descriptor is a **registry**, not a discovered surface. A single
-module — `aeat.application.wizard._catalogue` — exports
+module — `cadrumo.application.wizard._catalogue` — exports
 `WIZARD_FLOWS: tuple[WizardFlow, ...]` as a frozen tuple, mirroring
 how `AUTH_PROVIDER_CATALOGUE` is exported today. No entry-point walk,
 no plugin protocol, no decorator-based registration. Adding a new
@@ -156,7 +154,7 @@ def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
 ```
 
 The function runs at module import time inside
-`aeat.domain.profile._keys`, so `PROFILE_KEYS` becomes
+`cadrumo.domain.contribuyente._keys`, so `PROFILE_KEYS` becomes
 `compile_profile_keys(WIZARD_FLOWS)`. The derivation:
 
 - emits one `ProfileKey` per distinct `WizardQuestion.profile_key`
@@ -216,12 +214,14 @@ class Prompter(Protocol):
 class QuestionaryPrompter:  # production
     """Renders one WizardQuestion via the matching questionary primitive."""
 
-class ScriptedPrompter:  # tests
-    """Pops canonical-token answers from a deque; raises on under/overflow."""
+class CanonicalAnswerPrompter:  # non-interactive production path
+    """Consumes canonical flag/default answers in flow order."""
 ```
 
 The wizard runtime accepts the prompter as a constructor argument.
-Tests use `ScriptedPrompter(answers=deque(["12345678Z", "general"]))`
+Quiet and accept-defaults CLI execution use
+`CanonicalAnswerPrompter(answers=deque(["12345678Z", "general"]))`.
+Tests exercise that same implementation
 and assert that the runtime feeds each question to the prompter in
 the expected order, that conditional branches skip the right
 questions, and that the final answers project into a valid
@@ -266,8 +266,9 @@ signature level and are validated before any question is dispatched.
 The callable path (single closure per flow) is preferred over
 full codegen at import time because it keeps Typer's introspection
 intact for `--help` rendering, avoids `exec()` of generated source,
-and allows the same closure to be invoked from tests via
-`build_wizard_command(flow)(ScriptedPrompter(...), **answer_kwargs)`
+and allows the same closure to be invoked through the real non-interactive
+path via
+`build_wizard_command(flow)(CanonicalAnswerPrompter(...), **answer_kwargs)`
 without any Typer infrastructure.
 
 ### E. Surface convergence
@@ -383,42 +384,42 @@ In the same change that lands the new wizard, the following artifacts
 are deleted outright. No shims, no parallel modules, no deprecation
 notices.
 
-- `src/aeat/application/setup/_wizard.py` — delete (`SetupWizard`,
+- `src/cadrumo/application/setup/_wizard.py` — delete (`SetupWizard`,
   `_collect_interactive`, the ten-step orchestration).
-- `src/aeat/application/setup/_models.py` — delete (`SetupStep`,
+- `src/cadrumo/application/setup/_models.py` — delete (`SetupStep`,
   `SetupOutcome`, `SetupAnswers`, `SetupResult`). `VerifySeverity`
   and `VerifyFinding` fold into the new wizard verification surface
   as `WizardCheckSeverity` / `WizardCheckFinding`.
-- `src/aeat/application/setup/_prompter.py` — delete (`TyperPrompter`,
+- `src/cadrumo/application/setup/_prompter.py` — delete (`TyperPrompter`,
   `QueuedPrompter`). The `Prompter` protocol moves to
-  `aeat/application/wizard/_prompter.py` with the new
-  `QuestionaryPrompter` / `ScriptedPrompter` pair.
-- `src/aeat/application/setup/_verifier.py` — fold into
-  `aeat/application/wizard/_verifier.py`. The seven checks (cert
+  `src/cadrumo/application/wizard/_prompter.py` with the new
+  `QuestionaryPrompter` / `CanonicalAnswerPrompter` pair.
+- The verifier lives only at `src/cadrumo/application/wizard/_verifier.py`.
+  The seven checks (cert
   path, password env var, dir mkdirs, profile envelope load) become
   per-flow `WizardCheck` records on the descriptor; the orchestrator
   runs them after `persist_answers` succeeds.
-- `src/aeat/application/setup/_env_writer.py` — delete
+- `src/cadrumo/application/setup/_env_writer.py` — delete
   `write_profile_file`, `write_env_file`. The env-var write path is
   excised; operator-entered values commit to `ProfileRecord` only.
   `load_profile_envelope` (consumed by `deadlines/_helpers.py:67`)
   is rewritten to read directly from the active `ProfileRecord`
   through `project_answers`; the deadline engine no longer reads
   the env file.
-- `src/aeat/application/setup/_protocols.py` — delete; the
+- `src/cadrumo/application/setup/_protocols.py` — delete; the
   `Prompter` protocol relocates to `application/wizard/`.
-- `src/aeat/application/setup/_errors.py` — fold into
-  `aeat/application/wizard/_errors.py`.
-- `src/aeat/application/setup/__init__.py` — delete the subpackage.
-- `src/aeat/entrypoints/cli/__init__.py` — `init_cmd` (the root
+- `src/cadrumo/application/setup/_errors.py` — fold into
+  `src/cadrumo/application/wizard/_errors.py`.
+- `src/cadrumo/application/setup/__init__.py` — delete the subpackage.
+- `src/cadrumo/entrypoints/cli/__init__.py` — `init_cmd` (the root
   `aeat init` command body) deleted. The root module retains only
   the app instance and sub-app registration.
-- `src/aeat/entrypoints/cli/_setup.py` — `setup_init`,
+- `src/cadrumo/entrypoints/cli/_setup.py` — `setup_init`,
   `setup_profile_set`, `setup_profile_unset` deleted. The
   `aeat setup` command group itself is removed; reset and
   auth-configure live under `aeat config` as `aeat config reset` and
   `aeat config auth`, preserving the "config + app" two-root mandate.
-- `src/aeat/locales/{en,es,ca,hu}.yml` — every `setup.wizard.*` key,
+- `src/cadrumo/locales/{en,es,ca,hu}.yml` — every `setup.wizard.*` key,
   `cli.setup.*` key, and `cli.init.*` key deleted. Replacement keys
   under `wizard.*` ship in all four locales as part of the same
   change.
@@ -447,8 +448,8 @@ Every flow ships with three test files following one pattern.
   in every locale, every `profile_key` (when set) appears in the
   compiled `PROFILE_KEYS`, every choice value passes the widget
   validator.
-- `test_<flow-id>_runtime.py` — scripted-answer round-trip: feed a
-  canonical-token answer set through `ScriptedPrompter`, assert the
+- `test_<flow-id>_runtime.py` — non-interactive answer round-trip: feed a
+  canonical-token answer set through `CanonicalAnswerPrompter`, assert the
   runtime calls the prompter in the expected sequence (including
   skipped questions when `visible_when` evaluates false), assert the
   resulting `answers_model` validates, assert `persist_answers`
@@ -457,9 +458,8 @@ Every flow ships with three test files following one pattern.
 - `test_<flow-id>_cli.py` — Typer surface contract: build the
   command via `build_wizard_command`, invoke it through Typer's
   `CliRunner`, supply `--quiet` + flag values, assert exit code,
-  assert the workflow state mutation matches the scripted-runtime
-  result. No real questionary path is exercised here; the prompter
-  injection is overridden via a fixture.
+  assert the workflow state mutation matches the non-interactive runtime
+  result. No alternate prompter or test-only runtime is introduced.
 
 One additional integration test per flow exercises the questionary
 path against `prompt_toolkit.input.create_pipe_input`, asserting that
@@ -636,11 +636,11 @@ behaviour, not by re-implementing the validator.
 The design is considered landed when every check below passes on
 the merge commit.
 
-- The directory `src/aeat/application/setup/` does not exist. All
+- The directory `src/cadrumo/application/setup/` does not exist. All
   modules listed in section H are deleted.
-- `src/aeat/application/wizard/` exists and exports `WIZARD_FLOWS`
+- `src/cadrumo/application/wizard/` exists and exports `WIZARD_FLOWS`
   as a non-empty `tuple[WizardFlow, ...]`.
-- `from aeat.domain.profile import PROFILE_KEYS` returns a tuple
+- `from cadrumo.domain.contribuyente import PROFILE_KEYS` returns a tuple
   produced by `compile_profile_keys(WIZARD_FLOWS)`. The function is
   a pure import-time call with no side effects.
 - `aeat config setup --help`, `aeat config set --help`,
@@ -665,7 +665,7 @@ the merge commit.
   `test_setup_runtime.py`, `test_setup_cli.py`,
   `test_wizard_translations_resolve.py` all pass.
 - No grep hit for `setup.wizard.`, `cli.init.`, or `cli.setup.` in
-  any `src/aeat/locales/*.yml` file. No grep hit for `SetupWizard`,
+  any `src/cadrumo/locales/*.yml` file. No grep hit for `SetupWizard`,
   `SetupAnswers`, `TyperPrompter`, `QueuedPrompter`, or `Verifier`
   (the dead-wizard class) anywhere under `src/`.
 - `uv run --no-sync vaultspec-core vault check all` passes with zero

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#source-jurisdiction-axis'
 date: '2026-05-27'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"
@@ -37,8 +37,8 @@ Pedro (intra-community supplier), Olivia (UK landlord crossing
 resident/non-resident), Felipe (Argentina-resident pensioner under
 TRLIRNR Art. 25.1.b), and Khadija (Morocco-resident worker under the
 España–Marruecos convenio). No single-axis fix sufficed: the same
-field was needed at create, persistence, projection, CLI, profile-
-conditional defaulting, and aggregation. The campaign for this work
+field was needed at create, persistence, projection, CLI, profile-aware
+refusal, and aggregation. The campaign for this work
 is anchored at the cross-domain-continuity remediation plan; this ADR
 substitutes for a formal research artefact under that plan's open-
 ended persona-driven discovery posture (the persona testimonials and
@@ -55,7 +55,7 @@ alpha-2 country tokens. Free-form would have required a normaliser
 at every read site and re-introduced the boundary-leak problem.
 
 CLI-create-boundary gating vs aggregation-boundary gating. The
-profile-conditional defaulting and refusal logic could have lived on
+profile-aware refusal logic could have lived on
 the calculation aggregation surfaces (one site per modelo engine that
 consumes ledger rows). It instead lives at the CLI create surface, in
 a single helper called before the persistence-bound command is
@@ -70,19 +70,17 @@ LIRPF Art. 8 universal-base presumption. The read surface
 propagates the per-row jurisdiction unchanged; downstream IRNR and
 Beckham engines layer their own per-row filters when authored.
 
-Backward compatibility with pre-axis encrypted catalogues. The
-encrypted catalogue is an opaque JSON envelope; the persistence
-boundary IS the strict pydantic model, not a flat column schema.
-Adding the field with a `None` default lets pre-axis catalogues
-deserialise cleanly. The grandfather contract is locked by a
-repository-roundtrip anti-tautology test.
+Source jurisdiction is required evidence for jurisdiction-sensitive
+calculations. The encrypted catalogue boundary validates the current strict
+model and does not infer Spain, accept a missing value as historical truth, or
+carry a pre-axis read path.
 
 ## Constraints
 
-The field must not break the existing encrypted catalogue contract.
-The envelope schema version stays at 1; the additive field carries a
-`None` default at the strict-pydantic boundary so pre-axis envelopes
-roundtrip without migration.
+The current encrypted catalogue contract requires an explicit ISO 3166-1
+alpha-2 source jurisdiction wherever the row participates in
+jurisdiction-sensitive calculation. Missing evidence is surfaced for operator
+resolution; it is never silently defaulted to Spain.
 
 Refusal text reaching the operator surface must route through `tr()`
 per the locale gate. Two refusal keys, one per regulatory branch
@@ -92,7 +90,7 @@ across the four supported locales — never via direct yml edits.
 The field validator must not couple to profile state. The
 2-character alpha uppercase rule is intrinsic to the field and lives
 on each strict-frozen pydantic model that exposes it. The profile-
-conditional defaulting and refusal lives on a separate helper that
+aware refusal lives on a separate helper that
 the CLI create boundary calls; the model-level validator never reads
 profile state.
 
@@ -107,15 +105,12 @@ The axis was decomposed into six sequential Step leaves. Each leaf
 landed as a separate commit. The chain is:
 
 - S381 at `b7c571297` — domain field on `Transaction`, read projection
-  field on `LedgerTransactionPayload`, anti-tautology unit tests
-  (ES roundtrip, None grandfather, malformed rejection, whitespace
-  normalisation).
-- S382 at `40f3837b8` — encrypted-envelope persistence roundtrip
-  + grandfather-contract proof test. No DDL change, no migration,
-  no envelope schema version bump; the additive field is JSON-
-  compatible. Propagated to `LedgerTransactionReviewPayload` and
-  `LedgerExportRow` (empty-string default to match the flat export
-  row convention).
+  field on `LedgerTransactionPayload`, and anti-tautology tests for explicit
+  jurisdiction roundtrip, malformed rejection, and whitespace normalisation.
+- S382 at `40f3837b8` — encrypted-envelope persistence roundtrip with strict
+  missing-evidence refusal. The field is propagated to
+  `LedgerTransactionReviewPayload` and `LedgerExportRow`; no empty-string or
+  `None` compatibility representation is authoritative.
 - S383 at `d75202aab` and locale companion at `5cbd8e1c4` — write-
   side boundary closure: added the field to
   `ManualLedgerTransactionCommand` and `ManualLedgerTransactionPatch`,
@@ -126,7 +121,7 @@ landed as a separate commit. The chain is:
 - S384 at `c6e402eb3` + locale at `5a7601f89` + four patches at
   `ef3562e64` (read-projection wire), `3f7427714` (descriptor key),
   `f6c8d1028` (IRNR axis tuple), `3802591f6` (UE country
-  workaround) — profile-conditional default and refusal helper
+  workaround) — profile-aware refusal helper
   `_resolve_source_jurisdiction` plus four truth-table CLI
   integration tests covering the regulatory branching.
 - S385a at `0a153a83c` — provenance pass-through to
@@ -145,7 +140,9 @@ command is constructed:
   IRNR-anchored `tr()` key.
 - `irpf_special_regime` equal to `IMPATRIADO`: refuse with the
   Beckham-anchored `tr()` key.
-- otherwise: return `"ES"`. The Art. 8 universal-base default.
+- otherwise: require the operator value. Residence determines calculation
+  scope, not the provenance of a particular ledger row, so it cannot justify
+  manufacturing `"ES"`.
 
 The aggregation surface (M130 / M100 income side) propagates the
 field from the originating transaction to the observation; it does
@@ -177,10 +174,10 @@ aggregation gating for three reasons:
    consumes ledger rows, with the same regulatory rationale and the
    same risk of drift between sites.
 
-The profile-conditional default-vs-refuse truth table at the create
-boundary follows the regulatory branching directly. Art. 8 produces
-the silent ES default for the resident-general case. Art. 93.5
-produces the refusal for the impatriado case (the regime treats
+The profile-aware refusal table at the create boundary follows the regulatory
+branching directly. Art. 8 requires worldwide-income aggregation for a
+resident but does not prove that any individual row is Spanish-source. Art. 93.5
+also requires refusal for the impatriado case (the regime treats
 Spanish-source and foreign-source income distinctly, so a silent ES
 default would mask foreign-source income in the IRPF base). Art. 2
 and Art. 10 produce the refusal for the non-resident case (the IRNR
@@ -216,9 +213,8 @@ ledger source rejects foreign and unresolved jurisdictions with typed
 diagnostics and persists the admitted source evidence. The M151
 Beckham engine remains a Path-B refusal stub and a separately deferred
 follow-up; its future gating must not be inferred from this M210
-closure. The CLI create-boundary refusal continues to prevent the
-common error path of a Beckham filer or non-resident silently adopting
-the ES default.
+closure. The CLI create-boundary refusal prevents every filer from silently
+adopting an unsupported ES provenance value.
 
 Test-fixture discipline for non-resident profiles is now non-
 trivial. The S384 truth-table tests revealed a three-bug smoke

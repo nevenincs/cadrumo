@@ -3,12 +3,12 @@ tags:
   - "#adr"
   - "#relative-imports"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-relative-imports-research]]"
 ---
 
-# relative-imports adr: enforce relative imports inside src/aeat/ | (**status:** `accepted`)
+# relative-imports adr: enforce relative imports inside src/cadrumo/ | (**status:** `accepted`)
 
 Date: 2026-04-17
 Branch: `feature/162-relative-imports`
@@ -22,8 +22,8 @@ recorded in the matching exec summary.
 
 ## Problem Statement
 
-`src/aeat/` mixes two import styles for its own modules: 1108
-absolute occurrences (`from aeat.x.y import Z`) across 399 files, and
+`src/cadrumo/` mixes two import styles for its own modules: 1108
+absolute occurrences (`from cadrumo.x.y import Z`) across 399 files, and
 262 relative occurrences (`from .y import Z`) across 88 files.
 The split is historical drift, not deliberate — every subpackage
 contains both shapes. This costs us:
@@ -37,7 +37,7 @@ contains both shapes. This costs us:
   reintroduce the absolute style. The repo currently has no
   mechanical guard.
 
-#162 chooses to standardise on **relative imports inside `src/aeat/`**
+#162 chooses to standardise on **relative imports inside `src/cadrumo/`**
 and add a Ruff rule that fails any future absolute `aeat.*` import
 inside the package tree.
 
@@ -46,13 +46,13 @@ inside the package tree.
 - **Boundary respect**: `tests/` and `scripts/` live outside the
   package and must continue using absolute `aeat.*` imports.
 - **Colocated tests**: `test_*.py` and `_test_*.py` files inside
-  `src/aeat/` are part of the package per the existing
+  `src/cadrumo/` are part of the package per the existing
   *Rust-style colocated tests* pattern (CLAUDE.md), so they convert
   alongside production code.
 - **Public-API discipline preserved**: the existing CLAUDE.md rule
   *"Code outside a subpackage must import only from the subpackage
   root"* survives unchanged in spirit; only the syntax shifts from
-  `from aeat.domain.modelos import X` to `from ..models import X` (or
+  `from cadrumo.domain.modelos import X` to `from ..models import X` (or
   `from .models import X`, depending on caller depth).
 - **Ruff rule selection**: there is no built-in rule that *requires*
   relative imports. The closest fit is **TID251 (`banned-api`)** with
@@ -63,10 +63,10 @@ inside the package tree.
 - **Codemod determinism**: the dot-count for any conversion is purely
   a function of (file path, import target). A tiny one-shot Python
   script can compute it without AST manipulation by line-based
-  regex on `^from aeat\.` and `^import aeat\.`.
+  regex on `^from cadrumo\.` and `^import cadrumo\.`.
 - **Pre-existing violations**: a few files reach into another
   subpackage's private modules (e.g.,
-  `from aeat.application.sync._wire import X` from outside `aeat/application/sync/`). These
+  `from cadrumo.application.sync._wire import X` from outside `src/cadrumo/application/sync/`). These
   already violated the public-API discipline. Out of scope for #162;
   converted as-is.
 - **No runtime behaviour change**: relative-vs-absolute does not
@@ -77,7 +77,7 @@ inside the package tree.
 ## Decision
 
 1. **Adopt Ruff TID251** as the enforcement mechanism inside
-   `src/aeat/`.
+   `src/cadrumo/`.
 
 2. **Update `pyproject.toml [tool.ruff.lint]`**:
    - Add `"TID251"` to `select` (do **not** add bare `"TID"`).
@@ -87,16 +87,16 @@ inside the package tree.
      `"tests/**/*.py"` adds `"TID251"` (alongside existing
      `"S101", "T20"`); add `"scripts/**/*.py" = ["TID251"]`.
 
-3. **Convert every absolute `aeat.*` import inside `src/aeat/`** to
+3. **Convert every absolute `aeat.*` import inside `src/cadrumo/`** to
    the equivalent relative import via a deterministic line-based
-   codemod. Cover every `.py` file under `src/aeat/`, including
+   codemod. Cover every `.py` file under `src/cadrumo/`, including
    colocated tests (`test_*.py`, `_test_*.py`).
 
 4. **Leave absolute imports untouched** in:
    - `tests/**/*.py`
    - `scripts/**/*.py`
    - any `pyproject.toml`/manifest string references (e.g.,
-     `[project.scripts] aeat = "aeat.entrypoints.cli:app"`).
+     `[project.scripts] aeat = "cadrumo.entrypoints.cli:app"`).
 
 5. **Update `CLAUDE.md`**:
    - Under *Module Structure & API Rules*, add a "Relative-Imports
@@ -104,7 +104,7 @@ inside the package tree.
    - Keep the existing *Public API Discipline* bullet; clarify
      that the syntax for cross-subpackage imports is now relative
      (`from ..models import ModelCatalogue` from elsewhere inside
-     `src/aeat/`).
+     `src/cadrumo/`).
 
 6. **Verification gate**: the issue's acceptance criterion is
    `just lint && just typecheck && just test` passing cleanly on
@@ -132,7 +132,7 @@ inside the package tree.
 
 **Positive**:
 - Subpackages become relocatable without import-graph rewrites.
-- Future absolute `aeat.*` imports inside `src/aeat/` fail CI on
+- Future absolute `aeat.*` imports inside `src/cadrumo/` fail CI on
   the very first PR that introduces them.
 - Cohesion graph reads off the syntax: `from .x` is sibling,
   `from ..x` is uncle/aunt.
@@ -140,7 +140,7 @@ inside the package tree.
 **Neutral**:
 - Diff size is large (~1108 lines) but mechanical; reviewers can
   spot-check and trust the codemod.
-- Open PRs touching `src/aeat/` will rebase through this change and
+- Open PRs touching `src/cadrumo/` will rebase through this change and
   will likely need to convert any new absolute imports they add.
 
 **Negative**:
@@ -157,7 +157,7 @@ inside the package tree.
 - `just typecheck` (`uv run ty check src tests`) passes.
 - `just test` (`uv run pytest`) passes.
 - **Positive boundary check**: introduce a stray
-  `from aeat.core.config import Settings` in `src/aeat/entrypoints/cli/setup.py`;
+  `from cadrumo.core.config import Settings` in `src/cadrumo/entrypoints/cli/setup.py`;
   confirm Ruff fails with the TID251 message; revert.
 - **Negative boundary check**: introduce the same stray line in
   `tests/test_config.py`; confirm Ruff stays clean (per-file-ignore

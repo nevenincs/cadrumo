@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m100-dependent-modelo-applicability'
 date: '2026-06-19'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'
 ---
@@ -25,8 +25,8 @@ Adopt **Option 1 (interim)**: suppress a cross-period dependency whose source mo
 
 ## Implementation
 
-- `src/aeat/application/calculations/_cross_period_clean_state.py`: `partition_cross_period_requirements_by_modelo_applicability` (origin-agnostic split by an `applicable_source_modelos` set), `_suppressed_modelo_not_applicable_evidence` (clean, advisory-stamped row), the `modelo_not_applicable_advisory` facet + verdict property, and an optional `applicable_source_modelos` param on `evaluate_cross_period_clean_state` (default `None` = no suppression). Commit `944d58b28`.
-- `src/aeat/application/modelo/_verification_actions.py` + `_filing_actions.py`: `_applicable_source_modelos(profile, filing_year)` computes the obligation-schedule modelos (fail-safe `None`); verify and file thread it through `_require_cross_period_clean_state` / the verdict helper into the evaluation. Commit `784cc0517`.
+- `src/cadrumo/application/calculations/_cross_period_clean_state.py`: `partition_cross_period_requirements_by_modelo_applicability` (origin-agnostic split by an `applicable_source_modelos` set), `_suppressed_modelo_not_applicable_evidence` (clean, advisory-stamped row), the `modelo_not_applicable_advisory` facet + verdict property, and an optional `applicable_source_modelos` param on `evaluate_cross_period_clean_state` (default `None` = no suppression). Commit `944d58b28`.
+- `src/cadrumo/application/modelo/_verification_actions.py` + `_filing_actions.py`: `_applicable_source_modelos(profile, filing_year)` computes the obligation-schedule modelos (fail-safe `None`); verify and file thread it through `_require_cross_period_clean_state` / the verdict helper into the evaluation. Commit `784cc0517`.
 
 ## Rationale
 
@@ -38,7 +38,7 @@ Gains: a normal salaried/rental taxpayer's M100 is reachable (the withholding-mo
 
 ## Safety analysis
 
-Adversarial tests (`src/aeat/application/calculations/tests/test_decision_b_adversarial.py`) prove the boundary: a modelo the taxpayer files is NEVER suppressed (across multiple applicable sets); `None` suppresses nothing (fail-safe); a suppressed row is clean with the explicit advisory facet; and against the real M100 snapshot, an employee (`applicable = {"100"}`) gets 111/115/123/130/131/193 scoped out while a 130-filer keeps 130. No regression across 114 carry/e2e/clean-state/verify/file tests.
+Adversarial tests (`src/cadrumo/application/calculations/tests/test_decision_b_adversarial.py`) prove the boundary: a modelo the taxpayer files is NEVER suppressed (across multiple applicable sets); `None` suppresses nothing (fail-safe); a suppressed row is clean with the explicit advisory facet; and against the real M100 snapshot, an employee (`applicable = {"100"}`) gets 111/115/123/130/131/193 scoped out while a 130-filer keeps 130. No regression across 114 carry/e2e/clean-state/verify/file tests.
 
 ## Codification candidates
 
@@ -112,7 +112,7 @@ A post-landing self-audit surfaced and closed three drift items:
 
 1. **Threading coverage (functional gap).** The `taxpayer_files_economic_activity` signal was threaded into verify and file but NOT into the EXPORT cross-period gate (`_export.py`) nor the CLI verification-preview path — so a salaried filer's *export* (the C3 reachability finish line) was still blocked by 130/131, and the CLI preview was inconsistent with verify. Both now thread the signal (`e9515a2bc`, `67339e0d1`); all six production cross-period callers are covered.
 
-2. **Standardisation.** The signal-derivation helper was promoted from the private `_taxpayer_files_economic_activity` (in `_verification_actions.py`) to the public `derive_taxpayer_files_economic_activity`, re-exported through `aeat.application.modelo` (`service-imports-via-top-level-reexports`), so the entrypoints layer consumes it via the package surface rather than dotting into a private module. It checks `IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories` — the same canonical signal `registry/_applicability.py` uses for `required_income_categories`, so the two cannot diverge.
+2. **Standardisation.** The signal-derivation helper was promoted from the private `_taxpayer_files_economic_activity` (in `_verification_actions.py`) to the public `derive_taxpayer_files_economic_activity`, re-exported through `cadrumo.application.modelo` (`service-imports-via-top-level-reexports`), so the entrypoints layer consumes it via the package surface rather than dotting into a private module. It checks `IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories` — the same canonical signal `registry/_applicability.py` uses for `required_income_categories`, so the two cannot diverge.
 
 3. **Grounding verification (regulated-data risk).** The four 2024 `renta-2024-ledger-expense-0186/0192/0199/0203-deductible` bindings authored to unblock the registry were verified against the bundled LIRPF corpus: art-28 and art-30 both define the net rendimiento as *ingresos computables menos gastos deducibles* and reference *gasto deducible*, confirming the `legal_refs` are corpus-correct and match the reviewed 2025 template; `source_refs`/`required_text` are consistent with the established 2024 income binding.
 

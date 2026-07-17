@@ -26,7 +26,7 @@ and demos run offline. Real filing history is sensitive and live.
 
 ## Decision
 
-Introduce a new `aeat.domain.testing` subpackage under `src/aeat/` that
+Introduce a new `cadrumo.domain.testing` subpackage under `src/cadrumo/` that
 owns the typed public API for loading synthetic filing fixtures.
 Persist the fixtures as JSON files under
 `tests/fixtures/filing_history/<modelo>/<period>-<scenario>.json`.
@@ -40,7 +40,7 @@ Every boundary-crossing record is a strict, frozen pydantic v2
 - `FilingRecord` — one past filing. Carries `record_id`,
   `synthetic: Literal[True]`, `_comment: str` (non-empty),
   `modelo`, `period`, `period_kind`, `profile_tax_id`, `status`
-  (reusing `aeat.application.filing.FilingDraftStatus`), `casillas`,
+  (reusing `cadrumo.application.filing.FilingDraftStatus`), `casillas`,
   `totals: dict[str, Decimal]`, `created_at`, `submitted_at`,
   `acknowledged_at`, `source: Literal["synthetic"]`, `scenario`,
   `complementaria_of`, `notes`.
@@ -53,7 +53,7 @@ Every boundary-crossing record is a strict, frozen pydantic v2
   `COMPLEMENTARIA`, `WITH_ERRORS`, `AMENDED`, `CANCELLED`,
   `ROUNDING`.
 
-`FilingDraftStatus` is reused from `aeat.application.filing` (merged on main
+`FilingDraftStatus` is reused from `cadrumo.application.filing` (merged on main
 via #39) — no new status enum.
 
 ### Serialisation format — JSON
@@ -71,7 +71,7 @@ parses a fixture without both fields present.
 
 ### Loader shape
 
-`src/aeat/domain/testing/__init__.py` exposes the public API:
+`src/cadrumo/domain/testing/__init__.py` exposes the public API:
 
 - `FilingRecord`, `FixtureCasilla`, `FilingRecordPeriodKind`,
   `FilingRecordScenario` — re-exported.
@@ -81,12 +81,12 @@ parses a fixture without both fields present.
 - `load_filing_history(modelo: str | None = None,
   period: str | None = None) -> Iterator[FilingRecord]` — yields
   records in deterministic sorted order. Raises
-  `FilingFixtureError` (a new `AeatError` subclass) on any I/O,
+  `FilingFixtureError` (a new `CadrumoError` subclass) on any I/O,
   JSON, or validation failure, wrapping the underlying cause.
-- `FilingFixtureError(AeatError)` — the subpackage's only error
+- `FilingFixtureError(CadrumoError)` — the subpackage's only error
   type.
 
-Callers outside the subpackage import only from `aeat.domain.testing`.
+Callers outside the subpackage import only from `cadrumo.domain.testing`.
 Private helpers live in `_loader.py`.
 
 ### Location of the fixtures — `tests/` not `src/`
@@ -94,9 +94,9 @@ Private helpers live in `_loader.py`.
 The fixture files are *test data*, not shipped code. They live
 under `tests/fixtures/filing_history/` so they are excluded from
 the wheel while still being version-controlled next to the code
-that consumes them. The loader itself lives under `src/aeat/`
+that consumes them. The loader itself lives under `src/cadrumo/`
 because the CLAUDE.md hard rule mandates that all Python modules
-live under `src/aeat/`, and the loader is importable by any
+live under `src/cadrumo/`, and the loader is importable by any
 code in the project — including the future #11 sync pipeline.
 
 ### Scope — modelos and edge cases
@@ -122,7 +122,7 @@ exercise rounding and the complementaria scenario.
   records without network, secrets, or live systems.
 - The synthetic-only invariant is enforced by pydantic
   validation, not by convention — no code path can bypass it.
-- The loader is the *only* "test helper" code in `src/aeat/`,
+- The loader is the *only* "test helper" code in `src/cadrumo/`,
   satisfying both the src-layout rule and the issue's explicit
   "everything else stays under `tests/`" constraint.
 - Additive upgrade path: when #6 and #23 land, the loader can

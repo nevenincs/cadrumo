@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#ledger-transaction-lifecycle"
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-14-ledger-transaction-lifecycle-research]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
@@ -48,7 +48,7 @@ The non-negotiable charter for this work:
 - Backend already implements BucketEvent content-addressing and atomic
   catalogue-plus-event persistence; the CLI must enrol every verb.
 
-**Distinction from prior `split`-named work.** The current `[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]` uses `allocate` for a single-row `business_pct` allocation; it never produces child rows. The deleted `LedgerSplit` model (workflow-layer annotation on `LedgerReviewRecord`, removed in commit `3a08f880` on 2026-05-14) was part of the retired predecessor surface and is not compatibility authority. The live guard at `src/aeat/application/review/_actions.py:17-29` rejects any split overlay routed through review and is exercised by the test at `application/review/test_actions.py:40`. This ADR introduces a **wholly new primitive**: true N-way row splitting where one parent produces N child transactions whose amounts sum to the parent, each child carrying independent classification and an explicit `split_lineage` field. The new work replaces the guard in `_actions.py:17-29` with a real implementation; the `allocate` verb (single-row `business_pct`) remains unchanged and orthogonal.
+**Distinction from prior `split`-named work.** The current `[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]` uses `allocate` for a single-row `business_pct` allocation; it never produces child rows. The deleted `LedgerSplit` model (workflow-layer annotation on `LedgerReviewRecord`, removed in commit `3a08f880` on 2026-05-14) was part of the retired predecessor surface and is not compatibility authority. The live guard at `src/cadrumo/application/review/_actions.py:17-29` rejects any split overlay routed through review and is exercised by the test at `application/review/test_actions.py:40`. This ADR introduces a **wholly new primitive**: true N-way row splitting where one parent produces N child transactions whose amounts sum to the parent, each child carrying independent classification and an explicit `split_lineage` field. The new work replaces the guard in `_actions.py:17-29` with a real implementation; the `allocate` verb (single-row `business_pct`) remains unchanged and orthogonal.
 
 ## Decision 1 -- Canonical record shape for split lineage
 
@@ -59,7 +59,7 @@ with three fields: `split_group_id: str` (64-char sha256 hex);
 parent: every child id; for a child: the parent id plus every other child
 id; for a merged row: every source-child id).
 
-`SplitRole` is a new `StrEnum` under `src/aeat/domain/transactions/_enums.py`
+`SplitRole` is a new `StrEnum` under `src/cadrumo/domain/transactions/_enums.py`
 with members `PARENT`, `CHILD`, and `MERGED`. `split_group_id` is
 content-addressed: sha256 over (parent_transaction_id, sorted child amounts
 as canonical decimal strings, sorted child narratives). The same digest is
@@ -151,7 +151,7 @@ content-addressed merged id and is refused at the catalogue boundary.
 
 ## Decision 3 -- New BucketEventType members
 
-Two new members in `src/aeat/domain/buckets/_event.py`:
+Two new members in `src/cadrumo/domain/buckets/_event.py`:
 
 - `LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"`. Emitted once
   per `split` op. Payload carries `split_group_id`,

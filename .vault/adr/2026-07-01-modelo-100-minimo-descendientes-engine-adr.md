@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
@@ -64,7 +64,7 @@ descendientes, so it warrants a decision record rather than a bounded patch.
 ## Considerations
 
 Amounts verified verbatim against the bundled consolidated LIRPF
-`src/aeat/_data/corpus/normatives/html/ley-35-2006.html` (Art. 58), and matching
+`src/cadrumo/_data/corpus/normatives/html/ley-35-2006.html` (Art. 58), and matching
 the registry `money` parameters that cite the same law plus the AEAT manual:
 
 - Art. 58.1 ordinary minimo por descendientes: "2.400 euros anuales por el
@@ -274,11 +274,11 @@ minimo advisory + fix dangling descendientes selector (#515)`):
   never consumed) was deleted per `no-dormant-source-resolvers`. The sibling
   `descendientes-count` binding (a real, resolvable selector, simply
   unconsumed) was left in place as harmless future Option A fuel.
-- New module `src/aeat/application/modelo/_minimo_descendientes_advisory.py`,
+- New module `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`,
   wired into the post-calculation advisory coordinator
   (`_calculation_diagnostics.py`) with real-adapter tests (encrypted bucket,
   loaded registry snapshot, real domain eligibility logic — no mocks) in
-  `src/aeat/application/modelo/tests/test_minimo_descendientes_advisory.py`.
+  `src/cadrumo/application/modelo/tests/test_minimo_descendientes_advisory.py`.
 
 **Citation correction found during implementation:** the custodia-compartida
 prorrateo is Art. **61.1ª** LIRPF ("Cuando dos o más contribuyentes tengan
@@ -286,7 +286,7 @@ derecho a la aplicación del mínimo por descendientes... su importe se
 prorrateará entre ellos por partes iguales"), not Art. 61.4ª as stated
 elsewhere in this ADR and in the pre-existing
 `CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` constant comment
-(`src/aeat/core/external_constants.py`). Norm 4ª of Art. 61 covers a
+(`src/cadrumo/core/external_constants.py`). Norm 4ª of Art. 61 covers a
 completely different case (the fixed reduced amount on a descendant/ascendant's
 mid-year death). This pre-existing citation error was corrected in the new
 module's own docstrings and messages; the constant's comment and any other
@@ -294,7 +294,7 @@ call sites still carrying "61.4ª" are a separate, out-of-scope follow-up.
 
 **Art. 58.4 grounding resolved: the mechanism does not exist.** Cross-checked
 directly against the bundled consolidated LIRPF
-(`src/aeat/_data/corpus/normatives/html/ley-35-2006.html`, Art. 58, last
+(`src/cadrumo/_data/corpus/normatives/html/ley-35-2006.html`, Art. 58, last
 updated 28/11/2014, in force from 01/01/2015 — the same version the registry
 params already cite): Art. 58 has exactly two numbered subsections (58.1
 ordinary birth-order amounts, 58.2 menor-3-años supplement) and NO within-year
@@ -323,14 +323,14 @@ applies the full annual birth-order amount regardless of the descendant's entry
 date within the ejercicio.
 
 - New domain method `RentaFamilyProfile.minimo_descendientes_estatal` (
-  `src/aeat/domain/contribuyente/family.py`) ranks Art. 58.1-eligible
+  `src/cadrumo/domain/contribuyente/family.py`) ranks Art. 58.1-eligible
   descendants by `birth_date` ascending, sums the birth-order tranche (1º/2º/3º/
   4º-y-siguientes) plus the Art. 58.2 menor-3 supplement, and applies the
   Art. 61.1ª custodia-compartida 0.5 factor per descendant. Amounts are passed
   in by the caller from the revision's own registry `money` parameters — the
   domain method contains no hardcoded euro figure.
 - New application-layer injector
-  `inject_derived_minimo_descendientes_facts` (`src/aeat/application/modelo/_profile_binding.py`)
+  `inject_derived_minimo_descendientes_facts` (`src/cadrumo/application/modelo/_profile_binding.py`)
   reads `snapshot.revision.parameters` for the per-year tranche/menor-3 params,
   computes the aggregate, and projects it onto the (previously-dangling)
   user-profile schema field `renta_family.descendientes_minimos_aggregate_{year}`

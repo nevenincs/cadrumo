@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-modelo-720-prior-year-baseline-adr]]"
   - "[[2026-06-02-modelo-720-prior-year-baseline-research]]"
   - "[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]"
 ---
 
-# `modelo-720-prior-year-baseline` adr: `M720 class-code taxonomy` | (**status:** `proposed`)
+# `modelo-720-prior-year-baseline` adr: `M720 class-code taxonomy` | (**status:** `accepted`)
 
 ## Problem Statement
 

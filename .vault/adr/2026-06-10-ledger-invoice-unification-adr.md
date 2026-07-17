@@ -5,10 +5,8 @@ tags:
 date: '2026-06-10'
 related:
   - "[[2026-06-10-ledger-invoice-unification-research]]"
-  - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
 supersedes:
-  - '2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr'
-modified: '2026-07-15'
+modified: '2026-07-17'
 ---
 # `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `accepted`)
 
@@ -52,7 +50,7 @@ The operator-facing CLI ships two invoice noun-groups,
 `aeat app ledger payable-invoice` and `aeat app ledger collectible-invoice`,
 whose five-verb CRUD bodies (`add` / `view` / `list` / `update` / `remove`) are
 structurally identical in
-`src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py` — same options, same
+`src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py` — same options, same
 parse helpers, same emit shape — differing only in which service factory they
 call. This forces an operator to know the internal `payable` vs `collectible`
 split (a settlement-direction distinction that is fully determined by whether the
@@ -69,7 +67,7 @@ removes while keeping the load-bearing internal taxonomy intact.
   invoice direction. An *issued* invoice (we billed a customer) is *collectible*;
   a *received* invoice (a vendor billed us) is *payable*. The
   `_source_resolver._invoice_source_kind` function
-  (`src/aeat/application/invoices/_source_resolver.py:108`) already encodes
+  (`src/cadrumo/application/invoices/_source_resolver.py:108`) already encodes
   exactly this: `ISSUED → collectible_invoice`, `RECEIVED → payable_invoice`.
 - The source-kind strings are persisted contract, not labels. They appear in M349
   registry TOML (18 occurrences), `INVOICE_BINDING_SOURCE_KINDS`,
@@ -77,10 +75,10 @@ removes while keeping the load-bearing internal taxonomy intact.
   `{bucket_id}:{source_kind}` storage key grammar, and `AggregationSourceKind`.
   Collapsing them would break authored authority and stored data.
 - Two invoice aggregates exist for good reason: the rich `Invoice`
-  (`src/aeat/domain/invoices/_models.py`) is the calculation/reconciliation
+  (`src/cadrumo/domain/invoices/_models.py`) is the calculation/reconciliation
   authority with derived identity, line-item arithmetic, and modelo aggregation;
   the slim `BusinessOperationInvoice`
-  (`src/aeat/application/ledger/_business_operation_invoice.py`) is the flat
+  (`src/cadrumo/application/ledger/_business_operation_invoice.py`) is the flat
   operator-edit record. They have no shared base and no conversion path. Merging
   them is out of scope and rejected.
 - The English noun `invoice` conflicts with `aeat-spanish-stem-naming` (the
@@ -142,7 +140,7 @@ ergonomics, not a ledger transaction row. The two stores are addressed by
 different identifiers and serve different layers.
 
 **`link` interaction.** `aeat app ledger link --invoice-id`
-(`src/aeat/entrypoints/cli/_ledger.py`) continues to target the **rich**
+(`src/cadrumo/entrypoints/cli/_ledger.py`) continues to target the **rich**
 `InvoiceCatalogue` via `InvoiceCatalogueRepository`, not the slim store: the
 slim `BusinessOperationInvoice` has no `linked_transaction_ids` field, only the
 rich `Invoice` does. `link` does NOT gain a `--kind` flag — the rich
@@ -156,7 +154,7 @@ record.
 **Deletion (no-legacy).** Remove: the `payable_invoice_app` /
 `collectible_invoice_app` apps and their duplicate verb bodies; the 26 duplicate
 locale leaves `cli.app.ledger.{payable,collectible}_invoice.*` across all four
-catalogues (via the `aeat.locales` CLI, replaced by one
+catalogues (via the `cadrumo.locales` CLI, replaced by one
 `cli.app.ledger.invoice.*` set); the 10 duplicate payload schemas
 (`_ledger_payloads.py:676-723`, replaced by one five-class
 `Invoice{Add,View,Update,Remove,List}Result` family); the two CRUD contracts

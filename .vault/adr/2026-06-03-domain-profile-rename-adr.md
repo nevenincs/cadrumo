@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#domain-profile-rename'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-01-domain-boundary-audit-adr]]"
   - "[[2026-06-01-domain-boundary-audit-plan]]"
@@ -37,7 +37,7 @@ sweep that is costly to redo.
 ## Constraints
 
 - 89 files reference `domain.profile` (every submodule + importers + the entire
-  `docs/api/aeat.domain.profile.*` stub tree). The rename is one atomic move and needs the
+  `docs/api/cadrumo.domain.profile.*` stub tree). The rename is one atomic move and needs the
   tree quiesced (all 89 targets simultaneously non-peer-WIP through script→verify→commit)
   — hence D7/plan sequence S63 last, once the campaign's other drifts are closed (now the
   case: S63 is the sole remaining item).
@@ -48,7 +48,7 @@ sweep that is costly to redo.
 
 Rename the `domain/profile` package directory to `domain/contribuyente` and repoint every
 reference using the proven scripted pattern, covering all six rename surfaces codified in
-the audit ledger: (a) import statements (`aeat.domain.profile` / `domain.profile import` /
+the audit ledger: (a) import statements (`cadrumo.domain.profile` / `domain.profile import` /
 relative `from ..profile`), (b) core error-registry path strings, (c) `:mod:` docstring
 cross-references, (d) any hardcoded module-path strings in marker tests, (e) `.importlinter`
 ignore entries naming `domain.profile.*`, and (f) the apidocs stub tree (regenerate). The

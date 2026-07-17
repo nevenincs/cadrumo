@@ -3,16 +3,16 @@ tags:
   - '#adr'
   - '#deterministic-output-replay-substrate'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-deterministic-output-replay-substrate-research]]"
 ---
 
-# `deterministic-output-replay-substrate` adr: `deterministic output and golden capture substrate` | (**status:** `proposed`)
+# `deterministic-output-replay-substrate` adr: `deterministic output and golden capture substrate` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The `agent-harness` ADR (`2026-06-30-agent-harness-adr`, accepted) commits in its Q5 decision to a golden-task replay gate that asserts both the expected agent tool trajectory and the expected result payloads, plus a determinism-replay mode that re-runs a captured trajectory and asserts byte-identical output — because non-determinism in a regulated tax tool is itself an assurance failure. The grounding research (`2026-06-30-deterministic-output-replay-substrate-research`) confirms that the substrate this gate stands on does not exist at HEAD: the `replay_run` subsystem re-executes a captured argv but never captures the emitted `SchemaEnvelope`, gates only on `corpus_sha256`, and several `--format json` payloads carry wall-clock and uuid fields that cannot be isolated for replay. This ADR designs that substrate — the clock seam, the identity-determinism levers, the golden result-payload capture, and the canonicalise/mask compare layer — and resolves the four decisions the research left open. It is a new-feature, prerequisite ADR for the harness W03 vertical-slice proof; it introduces the decided shape, not code, and stops at plan approval.
+The `agent-harness` ADR (`2026-07-02-agent-harness-refoundation-adr`, accepted) commits in its Q5 decision to a golden-task replay gate that asserts both the expected agent tool trajectory and the expected result payloads, plus a determinism-replay mode that re-runs a captured trajectory and asserts byte-identical output — because non-determinism in a regulated tax tool is itself an assurance failure. The grounding research (`2026-06-30-deterministic-output-replay-substrate-research`) confirms that the substrate this gate stands on does not exist at HEAD: the `replay_run` subsystem re-executes a captured argv but never captures the emitted `SchemaEnvelope`, gates only on `corpus_sha256`, and several `--format json` payloads carry wall-clock and uuid fields that cannot be isolated for replay. This ADR designs that substrate — the clock seam, the identity-determinism levers, the golden result-payload capture, and the canonicalise/mask compare layer — and resolves the four decisions the research left open. It is a new-feature, prerequisite ADR for the harness W03 vertical-slice proof; it introduces the decided shape, not code, and stops at plan approval.
 
 ## Considerations
 

@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#identity-primitives"
 date: '2026-05-30'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-30-identity-primitives-reference]]"
   - "[[2026-05-13-identity-adr]]"
@@ -64,7 +64,7 @@ A single shared `Hex256Digest` shape primitive is rejected: the four hex-64 reco
 
 ### Rule 4 - naming and module pattern
 
-Every typed-id alias is named `<Owner>Id` and lives in the owner package `_ids.py` module. Every `_ids.py` module exports its aliases through `__all__`. Cross-package consumers import the alias by name (`from aeat.<owner>._ids import <Owner>Id`); they do not import the underlying regex or length constants and they do not re-alias the type under a private name (`as _BucketId`). Inline constraint constants (`_HEX_INVOICE_ID_LENGTH`, `_HEX_TRANSACTION_ID_LENGTH`) are forbidden in modules outside the owning `_ids.py`.
+Every typed-id alias is named `<Owner>Id` and lives in the owner package `_ids.py` module. Every `_ids.py` module exports its aliases through `__all__`. Cross-package consumers import the alias by name (`from cadrumo.<owner>._ids import <Owner>Id`); they do not import the underlying regex or length constants and they do not re-alias the type under a private name (`as _BucketId`). Inline constraint constants (`_HEX_INVOICE_ID_LENGTH`, `_HEX_TRANSACTION_ID_LENGTH`) are forbidden in modules outside the owning `_ids.py`.
 
 ### Rule 5 - `BucketId` home
 
@@ -90,7 +90,7 @@ The CLI consumer of the registry private `_CASILLA_RE` and `_REF_RE` constants i
 
 ### Rule 9 - enforcement test
 
-An import-direction test under `src/aeat/.../test_<name>.py` (the exact module location is a Plan-phase decision; the test participates in the CI gate per the roundtrip-discipline rule) parses every Python module under `src/aeat/` and fails when:
+An import-direction test under `src/cadrumo/.../test_<name>.py` (the exact module location is a Plan-phase decision; the test participates in the CI gate per the roundtrip-discipline rule) parses every Python module under `src/cadrumo/` and fails when:
 
 - a `domain.<a>` module imports a name from `domain.<b>._ids` for any `a != b` other than the registry-aliases exception in Rule 2;
 - an adapter, application, or entrypoint module imports a private name (leading underscore) from any `_ids.py` module;

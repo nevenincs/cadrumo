@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#envelope-conformance-gate'
 date: '2026-06-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-31-coverage-canonicalisation-audit]]"
   - "[[2026-06-01-envelope-conformance-gate-research]]"
@@ -39,7 +39,7 @@ hand-maintained "expected leaves" file.
 
 ## Implementation
 
-`src/aeat/entrypoints/cli/test_json_schema_conformance.py` builds the
+`src/cadrumo/entrypoints/cli/test_json_schema_conformance.py` builds the
 live CLI by calling the application factory, walks the Typer command
 tree to collect every leaf command path, and compares the resulting
 `set[tuple[str, ...]]` against `set(SCHEMA_REGISTRY.keys())`. Failures

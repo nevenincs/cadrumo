@@ -5,11 +5,8 @@ tags:
 date: '2026-07-12'
 related:
   - "[[2026-07-12-google-oauth-research]]"
-  - "[[2026-05-13-google-oauth-plan]]"
-  - "[[2026-05-13-google-oauth-adr]]"
 supersedes:
-  - '2026-05-13-google-oauth-adr'
-modified: '2026-07-12'
+modified: '2026-07-17'
 ---
 
 # `google-oauth` adr: `remote ciphertext manifest mirror boundary` | (**status:** `accepted`)

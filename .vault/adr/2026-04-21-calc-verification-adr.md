@@ -3,10 +3,9 @@ tags:
   - "#adr"
   - "#calc-verification"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-calc-verification-research]]"
-  - "[[2026-04-21-declaracion-extractor-adr]]"
   - "[[2026-04-21-casilla-schema-completeness-adr]]"
 ---
 
@@ -29,14 +28,14 @@ Calc-verification must turn the formula-engine's raw `AuditReport` into a Kent-r
 - **No new formula engine**. Cluster E is a consumer, not a producer, of the formula engine.
 - **Strict+frozen pydantic records** per ADR §3 of the research.
 - **Deterministic verdict**: given identical `(draft, declaracion, ruleset)` inputs, the verdict is byte-identical (modulo `verified_at`).
-- **Errors**: `VerificationError < AeatError` for catastrophic failures; not-verifiable ruleset gaps are a normal status, not errors.
+- **Errors**: `VerificationError < CadrumoError` for catastrophic failures; not-verifiable ruleset gaps are a normal status, not errors.
 
 ## Implementation
 
 ### 1. Module layout
 
 ```
-src/aeat/application/verification/
+src/cadrumo/application/verification/
     __init__.py       # public API: verify_declaracion, VerificationVerdict,
                       # DiscrepancyCause, ClassifiedDiscrepancy, VerificationError
     _schema.py        # records

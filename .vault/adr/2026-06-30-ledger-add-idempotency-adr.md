@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-ledger-add-idempotency-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
-  - "[[2026-06-30-agent-harness-adr]]"
+  - "[[2026-07-02-agent-harness-refoundation-adr]]"
 ---
 
 # `ledger-add-idempotency` adr: `manual ledger add idempotency and verify-report retry shape` | (**status:** `accepted`)

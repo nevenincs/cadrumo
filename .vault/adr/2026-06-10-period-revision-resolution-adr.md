@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#period-revision-resolution'
 date: '2026-06-10'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-period-revision-resolution-research]]"
 ---
@@ -25,7 +25,7 @@ foundation, sibling to the calculation-aggregation taxonomy ADR) ratifies the ex
 resolution machinery as the single law-determined authority and closes the gaps the
 grounding research surfaced. The reassuring headline from that research holds and was
 re-verified at HEAD for this ADR: the deterministic resolver `select_revision`
-(`src/aeat/domain/calculations/registry/_temporal.py`) already exists, is enforced
+(`src/cadrumo/domain/calculations/registry/_temporal.py`) already exists, is enforced
 unambiguous by the registry non-overlap gate `validate_revision_windows`
 (`_validate_revision_rules.py`), and every snapshot funnels through it via
 `ValidatedRegistryAuthority.snapshot` → `_build_validated_snapshot`
@@ -35,7 +35,7 @@ The real gaps this ADR decides on:
 
 - **D1 (identity-vs-calc divergence).** `revision_id` is part of the WorkUnit identity
   key `(bucket_id, modelo, filing_year, period, revision_id)`
-  (`src/aeat/domain/modelos/_work_unit.py`) and is persisted at creation, yet every
+  (`src/cadrumo/domain/modelos/_work_unit.py`) and is persisted at creation, yet every
   calculation path re-resolves the snapshot purely from `filing_year`/`period`
   (`_calculation_actions.py`, `_calculate_input.py`, the `PreviousFilingSourceResolver`
   fallback in `application/calculations/_multi_year.py`) and never consults
@@ -49,7 +49,7 @@ The real gaps this ADR decides on:
   `RegistryModeloObservation` records without re-confirming that the source filing's
   revision is the law-determined one. The persisted envelope
   (`_ObservationEnvelopePayload` in
-  `src/aeat/application/calculations/_observations_repository.py`) carries **no revision
+  `src/cadrumo/application/calculations/_observations_repository.py`) carries **no revision
   identifier at all** — `(modelo, filing_year, period, observations, captured_at,
   source_kind, member_nif)` only — so a wrong/stale-revision prior cannot even be
   detected today, let alone refused.

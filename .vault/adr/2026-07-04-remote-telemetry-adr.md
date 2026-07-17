@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#remote-telemetry'
 date: '2026-07-04'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-llm-evidence-classification-adr]]"
   - '[[2026-07-10-remote-telemetry-research]]'
@@ -44,7 +44,7 @@ transport itself is deliberately NOT part of this first slice.
   into the telemetry payload in the first place".
 - **The `llm-evidence-classification` off-host consent precedent**
   (`2026-06-10-llm-evidence-classification-adr`,
-  `src/aeat/application/ledger/_evidence_input.py`): the codebase already has exactly
+  `src/cadrumo/application/ledger/_evidence_input.py`): the codebase already has exactly
   one off-host-transmission gate, `cloud_evidence_read_permitted`. Its shape —
   default-off deployment flag, gestor-mode absolute bar, per-invocation
   (never-sticky) acknowledgement, single resolver function — is the template this ADR
@@ -129,7 +129,7 @@ transport itself is deliberately NOT part of this first slice.
 
 ## Implementation
 
-Four pieces land in this slice, all under `src/aeat/core/telemetry/` (a new package,
+Four pieces land in this slice, all under `src/cadrumo/core/telemetry/` (a new package,
 sibling to `core/observability/`, `core/classification/`, `core/redaction/`):
 
 1. **Settings fields.** `Settings` gains `aeat_telemetry_opt_in: bool = False`,

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#codebase-solidification'
 date: '2026-05-28'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-27-centralized-module-drift-audit]]"
   - '[[2026-06-04-codebase-solidification-research]]'
@@ -18,8 +18,8 @@ across eight axes (centralized exceptions, centralized logging,
 centralized locale, pydantic boundary models, helper duplication,
 stubs / dead code, hardcoded values / enum bypass, typecheck escape
 hatches). The codebase already ships every centralized module those
-findings would route through (`aeat.core.errors`, `aeat.core.logging`,
-`aeat.core.i18n`, `aeat.core.external_constants`, the registry of
+findings would route through (`cadrumo.core.errors`, `cadrumo.core.logging`,
+`cadrumo.core.i18n`, `cadrumo.core.external_constants`, the registry of
 `StrEnum`s scattered across `domain/` and `application/`). The drift
 is **not absence of canonical infrastructure**; the drift is **failure
 to enroll new callers into the canonical infrastructure** as the
@@ -105,7 +105,7 @@ Wave cadence:
 1. **Wave 1 - close the inaugural audit.** Land every finding from
    the `2026-05-27` audit. Each fix Step is paired with a
    verification Step that adds or strengthens a real-behavior test
-   under the canonical test surface (`src/aeat/.../test_*.py`). No
+   under the canonical test surface (`src/cadrumo/.../test_*.py`). No
    xfail, no skip, no mock.
 2. **Wave 2..N - recurring sweep.** When Wave 1 reaches 80%+ closed
    Steps across every Phase, dispatch the eight-axis swarm again

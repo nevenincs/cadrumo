@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
@@ -15,15 +15,30 @@ related:
 
 ## Problem Statement
 
-The accepted `2026-06-30-agent-harness-adr` settled the harness's four-layer shape and its MCP end-state; the proposed `2026-07-01-agent-harness-adr` settled the content of the rules, personas, and skills. Both were authored under a universe definition an operator directive of 2026-07-02 has now corrected, and both left the harness in a state the same directive identifies as unfinished in two defining ways: it was never operable — no live language model has ever driven the CLI through it — and there is no accepted way to measure or operate it.
+Two earlier harness drafts settled the four-layer shape, MCP end-state, rules,
+personas, and skills under a universe definition that the 2026-07-02 operator
+directive corrected. Their durable decisions are consolidated below; the
+predecessor ADR files are deleted so maintainers have one harness authority.
+The drafts also left the harness unfinished in two defining ways: no live
+language model had driven the CLI through it, and there was no accepted way to
+measure or operate it.
 
 The corrected universe definition is the load-bearing change. The Cadrumo CLI, exposed through the `aeat` executable, is a **black box**: a bundled, deterministic tool universe for calculating and manipulating tax data, not a codebase to be interfaced with. The agent harness is the **framework of rules, personas, and skills for operating safely and effectively within that confined universe**, and it serves **any** language model the user already runs — there is no bespoke embedded chat runtime. One MCP server is the **operating console**: it must ground user requests, understand the bundled legal corpus, run semantic search, hold deep knowledge of the CLI surface, ask the user questions when input is needed, and actually operate the CLI on the user's behalf. That is materially more than the verb-wrapper server shipped today.
 
-This ADR re-founds the concept against that definition. It records precisely what carries over from the two prior ADRs and what is superseded, and it resolves the nine decisions the `2026-07-02-agent-harness-refoundation-research` document raised: the universe re-definition itself (R1), the console's tool architecture (R2), a first-class grounding surface (R3), how the operating layer reaches an arbitrary client (R4), the situation-keyed skill taxonomy (R5), how the nominal safety gates become real (R6), how the harness is measured by live model-in-the-loop operation (R7), distribution (R8), and the off-host consent posture (R9). It introduces no code; it records the decided shape and its rationale.
+This ADR is the consolidated authority. It records what carries over and what
+is superseded, and it resolves the nine decisions the
+`2026-07-02-agent-harness-refoundation-research` document raised: the universe
+definition (R1), console tool architecture (R2), grounding (R3), client delivery
+(R4), skill taxonomy (R5), safety gates (R6), live-model measurement (R7),
+distribution (R8), and off-host consent (R9).
 
 ## Considerations
 
-**Most of the prior decision surface survives; the universe re-definition re-frames it rather than discarding it.** The accepted ADR's six resolutions (MCP as the validated end-state, `src/cadrumo/_data/agent/` as the artifact home, defense-in-depth HITL tiers, the advisory-then-blocking faithfulness posture, a golden-scenario eval methodology, and Spanish-stem naming) and the proposed ADR's seven (manifest-as-single-authority, the three-tier skill taxonomy, the verifier owning the export/record-marker boundary, the profile-fact derivation principle of D5, and the rest) remain correct under the corrected definition. What the re-definition changes is which of the shipped delivery mechanisms is primary and how large the console's mandate is — not the safety posture, the artifact home, or the naming discipline.
+**Most of the earlier decision surface survives; the universe re-definition
+re-frames it rather than discarding it.** The consolidated decisions below are
+binding parts of this accepted ADR. What changes is which delivery mechanism is
+primary and how large the console's mandate is — not the safety posture,
+artifact home, or naming discipline.
 
 **The CLI-as-contract substrate already embodies the black-box discipline.** The operator-surface manifest (`build_operator_surface_manifest`, `aeat app contract`), the `SchemaEnvelope`/`Notice`/`ExitCode` reading surface, and the rule-surface drift gate all treat the CLI as the only citable surface and execute every operation by shelling `aeat --format json`. This layer carries over unchanged and is the natural authority the console derives its tools from.
 
@@ -35,11 +50,57 @@ This ADR re-founds the concept against that definition. It records precisely wha
 
 ## Considered options
 
-### R1 — Universe re-definition and supersession of the two prior ADRs
+### R1 — Universe re-definition and predecessor consolidation
 
 *Continue the prior framing* (the harness as an operating layer over a ~75%-agent-ready backbone, delivered primarily by materialising a workspace): rejected — it treats the CLI as a codebase to be interfaced with and a bespoke workspace as the product, which the 2026-07-02 operator directive explicitly corrects.
 
-**Chosen — the black-box tool universe with one MCP operating console, serving any language model.** The CLI is a confined, deterministic tool universe; the harness is the framework of rules and regulations for operating within it; the console is the single operating surface that any MCP-capable client connects to. This re-founds, not discards, the prior work. **Carried over unchanged:** the accepted ADR's `Q1`–`Q6` (MCP as the end-state tool surface, the `src/cadrumo/_data/agent/` artifact home behind the `cadrumo[agent]` extra, the HITL tier taxonomy, the advisory-then-blocking faithfulness posture, the golden-scenario eval methodology, and Spanish-stem naming) and the proposed ADR's `D1`–`D7` (the manifest as the single capability authority, the three-tier skill taxonomy, the verifier owning the export/record-marker boundary, and the D5 profile-fact derivation principle). **Superseded:** the workspace materialiser as the *primary* delivery vehicle (it is demoted to an optional Claude-native mirror under R4), the flat `tools/list` surface (replaced by domain toolsets under R2), and any notion that the harness targets a bespoke future runtime (it targets the user's existing client). The origin of this decision is the operator directive recorded 2026-07-02.
+**Chosen — the black-box tool universe with one MCP operating console, serving
+any language model.** The CLI is a confined deterministic tool universe; the
+harness is the rules and skills for operating within it; the console is the
+single operating surface for any MCP-capable client. The workspace materialiser
+is optional, flat `tools/list` is replaced by progressive disclosure, and the
+harness targets the user's existing client rather than a bespoke runtime.
+
+#### Consolidated Q1–Q6 decisions
+
+- **Q1:** prove the rules and one golden workflow over the manifest-backed JSON
+  CLI first, then use the same manifest as the MCP tool authority.
+- **Q2:** authored harness data lives at `src/cadrumo/_data/agent/`; MCP is a
+  sibling entry point and packaging is governed by the current Cadrumo
+  distribution decisions.
+- **Q3:** manifest mutability annotations drive client confirmation while the
+  CLI's deterministic guards remain the non-bypassable backstop; live submit is
+  never exposed.
+- **Q4:** faithfulness mismatch is advisory during reversible narration and a
+  hard block at export or record-marker handoff.
+- **Q5:** golden tasks assert real tool trajectories, argument validity,
+  authoritative value oracles, and provenance; replay excludes only explicitly
+  non-deterministic fields.
+- **Q6:** Spanish tax-domain stems remain Spanish, generic computing vocabulary
+  remains English, and tool names are unambiguous. `aeat` is the human CLI;
+  product-owned Python and MCP identities are `cadrumo`.
+
+#### Consolidated D1–D7 decisions
+
+- **D1:** persona scope is filtered from the live manifest by `(family,
+  mutability)` and pinned by a build-time assertion, never copied into a second
+  allowlist.
+- **D2:** live reads that write derived local state remain
+  `LOCAL_STATE_MUTATING`; the unused `LIVE_READ` fork is retired after a
+  zero-consumer check.
+- **D3:** the verifier owns export and the record marker so the preparer cannot
+  self-certify the irreversible handoff.
+- **D4:** rules separate behavioural invariants, manifest-derived orientation,
+  and lifecycle ordering; a manifest-derived negative gate rejects internal
+  package, private-module, and test names in operator rules.
+- **D5:** Tier-A itinerary skills derive from explicit taxpayer-profile facts;
+  they are never an open-ended hand-curated roster.
+- **D6:** the executable unit is one skill per registry-modelled modelo, authored
+  by difference from one shared lifecycle spine; category material is reference
+  content and personas are thin entry itineraries.
+- **D7:** verifier context must be constructible from tool-result JSON without
+  the preparer's transcript. Separate invocation is structural enforcement;
+  self-report is explicitly degraded trust.
 
 ### R2 — Console tool architecture
 
@@ -114,7 +175,9 @@ only the vehicle is superseded. The original ruling follows for the decision tra
 
 ## Constraints
 
-**Two parent ADRs.** This refoundation rests on the accepted `2026-06-30-agent-harness-adr` (whose `Q1`–`Q6` it inherits) and the proposed `2026-07-01-agent-harness-adr` (whose `D1`–`D7` it extends). The second is proposed-status; the decisions here that build on it inherit that provisional standing until it is accepted.
+**Single authority.** The consolidated Q1–Q6 and D1–D7 decisions above are
+accepted here. No deleted predecessor status or wording remains independently
+binding.
 
 **Permanent safety rails.** `aeat-safety-legal-gates` makes live AEAT submission permanently forbidden — no console tool may ever expose it, and R6(iv) is that rail, not a configurable policy. `sensitive-financial-data-secure-storage-only` binds R9 and R6: evidence bytes persist only in encrypted secure storage, are never elicited, and never re-enter the model context expanded.
 
@@ -138,12 +201,26 @@ A high-level layering; no code accompanies this ADR. Notably, **the CLI surface 
 
 ## Rationale
 
-Every resolution follows the research directly and re-uses a settled pattern for the job it is good at. R1 records the operator's corrected universe definition and states supersession precisely so the decision trail stays linear rather than re-litigating settled questions — the prior ADRs' safety, home, and naming decisions were never the mistake; the delivery vehicle, the flat surface, and the bespoke-runtime assumption were. R2 resolves the load-bearing progressive-disclosure problem with toolsets for the common domains and meta-tools for the tail, and keeps the console manifest-derived so it cannot drift from the CLI — the same single-authority discipline the proposed ADR's D1 applied to persona scope. R3 gives the product the licence-clean, on-host retrieval surface it lacks, building on already-bundled extracted text. R4's floor-first delivery is the direct consequence of negotiated client capability: the one channel that always reaches the model is a tool, and everything richer is enhancement. R5 uses each skill axis for what it is good at — WHO for stable entry, WHEN for temporal sequencing, WHICH for execution — and makes the selection signal machine-queryable, extending the proposed ADR's D5 derivation principle rather than replacing its D6 per-modelo executable unit. R6 turns three nominal gates into real ones and closes the D3 family-scope caveat structurally. R7 is the operator's measurement directive: the prose is the code under test, so only a live model driving the real console is a faithful gate, and self-hosting keeps trajectories on-host. R8 and R9 make "the user's own client" a real, safe distribution story. Every decision is the project-specific application of a pattern the external landscape and the prior ADRs have already settled.
+Every resolution follows the research directly and reuses a settled pattern for
+the job it is good at. R1 keeps the decision trail linear: the safety, artifact
+home, and naming decisions survive; the delivery vehicle, flat surface, and
+bespoke-runtime assumption do not. R2 keeps the console manifest-derived so it
+cannot drift from the CLI, applying D1's single-authority discipline. R3 gives
+the product a licence-clean on-host retrieval surface. R4 is floor-first because
+only tools are universal across target clients. R5 preserves D5's derivation and
+D6's per-modelo executable unit. R6 makes the nominal gates real and closes D3's
+handoff boundary structurally. R7 measures the prose through a live model driving
+the real console. R8 and R9 make the user's own client a safe distribution story.
 
 ## Consequences
 
 **Gains.** The harness stops being a static content bundle plus an unwired shell and becomes an operable, measured console: any MCP-capable client gets grounded search, the operating layer over the protocol, real safety gates, and a live model-in-the-loop assurance regime with hard never-submit and faithfulness invariants. `regularizar-atrasos` alone exposes a fully-built, high-value late-filer surface that is currently invisible. The manifest-derived toolsets mean the console tracks the CLI for free.
 
-**Honest difficulties.** The semantic-search engine is undecided and licence-gated; R3 cannot ship until that gate is closed, and a wrong engine choice strands the grounding surface. Elicitation is the least-universal capability the safety story now leans on, so the degradation matrix must be decided and tested, not assumed — and the spec's prohibition on eliciting sensitive data means evidence handling stays a hard on-host constraint. The live subagent-persona harness is a new, non-trivial test substrate whose own reliability (model non-determinism, cost, latency per session) must be managed so it does not become a flaky gate. R9's off-host boundary rests on the console being a perfect evidence funnel; any tool result that leaks raw bytes into the model context breaks it, so the scrubbing boundary needs its own conformance gate. The proposed parent ADR is not yet accepted, so decisions extending its `D1`–`D7` inherit that provisional standing.
+**Honest difficulties.** The semantic-search engine is licence-gated; R3 cannot
+ship until that gate closes. Elicitation remains uneven across clients, so the
+degradation matrix must be tested. Evidence handling stays on-host. The live
+model harness must control non-determinism, cost, and latency, and the R9
+scrubbing boundary needs its own conformance gate so raw evidence bytes cannot
+enter model context.
 
 **Pathways opened.** The manifest-derived toolset surface and the on-host grounding index feed documentation generation, future personas, and additional situation skills without re-deriving the catalogue. The live harness plus the telemetry flywheel become the standing assurance loop — every rule, skill, prompt, and tool-description change is re-measured against a real model, and every live failure becomes a golden regression — turning the harness from a shipped artifact into a continuously-verified operating system for the black-box tool universe.

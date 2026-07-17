@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#pdf-sanitizer'
 date: '2026-04-25'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-25-pdf-sanitizer-research]]"
   - "[[2026-04-25-aeat-verify-research]]"
@@ -36,7 +36,7 @@ justificante.py`. That shape is wrong for three reasons:
    non-actionable because the byte stream drifts on every save.
 
 This ADR promotes the sanitiser to a first-class subpackage,
-`aeat.adapters.inbound.sanitizer`, with a typed pydantic v2 API, a CLI bridge, an
+`cadrumo.adapters.inbound.sanitizer`, with a typed pydantic v2 API, a CLI bridge, an
 explicit threat model, and a security-grade test suite. It overrides
 the parent ADR's "Sanitiser" section in full.
 
@@ -132,7 +132,7 @@ mandate, explicitly re-affirmed:
 
 ### Subpackage layout
 
-`src/aeat/adapters/inbound/sanitizer/` ships:
+`src/cadrumo/adapters/inbound/sanitizer/` ships:
 
 - `__init__.py` — public re-exports: `sanitize_pdf`, `TokenMap`,
   `SanitizationResult`, `Replacement`, `ScrubbedSurface`,
@@ -151,14 +151,14 @@ mandate, explicitly re-affirmed:
 - `_structtree.py` — StructTree drop / scrub.
 - `_determinism.py` — the named save flags + verification helpers.
 - `_errors.py` — `SanitizationError` hierarchy inheriting
-  `aeat.core.errors.AeatError`.
-- `_logging.py` (or use `aeat.core.logging.get_logger(__name__)`
+  `cadrumo.core.errors.CadrumoError`.
+- `_logging.py` (or use `cadrumo.core.logging.get_logger(__name__)`
   directly) — never logs cleartext, only `real_sha256` + synthetic.
 - `test_records.py`, `test_pipeline.py`, `test_streams.py`,
   `test_metadata.py`, `test_determinism.py`,
   `test_no_write_surface.py`, `test_adversarial_absence.py`,
   `test_round_trip.py` — colocated unit tests.
-- CLI bridge under `src/aeat/entrypoints/cli/sanitize/__init__.py` registering
+- CLI bridge under `src/cadrumo/entrypoints/cli/sanitize/__init__.py` registering
   `aeat sanitize {pdf, prepare-map, verify, check}`.
 
 ### Public API (locked)
@@ -292,7 +292,7 @@ The 8-step pipeline from the research, locked here verbatim:
 
 ### CLI bridge
 
-`aeat sanitize` group registered under `src/aeat/entrypoints/cli/sanitize/`,
+`aeat sanitize` group registered under `src/cadrumo/entrypoints/cli/sanitize/`,
 verbs:
 
 - `aeat sanitize pdf <input> --mapping <path> --output <path>
@@ -316,7 +316,7 @@ never authenticates, never calls AEAT, never reads tokens from
 
 ### Refuse-if-already-sanitised guard
 
-The package ships `aeat.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS: frozenset[
+The package ships `cadrumo.adapters.inbound.sanitizer.fixtures.SANITIZED_SHAS: frozenset[
 str]` — the set of SHA-256 hashes of every committed fixture under
 `tests/fixtures/justificantes/`. The pipeline computes the source
 SHA at step 1 and refuses with `AlreadySanitizedError` if the
@@ -396,7 +396,7 @@ benefit is that `pip install aeat` produces a working sanitiser.
   (operator must enumerate the values) for verifiability (every
   cleartext-to-synthetic edge is enumerated).
 - **Why per-capture YAML, not project-default.** A project-default
-  mapping under `aeat.adapters.inbound.sanitizer.fixtures.DEFAULT_MAPPING` would
+  mapping under `cadrumo.adapters.inbound.sanitizer.fixtures.DEFAULT_MAPPING` would
   encode one user's identity into git history. Per-capture YAML
   under `scratch/.../sanitizer-mapping.yaml` (gitignored) keeps
   cleartext exclusively in the operator's local tree and
@@ -437,7 +437,7 @@ benefit is that `pip install aeat` produces a working sanitiser.
   CI / dev platform; no system QPDF needed.
 - **New CLI surface (`aeat sanitize`).** Verified-clean against the
   30 existing CLI groups; no naming collision.
-- **New module (`src/aeat/adapters/inbound/sanitizer/`).** ~10 source files,
+- **New module (`src/cadrumo/adapters/inbound/sanitizer/`).** ~10 source files,
   ~8 colocated test files, plus the CLI bridge. Subject to the
   parent ADR's per-subpackage write-guard (`test_no_write_surface.py`)
   and the parent's grep-guard pattern (forbidden mutation verbs in

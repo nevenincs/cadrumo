@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#review-workflow-cycle-break'
 date: '2026-07-03'
-modified: '2026-07-04'
+modified: '2026-07-17'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
   - "[[2026-07-02-import-centralization-audit]]"
@@ -85,7 +85,7 @@ break the cycle for real. This ADR is that follow-up.
 
 ## Implementation
 
-A new private leaf module, `aeat.application._workflow_review_models`, defines
+A new private leaf module, `cadrumo.application._workflow_review_models`, defines
 `WorkflowEvent`, `LedgerReviewRecord`, and `InvoiceReviewRecord` (and re-exports
 `utc_now` from `core.time.now`), with zero dependency on either
 `application.review` or `application.workflow`. `workflow._models` imports the
@@ -125,9 +125,9 @@ could not reach.
 - Production Family-1 cross-package private imports for the
   `application.review` <-> `application.workflow` pair drop from 5 to 0; the
   `dev/import_hygiene_baseline.json` `sites` list for this exception is now
-  permanently `[]`, and `src/aeat/tests/test_import_hygiene_gate.py` pins that.
+  permanently `[]`, and `src/cadrumo/tests/test_import_hygiene_gate.py` pins that.
 - The two packages no longer import each other's private submodules at all;
-  `import aeat.application.review` and `import aeat.application.workflow` each
+  `import cadrumo.application.review` and `import cadrumo.application.workflow` each
   succeed cleanly and independently, in either order, with no partial-init
   re-entry hazard.
 - A separate, pre-existing and unrelated production Family-1 regression (10

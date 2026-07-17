@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -69,7 +69,7 @@ evidence-driven splitting in Stage-3.
   has its own `LLMProvider` StrEnum scoped to the subprocess CLIs
   (`claude` / `antigravity` / `codex`, probed on `PATH`), and `resolve_classifier`
   builds a `SubprocessLLMClassifier` for each. The HTTP-SDK adapter under
-  `aeat.adapters.outbound.llm` carries its own separate `LLMProvider`
+  `cadrumo.adapters.outbound.llm` carries its own separate `LLMProvider`
   (ANTHROPIC / OPENAI / GEMINI / LOCAL) but **is not wired into the classify
   path** today. So the production evidence-reading bridge is, first and foremost,
   about the subprocess CLI agents — which read a PDF/image/text file **directly

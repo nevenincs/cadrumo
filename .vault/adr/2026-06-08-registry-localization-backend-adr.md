@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#registry-localization-backend'
 date: '2026-06-08'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-08-registry-localization-backend-research]]"
 ---
@@ -18,7 +18,7 @@ Casilla labels are currently hardcoded in Spanish within the registry TOML files
 
 * Official Spanish labels are regulatory invariants and must remain accessible to workbook export engines.
 * The operator interface supports localization into English (`en`), Catalan (`ca`), and Hungarian (`hu`).
-* Core locales (`src/aeat/locales/`) must remain lightweight (~300KB) to ensure sub-second CLI startup.
+* Core locales (`src/cadrumo/locales/`) must remain lightweight (~300KB) to ensure sub-second CLI startup.
 
 ## Constraints
 
@@ -27,9 +27,9 @@ Casilla labels are currently hardcoded in Spanish within the registry TOML files
 
 ## Implementation
 
-1. **Schema Extension**: Modify `CasillaDefinition` in `src/aeat/domain/calculations/registry/_schema_surfaces.py` to carry `localized_labels: dict[str, str] = Field(default_factory=dict)` and `localized_help: dict[str, str] = Field(default_factory=dict)` fields. Keep `label` as the official Spanish invariant, accessible to export engines and validation rules.
+1. **Schema Extension**: Modify `CasillaDefinition` in `src/cadrumo/domain/calculations/registry/_schema_surfaces.py` to carry `localized_labels: dict[str, str] = Field(default_factory=dict)` and `localized_help: dict[str, str] = Field(default_factory=dict)` fields. Keep `label` as the official Spanish invariant, accessible to export engines and validation rules.
 2. **Model-Local Locales**: Place localized catalogues as `.toml` files under `revisions/<revision>/locales/<locale>.toml` (for revision-specific overrides matching `casilla_id`) and `modelos/<modelo>/locales/<locale>.toml` (for stable concept-level mappings matching `continuidad_id`).
-3. **Lazy Registry Compilation**: The compiler in `src/aeat/domain/calculations/registry/_loader.py` must filter out any files under `locales/` subdirectories during recursive TOML fragment discovery (`_merge_revision_directory`) to prevent parsing them as schema/calculation fragments. However, these files must remain in `_modelo_directory_fingerprints` to trigger cache invalidation.
+3. **Lazy Registry Compilation**: The compiler in `src/cadrumo/domain/calculations/registry/_loader.py` must filter out any files under `locales/` subdirectories during recursive TOML fragment discovery (`_merge_revision_directory`) to prevent parsing them as schema/calculation fragments. However, these files must remain in `_modelo_directory_fingerprints` to trigger cache invalidation.
 4. **Hardened Validation**: Introduce strict pydantic schemas for localization TOML files. Validate them at snapshot compile time to ensure referential integrity (every translated key corresponds to a valid `casilla_id` or `continuidad_id`), raising a `RegistryValidationError` on mismatch to prevent database pollution.
 5. **UI Rendering**: During `registry_casillas` query or CLI rendering, resolve the active translation key using `casilla.localized_labels.get(locale, casilla.label)`.
 

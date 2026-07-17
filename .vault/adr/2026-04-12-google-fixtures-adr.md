@@ -3,11 +3,9 @@ tags:
   - "#adr"
   - "#google-fixtures"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-google-fixtures-research]]"
-  - "[[2026-04-12-gsuite-bootstrap-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
 ---
 
 # google-fixtures adr: canonical google workspace test fixture surface | (**status:** `accepted`)
@@ -53,11 +51,11 @@ comment on #13). It is not optional.
 
 The provisioning and teardown scripts MUST reuse:
 
-- `aeat.adapters.outbound.aeat.auth.get_credentials_for_scopes` (credential resolver)
-- `aeat.adapters.outbound.aeat.auth.build_drive_service` / `build_sheets_service` / `build_docs_service`
-- `aeat.adapters.outbound.aeat.auth.DRIVE_SCOPE` / `SHEETS_SCOPE` / `DOCS_SCOPE`
-- `aeat.core.env_io.write_env_vars` (idempotent env rewrite)
-- The idempotent find-or-create pattern from `aeat.entrypoints.cli.bootstrap`
+- `cadrumo.adapters.outbound.aeat.auth.get_credentials_for_scopes` (credential resolver)
+- `cadrumo.adapters.outbound.aeat.auth.build_drive_service` / `build_sheets_service` / `build_docs_service`
+- `cadrumo.adapters.outbound.aeat.auth.DRIVE_SCOPE` / `SHEETS_SCOPE` / `DOCS_SCOPE`
+- `cadrumo.core.env_io.write_env_vars` (idempotent env rewrite)
+- The idempotent find-or-create pattern from `cadrumo.entrypoints.cli.bootstrap`
 
 No competing Google client is defined. No parallel credential resolver.
 
@@ -72,14 +70,14 @@ hatch). The catalogue (`scripts/_fixture_catalogue.py`), the provisioner
 
 Rejected alternatives:
 
-- `src/aeat/fixtures/` — would leak test-provisioning logic onto the
+- `src/cadrumo/fixtures/` — would leak test-provisioning logic onto the
   library's importable surface.
-- `src/aeat/domain/testing/` — feature-14 owns this subpackage; touching it would
+- `src/cadrumo/domain/testing/` — feature-14 owns this subpackage; touching it would
   cross branch boundaries.
 
-### D5 — Errors inherit from `AeatError`
+### D5 — Errors inherit from `CadrumoError`
 
-A new `FixtureProvisioningError` is added to `src/aeat/errors.py`.
+A new `FixtureProvisioningError` is added to `src/cadrumo/core/errors/`.
 Provisioning and teardown raise only this class (or stdlib
 OS/auth errors surfaced verbatim for failure clarity).
 
@@ -93,7 +91,7 @@ when **both** flags are true.
 
 ### D7 — Settings additions (additive, alignment-tested)
 
-`src/aeat/config.py` gains:
+`src/cadrumo/core/config.py` gains:
 
 - `aeat_google_test_fixtures_folder_id: str`
 - `aeat_google_test_fixture_smoke_sheet_id: str`
@@ -135,7 +133,7 @@ change that introduces non-synthetic content to a fixture.
 
 - Contributors without Google credentials cannot run the smoke test.
   Mitigated by the dual opt-in: the test is cleanly skipped by default.
-- `scripts/` is a second Python location (beyond `src/aeat/` and
+- `scripts/` is a second Python location (beyond `src/cadrumo/` and
   `tests/`); future contributors must know the convention. Documented in
   `scripts/README.md`.
 

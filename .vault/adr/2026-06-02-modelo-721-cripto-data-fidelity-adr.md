@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-modelo-721-cripto-data-fidelity-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
@@ -26,7 +26,7 @@ co-backing ADR. This is that ADR.
 There are two coupled problems. First, **how does 721 acquire a real two-year
 dependency** so it can enroll, given it computes nothing? Second, and blocking: the
 in-repo legal registry a 721 casilla author would trust,
-`src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml`, is marked
+`src/cadrumo/_data/registry/aeat/legal/monedas-virtuales.toml`, is marked
 `review_status = "reviewed"` but was **authored against the wrong BOE document** — it
 registers 721 under Orden HFP/887/2023 / `BOE-A-2023-18679`, when Orden HFP/887/2023
 is `BOE-A-2023-17430` and approves the *custodian-side* models 172/173, not 721.
@@ -107,7 +107,7 @@ A legal-correction-first data-fidelity mechanism in six parts; no calculation en
 and no hidden schema change.
 
 **(1) Correct the legal corpus (W06 step one).** In
-`src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml`: replace the
+`src/cadrumo/_data/registry/aeat/legal/monedas-virtuales.toml`: replace the
 `orden-hfp-887-2023:art-1/2/3` entries with `orden-hfp-886-2023:art-1/2/3`, all
 `document_id = "BOE-A-2023-17429"`, permalinks and `corpus_ref`s re-pointed at
 `BOE-A-2023-17429`; re-anchor the statutory obligation to `ley-58-2003:da-18`

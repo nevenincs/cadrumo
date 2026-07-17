@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
@@ -13,7 +13,7 @@ related:
   - '[[2026-07-10-binding-fold-in-carry-unification-research]]'
 ---
 
-# `binding-fold-in-carry-unification` adr: `fold-in and carry unification: one cross-filing fold-in implementation and one compensacion-carry authority` | (**status:** `proposed`)
+# `binding-fold-in-carry-unification` adr: `fold-in and carry unification: one cross-filing fold-in implementation and one compensacion-carry authority` | (**status:** `accepted`)
 
 > PROPOSED — design-ahead for coordinator review, authored while phase-2.1 code is
 > gated. NOT self-accepted, NOT a code-execution request; EXECUTION sequences after

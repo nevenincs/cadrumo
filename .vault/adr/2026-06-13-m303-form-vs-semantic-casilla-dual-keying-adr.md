@@ -3,9 +3,8 @@ tags:
   - '#adr'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-28'
+modified: '2026-07-17'
 related:
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-09-modelo-iva-routing-carry-adr]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
@@ -15,7 +14,13 @@ related:
 
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `accepted`)
 
-This ADR amends and extends the accepted 2026-06-01 dual-keying ADR. It supersedes that ADR's stale Finding A (corrected below) and authorises Stage 2 of the official-Diseno box wiring. The Stage 1 advisory floor (calculate-path advisory plus two ADVISORY verify predicates) shipped at commit 330ab6771; this ADR specifies the mechanism that POPULATES the official numbered boxes so the operator transcribes real cuota rather than zeros, and the verify-gate transition that follows. Status is proposed: the operator ratifies before any Stage-2 code lands. No code is changed by this ADR.
+This accepted ADR is the single authority for M303 semantic and official-numbered
+casilla keying. It absorbs the durable predecessor invariants — the engine
+resolves state by `casilla.id`, never by `casilla.number`, and official fields
+are downstream projections rather than a second aggregation path — while
+deleting the predecessor whose inventory claim became stale. The Stage 1
+advisory floor shipped at commit 330ab6771; this ADR governs the Stage 2
+projection mechanism and its verification transition.
 
 ## Problem Statement
 
@@ -32,14 +37,21 @@ Stage 1 (commit 330ab6771) made the contradiction non-silent by emitting a calcu
 
 ## Considerations
 
-### Correction of Finding A (supersedes the 2026-06-01 ADR's Finding A)
+### Corrected registry inventory
 
-The accepted 2026-06-01 ADR's Finding A states: "There are no purely form-numbered ids in this revision." That claim was true on 2026-06-01 but is **stale against HEAD**. Verified read-only against `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml` and `0001-casillas.part-002.toml` on 2026-06-13:
+The predecessor claimed there were no purely form-numbered ids in this
+revision. That inventory is stale. Read-only inspection of
+`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
+and `0001-casillas.part-002.toml` established the corrected shape:
 
 - **93** casilla rows carry `semantic_role = "dr303_NN"` (36 in part-001, 57 in part-002; the count is 36 + 57 = 93). Every one of these rows has `id` equal to its bare AEAT field number (e.g. `id = "01"`, `id = "09"`, `id = "27"`, `id = "77"`, `id = "150"`), `input_kind = "manual"`, no `binding`, no `formula`, and an `export_refs` entry of the shape `modelo-303-page-NN-casilla-NN`. These ARE purely form-numbered ids, added in the 2026-06-10 registry pass that post-dates the 2026-06-01 ADR.
 - The semantic layer (ids of the shape `iva.*`) coexists in the same revision and is the layer the engine populates.
 
-The corrected Finding A reads: **The M303 2023-y-siguientes revision carries BOTH a semantic-keyed layer (`id = "iva.*"`, bound/computed) AND a purely form-numbered Diseno layer (`id = "NN"`, `semantic_role = "dr303_NN"`, manual, 93 rows). The single-axis "id is always semantic" framing of the prior Finding A no longer holds.** The prior ADR's load-bearing D1/D2 contract -- the engine resolves casilla state only by `casilla.id`, never by `casilla.number` -- is UNAFFECTED and still holds: the numbered boxes are addressed by their `id` (which happens to equal the number), and the `number` field is still never the engine's lookup key.
+**The M303 2023-y-siguientes revision carries both a semantic-keyed layer
+(`id = "iva.*"`, bound/computed) and a purely form-numbered Diseno layer
+(`id = "NN"`, `semantic_role = "dr303_NN"`, manual, 93 rows).** The engine
+still resolves casilla state only by `casilla.id`, never by `casilla.number`:
+numbered boxes are addressed by their id, which happens to equal their number.
 
 ### The numbered boxes are presentation projections, not a second aggregation surface
 
@@ -47,7 +59,7 @@ Each cuota-bearing numbered box restates a value the semantic layer already comp
 
 ### The registry formula vocabulary already supports a single-source projection
 
-`FormulaDefinition` (`src/aeat/domain/calculations/registry/_schema.py`) is `id, target, expression` where `expression` is a `FormulaExpression`. The formula evaluator's leaf handler (`_evaluate_leaf` in `_formula_runtime.py`) resolves a leaf whose `expression.casilla = "<id>"` to `values["<id>"]` -- i.e. a `FormulaExpression` that is a bare single casilla-id reference evaluates to that casilla's already-computed value. A numbered box flipped from `input_kind = "manual"` to `input_kind = "computed"` with `formula = "<projection-id>"`, where the projection's `expression` is the single leaf referencing `iva.<source>`, is exactly a copy. The engine evaluates formulas in topological order and guards "casilla referenced before evaluation", so the semantic source is computed before the box projection -- no ordering hazard. This is the SAME primitive the existing `iva.cuota-devengada-total` formula uses to fold its constituents; no new schema field, op, resolver, or source kind is introduced.
+`FormulaDefinition` (`src/cadrumo/domain/calculations/registry/_schema.py`) is `id, target, expression` where `expression` is a `FormulaExpression`. The formula evaluator's leaf handler (`_evaluate_leaf` in `_formula_runtime.py`) resolves a leaf whose `expression.casilla = "<id>"` to `values["<id>"]` -- i.e. a `FormulaExpression` that is a bare single casilla-id reference evaluates to that casilla's already-computed value. A numbered box flipped from `input_kind = "manual"` to `input_kind = "computed"` with `formula = "<projection-id>"`, where the projection's `expression` is the single leaf referencing `iva.<source>`, is exactly a copy. The engine evaluates formulas in topological order and guards "casilla referenced before evaluation", so the semantic source is computed before the box projection -- no ordering hazard. This is the SAME primitive the existing `iva.cuota-devengada-total` formula uses to fold its constituents; no new schema field, op, resolver, or source kind is introduced.
 
 ## Constraints
 
@@ -93,7 +105,8 @@ Once a box is projection-populated it can no longer be silently zero while its t
 - No new binding, source kind, resolver, relation, or `previous_filing` carry.
 - The semantic aggregation layer and its formulas are untouched.
 - The already-computed/bound resultado-chain boxes (`46`, `64`, `65`, `66`, `69`, `71`) are untouched.
-- `casilla.number` is still never an engine lookup key; D1/D2 of the prior ADR still hold.
+- `casilla.number` is still never an engine lookup key; the absorbed id-only
+  resolution invariant remains binding.
 
 ## Rationale
 
@@ -111,7 +124,8 @@ The projection mechanism is the only candidate that does not create a second agg
 1. **Ratification of the selective scope.** This ADR populates ONLY cuota-bearing boxes with an exact single semantic source and leaves base/tipo/blocked boxes manual. Confirm that partial population (rather than forcing every box) is the intended Stage-2 scope.
 2. **Box 37 source.** Box `37` (AIC corrientes deducible cuota) has two plausible single sources in the current semantic layer (the interior-deducible autorepercutido casilla vs the AIC-deducible parity casilla). The executor will pin the exact 1:1 source against the box label before wiring; flag if you want a specific source mandated now.
 3. **Verify transition style.** Prefer (a) authoring an equality/consistency predicate per projected box (requires a DSL equality operator, separately grounded), or (b) retiring the now-satisfied Stage 1 advisory for populated constituents and relying on the copy being inherently consistent. The ADR permits either; name a preference if you have one.
-4. **Prior-ADR disposition.** This ADR corrects Finding A of the 2026-06-01 ADR in prose. Confirm whether you also want the 2026-06-01 ADR's body edited to stamp Finding A as corrected/superseded by 2026-06-13, or whether the cross-reference in this ADR is sufficient.
+4. **Predecessor disposition.** Resolved by absorbing the durable id-only and
+   single-source-projection invariants here and deleting the stale predecessor.
 
 ## Ratification
 
@@ -123,7 +137,9 @@ The operator ratified this ADR on 2026-06-13 and authorised the recommended defa
 
 3. **Verify transition (Open Question 3) -- NARROW the advisory AND add a consistency predicate.** Both moves are authorised. The Stage 1 ADVISORY `implies_any_nonzero` predicates are NARROWED so each constituent list retains only the boxes that REMAIN manual after Stage 2 (so the advisory keeps firing for base/tipo/blocked boxes and any box left manual, e.g. `37` if deferred) and drops the now-populated constituents. Because the advisory module reuses these same predicates as its single source of truth, narrowing the predicate lists narrows both the verify finding and the calculate advisory in lock-step. Separately, a consistency predicate (numbered box value == its semantic source value) is added for each populated box. The DSL has no equality operator today (only `implies_nonzero` / `implies_any_nonzero`); the executor adds a small, separately-grounded equality/consistency operator to the predicate DSL (registry `KNOWN_VERIFICATION_PREDICATE_OPERATORS`, the `_validate_surfaces` gate, and the `_verification_actions` evaluator) to express it. The consistency predicate is near-tautological within one evaluation (a copy cannot drift from its source); its value is catching a future mis-edit (a box re-flipped to manual, or a projection pointed at the wrong source).
 
-4. **Prior-ADR disposition (Open Question 4) -- superseding-pointer added to the 2026-06-01 ADR body.** A superseding-pointer note is added to the 2026-06-01 ADR body flagging its Finding A as corrected/superseded by this 2026-06-13 ADR.
+4. **Predecessor disposition -- consolidated.** The durable invariants are
+   accepted in this ADR; the stale predecessor is removed rather than retained
+   as a competing authority.
 
 ## Codification candidates
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"
@@ -79,7 +79,7 @@ basis cap.
   Portal, CorpusArtifact). Path B (SQLite) is fully feasible.
 
 - The issue body §2 explicitly chooses "SQLite via existing
-  `aeat.adapters.persistence.storage`". The issue is the authoritative scope; the
+  `cadrumo.adapters.persistence.storage`". The issue is the authoritative scope; the
   handover prompt's Path-A preference (JSON file) was a hedge
   against the #216 branch not yet being merged into the rental
   branch. With #216 merged in this worktree, the scope can land
@@ -104,15 +104,15 @@ basis cap.
   extra="forbid"))`. Closed enumerations are `enum.StrEnum`. No
   bare `dict[str, Any]` at boundary surfaces.
 
-- **`AeatError` discipline + #398 registration** — every new
-  exception subclasses `aeat.core.errors.AeatError` and registers an
+- **`CadrumoError` discipline + #398 registration** — every new
+  exception subclasses `cadrumo.core.errors.CadrumoError` and registers an
   `ErrorCode` row in `_DECLARED_ERROR_CODES`. The `bind_error_code`
   hook in `__init_subclass__` rejects any class without a
   registry entry.
 
-- **Logging via `aeat.core.logging.get_logger(__name__)`** only.
+- **Logging via `cadrumo.core.logging.get_logger(__name__)`** only.
 
-- **Public API** — callers outside `aeat.domain.rental` import only from
+- **Public API** — callers outside `cadrumo.domain.fincas` import only from
   the package root. Internal modules carry an underscore prefix.
 
 - **Trilingual contract** — every Translatable on the user-visible
@@ -125,8 +125,8 @@ basis cap.
 
 - **Module-level pytest markers** —
   `pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]`
-  for unit tests under `aeat.domain.rental`. M100 wiring tests under
-  `aeat.domain.formulas._rulesets.modelo_100` retain the existing
+  for unit tests under `cadrumo.domain.fincas`. M100 wiring tests under
+  `cadrumo.domain.calculations.registry.modelo_100` retain the existing
   `domain_submission` marker pair.
 
 - **NO wave / phase numbering in source code or docstrings** —
@@ -136,17 +136,17 @@ basis cap.
 - **No live AEAT submission surfaces** — this work is local-state +
   filing-calc only. Charter #116 / #432 is unaffected.
 
-- **Coverage floor 60 %** on `src/aeat` (CI gate); `just lint && just
+- **Coverage floor 60 %** on `src/cadrumo` (CI gate); `just lint && just
   typecheck && just test && just hooks` must stay green on Windows.
 
 ## Implementation
 
 ### Subpackage layout
 
-`src/aeat/domain/rental/` is a new top-level subpackage. Public API is the
+`src/cadrumo/domain/fincas/` is a new top-level subpackage. Public API is the
 package `__init__.py`; private modules carry underscore prefixes.
 
-- `aeat.domain.rental._models` — Pydantic v2 records:
+- `cadrumo.domain.fincas._models` — Pydantic v2 records:
   - `RentalFinca` — finca registration. Fields: `id`, `identifier`,
     `address` (encrypted at rest), `valor_catastral_total`,
     `valor_catastral_construccion`, `valor_catastral_revision_year`,
@@ -189,7 +189,7 @@ package `__init__.py`; private modules carry underscore prefixes.
     `cumulative_amortization_through_year`,
     `schema_version: str = "1"`.
 
-- `aeat.domain.rental._enums`:
+- `cadrumo.domain.fincas._enums`:
   - `UseType` (StrEnum, see above)
   - `ExpenseCategory` (StrEnum, see above)
   - `ReduccionTier` (StrEnum: `TIER_50`, `TIER_60_REHAB`,
@@ -199,7 +199,7 @@ package `__init__.py`; private modules carry underscore prefixes.
     traceability — DT 38ª vs art. 23.2.c — even though the
     numeric reducción is the same.
 
-- `aeat.domain.rental._tier_resolver`:
+- `cadrumo.domain.fincas._tier_resolver`:
   - `resolve_reduccion(contract: RentalContract, finca:
     RentalFinca, period_year: int, ejercicio_amendment_year:
     int = 2024) -> TierResolution` where `TierResolution` is a
@@ -217,7 +217,7 @@ package `__init__.py`; private modules carry underscore prefixes.
     5. Tier 70-b-1 multi-tenant case computes `qualifying_share =
        qualifying_co_tenant_count / tenant_count`.
 
-- `aeat.domain.rental._amortization_ledger`:
+- `cadrumo.domain.fincas._amortization_ledger`:
   - `compute_amortization_for_year(finca: RentalFinca, contract:
     RentalContract, income: RentalIncomeRecord, ledger:
     AmortizationLedger) -> Decimal` — applies LIRPF art. 23.1.f
@@ -228,20 +228,20 @@ package `__init__.py`; private modules carry underscore prefixes.
     the year-N amortización to `coste_adquisicion_construccion -
     cumulative_through_year_N_minus_1`.
 
-- `aeat.domain.rental._expense_rollup`:
+- `cadrumo.domain.fincas._expense_rollup`:
   - `compute_gastos_for_year(finca, expenses, prior_year_carry) ->
     GastosForYear` — rolls up per-category expenses, applies the
     art. 23.1.a) cap (financiación + reparación capped at
     ingresos; excess returns as a 4-year carry-forward).
 
-- `aeat.domain.rental._anexo_c_aggregator`:
+- `cadrumo.domain.fincas._anexo_c_aggregator`:
   - `compute_anexo_c_aggregates(period_year: int, store:
     RentalRegisterRepository) -> AnexoCAggregates` — emits a frozen
     Pydantic record carrying derived 0061, 0066, 0072, 0078, 0085
     decimals plus per-finca / per-contract attribution maps for
     audit traceability.
 
-- `aeat.domain.rental._repository`:
+- `cadrumo.domain.fincas._repository`:
   - `RentalFincaRepository(Repository[RentalFinca])`,
     `RentalContractRepository(Repository[RentalContract])`,
     `RentalIncomeRepository(Repository[RentalIncomeRecord])`,
@@ -249,18 +249,18 @@ package `__init__.py`; private modules carry underscore prefixes.
     `RentalAmortizationLedgerRepository(Repository[
     RentalAmortizationLedgerEntry])`.
 
-- `aeat.domain.rental._errors`:
-  - `RentalRegisterError(AeatError)` — base.
+- `cadrumo.domain.fincas._errors`:
+  - `RentalRegisterError(CadrumoError)` — base.
   - `FincaNotFoundError`, `ContractNotFoundError`,
     `TierResolutionError` (raised when contract metadata is
     inconsistent — e.g. tenant_min_age > tenant_max_age),
     `AmortizationLedgerCapExceededError`,
     `AnexoCAggregationError`. Each gets an `ErrorCode` row in
-    `aeat.core.errors._registry._DECLARED_ERROR_CODES` per #398.
+    `cadrumo.core.errors._registry._DECLARED_ERROR_CODES` per #398.
 
 ### Storage layer additions
 
-- New ORM tables in `src/aeat/adapters/persistence/storage/_orm.py`:
+- New ORM tables in `src/cadrumo/adapters/persistence/storage/_orm.py`:
   - `rental_fincas` (id, identifier UNIQUE, address ENCRYPTED,
     valor_catastral_total, valor_catastral_construccion,
     valor_catastral_revision_year, coste_adquisicion,
@@ -292,31 +292,25 @@ package `__init__.py`; private modules carry underscore prefixes.
 - Address (`rental_fincas.address`) and tenant identifying fields use
   `EncryptedString` columns at the FINANCIAL classification.
 
-### M100 Anexo C wiring (backwards-compat shim)
+### M100 Anexo C wiring
 
-The existing `anexo_c_2024.py / 2025.py / 2026.py` keep their
-caller-supplied casilla declarations and FORMULAS unchanged. The
-backwards-compat shim is a thin import-side helper:
+`cadrumo.domain.fincas.compute_finca_aggregates` is the single rental-register
+calculation path for Anexo C inputs. It derives ingresos, gastos,
+amortización, reducción, and imputación from the persisted per-finca and
+per-contract records with per-source attribution. Registry-backed Modelo 100
+calculation consumes that typed result; caller-supplied totals cannot bypass or
+override the canonical calculation.
 
-- `aeat.domain.rental.anexo_c_provider.compute_or_passthrough(period_year,
-  provided_casillas: Mapping[str, Decimal], store:
-  RentalRegisterRepository | None) -> dict[str, Decimal]` — when
-  `store` is None or empty (no fincas registered for the period),
-  passes through every caller-supplied 0061/0066/0072/0078/0085
-  unchanged. When the store is populated, computes derived
-  aggregates and merges: ledger-derived values take precedence over
-  caller-supplied; mismatches surface as a discrepancy via the
-  existing M100 `Engine.audit_against` path (no new error class
-  needed — existing `AuditDiscrepancyError` covers it).
-
-- `aeat filing import --from-borrador` and `--from-declaracion`
-  call `compute_or_passthrough` automatically when the rental store
-  is configured. The dispatch is opt-in — an unconfigured store
-  does not change behaviour.
+Values observed in a borrador or declaración are oracle evidence for
+`Engine.audit_against`. They are compared with the derived result and a
+mismatch surfaces as `AuditDiscrepancyError`; they are never accepted as an
+alternate calculation source. If the required register data is absent, the
+calculation fails with a typed readiness error instead of silently passing
+through supplied casillas.
 
 ### CLI surface
 
-A new `src/aeat/entrypoints/cli/rental/` sub-app with five command groups:
+A new `src/cadrumo/entrypoints/cli/rental/` sub-app with five command groups:
 
 - `aeat rental finca {add, list, show, update, dispose}`
 - `aeat rental contract {add, list, show, update, terminate}`
@@ -324,7 +318,7 @@ A new `src/aeat/entrypoints/cli/rental/` sub-app with five command groups:
 - `aeat rental amortization {recompute, show}`
 - `aeat rental anexo-c {compute, verify}`
 
-The sub-app is registered in `src/aeat/entrypoints/cli/__init__.py` via
+The sub-app is registered in `src/cadrumo/entrypoints/cli/__init__.py` via
 `app.add_typer(rental_module.app, name="rental", help="Per-finca
 rental register, Ley 12/2023 tier auto-resolver, art. 23.1.f
 amortización ledger (#454).")`. `decorate_typer_app(app)` at the
@@ -390,10 +384,9 @@ rental income tier per Ley 12/2023" → ✅ via #454.
   tier as `0 % × rendimiento` and the audit explanation surfaces
   the cause.
 
-- **Backwards-compat shim** preserves Kent's existing M100 flow
-  (caller-supplied aggregates) when the rental register is empty.
-  This is cheap to implement (one passthrough branch) and
-  eliminates the migration cliff for existing operator workflows.
+- **One Anexo C authority** keeps rental law and provenance in the per-finca
+  register. Imported observations remain comparison evidence, so there is no
+  second path that can silently replace the derived tax result.
 
 - **Per-finca explicit `is_stressed_area`** flag rather than CCAA-
   driven auto-detection because the BOE source pins zonas
@@ -410,15 +403,14 @@ rental income tier per Ley 12/2023" → ✅ via #454.
   (`_test_migrations.py`) automatically picks them up; no test
   surface change there.
 
-- **`aeat.domain.rental` adds ~15 new error classes** to the registry; each
+- **`cadrumo.domain.fincas` adds ~15 new error classes** to the registry; each
   needs an `ErrorCode` row in `_DECLARED_ERROR_CODES`. The
-  `bind_error_code` test (`aeat.core.errors.test_registry_enforcement`)
+  `bind_error_code` test (`cadrumo.core.errors.test_registry_enforcement`)
   enforces this at import time.
 
-- **Backwards-compat is structural, not testimonial** — the existing
-  `test_anexo_c_2025.py` cases still pass unchanged because the
-  `compute_or_passthrough` shim is opt-in. No M100 megaproject
-  regression risk.
+- **Anexo C tests exercise the canonical register-derived path** and assert
+  the real Modelo 100 boundary consumes its typed aggregates. Missing source
+  data and observed-value mismatches fail explicitly.
 
 - **CLI surface grows by 5 command groups** (~15 commands). The
   `decorate_typer_app(app)` walk picks them up automatically; no
