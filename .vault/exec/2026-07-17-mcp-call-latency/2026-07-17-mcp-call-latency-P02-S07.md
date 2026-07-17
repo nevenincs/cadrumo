@@ -87,3 +87,23 @@ private module (`_validate_evidence`).  This is acceptable for a test
 exercising the production function's real-behavior contract; the
 `service-imports-via-top-level-reexports` rule governs production code, not
 the test surface.
+
+**P02 code review remediation** (follow-up commit `test(packaging): gate corpus-text
+normaliser equivalence and sidecar resolution`):
+
+- MEDIUM: Added `test_corpus_text_normaliser_inlined_copy_is_byte_equal_to_canonical`
+  to the same test module.  Imports both `normalise_corpus_text` from `_text.py` and
+  `_normalise_corpus_text` from the build script, runs a battery of 20 inputs covering
+  HTML tags, entities, the `< 500 euros` math edge, combining marks U+0300-U+036F,
+  NBSP, whitespace collapsing, and lowercasing, and asserts byte-equal output.  An edit
+  to either side without mirroring the other now fails loudly.
+
+- LOW: Strengthened `test_manual_pdf_corpus_text_sidecar_mismatch_returns_none`.
+  Added a positive assertion before the negative one: calls `_read_manual_pdf_sidecar`
+  with the real source PDF and asserts the result equals the sidecar's
+  `normalised_text`, proving packaged_data resolution actually finds the sidecar and
+  the sha256 path passes.  Without this the None assertion would pass for the wrong
+  reason if the lookup itself broke.
+
+- LOW: Updated pyproject.toml shed-policy comment to acknowledge the ~7.4 MB
+  compressed `_data/manual_corpus_text/` derived-text payload added by S05.
