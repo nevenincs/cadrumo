@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#pdf-import"
 date: "2026-04-20"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-20-pdf-import-plan]]"
   - "[[2026-04-20-pdf-import-adr]]"

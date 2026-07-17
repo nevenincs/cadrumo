@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#profile-output-language'
 date: '2026-05-13'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-13-cli-workflow-redesign-profile-output-language-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'

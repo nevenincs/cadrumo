@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
-modified: '2026-07-14'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'

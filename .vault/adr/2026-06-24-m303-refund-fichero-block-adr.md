@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m303-refund-fichero-block'
 date: '2026-06-24'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-24-m303-refund-election-adr]]'
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#agent-harness'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-agent-harness-plan]]"
   - "[[2026-07-02-agent-harness-P06-S22]]"

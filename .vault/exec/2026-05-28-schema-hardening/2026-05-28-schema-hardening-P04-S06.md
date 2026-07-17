@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-06-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S06'
 related:
   - "[[2026-05-28-schema-hardening-continuity-conformance-plan]]"

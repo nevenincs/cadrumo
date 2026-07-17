@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-03-user-profile-lazy-import-adr]]'
 ---

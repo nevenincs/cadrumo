@@ -8,7 +8,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-adr]]"
 promoted_to:
   - 'rule:cadrumo-product-authority-names'
-modified: '2026-07-12'
+modified: '2026-07-17'
 ---
 # `cadrumo-product-rename` audit: `Cadrumo rename rolling formal review`
 

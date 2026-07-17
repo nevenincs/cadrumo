@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S04'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"

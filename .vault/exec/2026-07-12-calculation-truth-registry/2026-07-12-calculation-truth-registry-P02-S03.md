@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-07-14'
-modified: '2026-07-14'
+modified: '2026-07-17'
 step_id: 'S03'
 related:
   - "[[2026-07-12-calculation-truth-registry-plan]]"

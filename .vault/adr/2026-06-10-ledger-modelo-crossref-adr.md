@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-modelo-crossref'
 date: '2026-06-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-ledger-modelo-crossref-research]]"
 ---

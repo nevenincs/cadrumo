@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
   - '[[2026-06-02-modelo-multiyear-renta-income-adr]]'

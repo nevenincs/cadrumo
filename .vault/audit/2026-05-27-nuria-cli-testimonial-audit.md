@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-27'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-27-olivia-cli-testimonial-audit]]"
   - "[[2026-05-27-mateo-cli-testimonial-audit]]"

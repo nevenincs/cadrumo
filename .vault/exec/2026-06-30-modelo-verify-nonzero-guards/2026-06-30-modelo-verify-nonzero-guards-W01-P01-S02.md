@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S02'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s45-mcp-prompt-identity'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-17'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

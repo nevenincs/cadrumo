@@ -1,7 +1,7 @@
 ---
 tags: ["#exec", "#cli-testimonial"]
 date: '2026-05-21'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'P01.S01-P01.S04'
 related:
   - '[[2026-05-21-fresh-cli-persona-repair-plan]]'

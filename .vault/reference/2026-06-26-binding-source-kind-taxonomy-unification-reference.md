@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
   - '[[2026-06-26-bindings-architecture-unification-audit]]'

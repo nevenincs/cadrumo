@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#ledger-interface-contract'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'

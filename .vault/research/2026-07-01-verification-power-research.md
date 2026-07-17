@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#verification-power'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-verification-reconcile-when-present-adr]]'
   - '[[2026-07-01-verification-contract-coverage-audit]]'

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#live-submit-permanently-forbidden'
 date: '2026-04-27'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-plan]]'
 ---

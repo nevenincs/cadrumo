@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#real-pdf-import"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-casilla-schema-completeness-plan]]"
   - "[[2026-04-21-real-pdf-import-phase-3-summary-exec]]"

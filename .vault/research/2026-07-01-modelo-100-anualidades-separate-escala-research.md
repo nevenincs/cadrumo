@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-100-anualidades-separate-escala'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related: []
 ---
 

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#agent-harness'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S20'
 related:
   - "[[2026-07-02-agent-harness-plan]]"

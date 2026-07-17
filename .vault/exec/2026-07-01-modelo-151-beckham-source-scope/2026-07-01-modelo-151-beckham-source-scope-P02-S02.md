@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S02'
 related:
   - "[[2026-07-01-modelo-151-beckham-source-scope-plan]]"

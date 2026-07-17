@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#mandatory-citations'
 date: '2026-04-25'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-25-mandatory-citations-plan]]"
   - "[[2026-04-25-mandatory-citations-adr]]"

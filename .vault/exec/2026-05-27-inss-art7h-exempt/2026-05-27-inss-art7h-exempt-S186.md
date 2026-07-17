@@ -4,7 +4,7 @@ tags:
   - "#exec"
   - "#inss-art7h-exempt"
 date: 2026-05-27
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-27-inss-art7h-exempt-S186]]"
 ---

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S44'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'

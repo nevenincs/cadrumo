@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#registry-row-width-pressure'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-06-04-registry-reviewability-pressure-plan]]'
