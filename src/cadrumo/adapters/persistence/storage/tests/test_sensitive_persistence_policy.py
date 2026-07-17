@@ -97,10 +97,15 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "registry corpus PDF-text cache; writes public AEAT manual text only, no user data",
     (
-        "src/cadrumo/domain/calculations/registry/_loader.py",
-        "_load_registry_tree_cached",
+        "src/cadrumo/domain/calculations/registry/_compiled_cache.py",
+        "store_compiled_registry_cache",
         "tempfile.NamedTemporaryFile",
-    ): "registry-tree compile cache; writes first-party registry definitions only, no user data",
+    ): "compiled-registry payload cache; writes the framed first-party compiled registry set only, no user data",
+    (
+        "src/cadrumo/domain/calculations/registry/_validate_verdict.py",
+        "write_verdict",
+        "tempfile.NamedTemporaryFile",
+    ): "registry validation-verdict cache; writes the non-secret compiled-registry validation verdict (JSON), no user data",
     (
         "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
         "_write_bytes_secure_fd",
