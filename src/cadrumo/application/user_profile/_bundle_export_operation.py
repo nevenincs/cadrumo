@@ -7,13 +7,17 @@ under ``<storage-root>/profile-export-operations``, deliberately OUTSIDE both
 the target artifact and any bucket directory: the target file is the sensitive
 cleartext bundle, so the operation state that describes it carries no bundle
 bytes, no passphrase, and no raw tax id -- only the resolved target identity,
-purpose, transport, schema version, and derived data categories.
+purpose, transport, schema version, derived data categories, and the payload
+digest.
 
 A ``PREPARED`` journal records that a bundle was serialized to a staged
-temporary file but not yet atomically published; a ``COMPLETED`` journal
-records that the atomic replace and parent-directory fsync durably landed the
-target and the completion event fired. Reconciliation reads these states and
-never fabricates a completion for an operation that only reached ``PREPARED``.
+temporary file but not yet atomically published; a ``COMPLETED`` journal records
+that the atomic replace and parent-directory fsync durably landed the target,
+with the completion event still owed until the journal is cleared.
+Reconciliation completes a durably-published operation -- a ``COMPLETED`` one, or
+a ``PREPARED`` one whose destination content matches the recorded digest (the
+replace landed but the ``COMPLETED`` transition did not) -- by emitting the owed
+event, and clears a ``PREPARED`` operation that never published as an orphan.
 
 This is a distinct surface from the sealed recovery archive, which owns its own
 confidentiality and restoration semantics and is not folded in here.
@@ -53,7 +57,17 @@ class ProfileBundleExportOperationStatus(StrEnum):
 
 
 class ProfileBundleExportOperation(BaseModel):
-    """Credential-free durable record of one publication's progress."""
+    """Credential-free durable record of one publication's progress.
+
+    ``content_sha256`` is the digest of the exact staged payload bytes. Because
+    publication moves those bytes into place with :func:`os.replace` rather than
+    re-serializing, the published target's digest equals this value, so a
+    reconciliation can tell a ``PREPARED`` operation whose replace already landed
+    (published, digest matches) from a genuine orphan (digest absent or
+    divergent) without a separate durable marker. ``event_occurred_at`` is the
+    fixed timestamp the completion event is derived from, so a live publish and a
+    later reconciliation emit the byte-identical (idempotent) event.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -64,17 +78,20 @@ class ProfileBundleExportOperation(BaseModel):
     target_identity: str = Field(min_length=1)
     destination: str = Field(min_length=1)
     staged_path: str = Field(min_length=1)
+    content_sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     purpose: ProfileBundleExportPurpose
     transport: ProfileBundleExportTransport
     bundle_schema_version: int = Field(ge=1)
     data_categories: tuple[str, ...]
     started_at: datetime
     updated_at: datetime
+    event_occurred_at: datetime
 
     @model_validator(mode="after")
     def _validate_timestamps(self) -> ProfileBundleExportOperation:
         validate_utc_aware(self.started_at)
         validate_utc_aware(self.updated_at)
+        validate_utc_aware(self.event_occurred_at)
         if self.updated_at < self.started_at:
             raise ValueError("profile export journal updated_at precedes started_at")
         return self

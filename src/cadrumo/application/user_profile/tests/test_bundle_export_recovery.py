@@ -201,7 +201,12 @@ def test_crash_before_replace_reconciles_as_prepared_with_no_completion_event(tm
         assert _export_events(bucket_id) == ()
 
 
-def test_crash_after_replace_leaves_published_target_without_a_premature_event(tmp_path: Path) -> None:
+def test_crash_after_replace_reconciles_to_a_completed_event_via_the_content_digest(tmp_path: Path) -> None:
+    # Contract (S11): a crash between the atomic replace and the COMPLETED
+    # journal write leaves a durably-published bundle with only a PREPARED
+    # journal. Reconcile detects the publication via the recorded content digest
+    # and emits the owed PROFILE_EXPORTED event, so no durably-published bundle is
+    # left without its audit event.
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         bucket_id = _create_profile()
         dispose_engine()
@@ -212,20 +217,38 @@ def test_crash_after_replace_leaves_published_target_without_a_premature_event(t
 
         repository = ProfileBundleExportJournalRepository()
         assert len(repository.prepared()) == 1
-        # The atomic replace landed, so the artifact is durably published, but
-        # the completion event must not have fired for the crashed operation.
         assert destination.exists()
         published = UserProfilePortableExport.model_validate_json(destination.read_text(encoding="utf-8"))
         assert published.profile.profile_id == bucket_id
+        # No premature event yet: the crash was before the event write.
         assert _export_events(bucket_id) == ()
 
         reconciled = reconcile_prepared_exports()
         assert len(reconciled) == 1
-        # Reconciliation never fabricates a completion event, even for a
-        # genuinely-published artifact.
         assert destination.exists()
-        assert repository.prepared() == ()
-        assert _export_events(bucket_id) == ()
+        assert repository.list() == ()
+        # The digest-matched publication is completed: the owed event is emitted.
+        assert len(_export_events(bucket_id)) == 1
+
+
+def test_reconcile_completion_is_idempotent_for_a_published_operation(tmp_path: Path) -> None:
+    # Running reconcile more than once must emit the completion event exactly
+    # once, because it derives from the operation's fixed event_occurred_at.
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        bucket_id = _create_profile()
+        dispose_engine()
+        destination = tmp_path / "portable.json"
+
+        crashed = _run_export_child(storage_root, destination, "replaced")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+
+        first = reconcile_prepared_exports()
+        assert len(first) == 1
+        assert len(_export_events(bucket_id)) == 1
+        # A second reconcile has no journal left to act on and emits nothing new.
+        second = reconcile_prepared_exports()
+        assert second == ()
+        assert len(_export_events(bucket_id)) == 1
 
 
 def test_completed_export_leaves_no_journal_and_one_event(tmp_path: Path) -> None:

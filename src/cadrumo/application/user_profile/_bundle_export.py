@@ -2,19 +2,28 @@
 
 Both operator purposes -- portable transfer and the subject-access request --
 share this one service and one bundle schema; only their typed
-:class:`ProfileBundleExportPurpose` metadata differs. Publication is staged so a
-crash in any window recovers honestly: the service serializes to a restrictive
-temporary file, fsyncs it, records a durable ``PREPARED`` operation-state
-journal OUTSIDE the target artifact, atomically replaces the target, fsyncs the
-parent directory, and only then emits the completion event. A crash after
-``PREPARED`` but before publication is reconciled as prepared, never as
-complete, and the completion event never fires for an artifact that was not
-durably published. The sealed recovery archive is a separate surface and is not
-folded in here.
+:class:`ProfileBundleExportPurpose` metadata differs. Publication is a
+three-phase durable sequence so a crash in any window recovers honestly: the
+service serializes to a restrictive temporary file, fsyncs it, records a durable
+``PREPARED`` operation-state journal OUTSIDE the target artifact (carrying the
+payload digest), atomically replaces the target, fsyncs the parent directory,
+transitions the journal to ``COMPLETED``, and only then emits the completion
+event before clearing the journal. A durably-published bundle is never
+un-published; every crash window is reconciled without loss:
+
+- a ``PREPARED`` operation whose destination does not hold the recorded digest
+  never published -- it is cleared as an orphan and no event is emitted;
+- a ``PREPARED`` operation whose destination matches the digest, or a
+  ``COMPLETED`` operation, published durably -- reconciliation emits its
+  ``PROFILE_EXPORTED`` event (idempotently, from the fixed ``event_occurred_at``)
+  so no durably-published bundle is ever left without its audit event.
+
+The sealed recovery archive is a separate surface and is not folded in here.
 """
 
 from __future__ import annotations
 
+import hashlib
 import os
 import secrets
 from dataclasses import dataclass
@@ -22,7 +31,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import fsync_parent_dir
-from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.locks import exclusive_file_lock
 from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
@@ -43,7 +51,6 @@ from ._bundle_export_operation import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ...domain.user_profile import UserProfilePortableExport
     from ..workflow import ProfileBucketPointer
 
@@ -109,7 +116,8 @@ def prepare_profile_export(
     with _profile_export_runtime(pointer.bucket_id):
         bundle = _serialize_export_bundle(pointer.bucket_id)
         payload = _render_export_payload(bundle, request=request)
-    staged_path = _stage_export_tempfile(request.destination, payload.encode("utf-8"))
+    payload_bytes = payload.encode("utf-8")
+    staged_path = _stage_export_tempfile(request.destination, payload_bytes)
     try:
         categories = bundle_data_categories(bundle)
         occurred_at = now().replace(microsecond=0)
@@ -125,12 +133,14 @@ def prepare_profile_export(
             target_identity=target.identity,
             destination=str(request.destination),
             staged_path=str(staged_path),
+            content_sha256=hashlib.sha256(payload_bytes).hexdigest(),
             purpose=request.purpose,
             transport=request.transport,
             bundle_schema_version=bundle.bundle_schema_version,
             data_categories=categories,
             started_at=occurred_at,
             updated_at=occurred_at,
+            event_occurred_at=occurred_at,
         )
         repository.save(operation)
     except BaseException:
@@ -150,61 +160,52 @@ def publish_prepared_export(
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
 ) -> ProfileBundleExportResult:
-    """Atomically replace the target, fsync, then emit the completion event.
+    """Atomically replace the target, mark COMPLETED, then emit the event.
 
-    Captures any pre-existing target, replaces it with the staged temp, fsyncs
-    the parent directory, then emits the ``PROFILE_EXPORTED`` completion event.
-    If the completion event fails, the target is restored to its captured state
-    and the journal removed, so no completion event is recorded for a target
-    that is not durably left published. On success the operation journal is
-    removed.
+    Replaces the target with the staged temp and fsyncs the parent directory --
+    the durability point -- then transitions the operation journal to
+    ``COMPLETED`` and emits the ``PROFILE_EXPORTED`` completion event before
+    clearing the journal. A durably-published bundle is NEVER un-published: if
+    the completion event cannot be written, the ``COMPLETED`` journal is left in
+    place so a later :func:`reconcile_prepared_exports` emits the pending event,
+    and the failure is surfaced rather than rolled back. The event is derived
+    from the operation's fixed ``event_occurred_at``, so the live emission and
+    any reconciliation emission collapse to one idempotent event.
     """
     repository = journal or ProfileBundleExportJournalRepository()
-    request = prepared.request
-    destination = request.destination
-    from ._orchestration import _profile_export_runtime
+    operation = prepared.operation
+    destination = prepared.request.destination
 
-    previous_target = _capture_export_target(destination)
     os.replace(prepared.staged_path, destination)
     fsync_parent_dir(destination)
+    completed = operation.model_copy(
+        update={
+            "status": ProfileBundleExportOperationStatus.COMPLETED,
+            "updated_at": now().replace(microsecond=0),
+        },
+    )
+    repository.save(completed)
     try:
-        with _profile_export_runtime(prepared.pointer.bucket_id) as event_repository:
-            _record_profile_export(
-                pointer=prepared.pointer,
-                bundle=prepared.bundle,
-                request=request,
-                repository=event_repository,
-            )
+        _emit_export_event(completed)
     except Exception as exc:
-        try:
-            _restore_export_target(destination, previous_target)
-        except Exception as compensation_exc:
-            _safe_delete_journal(repository, prepared.operation.operation_id)
-            raise ProfileExportError(
-                "profile export audit failed and its destination could not be restored",
-                context={
-                    "destination": str(destination),
-                    "audit_error": type(exc).__name__,
-                    "compensation_error": type(compensation_exc).__name__,
-                },
-            ) from compensation_exc
-        _safe_delete_journal(repository, prepared.operation.operation_id)
         raise ProfileExportError(
-            "profile export audit failed; its destination was restored",
-            context={
-                "destination": str(destination),
-                "audit_error": type(exc).__name__,
-            },
+            "profile export published its destination but its audit event could not be "
+            "recorded; the pending event completes on the next reconcile",
+            context={"destination": str(destination), "audit_error": type(exc).__name__},
         ) from exc
-    _safe_delete_journal(repository, prepared.operation.operation_id)
+    _safe_delete_journal(repository, completed.operation_id)
+    return _result_from_operation(completed)
+
+
+def _result_from_operation(operation: ProfileBundleExportOperation) -> ProfileBundleExportResult:
     return ProfileBundleExportResult(
-        profile_id=prepared.pointer.bucket_id,
-        display_name=prepared.pointer.label,
-        destination=destination,
-        bundle_schema_version=prepared.bundle.bundle_schema_version,
-        purpose=request.purpose,
-        transport=request.transport,
-        data_categories=prepared.operation.data_categories,
+        profile_id=operation.profile_id,
+        display_name=operation.display_name,
+        destination=Path(operation.destination),
+        bundle_schema_version=operation.bundle_schema_version,
+        purpose=operation.purpose,
+        transport=operation.transport,
+        data_categories=operation.data_categories,
     )
 
 
@@ -214,56 +215,93 @@ def reconcile_prepared_exports(
 ) -> tuple[ProfileBundleExportOperation, ...]:
     """Reconcile crash-interrupted exports honestly in a fresh process.
 
-    Each ``PREPARED`` operation is reconciled only while holding the SAME
-    per-destination lock a live :func:`export_profile_bundle` holds across its
-    whole publication. An operation whose target lock cannot be acquired without
-    waiting is an in-flight export, not a crash orphan, and is skipped -- so a
-    reconcile running concurrently with a live same-target export can never
-    unlink its live staged temp or delete its journal (which would fail the live
-    ``os.replace``). Under the lock the operation is re-read: a still-``PREPARED``
-    operation is reported as prepared -- never upgraded to complete -- its orphan
-    staged temporary file is removed, and its journal is cleared. No completion
-    event is ever emitted here, so a crash between ``PREPARED`` and publication
-    can never surface a premature ``PROFILE_EXPORTED`` event for an artifact that
-    was not durably published.
+    Each operation is reconciled only while holding the SAME per-destination lock
+    a live :func:`export_profile_bundle` holds across its whole publication. An
+    operation whose target lock cannot be acquired without waiting is an in-flight
+    export, not a crash orphan, and is skipped -- so a reconcile running
+    concurrently with a live same-target export can never unlink its live staged
+    temp or delete its journal (which would fail the live ``os.replace``). Under
+    the lock the operation is re-read and resolved by state:
+
+    - ``COMPLETED`` (replace already landed): the durably-published bundle is
+      missing only its audit trail, so the ``PROFILE_EXPORTED`` event is emitted
+      (idempotently, from the fixed ``event_occurred_at``) and the journal
+      cleared.
+    - ``PREPARED`` whose destination content matches the recorded digest: the
+      atomic replace landed but the ``COMPLETED`` transition did not, so the
+      bundle IS published -- the event is emitted and the journal cleared, closing
+      the replace-to-``COMPLETED`` crash window.
+    - ``PREPARED`` with no matching published content: a genuine orphan -- its
+      staged temp is removed and its journal cleared, and no event is emitted for
+      an artifact that was never durably published.
     """
     from ...core.locks_errors import LockAcquisitionError
 
     repository = journal or ProfileBundleExportJournalRepository()
     reconciled: list[ProfileBundleExportOperation] = []
-    for operation in repository.prepared():
+    for operation in repository.list():
         destination = Path(operation.destination)
         if not destination.parent.exists():
-            # No live export can be staging beside a missing parent directory,
-            # so the journal is a bare orphan; clear it without a target lock.
-            repository.delete(operation.operation_id)
+            # No live export can be staging beside a missing parent directory, so
+            # no target lock is needed. A COMPLETED operation was durably
+            # published before the target was later moved away and still owes its
+            # audit event; a PREPARED one never published and is a bare orphan.
+            _finalise_reconciled_operation(repository, operation, published=_is_completed(operation))
             reconciled.append(operation)
             continue
         try:
             with exclusive_file_lock(destination, timeout=_RECONCILE_LOCK_TIMEOUT_S):
-                current = _reload_prepared_operation(repository, operation.operation_id)
+                current = _reload_operation(repository, operation.operation_id)
                 if current is None:
                     continue
-                _remove_orphan_staged_temp(current)
-                repository.delete(current.operation_id)
+                published = _is_completed(current) or _destination_matches_digest(
+                    destination,
+                    current.content_sha256,
+                )
+                _finalise_reconciled_operation(repository, current, published=published)
                 reconciled.append(current)
         except LockAcquisitionError:
             continue
     return tuple(reconciled)
 
 
-def _reload_prepared_operation(
+def _is_completed(operation: ProfileBundleExportOperation) -> bool:
+    return operation.status is ProfileBundleExportOperationStatus.COMPLETED
+
+
+def _finalise_reconciled_operation(
+    repository: ProfileBundleExportJournalRepository,
+    operation: ProfileBundleExportOperation,
+    *,
+    published: bool,
+) -> None:
+    """Emit the pending event for a published operation, or clear an orphan."""
+    if published:
+        _emit_export_event(operation)
+    else:
+        _remove_orphan_staged_temp(operation)
+    repository.delete(operation.operation_id)
+
+
+def _destination_matches_digest(destination: Path, content_sha256: str) -> bool:
+    """Return whether ``destination`` holds exactly the recorded staged payload."""
+    if not destination.is_file():
+        return False
+    try:
+        return hashlib.sha256(destination.read_bytes()).hexdigest() == content_sha256
+    except OSError:
+        return False
+
+
+def _reload_operation(
     repository: ProfileBundleExportJournalRepository,
     operation_id: str,
 ) -> ProfileBundleExportOperation | None:
-    """Re-read an operation under its target lock; ``None`` if no longer prepared."""
+    """Re-read an operation under its target lock; ``None`` if it has cleared."""
     try:
-        current = repository.load(operation_id)
+        return repository.load(operation_id)
     except ProfileBundleExportJournalNotFoundError:
         return None
-    if current.status is not ProfileBundleExportOperationStatus.PREPARED:
-        return None
-    return current
 
 
 def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
@@ -362,33 +400,6 @@ def _refuse_link_target(path: Path) -> None:
         )
 
 
-def _capture_export_target(path: Path) -> tuple[bool, bytes, int]:
-    """Capture an existing regular target so a failed audit can restore it."""
-    if path.is_symlink():
-        raise ProfileExportError(
-            "portable profile export refuses a symbolic-link destination",
-            context={"destination": str(path)},
-        )
-    if not path.exists():
-        return False, b"", 0o600
-    if not path.is_file():
-        raise ProfileExportError(
-            "portable profile export destination must be a regular file",
-            context={"destination": str(path)},
-        )
-    return True, path.read_bytes(), path.stat().st_mode & 0o777
-
-
-def _restore_export_target(path: Path, snapshot: tuple[bool, bytes, int]) -> None:
-    """Compensate a published target after its audit event fails."""
-    existed, contents, mode = snapshot
-    if existed:
-        atomic_write_hardened_bytes(path, contents, mode=mode)
-        return
-    path.unlink(missing_ok=True)
-    fsync_parent_dir(path)
-
-
 def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:
     """Delete a reconciled operation's orphan staged temp, never its target."""
     staged = Path(operation.staged_path)
@@ -408,13 +419,15 @@ def _safe_delete_journal(repository: ProfileBundleExportJournalRepository, opera
         get_logger(__name__).debug("profile export journal cleanup failed", exc_info=True)
 
 
-def _record_profile_export(
-    *,
-    pointer: ProfileBucketPointer,
-    bundle: UserProfilePortableExport,
-    request: ProfileBundleExportRequest,
-    repository: BucketEventHistoryRepositoryProtocol,
-) -> None:
+def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
+    """Emit the ``PROFILE_EXPORTED`` event for one operation, idempotently.
+
+    Derives the event solely from the durable operation record, including its
+    fixed ``event_occurred_at``, so a live publish emission and any later
+    reconciliation emission produce the byte-identical ``event_id``; the
+    content-addressed event catalogue then collapses the re-emission to one
+    entry.
+    """
     from ...domain.buckets import (
         BucketEvent,
         BucketEventObjectType,
@@ -422,36 +435,37 @@ def _record_profile_export(
         append_bucket_event,
         derive_bucket_event_id,
     )
+    from ._orchestration import _profile_export_runtime
 
-    occurred_at = now().replace(microsecond=0)
     payload = {
-        "display_name": pointer.label,
-        "out": str(request.destination),
-        "purpose": request.purpose.value,
-        "schema_version": str(bundle.bundle_schema_version),
-        "transport": request.transport.value,
+        "display_name": operation.display_name,
+        "out": operation.destination,
+        "purpose": operation.purpose.value,
+        "schema_version": str(operation.bundle_schema_version),
+        "transport": operation.transport.value,
     }
     event_id = derive_bucket_event_id(
-        bucket_id=pointer.bucket_id,
+        bucket_id=operation.profile_id,
         event_type=BucketEventType.PROFILE_EXPORTED,
-        occurred_at=occurred_at,
+        occurred_at=operation.event_occurred_at,
         actor="operator",
         object_type=BucketEventObjectType.PROFILE,
-        object_id=pointer.bucket_id,
+        object_id=operation.profile_id,
         payload=payload,
     )
     event = BucketEvent(
         event_id=event_id,
-        bucket_id=pointer.bucket_id,
+        bucket_id=operation.profile_id,
         event_type=BucketEventType.PROFILE_EXPORTED,
-        occurred_at=occurred_at,
+        occurred_at=operation.event_occurred_at,
         actor="operator",
         object_type=BucketEventObjectType.PROFILE,
-        object_id=pointer.bucket_id,
+        object_id=operation.profile_id,
         payload_version=1,
         payload=payload,
     )
-    repository.save(append_bucket_event(repository.load(), event))
+    with _profile_export_runtime(operation.profile_id) as event_repository:
+        event_repository.save(append_bucket_event(event_repository.load(), event))
 
 
 __all__ = [

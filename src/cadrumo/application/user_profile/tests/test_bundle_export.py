@@ -222,7 +222,19 @@ def test_encrypted_transport_decrypts_to_the_canonical_cleartext_bundle(tmp_path
         assert b"12345678Z" not in encrypted_path.read_bytes()
 
 
-def test_event_failure_removes_new_target_and_restores_preexisting_target(tmp_path: Path) -> None:
+def test_event_failure_keeps_target_published_and_reconcile_emits_pending_event(tmp_path: Path) -> None:
+    # Contract (S11): a durably-published bundle is NEVER un-published. If the
+    # completion event write fails after a successful atomic replace, the target
+    # stays published, the operation journal stays COMPLETED, and a later
+    # reconcile emits the still-owed PROFILE_EXPORTED event exactly once. This
+    # replaces the earlier restore-on-event-failure contract, which could
+    # un-publish a durably-written bundle.
+    from .. import reconcile_prepared_exports
+    from .._bundle_export_operation import (
+        ProfileBundleExportJournalRepository,
+        ProfileBundleExportOperationStatus,
+    )
+
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         bucket_id = _create_profile()
         seed_path = tmp_path / "seed.json"
@@ -232,21 +244,31 @@ def test_event_failure_removes_new_target_and_restores_preexisting_target(tmp_pa
         event_count_before = len(_export_events(bucket_id))
         database_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
 
-        new_target = tmp_path / "new-target.json"
         existing_target = tmp_path / "existing-target.json"
         previous_bytes = b"operator-owned previous export bytes\n"
         existing_target.write_bytes(previous_bytes)
 
-        with _reject_event_history_updates(database_path):
-            with pytest.raises(ProfileExportError, match="destination was restored"):
-                export_profile_bundle(
-                    _request(new_target, purpose=ProfileBundleExportPurpose.SUBJECT_ACCESS),
-                )
-            with pytest.raises(ProfileExportError, match="destination was restored"):
-                export_profile_bundle(
-                    _request(existing_target, purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER),
-                )
+        with (
+            _reject_event_history_updates(database_path),
+            pytest.raises(ProfileExportError, match="audit event could not be recorded"),
+        ):
+            export_profile_bundle(
+                _request(existing_target, purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER),
+            )
 
-        assert not new_target.exists()
-        assert existing_target.read_bytes() == previous_bytes
+        # Published: the new bundle overwrote the preexisting bytes (not restored).
+        published = UserProfilePortableExport.model_validate_json(existing_target.read_text(encoding="utf-8"))
+        assert published.profile.profile_id == bucket_id
+        assert existing_target.read_bytes() != previous_bytes
+        # The audit event is still owed; the journal is COMPLETED.
+        repository = ProfileBundleExportJournalRepository()
+        completed = repository.list()
+        assert len(completed) == 1
+        assert completed[0].status is ProfileBundleExportOperationStatus.COMPLETED
         assert len(_export_events(bucket_id)) == event_count_before
+
+        # With the event store healthy again, reconcile emits the pending event.
+        reconciled = reconcile_prepared_exports()
+        assert len(reconciled) == 1
+        assert repository.list() == ()
+        assert len(_export_events(bucket_id)) == event_count_before + 1
