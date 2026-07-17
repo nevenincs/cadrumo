@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -21,8 +22,14 @@ from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
+from .. import (
+    AuthLoginPreconditionError,
+    active_auth_projection_span,
+    login_operator_auth,
+)
 from .._operator import build_live_auth_preflight_report, configure_operator_auth, inspect_operator_auth
 from .._operator import test_operator_auth as run_operator_auth_test
 from .._sessions import (
@@ -439,6 +446,64 @@ def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
     )
     assert status.configured == probe.configured
     assert status.health_summary == probe.health_summary
+
+
+def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> None:
+    """A malformed stored selector never escapes the typed projection boundary.
+
+    The real workflow repository persists a non-empty legacy selector that cannot
+    hydrate :class:`AuthProviderKind`. The route snapshot must narrow it to
+    ``None``; status, test, and live preflight must then expose the same empty,
+    unconfigured, unavailable state. Login must refuse at that boundary, before
+    any provider or browser-session construction can begin.
+    """
+
+    from ...state_projection import build_operator_state_projection
+
+    invalid_selector = "certificate-private-taxpayer-note"
+    workflow_state_repository().update(_register_operator_profile())
+    workflow_state_repository().update(
+        lambda state: state.model_copy(
+            update={
+                "auth": state.auth.model_copy(
+                    update={"provider": invalid_selector},
+                ),
+            },
+        ),
+    )
+
+    with active_auth_projection_span() as snapshot:
+        assert snapshot.state is not None
+        assert snapshot.state.auth.provider == invalid_selector
+        assert snapshot.provider is None
+        projection = build_operator_state_projection(
+            auth_snapshot=snapshot,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+        direct_state_projection = build_operator_state_projection(
+            state=snapshot.state,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+
+    status = inspect_operator_auth()
+    probe = run_operator_auth_test()
+    preflight = build_live_auth_preflight_report()
+
+    for readiness in (projection.auth, direct_state_projection.auth, status, probe, preflight):
+        assert readiness.provider == ""
+        assert readiness.configured is False
+        assert readiness.available is False
+        assert invalid_selector not in readiness.model_dump_json()
+
+    with pytest.raises(AuthLoginPreconditionError) as excinfo:
+        asyncio.run(login_operator_auth(pytest_current_test=""))
+
+    assert excinfo.value.translated_message == "application.auth.operator.errors.provider_not_configured"
+    assert invalid_selector not in str(excinfo.value)
 
 
 def test_auth_test_probes_the_provider_when_one_is_configured() -> None:

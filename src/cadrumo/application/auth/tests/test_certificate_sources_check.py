@@ -16,31 +16,19 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import pkcs12
-from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
-from ....adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    get_secret_store,
-    override_secret_store,
-)
+from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore, get_secret_store, override_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....core import AuthProviderKind, BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
+from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ...state_projection import build_operator_state_projection
-from ...user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-)
+from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import (
     AuthLoginPreconditionError,
@@ -50,6 +38,7 @@ from .. import (
     check_operator_certificate_sources,
     configure_operator_auth,
     inspect_operator_auth,
+    load_persisted_session,
     login_operator_auth,
     probe_provider_credentials,
     project_active_certificate_credentials,
@@ -58,9 +47,12 @@ from .. import (
     select_operator_certificate_source,
     select_provider,
     set_operator_certificate_source_secret,
+    storage_state_paths,
     update_auth,
 )
+from .._operator import _test_operator_auth_from_snapshot
 from .._operator import test_operator_auth as run_operator_auth_test
+from ._certificate_bundle_support import _SECRET, _build_pkcs12
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -68,7 +60,6 @@ _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _BUCKET_B = "44444444-4444-4444-8444-444444444444"
 _MISSING_BUCKET = "55555555-5555-4555-8555-555555555555"
 _PROFILE_LABEL = "gestor-cert-rotation"
-_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
 _SECRET_B = "bucket-b-correct-horse"  # noqa: S105 - synthetic test fixture, not a secret
 _NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
 
@@ -100,45 +91,6 @@ def _isolated_backend(
 @pytest.fixture
 def _manages_storage_roots() -> None:
     """Let one route-isolation test own both complete storage-root contexts."""
-
-
-def _build_pkcs12(
-    tmp_path: Path,
-    *,
-    not_valid_before: datetime,
-    not_valid_after: datetime,
-    name: str,
-    subject_cn: str,
-    password: str = _SECRET,
-) -> Path:
-    """Generate a real self-signed PKCS#12 bundle with the given validity window."""
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    subject = issuer = x509.Name(
-        [
-            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.COMMON_NAME, subject_cn),
-        ],
-    )
-    cert = (
-        x509.CertificateBuilder()
-        .subject_name(subject)
-        .issuer_name(issuer)
-        .public_key(key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(not_valid_before)
-        .not_valid_after(not_valid_after)
-        .sign(key, hashes.SHA256())
-    )
-    pfx_bytes = pkcs12.serialize_key_and_certificates(
-        name=name.encode("utf-8"),
-        key=key,
-        cert=cert,
-        cas=None,
-        encryption_algorithm=serialization.BestAvailableEncryption(password.encode("utf-8")),
-    )
-    out = tmp_path / f"{name}.p12"
-    out.write_bytes(pfx_bytes)
-    return out
 
 
 def test_check_reports_ok_for_a_certificate_far_from_expiry(
@@ -977,6 +929,18 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
     set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
     select_operator_certificate_source(name="selected")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
+    session_captured_at = _NOW
+    session_a_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+    _session_store.save(
+        session_a_path,
+        storage_state={"cookies": [], "origins": []},
+        metadata={
+            "provider_kind": AuthProviderKind.CERTIFICATE.value,
+            "identity_nif": "ROUTE-A",
+            "authenticated_at": session_captured_at.isoformat(),
+            "idle_deadline": (session_captured_at + timedelta(minutes=30)).isoformat(),
+        },
+    )
 
     with profile_create_storage_span(_BUCKET_B):
         workflow_state_repository().update(
@@ -998,6 +962,17 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
+        session_b_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+        _session_store.save(
+            session_b_path,
+            storage_state={"cookies": [], "origins": []},
+            metadata={
+                "provider_kind": AuthProviderKind.CERTIFICATE.value,
+                "identity_nif": "ROUTE-B",
+                "authenticated_at": session_captured_at.isoformat(),
+                "idle_deadline": (session_captured_at + timedelta(minutes=30)).isoformat(),
+            },
+        )
 
     settings = load_settings()
     write_pointer(
@@ -1015,16 +990,48 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             )
             state_after_pointer_change = workflow_state_repository().load()
             credentials_after_pointer_change = resolve_active_certificate_credentials()
+            projection_after_pointer_change = build_operator_state_projection(
+                auth_snapshot=snapshot,
+                requested_provider=AuthProviderKind.CERTIFICATE.value,
+                probe_live_backend=True,
+                include_workspace_summary=False,
+                include_pending_obligations=False,
+            )
+            session_after_pointer_change = load_persisted_session(
+                load_settings(),
+                AuthProviderKind.CERTIFICATE,
+            )
+            operator_test_after_pointer_change = _test_operator_auth_from_snapshot(
+                snapshot,
+                requested_provider=AuthProviderKind.CERTIFICATE.value,
+                resolved_settings=load_settings(),
+            )
+            preflight_after_pointer_change = build_live_auth_preflight_report(AuthProviderKind.CERTIFICATE.value)
 
             assert state_after_pointer_change.auth.certificate_path == str(cert_a)
             assert credentials_after_pointer_change.certificate_path == cert_a
             assert credentials_after_pointer_change.password is not None
             assert credentials_after_pointer_change.password.get_secret_value() == _SECRET
+            assert projection_after_pointer_change.active_profile.profile_id == _BUCKET_ID
+            assert projection_after_pointer_change.auth.certificate_path == str(cert_a)
+            assert projection_after_pointer_change.auth.available is True
+            assert session_after_pointer_change is not None
+            assert session_after_pointer_change.identity_nif == "ROUTE-A"
+            assert operator_test_after_pointer_change.active_profile == _BUCKET_ID
+            assert operator_test_after_pointer_change.certificate_path == str(cert_a)
+            assert operator_test_after_pointer_change.persisted_session_present is True
+            assert preflight_after_pointer_change.active_profile == _BUCKET_ID
+            assert preflight_after_pointer_change.certificate_path_configured is True
+            assert preflight_after_pointer_change.persisted_session_present is True
 
         credentials_after_span = resolve_active_certificate_credentials()
+        with profile_storage_session(_BUCKET_B):
+            session_after_span = load_persisted_session(load_settings(), AuthProviderKind.CERTIFICATE)
         assert credentials_after_span.certificate_path == cert_b
         assert credentials_after_span.password is not None
         assert credentials_after_span.password.get_secret_value() == _SECRET_B
+        assert session_after_span is not None
+        assert session_after_span.identity_nif == "ROUTE-B"
 
 
 def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_ambient_session(

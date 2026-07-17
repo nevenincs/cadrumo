@@ -9,13 +9,14 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings, unwrap_optional_secret
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
@@ -28,11 +29,15 @@ from ._sessions import load_persisted_session
 
 _log = get_logger(__name__)
 
+if TYPE_CHECKING:
+    from ..workflow import WorkflowState
+
 
 def _live_auth_identity_state(
     provider_kind: AuthProviderKind | None,
     *,
     settings: Settings,
+    state: WorkflowState | None = None,
 ) -> tuple[bool, bool, str]:
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
@@ -40,10 +45,11 @@ def _live_auth_identity_state(
         from ..user_profile import record_to_path_values
         from ..workflow import workflow_state_repository
 
-        record = workflow_state_repository().load().active_profile_record()
+        resolved_state = state if state is not None else workflow_state_repository().load()
+        record = resolved_state.active_profile_record()
         values = record_to_path_values(record) if record is not None else {}
         profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
-    except (OSError, AeatError, AttributeError, LookupError):
+    except (OSError, CadrumoError, AttributeError, LookupError):
         _log.debug("profile tax-id probe failed; treating as empty", exc_info=True)
         profile_tax_id = ""
     provider_identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip().upper()
@@ -119,7 +125,7 @@ def _probe_local_session(provider: str, *, settings: Settings | None = None) -> 
     try:
         with active_profile_storage_span(resolved_settings):
             session = load_persisted_session(resolved_settings, kind)
-    except (AeatError, OSError):
+    except (CadrumoError, OSError):
         _log.debug("local auth session probe failed; treating persisted session as absent", exc_info=True)
         session = None
     if session is None:
@@ -206,9 +212,7 @@ def probe_provider_configuration(
     """
     resolved_settings = settings or load_settings()
     credentials = (
-        unnamed_certificate_credentials(resolved_settings)
-        if provider == AuthProviderKind.CERTIFICATE.value
-        else None
+        unnamed_certificate_credentials(resolved_settings) if provider == AuthProviderKind.CERTIFICATE.value else None
     )
     return probe_provider_credentials(
         provider,

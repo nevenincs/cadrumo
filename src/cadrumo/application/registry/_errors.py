@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class RegistryApplicationError(AeatError):
+class RegistryApplicationError(CadrumoError):
     """Raised when registry application orchestration refuses or fails."""
 
 

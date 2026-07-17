@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ..core import BucketPointer, capture_pointer
 from ..core.config import load_settings
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.hashing import sha256_hex
 from ..core.time import now
 from ..domain.retention import RetentionFloorAssessment
@@ -42,7 +42,7 @@ from .user_profile import (
 from .workflow import list_profile_buckets
 
 
-class ConfigResetError(AeatError):
+class ConfigResetError(CadrumoError):
     """Base application failure for durable configuration reset."""
 
 

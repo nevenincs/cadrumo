@@ -8,10 +8,11 @@ import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...tests.secure_sql import isolated_profile_storage_root
+from ...tests.user_profile import register_minimal_profile
 from .. import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 from ..auth import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..operator_surface import require_accepted_root
-from ..user_profile import profile_create_storage_span, register_minimal_profile
+from ..user_profile import profile_create_storage_span
 from ..workflow import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

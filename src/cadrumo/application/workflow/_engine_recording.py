@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
-from typing import NoReturn, cast
+from typing import NoReturn
 
 from ...core.errors import SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
@@ -68,14 +68,7 @@ def record_site_unavailable(
     current_run_id: Callable[[], str | None],
 ) -> NoReturn:
     """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
-    # CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS:
-    # ``SiteHealthError`` types its payload through the structural
-    # ``SiteHealthStatusLike`` protocol so ``core.errors`` need not
-    # import the browser adapter. Every site-health failure raised
-    # by the AEAT browser adapter carries the concrete
-    # ``SiteHealthStatus`` record, which the workflow ``SiteHealthAlert``
-    # requires; narrow at this adapter boundary.
-    status = cast("SiteHealthStatus", exc.status)
+    status = SiteHealthStatus.model_validate(exc.status, from_attributes=True)
     alert_run_id = current_run_id() or "-"
     summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {status.state.value}")
     steps.append(

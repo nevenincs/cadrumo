@@ -40,7 +40,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
@@ -88,11 +88,11 @@ class MediaKind(StrEnum):
     IMAGE = "image"
 
 
-class PurchaseInvoiceEvidenceInputError(AeatError):
+class PurchaseInvoiceEvidenceInputError(CadrumoError):
     """Raised when a CLI-supplied evidence input violates the typed contract."""
 
 
-class PurchaseInvoiceEvidenceNotFoundError(AeatError):
+class PurchaseInvoiceEvidenceNotFoundError(CadrumoError):
     """Raised when a CLI lookup targets a missing evidence record."""
 
 

@@ -18,8 +18,7 @@ import pytest
 from ....core import Period, require_active_bucket_id
 from ....tests.live_gate import requires_live_enabled
 from .. import (
-    _default_justificante_declarations,
-    _default_justificante_session,
+    capture_expedientes,
     capture_justificante_snapshot,
 )
 from .._errors import LiveApplicationInputError
@@ -36,10 +35,9 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 _LIVE_MODELO = "130"
 
 
-async def _discover_filed_period(*, modelo: str, year: int) -> Period | None:
-    session, settings = await _default_justificante_session()
-    declarations = await _default_justificante_declarations(session, settings, modelo=modelo, year=year)
-    for declaration in declarations:
+async def _discover_filed_period(*, bucket_id: str, modelo: str, year: int) -> Period | None:
+    snapshot = await capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year)
+    for declaration in snapshot.declarations:
         if declaration.modelo == modelo:
             return declaration.period
     return None
@@ -54,7 +52,7 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
     bucket_id = require_active_bucket_id()
     year = date.today().year - 1
 
-    period = asyncio.run(_discover_filed_period(modelo=_LIVE_MODELO, year=year))
+    period = asyncio.run(_discover_filed_period(bucket_id=bucket_id, modelo=_LIVE_MODELO, year=year))
     if period is None:
         pytest.fail(
             f"active profile {bucket_id!r} has no filed Modelo {_LIVE_MODELO} declaration "

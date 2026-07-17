@@ -32,7 +32,7 @@ _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
-_PROFILE_FINGERPRINT = "sha256:e43c88edad4d98897cc610aad74834a0ef1711f53a635269846e54069237b207"
+_PROFILE_FINGERPRINT = "sha256:a2163dffc4d956186d63f53548026176dfda6cf90ceeec02aafa843fb46ae4b9"
 # Derived-fact profile bindings that unconditionally resolve a grounded value
 # (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
 # the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61

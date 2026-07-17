@@ -68,7 +68,7 @@ from ...domain.calculations.registry import (
 from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
-from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload
+from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._revision_carry_gate import revision_carry_outcome
 
 
@@ -121,7 +121,7 @@ _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generad
 _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
-def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
+def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:
     """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
@@ -283,7 +283,7 @@ def _gather_grouped_member_observations(
         )
 
 
-def _gathered_from_payload(payload: _ObservationEnvelopePayload | None) -> _GatheredObservation | None:
+def _gathered_from_payload(payload: ObservationEnvelopePayload | None) -> _GatheredObservation | None:
     """Apply the R2 carry gate to a single-key payload.
 
     Divergent or unreconfirmable source revision stamps refuse the carry.

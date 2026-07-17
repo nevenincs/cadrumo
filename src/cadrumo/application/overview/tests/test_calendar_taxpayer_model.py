@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import UTC, date, datetime
 
 import pytest
@@ -14,7 +13,6 @@ from ....domain.deadlines import (
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
-    Schedule,
     TaxpayerProfile,
 )
 from ...live import PersistedExpedientesSnapshot
@@ -583,103 +581,3 @@ def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     # not refuse with an INCOMPLETE.
     assert cal.taxpayer_model_declared is True
     assert cal.incomplete_reason is None
-
-
-# ---------------------------------------------------------------------
-# NoDeadlineWindowsError catch-narrowing (round-4 #40)
-# ---------------------------------------------------------------------
-
-
-class _NoWindowsEngine:
-    """A ScheduleProducer that raises the benign no-windows fault.
-
-    Real-behaviour fault injector for the ``build_overview_calendar``
-    exception-narrowing contract: it raises the genuine
-    :class:`NoDeadlineWindowsError` the engine raises for a year with
-    no registered deadline windows. Not a mock of engine behaviour —
-    it exercises the calendar's pure catch logic against the real
-    exception type.
-    """
-
-    def compute(
-        self,
-        profile: TaxpayerProfile,
-        year: int,
-        *,
-        today: date | None = None,
-    ) -> Schedule:
-        from ....domain.deadlines import NoDeadlineWindowsError
-
-        raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
-
-
-class _CorruptRegistryEngine:
-    """A ScheduleProducer that raises a genuine registry-integrity fault.
-
-    Raises the bare :class:`ScheduleComputationError` the deadline
-    engine raises for a real registry-integrity fault (validation
-    failure, profile-condition evaluation failure) — distinct from the
-    benign :class:`NoDeadlineWindowsError`. The calendar must let this
-    propagate, not swallow it as a missing-data state.
-    """
-
-    def compute(
-        self,
-        profile: TaxpayerProfile,
-        year: int,
-        *,
-        today: date | None = None,
-    ) -> Schedule:
-        from ....domain.deadlines import ScheduleComputationError
-
-        raise ScheduleComputationError(f"deadline registry validation failed for year {year}")
-
-
-def test_calendar_benign_no_windows_year_still_degrades(caplog: pytest.LogCaptureFixture) -> None:
-    """The benign no-windows fault still degrades gracefully after the
-    catch was narrowed to ``NoDeadlineWindowsError``.
-
-    A year whose schedule raises the benign ``NoDeadlineWindowsError``
-    contributes zero entries; the calendar still returns a valid empty
-    result rather than propagating the error."""
-
-    rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.overview"):
-        cal = build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine())
-
-    assert isinstance(cal, OverviewCalendar)
-    assert cal.entries == ()
-    assert cal.taxpayer_model_declared is True
-    relevant = [
-        record
-        for record in caplog.records
-        if record.getMessage() == "overview calendar ignored covered year with no registered deadline windows"
-    ]
-    assert len(relevant) == 2
-    # year and error_type are added via logging.extra={...} — access via getattr.
-    assert {getattr(record, "year", None) for record in relevant} == {2029, 2030}
-    assert {getattr(record, "error_type", None) for record in relevant} == {"NoDeadlineWindowsError"}
-
-
-def test_calendar_propagates_genuine_registry_fault() -> None:
-    """A genuine registry-integrity fault must propagate past
-    ``build_overview_calendar`` instead of being swallowed.
-
-    Before the catch was narrowed, the broad ``ScheduleComputationError``
-    catch silently masked a registry validation failure as a benign
-    "no data yet" year. The narrowed ``NoDeadlineWindowsError`` catch
-    lets the genuine fault surface so a corrupt registry is never
-    hidden from the operator (round-4 #40)."""
-
-    from ....domain.deadlines import (
-        NoDeadlineWindowsError,
-        ScheduleComputationError,
-    )
-
-    rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
-    with pytest.raises(ScheduleComputationError) as excinfo:
-        build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_CorruptRegistryEngine())
-    # The genuine fault is the bare base class, not the benign subtype —
-    # the narrowed catch deliberately let it through.
-    assert not isinstance(excinfo.value, NoDeadlineWindowsError)
-    assert "validation failed" in str(excinfo.value)

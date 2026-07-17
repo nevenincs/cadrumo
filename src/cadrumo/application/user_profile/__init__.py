@@ -103,7 +103,6 @@ if TYPE_CHECKING:
         UserProfileStatus,
     )
     from ._bundle import (
-        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
         serialize_profile_bundle,
@@ -114,6 +113,13 @@ if TYPE_CHECKING:
         EncryptedProfileBundleExport,
         decrypt_profile_bundle_with_passphrase,
         encrypt_profile_bundle_for_passphrase,
+    )
+    from ._bundle_export import (
+        ProfileBundleExportPurpose,
+        ProfileBundleExportRequest,
+        ProfileBundleExportResult,
+        ProfileBundleExportTransport,
+        export_profile_bundle,
     )
     from ._capabilities import (
         CapabilityDecision,
@@ -212,7 +218,6 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
     )
-    from ._testing import register_minimal_profile
     from ._validation import ProfileValidationService
 
 # An explicit register call replaces a side-effect import so the
@@ -302,7 +307,6 @@ def __getattr__(name: str):
 
         return ProfileValidationService
     if name in (
-        "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
         "UnsupportedBundleSchemaVersionError",
         "deserialize_profile_bundle",
         "serialize_profile_bundle",
@@ -311,6 +315,16 @@ def __getattr__(name: str):
         from . import _bundle
 
         return getattr(_bundle, name)
+    if name in (
+        "ProfileBundleExportPurpose",
+        "ProfileBundleExportRequest",
+        "ProfileBundleExportResult",
+        "ProfileBundleExportTransport",
+        "export_profile_bundle",
+    ):
+        from . import _bundle_export
+
+        return getattr(_bundle_export, name)
     if name in (
         "EncryptedProfileBundleError",
         "EncryptedProfileBundleExport",
@@ -416,17 +430,12 @@ def __getattr__(name: str):
         from . import _custody_carry
 
         return getattr(_custody_carry, name)
-    if name == "register_minimal_profile":
-        from ._testing import register_minimal_profile
-
-        return register_minimal_profile
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [
     "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_SOURCE_TAG",
-    "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TAX_ID_FACT_PATH",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
@@ -445,6 +454,10 @@ __all__ = [
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
     "ProfileAlreadyRegisteredError",
+    "ProfileBundleExportPurpose",
+    "ProfileBundleExportRequest",
+    "ProfileBundleExportResult",
+    "ProfileBundleExportTransport",
     "ProfileId",
     "ProfileImportResult",
     "ProfileIntegrityError",
@@ -481,6 +494,7 @@ __all__ = [
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
     "encrypt_profile_bundle_for_passphrase",
+    "export_profile_bundle",
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
@@ -499,7 +513,6 @@ __all__ = [
     "recovery_wrap_path",
     "refuse_duplicate_label",
     "register_active_profile",
-    "register_minimal_profile",
     "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",

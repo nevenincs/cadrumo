@@ -35,6 +35,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import resolve_profile_sourced_bindings
+from ._registry_resources import authority_via_resources
 
 _log = get_logger(__name__)
 
@@ -61,7 +62,7 @@ def profile_resolvable_binding_ids(
     bucket has no profile — the caller then treats every non-constant
     binding as missing, which is the correct conservative answer.
     """
-    authority = _resources_authority()
+    authority = authority_via_resources()
     if period is not None and period.filing_year != filing_year:
         raise RegistryValidationError(
             f"binding-readiness period {period} does not match filing year {filing_year}",
@@ -110,13 +111,6 @@ def profile_resolvable_binding_ids(
     return frozenset(
         set(result.binding_values) | set(result.enum_binding_values) | set(result.date_binding_values),
     )
-
-
-def _resources_authority() -> ValidatedRegistryAuthority:
-    """Return the registry authority via the central resource registry."""
-    from ...core.resources import resources
-
-    return resources().modelos.authority
 
 
 def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: str, filing_year: int) -> str | None:

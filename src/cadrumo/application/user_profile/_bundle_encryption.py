@@ -12,13 +12,13 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.user_profile import UserProfilePortableExport, UserProfileValidationError
 from ._bundle import (
-    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
+    BUNDLE_SCHEMA_VERSION,
     UnsupportedBundleSchemaVersionError,
     validate_bundle_payload,
 )
 
 _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION = 1
-_ENCRYPTED_BUNDLE_AAD = b"aeat.user-profile.portable-export.v1"
+_ENCRYPTED_BUNDLE_AAD = b"cadrumo.user-profile.portable-export.v1"
 
 
 class EncryptedProfileBundleExport(BaseModel):
@@ -84,7 +84,7 @@ def decrypt_profile_bundle_with_passphrase(
 
     Payload validation routes through
     :func:`~cadrumo.application.user_profile.validate_bundle_payload`, so an
-    out-of-range or non-upgradeable ``bundle_schema_version`` propagates as
+    non-current ``bundle_schema_version`` propagates as
     :class:`UnsupportedBundleSchemaVersionError` (naming the version) rather
     than being flattened into the generic envelope error.
     """
@@ -96,7 +96,7 @@ def decrypt_profile_bundle_with_passphrase(
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares the wrong payload model",
         )
-    if envelope.payload_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+    if envelope.payload_schema_version != BUNDLE_SCHEMA_VERSION:
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares an unsupported payload schema",
         )

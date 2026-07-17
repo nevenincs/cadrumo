@@ -13,7 +13,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Protocol
 
 import pytest
 from pydantic import ValidationError
@@ -46,11 +45,6 @@ _TEST_PERIOD = Period.from_year_and_code(_TEST_YEAR, "1T")
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 _CASILLA_02: CasillaId = validated_casilla_id("02", surface="_CASILLA_02")
 _MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_INPUT_CASILLA")
-
-
-class _TimeMachineController(Protocol):
-    def move_to(self, destination: object, *, tick: bool = False) -> None:
-        """Move the test clock to ``destination``."""
 
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
@@ -470,36 +464,39 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
     assert not offences, "ambiguous runtime casilla schema projection:\n  " + "\n  ".join(offences)
 
 
-def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: _TimeMachineController) -> None:
+def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path) -> None:
     """_registry_tree_fingerprint must cache results with a 1-second TTL and support clearing."""
     import os
+    import time
 
     from ..runtime import clear_runtime_fingerprint_cache, registry_tree_fingerprint
 
     clear_runtime_fingerprint_cache()
-    reg_root = tmp_path / "registry"
-    (reg_root / "legal").mkdir(parents=True)
-    (reg_root / "modelos").mkdir()
+    try:
+        reg_root = tmp_path / "registry"
+        (reg_root / "legal").mkdir(parents=True)
+        (reg_root / "modelos").mkdir()
 
-    toml_file = reg_root / "legal" / "test.toml"
-    toml_file.write_text("a = 1")
+        toml_file = reg_root / "legal" / "test.toml"
+        toml_file.write_text("a = 1")
 
-    time_machine.move_to("2026-06-09T12:00:00+00:00")
-    fp1 = registry_tree_fingerprint(reg_root)
+        fp1 = registry_tree_fingerprint(reg_root)
 
-    toml_file.write_text("a = 2")
-    os.utime(toml_file, (1812542400, 1812542400))  # 2027-06-09 12:00:00
+        toml_file.write_text("a = 2")
+        os.utime(toml_file, (1812542400, 1812542400))  # 2027-06-09 12:00:00
 
-    fp2 = registry_tree_fingerprint(reg_root)
-    assert fp2 == fp1
+        fp2 = registry_tree_fingerprint(reg_root)
+        assert fp2 == fp1
 
-    clear_runtime_fingerprint_cache()
-    fp3 = registry_tree_fingerprint(reg_root)
-    assert fp3 != fp1
+        clear_runtime_fingerprint_cache()
+        fp3 = registry_tree_fingerprint(reg_root)
+        assert fp3 != fp1
 
-    toml_file.write_text("a = 3")
-    os.utime(toml_file, (1812542405, 1812542405))
+        toml_file.write_text("a = 3")
+        os.utime(toml_file, (1812542405, 1812542405))
+        time.sleep(1.05)
 
-    time_machine.move_to("2026-06-09T12:00:02+00:00")
-    fp4 = registry_tree_fingerprint(reg_root)
-    assert fp4 != fp3
+        fp4 = registry_tree_fingerprint(reg_root)
+        assert fp4 != fp3
+    finally:
+        clear_runtime_fingerprint_cache()

@@ -747,7 +747,10 @@ def _resolve_cross_period_source(
             # CAST-RATIONALE-CROSS-PERIOD-MEMBER-PAYLOAD: iter_modelo records are typed envelopes at runtime.
             value_member_payloads = tuple(
                 # CAST-RATIONALE-CROSS-PERIOD-MEMBER-ITEM: iter_modelo records are typed envelopes at runtime.
-                cast(_ObservationPayload, item)
+                cast(  # nosemgrep: no-cast-in-domain-application reason: repository rows satisfy _ObservationPayload.
+                    _ObservationPayload,
+                    item,
+                )
                 for item in member_payloads
             )
         else:
@@ -763,7 +766,10 @@ def _resolve_cross_period_source(
             # CAST-RATIONALE-CROSS-PERIOD-FILTERED-PAYLOAD: roster filtering retains the typed repository envelope.
             value_member_payloads = tuple(
                 # CAST-RATIONALE-CROSS-PERIOD-FILTERED-ITEM: roster filtering retains the typed repository envelope.
-                cast(_ObservationPayload, item)
+                cast(  # nosemgrep: no-cast-in-domain-application reason: roster rows satisfy _ObservationPayload.
+                    _ObservationPayload,
+                    item,
+                )
                 for item in member_payloads
                 if str(item.member_nif) in expected_member_nif_set
             )
@@ -780,7 +786,7 @@ def _resolve_cross_period_source(
     else:
         # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
         # CAST-RATIONALE-CROSS-PERIOD-SINGLE-RESULT: load_observation returns the same envelope contract as iteration.
-        payload = cast(
+        payload = cast(  # nosemgrep: no-cast-in-domain-application reason: lookup returns this Protocol or None.
             _ObservationPayload | None,
             observation_repository.load_observation(
                 requirement.source_modelo,

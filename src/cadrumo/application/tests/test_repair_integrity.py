@@ -21,7 +21,6 @@ import pytest
 from ...adapters.persistence.storage import (
     REPAIR_INTEGRITY_DECISION_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
-    EphemeralMasterKeyProvider,
     has_active_bucket_session,
     suspend_active_session,
 )
@@ -30,6 +29,7 @@ from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
+from ...tests.master_key import EphemeralMasterKeyProvider
 from ...tests.secure_sql import isolated_runtime_profile
 from ..repair_integrity import (
     RepairDecisionNotFoundError,

@@ -24,7 +24,7 @@ from collections.abc import Callable, Mapping
 from typing import Final
 
 from ....core.decimal import format_decimal
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....domain.calculations.registry import BindingId, CasillaId, FormulaExpression, ParameterId, RelationId
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout
@@ -32,7 +32,7 @@ from ._layout import SheetLayout
 type SheetA1Reference = str
 
 
-class TranslationError(AeatError):
+class TranslationError(CadrumoError):
     """A registry expression has no closed-form Sheets equivalent."""
 
     def __init__(self, message: str, *, op: str | None = None, hint: str | None = None) -> None:

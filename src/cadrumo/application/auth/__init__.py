@@ -83,9 +83,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from importlib import import_module
-from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
@@ -165,13 +164,16 @@ def select_provider(
     if kind is _AuthProviderKind.CERTIFICATE and credentials is None:
         credentials = resolve_active_certificate_credentials(settings=settings)
     outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth")
-    outbound_factory = cast(Callable[..., AuthProvider], outbound_auth.select_provider)
-    return outbound_factory(
+    outbound_factory = outbound_auth.select_provider
+    provider = outbound_factory(
         kind,
         settings=settings,
         browser_session_factory=browser_session_factory,
         certificate_credentials=credentials,
     )
+    if not isinstance(provider, AuthProvider):
+        raise TypeError("outbound auth factory returned an object outside the AuthProvider contract")
+    return provider
 
 
 from ._acquisition_lock import (

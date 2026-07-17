@@ -4,8 +4,8 @@ The :class:`Prompter` protocol decouples "where does an answer come
 from" from "what does the wizard ask for". The runtime calls
 ``prompter.ask(question, default=...)`` for every visible question
 and receives a canonical-token string in return. Two implementations
-ship: ``ScriptedPrompter`` for deterministic tests and structured
-flag-driven CLI invocations, and ``QuestionaryPrompter`` for live
+ship: ``CanonicalAnswerPrompter`` for structured non-interactive CLI
+invocations, and ``QuestionaryPrompter`` for live
 operator interaction. Both speak the same canonical-token contract.
 """
 
@@ -17,16 +17,16 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 import questionary
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ._errors import WizardScriptOverflowError, WizardScriptUnderflowError
+from ._errors import WizardAnswerQueueOverflowError, WizardAnswerQueueUnderflowError
 from ._models import WizardChoice, WizardQuestion, WizardWidget
 
 _log = get_logger(__name__)
 
 
-class WizardUnsupportedConsoleError(AeatError):
+class WizardUnsupportedConsoleError(CadrumoError):
     """Raised when the host terminal cannot host an interactive wizard.
 
     Surfaces when ``prompt_toolkit`` rejects the active TTY (typically
@@ -87,16 +87,16 @@ class Prompter(Protocol):
         ...
 
 
-class ScriptedPrompter:
-    """Test-only prompter that pops canonical-token answers from a FIFO queue.
+class CanonicalAnswerPrompter:
+    """Non-interactive prompter that consumes canonical answers in flow order.
 
-    Tests construct a ``ScriptedPrompter`` with a deque of canonical
-    tokens whose order matches the runtime's expected question
-    sequence. Each ``ask`` call pops the leftmost token; an empty
-    deque raises :class:`WizardScriptUnderflowError`. Calling
+    Quiet and accept-defaults CLI modes construct this prompter with canonical
+    tokens whose order matches the runtime's expected question sequence. Each
+    ``ask`` call pops the leftmost token; an empty deque raises
+    :class:`WizardAnswerQueueUnderflowError`. Calling
     :meth:`close` after the runtime finishes raises
-    :class:`WizardScriptOverflowError` if any scripted token went
-    unconsumed, surfacing test-fixture drift loudly without exposing
+    :class:`WizardAnswerQueueOverflowError` if any token went unconsumed,
+    surfacing caller/runtime drift loudly without exposing
     token values in diagnostics.
     """
 
@@ -119,25 +119,25 @@ class ScriptedPrompter:
                 answer.
 
         Raises:
-            WizardScriptUnderflowError: When the answer queue is empty.
+            WizardAnswerQueueUnderflowError: When the answer queue is empty.
         """
         del default
         if not self._answers:
             context = {"question_id": question.id, "prompt_key": str(question.prompt)}
-            raise WizardScriptUnderflowError(
-                translated_message="errors.internal.internal_wizard_script_underflow",
+            raise WizardAnswerQueueUnderflowError(
+                translated_message="errors.internal.internal_wizard_answer_queue_underflow",
                 context=context,
             )
         self._asked.append(question.id)
         return self._answers.popleft()
 
     def close(self) -> None:
-        """Assert every scripted answer was consumed.
+        """Assert every canonical answer was consumed.
 
         Raises:
-            WizardScriptOverflowError: When the deque holds unconsumed
+            WizardAnswerQueueOverflowError: When the deque holds unconsumed
                 canonical tokens at flow end. The exception context
-                reports counts only because scripted tokens can contain
+                reports counts only because canonical tokens can contain
                 secrets.
         """
         if self._answers:
@@ -145,8 +145,8 @@ class ScriptedPrompter:
                 "remaining_count": len(self._answers),
                 "asked_count": len(self._asked),
             }
-            raise WizardScriptOverflowError(
-                translated_message="errors.internal.internal_wizard_script_overflow",
+            raise WizardAnswerQueueOverflowError(
+                translated_message="errors.internal.internal_wizard_answer_queue_overflow",
                 context=context,
             )
 
@@ -343,7 +343,7 @@ def _stringify(value: object) -> str:
 
 
 __all__ = [
+    "CanonicalAnswerPrompter",
     "Prompter",
     "QuestionaryPrompter",
-    "ScriptedPrompter",
 ]

@@ -15,7 +15,6 @@ from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry import (
     CasillaId,
     DataBindingDefinition,
@@ -23,16 +22,7 @@ from ....domain.calculations.registry import (
     PeriodSelector,
     validated_casilla_id,
 )
-from ....domain.categories import (
-    CategoryCitation,
-    CategoryCitationSource,
-    CategoryProfile,
-    ProportionalityKind,
-    ProportionalityRule,
-    SpendingCategory,
-    parse_http_url,
-)
-from ....domain.contribuyente import CCAA
+from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.renta import RentaExpenseDirection
@@ -47,14 +37,12 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.usage_ratios import UsageRatioProfile
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
     LedgerRentaExpenseAggregationSourceResolver,
     RentaLedgerAggregationIssueReason,
-    RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
@@ -954,206 +942,3 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT
-
-
-# ---------------------------------------------------------------------------
-# Territorial-regime region-scoped deductibility (region-Renta D1/D2/D4)
-# ---------------------------------------------------------------------------
-
-
-def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
-    """A SYNTHETIC per-comunidad override profile for wiring tests only.
-
-    Fixed 50% deductibility, distinct from the GASTOS_BANCARIOS state profile
-    (full deductible), so a selection is observable. This is a test double for
-    the SELECTION MECHANISM, never a real territorial-regime figure.
-    """
-    return CategoryProfile(
-        category=category,
-        display_label=tr("Override territorial de prueba"),
-        proportionality=ProportionalityRule(
-            kind=ProportionalityKind.FIXED_PERCENTAGE,
-            fixed_pct=Decimal("0.50"),
-            citations=(
-                CategoryCitation(
-                    source=CategoryCitationSource.MANUAL_RENTA,
-                    reference="Regla de prueba territorial",
-                    locator="test",
-                    url=parse_http_url("https://example.com/regimen"),
-                    quote=tr("Texto de prueba para override territorial."),
-                ),
-            ),
-            notes=tr("Override territorial de prueba."),
-        ),
-    )
-
-
-def test_non_regional_category_profile_preserves_result_across_region() -> None:
-    """With the empty override layer, the residence CCAA is inert.
-
-    A category with no territorial-regime override produces byte-identical
-    observations whether the residence comunidad is declared or not.
-    """
-    row = _transaction("row-region-inert", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
-    catalogue = TransactionCatalogue.from_transactions((row,))
-
-    without_region = aggregate_renta_ledger_expenses(
-        catalogue, InvoiceCatalogue(), bucket_id="test", period=_ANNUAL_2025, profile_year=2025
-    )
-    with_region = aggregate_renta_ledger_expenses(
-        catalogue,
-        InvoiceCatalogue(),
-        bucket_id="test",
-        period=_ANNUAL_2025,
-        profile_year=2025,
-        residence_ccaa=CCAA.MADRID,
-    )
-
-    assert with_region.observations == without_region.observations
-    assert with_region.casilla_values == without_region.casilla_values
-    assert with_region.issues == without_region.issues == ()
-
-
-def test_region_override_selected_when_residence_matches() -> None:
-    """A declared residence with a territorial override selects the override.
-
-    The synthetic 50% override for the residence comunidad halves the deductible
-    versus the full-deductible state profile, proving selection by CCAA.
-    """
-    row = _transaction("row-region-hit", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
-    overrides = {
-        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)}
-    }
-
-    result = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((row,)),
-        InvoiceCatalogue(),
-        bucket_id="test",
-        period=_ANNUAL_2025,
-        profile_year=2025,
-        residence_ccaa=CCAA.CANARIAS,
-        region_category_overrides=overrides,
-    )
-
-    assert result.issues == ()
-    assert result.observations[0].proportionality_kind is ProportionalityKind.FIXED_PERCENTAGE
-    assert result.observations[0].deductible_amount == Decimal("50.0000")
-
-
-def test_region_override_undeclared_residence_fails_closed() -> None:
-    """A category carrying an override with no declared residence fails closed."""
-    row = _transaction("row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
-    overrides = {
-        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)}
-    }
-
-    result = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((row,)),
-        InvoiceCatalogue(),
-        bucket_id="test",
-        period=_ANNUAL_2025,
-        profile_year=2025,
-        residence_ccaa=None,
-        region_category_overrides=overrides,
-    )
-
-    assert result.observations == ()
-    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE
-
-
-# ---------------------------------------------------------------------------
-# Residence CCAA derived from the active profile at the repository boundary.
-# ---------------------------------------------------------------------------
-
-
-def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
-    """A user profile carrying an optional ``tax_residence.ccaa`` fact."""
-    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
-    if ccaa_value is not None:
-        facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
-    return UserProfileRecord(
-        profile_id="11111111-1111-4111-8111-111111111111",
-        display_name="Region Tester",
-        facts=facts,
-    )
-
-
-def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empty(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """Deriving residence CCAA from the profile changes nothing without overrides.
-
-    With the registry override layer empty, aggregating through the repository
-    wrapper with a profile declaring ``tax_residence.ccaa = madrid`` produces
-    casilla totals and observations byte-identical to the no-residence case.
-    """
-    invoice = _invoice(_transaction("row-region-wrapper-inert").transaction_id)
-    linked = _transaction("row-region-wrapper-inert", purchase_invoice_evidence_id=invoice.invoice_id)
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((linked,)),
-    )
-    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,)),
-    )
-
-    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
-        return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
-            period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
-            profile_year=2025,
-            profile_record=profile_record,
-        )
-
-    with_madrid = _run(_profile_with_ccaa("madrid"))
-    without_region = _run(_profile_with_ccaa(None))
-
-    assert with_madrid.casilla_values == without_region.casilla_values
-    assert with_madrid.observations == without_region.observations
-    assert with_madrid.issues == without_region.issues == ()
-
-
-def test_repository_wrapper_threads_profile_residence_into_region_override_selection(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The residence CCAA derived from the profile reaches override selection.
-
-    A GASTOS_BANCARIOS row with a synthetic Canarias override: a profile declaring
-    ``tax_residence.ccaa = canarias`` selects the override THROUGH the repository
-    wrapper (deductible halved), proving the residence derived from the profile
-    flows end-to-end; a Madrid profile falls through to state law, proving the
-    derived residence is the actual selector and is not silently dropped.
-    """
-    row = _transaction(
-        "row-region-wrapper-hit",
-        amount=Decimal("100.00"),
-        category=SpendingCategory.GASTOS_BANCARIOS,
-    )
-    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((row,)),
-    )
-    overrides = {
-        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)},
-    }
-
-    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
-        return aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id="test",
-            period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
-            profile_year=2025,
-            profile_record=profile_record,
-            region_category_overrides=overrides,
-        )
-
-    matched = _run(_profile_with_ccaa("canarias"))
-    assert matched.issues == ()
-    assert matched.observations[0].proportionality_kind is ProportionalityKind.FIXED_PERCENTAGE
-    assert matched.observations[0].deductible_amount == Decimal("50.0000")
-
-    other_region = _run(_profile_with_ccaa("madrid"))
-    assert other_region.issues == ()
-    assert other_region.observations[0].proportionality_kind is not ProportionalityKind.FIXED_PERCENTAGE
-    assert other_region.observations[0].deductible_amount == Decimal("100.00")

@@ -62,11 +62,6 @@ _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozens
     },
 )
 
-#: Legacy diagnostic ``source_kind`` retained for callers that only need the
-#: generic reason. New diagnostics use the settlement-side-specific source
-#: kinds below.
-MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND = "transaction_evidence"
-
 #: Diagnostic ``source_kind`` for missing supplier evidence on positive
 #: deductible input IVA. Verification treats this as filing-grade blocking.
 MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND = "deductible_vat_evidence"
@@ -217,7 +212,6 @@ def missing_evidence_advisory_observations(
 __all__ = [
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND",
-    "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "missing_evidence_advisory_observations",
     "transaction_missing_deductible_vat_evidence",
     "transaction_missing_output_vat_evidence",

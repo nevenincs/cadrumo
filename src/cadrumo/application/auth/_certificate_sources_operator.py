@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 from pydantic import SecretStr
 
 from ...core.config import Settings, load_settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.time import now
 from .._workflow_auth_models import (
     CertificateSecretMutationEventKind,
@@ -260,10 +260,8 @@ def list_operator_certificate_sources() -> CertificateSourceListResult:
 def select_operator_certificate_source(*, name: str) -> CertificateSourceMutationResult:
     """Mark ``name`` the active certificate source for the active profile.
 
-    Selecting a source mirrors its path onto ``AuthState.certificate_path``
-    so every existing certificate-provider consumer (the backend health
-    probe, live login preconditions, ``auth status``/``auth test``) reads
-    the newly selected source without further changes.
+    The canonical credential resolver reads the selected registry record
+    directly; no duplicate path mirror is written.
 
     Raises:
         AuthConfigureNoActiveBucketError: When no active profile bucket
@@ -395,7 +393,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
                     bucket_id=active_bucket_id,
                     settings=resolved_settings,
                 )
-            except (OSError, AeatError):
+            except (OSError, CadrumoError):
                 per_source_secret = None
             credentials = ActiveCertificateCredentials(
                 certificate_path=Path(record.certificate_path),

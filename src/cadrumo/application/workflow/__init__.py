@@ -31,7 +31,7 @@ sensitive profile records are loaded only through the active bucket and the
 user-profile orchestration layer.
 
 Workflow persistence is likewise bucket-scoped.
-:func:`workflow_state_repository` binds the
+:func:`~cadrumo.application.workflow._persistence.workflow_state_repository` binds the
 state envelope to the currently resolved active bucket via the storage
 runtime's secure-object repository. A cold root with no active pointer is the
 only bootstrap exception, so recovery and status probes can observe an absent
@@ -68,7 +68,7 @@ See Also:
         manifest-backed profile buckets without opening secure storage.
     :func:`assess_active_profile_health`: Produce
         the redacted active-profile status used by CLI status surfaces.
-    :func:`workflow_state_repository`: Resolve the
+    :func:`~cadrumo.application.workflow._persistence.workflow_state_repository`: Resolve the
         active-bucket secure-object repository for encrypted workflow state.
     :class:`WorkflowStateResetFingerprint`: Redacted
         reset audit record produced before workflow-state deletion.

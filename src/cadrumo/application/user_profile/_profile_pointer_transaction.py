@@ -33,10 +33,10 @@ from ...core import (
     write_pointer,
 )
 from ...core.config import load_settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class ActiveProfilePointerTransactionError(AeatError):
+class ActiveProfilePointerTransactionError(CadrumoError):
     """Reject invalid nesting or use outside live transaction ownership."""
 
 

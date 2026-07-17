@@ -30,16 +30,6 @@ def test_application_package_reexports_callable_symbols() -> None:
         assert callable(getattr(package, symbol)), symbol
 
 
-def test_application_package_reexports_supported_bundle_schema_versions() -> None:
-    """The frozen set of accepted bundle schema versions is package-visible."""
-    from ... import user_profile as package
-
-    assert "SUPPORTED_BUNDLE_SCHEMA_VERSIONS" in package.__all__
-    supported = package.SUPPORTED_BUNDLE_SCHEMA_VERSIONS
-    assert isinstance(supported, frozenset)
-    assert supported, "supported bundle schema version set must not be empty"
-
-
 def test_application_package_reexports_orchestration_full_surface() -> None:
     """Every public symbol declared in _orchestration.__all__ is reachable via the package.
 

@@ -63,7 +63,7 @@ from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NA
 from ...adapters.persistence.storage import SensitivityClass
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
@@ -83,7 +83,7 @@ _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 _HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
-class ReviewPackageSigningError(AeatError):
+class ReviewPackageSigningError(CadrumoError):
     """Base error for review-package signing/verification failures."""
 
 

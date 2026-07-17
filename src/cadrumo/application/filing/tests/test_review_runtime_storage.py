@@ -23,6 +23,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from .. import (
@@ -32,7 +33,6 @@ from .. import (
     build_runtime_schema_provider,
     compute_current_approval_basis,
 )
-from ..testing import build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

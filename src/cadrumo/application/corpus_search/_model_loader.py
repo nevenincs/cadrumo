@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import importlib
 import inspect
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Protocol, runtime_checkable
 
 from ._errors import CorpusSearchDependencyError
 
@@ -25,7 +26,21 @@ SEARCH_EXTRA_HINT = "pip install cadrumo[search]"
 _DEFAULT_DIMENSIONS = 256
 
 
-def load_static_model(model_id: str, *, revision: str, cache_dir: Path | None = None) -> Any:
+@runtime_checkable
+class StaticEmbeddingModel(Protocol):
+    """Minimal model2vec surface consumed by corpus embedding services."""
+
+    def encode(self, sentences: Sequence[str]) -> object:
+        """Return an array-like embedding matrix for ``sentences``."""
+        ...
+
+
+def load_static_model(
+    model_id: str,
+    *,
+    revision: str,
+    cache_dir: Path | None = None,
+) -> StaticEmbeddingModel:
     """Load a model2vec ``StaticModel``, refusing if the ``search`` extra is absent.
 
     Args:
@@ -35,7 +50,7 @@ def load_static_model(model_id: str, *, revision: str, cache_dir: Path | None = 
         cache_dir: Optional app-controlled cache directory for the download.
 
     Returns:
-        The loaded ``StaticModel`` (typed ``Any`` — model2vec ships no stubs).
+        The loaded model narrowed to the embedding protocol used here.
 
     Raises:
         CorpusSearchDependencyError: If ``model2vec`` is not installed.
@@ -58,22 +73,30 @@ def load_static_model(model_id: str, *, revision: str, cache_dir: Path | None = 
         kwargs["revision"] = revision
     if cache_dir is not None and "cache_dir" in accepted:
         kwargs["cache_dir"] = str(cache_dir)
-    return static_model.from_pretrained(model_id, **kwargs)
+    loaded = static_model.from_pretrained(model_id, **kwargs)
+    if not isinstance(loaded, StaticEmbeddingModel):
+        raise CorpusSearchDependencyError(
+            "the installed model2vec StaticModel lacks the required encode method",
+            context={"model_id": model_id, "dependency": "model2vec"},
+            suggestion=SEARCH_EXTRA_HINT,
+        )
+    return loaded
 
 
-# KWARGS-ANY-RATIONALE-cli: model is an untyped model2vec StaticModel optional-extra object
 def model_dimensions(
-    model: Any,
-) -> int:  # KWARGS-ANY-RATIONALE-optextra: model is an untyped model2vec StaticModel optional-extra object
+    model: StaticEmbeddingModel,
+) -> int:
     """Return the embedding dimensionality of a loaded ``StaticModel``."""
     dim = getattr(model, "dim", None)
     if isinstance(dim, int) and dim > 0:
         return dim
     embedding = getattr(model, "embedding", None)
     shape = getattr(embedding, "shape", None)
-    if shape is not None and len(shape) == 2:
-        return int(shape[1])
+    if isinstance(shape, Sequence) and len(shape) == 2:
+        dimensions = shape[1]
+        if isinstance(dimensions, int) and dimensions > 0:
+            return dimensions
     return _DEFAULT_DIMENSIONS
 
 
-__all__ = ["SEARCH_EXTRA_HINT", "load_static_model", "model_dimensions"]
+__all__ = ["SEARCH_EXTRA_HINT", "StaticEmbeddingModel", "load_static_model", "model_dimensions"]
