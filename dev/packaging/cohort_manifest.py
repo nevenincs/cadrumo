@@ -53,6 +53,7 @@ class BuildIdentity(BaseModel):
     uv: str = Field(min_length=1)
     platform: str = Field(min_length=1)
     architecture: str = Field(min_length=1)
+    build_constraints_sha256: str = Field(pattern=_SHA256_PATTERN)
 
 
 class ArtifactRecord(BaseModel):
