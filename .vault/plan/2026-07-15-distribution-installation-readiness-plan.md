@@ -101,7 +101,7 @@ translation. A failed check leaves its row open for a separate approved implemen
 - [x] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
 - [ ] `W02.P06.S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort; `packaging/mcpb/build.py`.
 - [ ] `W02.P06.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
-- [ ] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
+- [x] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
 - [ ] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
 - [ ] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [ ] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
