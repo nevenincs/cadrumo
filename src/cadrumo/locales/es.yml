@@ -1974,10 +1974,8 @@ cli:
           (manifest.json se escribe el último).
         force_incomplete_help: Permitir la exportación cuando la verificación señale
           el paquete como incompleto.
-        group_help: Verbos de auditoría del paquete de evidencia (show/check/export/replay).
+        group_help: Verbos de auditoría del paquete de evidencia (show/check/export).
         output_help: Ruta de salida para el ZIP del paquete.
-        replay_help: Reproducir la verificación del caso de evidencia para entrega
-          forense; nunca contacta con AEAT ni realiza envíos.
         show_help: Mostrar el manifiesto y los registros referenciados de un paquete
           de evidencia
       bindings:

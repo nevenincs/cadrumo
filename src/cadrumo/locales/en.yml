@@ -1824,10 +1824,8 @@ cli:
           emitted last).
         force_incomplete_help: Allow export when verification reports the bundle as
           incomplete.
-        group_help: Evidence bundle audit verbs (show/check/export/replay).
+        group_help: Evidence bundle audit verbs (show/check/export).
         output_help: Output path for the bundle ZIP archive.
-        replay_help: Re-run the evidence-case verification for forensic audit handoff;
-          never contacts AEAT and never performs submission.
         show_help: Render an evidence bundle's manifest and referenced records
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form

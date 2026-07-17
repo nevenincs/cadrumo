@@ -1951,10 +1951,8 @@ cli:
           s'escriu l'últim).
         force_incomplete_help: Permetre l'exportació quan la verificació indiqui que
           el paquet és incomplet.
-        group_help: Verbs d'auditoria del paquet d'evidència (show/check/export/replay).
+        group_help: Verbs d'auditoria del paquet d'evidència (show/check/export).
         output_help: Ruta de sortida per al ZIP del paquet.
-        replay_help: Reproduir la verificació del cas d'evidència per al lliurament
-          forense; mai contacta amb AEAT ni realitza tramesses.
         show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
