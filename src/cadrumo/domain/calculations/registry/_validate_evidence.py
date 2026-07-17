@@ -93,6 +93,8 @@ def _normalise_required_text(text: str) -> str:
 
 _DISK_CACHE: dict[str, str] | None = None
 _DISK_CACHE_DIRTY: bool = False
+# Disk-cache writes since reset; observability for the validation-verdict pin.
+_DISK_CACHE_WRITE_COUNT: int = 0
 
 
 def _corpus_text_cache_path() -> Path:
@@ -107,9 +109,10 @@ def _corpus_text_cache_path() -> Path:
 
 def reset_corpus_text_cache() -> None:
     """Drop the in-process corpus-text cache memos (test isolation only)."""
-    global _DISK_CACHE, _DISK_CACHE_DIRTY
+    global _DISK_CACHE, _DISK_CACHE_DIRTY, _DISK_CACHE_WRITE_COUNT
     _DISK_CACHE = None
     _DISK_CACHE_DIRTY = False
+    _DISK_CACHE_WRITE_COUNT = 0
     _NORMALISED_SOURCE_TEXT_CACHE.clear()
 
 
@@ -151,6 +154,8 @@ def _load_disk_cache() -> dict[str, str]:
 
 
 def _write_disk_cache(data: dict[str, str]) -> None:
+    global _DISK_CACHE_WRITE_COUNT
+    _DISK_CACHE_WRITE_COUNT += 1
     cache_path = _corpus_text_cache_path()
     temp_name = None
     try:

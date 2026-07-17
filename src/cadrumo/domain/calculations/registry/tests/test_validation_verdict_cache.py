@@ -1,0 +1,139 @@
+"""Regression pin for the persistent validation-verdict cache (ADR D1).
+
+These real-behavior tests exercise the bundled registry, real corpus-text
+extraction, and the real filesystem under isolated per-test cache directories.
+They lock the mandatory contract from the research:
+
+- authority-boundary validation performs exactly one corpus-cache write, while a
+  direct ``RegistryValidator`` performs zero (the flush lives at the authority
+  boundary only);
+- a verdict-cache hit provably skips ``validate_registry`` -- including the
+  per-modelo ``validate_modelo`` path ``modelo list`` uses -- observed as zero
+  corpus extraction on the warm-verdict load and an unchanged verdict file; and
+- a fingerprint mismatch (a superseded stored verdict) is deleted, re-validates
+  in full, and rewrites the verdict with the freshly computed key.
+
+No mocks, stubs, or monkeypatches: the write count is a real production
+observability counter, and skips/re-validation are proven by filesystem side
+effects.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from .....core.config import override_settings
+from .....core.resources import bundled_path
+from .. import _validate_evidence as ve
+from .._authority import _load_authority, bundled_authority
+from .._loader import _load_registry_tree_cached, clear_fingerprint_cache, load_registry_tree
+from .._validate import RegistryValidator
+from .._validate_verdict import (
+    VERDICT_OUTCOME_GREEN,
+    ValidationVerdict,
+    read_verdict,
+    verdict_cache_path,
+    write_verdict,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _bundled_registry_root() -> Path:
+    return bundled_path("registry", "aeat").expanduser().resolve()
+
+
+def _reset_all_caches() -> None:
+    # Clear the compiled-tree lru so each construction gets fresh modelo objects:
+    # the registry validator memoizes results in a module-level cache keyed by
+    # id(modelo), so reusing shared objects would let a prior validation's
+    # cached result short-circuit the source-citation reads this pin observes.
+    _load_authority.cache_clear()
+    _load_registry_tree_cached.cache_clear()
+    clear_fingerprint_cache()
+    ve.reset_corpus_text_cache()
+
+
+def test_direct_registry_validator_performs_zero_corpus_cache_writes(tmp_path: Path) -> None:
+    """A bare ``RegistryValidator`` accumulates dirty state but never flushes."""
+    with override_settings(cadrumo_corpus_text_cache_dir=tmp_path / "corpus"):
+        _reset_all_caches()
+        modelos, catalogues = load_registry_tree(_bundled_registry_root())
+        validator = RegistryValidator(catalogues, source_root=bundled_path())
+
+        validator.validate_registry(modelos)
+
+        assert ve._DISK_CACHE_WRITE_COUNT == 0, "the direct validator must not flush the corpus cache"
+        assert ve._DISK_CACHE_DIRTY is True, "real extraction must have marked the cache dirty without flushing"
+        assert not ve._corpus_text_cache_path().exists(), "no corpus cache file may be written by the direct validator"
+
+
+def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(tmp_path: Path) -> None:
+    """The authority flushes exactly once cold, then a verdict hit skips validation entirely."""
+    root = _bundled_registry_root()
+    with override_settings(
+        cadrumo_corpus_text_cache_dir=tmp_path / "corpus",
+        cadrumo_validation_verdict_cache_dir=tmp_path / "verdict",
+    ):
+        _reset_all_caches()
+
+        authority = bundled_authority()
+        assert authority._registry_validated is True
+        assert ve._DISK_CACHE_WRITE_COUNT == 1, "the authority boundary must batch to exactly one flush"
+        assert ve._DISK_CACHE_DIRTY is False, "the authority must have flushed the batched corpus cache"
+        assert ve._corpus_text_cache_path().is_file()
+
+        verdict_path = verdict_cache_path(root)
+        assert verdict_path.is_file(), "a green validation must persist a verdict"
+        verdict_mtime_before = verdict_path.stat().st_mtime_ns
+
+        # Second cold construction: delete the corpus file and drop in-process
+        # memos, so a re-validation would necessarily re-extract and rewrite it.
+        ve._corpus_text_cache_path().unlink()
+        _reset_all_caches()
+
+        skipped_authority = bundled_authority()
+
+        assert skipped_authority._registry_validated is True, "the verdict hit must construct as validated"
+        assert ve._DISK_CACHE_WRITE_COUNT == 0, "a verdict hit must not re-extract or flush"
+        assert not ve._corpus_text_cache_path().exists(), "validation was skipped, so no corpus file is rewritten"
+        assert verdict_path.stat().st_mtime_ns == verdict_mtime_before, "a skip must not rewrite the verdict"
+
+        # The per-modelo path modelo list uses is short-circuited too.
+        skipped_authority.validate_modelo(skipped_authority.modelos[0].id)
+        assert ve._DISK_CACHE_WRITE_COUNT == 0, "modelo list validation must also be skipped on a verdict hit"
+
+
+def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path: Path) -> None:
+    """A superseded stored verdict is not trusted: the tree re-validates and rewrites it."""
+    root = _bundled_registry_root()
+    with override_settings(
+        cadrumo_corpus_text_cache_dir=tmp_path / "corpus",
+        cadrumo_validation_verdict_cache_dir=tmp_path / "verdict",
+    ):
+        _reset_all_caches()
+
+        # Plant a verdict whose key belongs to a superseded fingerprint (the
+        # effect of a touched registry file), then force a fresh construction.
+        verdict_path = verdict_cache_path(root)
+        write_verdict(
+            verdict_path,
+            ValidationVerdict(
+                verdict_key="superseded-fingerprint", package_version="0.0.0", outcome=VERDICT_OUTCOME_GREEN
+            ),
+        )
+
+        authority = bundled_authority()
+
+        assert authority._registry_validated is True
+        assert ve._DISK_CACHE_WRITE_COUNT >= 1, "the mismatch must trigger a real cold re-validation"
+        rewritten = read_verdict(verdict_path)
+        assert rewritten is not None
+        assert rewritten.verdict_key != "superseded-fingerprint", "the stale verdict must be replaced, not trusted"
+        assert rewritten.outcome == VERDICT_OUTCOME_GREEN
+        # The rewritten verdict now certifies the tree: a fresh load hits it and skips.
+        _reset_all_caches()
+        bundled_authority()
+        assert ve._DISK_CACHE_WRITE_COUNT == 0, "the rewritten verdict must certify the current tree"
