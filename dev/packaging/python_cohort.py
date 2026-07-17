@@ -462,11 +462,23 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     )
 
 
+def digest_install_target(name: str, artifact: Path, *, extras: tuple[str, ...] = ()) -> str:
+    """Return one digest-pinned direct URL requirement for a local artifact.
+
+    The ``#sha256=`` fragment makes the installer itself verify the artifact
+    bytes at install time and fail closed on drift — installers do not reliably
+    record ``archive_info.hashes`` for bare local paths (uv records an empty
+    ``archive_info``), so the fragment is the enforceable digest channel.
+    """
+    resolved = artifact.resolve(strict=True)
+    digest = hashlib.sha256(resolved.read_bytes()).hexdigest()
+    extras_suffix = f"[{','.join(extras)}]" if extras else ""
+    return f"{name}{extras_suffix} @ {resolved.as_uri()}#sha256={digest}"
+
+
 def root_install_target(root_artifact: Path, *, extras: tuple[str, ...] = ()) -> str:
-    """Return one direct local root target, optionally selecting public extras."""
-    if not extras:
-        return str(root_artifact.resolve())
-    return f"cadrumo[{','.join(extras)}] @ {root_artifact.resolve().as_uri()}"
+    """Return one digest-pinned direct local root target, optionally with extras."""
+    return digest_install_target("cadrumo", root_artifact, extras=extras)
 
 
 def install_targets(
@@ -478,8 +490,8 @@ def install_targets(
     """Return explicit local targets that prevent companion index resolution."""
     return (
         root_install_target(root_artifact, extras=extras),
-        str(cohort.manuals_wheel),
-        str(cohort.official_wheel),
+        digest_install_target("cadrumo-data-manuals", cohort.manuals_wheel),
+        digest_install_target("cadrumo-data-official", cohort.official_wheel),
     )
 
 
@@ -517,19 +529,32 @@ def assert_installed_cohort(
         raise SystemExit("installed cohort probe returned no direct URLs")
     for name, artifact in expected_artifacts.items():
         direct_url = direct_urls.get(name)
-        if not isinstance(direct_url, dict) or direct_url.get("url") != artifact.as_uri():
+        recorded_url = direct_url.get("url") if isinstance(direct_url, dict) else None
+        base_url, _, fragment = str(recorded_url or "").partition("#")
+        if not isinstance(direct_url, dict) or base_url != artifact.as_uri():
             raise SystemExit(
                 f"{name} installed from an unrelated origin: {direct_url!r}",
             )
-        hashes = (direct_url.get("archive_info") or {}).get("hashes") or {}
         expected_sha = (
             cohort.sha256["cadrumo-sdist"]
             if name == "cadrumo" and artifact == cohort.root_sdist
             else cohort.sha256[name]
         )
-        if hashes.get("sha256") != expected_sha:
+        # Installers differ in where they surface the digest of a local direct
+        # install: pip records ``archive_info.hashes`` while uv preserves only
+        # the requirement's ``#sha256=`` fragment it verified at install time.
+        # Accept either recorded channel, and always re-hash the origin bytes
+        # so the proof never rests on installer metadata alone.
+        hashes = (direct_url.get("archive_info") or {}).get("hashes") or {}
+        recorded_sha = hashes.get("sha256") or fragment.removeprefix("sha256=") or None
+        if recorded_sha != expected_sha:
             raise SystemExit(
-                f"{name} installed digest drifted: expected {expected_sha}, got {hashes!r}",
+                f"{name} installed digest drifted: expected {expected_sha}, recorded {recorded_sha!r}",
+            )
+        origin_sha = hashlib.sha256(artifact.resolve(strict=True).read_bytes()).hexdigest()
+        if origin_sha != expected_sha:
+            raise SystemExit(
+                f"{name} origin bytes drifted after install: expected {expected_sha}, hashed {origin_sha}",
             )
     return document
 
