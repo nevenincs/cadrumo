@@ -147,27 +147,46 @@ def persist_filed_calculation_observation(
     )
 
 
-def persist_latest_filed_calculation_observations(
+def select_latest_filed_observations_in_history_order(
     observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    justificante_csvs_by_observation: Mapping[tuple[str, int, str, str], tuple[str, ...]] | None = None,
-) -> tuple[str, ...]:
-    """Persist only the latest captured observation per modelo/year/period."""
+) -> tuple[FiledDeclaracionObservation, ...]:
+    """Return the latest observation per (modelo, year, period) in deterministic history order.
+
+    "Latest" is by :func:`_filed_observation_rank` (an ALTA registration beats a
+    BAJA, then most-recent ``presented_at``, then ``expediente_id``). History order
+    is :func:`_filed_observation_history_period_sort_key` (Modelo 303 IVA fiscal
+    order, quarterly/monthly numeric order elsewhere). This is the single
+    selection-and-ordering authority shared by the calculation-history persistence
+    below and the filed-capture finalizer, so every capture route persists the same
+    observations in the same order and cannot drift.
+    """
     latest: dict[tuple[str, int, Period], FiledDeclaracionObservation] = {}
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
         current = latest.get(key)
         if current is None or _filed_observation_rank(observation) > _filed_observation_rank(current):
             latest[key] = observation
+    return tuple(
+        observation
+        for _key, observation in sorted(
+            latest.items(),
+            key=lambda item: (
+                item[0][0],
+                item[0][1],
+                _filed_observation_history_period_sort_key(item[0][0], item[0][2]),
+            ),
+        )
+    )
+
+
+def persist_latest_filed_calculation_observations(
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    justificante_csvs_by_observation: Mapping[tuple[str, int, str, str], tuple[str, ...]] | None = None,
+) -> tuple[str, ...]:
+    """Persist only the latest captured observation per modelo/year/period."""
     keys: list[str] = []
-    for _key, observation in sorted(
-        latest.items(),
-        key=lambda item: (
-            item[0][0],
-            item[0][1],
-            _filed_observation_history_period_sort_key(item[0][0], item[0][2]),
-        ),
-    ):
+    for observation in select_latest_filed_observations_in_history_order(observations):
         keys.extend(
             _persist_filed_calculation_observation_if_extractable(
                 observation,
@@ -669,4 +688,5 @@ __all__ = [
     "persist_filed_justificante_metadata",
     "persist_iva_compensation_history_observations_strict",
     "persist_latest_filed_calculation_observations",
+    "select_latest_filed_observations_in_history_order",
 ]
