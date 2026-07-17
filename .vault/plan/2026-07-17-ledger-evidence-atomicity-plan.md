@@ -58,11 +58,11 @@ Restrict ledger link to invoice-only linkage and remove the duplicate backend re
 
 Move the evidence and replay payload schemas, locales, help and risk metadata, and generated documentation.
 
-- [ ] `P04.S11` - Remove replay-specific fields from every payload and schema projection; `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`.
-- [ ] `P04.S12` - Migrate the ledger evidence and audit family help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
+- [x] `P04.S11` - Remove replay-specific fields from every payload and schema projection; `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`.
+- [x] `P04.S12` - Migrate the ledger evidence and audit family help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
 - [ ] `P04.S13` - Migrate the four locale catalogues for the ledger evidence and audit families through the locales CLI; `src/cadrumo/locales/en.yml`.
 - [ ] `P04.S14` - Regenerate the operator how-to and reference pages for ledger evidence from the frozen live surface; `docs/how-to/ledger-evidence.md`.
-- [ ] `P04.S15` - Prove the removed replay and evidence-patch spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+- [x] `P04.S15` - Prove the removed replay and evidence-patch spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
 
 ## Description
 
