@@ -1107,9 +1107,7 @@ def test_file_custody_supports_the_full_recovery_lifecycle(tmp_path: Path) -> No
     assert rotated.rotated is True
 
     _new_passphrase = f"{dev_test_database_password()}-rotated"
-    recover_provider = FileFallbackMasterKeyProvider(
-        store_dir=store_dir, passphrase_callback=lambda: _new_passphrase
-    )
+    recover_provider = FileFallbackMasterKeyProvider(store_dir=store_dir, passphrase_callback=lambda: _new_passphrase)
     recovered = recovery_recover(provider=recover_provider, path=path, mnemonic=staged["mnemonic"])
     assert recovered.recovery_fingerprint == rotated.recovery_fingerprint
 
