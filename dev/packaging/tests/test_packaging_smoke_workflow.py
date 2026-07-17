@@ -50,6 +50,24 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
     return tuple(label for label, pattern in _PROHIBITED_AEAT_PRODUCT_FORMS if pattern.search(surface))
 
 
+def _run_command_lines(job: dict[str, object]) -> set[str]:
+    """Return every non-empty command line across the job's run scripts.
+
+    A step's ``run`` may be a multi-line script (the campaign step wraps the
+    canonical aggregate invocation with a resource sampler), so the canonical
+    command contract is asserted line-wise rather than against whole scripts.
+    """
+    steps = job["steps"]
+    assert isinstance(steps, list)
+    return {
+        line.strip()
+        for step in steps
+        if isinstance(step, dict)
+        for line in str(step.get("run", "")).splitlines()
+        if line.strip()
+    }
+
+
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     """The workflow runs one aggregate so every lane consumes the same bytes."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
@@ -58,7 +76,7 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
 
     job = document["jobs"]["cadrumo-packaging-smoke"]
     assert job["name"] == "Cadrumo / Ubuntu / Python 3.13 / wheel artifacts"
-    commands = {step["run"] for step in job["steps"] if "run" in step}
+    commands = _run_command_lines(job)
     assert {
         "just packaging-smoke-ci",
         "uv run --no-sync python -m dev.packaging.evidence",
@@ -75,7 +93,7 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
     uploads = [step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
     upload = next(step for step in uploads if step["with"]["name"] == "cadrumo-packaging-smoke-evidence")
     cohort_upload = next(step for step in uploads if step["with"]["name"] == "cadrumo-python-cohort")
-    campaign = next(step for step in job["steps"] if step.get("run") == "just packaging-smoke-ci")
+    campaign = next(step for step in job["steps"] if "just packaging-smoke-ci" in str(step.get("run", "")))
     checkpoint = next(
         step for step in job["steps"] if step.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
     )
