@@ -244,3 +244,93 @@ The five shipped client-display fields still correctly fail because the accepted
 verification-only scope has zero approved translation pairs. The implementation review
 passes; it does not approve copy, close S68, or change the required failed distribution
 verdict.
+
+## S69 evidence review scope
+
+Reviewed the retained `W03.P08.S69` Claude-client identity record, its execution
+record, and only the source files cited by the retained record. The review re-hashed
+the retained JSON and every readable cited source, inspected the installed plugin and
+MCPB metadata used for identifier and description observations, and checked the
+Desktop local-agent transcript evidence used to classify the Cowork surface. The
+retained JSON itself matches the execution record's SHA-256
+`294a4705d312dcda5ba68d2d5b0676aa2d74519b72a3f6807aa25b66679cdd12`.
+Its failure verdicts are conservative: no client receives an identity or bilingual
+false pass, missing inventories remain incomplete, and absent Spanish copy remains a
+failure.
+
+## S69 findings
+
+### cowork-source-digest-mismatch | high | The retained Cowork transcript source does not match its recorded digest
+
+The Cowork row cites `audit.jsonl` with SHA-256
+`529496d6248d05651cabdc81c73b00edf663ed355c14187e99f42b160cd56c49`,
+but a shared-read re-hash of that exact completed file produced
+`bc31dcb613b0422a8c757f232068c4e1281e0e3cd10656e2d5abdae74a9eca67`.
+The cited digest belongs to the separate Claude project transcript
+`.claude/projects/.../e7affa71-a0e9-4ec1-ac77-9e001b3413d3.jsonl`, not to the named
+local-agent `audit.jsonl`; S69 assigned the project-transcript digest to a different
+concrete source path. This invalidates the source-integrity claim for the only direct
+evidence behind the Cowork row. The
+transcript content does support the proposed surface classification—`desktop_app`,
+local-agent-mode storage, Cowork MCP tools, Cowork plugin-management commands, and the
+Cadrumo calls are all present—but S69 cannot retain it as verified evidence under a
+mismatched digest.
+
+### claude-code-observation-provenance | high | Several Claude Code observations have no cited or digested source
+
+The Claude Code row cites only the aggregate plugin-evidence JSON and installed
+`plugin.json`. Neither cited file contains client version `2.1.211`, MCP server version
+`1.28.1`, installed-plugin commit `d5d6c34661fe4dd4ad365be8faf53e51682559c3`,
+or the claimed complete seven-agent and 34-skill inventories. Those values exist in
+other retained run files—the client transcript/debug log, `installed_plugins.json`,
+and installed agent and skill trees—but the S69 record neither names nor digests those
+sources and supplies no artifact or tree digest covering them. Consequently the listed
+observations may be correct, but the evidence record does not meet the decision's
+requirement to bind observed identifiers, client identity, and artifact identity to
+retained exact bytes.
+
+## S69 disposition
+
+**Revision required.** The overall noncompliant matrix verdict is honest, the MCP
+server and bilingual verdicts do not fabricate a pass, and treating the Desktop
+local-agent host-loop session as the Cowork surface is supported by the transcript.
+However, the mismatched Cowork digest and uncited Claude Code observation sources make
+the retained evidence set unverifiable. Re-capture or re-hash the exact Cowork source,
+cite and digest every Claude Code source from which recorded fields are derived, then
+regenerate the S69 record and execution-record digest. Keep the S69 plan row unchecked.
+
+## S69 final remediation disposition
+
+**Pass.** A read-only re-review of the remediated S69 evidence found no remaining
+review finding. The earlier rolling findings remain above as audit history; their final
+dispositions are:
+
+- `cowork-source-digest-mismatch`: resolved. The Cowork row now cites the exact main
+  Claude project transcript beneath the local-agent session. A shared-read SHA-256 of
+  that named file matches
+  `529496d6248d05651cabdc81c73b00edf663ed355c14187e99f42b160cd56c49`.
+  The transcript identifies `desktop_app`, the local-agent host-loop, Cowork tools and
+  plugin-management commands, the connected 16-tool Cadrumo surface, and the real tax
+  operation. The installed Desktop evidence binds the same session identifiers to the
+  exact MCPB and root-wheel digests, so the Cowork surface and cohort classification is
+  supported without treating `audit.jsonl` as the retained source.
+- `claude-code-observation-provenance`: resolved. The row now cites and byte-digests
+  the plugin evidence, installed plugin manifest, Claude debug log,
+  `installed_plugins.json`, and installed `.mcp.json`. Those files support the client
+  version, server name and version, client-generated installed-plugin commit, product
+  description, and real behavior. The record expressly marks that generated commit as
+  unequal to the accepted source commit and leaves exact-cohort compliance false.
+  The installed tree independently contains exactly seven agent files and 34 skill
+  directories matching the recorded lists. Their specified sorted compact-JSON
+  canonicalization reproduces SHA-256
+  `f35c5a0a05600984b7945623ad4444c6c97d8c9bd4b602e2a41bb8fd7ac5a7fe`.
+
+Every cited source digest re-hashed successfully. The final retained evidence JSON and
+execution record agree on SHA-256
+`ddda9b49c91ea173858e26c684804c181569c0ab0505bcf7e62985d34b72ff76`.
+The per-field Desktop and Cowork claim maps accurately distinguish the limited short
+description from the complete English long description; both remain Spanish-empty.
+No identity, bilingual, inventory-completeness, or exact-cohort false pass remains.
+This evidence review passes while the S69 delivery row correctly remains unchecked
+because all observed clients fail the requested product contract and the capture is not
+yet an executable workflow.
