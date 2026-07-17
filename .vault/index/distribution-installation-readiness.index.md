@@ -31,6 +31,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S19]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S21]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S22]]'
+  - '[[2026-07-15-distribution-installation-readiness-W03-P08-S39]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
@@ -83,6 +84,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P05-S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort
 - `2026-07-15-distribution-installation-readiness-W02-P05-S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S43` - Remove local release upload authority while retaining diagnostic build recipes
+- `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
 
 ### plan
 
