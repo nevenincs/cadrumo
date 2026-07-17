@@ -18,7 +18,6 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
 from zipfile import BadZipFile
 
 from openpyxl import load_workbook
@@ -285,10 +284,8 @@ def _scan_xlsx_contents(
     return sheets, formulas, references
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-OPENPYXL-WORKSHEET: openpyxl ships incomplete
-# stubs for Worksheet; the loose-typed alias keeps the scan helper callable.
 def _scan_worksheet_cells(
-    worksheet: Any,  # openpyxl Worksheet; loose-typed because openpyxl ships incomplete stubs
+    worksheet: Worksheet,
     *,
     relative: str,
     opts: WorkbookScanOptions,

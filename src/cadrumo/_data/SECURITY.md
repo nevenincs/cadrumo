@@ -1,6 +1,6 @@
 # Security disposition for bundled data
 
-`src/aeat/_data` contains bundled data, not application code. The tree has two
+`src/cadrumo/_data` contains bundled data, not application code. The tree has two
 main classes:
 
 - `corpus/`: mirrored or captured official-source artefacts used as legal,

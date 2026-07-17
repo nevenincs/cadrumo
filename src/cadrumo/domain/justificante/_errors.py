@@ -13,10 +13,10 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import cast
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class PdfModeloImportError(AeatError):
+class PdfModeloImportError(CadrumoError):
     """Domain-level root for PDF filing import failures."""
 
 
@@ -56,9 +56,9 @@ class PdfExtractionCoverageMixin:
         Args:
             message: Human-readable error message.
             context: Optional structured context forwarded to the
-                :class:`core.errors.AeatError` boundary.
+                :class:`core.errors.CadrumoError` boundary.
             suggestion: Optional copy-paste recovery hint forwarded to
-                :class:`core.errors.AeatError`.
+                :class:`core.errors.CadrumoError`.
             translated_message: Optional locale key rendered at the CLI
                 boundary.
             missing: Target identifiers that produced no match in the PDF text.
@@ -67,8 +67,11 @@ class PdfExtractionCoverageMixin:
             coverage: Fraction of required targets successfully extracted,
                 or ``None`` when the error is not a coverage failure.
         """
-        # CAST-RATIONALE-PDF-COVERAGE-MRO: cooperative super resolves the AeatError initializer in this mixin MRO.
-        error_base = cast(AeatError, super())
+        # CAST-RATIONALE-PDF-COVERAGE-MRO: cooperative super resolves the CadrumoError initializer in this mixin MRO.
+        error_base = cast(  # nosemgrep: no-cast-in-domain-application reason: MRO targets CadrumoError.
+            CadrumoError,
+            super(),
+        )
         error_base.__init__(
             message,
             context=context,

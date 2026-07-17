@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from itertools import pairwise
-from typing import Literal, cast
+from typing import Literal
 
 from pydantic import Field, model_validator
 
@@ -27,13 +27,7 @@ __all__ = [
 def _normalise_dispatch_table_entries(value: object) -> object:
     if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
         return value
-    # TOML fragments always parse to string-keyed tables; ``isinstance`` narrows
-    # to Mapping[Unknown, object] because the key type is erased by the object
-    # parameter.  The cast re-attaches the known str key type at this single
-    # TOML deserialization boundary.
-    # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib always produces str keys;
-    # isinstance(value, Mapping) erases the key type to Unknown; cast restores it.
-    mapping = cast("Mapping[str, object]", value)
+    mapping = _string_keyed_mapping(value, surface="formula")
     if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
 
@@ -45,9 +39,7 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     for raw_entry in raw_entries:
         if not isinstance(raw_entry, Mapping):
             raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib always produces str keys;
-        # isinstance(raw_entry, Mapping) erases the key type to Unknown; cast restores it.
-        entry = cast("Mapping[str, object]", raw_entry)
+        entry = _string_keyed_mapping(raw_entry, surface="dispatch_table_entries entry")
         if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
         key = entry["key"]
@@ -61,6 +53,17 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     normalised.pop("dispatch_table_entries")
     normalised["dispatch_table"] = dispatch_table
     return normalised
+
+
+def _string_keyed_mapping(value: object, *, surface: str) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        raise RegistryValidationError(f"{surface} must be a table")
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise RegistryValidationError(f"{surface} keys must be strings")
+        result[key] = item
+    return result
 
 
 class FormulaExpression(RegistryModel):

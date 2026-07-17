@@ -93,11 +93,9 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1373,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/transactions/_models.py": 1419,  # SPLIT-CANDIDATE
     "src/cadrumo/entrypoints/cli/_config/__init__.py": 1261,  # SPLIT-CANDIDATE
-    # cli-authority-verb-conformance W02/W05 in-flight: the logout/reset operator
-    # split and the schema-payload migration grew these past the default budget;
-    # pinned at present size pending the owning campaign's split pass.
+    # Authentication lifecycle responsibilities keep this module above the
+    # default budget.
     "src/cadrumo/application/auth/_operator.py": 1450,  # SPLIT-CANDIDATE
-    "src/cadrumo/entrypoints/cli/_config_payloads.py": 1350,  # SPLIT-CANDIDATE
 }
 _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/cadrumo/application/modelo/_revision_persistence.py", "persist_filed_revision"): 192,  # SPLIT-CANDIDATE

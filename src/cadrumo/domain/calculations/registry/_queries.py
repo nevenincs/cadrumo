@@ -14,7 +14,6 @@ from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import cast
 
 from pydantic import BaseModel
 
@@ -902,7 +901,9 @@ def _public_selector(source: str, selector: object) -> BindingSelectorQueryProje
     )
 
 
-def _public_mapping(value: Mapping[str, object]) -> dict[str, object]:
+def _public_mapping(value: object) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        raise RegistryValidationError(f"unsupported public mapping value {value!r}")
     return {str(key): _public_value(item) for key, item in value.items()}
 
 
@@ -927,9 +928,7 @@ def _public_value(value: object) -> object:
     if isinstance(value, tuple):
         return tuple(_public_value(item) for item in value)
     if isinstance(value, Mapping):
-        # CAST-RATIONALE-TOML-STR-KEYS: all registry and pydantic mappings use str keys;
-        # isinstance(value, Mapping) erases the key type; cast restores it.
-        return _public_mapping(cast("Mapping[str, object]", value))
+        return _public_mapping(value)
     return value
 
 

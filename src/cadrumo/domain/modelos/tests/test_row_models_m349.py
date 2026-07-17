@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import IntracomOperationType
-from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
+from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from .._row_models import (
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
@@ -405,7 +405,7 @@ class TestValidateM349CountryPrefixContext:
             assert case.match is not None, case.case_id
             with pytest.raises(Modelo349CountryPrefixContextError) as exc:
                 case.call()
-            assert isinstance(exc.value, AeatError), case.case_id
+            assert isinstance(exc.value, CadrumoError), case.case_id
             assert isinstance(exc.value, ValueError), case.case_id
             code = get_registered_error_code(exc.value)
             assert code.code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT", case.case_id

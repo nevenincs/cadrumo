@@ -14,14 +14,19 @@ from typing import cast
 def as_toml_table(value: object) -> dict[str, object] | None:
     """Narrow a parsed TOML value to a string-keyed table, or ``None``.
 
-    ``tomllib`` and :func:`~core.freeze_toml` always emit ``str`` keys, so
-    a parsed-TOML ``dict`` is genuinely ``dict[str, object]``. The runtime
-    ``isinstance`` check loses the key type because TOML payloads flow
-    through ``object``; the annotation below re-attaches the known ``str``
-    key type at this single TOML deserialization boundary.
+    The original dictionary identity is preserved because locale-fragment
+    merging updates the compiled table in place. Every key is validated
+    before the deserialization-boundary type is restored.
     """
-    if isinstance(value, dict):
-        # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib/freeze_toml always
-        # produces str-keyed dicts; isinstance loses the key type annotation.
-        return cast("dict[str, object]", value)
-    return None
+    if not isinstance(value, dict):
+        return None
+    for key in value:
+        if not isinstance(key, str):
+            return None
+    # CAST-RATIONALE-TOML-VALIDATED-KEYS-PRESERVE-IDENTITY: every key is
+    # runtime-validated as str, but a cast is required to retain the original
+    # dict identity used by in-place locale merging.
+    return cast(  # nosemgrep: no-cast-in-domain-application reason: validated table identity must survive merging.
+        "dict[str, object]",
+        value,
+    )

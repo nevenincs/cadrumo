@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import AeatError, get_registered_error_code
+from ....core.errors import CadrumoError, get_registered_error_code
 from .._errors import CensoStaleRefusedError, ModeloError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_censo_stale_refused_is_a_modelo_error() -> None:
     assert issubclass(CensoStaleRefusedError, ModeloError)
-    assert issubclass(CensoStaleRefusedError, AeatError)
+    assert issubclass(CensoStaleRefusedError, CadrumoError)
 
 
 def test_censo_stale_refused_carries_registered_error_code() -> None:

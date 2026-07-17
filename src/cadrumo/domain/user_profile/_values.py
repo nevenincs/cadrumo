@@ -145,7 +145,7 @@ class UserProfileRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    schema_id: str = "aeat.user_profile"
+    schema_id: str = "cadrumo.user_profile"
     schema_version: int = Field(default=1, ge=1)
     profile_id: _ProfileId
     display_name: _DisplayName
@@ -210,7 +210,7 @@ class UserProfileSnapshot(BaseModel):
 
     snapshot_id: _SnapshotId
     profile_id: _ProfileId
-    schema_id: str = "aeat.user_profile"
+    schema_id: str = "cadrumo.user_profile"
     schema_version: int = Field(ge=1)
     created_at: datetime = Field(default_factory=utc_now)
     facts: tuple[UserProfileFact, ...]

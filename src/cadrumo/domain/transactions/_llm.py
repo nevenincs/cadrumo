@@ -1108,7 +1108,7 @@ def _resolve_model_id(
     return profile.model_id
 
 
-_BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
+_PROVIDER_BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
     "claude": build_claude_classifier,
     "antigravity": build_antigravity_classifier,
     "codex": build_codex_classifier,
@@ -1126,8 +1126,7 @@ def resolve_classifier(
     """Return a classifier for the given provider name.
 
     Args:
-        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``, or a
-            name registered via :func:`register_classifier`.
+        provider: One of ``"claude"``, ``"antigravity"``, or ``"codex"``.
         alias: Optional capability-tier alias (see
             :class:`cadrumo.domain.transactions._model_tier.ModelProfile`).
             Resolves to a current model ID via the tier catalogue.
@@ -1142,28 +1141,18 @@ def resolve_classifier(
         A concrete implementation of :class:`LLMClassifier`.
 
     Raises:
-        LLMClassifierError: If ``provider`` is not a registered builder,
+        LLMClassifierError: If ``provider`` is not supported,
             or if tier resolution fails.
     """
     try:
-        builder = _BUILDERS[provider.lower()]
+        builder = _PROVIDER_BUILDERS[provider.lower()]
     except KeyError as exc:
-        valid = ", ".join(sorted(_BUILDERS))
+        valid = ", ".join(sorted(_PROVIDER_BUILDERS))
         raise LLMClassifierError(f"unknown LLM provider: {provider!r}; valid: {valid}") from exc
     try:
         return builder(alias=alias, model=model, spec=spec, minimum_tier=minimum_tier)
     except ValueError as exc:
         raise LLMClassifierError(str(exc)) from exc
-    except TypeError:
-        # Test-only builders registered via register_classifier may not take
-        # the alias/minimum_tier kwargs. Fall back to the simple form so the
-        # dependency-injected concrete classifiers keep working.
-        _logger.debug(
-            "resolve_classifier: builder for provider %r does not accept alias/minimum_tier kwargs; "
-            "falling back to simple form",
-            provider,
-        )
-        return builder(model=model, spec=spec)
 
 
 def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> LLMSplitProposer:
@@ -1171,8 +1160,7 @@ def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> 
 
     Resolves the provider's classifier (via :func:`resolve_classifier`) and
     narrows it to an :class:`LLMSplitProposer`. The subprocess classifiers are
-    the only production proposers; a registered classifier that does not also
-    propose splits is refused instructively.
+    the only production proposers.
 
     Args:
         provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``.
@@ -1191,21 +1179,6 @@ def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> 
     if not isinstance(classifier, LLMSplitProposer):
         raise LLMClassifierError(f"provider {provider!r} does not support evidence-driven splitting")
     return classifier
-
-
-def register_classifier(name: str, builder: Callable[..., LLMClassifier]) -> None:
-    """Register a classifier builder under ``name``.
-
-    Intended for tests that want to inject a concrete in-process
-    classifier (no mocks) and for third-party extensions that want to
-    add a new provider without monkey-patching the module.
-    """
-    _BUILDERS[name.lower()] = builder
-
-
-def unregister_classifier(name: str) -> None:
-    """Remove a builder previously added via :func:`register_classifier`."""
-    _BUILDERS.pop(name.lower(), None)
 
 
 __all__ = [
@@ -1230,8 +1203,6 @@ __all__ = [
     "parse_response",
     "prompt_spec_with_every_spending_category",
     "prompt_spec_with_saturation_fields",
-    "register_classifier",
     "resolve_classifier",
     "resolve_split_proposer",
-    "unregister_classifier",
 ]

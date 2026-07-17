@@ -7,10 +7,10 @@ defines reconciliation-specific failures only.
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 
 
-class ReconciliationError(AeatError):
+class ReconciliationError(CadrumoError):
     """Base error for reconciliation between periodic filings and annual summaries."""
 
 

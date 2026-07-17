@@ -3,13 +3,13 @@
 # Bounded to the four casillas that anchor both modality lanes' base
 # inputs and both lanes' final results, per the AEAT-published printed-form
 # box numbering confirmed in the bundled Diseno de Registro:
-#   src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/
+#   src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/
 #     01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx.extracted.md
 #   ("... Base del pago fraccionado [01]", "... A Ingresar [03]",
 #    "Resultado contable despues del IS e IC [04]",
 #    "Cantidad a ingresar (mayor de claves [32] y [33]) [34]")
 # and the AEAT-published instructions HTML:
-#   src/aeat/_data/corpus/aeat_official/instructions/modelo_202/files/
+#   src/cadrumo/_data/corpus/aeat_official/instructions/modelo_202/files/
 #     modelo-202-instrucciones-2023-2024.html
 #   ("... base del pago fraccionado (clave 01, clave 16 o clave 19) ...
 #     la cantidad a ingresar (clave 03 o clave 34)").

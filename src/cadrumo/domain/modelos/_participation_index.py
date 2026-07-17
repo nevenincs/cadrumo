@@ -31,7 +31,7 @@ boundary mirroring the :class:`CalculationRevision` catalogue repository at
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Annotated, cast
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -94,9 +94,11 @@ class TransactionRevisionParticipation(BaseModel):
     @classmethod
     def _coerce_modelo(cls, data: object) -> object:
         if isinstance(data, Mapping) and "modelo" in data:
-            # CAST-RATIONALE-REGISTRY-MAPPING: pydantic before-validator input is an
-            # untyped Mapping; the isinstance guard above proves the str-keyed shape.
-            mapping = cast("Mapping[str, object]", data)
+            mapping: dict[str, object] = {}
+            for key, item in data.items():
+                if not isinstance(key, str):
+                    return data
+                mapping[key] = item
             value = mapping["modelo"]
             if isinstance(value, str) and not isinstance(value, ModeloCode):
                 mutable = dict(mapping)
