@@ -15,7 +15,6 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
 ---
 
-
 # `cli-authority-quality-backlog` plan
 
 ### Phase `P01` - Registry as-of honesty
@@ -71,7 +70,9 @@ Close two MCP-surface gaps. Both are GATED: do not start either step until the m
 
 Pin the prompted-question inventory the profile-create wizard surfaces so a silent add or drop of a question is a loud test failure. Decide the contract first, then implement and assert the exact count.
 
-- [ ] `P07.S20` - Decide the profile-create prompted-question inventory contract: fix the exact set and count of questions the wizard surfaces on the payload and record the rationale as an ADR-lite decision note in the plan; `src/cadrumo/application/wizard/_catalogue.py`.
+Decision note (S20): the pinned contract is the full declared question inventory of `SETUP_FLOW` — 76 questions across 11 sections (taxpayer-type 9, profile 9, taxpayer 7, spouse 9, family 2, iva 8, enrollment 2, obligations 21, residence 5, capabilities 3, notes 1), every id unique. This set is exactly the `supplied_question_ids` frozenset that `create` writes to the payload (`application/wizard/_commands.py`), so it is the questions the wizard surfaces on the payload rather than any conditional per-answer visible subset. Pinning the full declared set makes the gate deterministic and path-independent: a silent add or drop of any question definition fails loudly, while conditional per-answer visibility stays covered by the interactive persisted-fact test. The count and the id set are asserted together so a same-size swap (one question renamed) also fails.
+
+- [x] `P07.S20` - Decide the profile-create prompted-question inventory contract: fix the exact set and count of questions the wizard surfaces on the payload and record the rationale as an ADR-lite decision note in the plan; `src/cadrumo/application/wizard/_catalogue.py`.
 - [ ] `P07.S21` - Implement and assert the exact profile-create question count against the decided inventory so an added or dropped question fails the test loudly; `src/cadrumo/entrypoints/cli/tests/test_profile_create_wizard.py`.
 
 ### Phase `P08` - Acceptance-wall meta-test isolation
