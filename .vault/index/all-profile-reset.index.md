@@ -6,6 +6,7 @@ tags:
 date: '2026-07-17'
 modified: '2026-07-17'
 related:
+  - '[[2026-07-17-all-profile-reset-adr]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
 ---
 
@@ -14,6 +15,10 @@ related:
 Auto-generated index of all documents tagged with `#all-profile-reset`.
 
 ## Documents
+
+### adr
+
+- `2026-07-17-all-profile-reset-adr` - `all-profile-reset` adr: `all-profile-reset rescope grounding` | (**status:** `accepted`)
 
 ### plan
 
