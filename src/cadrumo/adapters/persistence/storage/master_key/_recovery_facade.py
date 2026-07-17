@@ -215,10 +215,10 @@ def open_session_from_recovery(
 # three invariants the low-level primitives above do not:
 #
 #   * file custody only — mnemonic recovery rewraps the master key, which is a
-#     file-backend concept; keyring and unsecured custody refuse (S74);
-#   * create refuses an existing enrollment and rotate requires one (S72);
+#     file-backend concept; keyring and unsecured custody refuse;
+#   * create refuses an existing enrollment and rotate requires one;
 #   * a candidate mnemonic is fully verified before the prior envelope is ever
-#     replaced (S73, via ``atomically_install_verified_recovery``).
+#     replaced (via ``atomically_install_verified_recovery``).
 #
 # None of these operations serialize the mnemonic or the master key: their
 # result records carry only the non-secret recovery fingerprint and booleans.
