@@ -232,16 +232,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "cached_path.write_bytes",
     ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
     (
-        "src/cadrumo/entrypoints/cli/_config/_profile_bundle.py",
-        "config_profile_export",
-        "out.write_text",
-    ): "explicit operator-directed profile export to a caller-chosen path",
-    (
-        "src/cadrumo/entrypoints/cli/_config/_profile_bundle.py",
-        "config_profile_subject_access_request",
-        "out.write_text",
-    ): "explicit operator-directed GDPR right-of-access export to a caller-chosen path",
-    (
         "src/cadrumo/application/ledger/_actions_export.py",
         "export_ledger_transactions",
         "command.output_path.write_bytes",
