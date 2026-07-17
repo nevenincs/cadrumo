@@ -55,7 +55,6 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -188,7 +187,7 @@ def _parse_junit_results(junit_xml_path: Path) -> _JunitResults:
 
 
 @pytest.fixture(scope="module")
-def _batched_wall_results() -> _JunitResults:
+def _batched_wall_results(tmp_path_factory: pytest.TempPathFactory) -> _JunitResults:
     """Run every catalogued wall's guarding test in ONE real pytest subprocess boot.
 
     Collapses the prior per-wall subprocess-boot cost (~30 cold pytest
@@ -239,10 +238,17 @@ def _batched_wall_results() -> _JunitResults:
         )
     )
     keyword_expression = " or ".join(dict.fromkeys(entry.test_function for entry in ACCEPTANCE_WALL_CATALOGUE))
-    with tempfile.TemporaryDirectory(prefix="acceptance-wall-junit-") as tmp_dir:
-        junit_xml_path = Path(tmp_dir) / "acceptance_wall_junit.xml"
-        _run_pytest_subprocess(*modules, junit_xml_path=junit_xml_path, keyword_expression=keyword_expression)
-        return _parse_junit_results(junit_xml_path)
+    # The junit sink lives under pytest's per-worker basetemp, NOT a bare
+    # tempfile.TemporaryDirectory in the shared OS temp root: under `-n auto`
+    # this module-scoped fixture is evaluated once PER xdist worker, and a
+    # TemporaryDirectory removed at block exit while a concurrent worker's
+    # subprocess is still resolving paths under the shared temp root races into
+    # a FileNotFoundError collection abort. tmp_path_factory is worker-namespaced
+    # and session-lived, so no concurrent run deletes a sibling's directory.
+    junit_dir = tmp_path_factory.mktemp("acceptance-wall-junit")
+    junit_xml_path = junit_dir / "acceptance_wall_junit.xml"
+    _run_pytest_subprocess(*modules, junit_xml_path=junit_xml_path, keyword_expression=keyword_expression)
+    return _parse_junit_results(junit_xml_path)
 
 
 def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
@@ -332,7 +338,9 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate(tmp_path: Path) -> Non
     mutated_source = mutated_source.replace("from ....", "from cadrumo.")
     assert mutated_source != original_source
 
-    mutated_module_name = f"test_acceptance_wall_regression_proof_ledger_exclude_mutated_{os.getpid()}.py"
+    # ``tmp_path`` is already per-worker unique and session-lived, so the module
+    # basename needs no PID key to avoid a cross-worker collision.
+    mutated_module_name = "test_acceptance_wall_regression_proof_ledger_exclude_mutated.py"
     mutated_module_path = tmp_path / mutated_module_name
     mutated_module_path.write_text(mutated_source, encoding="utf-8")
     mutated_node_id = f"{mutated_module_path.as_posix()}::{guarded_entry.test_function}"
