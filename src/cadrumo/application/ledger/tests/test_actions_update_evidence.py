@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.invoices import InvoiceLinkError
+from .. import link_manual_transaction_invoice
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,
@@ -206,3 +208,123 @@ def test_generic_field_edit_preserves_existing_evidence(
     persisted = transaction_repository.load().get(edited.ref.transaction_id)
     assert persisted is not None
     assert persisted.purchase_invoice_evidence_id == purchase_evidence.invoice_id
+
+
+def test_invoice_linkage_does_not_mutate_evidence(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    # link_manual_transaction_invoice establishes an invoice-only relationship;
+    # it must leave the transaction's evidence link untouched.
+    (
+        transaction_repository,
+        event_repository,
+        invoice_repository,
+        purchase_evidence,
+        created,
+    ) = _seed_transaction_and_invoice(secure_objects, idempotency_key="link-no-evidence-mutation")
+    attach_manual_transaction_evidence(
+        bucket_id=_BUCKET_ID,
+        transaction_id=created.ref.transaction_id,
+        purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+        actor="operator-B",
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+    )
+    events_before = [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)]
+
+    linked = link_manual_transaction_invoice(
+        bucket_id=_BUCKET_ID,
+        transaction_id=created.ref.transaction_id,
+        invoice_id=purchase_evidence.invoice_id,
+        actor="operator-B",
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+    )
+
+    assert linked.invoice_id == purchase_evidence.invoice_id
+    assert created.ref.transaction_id in linked.invoice.linked_transaction_ids
+    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    assert persisted is not None
+    # Evidence preserved verbatim; the invoice link emits no evidence event.
+    assert persisted.purchase_invoice_evidence_id == purchase_evidence.invoice_id
+    events_after = [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)]
+    assert events_after == events_before
+
+
+def test_failed_attach_leaves_transaction_and_history_unchanged(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    # An attach naming an unknown evidence id must refuse BEFORE any write: the
+    # transaction stays evidence-free, provenance stays empty, and no attach event
+    # is appended.
+    transaction_repository, event_repository = _repositories(secure_objects)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="material oficina",
+            idempotency_key="failed-attach-unchanged",
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+    )
+
+    with pytest.raises(TransactionValidationError):
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            purchase_invoice_evidence_id="deadbeefdeadbeef",
+            actor="operator-B",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
+
+    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    assert persisted is not None
+    assert persisted.purchase_invoice_evidence_id is None
+    assert persisted.evidence_provenance == ()
+    events = event_repository.load().for_bucket(_BUCKET_ID)
+    assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_CREATED]
+
+
+def test_failed_invoice_link_leaves_transaction_and_history_unchanged(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    # A link naming an unknown invoice must refuse BEFORE any catalogue write.
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="material oficina",
+            idempotency_key="failed-link-unchanged",
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+    )
+
+    with pytest.raises(InvoiceLinkError):
+        link_manual_transaction_invoice(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            invoice_id="unknown-invoice-id",
+            actor="operator-B",
+            transaction_repository=transaction_repository,
+            invoice_repository=invoice_repository,
+        )
+
+    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    assert persisted is not None
+    assert persisted.purchase_invoice_evidence_id is None
+    events = event_repository.load().for_bucket(_BUCKET_ID)
+    assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_CREATED]
