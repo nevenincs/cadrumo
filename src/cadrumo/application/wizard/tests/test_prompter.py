@@ -7,8 +7,11 @@ from __future__ import annotations
 import errno
 import os
 from collections import deque
+from io import StringIO
 
 import pytest
+from prompt_toolkit.input import create_pipe_input
+from prompt_toolkit.output.plain_text import PlainTextOutput
 
 from ....core.i18n import Translatable as tr
 from .._errors import (
@@ -121,42 +124,70 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     assert str(cause) not in message
 
 
-# ── contract: QuestionaryPrompter.emit_progress routes through structured logger ───
+# ── contract: emit_progress renders on the prompter's own output device ───
 
 
-def test_emit_progress_routes_through_logger_not_stdout(
-    caplog: pytest.LogCaptureFixture,
+def test_emit_progress_renders_on_the_injected_output_device(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """emit_progress must use the structured logger; nothing must reach stdout."""
-    import logging
+    """Progress must reach the device the prompts render on, and never stdout.
 
+    An operator reads the flow's section headers and question counters off the
+    same surface the prompts appear on, so a route the operator cannot see (a
+    logger under a WARNING console handler) is not a render.
+    """
     from .._prompter import QuestionaryPrompter
 
-    prompter = QuestionaryPrompter()
+    buffer = StringIO()
+    prompter = QuestionaryPrompter(output=PlainTextOutput(buffer))
 
-    with caplog.at_level(logging.INFO, logger="cadrumo.application.wizard._prompter"):
-        prompter.emit_progress("Sección 1 de 3")
+    prompter.emit_progress("Sección 1 de 3")
+
+    assert "Sección 1 de 3" in buffer.getvalue(), "emit_progress must render on the prompter's output device"
 
     captured = capsys.readouterr()
     assert captured.out == "", "emit_progress must not write to stdout"
     assert captured.err == "", "emit_progress must not write to stderr"
 
-    assert any("wizard.progress" in r.message for r in caplog.records), (
-        "expected a 'wizard.progress' log record from emit_progress"
-    )
+
+def test_emit_progress_renders_on_the_ambient_app_session_device(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A prompter built the production way renders progress on the session's device.
+
+    ``from_ambient_app_session`` is the constructor the CLI uses, and outside an
+    app session it leaves the IO un-injected so the prompts bind to the real
+    terminal. Driving it inside a session with declared IO proves the un-injected
+    prompter resolves the *same* device its prompts do rather than falling back to
+    stdout.
+    """
+    from prompt_toolkit.application.current import create_app_session
+
+    from .._prompter import QuestionaryPrompter
+
+    buffer = StringIO()
+    with create_pipe_input() as pipe_input, create_app_session(input=pipe_input, output=PlainTextOutput(buffer)):
+        prompter = QuestionaryPrompter.from_ambient_app_session()
+        prompter.emit_progress("(pregunta 2/5)")
+
+    assert "(pregunta 2/5)" in buffer.getvalue(), "progress must reach the ambient session's output device"
+
+    captured = capsys.readouterr()
+    assert captured.out == "", "emit_progress must not write to stdout"
+    assert captured.err == "", "emit_progress must not write to stderr"
 
 
-def test_emit_progress_log_record_carries_text(caplog: pytest.LogCaptureFixture) -> None:
-    """The log record emitted by emit_progress must carry the progress text."""
+def test_emit_progress_also_records_a_structured_log_line(caplog: pytest.LogCaptureFixture) -> None:
+    """The secondary machine-facing trace still carries the progress text."""
     import logging
 
     from .._prompter import QuestionaryPrompter
 
-    prompter = QuestionaryPrompter()
+    prompter = QuestionaryPrompter(output=PlainTextOutput(StringIO()))
 
     with caplog.at_level(logging.INFO, logger="cadrumo.application.wizard._prompter"):
         prompter.emit_progress("Hello wizard progress")
 
     records = [r for r in caplog.records if "wizard.progress" in r.message]
     assert records, "expected at least one wizard.progress log record"
+    assert any("Hello wizard progress" in r.getMessage() for r in records)
