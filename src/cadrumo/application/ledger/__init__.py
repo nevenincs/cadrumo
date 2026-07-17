@@ -122,7 +122,11 @@ from ._actions_manual import (
     update_manual_transaction,
     update_manual_transaction_fields,
 )
-from ._actions_split_merge import merge_transactions, split_transaction
+from ._actions_split_merge import (
+    merge_transactions,
+    split_transaction,
+    split_transaction_with_classified_children,
+)
 from ._business_operation_invoice import (
     BusinessOperationInvoice,
     BusinessOperationInvoiceDirection,
@@ -373,6 +377,7 @@ __all__ = [
     "saturate_llm_classification",
     "set_usage_ratio",
     "split_transaction",
+    "split_transaction_with_classified_children",
     "stash_manual_transaction",
     "suggest_evidence_split",
     "suggest_llm_classification",
