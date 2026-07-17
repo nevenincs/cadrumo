@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import os
 import platform
@@ -159,6 +160,17 @@ def _materialise_claude_artifacts(
     return plugin, marketplace
 
 
+def _require_cohort_aware_marketplace_materialiser() -> None:
+    """Refuse before building if the clean source cannot embed cohort wheels."""
+    from cadrumo.agent import materialise_marketplace
+
+    if "cohort" not in inspect.signature(materialise_marketplace).parameters:
+        raise SystemExit(
+            "clean source marketplace materialiser cannot embed the immutable "
+            "Python cohort; complete W02.P06.S25 before release assembly",
+        )
+
+
 def _generate_channel_artifacts(
     *,
     clean_root: Path,
@@ -287,6 +299,7 @@ def build_from_clean_source(
 
     source_epoch = _git(root, "show", "-s", "--format=%ct", commit)
     builder = _build_identity(root)
+    _require_cohort_aware_marketplace_materialiser()
     build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
     os.environ["SOURCE_DATE_EPOCH"] = source_epoch
     os.environ["PYTHONHASHSEED"] = "0"
@@ -427,8 +440,18 @@ def build_release_cohort(
         ]
         if source_tag is not None:
             argv.extend(("--source-tag", source_tag))
-        _run(argv, cwd=clean_root, env=env)
-        staging.replace(output)
+        try:
+            _run(argv, cwd=clean_root, env=env)
+            staging.replace(output)
+        except (OSError, SystemExit):
+            if (
+                staging.parent == var
+                and staging.name.startswith(f".{output.name}-")
+                and staging.name.endswith(".staging")
+                and staging.exists()
+            ):
+                shutil.rmtree(staging)
+            raise
     cohort = load_release_cohort(output)
     if cohort.manifest.source.commit != commit:
         raise SystemExit("completed release cohort lost its requested source commit")

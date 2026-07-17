@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+import shutil
 import uuid
 import zipfile
 from pathlib import Path
 
 import pytest
 
+from dev.packaging.cohort_manifest import REQUIRED_ARTIFACT_KINDS
 from dev.packaging.release_cohort import build_release_cohort, deterministic_zip_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.hex_entrypoint]
 
 
+@pytest.mark.unit
 def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:
     """Repeated packaging changes neither archive bytes nor member payloads."""
     source = tmp_path / "plugin"
@@ -37,6 +40,7 @@ def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:
         assert {info.date_time for info in archive.infolist()} == {(1980, 1, 1, 0, 0, 0)}
 
 
+@pytest.mark.unit
 def test_deterministic_zip_refuses_empty_or_existing_output(tmp_path: Path) -> None:
     """Assembly never invents a payload or replaces retained artifact bytes."""
     empty = tmp_path / "empty"
@@ -55,6 +59,7 @@ def test_deterministic_zip_refuses_empty_or_existing_output(tmp_path: Path) -> N
     assert destination.read_bytes() == b"retained"
 
 
+@pytest.mark.unit
 def test_build_refuses_an_expected_commit_other_than_checked_out_head() -> None:
     """The commit option is an assertion and never silently selects other bytes."""
     repo_root = Path(__file__).resolve().parents[3]
@@ -68,3 +73,56 @@ def test_build_refuses_an_expected_commit_other_than_checked_out_head() -> None:
         )
 
     assert not output.exists()
+
+
+@pytest.mark.integration
+def test_real_clean_source_build_is_complete_and_reproducible() -> None:
+    """Build the real 12-member cohort twice from HEAD and compare every digest."""
+    repo_root = Path(__file__).resolve().parents[3]
+    var = (repo_root / "var").resolve(strict=True)
+    run_id = uuid.uuid4().hex
+    outputs = (
+        var / f"release-cohort-integration-{run_id}-first",
+        var / f"release-cohort-integration-{run_id}-second",
+    )
+    try:
+        first = build_release_cohort(repo_root=repo_root, output_dir=outputs[0])
+        second = build_release_cohort(
+            repo_root=repo_root,
+            output_dir=outputs[1],
+            expected_commit=first.manifest.source.commit,
+        )
+
+        assert first.manifest.cohort_id == second.manifest.cohort_id
+        assert first.manifest.source == second.manifest.source
+        assert {record.name for record in first.manifest.artifacts} == set(
+            REQUIRED_ARTIFACT_KINDS,
+        )
+        assert tuple(
+            (
+                record.name,
+                record.kind,
+                record.path,
+                record.sha256,
+                record.size,
+            )
+            for record in first.manifest.artifacts
+        ) == tuple(
+            (
+                record.name,
+                record.kind,
+                record.path,
+                record.sha256,
+                record.size,
+            )
+            for record in second.manifest.artifacts
+        )
+    finally:
+        for output in outputs:
+            resolved = output.resolve()
+            if (
+                resolved.parent == var
+                and resolved.name.startswith(f"release-cohort-integration-{run_id}-")
+                and resolved.exists()
+            ):
+                shutil.rmtree(resolved)
