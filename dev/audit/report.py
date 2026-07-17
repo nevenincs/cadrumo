@@ -11,13 +11,15 @@ model:
   set (the same authority ``src/cadrumo/tests/test_import_hygiene_gate.py``
   enforces). A genuine multi-facade duplicate symbol not in the pinned set is
   RED; the pinned/tolerated set is AMBER debt; zero unpinned hits is GREEN.
-* **Duplication** (D2) -- shells out to the same ``jscpd`` invocation
-  ``just audit-duplication`` runs and reduces its console report through the
-  existing ``dev.audit.duplication`` filter. Any clone cluster is advisory
-  debt (AMBER); zero clones is GREEN. jscpd has no meaningful "graph broken"
-  failure mode, so this dimension never reports RED on its own -- it is
-  advisory by design (mirrors ``dev/audit/duplication.py``'s own "duplication
-  is advisory debt, not a gate" contract).
+* **Duplication** (D2) -- delegates the entire measurement to
+  ``dev.audit.duplication.run_duplication_scan``, the one runner
+  ``just audit-duplication`` also calls. Any clone cluster is advisory debt
+  (AMBER, carrying the measured count); a scan that demonstrably inspected the
+  tree and found nothing is GREEN; a scan that could not run or produced no
+  parseable evidence is AMBER-unavailable, never GREEN. jscpd has no meaningful
+  "graph broken" failure mode, so this dimension never reports RED on its own --
+  it is advisory by design (mirrors ``dev/audit/duplication.py``'s own
+  "duplication is advisory debt, not a gate" contract).
 * **Layering** -- reuses the ``.importlinter`` contracts already declared at
   the repo root (the restructure EPIC's ``domain/adapters/application/
   entrypoints/core`` layout) via the ``lint-imports`` console script. A
@@ -46,9 +48,8 @@ convention: RED is "new/regressed", AMBER is "grandfathered debt", GREEN is
 See Also:
     :func:`~dev.import_hygiene_scan.find_multi_sourced_symbols`
         Symbol-shadowing scanner reused for the D1 dimension.
-    :mod:`~dev.audit.duplication`
-        Console-output reducer whose jscpd parsing primitives are reused for
-        duplication classification.
+    :func:`~dev.audit.duplication.run_duplication_scan`
+        The single duplication runner consumed for the D2 dimension.
     :mod:`~dev.audit.complexity`
         Baseline-ratchet complexity scanner reused for the complexity
         dimension.
@@ -87,7 +88,7 @@ from dev.audit.complexity import (
 from dev.audit.complexity import (
     load_baseline as load_complexity_baseline,
 )
-from dev.audit.duplication import _ANSI, _CLONE_CAP, _FOUND, _TABLE_PCT
+from dev.audit.duplication import DuplicationOutcome, run_duplication_scan
 from dev.import_hygiene_scan import (
     PKG_ROOT,
     discover_facades,
@@ -176,101 +177,36 @@ def audit_shadowing() -> DimensionReport:
 # ---------------------------------------------------------------------------
 
 
-def _jscpd_command() -> list[str] | None:
-    """Resolve the ``npx`` shim (``.cmd`` on Windows) for the jscpd invocation.
-
-    Mirrors the resolution idiom in ``dev/docs/build.py``/``dev/packaging/smoke_core.py``:
-    ``subprocess`` on Windows cannot ``CreateProcess`` a bare ``npx`` name because
-    the real executable is a ``.cmd`` shim, so the PATH lookup must be done by
-    ``shutil.which`` rather than left to the OS loader.
-    """
-    npx = shutil.which("npx")
-    if npx is None:
-        return None
-    return [
-        npx,
-        "--yes",
-        "jscpd@4.2.0",
-        str(_PRODUCT_SOURCE_ROOT),
-        "--format",
-        "python",
-        "--min-lines",
-        "6",
-        "--min-tokens",
-        "80",
-        "--max-size",
-        "250kb",
-        "--ignore",
-        "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**",
-        "--gitignore",
-        "--reporters",
-        "console",
-        "--noTips",
-    ]
-
-
-def _reduce_jscpd_output(raw_stdout: str) -> tuple[int, str]:
-    """Reduce jscpd's raw stdout to a clone count and the duplicated-lines pct.
-
-    Mirrors ``dev.audit.duplication.main``'s parsing exactly (that module
-    reads from stdin as a CLI filter; this reuses its regexes directly rather
-    than shelling out to a second subprocess).
-    """
-    raw = _ANSI.sub("", raw_stdout)
-    total = 0
-    duplicated_pct = ""
-    for line in raw.splitlines():
-        found = _FOUND.search(line)
-        if found:
-            total = int(found.group(1))
-        if "Duplicated lines" not in line and "%" in line and not duplicated_pct:
-            pct = _TABLE_PCT.search(line)
-            if pct:
-                duplicated_pct = pct.group(1)
-    return total, duplicated_pct
-
-
 def audit_duplication(repo_root: Path) -> DimensionReport:
-    """Classify D2 (copy-paste duplication) by shelling out to jscpd.
+    """Classify D2 (copy-paste duplication) from the one duplication runner.
 
-    AMBER: one or more clone clusters found (advisory debt; jscpd has no
-    "broken" state so this dimension never reports RED). GREEN: no clones.
+    Delegates the whole measurement to :func:`~dev.audit.duplication.run_duplication_scan`
+    and only maps its typed outcome onto this module's severity vocabulary; there
+    is no second jscpd invocation or parser here.
+
+    GREEN exclusively on ``observed_zero`` -- a scan that demonstrably inspected
+    the production tree and found nothing. Clones are AMBER carrying the measured
+    count (advisory debt: the count is not a gate). An unavailable scan is
+    AMBER naming the reason, never green -- "we could not measure" and "there is
+    nothing to find" are different facts.
     """
-    command = _jscpd_command()
-    if command is None:
+    result = run_duplication_scan(repo_root)
+
+    if result.outcome is DuplicationOutcome.UNAVAILABLE:
         return DimensionReport(
             name="duplication",
             status=Status.AMBER,
-            headline="npx not found on PATH; duplication signal unavailable this cycle",
+            headline=result.headline(),
+            details=["no duplication evidence was produced this cycle; this is not a clean-tree signal"],
         )
-    try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
-            errors="replace",
-            check=False,
-            cwd=repo_root,
-            timeout=180,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return DimensionReport(
-            name="duplication",
-            status=Status.AMBER,
-            headline=f"jscpd could not run ({exc}); duplication signal unavailable this cycle",
-        )
+    if result.outcome is DuplicationOutcome.OBSERVED_ZERO:
+        return DimensionReport(name="duplication", status=Status.GREEN, headline=result.headline())
 
-    total, pct = _reduce_jscpd_output(result.stdout)
-    if total <= 0:
-        return DimensionReport(name="duplication", status=Status.GREEN, headline="no clones found")
-
-    pct_clause = f", {pct}% duplicated lines" if pct else ""
     return DimensionReport(
         name="duplication",
         status=Status.AMBER,
-        headline=f"{total} clone cluster(s){pct_clause} (advisory debt)",
-        details=[f"see `just audit-duplication` for the full clone report ({_CLONE_CAP}-line cap)"],
+        headline=result.headline(),
+        details=["see `just audit-duplication` for the full clone report"],
     )
 
 
