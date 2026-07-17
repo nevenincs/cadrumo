@@ -5757,14 +5757,14 @@ errors:
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no estan registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
+    internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
+      respuestas canónicas sin consumir.'
+    internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó
+      más respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
     internal_wizard_catalogue_already_registered: 'Error interno: el catalogo del
       asistente ya esta registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catalogo del asistente
       no esta registrado.'
-    internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
-      respuestas canónicas sin consumir.'
-    internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó más
-      respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
     internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
@@ -6240,6 +6240,10 @@ mcp:
     timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
       y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente
       en un terminal.'
+    timeout_may_complete: '''{command}'' superó su límite de tiempo; puede que la
+      operación siga completándose en segundo plano. Vuelve a ejecutarla con la misma
+      clave de idempotencia para comprobarlo: la garantía de idempotencia hace que
+      el reintento sea seguro y nunca duplica la escritura.'
   elicitation:
     confirm:
       consequence_handoff: Esto genera el documento de presentación que el contribuyente
@@ -6284,6 +6288,10 @@ mcp:
       propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
       estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador
       para producir la exportación o el marcador de registro.'
+  serving:
+    warm_degraded: '''{command}'' se atendio por el transporte de subproceso porque
+      el runtime en caliente estaba {reason}; el resultado es identico, solo mas lento.
+      El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

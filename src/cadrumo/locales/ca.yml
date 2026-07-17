@@ -5711,14 +5711,14 @@ errors:
     internal_profile_project_answers_not_registered: 'Error intern: les respostes
       del projecte de perfil no estan registrades.'
     internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
+    internal_wizard_answer_queue_overflow: 'Error intern: l''assistent s''ha tancat
+      amb respostes canòniques sense consumir.'
+    internal_wizard_answer_queue_underflow: 'Error intern: l''assistent ha demanat
+      més respostes canòniques de les proporcionades per la invocació no interactiva.'
     internal_wizard_catalogue_already_registered: 'Error intern: el cataleg de l''assistent
       ja esta registrat.'
     internal_wizard_catalogue_not_registered: 'Error intern: el cataleg de l''assistent
       no esta registrat.'
-    internal_wizard_answer_queue_overflow: 'Error intern: l''assistent s''ha tancat
-      amb respostes canòniques sense consumir.'
-    internal_wizard_answer_queue_underflow: 'Error intern: l''assistent ha demanat més
-      respostes canòniques de les proporcionades per la invocació no interactiva.'
     internal_workflow_abort_signal: 'Error intern: una etapa del flux de treball ha
       emès un senyal de cancel·lació.'
     internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
@@ -6190,6 +6190,10 @@ mcp:
     timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s)
       i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en
       un terminal.'
+    timeout_may_complete: '''{command}'' ha superat el seu límit de temps; és possible
+      que l''operació encara s''estigui completant en segon pla. Torna a executar-la
+      amb la mateixa clau d''idempotència per comprovar-ho: la garantia d''idempotència
+      fa que el reintent sigui segur i mai duplica l''escriptura.'
   elicitation:
     confirm:
       consequence_handoff: Això genera el document de presentació que el contribuent
@@ -6233,6 +6237,10 @@ mcp:
       presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la
       té denegada estructuralment. Lliura la unitat de treball verificada a la sessió
       del verificador per produir l''exportació o el marcador de registre.'
+  serving:
+    warm_degraded: '''{command}'' s''ha ates pel transport de subproces perque el
+      runtime en calent estava {reason}; el resultat es identic, nomes mes lent. El
+      servei en calent es repren quan s''allibera la crida lenta.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
