@@ -822,6 +822,17 @@ class Settings(CadrumoIntegrationSettings):
         ge=1,
         description="Maximum number of LLM response-cache entries retained; oldest excess entries are pruned",
     )
+    cadrumo_mcp_serving_concurrency: int = Field(
+        default=4,
+        ge=1,
+        description=(
+            "Maximum MCP tool calls dispatched off the event loop at once. Bounds the "
+            "supervised subprocess spawn and the warm in-process worker pool so a burst "
+            "cannot thrash the host; the previous anyio default admitted 40. A conservative "
+            "small default suits the single-operator desktop client; raise it for a "
+            "multi-client host."
+        ),
+    )
     cadrumo_llm_usage_retention_days: int = Field(
         default=30,
         ge=1,
