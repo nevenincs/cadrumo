@@ -334,3 +334,42 @@ No identity, bilingual, inventory-completeness, or exact-cohort false pass remai
 This evidence review passes while the S69 delivery row correctly remains unchecked
 because all observed clients fail the requested product contract and the capture is not
 yet an executable workflow.
+
+## S23 Homebrew source-install review scope
+
+Reviewed `W02.P05.S23`, the Homebrew source-install harness, the generated formula,
+its direct real-behavior tests, the retained three-archive cohort, the WSL2 command
+logs, both installed tax oracles, cleanup evidence, and the S23 execution record. The
+review distinguishes this one local Linux x86-64 tap snapshot from the hosted Linux and
+macOS matrix owned by S24.
+
+## S23 initial finding
+
+### retained-cohort-digest-drift | high | The retained root archive did not reproduce the tested formula input
+
+The formula pinned root source digest
+`6d1b0980c3102ed8445a44f1eeeb6ea8f219290641577cf1980262ca5ca948c2`,
+but the retained cohort initially contained root archive digest
+`d781f40491f012aa767f69d8778cd9f764798cd52e3bd5fa0d74aaf3515a9722`.
+The historical WSL2 run was real because Homebrew's cache still contained and used the
+formula-pinned bytes, but its recorded local inputs were not self-contained or
+reproducible. S23 could not close on that evidence.
+
+## S23 final remediation disposition
+
+**Pass.** The exact formula-pinned root archive was restored beside the already matching
+manuals and official companion archives. The harness now hashes each local cohort
+archive against the digest adjacent to its formula URL before starting Homebrew; a
+stale or substituted archive fails before localization. Its structured evidence also
+records the filename, SHA-256, and byte size of all three inputs. A direct negative test
+proves digest drift is rejected, and the complete focused Homebrew suite passed `10/10`.
+
+A fresh post-remediation WSL2 source-install run passed with retained evidence SHA-256
+`5c81176443c837cc43db724f0e7e4aef0bf7d633134cd4c5a323ac274cda63ca`.
+Strict audit, source installation, formula test, installed CLI oracle, and installed MCP
+oracle all exited successfully. Both installed surfaces returned
+`DP200014:00562 == 23000.00` under `modelo-200-cuota-integra` with the required legal
+and authoritative-source grounding, and the MCP evidence binds its child invocation to
+the Cellar-owned CLI identity. Cleanup removed the formula, installed prefix, and tap
+with no retained formulas, taps, or errors. No blocking S23 finding remains. Hosted
+Linux and macOS coverage remains open under S24.

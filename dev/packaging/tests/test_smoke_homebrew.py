@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -20,18 +21,24 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
         "cadrumo_data_manuals-0.2.1.tar.gz",
         "cadrumo_data_official-0.2.1.tar.gz",
     )
+    digests: dict[str, str] = {}
     for filename in filenames:
-        (cohort / filename).write_bytes(filename.encode())
+        payload = filename.encode()
+        (cohort / filename).write_bytes(payload)
+        digests[filename] = hashlib.sha256(payload).hexdigest()
     base = "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1"
     formula = "\n".join(
         (
             "class Cadrumo < Formula",
             f'  url "{base}/{filenames[0]}"',
+            f'  sha256 "{digests[filenames[0]]}"',
             '  resource "cadrumo-data-manuals" do',
             f'    url "{base}/{filenames[1]}"',
+            f'    sha256 "{digests[filenames[1]]}"',
             "  end",
             '  resource "cadrumo-data-official" do',
             f'    url "{base}/{filenames[2]}"',
+            f'    sha256 "{digests[filenames[2]]}"',
             "  end",
             '  resource "mcp" do',
             '    url "https://files.pythonhosted.org/packages/mcp.tar.gz"',
@@ -66,10 +73,54 @@ def test_localization_rejects_an_incomplete_cohort_formula(tmp_path: Path) -> No
         "class Cadrumo < Formula\n"
         '  url "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1/'
         'cadrumo-0.2.1.tar.gz"\n'
+        f'  sha256 "{hashlib.sha256(b"root").hexdigest()}"\n'
         "end\n"
     )
 
     with pytest.raises(SystemExit, match="expected root and two companion"):
+        localize_formula(
+            formula,
+            cohort_dir=cohort.resolve(),
+            server_base_url="http://127.0.0.1:43123",
+        )
+
+
+def test_localization_rejects_a_cohort_archive_not_matching_the_formula_digest(
+    tmp_path: Path,
+) -> None:
+    """The source smoke cannot pass through a stale or substituted cohort archive."""
+    cohort = tmp_path / "cohort"
+    cohort.mkdir()
+    filenames = (
+        "cadrumo-0.2.1.tar.gz",
+        "cadrumo_data_manuals-0.2.1.tar.gz",
+        "cadrumo_data_official-0.2.1.tar.gz",
+    )
+    expected_payload = b"accepted source archive"
+    expected_sha256 = hashlib.sha256(expected_payload).hexdigest()
+    for filename in filenames:
+        (cohort / filename).write_bytes(expected_payload)
+    (cohort / filenames[0]).write_bytes(b"different source archive")
+    base = "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1"
+    formula = "\n".join(
+        (
+            "class Cadrumo < Formula",
+            f'  url "{base}/{filenames[0]}"',
+            f'  sha256 "{expected_sha256}"',
+            '  resource "cadrumo-data-manuals" do',
+            f'    url "{base}/{filenames[1]}"',
+            f'    sha256 "{expected_sha256}"',
+            "  end",
+            '  resource "cadrumo-data-official" do',
+            f'    url "{base}/{filenames[2]}"',
+            f'    sha256 "{expected_sha256}"',
+            "  end",
+            "end",
+            "",
+        ),
+    )
+
+    with pytest.raises(SystemExit, match="cohort artifact digest mismatch"):
         localize_formula(
             formula,
             cohort_dir=cohort.resolve(),
