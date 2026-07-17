@@ -78,6 +78,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
+  - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
 ---
 
 # `cli-authority-verb-conformance` feature index
@@ -96,6 +97,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-16-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `S43 auth logout preservation review`
 - `2026-07-16-cli-authority-verb-conformance-duplication-authority-audit` - `cli-authority-verb-conformance` audit: `Duplication authority and CLI conformance campaign`
 - `2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit` - `cli-authority-verb-conformance` audit: `S37 auth logout/reset cutover review`
+- `2026-07-17-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Rescope and split closure`
 
 ### exec
 
