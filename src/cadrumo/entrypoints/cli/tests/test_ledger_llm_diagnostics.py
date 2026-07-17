@@ -13,19 +13,17 @@ them back typed.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 from click.testing import Result
 
 from ....adapters.outbound.llm import LLMProvider, LLMResponse, UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.transactions import (
@@ -40,6 +38,9 @@ from ....domain.transactions import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .envelope_helpers import unwrap_cli_result as _json_result
+from .envelope_helpers import unwrap_envelope_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,10 +49,6 @@ _BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 
 def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-def _json_result(result: Result) -> dict[str, Any]:
-    return json.loads(result.output)["result"]
 
 
 @pytest.fixture
@@ -214,8 +211,7 @@ def test_llm_diagnostics_empty_is_instructive(_isolated_backend: None) -> None:
     """With no LLM activity the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
     assert result.exit_code == 0, result.output
-    envelope = json.loads(result.output)
-    payload = envelope["result"]
+    payload = _json_result(result)
 
     assert payload["has_data"] is False
     assert payload["usage_providers"] == []
@@ -223,7 +219,7 @@ def test_llm_diagnostics_empty_is_instructive(_isolated_backend: None) -> None:
     assert payload["total_calls"] == 0
     assert payload["total_classified"] == 0
 
-    codes = {notice["code"] for notice in envelope.get("notices", [])}
+    codes = {notice["code"] for notice in unwrap_envelope_notices(result.output)}
     assert "ledger.llm_diagnostics.no_data" in codes
 
 

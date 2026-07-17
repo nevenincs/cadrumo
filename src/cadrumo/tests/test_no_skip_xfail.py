@@ -5,9 +5,9 @@ Walks every deterministic test, test-support, and ``conftest.py`` module under
 skip/xfail markers or shortcut calls. Import-time skips and
 ``unittest.SkipTest`` raises are forbidden as well, including pytest alias forms.
 
-Live modules are deselected by marker and collection-level opt-in. Once selected,
-they must not self-skip; only the central live gate support may emit skip
-markers. No item may carry both ``unit`` and ``aeat_live`` markers.
+Live modules are deselected by the default marker expression. Once explicitly
+selected, they fail when prerequisites are absent and must never self-skip. No
+item may carry both ``unit`` and ``aeat_live`` markers.
 
 See Also:
     :mod:`~tests.test_mock_inventory`
@@ -52,10 +52,6 @@ _FORBIDDEN_CALLS = frozenset({f"pytest.{name}" for name in _FORBIDDEN_CALL_NAMES
 _FORBIDDEN_EXCEPTIONS = frozenset({"SkipTest", "unittest.SkipTest", "unittest.case.SkipTest"})
 _LIVE_EXECUTION_MARKER = "aeat_live"
 _UNIT_EXECUTION_MARKER = "unit"
-_LIVE_GATE_SUPPORT_RELATIVE = "src/cadrumo/tests/live_gate.py"
-_LIVE_GATE_HELPERS = frozenset({"requires_live_enabled", "requires_live_google_enabled"})
-_LIVE_CONFTST_RELATIVE = "src/cadrumo/tests/conftest.py"
-_LIVE_COLLECTION_HOOK = "pytest_collection_modifyitems"
 
 
 def _pytest_name(*parts: str) -> str:
@@ -161,33 +157,9 @@ def _filter_forbidden_marker_sites_for_relative(
     tree: ast.AST,
     sites: list[tuple[int, str]],
 ) -> list[tuple[int, str]]:
-    """Apply central live-gate exceptions to raw skip/xfail sites."""
-    if not sites or relative_path not in {_LIVE_GATE_SUPPORT_RELATIVE, _LIVE_CONFTST_RELATIVE}:
-        return sites
-    function_context = _function_context_by_lineno(tree)
-    return [
-        (lineno, marker_or_call_name)
-        for lineno, marker_or_call_name in sites
-        if not _is_allowed_live_skip_support_site(relative_path, lineno, marker_or_call_name, function_context)
-    ]
-
-
-def _function_context_by_lineno(tree: ast.AST) -> dict[int, tuple[str, ...]]:
-    """Return lexical function/class context keyed by source line."""
-    context: dict[int, tuple[str, ...]] = {}
-
-    def visit(node: ast.AST, stack: tuple[str, ...]) -> None:
-        lineno = getattr(node, "lineno", None)
-        if isinstance(lineno, int):
-            context.setdefault(lineno, stack)
-        child_stack = stack
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            child_stack = (*stack, node.name)
-        for child in ast.iter_child_nodes(node):
-            visit(child, child_stack)
-
-    visit(tree, ())
-    return context
+    """Return raw skip/xfail sites; no support-file exception exists."""
+    del relative_path, tree
+    return sites
 
 
 def _unit_context_by_lineno(tree: ast.AST) -> dict[int, bool]:
@@ -215,23 +187,6 @@ def _unit_context_by_lineno(tree: ast.AST) -> dict[int, bool]:
 
     visit(tree, module_is_unit, False)
     return context
-
-
-def _is_allowed_live_skip_support_site(
-    relative_path: str,
-    lineno: int,
-    marker_or_call_name: str,
-    function_context: Mapping[int, tuple[str, ...]],
-) -> bool:
-    """Return True for the two central live-test skip mechanisms."""
-    context = function_context.get(lineno, ())
-    if relative_path == _LIVE_GATE_SUPPORT_RELATIVE and marker_or_call_name == "pytest.skip":
-        return any(name in _LIVE_GATE_HELPERS for name in context)
-    return (
-        relative_path == _LIVE_CONFTST_RELATIVE
-        and marker_or_call_name == "pytest.mark.skip"
-        and _LIVE_COLLECTION_HOOK in context
-    )
 
 
 def _forbidden_pytest_mark_name(
@@ -800,8 +755,8 @@ def test_skip_policy_rejects_forbidden_shortcut_shapes(
     assert _shortcut_violation_name_counts(inventory.shortcut_violations) == expected_violations
 
 
-def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
-    """Support-file skips are allowed only in the central live-gate helper functions."""
+def test_skip_detector_rejects_support_file_skip_helpers() -> None:
+    """Support-file helpers cannot hide selected live-test skips."""
     source = """
 import pytest
 
@@ -814,9 +769,9 @@ def requires_live_google_enabled():
 def rogue_helper():
     pytest.skip("shortcut")
 """
-    inventory = _skip_policy_inventory_for_source(_LIVE_GATE_SUPPORT_RELATIVE, source)
+    inventory = _skip_policy_inventory_for_source("src/cadrumo/tests/live_gate.py", source)
 
-    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 3})
 
 
 def test_skip_detector_rejects_live_module_local_skip() -> None:
@@ -834,8 +789,8 @@ def test_live_service():
     assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
 
 
-def test_skip_detector_allows_only_collection_live_skip_marker() -> None:
-    """The collection hook may mark aeat_live items skipped; other support skips fail."""
+def test_skip_detector_rejects_collection_live_skip_marker() -> None:
+    """Collection hooks cannot turn selected live tests into green skips."""
     source = """
 import pytest
 
@@ -845,9 +800,9 @@ def pytest_collection_modifyitems(config, items):
 def rogue_helper():
     pytestmark = [pytest.mark.skip]
 """
-    inventory = _skip_policy_inventory_for_source(_LIVE_CONFTST_RELATIVE, source)
+    inventory = _skip_policy_inventory_for_source("src/cadrumo/tests/conftest.py", source)
 
-    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.mark.skip": 1})
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.mark.skip": 2})
 
 
 def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInventory) -> None:

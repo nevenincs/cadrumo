@@ -1,7 +1,7 @@
 """Error hierarchy for the calculation-verification subpackage.
 
 Defines :class:`VerificationError`, the base exception for unrecoverable
-verification failures rooted at :class:`cadrumo.core.errors.AeatError`.
+verification failures rooted at :class:`cadrumo.core.errors.CadrumoError`.
 Ordinary discrepancies between printed and computed values are *not*
 exceptions — they are encoded in
 :class:`cadrumo.application.verification.VerificationVerdict`.
@@ -14,10 +14,10 @@ See Also:
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class VerificationError(AeatError):
+class VerificationError(CadrumoError):
     """Raised on catastrophic verification failures.
 
     Reserved for unrecoverable conditions (corrupt registry data, broken engine

@@ -65,7 +65,7 @@ from cryptography.hazmat.primitives.serialization import (
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..errors import AeatError
+from ..errors import CadrumoError
 from ..external_constants import UTF_8_ENCODING
 from ..file_permissions import restrict_file_permissions
 from ..time import now as _utc_now
@@ -83,7 +83,7 @@ _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 _HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
-class CorpusBundleSigningError(AeatError):
+class CorpusBundleSigningError(CadrumoError):
     """Base error for corpus-bundle signing/verification failures."""
 
 

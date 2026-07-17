@@ -285,10 +285,10 @@ class TestJustificanteErrorRehome:
 
         assert issubclass(JustificanteError, PdfModeloImportError)
 
-    def test_justificante_error_still_aeat_error(self) -> None:
-        from .....core.errors import AeatError
+    def test_justificante_error_still_cadrumo_error(self) -> None:
+        from .....core.errors import CadrumoError
 
-        assert issubclass(JustificanteError, AeatError)
+        assert issubclass(JustificanteError, CadrumoError)
 
 
 @pytest.fixture(scope="module")

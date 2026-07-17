@@ -38,7 +38,8 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)

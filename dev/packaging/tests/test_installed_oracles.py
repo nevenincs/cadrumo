@@ -24,7 +24,7 @@ import pytest
 from cadrumo.agent import materialise_marketplace
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
-from dev.packaging.python_cohort import load_python_cohort
+from dev.packaging.python_cohort import PythonCohort, load_python_cohort
 from dev.packaging.smoke_core import _run, _venv_bin, _venv_python
 from dev.packaging.smoke_pip_core import _create_pip_venv
 from dev.packaging.smoke_split_install import (
@@ -85,6 +85,7 @@ class InstalledCohort:
     artifact_sha256: dict[str, str]
     evidence_path: Path
     metadata: dict[str, Any]
+    python_cohort: PythonCohort
 
 
 def _installed_script(venv: Path, name: str) -> Path:
@@ -255,6 +256,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         artifact_sha256=artifact_sha256,
         evidence_path=evidence_path,
         metadata=metadata,
+        python_cohort=supplied,
     )
 
 
@@ -375,7 +377,7 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     marketplace = cohort.work_dir / "cohort-marketplace"
     manifest = materialise_marketplace(
         marketplace,
-        cohort_dir=cohort.cohort_dir,
+        cohort=cohort.python_cohort,
     )
     plugin_root = marketplace / "plugins" / "cadrumo"
     assert manifest.plugin.version == cohort.metadata["versions"]["cadrumo"]
@@ -426,12 +428,12 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
         materialise_marketplace(
             cohort.work_dir / "wrong-version-marketplace",
             version="999.0.0",
-            cohort_dir=cohort.cohort_dir,
+            cohort=cohort.python_cohort,
         )
     with (cohort.cohort_dir / cohort.data_wheels[1].name).open("ab") as handle:
         handle.write(b"foreign same-name bytes")
     with pytest.raises(ValueError, match="cohort artifact digest mismatch"):
         materialise_marketplace(
             cohort.work_dir / "drifted-cohort-marketplace",
-            cohort_dir=cohort.cohort_dir,
+            cohort=cohort.python_cohort,
         )

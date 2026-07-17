@@ -249,7 +249,7 @@ def test_manual_ledger_export_help_keeps_serialization_format_named_as_export_fo
 
 
 def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path: Path) -> None:
-    """The root ``--format`` flag must remain the rendering switch used by ``_emit``."""
+    """The root ``--format`` flag remains the switch used by the envelope emitter."""
 
     env = {"CADRUMO_SECRET_PASSPHRASE": "backend-boundary-passphrase"}
     created = invoke_cached_cli(

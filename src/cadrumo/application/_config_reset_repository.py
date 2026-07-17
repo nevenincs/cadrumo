@@ -18,7 +18,7 @@ from pydantic import ValidationError
 from ..core import exclusive_file_lock
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.config import Settings, load_settings
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
 from ._config_reset_models import (
     ConfigResetOperation,
@@ -33,7 +33,7 @@ _DIRECTORY_MODE = 0o700
 _FILE_MODE = 0o600
 
 
-class ConfigResetJournalError(AeatError):
+class ConfigResetJournalError(CadrumoError):
     """Base failure for reset-journal persistence and validation."""
 
 
@@ -163,9 +163,7 @@ class ConfigResetJournalRepository:
     def incomplete(self) -> tuple[ConfigResetOperation, ...]:
         """Return journals whose status is not ``complete``."""
         return tuple(
-            operation
-            for operation in self.list()
-            if operation.status is not ConfigResetOperationStatus.COMPLETE
+            operation for operation in self.list() if operation.status is not ConfigResetOperationStatus.COMPLETE
         )
 
     def latest(self) -> ConfigResetOperation | None:
@@ -203,11 +201,7 @@ class ConfigResetJournalRepository:
                 f"reset operation {operation_id} does not contain target {bucket_id}",
             )
         fingerprint = target.fingerprint
-        if (
-            not target.exists_at_snapshot
-            or fingerprint is None
-            or fingerprint.digest != expected_fingerprint
-        ):
+        if not target.exists_at_snapshot or fingerprint is None or fingerprint.digest != expected_fingerprint:
             raise ConfigResetJournalOwnershipError(
                 f"reset operation {operation_id} does not own fingerprint for target {bucket_id}",
             )
@@ -287,9 +281,7 @@ class ConfigResetJournalRepository:
 
     def _raise_if_incomplete(self) -> None:
         incomplete = tuple(
-            candidate
-            for candidate in self.list()
-            if candidate.status is not ConfigResetOperationStatus.COMPLETE
+            candidate for candidate in self.list() if candidate.status is not ConfigResetOperationStatus.COMPLETE
         )
         if incomplete:
             raise ConfigResetJournalIncompleteError(incomplete[-1].operation_id)

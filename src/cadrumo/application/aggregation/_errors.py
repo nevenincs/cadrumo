@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors import AeatError, CoreError, CoreValidationError
+from ...core.errors import CadrumoError, CoreError, CoreValidationError
 from ...core.i18n import Translatable as tr
 
 
@@ -25,7 +25,7 @@ class AggregationConfigError(CoreError, ValueError):
     """
 
 
-class AggregationError(AeatError):
+class AggregationError(CadrumoError):
     """Base class for financial transaction aggregation failures.
 
     The ``translated_message`` field is a translation key resolved by

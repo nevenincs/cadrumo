@@ -18,7 +18,7 @@ from ....application.ledger import (
     PayableInvoiceService,
 )
 from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
-from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
+from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import RegistryValidationError, load_modelo_directory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
@@ -553,7 +553,7 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
                 revision=snapshot.revision,
             ),
         )
-    assert isinstance(exc.value, AeatError)
+    assert isinstance(exc.value, CadrumoError)
     assert get_registered_error_code(exc.value).code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT"
     message = resolve_error_message(exc.value)
     assert "post-transition" in message

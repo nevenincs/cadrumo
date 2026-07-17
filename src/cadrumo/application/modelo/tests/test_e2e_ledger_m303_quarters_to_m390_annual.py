@@ -56,7 +56,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
@@ -871,7 +871,7 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     after_revision_ids = frozenset(cr_repo.load().revisions)
 
     assert after_revision_ids == before_revision_ids
-    assert isinstance(exc_info.value, AeatError)
+    assert isinstance(exc_info.value, CadrumoError)
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
     context = exc_info.value.context or {}
     assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"

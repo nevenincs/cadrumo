@@ -22,10 +22,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 
 
-class BrowserError(AeatError):
+class BrowserError(CadrumoError):
     """Base class for browser-related failures.
 
     ``failure_mode`` may be a :class:`BrowserFailureMode` member or an existing

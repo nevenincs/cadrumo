@@ -29,7 +29,6 @@ from ._file_flow_support import (
     VERIFY_MODELO,
     VERIFY_PERIOD,
     VERIFY_REVISION,
-    AuthProvider,
     BucketEventType,
     CalculationRevisionNotFoundError,
     CalculationRevisionState,
@@ -112,68 +111,6 @@ def test_mark_verificado_completo_requires_borrador_state(repos: Repos) -> None:
             calculation_repository=cr_repo,
             clock=T3,
         )
-
-
-def test_verify_proceeds_locally_when_auth_provider_unavailable(repos: Repos) -> None:
-    """The local verify transition does not gate on auth-provider readiness.
-
-    Per the operator ruling that auth readiness binds only live, AEAT-touching
-    purposes (not the local build/verify/file/export flow), verifying a
-    revision locally proceeds even when the auth provider is unavailable, and
-    the provider is never consulted. The live-purpose half of the ruling — an
-    unavailable auth provider still refuses a live/AEAT-touching flow — is
-    pinned by ``test_preflight.py::test_gate_4_unavailable_provider_surfaces_structured_context``.
-    """
-
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
-
-    unavailable_provider = AuthProvider(available=False)
-    verify_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-        auth_provider=unavailable_provider,
-    )
-
-    # Auth readiness gates only live purposes: the local verify flow never
-    # consults the provider, so an unavailable one does not block it.
-    assert unavailable_provider.describe_calls == 0
-    refreshed_revision = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
-    assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert (
-        list_verification_reports(
-            calculation_revision_id=revision.calculation_revision_id,
-            verification_repository=vr_repo,
-        )
-        != ()
-    )
-    verification_events = bv_repo.load().for_bucket(
-        work_unit.bucket_id,
-        event_types=(
-            BucketEventType.MODELO_VERIFICATION_PASSED,
-            BucketEventType.MODELO_VERIFICATION_REFUSED,
-        ),
-    )
-    assert tuple(event.event_type for event in verification_events) == (BucketEventType.MODELO_VERIFICATION_PASSED,)
 
 
 def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> None:

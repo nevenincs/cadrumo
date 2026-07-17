@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.errors import AeatError, get_registered_error_code, resolve_error_message
+from .....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ..bucket import BucketError
 from ..errors import (
     DecryptionError,
@@ -20,7 +20,7 @@ from ..master_key import NoActiveBucketSessionError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def test_secure_storage_errors_reuse_central_aeat_error_registry() -> None:
+def test_secure_storage_errors_reuse_central_cadrumo_error_registry() -> None:
     for error_type in (
         SecureStorageError,
         StorageError,
@@ -31,7 +31,7 @@ def test_secure_storage_errors_reuse_central_aeat_error_registry() -> None:
         BucketError,
         NoActiveBucketSessionError,
     ):
-        assert issubclass(error_type, AeatError), error_type.__name__
+        assert issubclass(error_type, CadrumoError), error_type.__name__
         assert issubclass(error_type, SecureStorageError), error_type.__name__
 
 

@@ -20,7 +20,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import Settings
-from ...core.errors import AeatError, BaseSeverity
+from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.invoices import (
@@ -361,7 +361,7 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     try:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
-    except (AeatError, AttributeError):
+    except (CadrumoError, AttributeError):
         _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
         return None
     return fact_value(record, "identity.tax_id") or None
@@ -383,7 +383,7 @@ def _load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, Mod
     try:
         for draft in repository.iter_drafts():
             out.append((repository.envelope_path_for(draft.draft_id), draft))
-    except (AeatError, ValidationError, OSError, ValueError) as exc:
+    except (CadrumoError, ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(
             message="failed to load filing drafts from secure backend",
             translated_message="review.adapters.errors.drafts_load_failed",

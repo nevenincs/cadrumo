@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from pydantic import SecretStr
 
-from ...core.config import Settings, load_settings
-from ...core.errors import AeatError
+from ...core import AuthProviderKind
+from ...core.config import Settings, load_settings, override_settings
+from ...core.errors import CadrumoError
 from ..auth_credentials import (
     ActiveCertificateCredentials,
     unnamed_certificate_credentials,
@@ -20,16 +20,10 @@ from ..auth_credentials import (
 from ._certificate_secret_backend import SecureStorageCertificateSecretBackend
 from ._certificate_sources import active_certificate_source
 from ._operator_scope import active_profile_storage_span
+from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 
 if TYPE_CHECKING:
-    from ..workflow import WorkflowState, WorkflowStateRepository
-
-
-def _workflow_state_repository() -> WorkflowStateRepository:
-    """Resolve the public workflow repository without loading workflow at auth import time."""
-    workflow = import_module("cadrumo.application.workflow")
-    factory = cast(Callable[[], object], workflow.workflow_state_repository)
-    return cast("WorkflowStateRepository", factory())
+    from ..workflow import WorkflowState
 
 
 def resolve_certificate_source_secret(
@@ -56,7 +50,7 @@ def _resolve_named_certificate_source_secret(
             bucket_id=bucket_id,
             settings=settings,
         )
-    except (OSError, AeatError):
+    except (OSError, CadrumoError):
         return None
 
 
@@ -66,7 +60,19 @@ class ActiveAuthProjectionSnapshot:
 
     bucket_id: str | None
     state: WorkflowState | None
+    provider: AuthProviderKind | None
     certificate_credentials: ActiveCertificateCredentials | None
+
+
+def _project_provider_kind(provider: str | None) -> AuthProviderKind | None:
+    """Convert one selected provider id into the canonical closed kind."""
+    normalized = (provider or "").strip().lower()
+    if not normalized:
+        return None
+    try:
+        return AuthProviderKind(normalized)
+    except ValueError:
+        return None
 
 
 def _resolve_witnessed_certificate_credentials(
@@ -92,34 +98,45 @@ def active_auth_projection_span(
     *,
     settings: Settings | None = None,
     requested_provider: str | None = None,
-) -> Iterator[ActiveAuthProjectionSnapshot]:
-    """Pin one active route while loading state, credentials, and their consumers."""
+    fallback_provider: str | None = None,
+) -> Generator[ActiveAuthProjectionSnapshot]:
+    """Pin one active route while loading state, provider, credentials, and consumers.
+
+    ``requested_provider`` has explicit operator precedence. ``fallback_provider``
+    applies only when neither the operator nor the witnessed workflow state
+    selected a provider. Status/test callers omit the fallback so they never
+    invent configuration; login/preflight can apply their established default
+    without reopening the route.
+    """
     resolved = settings or load_settings()
     with active_profile_storage_span(resolved) as bucket_id:
         if bucket_id is None:
+            provider = _project_provider_kind(requested_provider or fallback_provider)
             yield ActiveAuthProjectionSnapshot(
                 bucket_id=None,
                 state=None,
-                certificate_credentials=None,
+                provider=provider,
+                certificate_credentials=(
+                    unnamed_certificate_credentials(resolved) if provider is AuthProviderKind.CERTIFICATE else None
+                ),
             )
             return
-        from ...core.config import override_settings
-
         with override_settings(cadrumo_active_profile=bucket_id):
             state = _workflow_state_repository().load()
-            provider = (requested_provider or state.auth.provider or "").strip().lower()
+            provider = _project_provider_kind(requested_provider or state.auth.provider or fallback_provider)
             credentials = (
                 _resolve_witnessed_certificate_credentials(
                     state,
                     bucket_id=bucket_id,
                     settings=resolved,
                 )
-                if provider == "certificate"
+                if provider is AuthProviderKind.CERTIFICATE
                 else None
             )
             yield ActiveAuthProjectionSnapshot(
                 bucket_id=bucket_id,
                 state=state,
+                provider=provider,
                 certificate_credentials=credentials,
             )
 
@@ -138,7 +155,7 @@ def resolve_active_certificate_credentials(
             if snapshot.state is None:
                 return unnamed_certificate_credentials(resolved)
             return snapshot.certificate_credentials or ActiveCertificateCredentials()
-    except (OSError, AeatError):
+    except (OSError, CadrumoError):
         return ActiveCertificateCredentials()
 
 

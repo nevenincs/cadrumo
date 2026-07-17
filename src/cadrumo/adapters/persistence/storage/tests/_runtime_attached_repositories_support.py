@@ -132,6 +132,7 @@ from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_url,
 )
+from .....tests.master_key import EphemeralMasterKeyProvider
 from ....outbound.aeat.auth import _session_store as _session_store
 from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
 from ....outbound.google import (
@@ -154,7 +155,7 @@ from ...profile.assets import load_amortizacion_ledger, load_assets, save_amorti
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
+from .. import AttachmentStore, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
 from ..master_key import BucketSession, activate_session
 from ..runtime_repository import secure_object_repository_for_active_bucket

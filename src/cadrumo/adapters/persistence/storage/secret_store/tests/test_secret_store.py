@@ -19,6 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.classification import SensitivityClass
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ...blob_store import EncryptedBlobStore
 from ...crypto import KEY_SIZE
 from ...errors import (
@@ -28,7 +29,6 @@ from ...errors import (
     SecretNotFoundError,
     StorageValidationError,
 )
-from ...master_key import EphemeralMasterKeyProvider
 from .._secret_store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

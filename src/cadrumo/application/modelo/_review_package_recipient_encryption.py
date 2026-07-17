@@ -127,7 +127,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import DecryptionError, SensitivityClass
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 
@@ -143,7 +143,7 @@ _RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 1
 #: DEK wrapping) so a key derived here can never collide with a key
 #: derived for an unrelated purpose even if the same shared secret were
 #: (incorrectly) reused.
-_HKDF_CONTEXT_PREFIX = b"aeat.review_package.recipient_encryption.v1"
+_HKDF_CONTEXT_PREFIX = b"cadrumo.review_package.recipient_encryption.v1"
 
 _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 
@@ -152,7 +152,7 @@ _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 _REPLAY_NONCE_BYTES = 32
 
 
-class RecipientEncryptionError(AeatError):
+class RecipientEncryptionError(CadrumoError):
     """Base error for review-package recipient-encryption failures."""
 
 
@@ -409,7 +409,7 @@ def _associated_data(recipient_public_key_hex: str) -> bytes:
     recipient's public key fails AEAD authentication, because the
     associated data would no longer match.
     """
-    return b"aeat.review_package.recipient:" + recipient_public_key_hex.encode("ascii")
+    return b"cadrumo.review_package.recipient:" + recipient_public_key_hex.encode("ascii")
 
 
 def encrypt_review_package_for_recipient(

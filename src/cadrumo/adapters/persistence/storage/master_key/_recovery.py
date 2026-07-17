@@ -36,6 +36,7 @@ import base64
 import binascii
 import hashlib
 import secrets
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
@@ -56,8 +57,8 @@ from ..errors import (
 
 _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
-_HKDF_CONTEXT_RECOVERY: Final[bytes] = b"aeat.recovery-key.master-wrap.v1"
-_RECOVERY_AAD: Final[bytes] = b"aeat.recovery-key.aad.v1"
+_HKDF_CONTEXT_RECOVERY: Final[bytes] = b"cadrumo.recovery-key.master-wrap.v1"
+_RECOVERY_AAD: Final[bytes] = b"cadrumo.recovery-key.aad.v1"
 
 
 class RecoveryKey(BaseModel):
@@ -288,9 +289,44 @@ def load_wrapped_master_key(path: Path) -> WrappedMasterKey:
         raise _storage_validation_error("wrapped recovery master key file is malformed") from exc
 
 
+def atomically_install_verified_recovery(
+    *,
+    path: Path,
+    payload: bytes,
+    verify: Callable[[], None],
+) -> None:
+    """Persist ``payload`` to ``path`` only after ``verify`` passes.
+
+    This is the single ordering guarantee behind recovery ``create`` and
+    ``rotate``: the candidate recovery envelope must be *fully* verified — a
+    real mnemonic unwrap / AES-GCM tag check, never a string comparison —
+    before it may replace whatever is already on disk. ``verify`` MUST raise
+    when the candidate is not valid; it returns ``None`` only when the
+    candidate is proven good.
+
+    Because the atomic write is not reached until ``verify`` returns without
+    raising, a cancelled, mistyped, or corrupt candidate leaves any prior
+    recovery envelope at ``path`` byte-for-byte untouched. The write itself
+    goes through the substrate's ``atomic_write_secure_bytes`` (restrictive
+    permissions from creation, fsync, ``os.replace``), so the replacement is
+    all-or-nothing and never leaves a torn envelope.
+
+    Args:
+        path: Destination recovery-envelope path.
+        payload: The serialized candidate envelope bytes to install.
+        verify: A zero-argument callable that fully validates the candidate and
+            raises on any failure.
+    """
+    verify()
+    from ._master_key import atomic_write_secure_bytes
+
+    atomic_write_secure_bytes(path, payload)
+
+
 __all__ = [
     "RecoveryKey",
     "WrappedMasterKey",
+    "atomically_install_verified_recovery",
     "decode_mnemonic",
     "encode_mnemonic",
     "generate_recovery_key",

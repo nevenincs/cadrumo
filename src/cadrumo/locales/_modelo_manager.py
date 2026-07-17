@@ -16,7 +16,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..core import CasillaId, read_toml
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.resources import bundled_path
 from ..domain.calculations.registry import (
@@ -28,7 +28,7 @@ from ..domain.calculations.registry import (
 )
 
 
-class ModeloLocaleError(AeatError, ValueError):
+class ModeloLocaleError(CadrumoError, ValueError):
     """Raised when modelo schema-local locale management fails."""
 
 

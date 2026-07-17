@@ -264,7 +264,7 @@ def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for build
-        # diagnostics; not on the operator-facing AeatError contract.
+        # diagnostics; not on the operator-facing CadrumoError contract.
         raise RuntimeError(
             f"CLI tree walk subprocess failed for language {language.value!r} "
             f"(exit {result.returncode}):\n{result.stderr}",

@@ -34,6 +34,7 @@ from ....core import BucketPointer, capture_pointer, pointer_path, read_pointer,
 from ....core.config import load_settings, override_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileStatus
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401
 from ...workflow import WorkflowState, repair_active_profile_pointer
 from .. import ProfileRepository, active_profile_pointer_transaction
@@ -43,7 +44,6 @@ from .._orchestration import (
     remove_active_profile,
     select_profile,
 )
-from .._testing import register_minimal_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

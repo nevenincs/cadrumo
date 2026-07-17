@@ -5,10 +5,8 @@ The production schema provider requires validated registry snapshots and
 projects them into the :class:`~domain.filing.CasillaSchemaProvider`
 surface consumed by :func:`~application.filing.build_draft`.
 
-The filing runtime must not depend on
-:mod:`application.filing.testing`; this module is the production
-entry point that callers (CLI, workflow, services) construct profiles
-and schema providers through.
+This module is the production entry point through which callers (CLI,
+workflow, services) construct profiles and schema providers.
 
 Key entry points:
 
@@ -484,7 +482,7 @@ def registry_tree_fingerprint(  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE
     # filename-keyed canonical file_stat_fingerprint).
     import time
 
-    now = time.time()
+    now = time.monotonic()
     if root in _FINGERPRINT_CACHE:
         cached_time, cached_val = _FINGERPRINT_CACHE[root]
         if now - cached_time < 1.0:

@@ -53,6 +53,7 @@ from pydantic import AnyHttpUrl, BaseModel, TypeAdapter, model_validator
 
 from .. import __version__
 from ..core import STRICT_FROZEN_CONFIG, Modelo
+from ..core.async_cleanup import close_async_resources
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
@@ -518,19 +519,11 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
             return status
         return _ok_site_health_status(url)
     finally:
-        if context is not None:
-            try:
-                await context.close()
-            # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN:
-            # close raises heterogeneous async exceptions; teardown must continue.
-            except Exception:
-                _log.warning("config repair connectivity context close failed", exc_info=True)
-        try:
-            await session.close()
-        # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN:
-        # close raises heterogeneous async exceptions; teardown must continue.
-        except Exception:
-            _log.warning("config repair connectivity browser close failed", exc_info=True)
+        await close_async_resources(
+            context,
+            session,
+            task_name="cadrumo-diagnostics-browser-connectivity-close",
+        )
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:

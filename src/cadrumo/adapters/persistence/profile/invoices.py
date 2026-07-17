@@ -24,17 +24,16 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
+from ..storage import INVOICE_CATALOGUE_NAMESPACE
 
 if TYPE_CHECKING:
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
-# namespace/version constants redeclared here (the persistence contract now lives
-# with the adapter); the string is preserved to avoid orphaning persisted envelopes
-_INVOICE_CATALOGUE_VERSION = 1
-_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
-_INVOICE_OBJECT_KEY = "catalogue"
+_INVOICE_CATALOGUE_VERSION = INVOICE_CATALOGUE_NAMESPACE.schema_version
+_INVOICE_NAMESPACE = INVOICE_CATALOGUE_NAMESPACE.namespace
+_INVOICE_OBJECT_KEY = INVOICE_CATALOGUE_NAMESPACE.require_default_object_key()
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:

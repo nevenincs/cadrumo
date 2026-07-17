@@ -41,7 +41,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core.config import Settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.auth import (
@@ -51,11 +51,11 @@ from ...domain.auth import (
 )
 
 
-class ApoderadoConfigurationNotSetError(AeatError):
+class ApoderadoConfigurationNotSetError(CadrumoError):
     """Raised when status or check runs without a configured apoderado."""
 
 
-class ApoderadoLiveCheckUnavailableError(AeatError):
+class ApoderadoLiveCheckUnavailableError(CadrumoError):
     """Raised when the live-read path is not yet wired or AEAT contact fails."""
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -21,9 +22,24 @@ from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
-from .._operator import build_live_auth_preflight_report, configure_operator_auth, inspect_operator_auth
+from .. import (
+    AuthLoginPreconditionError,
+    active_auth_projection_span,
+    login_operator_auth,
+    register_operator_certificate_source,
+    resolve_certificate_source_secret,
+    set_operator_certificate_source_secret,
+)
+from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+from .._operator import (
+    build_live_auth_preflight_report,
+    configure_operator_auth,
+    inspect_operator_auth,
+    reset_operator_auth,
+)
 from .._operator import test_operator_auth as run_operator_auth_test
 from .._sessions import (
     AuthProfileIdentityMismatchError,
@@ -441,6 +457,64 @@ def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
     assert status.health_summary == probe.health_summary
 
 
+def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> None:
+    """A malformed stored selector never escapes the typed projection boundary.
+
+    The real workflow repository persists a non-empty legacy selector that cannot
+    hydrate :class:`AuthProviderKind`. The route snapshot must narrow it to
+    ``None``; status, test, and live preflight must then expose the same empty,
+    unconfigured, unavailable state. Login must refuse at that boundary, before
+    any provider or browser-session construction can begin.
+    """
+
+    from ...state_projection import build_operator_state_projection
+
+    invalid_selector = "certificate-private-taxpayer-note"
+    workflow_state_repository().update(_register_operator_profile())
+    workflow_state_repository().update(
+        lambda state: state.model_copy(
+            update={
+                "auth": state.auth.model_copy(
+                    update={"provider": invalid_selector},
+                ),
+            },
+        ),
+    )
+
+    with active_auth_projection_span() as snapshot:
+        assert snapshot.state is not None
+        assert snapshot.state.auth.provider == invalid_selector
+        assert snapshot.provider is None
+        projection = build_operator_state_projection(
+            auth_snapshot=snapshot,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+        direct_state_projection = build_operator_state_projection(
+            state=snapshot.state,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+
+    status = inspect_operator_auth()
+    probe = run_operator_auth_test()
+    preflight = build_live_auth_preflight_report()
+
+    for readiness in (projection.auth, direct_state_projection.auth, status, probe, preflight):
+        assert readiness.provider == ""
+        assert readiness.configured is False
+        assert readiness.available is False
+        assert invalid_selector not in readiness.model_dump_json()
+
+    with pytest.raises(AuthLoginPreconditionError) as excinfo:
+        asyncio.run(login_operator_auth(pytest_current_test=""))
+
+    assert excinfo.value.translated_message == "application.auth.operator.errors.provider_not_configured"
+    assert invalid_selector not in str(excinfo.value)
+
+
 def test_auth_test_probes_the_provider_when_one_is_configured() -> None:
     """``auth test`` still actively scopes readiness to the configured
     provider when workflow state has one — it only declines to invent a
@@ -714,6 +788,69 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
         # the localised string for the canonical key rather than a
         # hard-coded English fragment.
         assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_profile_mismatch"
+
+
+def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_path: Path) -> None:
+    """A provider-scoped reset clears only the target provider's session, lock, registration, and secret.
+
+    The certificate provider is given a real persisted session, an acquisition
+    lock, a named source registration, and its secure-storage secret. An
+    unrelated Cl@ve Móvil session and acquisition lock live in the same bucket.
+    Resetting the certificate provider must delete every certificate artefact
+    and leave every Cl@ve Móvil artefact byte-for-byte in place.
+    """
+
+    workflow_state_repository().update(_register_operator_profile())
+    cert_path = tmp_path / "operator.p12"
+    cert_path.write_bytes(b"placeholder cert")
+    settings = load_settings()
+
+    configure_operator_auth("certificate", certificate_path=cert_path)
+    register_operator_certificate_source(name="personal", certificate_path=cert_path)
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr("cert-passphrase"))
+
+    certificate_session = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+    _session_store.save(
+        certificate_session,
+        storage_state={"cookies": [], "origins": []},
+        metadata={"provider_kind": "certificate"},
+    )
+    unrelated_session = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
+    _session_store.save(
+        unrelated_session,
+        storage_state={"cookies": [], "origins": []},
+        metadata={"provider_kind": "clave_movil"},
+    )
+
+    certificate_lock = auth_acquisition_lock_path(settings, AuthProviderKind.CERTIFICATE, bucket_id=_BUCKET_ID)
+    clave_lock = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id=_BUCKET_ID)
+
+    with (
+        acquire_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, ttl_seconds=60, operation="target"),
+        acquire_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, ttl_seconds=60, operation="unrelated"),
+    ):
+        assert certificate_lock.is_file()
+        assert clave_lock.is_file()
+
+        result = reset_operator_auth(provider="certificate")
+
+        assert certificate_lock.exists() is False
+        assert clave_lock.is_file(), "an unrelated provider's acquisition lock must survive a scoped reset"
+
+    state = workflow_state_repository().load()
+
+    assert result.cleared_provider_configuration is True
+    assert result.removed_sessions == 1
+    assert result.cleared_locks == 1
+    assert result.removed_certificate_sources == 1
+    assert result.removed_certificate_secrets == 1
+    assert _session_store.exists(certificate_session) is False
+    assert state.auth.certificate_sources == {}
+    assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+
+    assert _session_store.exists(unrelated_session) is True, (
+        "an unrelated provider's persisted session must survive a scoped reset"
+    )
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

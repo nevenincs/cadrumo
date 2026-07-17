@@ -29,7 +29,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_serializer
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
@@ -43,11 +43,11 @@ from ...domain.modelos import (
 from ._ids import BundleId
 
 
-class EvidenceBundleNotFoundError(AeatError):
+class EvidenceBundleNotFoundError(CadrumoError):
     """Raised when an evidence-bundle lookup misses by id."""
 
 
-class EvidenceBundleVerificationError(AeatError):
+class EvidenceBundleVerificationError(CadrumoError):
     """Raised when bundle verification fails and the caller refuses ``--force-incomplete``.
 
     The verification service raises this when one or more

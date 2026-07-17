@@ -46,15 +46,16 @@ from ....domain.modelos import (
     WorkUnitPersistenceError,
     raise_catalogue_integrity_error,
 )
+from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
-_WORK_UNIT_NAMESPACE = "cadrumo.domain.modelos.work_units"
-_WORK_UNIT_OBJECT_KEY = "catalogue"
-_WORK_UNIT_CATALOGUE_VERSION = 1
+_WORK_UNIT_NAMESPACE = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace
+_WORK_UNIT_OBJECT_KEY = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.require_default_object_key()
+_WORK_UNIT_CATALOGUE_VERSION = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.schema_version
 _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"
 
 

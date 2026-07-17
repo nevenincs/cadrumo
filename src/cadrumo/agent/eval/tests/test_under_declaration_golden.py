@@ -44,8 +44,9 @@ import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .. import UnderDeclarationScenario, check_under_declaration_scenario
 
@@ -84,7 +85,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     under-declaration, not the ledger-aggregation one.
     """
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Under-declaration golden-eval test profile",
@@ -109,21 +110,6 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     lifecycle.save(record)
 
 
-def _create_m200_work_unit() -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "200",
-            "--year", str(_FILING_YEAR),
-            "--period", _PERIOD,
-            "--revision", _REVISION,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return unwrap_schema_envelope(result.output)["work_unit_id"]
-
-
 def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestRuntimeProfile) -> None:
     """Dispatch a REAL ``modelo.work.calculate`` for a positive-00500/zero-00501 draft.
 
@@ -144,7 +130,12 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     ``00501``/correcciones/reserva/BIN - this scenario deliberately omits them.
     """
     _seed_legal_entity_profile(runtime_profile)
-    work_unit_id = _create_m200_work_unit()
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="200",
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+        revision=_REVISION,
+    )
 
     result = invoke_cached_cli(
         [
@@ -163,7 +154,7 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     values = payload["casilla_values"]
     # Anti-tautology precondition: confirm the cascade actually reproduces the
     # silent-zero shape before asserting the verify-layer advisory over it - if
@@ -186,7 +177,7 @@ def _dispatch_m200_verify() -> tuple[dict[str, Any], ...]:
             "--modelo", "200", "--year", str(_FILING_YEAR), "--period", _PERIOD,
         ],
     )  # fmt: skip
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     return tuple(payload["findings"])
 
 

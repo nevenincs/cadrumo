@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import AeatError, build_error_envelope
+from ....core.errors import CadrumoError, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
@@ -88,7 +88,7 @@ def test_unknown_binding_id_refuses_with_accepted_set() -> None:
         _validated_binding_input_channel("no-such-binding-id", revision, known, enum_ids)
 
     error = exc_info.value
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert error.translated_message == "application.modelo.errors.calculate_binding_unknown"
     assert error.context is not None
     assert error.context["key"] == "no-such-binding-id"

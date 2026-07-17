@@ -59,8 +59,8 @@ from .. import (
 from .. import (
     select_provider as select_provider,
 )
-from .._fixtures import SECRET_PASSPHRASE
 from ..certificate import CertificateBundle
+from ._auth_fixtures import SECRET_PASSPHRASE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -17,11 +17,11 @@ from ....domain.filing import (
     ModeloValidationFinding,
 )
 from ....domain.submission import ModeloDraftStatus
+from ....tests.filing import build_registry_filing_draft
 from .. import (
     DeclaracionCalculateNextAction,
     summarise_calculation,
 )
-from ..testing import build_registry_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

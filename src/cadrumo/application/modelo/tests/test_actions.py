@@ -458,7 +458,6 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
         target=target,
         profile=_resident_profile(),
         transaction_repository=None,
-        invoice_repository=None,
     )
 
     assert len(findings) == 1

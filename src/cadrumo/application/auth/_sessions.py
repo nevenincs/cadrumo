@@ -20,18 +20,19 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
-from ...core.errors import AeatError
+from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ..auth_credentials import ActiveCertificateCredentials
@@ -49,6 +50,7 @@ from ._operator_scope import (
     auth_mutation_span,
 )
 from ._protocols import SessionStoreProtocol
+from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
@@ -57,22 +59,22 @@ if TYPE_CHECKING:
         BrowserSessionFactory,
     )
     from ...core.config import Settings
-    from ..workflow import WorkflowStateRepository
     from . import AuthProvider
 
 _logger = get_logger(__name__)
 
 
+@runtime_checkable
 class _TargetedAuthProvider(Protocol):
     """Provider extension for Cl@ve flows that accept a requested live target."""
 
-    async def authenticate(
+    async def authenticate_for_target(
         self,
         *,
         target_url: str | None = None,
     ) -> AeatSession: ...
 
-    async def verify(
+    async def verify_for_target(
         self,
         session: AeatSession,
         *,
@@ -80,6 +82,7 @@ class _TargetedAuthProvider(Protocol):
     ) -> AeatLoginAssertion: ...
 
 
+@runtime_checkable
 class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
     """Cl@ve provider extension with a direct persisted-session probe."""
 
@@ -90,16 +93,13 @@ class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
     ) -> tuple[AeatSession, AeatLoginAssertion]: ...
 
 
-def _workflow_state_repository() -> WorkflowStateRepository:
-    """Resolve the public workflow repository without loading workflow at auth import time."""
-    workflow = import_module("cadrumo.application.workflow")
-    factory = cast(Callable[[], object], workflow.workflow_state_repository)
-    return cast("WorkflowStateRepository", factory())
-
 def _get_session_store() -> SessionStoreProtocol:
     """Return the sole encrypted outbound session-store implementation."""
     outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth")
-    return cast(SessionStoreProtocol, outbound_auth.session_store)
+    session_store = outbound_auth.session_store
+    if not isinstance(session_store, SessionStoreProtocol):
+        raise TypeError("outbound auth session store does not implement SessionStoreProtocol")
+    return session_store
 
 
 def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
@@ -132,11 +132,11 @@ class StorageStatePaths(BaseModel):
     storage_state: Path
 
 
-class CorruptAuthSessionError(AeatError):
+class CorruptAuthSessionError(CadrumoError):
     """Raised when persisted session metadata cannot be parsed."""
 
 
-class AuthSessionUnavailableError(AeatError):
+class AuthSessionUnavailableError(CadrumoError):
     """Raised when no verified active AEAT session can be supplied."""
 
 
@@ -149,7 +149,7 @@ class SessionDeserializationError(AuthSessionUnavailableError):
     """
 
 
-class AuthProfileIdentityMismatchError(AeatError):
+class AuthProfileIdentityMismatchError(CadrumoError):
     """Raised when the active profile identity cannot own the requested auth session."""
 
 
@@ -683,7 +683,9 @@ async def _probe_existing_session(
     target_url: str | None = None,
 ) -> tuple[AeatSession, AeatLoginAssertion]:
     if provider.kind is AuthProviderKind.CLAVE_MOVIL:
-        return await cast(_PersistedTargetProbeProvider, provider).probe_persisted_session(
+        if not isinstance(provider, _PersistedTargetProbeProvider):
+            raise TypeError("clave movil provider lacks persisted-session probing")
+        return await provider.probe_persisted_session(
             target_url=target_url,
         )
     return await _authenticate_and_verify_provider(provider, target_url=target_url)
@@ -699,48 +701,27 @@ async def _authenticate_and_verify_provider(
         session = await provider.authenticate()
         assertion = await provider.verify(session)
         return session, assertion
-    targeted_provider = cast(_TargetedAuthProvider, provider)
-    session = await targeted_provider.authenticate(target_url=target_url)
-    assertion = await targeted_provider.verify(session, target_url=target_url)
+    if not isinstance(provider, _TargetedAuthProvider):
+        raise TypeError("non-certificate auth provider lacks target-aware authentication")
+    targeted_provider = provider
+    session = await targeted_provider.authenticate_for_target(target_url=target_url)
+    assertion = await targeted_provider.verify_for_target(session, target_url=target_url)
     return session, assertion
 
 
 @asynccontextmanager
-async def _provider_lifecycle(provider: AuthProvider) -> AsyncIterator[None]:
+async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
     """Close ``provider`` without hiding a primary auth failure."""
     try:
         yield
-    except BaseException:
+    finally:
         try:
-            await _close_provider_with_retry(provider)
-        except Exception as close_error:  # BROAD-EXCEPT-RATIONALE-PRESERVE-PRIMARY-AUTH-FAILURE
-            _logger.warning(
-                "provider close failed while preserving primary auth failure close_failure=%s",
-                type(close_error).__name__,
+            await close_async_resources(
+                provider,
+                task_name="cadrumo-auth-provider-close",
+                close_attempts=2,
             )
-        raise
-    else:
-        try:
-            await _close_provider_with_retry(provider)
-        except Exception as exc:
+        except AsyncResourceCleanupError as cleanup_error:
             raise AuthSessionUnavailableError(
                 translated_message="application.auth.sessions.errors.provider_close_failed",
-            ) from exc
-
-
-async def _close_provider_with_retry(provider: AuthProvider) -> None:
-    """Give a provider one bounded retry while its cleanup handles remain owned."""
-    try:
-        await provider.close()
-    except Exception as first_error:
-        _logger.warning(
-            "provider close failed; retrying once close_failure=%s",
-            type(first_error).__name__,
-        )
-        try:
-            await provider.close()
-        except Exception as retry_error:
-            retry_error.add_note(
-                f"initial provider close failure: {type(first_error).__name__}",
-            )
-            raise
+            ) from cleanup_error

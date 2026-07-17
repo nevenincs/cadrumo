@@ -11,7 +11,7 @@ target_casillas = [
 # AEAT-published diseño de registro DR_Modelo_184_2025.pdf, downloaded 2026-05-27 from
 #   https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
 #     DR_100_199/DR_Modelo_184_2025.pdf
-#   saved at src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
+#   saved at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
 #     01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf
 # Registro de tipo 1, positions 5-8: "EJERCICIO"
 #   "Las cuatro cifras del ejercicio fiscal al que corresponde la declaración"
@@ -25,7 +25,7 @@ target_casillas = [
 # uses "Tipo de declaración" as a labeled field for M184.  Identical to the M720
 # removal (same record-type-1 positions 121-122 structure).
 #
-# Synthetic round-trip fixture at src/aeat/tests/fixtures/justificantes/184/2024-0A.pdf
+# Synthetic round-trip fixture at src/cadrumo/tests/fixtures/justificantes/184/2024-0A.pdf
 # reproduces the AEAT ejercicio label so the named_label parser can locate and
 # extract the value.
 confidence = "strict"

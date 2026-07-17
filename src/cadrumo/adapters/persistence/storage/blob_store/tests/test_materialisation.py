@@ -11,8 +11,8 @@ import pytest
 
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import SecretNotFoundError, StorageValidationError
-from ...master_key import EphemeralMasterKeyProvider
 from ...secret_store import SecretRecord, SecretStore
 from .. import EncryptedBlobStore
 from .._materialisation import (

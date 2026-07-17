@@ -24,11 +24,13 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -59,13 +61,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             yield
         finally:
             dispose_engine()
-
-
-def _list_rows() -> list[dict[str, object]]:
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    payload = json.loads(listed.output)
-    return payload.get("result", payload).get("rows", [])
 
 
 def _add_rows() -> list[str]:

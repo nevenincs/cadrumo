@@ -17,7 +17,7 @@ from typing import NoReturn
 import pytest
 
 from ..core.errors import (
-    AeatError,
+    CadrumoError,
     build_error_envelope,
     get_registered_error_code,
 )
@@ -41,31 +41,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 class TestNewErrorClassesRegistered:
-    """The three new error classes are AeatError subclasses with registry entries."""
+    """The three new error classes are CadrumoError subclasses with registry entries."""
 
-    # Declared as ``type[AeatError]`` (not inferred from the literal subclasses)
+    # Declared as ``type[CadrumoError]`` (not inferred from the literal subclasses)
     # so ``test_envelope_roundtrip``'s fallback construction below type-checks
     # against the common base constructor rather than each member's own
     # override — two of the three hardcode a message and take no positional
-    # arg, one inherits ``AeatError``'s optional-message constructor.
-    _ERROR_CASES: tuple[tuple[type[AeatError], str], ...] = (
+    # arg, one inherits ``CadrumoError``'s optional-message constructor.
+    _ERROR_CASES: tuple[tuple[type[CadrumoError], str], ...] = (
         (WizardCatalogueNotRegisteredError, "INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED"),
         (WizardCatalogueAlreadyRegisteredError, "INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED"),
         (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
     )
 
     @pytest.mark.parametrize(("error_cls", "expected_code"), _ERROR_CASES)
-    def test_error_classes_are_aeat_errors_with_registered_codes(
+    def test_error_classes_are_cadrumo_errors_with_registered_codes(
         self,
-        error_cls: type[AeatError],
+        error_cls: type[CadrumoError],
         expected_code: str,
     ) -> None:
-        assert issubclass(error_cls, AeatError), error_cls.__name__
+        assert issubclass(error_cls, CadrumoError), error_cls.__name__
         code = get_registered_error_code(error_cls)
         assert code.code == expected_code
 
     @pytest.mark.parametrize(("error_cls", "_expected_code"), _ERROR_CASES)
-    def test_envelope_roundtrip(self, error_cls: type[AeatError], _expected_code: str) -> None:
+    def test_envelope_roundtrip(self, error_cls: type[CadrumoError], _expected_code: str) -> None:
         """An instance can be built into an ErrorEnvelope without raising."""
         del _expected_code
         try:
@@ -144,8 +144,8 @@ class TestResultSummaryNarrowing:
             updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
         )
 
-    def test_aeat_error_from_get_work_unit_returns_none(self) -> None:
-        """An AeatError from get_work_unit is caught and returns None."""
+    def test_cadrumo_error_from_get_work_unit_returns_none(self) -> None:
+        """An CadrumoError from get_work_unit is caught and returns None."""
         from ..application.modelo import calculation_result_summary
 
         def _raising(work_unit_id: str) -> NoReturn:

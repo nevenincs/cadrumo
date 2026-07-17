@@ -237,7 +237,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     recovery_document = recovery_path.read_text(encoding="utf-8")
     recovery_record = RecoveryRecord.model_validate_json(recovery_document)
     assert recovery_record.mnemonic_word_count == 24
-    assert recovery_record.hkdf_info == "aeat.recovery-key.master-wrap.v1"
+    assert recovery_record.hkdf_info == "cadrumo.recovery-key.master-wrap.v1"
     assert recovery_key not in recovery_document
     bucket_dir = next((tmp_path / "buckets").iterdir())
     manifest = tomllib.loads((bucket_dir / "manifest.toml").read_text(encoding="utf-8"))

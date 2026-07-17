@@ -14,5 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage.envelope._envelope
-   cadrumo.adapters.persistence.storage.envelope._repository_test_suite
    cadrumo.adapters.persistence.storage.envelope._secure_repository

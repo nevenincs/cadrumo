@@ -14,14 +14,12 @@ from sqlalchemy import event as event
 
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ... import (
     STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY,
 )
 from ... import (
     WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_NAMESPACE,
-)
-from ... import (
-    EphemeralMasterKeyProvider,
 )
 from ... import (
     SecureObjectNamespaceDefinition as SecureObjectNamespaceDefinition,

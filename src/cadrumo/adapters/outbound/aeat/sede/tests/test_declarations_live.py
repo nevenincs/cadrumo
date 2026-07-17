@@ -39,7 +39,7 @@ async def _load_active_clave_session():
     )
     from ......core import AuthProviderKind
     from ......core.config import load_settings
-    from ......core.errors import AeatError
+    from ......core.errors import CadrumoError
 
     settings = load_settings()
     try:
@@ -49,7 +49,7 @@ async def _load_active_clave_session():
             operation="sede-declarations-live-test",
         )
         return result.session
-    except AeatError as exc:
+    except CadrumoError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available after live opt-in: {exc}")
 
 

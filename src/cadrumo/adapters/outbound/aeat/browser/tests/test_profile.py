@@ -1,6 +1,8 @@
 """Unit tests for the Profile model."""
 
+from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -9,16 +11,11 @@ from ..profile import Profile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def test_profile_ensure_storage_dir(tmp_path: Path) -> None:
-    """Test that ensure_storage_dir creates the parent directory only."""
-    storage_path = tmp_path / "test_state.json"
-    profile = Profile(name="test_profile", storage_state_path=storage_path)
-
-    assert not storage_path.exists()
-    profile.ensure_storage_dir()
-
-    assert storage_path.parent.exists()
-    assert not storage_path.exists()
+def test_profile_rejects_plaintext_storage_state_paths(tmp_path: Path) -> None:
+    """Browser profiles cannot carry a Playwright storage-state file path."""
+    constructor = cast("Callable[..., Profile]", Profile)
+    with pytest.raises(TypeError, match="storage_state_path"):
+        constructor(name="test-profile", storage_state_path=tmp_path / "state.json")
 
 
 def test_importing_profile_module_does_not_construct_settings() -> None:
@@ -41,24 +38,23 @@ def test_importing_profile_module_does_not_construct_settings() -> None:
     assert callable(profile_module._browser_timezone_default)
 
 
-def test_profile_resolves_browser_defaults_on_construction(tmp_path: Path) -> None:
+def test_profile_resolves_browser_defaults_on_construction() -> None:
     """An unsupplied locale/timezone is filled from Settings at construction."""
 
     from ......core.config import Settings
 
     settings = Settings()
-    profile = Profile(name="defaults", storage_state_path=tmp_path / "state.json")
+    profile = Profile(name="defaults")
 
     assert profile.locale == settings.cadrumo_browser_locale
     assert profile.timezone_id == settings.cadrumo_browser_timezone
 
 
-def test_profile_honours_explicit_locale_without_touching_settings(tmp_path: Path) -> None:
+def test_profile_honours_explicit_locale_without_touching_settings() -> None:
     """An explicitly supplied locale bypasses the lazy default factory."""
 
     profile = Profile(
         name="explicit",
-        storage_state_path=tmp_path / "state.json",
         locale="ca-ES",
         timezone_id="Atlantic/Canary",
     )

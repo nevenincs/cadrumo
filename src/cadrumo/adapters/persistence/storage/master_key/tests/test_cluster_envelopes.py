@@ -1,7 +1,7 @@
 """Aggregate real-behavior test: every master_key cluster error envelope-round-trips (contract).
 
 Each error class in the master_key cluster must:
-1. Be a registered AeatError subclass with a bound ErrorCode in ERROR_REGISTRY.
+1. Be a registered CadrumoError subclass with a bound ErrorCode in ERROR_REGISTRY.
 2. Produce a non-empty, well-formed ErrorEnvelope via build_error_envelope.
 
 This is an envelope smoke-test, not a behaviour test. It verifies the
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, AeatError, build_error_envelope
+from ......core.errors import ERROR_REGISTRY, CadrumoError, build_error_envelope
 from ...errors import (
     EncryptionError,
     KeyDerivationError,
@@ -29,7 +29,7 @@ from .._errors import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def _envelope_round_trip(err: AeatError) -> None:
+def _envelope_round_trip(err: CadrumoError) -> None:
     """Assert `err` round-trips through build_error_envelope to a valid envelope."""
 
     code = err.code

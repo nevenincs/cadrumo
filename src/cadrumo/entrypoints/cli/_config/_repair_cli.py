@@ -30,7 +30,7 @@ from ....application.diagnostics import (
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
-from .._common import _emit, _emit_envelope
+from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 
@@ -50,8 +50,16 @@ def _register_repair_root_callback(repair_app: typer.Typer) -> None:
         """Diagnose and repair local configuration, registry, profile, auth, and log state."""
         if ctx.invoked_subcommand is not None:
             return
+        from .._config_payloads import ConfigRepairResult
+
         report = _build_config_repair_report()
-        _emit(ctx, report.model_dump(mode="json"), _render_config_repair_text(report).splitlines())
+        result = ConfigRepairResult.model_validate(report.model_dump(mode="json"))
+        _emit_envelope(
+            ctx,
+            command="config.repair",
+            result=result,
+            lines=_render_config_repair_text(report).splitlines(),
+        )
 
 
 def _register_repair_logs_command(repair_app: typer.Typer) -> None:

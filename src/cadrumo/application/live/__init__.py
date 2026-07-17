@@ -56,12 +56,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Sequence
-
-    from ...adapters.outbound.aeat.auth import AeatSession
-    from ...adapters.outbound.aeat.sede import Declaracion, Expediente, SedeCapture
     from ...core import Period
-    from ...core.config import Settings
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ._expedientes import (
@@ -357,56 +352,12 @@ async def capture_notifications(*, bucket_id: str):
     return persisted
 
 
-async def _default_justificante_session() -> tuple[AeatSession, Settings]:
-    return await _active_verified_session(operation="live-justificante-read")
-
-
-async def _default_justificante_declarations(
-    session: AeatSession,
-    settings: Settings,
-    *,
-    modelo: str,
-    year: int,
-) -> tuple[Declaracion, ...]:
-    async with (
-        _shared_playwright(session) as playwright,
-        _open_declarations_register(session, settings=settings, playwright=playwright) as register,
-    ):
-        return tuple(await register.walk(modelo=modelo, ejercicio=year))
-
-
-async def _default_justificante_expedientes(
-    session: AeatSession,
-    settings: Settings,
-    *,
-    modelo: str,
-) -> tuple[Expediente, ...]:
-    from ...adapters.outbound.aeat.sede import walk_expedientes_tree
-
-    return await walk_expedientes_tree(session, modelo=modelo, settings=settings)
-
-
-async def _default_justificante_capture(
-    session: AeatSession,
-    settings: Settings,
-    *,
-    expediente: Expediente,
-) -> SedeCapture:
-    from ...adapters.outbound.aeat.sede import capture_justificante
-
-    return await capture_justificante(session, expediente, settings=settings)
-
-
 async def capture_justificante_snapshot(
     *,
     bucket_id: str,
     modelo: str,
     year: int,
     period: Period,
-    session_provider: Callable[[], Awaitable[tuple[AeatSession, Settings]]] = _default_justificante_session,
-    declarations_provider: Callable[..., Awaitable[Sequence[Declaracion]]] = _default_justificante_declarations,
-    expedientes_provider: Callable[..., Awaitable[Sequence[Expediente]]] = _default_justificante_expedientes,
-    justificante_provider: Callable[..., Awaitable[SedeCapture]] = _default_justificante_capture,
 ) -> JustificanteCaptureSnapshot:
     """Live-pull the AEAT justificante for one work unit and persist it.
 
@@ -418,10 +369,6 @@ async def capture_justificante_snapshot(
     ``capture_justificante``, and persists it through
     :class:`JustificanteCaptureSnapshotService` under the active bucket.
 
-    The four ``*_provider`` seams default to the live sede implementations;
-    tests inject canned typed records to exercise the wiring offline without
-    a network round-trip. The persistence path always uses the real service.
-
     Returns:
         The persisted :class:`JustificanteCaptureSnapshot`.
     """
@@ -430,10 +377,6 @@ async def capture_justificante_snapshot(
         modelo=modelo,
         year=year,
         period=period,
-        session_provider=session_provider,
-        declarations_provider=declarations_provider,
-        expedientes_provider=expedientes_provider,
-        justificante_provider=justificante_provider,
     )
     return outcome.snapshot
 
@@ -444,10 +387,6 @@ async def capture_justificante_snapshot_outcome(
     modelo: str,
     year: int,
     period: Period,
-    session_provider: Callable[[], Awaitable[tuple[AeatSession, Settings]]] = _default_justificante_session,
-    declarations_provider: Callable[..., Awaitable[Sequence[Declaracion]]] = _default_justificante_declarations,
-    expedientes_provider: Callable[..., Awaitable[Sequence[Expediente]]] = _default_justificante_expedientes,
-    justificante_provider: Callable[..., Awaitable[SedeCapture]] = _default_justificante_capture,
 ) -> JustificanteCaptureOutcome:
     """Live-pull one AEAT justificante and report local filing-evidence enrolment.
 
@@ -459,16 +398,22 @@ async def capture_justificante_snapshot_outcome(
     Returns:
         A :class:`JustificanteCaptureOutcome` with the capture and enrolment result.
     """
-    session, settings = await session_provider()
-    declarations = await declarations_provider(session, settings, modelo=modelo, year=year)
-    expedientes = await expedientes_provider(session, settings, modelo=modelo)
+    from ...adapters.outbound.aeat.sede import capture_justificante, walk_expedientes_tree
+
+    session, settings = await _active_verified_session(operation="live-justificante-read")
+    async with (
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        declarations = tuple(await register.walk(modelo=modelo, ejercicio=year))
+    expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
     expediente = resolve_period_expediente(
         declarations=declarations,
         expedientes=expedientes,
         modelo=modelo,
         period=period,
     )
-    capture = await justificante_provider(session, settings, expediente=expediente)
+    capture = await capture_justificante(session, expediente, settings=settings)
     persisted = JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
         modelo=modelo,
         filing_year=year,

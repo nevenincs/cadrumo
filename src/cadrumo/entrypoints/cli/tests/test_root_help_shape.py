@@ -15,13 +15,14 @@ import pytest
 
 from .... import __version__
 from ....application.operator_surface import build_help_document
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import PRODUCT_IDENTITY
 from ....core.config import SecretStoreBackend, Settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,10 +104,12 @@ def test_root_help_uses_curated_two_root_shape() -> None:
 
 def test_config_and_app_help_use_curated_subtree_shape() -> None:
     config = _invoke(["config", "--help"])
+    config_json = _invoke(["--format", "json", "config", "--help"])
     app_result = _invoke(["app", "--help"])
     retired_init = "aeat config " + "init"
 
     assert config.exit_code == 0, config.output
+    assert config_json.exit_code == 0, config_json.output
     assert "aeat config - profile, auth, diagnostics" in config.output
     assert "aeat config profile create NAME" in config.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
@@ -115,6 +118,9 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
     assert "Run aeat --help for the full overview." in config.output
+    config_envelope = json.loads(config_json.output)
+    assert config_envelope["command"] == "root.config"
+    assert config_envelope["result"]["surface"] == "config"
 
     assert app_result.exit_code == 0, app_result.output
     assert "aeat app - operational tax work" in app_result.output

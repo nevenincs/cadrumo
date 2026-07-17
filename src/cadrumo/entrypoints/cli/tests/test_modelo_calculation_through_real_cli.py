@@ -32,6 +32,7 @@ import pytest
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -75,7 +76,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """
 
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Oracle calculation test profile",
@@ -136,7 +137,7 @@ def _seed_legal_entity_profile(
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     ]
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Oracle calculation test profile",
@@ -148,23 +149,6 @@ def _seed_legal_entity_profile(
         objects=runtime_profile.repository,
     )
     lifecycle.save(record)
-
-
-def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str:
-    """Create a work unit and return its id."""
-
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", modelo,
-            "--year", year,
-            "--period", period,
-            "--revision", revision,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -206,9 +190,9 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
         incn_prior_12_months=Decimal("500000.00"),  # below 1 M → pyme lane
         new_entity=False,
     )
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="200",
-        year="2024",
+        filing_year=2024,
         period="0A",
         revision="2024-y-siguientes",
     )
@@ -298,9 +282,9 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
         incn_prior_12_months=Decimal("500000.00"),  # below 6 M → Art. 40.2 optional
         new_entity=False,
     )
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="202",
-        year="2026",
+        filing_year=2026,
         period="1P",
         revision="2025-y-siguientes",
     )
@@ -369,9 +353,9 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
     """
 
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
-        year="2026",
+        filing_year=2026,
         period="1T",
         revision="2019-y-siguientes",
     )
@@ -438,9 +422,9 @@ def test_modelo_303_calculate_surface_is_reachable(
     """
 
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
-        year="2026",
+        filing_year=2026,
         period="1T",
         revision="2023-y-siguientes",
     )
@@ -488,9 +472,9 @@ def test_modelo_100_calculate_surface_is_reachable(
     """
 
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="100",
-        year="2024",
+        filing_year=2024,
         period="0A",
         revision="2024",
     )
@@ -530,9 +514,9 @@ def test_modelo_130_malformed_numeric_binding_refuses_not_reclassified(
     """
 
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
-        year="2026",
+        filing_year=2026,
         period="1T",
         revision="2019-y-siguientes",
     )
@@ -581,9 +565,9 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
         incn_prior_12_months=Decimal("500000.00"),
         new_entity=False,
     )
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="200",
-        year="2024",
+        filing_year=2024,
         period="0A",
         revision="2024-y-siguientes",
     )

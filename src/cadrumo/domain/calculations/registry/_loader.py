@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, cast, get_args, get_origin
+from typing import Literal, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
@@ -37,6 +37,7 @@ from ._schema import (
     RegistryCatalogues,
     SourceReference,
 )
+from ._toml_helpers import as_toml_table as _as_toml_table
 from ._validate_revision_identity import revision_reference_identity_failures
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
@@ -244,22 +245,6 @@ class ModeloSource:
     path: Path
     manifest_path: Path
     revision_sources: tuple[ModeloRevisionSource, ...] = ()
-
-
-def _as_toml_table(value: object) -> dict[str, object] | None:
-    """Narrow a parsed TOML value to a string-keyed table, or ``None``.
-
-    ``tomllib`` and :func:`freeze_toml` always emit ``str`` keys, so a
-    parsed-TOML ``dict`` is genuinely ``dict[str, object]``. The runtime
-    ``isinstance`` check loses the key type because TOML payloads flow
-    through ``object``; the annotation below re-attaches the known ``str``
-    key type at this single TOML deserialization boundary.
-    """
-    if isinstance(value, dict):
-        # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib/freeze_toml always
-        # produces str-keyed dicts; isinstance loses the key type annotation.
-        return cast("dict[str, object]", value)
-    return None
 
 
 def _toml_table_id(value: object) -> str | None:

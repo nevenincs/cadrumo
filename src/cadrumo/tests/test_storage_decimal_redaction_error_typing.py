@@ -25,14 +25,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_financial_validation_error_typing_and_registry() -> None:
-    """FinancialValidationError is an AeatError, not a ValueError, and is registered."""
+    """FinancialValidationError is an CadrumoError, not a ValueError, and is registered."""
     from ..adapters.inbound.financial.providers import FinancialValidationError
-    from ..core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
+    from ..core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
 
     assert not issubclass(FinancialValidationError, ValueError), (
         "FinancialValidationError must not inherit from ValueError after the MRO cleanup"
     )
-    assert issubclass(FinancialValidationError, AeatError)
+    assert issubclass(FinancialValidationError, CadrumoError)
     err = FinancialValidationError("test")
     code = get_registered_error_code(err)
     assert code.code in ERROR_REGISTRY
@@ -181,15 +181,15 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
 
 def test_censo_sync_error_typing() -> None:
-    """CensoSyncError is an AeatError subclass and not a ValueError.
+    """CensoSyncError is an CadrumoError subclass and not a ValueError.
 
     CensoSyncService cannot be instantiated in a pure unit context here;
     the contract tested is that the error class itself is properly typed.
     """
     from ..application.user_profile import CensoSyncError
-    from ..core.errors import AeatError
+    from ..core.errors import CadrumoError
 
-    assert issubclass(CensoSyncError, AeatError)
+    assert issubclass(CensoSyncError, CadrumoError)
     assert not issubclass(CensoSyncError, ValueError)
 
 

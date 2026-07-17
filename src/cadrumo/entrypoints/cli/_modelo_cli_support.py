@@ -44,7 +44,7 @@ from ...application.modelo import (
     validate_m349_nif_format,
 )
 from ...core import M210GrossIncomeSourceMode, Modelo, RescateType
-from ...core.errors import AeatError, build_error_envelope, resolve_error_message
+from ...core.errors import CadrumoError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -222,7 +222,7 @@ def unsupported_local_work_period_refusal(
 
     try:
         declared = declared_modelo_period_tokens(modelo_code)
-    except AeatError:
+    except CadrumoError:
         return None
     except Exception:
         _log.debug(
@@ -565,7 +565,7 @@ def work_calculate_input_bundle_from_cli(
                 default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
             ),
         )
-    except AeatError:
+    except CadrumoError:
         raise
     except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
         raise typer.BadParameter(str(exc)) from exc

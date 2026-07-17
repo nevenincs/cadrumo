@@ -22,7 +22,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloBuilderError
 from .. import _filing_period_date, build_draft, build_runtime_schema_provider
-from ..testing import ModeloTestProfile
+from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,8 +56,8 @@ _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_i
 )
 
 
-def _profile() -> ModeloTestProfile:
-    return ModeloTestProfile(
+def _profile() -> ModeloOperatorProfile:
+    return ModeloOperatorProfile(
         tax_id="12345678Z",
         display_name="build_draft identity contract",
     )

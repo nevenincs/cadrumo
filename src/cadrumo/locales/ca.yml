@@ -33,9 +33,8 @@ adapters:
           sessio valida.
         capture_requires_active_session: capture_storage_state() requereix la sessió
           autenticada activa.
-        capture_requires_certificate: capture_storage_state() requereix una sessió activa
-          amb certificat i metadades del recurs protegit.
-        closing: L'autenticador s'està tancant; no es permeten noves operacions verify_login.
+        capture_requires_certificate: capture_storage_state() requereix una sessió
+          activa amb certificat i metadades del recurs protegit.
         metadata_parse_failed: Les metadades persistides no han produit un model analitzat.
         no_active_context: No hi ha context de navegador actiu; crideu authenticate()
           primer.
@@ -60,8 +59,6 @@ adapters:
           no es poden analitzar.
         no_persisted_session: No s'ha trobat cap sessio de Cl@ve Movil; executeu `aeat
           config auth status` primer.
-        page_missing_click: La pagina de Playwright no exposa click(); no es pot operar
-          l'entrada de Cl@ve Movil.
         session_expired: La sessio de Cl@ve Movil ha superat el seu termini d'inactivitat.
         storage_state_hash_mismatch: El hash de l'estat d'emmagatzematge de Cl@ve
           Movil no coincideix; les dades de sessio poden estar corrompudes.
@@ -594,8 +591,8 @@ application:
           de llegir dades AEAT.
         profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
           el perfil actiu tingui identity.tax_id.
-        provider_close_failed: No s'ha pogut tancar de manera segura la sessió del navegador
-          AEAT; repeteix l'autenticació abans de llegir dades AEAT.
+        provider_close_failed: No s'ha pogut tancar de manera segura la sessió del
+          navegador AEAT; repeteix l'autenticació abans de llegir dades AEAT.
         sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
           auth test` abans de llegir dades AEAT.
         session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
@@ -5094,8 +5091,9 @@ errors:
       Cl@ve Móvil o són incorrectes. Revisa la configuració de Cl@ve.
     auth_auth_configuration: Falten ajustos d'autenticació obligatoris o són incorrectes.
       Revisa la configuració d'autenticació.
-    auth_auth_provider_cleanup: El proveïdor d'autenticació no ha pogut alliberar tots
-      els recursos del navegador. Torna a provar el tancament abans d'iniciar una altra sessió.
+    auth_auth_provider_cleanup: El proveïdor d'autenticació no ha pogut alliberar
+      tots els recursos del navegador. Torna a provar el tancament abans d'iniciar
+      una altra sessió.
     auth_auth_validation: Els paràmetres d'autenticació no han superat la validació.
       Corregeix els valors indicats i torna-ho a provar.
     auth_former_product_session_state: Cadrumo ha detectat estat de sessió d'un producte
@@ -5218,9 +5216,6 @@ errors:
       d'enviament.
     error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
       ha rebutjat una operació d'escriptura.
-    error_aeat_core: S'ha produït un error intern en l'aplicació.
-    error_aeat_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
-    error_aeat_observability: S'ha produït un error en la telemetria de l'aplicació.
     error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
     error_application_live_iva_surface_timeout: La superfície de lectura d'IVA en
@@ -5229,6 +5224,11 @@ errors:
       ha estat rebutjada.
     error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
       del Model 100 conegut.
+    error_cadrumo_async_resource_cleanup: Ha fallat la neteja asíncrona de recursos;
+      torneu a intentar la neteja abans de continuar.
+    error_cadrumo_core: S'ha produït un error intern en l'aplicació.
+    error_cadrumo_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
+    error_cadrumo_observability: S'ha produït un error en la telemetria de l'aplicació.
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
@@ -5604,13 +5604,12 @@ errors:
   integrity:
     integrity_active_profile_pointer: El punter de perfil actiu no es valid; repara
       el perfil seleccionat abans de continuar.
-    integrity_aeat_core_validation: Una comprovació interna d'integritat de dades
+    integrity_cadrumo_core_validation: Una comprovació interna d'integritat de dades
       no s'ha superat.
     integrity_cli_output_schema: El registre d'esquemes de sortida de la CLI està
       mal configurat.
     integrity_filing_amendment_validation: La declaració complementària infringeix
       una invariant legal o d'estructura.
-    integrity_filing_fixture: Les dades de prova de la declaració no són vàlides.
     integrity_filing_validation: La validació de la declaració ha detectat un problema
       que impedeix continuar.
     integrity_financial_attachments_attachment_validation: El justificant adjunt no
@@ -5716,10 +5715,10 @@ errors:
       ja esta registrat.'
     internal_wizard_catalogue_not_registered: 'Error intern: el cataleg de l''assistent
       no esta registrat.'
-    internal_wizard_script_overflow: 'Error intern: l''assistent s''ha tancat amb
-      respostes guionades sense consumir.'
-    internal_wizard_script_underflow: 'Error intern: l''assistent ha demanat més respostes
-      de les que tenia guionades.'
+    internal_wizard_answer_queue_overflow: 'Error intern: l''assistent s''ha tancat
+      amb respostes canòniques sense consumir.'
+    internal_wizard_answer_queue_underflow: 'Error intern: l''assistent ha demanat més
+      respostes canòniques de les proporcionades per la invocació no interactiva.'
     internal_workflow_abort_signal: 'Error intern: una etapa del flux de treball ha
       emès un senyal de cancel·lació.'
     internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
@@ -6101,14 +6100,12 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
-      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per
-        a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version}
-        cap a {expected}.'
-      schema_upgrader_already_registered: Ja hi ha un actualitzador d'esquema registrat
-        per a l'espai de noms {namespace} des de la versió {from_version}.
       schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
         de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
         (fins a {expected}); no es pot llegir.
+      schema_version_unsupported: La versió d'esquema emmagatzemada {schema_version}
+        de l'espai de noms {namespace} no és compatible; aquesta aplicació requereix
+        la versió {expected}.
       unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat

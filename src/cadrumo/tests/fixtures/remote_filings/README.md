@@ -1,7 +1,7 @@
 # Synthetic AEAT filing-detail HTML fixtures
 
-These fixtures are hand-authored to exercise the read-only fetchers
-under `src/aeat/remote/filings/`. They carry no real taxpayer data and
+These fixtures are hand-authored read-only filing-detail parser cases under
+`src/cadrumo/tests/fixtures/remote_filings/`. They carry no real taxpayer data and
 no real AEAT content; every NIF, CSV, expediente identifier, and
 monetary value is synthetic.
 

@@ -91,7 +91,8 @@ def test_attribution_received_base_is_explicit_money_amount(
     assert field.required is True
     # The received base must be transcribed from the entity's Modelo 184 output,
     # never derived from share_pct without an independently declared entity total.
-    assert "must not be fabricated" in field.description
+    assert "Debe consignarse expresamente" in field.description
+    assert "no se deduce únicamente del porcentaje de participación" in field.description
     expected_refs = {
         "ley-35-2006:art-87",
         "ley-35-2006:art-88",

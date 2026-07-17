@@ -18,11 +18,11 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from ...core import FormerProductStateError
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.logging import set_log_level
 
 
-class LogLevelResolutionError(AeatError):
+class LogLevelResolutionError(CadrumoError):
     """Raised when the requested CLI log-level inputs are contradictory.
 
     Examples include passing more than one of ``--quiet`` / ``--verbose``

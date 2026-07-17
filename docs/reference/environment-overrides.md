@@ -23,8 +23,8 @@ the process environment wins over the `.env` file.
 | `AEAT_MANUALS_ROOT` | Path | (derived) | Root directory for the structured AEAT Manual práctico corpus |
 | `AEAT_NORMATIVES_ROOT` | Path | (derived) | Root directory for the bundled legal normatives corpus |
 | `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes' — the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
-| `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Overrideable per campaign. |
-| `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Overrideable for campaign drift. |
+| `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Override only when AEAT changes the corresponding route. |
+| `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Override only when AEAT changes the corresponding route. |
 | `CADRUMO_ACTIVE_PROFILE` | str | unset | Per-shell override for the active operator profile. When set, wins over the <cadrumo-root>/active-profile pointer file in the active-profile precedence chain. Leave unset for normal installs; the pointer file is the canonical default. |
 | `CADRUMO_ALLOW_UNENCRYPTED` | str | empty | Hostile-named opt-out gate for the unsecured backend. Must be set to the literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to use cadrumo_secret_store_backend=unsecured. The unsecured backend is intended for testing / educational / throwaway scenarios only and provides ZERO confidentiality. The substrate refuses to load an operator profile that carries a real NIF/NIE/CIF while running in unsecured mode. |
 | `CADRUMO_ATTACHMENTS_DIR` | Path | (derived) | Root directory for the attachment byte and manifest store |
@@ -144,6 +144,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_REGISTRY_PARITY_STORE_DIR` | Path | (derived) | Directory where registry parity tape artifacts are archived by default |
 | `CADRUMO_REPLAY_ACTIVE` | str | empty | Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry |
 | `CADRUMO_RUNS_DIR` | Path | (derived) | Directory where run traces and JSONL event logs are persisted (one subdirectory per run_id, containing trace.json + events.jsonl) |
+| `CADRUMO_RUNS_MAX_TOTAL_BYTES` | int | `268435456` | Total on-disk size cap (bytes) for the per-run trace store; after the age-based prune, oldest run directories are removed until the store fits under this ceiling (the newest run directory is always kept) |
 | `CADRUMO_RUNS_RETENTION_DAYS` | int | `30` | Retention window in days for per-run trace directories; older run directories are pruned |
 | `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. Default None — the master-key loader refuses operation on None or empty value to preserve fail-closed behaviour. Operator-facing env var is CADRUMO_SECRET_PASSPHRASE. |
 | `CADRUMO_SECRET_STORE_BACKEND` | SecretStoreBackend | `auto` | Master-key backend for the secret store. auto = OS keychain when available, encrypted file fallback otherwise. keyring = OS keychain only (refuses to fall back). file = encrypted file only (required for CI / headless). unsecured = testing-only mode with a published deterministic key; requires cadrumo_allow_unencrypted=true and refuses real NIFs. |

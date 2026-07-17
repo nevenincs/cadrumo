@@ -19,7 +19,7 @@ reserved for refusals emitted in JSON mode whose payload is intentionally
 stderr-only.
 
 The :func:`command_error_boundary` decorator wraps a callback so that
-:class:`AeatError` instances are emitted via
+:class:`CadrumoError` instances are emitted via
 :func:`_emit_error_and_exit`.
 :func:`decorate_typer_app` walks a
 :class:`~typer.Typer` tree and applies the decorator to every registered command
@@ -47,7 +47,7 @@ from pydantic import ValidationError
 from ...core import FormerProductStateError
 from ...core.click_context import json_output_requested
 from ...core.errors import (
-    AeatError,
+    CadrumoError,
     get_error_exit_code,
     get_registered_error_code,
     render_error_json,
@@ -84,7 +84,7 @@ class _ReconfigurableTextIO(Protocol):
         ...
 
 
-class CliValidationBoundaryError(AeatError):
+class CliValidationBoundaryError(CadrumoError):
     """Raised when a CLI callback leaks a :exc:`~pydantic.ValidationError`.
 
     The original exception is preserved on
@@ -120,10 +120,10 @@ class CliValidationBoundaryError(AeatError):
         self.original_exception: ValidationError = error
 
 
-class CliUnexpectedBoundaryError(AeatError):
+class CliUnexpectedBoundaryError(CadrumoError):
     """Raised when a CLI callback leaks an unexpected exception.
 
-    Used for any exception that is not :class:`AeatError`,
+    Used for any exception that is not :class:`CadrumoError`,
     :exc:`~pydantic.ValidationError`, or Typer/Click control flow. The
     original exception is preserved on
     :attr:`CliUnexpectedBoundaryError.original_exception`.
@@ -158,7 +158,7 @@ class CliUnexpectedBoundaryError(AeatError):
         self.original_exception: Exception = error
 
 
-class CliStoredDataValidationBoundaryError(AeatError):
+class CliStoredDataValidationBoundaryError(CadrumoError):
     """Raised when a CLI callback loads stored profile data that fails validation.
 
     Distinct from
@@ -194,7 +194,7 @@ class CliStoredDataValidationBoundaryError(AeatError):
         self.original_exception: ValidationError = error
 
 
-class CliRefusedBoundaryError(AeatError):
+class CliRefusedBoundaryError(CadrumoError):
     """Raised when JSON-mode CLI must refuse a request with stderr-only output.
 
     Refusals are emitted as plain stderr text even in JSON mode because
@@ -204,7 +204,7 @@ class CliRefusedBoundaryError(AeatError):
 
 
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
-    """Wrap ``callback`` so :class:`AeatError` emits the structured stderr form.
+    """Wrap ``callback`` so :class:`CadrumoError` emits the structured stderr form.
 
     The wrapper catches four exception families and routes them to
     :func:`_emit_error_and_exit`:
@@ -214,9 +214,9 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
       :exc:`CliStoredDataValidationBoundaryError`
       so operators see a repair-oriented message distinct from input-time
       validation failures. Checked before the broad
-      :class:`AeatError` arm by typed exception, not field-path
+      :class:`CadrumoError` arm by typed exception, not field-path
       introspection.
-    - :class:`AeatError` is forwarded verbatim.
+    - :class:`CadrumoError` is forwarded verbatim.
     - :exc:`~pydantic.ValidationError` is wrapped in
       :exc:`CliValidationBoundaryError`.
     - Any other non-control-flow exception is wrapped in
@@ -276,7 +276,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
             # profile record) from input-time validation failures.  Both
             # originate from pydantic ValidationError but the operator-facing
             # messages and recovery paths differ.  Checked before the broad
-            # AeatError arm so the typed CLI wrapper is emitted, not the raw
+            # CadrumoError arm so the typed CLI wrapper is emitted, not the raw
             # domain error code.
             if _UNDER_TEST.get():
                 raise
@@ -290,7 +290,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
                     suggestion="aeat config repair --help",
                 )
             )
-        except AeatError as error:
+        except CadrumoError as error:
             if _UNDER_TEST.get():
                 raise
             _emit_error_and_exit(error)
@@ -316,14 +316,14 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
             # SQLAlchemy wraps an exception raised inside bind-param
             # processing (e.g. NoActiveBucketSessionError raised by an
             # encrypted-column codec when no session is unlocked) into
-            # a StatementError. The wrapped cause is a typed AeatError
+            # a StatementError. The wrapped cause is a typed CadrumoError
             # carrying a clean operator refusal. Unwrap it and forward
             # the refusal verbatim — otherwise the no-session refusal
             # is mis-classified as an unexpected internal error and a
             # full traceback is written to the log file, where
             # `aeat config repair logs` later echoes it back at the
             # operator as if it were a live crash.
-            wrapped = _unwrap_aeat_error(error)
+            wrapped = _unwrap_cadrumo_error(error)
             if wrapped is not None:
                 _emit_error_and_exit(wrapped)
             _log.error(
@@ -446,7 +446,7 @@ def _active_command_identifier() -> str | None:
     return _ACTIVE_COMMAND_ID.get()
 
 
-def _emit_error_and_exit(error: AeatError) -> Never:
+def _emit_error_and_exit(error: CadrumoError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
     Selects the JSON or text renderer based on whether the active
@@ -554,11 +554,11 @@ def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     return hasattr(stream, "reconfigure")
 
 
-def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
-    """Return the typed :class:`AeatError` wrapped inside ``error``, if any.
+def _unwrap_cadrumo_error(error: BaseException) -> CadrumoError | None:
+    """Return the typed :class:`CadrumoError` wrapped inside ``error``, if any.
 
     A library boundary (notably SQLAlchemy) can catch an
-    :class:`AeatError` raised inside its own machinery and
+    :class:`CadrumoError` raised inside its own machinery and
     re-raise it wrapped in a library-specific exception. The typed refusal is
     then reachable only through the ``orig`` attribute SQLAlchemy sets, or
     through the standard ``__cause__`` / ``__context__`` chain. This helper walks
@@ -571,7 +571,7 @@ def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
     current: BaseException | None = error
     depth = 0
     while current is not None and depth < 16:
-        if isinstance(current, AeatError):
+        if isinstance(current, CadrumoError):
             return current
         if id(current) in seen:
             return None

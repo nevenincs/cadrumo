@@ -67,7 +67,7 @@ _log = get_logger(__name__)
 
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
-_HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
+_HKDF_CONTEXT_SECRET_LOOKUP = b"cadrumo.secret_store.lookup.v1"
 _HKDF_CONTEXT_SECRET_VALUE_WITNESS = b"cadrumo.secret_store.value_witness.v1"
 
 

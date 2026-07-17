@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Locator, Page
 
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
@@ -200,9 +201,11 @@ async def collect_renta_web_open_observation(
             context={"stage": "unknown", "cause_type": type(exc).__name__},
         ) from exc
     finally:
-        if context is not None:
-            await context.close()
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-renta-web-open-close",
+        )
 
 
 async def _open_renta_web_open_session(

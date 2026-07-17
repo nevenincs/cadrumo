@@ -40,6 +40,8 @@ from typer._click.core import Context as ClickContext
 from typer._click.core import Parameter as ClickParameter
 from typer.main import get_command as _typer_get_command
 
+from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY
+
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
 
@@ -247,6 +249,9 @@ def _naive_cli_path(command_key: str) -> tuple[str, ...]:
     is a child of ``app``. Used as the fallback path when a key does not resolve
     to a live command (a stale registry key).
     """
+    override = CLI_PATH_BY_SCHEMA_KEY.get(command_key)
+    if override is not None:
+        return override
     tokens = command_key.split(".")
     if tokens[0] in {"config", "app"}:
         return tuple(tokens)
@@ -265,10 +270,10 @@ def _resolve_command(
     form, so ``iva_wallet`` resolves to the ``iva-wallet`` command.
 
     Returns the resolved command (or ``None``), the command names as click knows
-    them, and a failure reason. The reason is ``None`` for a clean resolution
-    AND for a genuine not-found (a stale key whose segment simply does not
-    exist); it is a message string ONLY when materialising a lazily-loaded
-    subtree RAISED — the case that must not silently degrade to an empty schema.
+    them, and a failure reason. The reason is ``None`` only for a clean
+    resolution. A missing segment and an exception while materialising a lazy
+    subtree are both coverage failures; neither may silently ship an
+    argument-free schema.
     """
     command: ClickCommand | None = root
     context = ClickContext(root, info_name=str(root.name))
@@ -276,7 +281,7 @@ def _resolve_command(
     for token in _naive_cli_path(command_key):
         getter = getattr(command, "get_command", None)
         if getter is None:
-            return None, tuple(resolved), None
+            return None, tuple(resolved), f"resolving {token!r}: command has no subcommands"
         try:
             child = getter(context, token) or getter(context, token.replace("_", "-"))
         except Exception as exc:
@@ -286,7 +291,7 @@ def _resolve_command(
             # hostile parameter silently ship as an argument-free schema.
             return None, tuple(resolved), f"resolving {token!r}: {type(exc).__name__}: {exc}"
         if child is None:
-            return None, tuple(resolved), None
+            return None, tuple(resolved), f"resolving {token!r}: command segment not found"
         resolved.append(str(child.name))
         context = ClickContext(child, parent=context, info_name=str(child.name))
         command = child
@@ -308,10 +313,10 @@ def assert_schema_coverage(resolution_errors: Mapping[str, str]) -> None:
     """Fail the build when any command key's subtree failed to materialise.
 
     ``resolution_errors`` maps a command key to the reason its lazily-loaded
-    subtree raised during the tree walk. An empty mapping is the healthy state
-    (a genuine no-arg command or a stale not-found key never appears here — only
-    a resolution FAILURE does). Any entry names a verb that would silently ship
-    an argument-free schema and raises :class:`SchemaResolutionError`.
+    subtree could not be resolved during the tree walk. An empty mapping is the
+    healthy state. Any entry names a missing or unmaterialisable verb that would
+    otherwise silently ship an argument-free schema and raises
+    :class:`SchemaResolutionError`.
     """
     if not resolution_errors:
         return
@@ -324,18 +329,10 @@ def assert_schema_coverage(resolution_errors: Mapping[str, str]) -> None:
 
 def _schema_from_resolution(
     command_key: str,
-    command: ClickCommand | None,
+    command: ClickCommand,
     resolved: tuple[str, ...],
 ) -> VerbInputSchema:
-    """Project a resolved command into its strict :class:`VerbInputSchema`.
-
-    An unresolved command (``None``) yields an empty parameter set over the naive
-    path — a valid argument-free descriptor. The build-time coverage gate, not
-    this projection, is what distinguishes a genuine no-arg/stale key from a
-    resolution failure.
-    """
-    if command is None:
-        return VerbInputSchema(command_key=command_key, cli_path=_naive_cli_path(command_key), parameters=())
+    """Project a resolved command into its strict :class:`VerbInputSchema`."""
     parameters = tuple(
         projected for parameter in command.params if (projected := _parameter_from_click(parameter)) is not None
     )
@@ -355,25 +352,6 @@ def _command_help(command: ClickCommand) -> str:
         return short
     full = str(getattr(command, "help", "") or "").strip()
     return full.splitlines()[0].strip() if full else ""
-
-
-def build_verb_input_schema(root: ClickCommand, command_key: str) -> VerbInputSchema:
-    """Build the :class:`VerbInputSchema` for one command key.
-
-    Resolves the leaf command in the tree rooted at ``root`` and reads its click
-    parameters. A key that does not resolve to a live command - a stale registry
-    key, or one whose subtree cannot be introspected because a command in it
-    declares a Typer-unconvertible parameter type - falls back to an empty
-    parameter set over the naive path, yielding a valid (argument-free) descriptor
-    rather than crashing this single-key build. The batch entry point
-    :func:`build_verb_input_schemas` runs the coverage gate that turns a
-    resolution FAILURE into a loud build error.
-
-    Returns:
-        The strict :class:`VerbInputSchema` for the command.
-    """
-    command, resolved, _error = _resolve_command(root, command_key)
-    return _schema_from_resolution(command_key, command, resolved)
 
 
 def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
@@ -396,8 +374,9 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
     resolution_errors: dict[str, str] = {}
     for key in command_keys:
         command, resolved, error = _resolve_command(root, key)
-        if error is not None:
-            resolution_errors[key] = error
+        if error is not None or command is None:
+            resolution_errors[key] = error or "command did not resolve"
+            continue
         schemas[key] = _schema_from_resolution(key, command, resolved)
     assert_schema_coverage(resolution_errors)
     return schemas

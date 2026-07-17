@@ -121,15 +121,10 @@ def _wheel_identity(wheel: Path) -> tuple[str, str, tuple[str, ...]]:
 def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
     try:
         with tarfile.open(sdist, mode="r:gz") as archive:
-            metadata_names = tuple(
-                member
-                for member in archive.getmembers()
-                if member.name.endswith("/PKG-INFO")
-            )
+            metadata_names = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
             if len(metadata_names) != 1:
                 raise SystemExit(
-                    f"expected one PKG-INFO member in {sdist}; got "
-                    f"{[member.name for member in metadata_names]!r}",
+                    f"expected one PKG-INFO member in {sdist}; got {[member.name for member in metadata_names]!r}",
                 )
             handle = archive.extractfile(metadata_names[0])
             if handle is None:
@@ -157,20 +152,14 @@ def _validate_companion_pins(
     parsed = tuple(Requirement(row) for row in requirements)
     for companion in _DISTRIBUTIONS[1:]:
         matches = tuple(
-            requirement
-            for requirement in parsed
-            if requirement.name.casefold().replace("_", "-") == companion
+            requirement for requirement in parsed if requirement.name.casefold().replace("_", "-") == companion
         )
         if len(matches) != 1:
             raise SystemExit(
                 f"root {artifact_kind} must declare exactly one dependency on {companion}",
             )
         requirement = matches[0]
-        if (
-            requirement.extras
-            or requirement.marker is not None
-            or str(requirement.specifier) != f"=={version}"
-        ):
+        if requirement.extras or requirement.marker is not None or str(requirement.specifier) != f"=={version}":
             raise SystemExit(
                 f"root {artifact_kind} must require {companion}=={version} "
                 f"unconditionally and without extras; found {requirement}",
@@ -226,8 +215,7 @@ def _validate_sdist_contract(
     expected = {name: expected_version for name in _DISTRIBUTIONS}
     if observed != expected:
         raise SystemExit(
-            f"Python cohort sdist identities or versions drifted: expected {expected!r}, "
-            f"got {observed!r}",
+            f"Python cohort sdist identities or versions drifted: expected {expected!r}, got {observed!r}",
         )
     _validate_companion_pins(
         requirements,
@@ -325,6 +313,13 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             archive.unlink()
         if build_root.exists():
             shutil.rmtree(build_root)
+
+    # uv seeds its --out-dir with a `.gitignore`; that is a build-tool artifact,
+    # not a cohort member, and the release-cohort completeness check refuses any
+    # file the manifest does not declare.
+    uv_gitignore = output / ".gitignore"
+    if uv_gitignore.exists():
+        uv_gitignore.unlink()
 
     root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
     root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")

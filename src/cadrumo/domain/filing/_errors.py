@@ -1,15 +1,15 @@
 """Domain errors for the :mod:`domain.filing` subpackage.
 
-Every exception inherits from :class:`~core.errors.AeatError` so
+Every exception inherits from :class:`~core.errors.CadrumoError` so
 callers can catch the project-wide base.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreValidationError
+from ...core.errors import CadrumoError, CoreValidationError
 
 
-class ModeloDraftError(AeatError):
+class ModeloDraftError(CadrumoError):
     """Base class for every error raised inside :mod:`domain.filing`."""
 
 

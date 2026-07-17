@@ -1,7 +1,7 @@
 """Errors for the backend-owned operator-surface contract.
 
 :class:`OperatorSurfaceContractError` is the registered
-:class:`~core.errors.AeatError` raised by
+:class:`~core.errors.CadrumoError` raised by
 :func:`~application.operator_surface.require_accepted_root` and
 :func:`~application.operator_surface.resolve_source_kind_alias` when a
 caller asks for a root, source-kind token, or command-surface shape outside the
@@ -12,11 +12,11 @@ so boundary adapters can render the refusal through the shared error contract.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 
 
-class OperatorSurfaceContractError(AeatError):
+class OperatorSurfaceContractError(CadrumoError):
     """Registered application error for rejected operator-surface requests.
 
     The message is localized with a stable, non-secret ``surface`` / ``reason``

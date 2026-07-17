@@ -12,11 +12,11 @@ import pytest
 
 from ....core.i18n import Translatable as tr
 from .._errors import (
-    WizardScriptOverflowError,
-    WizardScriptUnderflowError,
+    WizardAnswerQueueOverflowError,
+    WizardAnswerQueueUnderflowError,
 )
 from .._models import WizardQuestion, WizardWidget
-from .._prompter import Prompter, ScriptedPrompter
+from .._prompter import CanonicalAnswerPrompter, Prompter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -35,41 +35,41 @@ def _question(qid: str, prompt: tr) -> WizardQuestion:
 
 
 def test_scripted_prompter_pops_in_fifo_order() -> None:
-    prompter = ScriptedPrompter(deque(["12345678Z", "Acme"]))
+    prompter = CanonicalAnswerPrompter(deque(["12345678Z", "Acme"]))
     assert prompter.ask(_question("tax-id", _PROMPT_TAX), default=None) == "12345678Z"
     assert prompter.ask(_question("name", _PROMPT_NAME), default=None) == "Acme"
 
 
 def test_scripted_prompter_records_asked_questions() -> None:
-    prompter = ScriptedPrompter(["12345678Z", "Acme"])
+    prompter = CanonicalAnswerPrompter(["12345678Z", "Acme"])
     prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
     prompter.ask(_question("name", _PROMPT_NAME), default=None)
     assert prompter.asked == ("tax-id", "name")
 
 
-def test_scripted_prompter_raises_on_underflow() -> None:
-    prompter = ScriptedPrompter([])
-    with pytest.raises(WizardScriptUnderflowError) as excinfo:
+def test_canonical_answer_prompter_raises_on_underflow() -> None:
+    prompter = CanonicalAnswerPrompter([])
+    with pytest.raises(WizardAnswerQueueUnderflowError) as excinfo:
         prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
-    assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_underflow"
+    assert excinfo.value.translated_message == "errors.internal.internal_wizard_answer_queue_underflow"
     assert excinfo.value.context == {
         "question_id": "tax-id",
         "prompt_key": "wizard.setup.profile.tax-id.prompt",
     }
 
 
-def test_scripted_prompter_close_raises_on_overflow() -> None:
+def test_canonical_answer_prompter_close_raises_on_overflow() -> None:
     unused_answer = "unconsumed-answer-value"
-    prompter = ScriptedPrompter([unused_answer])
-    with pytest.raises(WizardScriptOverflowError) as excinfo:
+    prompter = CanonicalAnswerPrompter([unused_answer])
+    with pytest.raises(WizardAnswerQueueOverflowError) as excinfo:
         prompter.close()
-    assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_overflow"
+    assert excinfo.value.translated_message == "errors.internal.internal_wizard_answer_queue_overflow"
     assert excinfo.value.context == {"remaining_count": 1, "asked_count": 0}
     assert unused_answer not in str(excinfo.value.context)
 
 
 def test_scripted_prompter_close_succeeds_when_drained() -> None:
-    prompter = ScriptedPrompter(["12345678Z"])
+    prompter = CanonicalAnswerPrompter(["12345678Z"])
     answer = prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
     assert answer == "12345678Z"
     result = prompter.close()
@@ -77,7 +77,7 @@ def test_scripted_prompter_close_succeeds_when_drained() -> None:
 
 
 def test_scripted_prompter_satisfies_prompter_protocol() -> None:
-    prompter = ScriptedPrompter(["12345678Z"])
+    prompter = CanonicalAnswerPrompter(["12345678Z"])
     assert isinstance(prompter, Prompter)
 
 

@@ -21,7 +21,7 @@ from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from .envelope_helpers import unwrap_schema_envelope as _payload
+from ._modelo_work_ux_support import _create_m303_work_unit
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,7 +56,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     """
 
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Casilla canonical-id test profile",
@@ -76,23 +76,6 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     lifecycle.save(record)
 
 
-def _create_303_work_unit() -> str:
-    """Create a Modelo 303 work unit and return its id."""
-
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "303",
-            "--year", "2025",
-            "--period", "1T",
-            "--revision", "2023-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
-
-
 # ---------------------------------------------------------------------------
 # Printed-number metadata tokens are refused
 # ---------------------------------------------------------------------------
@@ -104,7 +87,7 @@ def test_printed_number_metadata_token_is_refused(
     """A printed number is not accepted when it differs from ``casilla.id``."""
 
     _seed_profile(runtime_profile)
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_m303_work_unit()
 
     result = invoke_cached_cli(
         [
@@ -126,7 +109,7 @@ def test_export_ref_metadata_token_is_refused(
     """An export field id is not accepted as an alternate casilla reference."""
 
     _seed_profile(runtime_profile)
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_m303_work_unit()
 
     result = invoke_cached_cli(
         [
@@ -157,7 +140,7 @@ def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
     """
 
     _seed_profile(runtime_profile)
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_m303_work_unit()
 
     result = invoke_cached_cli(
         [
@@ -188,7 +171,7 @@ def test_qualified_casilla_key_passes_validation_unchanged(
     """
 
     _seed_profile(runtime_profile)
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_m303_work_unit()
 
     result = invoke_cached_cli(
         [

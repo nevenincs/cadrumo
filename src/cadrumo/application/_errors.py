@@ -5,7 +5,7 @@ This module currently owns the diagnostics-specific validation error raised by
 :class:`application.diagnostics.ConfigRepairReport` rows. The class
 inherits from :class:`core.errors.CoreValidationError`, so it remains
 catchable as ``ValueError`` for Pydantic validator compatibility while still
-participating in the project-wide :class:`core.errors.AeatError` registry
+participating in the project-wide :class:`core.errors.CadrumoError` registry
 and :class:`core.errors.ErrorEnvelope` rendering path.
 """
 

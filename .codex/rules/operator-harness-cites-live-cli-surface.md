@@ -47,7 +47,7 @@ than a silent operator misdirection.
 ## Source
 
 Authored during the agent-harness framework build (ADR
-`2026-06-30-agent-harness-adr`, plan step W05.P13.S54), codifying the discipline
+`2026-07-02-agent-harness-refoundation-adr`, plan step W05.P13.S54), codifying the discipline
 the rule-surface drift gate enforces. Companion to `aeat-cli-pull-and-file-standard`
 (CLI verb naming), `cli-notices-are-the-only-diagnostic-channel` (the envelope
 fields the rules cite), and `aeat-architecture-boundaries` (the two-root surface).

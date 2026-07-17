@@ -43,7 +43,7 @@ from ...core import (
     Modelo,
     RescateType,
 )
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
@@ -786,7 +786,7 @@ def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisor
 
     try:
         capability = resources().modelos.authority.authorization(modelo.strip())
-    except AeatError:
+    except CadrumoError:
         return None
     if capability.state is AuthorizationState.AUTHORIZED:
         return None

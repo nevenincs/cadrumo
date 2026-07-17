@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,37 +12,6 @@ from ...bucket import (
     provision_bucket_directory,
     write_manifest,
 )
-
-
-class _InMemoryKeyringClient:
-    """Protocol-compatible keyring client backed by an in-process dict."""
-
-    def __init__(
-        self,
-        *,
-        probe: Callable[[], None] | None = None,
-        get: Callable[[str, str], str | None] | None = None,
-        set_: Callable[[str, str, str], None] | None = None,
-        seeded: dict[tuple[str, str], str] | None = None,
-    ) -> None:
-        self._probe = probe or (lambda: None)
-        self._store: dict[tuple[str, str], str] = dict(seeded or {})
-        self._get_override = get
-        self._set_override = set_
-
-    def probe_backend(self) -> None:
-        self._probe()
-
-    def get_password(self, service: str, username: str) -> str | None:
-        if self._get_override is not None:
-            return self._get_override(service, username)
-        return self._store.get((service, username))
-
-    def set_password(self, service: str, username: str, password: str) -> None:
-        if self._set_override is not None:
-            self._set_override(service, username, password)
-            return
-        self._store[(service, username)] = password
 
 
 def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:

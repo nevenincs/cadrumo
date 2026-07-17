@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -74,7 +74,7 @@ class AuthAcquisitionLockStatus(BaseModel):
         return self.state is AuthAcquisitionLockState.HELD
 
 
-class AuthAcquisitionLockedError(AeatError):
+class AuthAcquisitionLockedError(CadrumoError):
     """Raised when another process is already acquiring AEAT auth."""
 
 
@@ -238,9 +238,9 @@ def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
 
 
 def _status_context(status: AuthAcquisitionLockStatus) -> Mapping[str, object]:
-    # Builds a structured context dict passed to AeatError(context=...).
+    # Builds a structured context dict passed to CadrumoError(context=...).
     # dict[str, object] is the concrete type; Mapping is the narrowest correct
-    # annotation since AeatError accepts Mapping[str, object] | None.
+    # annotation since CadrumoError accepts Mapping[str, object] | None.
     context: dict[str, object] = {
         "state": status.state.value,
         "path": str(status.path),

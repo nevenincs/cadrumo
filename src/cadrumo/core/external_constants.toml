@@ -177,9 +177,6 @@ declarations_browser_action_patterns = [
   "open-cotejo-pdf",
   "download-filed-data-file",
 ]
-csv_verify_browser_action_patterns = [
-  "csv-verifier-query",
-]
 consult_oracle_browser_action_patterns = [
   "open-groi-form",
   "open-nif-iva-form",

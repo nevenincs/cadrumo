@@ -4,7 +4,7 @@ Synthetic HTML fixtures for the `aeat.browser._site_health_parsers`
 parser suite. Every file under this tree is hand-authored to mirror
 the real AEAT Sede Electrónica response shapes — no fixture is a
 verbatim copy of a production response; see
-`src/aeat/tests/fixtures/aeat-pages/README.md` for the project-wide
+`src/cadrumo/tests/fixtures/aeat-pages/README.md` for the project-wide
 scrub procedure this corpus follows.
 
 ## Layout

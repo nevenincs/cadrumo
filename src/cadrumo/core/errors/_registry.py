@@ -1,7 +1,7 @@
 """Structured error-code registry and CLI rendering helpers.
 
 Centralises Cadrumo's stable CLI error taxonomy. Every
-:class:`core.errors.AeatError` subclass binds to a predeclared
+:class:`core.errors.CadrumoError` subclass binds to a predeclared
 :class:`ErrorCode` row through :func:`bind_error_code`, so the public
 contract stays explicit, reviewable, and grep-stable. Rendering helpers
 :func:`render_error_text` and :func:`render_error_json` produce the
@@ -84,7 +84,7 @@ def _category_text_prefix(category: ErrorCategory) -> str:
 
 
 class ErrorCode(BaseModel):
-    """Stable metadata attached to an :class:`core.errors.AeatError` type."""
+    """Stable metadata attached to an :class:`core.errors.CadrumoError` type."""
 
     model_config = ConfigDict(
         frozen=True,
@@ -131,7 +131,7 @@ class ErrorEnvelope(BaseModel):
 _ERROR_REGISTRY_MUTABLE: dict[str, ErrorCode] = {}
 _CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
 
-# Collects AeatError subclasses whose bind_error_code call arrived before
+# Collects CadrumoError subclasses whose bind_error_code call arrived before
 # _DECLARED_CODE_BY_QUALNAME was fully populated (i.e. during the circular-
 # import window while this module is still initialising).  get_registered_
 # error_code drains this set on every call so deferred classes are bound
@@ -208,7 +208,7 @@ def _flush_deferred_binds() -> None:
 def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
     """Bind a stable :class:`ErrorCode` to ``error_type``.
 
-    Called from ``AeatError.__init_subclass__`` at class-creation
+    Called from ``CadrumoError.__init_subclass__`` at class-creation
     time.  If the global :data:`_DECLARED_CODE_BY_QUALNAME` mapping is
     not yet available (the module is still initialising due to a circular
     import) the class is added to :data:`_DEFERRED_BIND` and bound
@@ -229,7 +229,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
         return bound
     # _DECLARED_CODE_BY_QUALNAME is assigned at module level after the
     # registry submodule import on the line above.  During the circular-
-    # import window (when another module triggers AeatError subclass
+    # import window (when another module triggers CadrumoError subclass
     # creation while _registry.py is still executing) this name does not
     # yet exist in the module globals.  Defer rather than crash.
     declared = globals().get("_DECLARED_CODE_BY_QUALNAME")
@@ -242,7 +242,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
     code = declared.get(qualname)
     if code is None:
         raise ValueError(
-            f"AeatError subclass {qualname} is missing a declared ErrorCode "
+            f"CadrumoError subclass {qualname} is missing a declared ErrorCode "
             f"registry entry. If this class was just added, declare it in the "
             f"error-code registry alongside the class. If you encountered this "
             f"during a test run, the class may have been added by a concurrent "
@@ -274,7 +274,7 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
         # above; None here would mean the class has no declared ErrorCode entry.
         if resolved is None:
             raise ValueError(
-                f"AeatError subclass {_qualname(error_type)} has no registered ErrorCode "
+                f"CadrumoError subclass {_qualname(error_type)} has no registered ErrorCode "
                 f"even after deferred-bind drain; ensure it is declared in the error-code registry.",
             )
         code = resolved
@@ -391,7 +391,7 @@ def render_error_json(
     resolves the label and passes it here. The
     :data:`core.json_contract.ENVELOPE_SCHEMA_VERSION` import is function-local
     to avoid the ``json_contract`` <-> ``errors`` import cycle
-    (``json_contract`` imports :class:`AeatError`).
+    (``json_contract`` imports :class:`CadrumoError`).
     """
     from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
 
@@ -512,7 +512,7 @@ def _stringify_context_value(value: object) -> str:
     """Render one error-context value as an operator-safe string.
 
     This is the single defensive funnel for the CLI error boundary. An
-    :class:`core.errors.AeatError` subclass can — accidentally or
+    :class:`core.errors.CadrumoError` subclass can — accidentally or
     by design — carry a non-primitive object in its ``context`` mapping
     or as a public instance attribute (which
     :func:`_merge_error_context` folds into the context via

@@ -17,6 +17,7 @@ from ..application.user_profile import profile_create_storage_span
 from ..core.config import override_settings
 from ..core.i18n import output_language
 from .secure_sql import isolated_profile_storage_root
+from .user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +41,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_profile_language(language: str) -> None:
-    from ..application.user_profile import register_minimal_profile, set_active_field
+    from ..application.user_profile import set_active_field
     from ..application.workflow import workflow_state_repository
     from ..domain.user_profile import UserProfileFact
 

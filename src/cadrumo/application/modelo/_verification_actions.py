@@ -58,7 +58,6 @@ from ...domain.calculations.registry import (
     derive_modelo_202_modality,
 )
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -88,9 +87,7 @@ from ...domain.modelos import (
 )
 from ..aggregation import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
-    CalculationSourceContext,
     CalculationSourceDiagnostic,
-    OssIossLedgerSourceResolver,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     missing_evidence_advisory_observations,
@@ -433,7 +430,6 @@ def _collect_verification_gate_findings(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepository | None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
@@ -442,7 +438,6 @@ def _collect_verification_gate_findings(
         target=target,
         profile=workflow_profile,
         transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
     )
     incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
         work_unit=work_unit,
@@ -571,7 +566,6 @@ def verify_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -614,10 +608,6 @@ def verify_modelo_revision(
         transaction_repository: Optional
             :class:`TransactionCatalogueRepository` used for transaction-evidence
             advisories.
-        invoice_repository: Optional
-            :class:`~cadrumo.domain.invoices.InvoiceCatalogueRepositoryProtocol`
-            used to reconstruct legacy Modelo 369 OSS source resolution before
-            the revision can be treated as filing-grade.
         verification_repository: Optional verification-report repository port.
         bucket_event_repository: Optional bucket-event history repository port.
         iva_compensation_decision_repository: Optional IVA-wallet decision
@@ -709,7 +699,6 @@ def verify_modelo_revision(
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
@@ -996,7 +985,6 @@ def _m369_unresolved_oss_source_finding(
     work_unit: WorkUnit,
     target: CalculationRevision,
     snapshot: RegistrySnapshot,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> ModeloVerificationFinding | None:
     """Block Modelo 369 verification when its OSS source remained unresolved.
 
@@ -1036,57 +1024,6 @@ def _m369_unresolved_oss_source_finding(
             legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
             source_refs=source_refs,
         )
-    if not target.source_resolution_assessed:
-        legacy_resolution = OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(
-            CalculationSourceContext(
-                bucket_id=work_unit.bucket_id,
-                modelo=str(work_unit.modelo),
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-                revision=snapshot.revision,
-            ),
-        )
-        legacy_diagnostics = tuple(
-            diagnostic
-            for diagnostic in legacy_resolution.diagnostics
-            if diagnostic.source_kind == _OSS_AGGREGATION_SOURCE.value
-            and diagnostic.reason in {"unrouted_observation", "storage_degraded"}
-        )
-        if legacy_diagnostics:
-            legacy_refs = ", ".join(diagnostic.source_ref or diagnostic.reason for diagnostic in legacy_diagnostics)
-            return ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    "Modelo 369 legacy OSS/IOSS source resolution cannot be confirmed; "
-                    f"recalculate before verification (sources: {legacy_refs})"
-                ),
-                next_action=(
-                    "Rerun `aeat app modelo work calculate` to persist current OSS/IOSS source resolution, "
-                    "then rerun verification."
-                ),
-                legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
-                source_refs=source_refs,
-            )
-        if any(ref.binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance) and any(
-            diagnostic.source_kind == _OSS_AGGREGATION_SOURCE.value and diagnostic.reason == "oss_no_live_source"
-            for diagnostic in legacy_resolution.diagnostics
-        ):
-            return ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    "Modelo 369 legacy OSS/IOSS source evidence is no longer available for verification; "
-                    "recalculate before verification."
-                ),
-                next_action=(
-                    "Restore or classify the OSS/IOSS issued invoice evidence, rerun "
-                    "`aeat app modelo work calculate`, "
-                    "then rerun verification."
-                ),
-                legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
-                source_refs=source_refs,
-            )
     if any(ref.binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
         return None
     return ModeloVerificationFinding(
@@ -1111,7 +1048,6 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepository | None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
     """Build the verification finding list for one calculation revision.
 
@@ -1189,7 +1125,6 @@ def _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
         snapshot=snapshot,
-        invoice_repository=invoice_repository,
     )
     if oss_source_finding is not None:
         findings.append(oss_source_finding)

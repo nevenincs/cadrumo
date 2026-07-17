@@ -52,7 +52,6 @@ import pytest
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
-from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
@@ -61,6 +60,7 @@ from ....entrypoints.mcp import (
     confirmation_for_tool,
 )
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -76,10 +76,6 @@ _CALCULATE_STEP = "modelo.work.calculate"
 # consistent with entrypoints/mcp/tests/test_hitl_and_live_write.py's own
 # defensive proof.
 _HYPOTHETICAL_LIVE_WRITE_STEP = "modelo.work.submit"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 def _descriptors_by_command_key() -> dict[str, McpToolDescriptor]:
@@ -243,7 +239,7 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         expected_confirmation_tiers=checks,
     )
 
@@ -274,7 +270,7 @@ def test_confirmation_gate_mismatch_fails_the_scenario() -> None:
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         expected_confirmation_tiers=(mismatched_check,),
     )
 
@@ -291,6 +287,6 @@ def test_confirmation_gate_dimension_holds_trivially_when_not_checked() -> None:
     silently fail every existing scenario run.
     """
     scenario = load_scenario(_SCENARIO_PATH)
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert result.expected_confirmation_tiers == ()
     assert result.passed, result.failures

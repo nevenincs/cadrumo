@@ -47,6 +47,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -124,7 +125,7 @@ def runtime_profile(
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Modelo compare regression test profile",
@@ -151,21 +152,6 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         objects=runtime_profile.repository,
     )
     lifecycle.save(record)
-
-
-def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", modelo,
-            "--year", year,
-            "--period", period,
-            "--revision", revision,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
 
 
 def _casilla_id_from_payload(value: object) -> CasillaId:
@@ -238,9 +224,9 @@ def test_modelo_compare_m130_two_year_delta_rows(
     _seed_natural_person_profile(runtime_profile)
 
     # -- Create and calculate M130 2025 (year_a) ----------------------------
-    wuid_2025 = _create_work_unit(
+    wuid_2025 = create_modelo_work_unit_via_cli(
         modelo="130",
-        year="2025",
+        filing_year=2025,
         period="1T",
         revision="2019-y-siguientes",
     )
@@ -252,9 +238,9 @@ def test_modelo_compare_m130_two_year_delta_rows(
     )
 
     # -- Create and calculate M130 2026 (year_b) ----------------------------
-    wuid_2026 = _create_work_unit(
+    wuid_2026 = create_modelo_work_unit_via_cli(
         modelo="130",
-        year="2026",
+        filing_year=2026,
         period="1T",
         revision="2019-y-siguientes",
     )

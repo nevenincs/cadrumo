@@ -15,6 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.hashing import sha256_hex
 from .....core.time import validate_utc_aware
 from ..errors import StorageValidationError
 
@@ -54,6 +55,29 @@ class RecoveryRecord(BaseModel):
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
+
+    @property
+    def recovery_fingerprint(self) -> str:
+        """Return the stable, non-secret fingerprint of this recovery enrollment.
+
+        Derived only from the AES-GCM wrap material (ciphertext, nonce, tag)
+        plus the HKDF info string and the word count. Every one of those fields
+        is already public ciphertext or a constant; the plaintext mnemonic and
+        the master key never enter the digest. The value is therefore a safe
+        operator-facing identifier that is deterministic for a given envelope,
+        so a verification or a recovery that leaves the envelope file untouched
+        observes the same fingerprint before and after.
+        """
+        material = "|".join(
+            (
+                self.wrapped_dek_b64,
+                self.nonce_b64,
+                self.tag_b64,
+                self.hkdf_info,
+                str(self.mnemonic_word_count),
+            ),
+        )
+        return sha256_hex(material.encode("ascii"))
 
 
 __all__ = ["RecoveryRecord"]

@@ -35,7 +35,6 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         "adapters.auth.clave_movil.errors.dni_nie_not_set",
         # adapters.auth.authenticator
         "adapters.auth.authenticator.errors.session_stale",
-        "adapters.auth.authenticator.errors.closing",
         "adapters.auth.authenticator.errors.no_active_context",
         "adapters.auth.authenticator.errors.capture_requires_active_session",
         "adapters.auth.authenticator.errors.already_active_before_resume",

@@ -33,7 +33,7 @@ from ._context import (
 )
 from ._errors import (
     AeatCorpusDriftError,
-    AeatObservabilityError,
+    CadrumoObservabilityError,
     GoldenCaptureError,
     GoldenReplayMismatchError,
     RunContextMissingError,
@@ -95,11 +95,11 @@ __all__ = [
     "RUN_CONTEXT_VAR",
     "STEP_CONTEXT_VAR",
     "AeatCorpusDriftError",
-    "AeatObservabilityError",
     "ArgumentRecord",
     "ArgumentSource",
     "AssertionPayload",
     "CacheHitPayload",
+    "CadrumoObservabilityError",
     "ErrorPayload",
     "FormFillPayload",
     "GenericPayload",

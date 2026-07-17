@@ -41,7 +41,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now
@@ -57,7 +57,7 @@ class VerifySurface(StrEnum):
     TGVI = "tgvi"
 
 
-class VerifyObservationNotFoundError(AeatError):
+class VerifyObservationNotFoundError(CadrumoError):
     """Raised when a verify-observation lookup misses by id."""
 
 

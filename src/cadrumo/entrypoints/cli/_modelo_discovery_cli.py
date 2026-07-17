@@ -713,22 +713,12 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
-
-
 def _profile_resolved_binding_ids(report) -> frozenset[str]:
     filing_year = getattr(report, "filing_year", None)
     if filing_year is None:
         return frozenset()
-    try:
-        bucket_id = _active_bucket_id()
-    except typer.BadParameter:
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
         return frozenset()
     try:
         return profile_resolvable_binding_ids(

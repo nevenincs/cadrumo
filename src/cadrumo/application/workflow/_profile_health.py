@@ -34,7 +34,7 @@ from ...adapters.persistence.storage import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ..user_profile import (
     active_profile_pointer_transaction,
@@ -158,8 +158,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     try:
         with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
             resolved_state = state or workflow_state_repository().load()
-    except (AeatError, OSError) as exc:
-        # AeatError: decryption, session, or domain failures loading the workflow state row.
+    except (CadrumoError, OSError) as exc:
+        # CadrumoError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.
         return ActiveProfileHealth(
             active_profile=active_profile,
@@ -178,8 +178,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     try:
         with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
             record = resolved_state.active_profile_record()
-    except (AeatError, ValueError) as exc:
-        # AeatError: domain or registry failures resolving the profile record.
+    except (CadrumoError, ValueError) as exc:
+        # CadrumoError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.
         return ActiveProfileHealth(
             active_profile=active_profile,
@@ -299,8 +299,8 @@ def assess_active_profile_health_with_session() -> ActiveProfileHealth:
             if repairable:
                 updates["next_action"] = "aeat config repair profile --clear-active --yes"
         return reassessed.model_copy(update=updates)
-    except (AeatError, OSError, ImportError) as exc:
-        # AeatError: keyring/master-key domain failures.
+    except (CadrumoError, OSError, ImportError) as exc:
+        # CadrumoError: keyring/master-key domain failures.
         # OSError: filesystem-backed secret-store I/O failures.
         # ImportError: defensive guard; the dynamic import of storage internals may fail.
         return before.model_copy(

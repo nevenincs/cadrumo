@@ -11,11 +11,7 @@ import pytest
 from click.testing import Result
 
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
-from ....application.user_profile import (
-    UserProfileLifecycleRepository,
-    profile_create_storage_span,
-    register_minimal_profile,
-)
+from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
 from ....application.workflow import (
     WorkflowAbortReason,
     WorkflowResult,
@@ -31,6 +27,7 @@ from ....domain.deadlines import ModeloDeadline, ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -57,11 +57,11 @@ from ...core import (
 from ...core import (
     SectorDiferenciadoLetra,
 )
-from ...core.errors import AeatError as _AeatError
+from ...core.errors import CadrumoError as _CadrumoError
 from ._protocols import ProrrataRegisterRepositoryProtocol
 
 
-class ProrrataRegisterError(_AeatError):
+class ProrrataRegisterError(_CadrumoError):
     """Raised when a prorrata-register record is structurally invalid."""
 
 

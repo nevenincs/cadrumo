@@ -1,15 +1,15 @@
 """Domain errors for the :mod:`cadrumo.domain.deadlines` subpackage.
 
-Every error inherits from :class:`cadrumo.core.errors.AeatError` so callers have
+Every error inherits from :class:`cadrumo.core.errors.CadrumoError` so callers have
 a single root they can catch when integrating with the deadline engine.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class DeadlineError(AeatError):
+class DeadlineError(CadrumoError):
     """Base class for every error raised by :mod:`cadrumo.domain.deadlines`."""
 
 

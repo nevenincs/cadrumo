@@ -400,10 +400,10 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                         source_refs=tuple(formula.source_refs),
                         # UnresolvedFormulaOutcomeError.context is always a str-keyed,
                         # str-valued mapping (its constructor only accepts
-                        # Mapping[str, str]); the inherited AeatError.context attribute
+                        # Mapping[str, str]); the inherited CadrumoError.context attribute
                         # is declared dict[str, object] | None for the general error
                         # hierarchy, so re-stringify here rather than narrowing the
-                        # shared base attribute for every AeatError subclass.
+                        # shared base attribute for every CadrumoError subclass.
                         context={str(key): str(value) for key, value in (exc.context or {}).items()},
                     ),
                 )

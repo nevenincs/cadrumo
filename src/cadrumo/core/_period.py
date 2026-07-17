@@ -37,7 +37,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
-from .errors import AeatError
+from .errors import CadrumoError
 
 
 class StandardPeriodCode(StrEnum):
@@ -148,12 +148,12 @@ def _format_accepted_period_set() -> str:
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
 
-class PeriodError(AeatError, ValueError):
+class PeriodError(CadrumoError, ValueError):
     """Raised when a :class:`Period` is constructed from an invalid year/code.
 
     Subclasses :class:`ValueError` so pydantic validation and existing callers
     retain value-error compatibility while still routing through the registered
-    :class:`AeatError` hierarchy required for production exceptions.
+    :class:`CadrumoError` hierarchy required for production exceptions.
     """
 
 

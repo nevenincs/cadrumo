@@ -13,8 +13,9 @@ This module enforces the following invariants at collection time:
    it receives and filters in-place.
 2. No file containing an ``aeat_live`` item may import
    any symbol in :data:`BANNED_LIVE_IMPORTS`.
-3. ``aeat_live`` items are skipped unless ``CADRUMO_LIVE_TESTS_ENABLED`` is
-   truthy.
+3. Default selection deselects ``aeat_live`` items by marker. Explicitly
+   selected live tests fail at their shared prerequisite gate when the required
+   opt-in is absent.
 
 The ``env/.env`` auto-load happens at module-load time in the repo-root
 ``conftest.py``.
@@ -30,7 +31,6 @@ from every source test subtree.
 from __future__ import annotations
 
 import ast
-import os
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -57,18 +57,6 @@ BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
     },
 )
 """Import targets that may never appear in a file containing a live-marked test."""
-
-LIVE_OPT_IN_ENV: str = "CADRUMO_LIVE_TESTS_ENABLED"
-"""Environment variable that opts ``aeat_live`` tests into execution."""
-
-_TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})
-
-
-def _truthy(value: str | None) -> bool:
-    """Return True when the given env-style value is a recognised truthy token."""
-    if value is None:
-        return False
-    return value.strip().lower() in _TRUTHY
 
 
 def _marker_names(item: pytest.Item) -> set[str]:
@@ -146,7 +134,7 @@ def _check_banned_live_imports(paths: Iterable[Path]) -> list[str]:
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Enforce the hexagonal marker contract, banned-import scan, and live opt-in gate.
+    """Enforce the hexagonal marker contract and banned-import scan.
 
     Runs ``tryfirst=True`` so it sees every collected item *before* pytest's
     built-in ``-m`` keyword filter deselects anything. This ensures the
@@ -160,8 +148,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
     Args:
         config: The active :class:`pytest.Config` for the session.
-        items: Collected test items; mutated in place by the shared helper
-            and by the live-opt-in skip step.
+        items: Collected test items; validated by the shared helper.
     """
     _apply_marker_contract(config, items)
 
@@ -172,10 +159,3 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             header = "Banned import in live-marked file (see src/cadrumo/tests/README.md):"
             message = header + "\n  " + "\n  ".join(import_violations)
             pytest.exit(message, returncode=2)
-
-    if not _truthy(os.environ.get(LIVE_OPT_IN_ENV)):
-        skip_reason = f"Live tests disabled — set {LIVE_OPT_IN_ENV}=1 to enable"
-        skip_marker = pytest.mark.skip(reason=skip_reason)
-        for item in items:
-            if "aeat_live" in _marker_names(item):
-                item.add_marker(skip_marker)

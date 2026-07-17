@@ -1,4 +1,4 @@
-"""Inventory test: no production AeatError subclass raise may use tr() as positional arg.
+"""Inventory test: no production CadrumoError subclass raise may use tr() as positional arg.
 
 Rule
 ----
@@ -30,9 +30,9 @@ Exclusions
 - ``test_*.py`` files: tests may call tr() freely.
 - Lines where ``tr(`` appears only inside a Python string literal are excluded.
 - Calls where ``tr(...)`` is passed to Typer/Click (``help=``, ``typer.*``,
-  ``click.*``) or to non-AeatError standard-library exceptions (e.g.
+  ``click.*``) or to non-CadrumoError standard-library exceptions (e.g.
   ``typer.BadParameter``, ``ValueError``) are out-of-scope; the rule targets
-  AeatError subclass constructors only.
+  CadrumoError subclass constructors only.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ from ._inventory import production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# Exception class names that are NOT AeatError subclasses and therefore
+# Exception class names that are NOT CadrumoError subclasses and therefore
 # do not need the translated_message pattern (Typer/Click/stdlib classes).
 _NON_AEAT_EXCEPTION_CLASSES = frozenset(
     {
@@ -64,9 +64,9 @@ _NON_AEAT_EXCEPTION_CLASSES = frozenset(
     },
 )
 
-# Factory function names that return non-AeatError exceptions (e.g. typer.BadParameter
-# wrappers). Raising ``_bad(tr(...))`` is not the AeatError anti-pattern because
-# ``_bad`` wraps ``typer.BadParameter``, not an AeatError subclass.
+# Factory function names that return non-CadrumoError exceptions (e.g. typer.BadParameter
+# wrappers). Raising ``_bad(tr(...))`` is not the CadrumoError anti-pattern because
+# ``_bad`` wraps ``typer.BadParameter``, not an CadrumoError subclass.
 _NON_AEAT_FACTORY_FUNCTIONS = frozenset(
     {
         "_bad",  # cli/_common.py factory for typer.BadParameter
@@ -107,8 +107,8 @@ def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:
             class_name = func.attr
         else:
             continue
-        # Skip non-AeatError exception classes and factory functions that wrap
-        # non-AeatError types (e.g. _bad() returns typer.BadParameter).
+        # Skip non-CadrumoError exception classes and factory functions that wrap
+        # non-CadrumoError types (e.g. _bad() returns typer.BadParameter).
         if class_name in _NON_AEAT_EXCEPTION_CLASSES or class_name in _NON_AEAT_FACTORY_FUNCTIONS:
             continue
         # Check: does the call have at least one positional arg that is tr()?
@@ -123,7 +123,7 @@ def _collect_violations(
     """Walk every production module under ``src/cadrumo/`` and collect violations.
 
     The invariant is applied unconditionally: every non-test module that
-    raises an :class:`AeatError` subclass must use the
+    raises an :class:`CadrumoError` subclass must use the
     ``translated_message=`` keyword rather than passing ``tr(...)`` as
     the positional ``message`` argument.
 
@@ -139,7 +139,7 @@ def _collect_violations(
     return violations
 
 
-def test_no_aeat_error_raise_with_positional_tr(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_no_cadrumo_error_raise_with_positional_tr(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Every production module must have zero raise-with-positional-tr() violations.
 
     The invariant applies unconditionally to every non-test module under
@@ -164,7 +164,7 @@ def test_no_aeat_error_raise_with_positional_tr(source_tree_ast: Mapping[Path, a
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
-            f"{len(violations)} raise(s) pass tr() as a positional AeatError arg:\n"
+            f"{len(violations)} raise(s) pass tr() as a positional CadrumoError arg:\n"
             f"  {joined}\n\n"
             "Convert to: raise SomeError(translated_message='key', context={{...}})",
         )

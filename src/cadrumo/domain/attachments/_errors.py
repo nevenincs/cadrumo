@@ -2,16 +2,16 @@
 
 Every error raised inside the attachment subpackage inherits from
 :exc:`AttachmentError`, which itself derives from
-:exc:`core.errors.AeatError`. Callers can therefore catch the family
+:exc:`core.errors.CadrumoError`. Callers can therefore catch the family
 root for coarse handling or branch on the specific subclasses.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class AttachmentError(AeatError):
+class AttachmentError(CadrumoError):
     """Base error for every attachment-service failure.
 
     All other exceptions in :mod:`domain.attachments` derive from this

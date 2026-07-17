@@ -1,6 +1,6 @@
 """Wizard error hierarchy.
 
-Every wizard error inherits from :class:`AeatError` so callers can
+Every wizard error inherits from :class:`CadrumoError` so callers can
 catch the package-wide base class to handle every cadrumo domain error
 uniformly. Each concrete subclass is bound to an :class:`ErrorCode`
 in the application error registry.
@@ -8,10 +8,10 @@ in the application error registry.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreValidationError, ProfileAnswerTypeError
+from ...core.errors import CadrumoError, CoreValidationError, ProfileAnswerTypeError
 
 
-class WizardError(AeatError):
+class WizardError(CadrumoError):
     """Base class for every wizard error."""
 
 
@@ -24,12 +24,12 @@ class WizardValidationError(WizardError, CoreValidationError):
     """
 
 
-class WizardScriptUnderflowError(WizardError):
-    """Raised when a ``ScriptedPrompter`` is asked for more answers than it carries."""
+class WizardAnswerQueueUnderflowError(WizardError):
+    """Raised when a non-interactive answer queue runs empty."""
 
 
-class WizardScriptOverflowError(WizardError):
-    """Raised when a ``ScriptedPrompter`` is closed with unconsumed scripted answers."""
+class WizardAnswerQueueOverflowError(WizardError):
+    """Raised when a non-interactive flow leaves canonical answers unconsumed."""
 
 
 class WizardMissingFlagError(WizardError):

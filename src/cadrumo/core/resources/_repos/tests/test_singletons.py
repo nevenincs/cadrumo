@@ -43,7 +43,7 @@ def test_user_profile_singleton_loads_real_schema() -> None:
 
     assert isinstance(result, ProfileSchemaDefinition), f"Expected ProfileSchemaDefinition, got {type(result).__name__}"
     assert repo.singleton is result
-    assert result.id == "aeat.user_profile", f"Expected schema id 'aeat.user_profile', got {result.id!r}"
+    assert result.id == "cadrumo.user_profile", f"Expected schema id 'cadrumo.user_profile', got {result.id!r}"
     assert result.version >= 1, "Schema version must be a positive integer"
     section_keys = {s.key for s in result.sections}
     assert "identity" in section_keys, f"Expected 'identity' section in user profile schema; got: {section_keys}"

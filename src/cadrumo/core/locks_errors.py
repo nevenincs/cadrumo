@@ -13,10 +13,10 @@ TTL/recovery state, or custody semantics that this primitive does not own.
 
 from __future__ import annotations
 
-from .errors import AeatError
+from .errors import CadrumoError
 
 
-class LockAcquisitionError(AeatError):
+class LockAcquisitionError(CadrumoError):
     """Raised when an exclusive file lock cannot be acquired within the timeout.
 
     Bound to a registered :class:`core.errors.ErrorCode` so callers

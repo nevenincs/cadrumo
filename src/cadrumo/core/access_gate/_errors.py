@@ -1,6 +1,6 @@
 """Policy errors for the AEAT live-access gate.
 
-All errors inherit from :class:`core.errors.AeatError` so callers
+All errors inherit from :class:`core.errors.CadrumoError` so callers
 have a single root they can catch at integration boundaries.
 
 ``LiveSubmitForbiddenError`` lives here (rather than in the
@@ -22,10 +22,10 @@ See Also:
 
 from __future__ import annotations
 
-from ..errors import AeatError
+from ..errors import CadrumoError
 
 
-class AccessGateSubmissionError(AeatError):
+class AccessGateSubmissionError(CadrumoError):
     """Base class for live-write access-gate submission policy failures.
 
     Attributes:
@@ -69,7 +69,7 @@ class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
         super().__init__(message, translated_message=translated_message)
 
 
-class AeatLiveReadNotEnabledError(AeatError):
+class AeatLiveReadNotEnabledError(CadrumoError):
     """Raised when pytest live-read access is required but the test gate is shut.
 
     Emitted by :meth:`core.access_gate.AeatAccessGate.require_live_read` during pytest
@@ -79,7 +79,7 @@ class AeatLiveReadNotEnabledError(AeatError):
     """
 
 
-class AuthorizationManifestError(AeatError):
+class AuthorizationManifestError(CadrumoError):
     """Raised when the multi-year-renta authorization manifest is malformed.
 
     Emitted by the authorization-manifest loader when an

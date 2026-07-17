@@ -42,8 +42,7 @@ from .. import (
     _string_inputs_for_ids,
     build_draft,
 )
-from ..runtime import build_runtime_schema_provider
-from ..testing import ModeloTestProfile
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,8 +59,8 @@ def _m100_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", on=None)
 
 
-def _profile() -> ModeloTestProfile:
-    return ModeloTestProfile(tax_id="12345678Z", display_name="M100 enum replay")
+def _profile() -> ModeloOperatorProfile:
+    return ModeloOperatorProfile(tax_id="12345678Z", display_name="M100 enum replay")
 
 
 def test_date_binding_ids_identifies_m100_birth_date() -> None:

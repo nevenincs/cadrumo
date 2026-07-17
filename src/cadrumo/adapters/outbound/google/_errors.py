@@ -1,6 +1,6 @@
 """Typed exception hierarchy for the Google OAuth Desktop integration.
 
-Every subclass is an :class:`core.errors.AeatError` with a stable
+Every subclass is an :class:`core.errors.CadrumoError` with a stable
 :class:`core.errors.ErrorCode` declared in the adapter error registry.
 That keeps the public CLI taxonomy explicit while
 :mod:`entrypoints.cli._config._google_errors` can map concrete
@@ -12,10 +12,10 @@ surface actionable guidance without leaking the secret material handled by
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 
 
-class GoogleAuthError(AeatError):
+class GoogleAuthError(CadrumoError):
     """Base class for every Google OAuth Desktop authentication failure.
 
     Catch this at CLI boundaries that need one Google-auth refusal arm while

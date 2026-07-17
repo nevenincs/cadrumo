@@ -35,7 +35,7 @@ from sqlalchemy.engine import Engine
 
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
-from ... import EphemeralMasterKeyProvider
+from ......tests.master_key import EphemeralMasterKeyProvider
 from .._orm import Base
 from ..engine import create_engine_from_settings
 from ..secure_objects import SecureObjectRawRow, SecureObjectRepository

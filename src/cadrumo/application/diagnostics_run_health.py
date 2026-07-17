@@ -69,7 +69,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from .auth import AuthTestResult, test_operator_auth
+from .auth import test_operator_auth
 
 __all__ = [
     "ErrorKindCount",
@@ -153,7 +153,6 @@ def build_run_health_report(
     until: date | None = None,
     provider: str | None = None,
     run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
-    auth_probe: AuthTestResult | None = None,
 ) -> RunHealthReport:
     """Aggregate local LLM run telemetry and the auth-session probe into one report.
 
@@ -164,16 +163,10 @@ def build_run_health_report(
             ``"llm:claude:sonnet"``, ``"claude"``); scopes ONLY the LLM
             run-timing section. This is distinct from an AEAT auth provider
             name -- the auth-session probe always auto-resolves its provider
-            from workflow state (see ``auth_probe`` below) and never receives
-            this filter.
+            from workflow state and never receives this filter.
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
             :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
-        auth_probe: Injected :class:`~application.auth.AuthTestResult`
-            (dependency injection for tests); defaults to a fresh call to
-            :func:`~application.auth.test_operator_auth` with no provider
-            override, so it reports whatever AEAT auth provider is configured
-            in workflow state (or "none configured").
 
     Returns:
         The populated :class:`RunHealthReport`.
@@ -184,7 +177,7 @@ def build_run_health_report(
         records = tuple(item for item in records if item.provider == provider)
     llm_providers = _aggregate_runs(records)
 
-    probe = auth_probe if auth_probe is not None else test_operator_auth()
+    probe = test_operator_auth()
 
     return RunHealthReport(
         since=since,

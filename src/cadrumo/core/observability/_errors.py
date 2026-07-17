@@ -1,6 +1,6 @@
-"""Concrete observability errors layered over :class:`AeatObservabilityError`.
+"""Concrete observability errors layered over :class:`CadrumoObservabilityError`.
 
-The base class :class:`cadrumo.core.errors.AeatObservabilityError` lives in
+The base class :class:`cadrumo.core.errors.CadrumoObservabilityError` lives in
 :mod:`cadrumo.core.errors` so other subpackages can catch it without
 importing observability internals. This module re-exports the base and
 declares the leaf error types raised by :func:`record_event`,
@@ -11,10 +11,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..errors import AeatObservabilityError
+from ..errors import CadrumoObservabilityError
 
 
-class RunContextMissingError(AeatObservabilityError):
+class RunContextMissingError(CadrumoObservabilityError):
     """Raised when :func:`record_event` runs outside an active :func:`run_context`.
 
     Caused by calling the recorder from a thread that did not propagate
@@ -24,7 +24,7 @@ class RunContextMissingError(AeatObservabilityError):
     """
 
 
-class RunTraceValidationError(AeatObservabilityError):
+class RunTraceValidationError(CadrumoObservabilityError):
     """Raised when persisted ``trace.json`` or ``events.jsonl`` fails strict validation.
 
     Surfaces both shape-level rejections (bad ``run_id``, malformed
@@ -33,7 +33,7 @@ class RunTraceValidationError(AeatObservabilityError):
     """
 
 
-class RunTracePersistenceError(AeatObservabilityError):
+class RunTracePersistenceError(CadrumoObservabilityError):
     """Raised when run-trace files cannot be created, read, or written."""
 
     def __init__(self, *, operation: str, path: Path) -> None:
@@ -51,7 +51,7 @@ class RunTracePersistenceError(AeatObservabilityError):
         self.path = path
 
 
-class AeatCorpusDriftError(AeatObservabilityError):
+class AeatCorpusDriftError(CadrumoObservabilityError):
     """Raised when replay detects that ``corpus_sha256`` has drifted.
 
     Carries both the recorded and observed hashes plus the entrypoint
@@ -95,7 +95,7 @@ class AeatCorpusDriftError(AeatObservabilityError):
         self.entrypoint: str = entrypoint
 
 
-class GoldenCaptureError(AeatObservabilityError):
+class GoldenCaptureError(CadrumoObservabilityError):
     """Raised when a captured envelope document cannot be typed / re-validated.
 
     Surfaces an emitted-envelope document whose ``command`` is not in the
@@ -106,7 +106,7 @@ class GoldenCaptureError(AeatObservabilityError):
     """
 
 
-class GoldenReplayMismatchError(AeatObservabilityError):
+class GoldenReplayMismatchError(CadrumoObservabilityError):
     """Raised when a replayed envelope diverges from its captured expectation.
 
     Carries the differing JSON paths (after the declared narrow mask is
@@ -133,7 +133,7 @@ class GoldenReplayMismatchError(AeatObservabilityError):
 
 __all__ = [
     "AeatCorpusDriftError",
-    "AeatObservabilityError",
+    "CadrumoObservabilityError",
     "GoldenCaptureError",
     "GoldenReplayMismatchError",
     "RunContextMissingError",

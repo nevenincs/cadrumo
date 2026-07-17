@@ -12,7 +12,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import calculation_result_summary
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
@@ -27,6 +27,7 @@ from ....domain.modelos import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from .._modelo_rendering import result_summary_lines, result_summary_payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

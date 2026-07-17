@@ -56,7 +56,7 @@ from pydantic import BaseModel
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....core.time import now
@@ -78,10 +78,10 @@ CorpusVerificationSource = Literal[
 ]
 
 
-class FinancialProviderError(AeatError):
+class FinancialProviderError(CadrumoError):
     """Base error raised by financial-ingest providers.
 
-    Subclasses :class:`core.errors.AeatError` so the application
+    Subclasses :class:`core.errors.CadrumoError` so the application
     layer can catch every provider failure with one ``except`` clause.
     """
 

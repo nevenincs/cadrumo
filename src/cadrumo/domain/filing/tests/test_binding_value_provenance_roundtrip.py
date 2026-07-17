@@ -8,7 +8,7 @@ values ride inside the encrypted :class:`ModeloDraft` persisted through the
 FINANCIAL-classified :class:`ModeloDraftRepository`.
 
 This module exercises the **encrypted persistence boundary** with real
-adapters (the runtime ``EphemeralMasterKeyProvider``-backed secure store, a
+adapters (the test-support ``EphemeralMasterKeyProvider``-backed secure store, a
 real SQLite engine, the real serializer): it persists a draft whose binding
 values carry NON-DEFAULT provenance, reloads it, and asserts strict pydantic
 equality. It then proves the boundary is not tautological by surgically

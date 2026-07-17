@@ -21,14 +21,12 @@ registry formula engine already populate them, exactly as a bare
 surface a bare calculate call would otherwise reject with a bindings-missing
 refusal.
 
-A real interactive terminal is required by default:
+A real interactive terminal is required:
 :class:`_QuestionaryTextPrompter` reuses the exact non-TTY / Windows-no-console
 detection :class:`~application.wizard.QuestionaryPrompter` applies for
 the profile setup wizard, and raises the same translated
 :class:`~application.wizard.WizardUnsupportedConsoleError`.
-Tests and scripted callers inject a deque-backed :class:`_ScriptedTextPrompter`
-through the keyword-only ``_prompter`` slot, mirroring
-:func:`~application.wizard.build_wizard_command`. Prompt copy is dynamic
+Prompt copy is dynamic
 (the casilla number and label come from the resolved registry snapshot, not a
 static translation-catalogue key), so this module does not reuse the wizard
 package's ``WizardQuestion`` model — that model's ``prompt`` field is a static
@@ -38,11 +36,8 @@ for a runtime-discovered casilla label.
 
 from __future__ import annotations
 
-import contextvars
 import sys
-from collections import deque
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Any, Protocol, runtime_checkable
 
@@ -59,7 +54,7 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
 )
-from ...application.wizard import WizardScriptUnderflowError, WizardUnsupportedConsoleError
+from ...application.wizard import WizardUnsupportedConsoleError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice
@@ -126,62 +121,6 @@ class _QuestionaryTextPrompter:
         if result is None:
             return ""
         return str(result)
-
-
-class _ScriptedTextPrompter:
-    """Test-only prompter that pops canonical-token answers from a FIFO queue.
-
-    Mirrors :class:`~application.wizard.ScriptedPrompter`'s contract
-    (pop-and-raise-on-underflow) for the narrower ``ask_text`` surface, so
-    tests can drive the wizard's full step sequence deterministically without
-    a live terminal.
-    """
-
-    def __init__(self, answers: deque[str] | list[str] | tuple[str, ...]) -> None:
-        self._answers: deque[str] = deque(answers)
-        self.asked_prompts: list[str] = []
-
-    def ask_text(self, prompt: str, *, help_text: str | None) -> str:
-        del help_text
-        if not self._answers:
-            raise WizardScriptUnderflowError(
-                translated_message="errors.internal.internal_wizard_script_underflow",
-                context={"prompt": prompt},
-            )
-        self.asked_prompts.append(prompt)
-        return self._answers.popleft()
-
-
-#: Context-local prompter override, mirroring
-#: :func:`~core.config.override_settings`'s contextvar-based test-injection
-#: pattern. Typer statically introspects a registered command's *signature*, so
-#: (unlike :func:`~application.wizard.build_wizard_command`, which builds
-#: its own dynamic ``__signature__`` with no ``_prompter`` slot at all) a plain
-#: ``@work_app.command`` function cannot carry a hidden keyword-only test
-#: parameter — Typer would try to resolve it into a CLI option and fail on
-#: an unsupported type. A contextvar override reaches the real command body
-#: through the real Typer/Click invocation path without perturbing the
-#: command's introspected signature.
-_prompter_override: contextvars.ContextVar[_TextAnswerPrompter | None] = contextvars.ContextVar(
-    "modelo_work_wizard_prompter_override",
-    default=None,
-)
-
-
-@contextmanager
-def override_wizard_prompter(prompter: _TextAnswerPrompter) -> Iterator[None]:
-    """Route the next ``work wizard`` invocation's prompts through ``prompter``.
-
-    Test-only entry point. A real CLI invocation never calls this; it always
-    falls back to :class:`_QuestionaryTextPrompter`, so an operator's session
-    is unaffected by a coexisting test's override (the token is reset even
-    on exception).
-    """
-    token = _prompter_override.set(prompter)
-    try:
-        yield
-    finally:
-        _prompter_override.reset(token)
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,7 +212,6 @@ def register_work_wizard_commands(
             bucket_id=bucket_id,
             actor=actor,
             output_language_opt=output_language_opt,
-            prompter=_prompter_override.get(),
         )
 
 
@@ -289,7 +227,6 @@ def run_modelo_work_wizard(
     bucket_id: str | None,
     actor: str | None,
     output_language_opt: OutputLanguage | None,
-    prompter: _TextAnswerPrompter | None,
 ) -> None:
     deps.activate_output_language(ctx, output_language_opt)
     deps.require_active_profile()
@@ -302,7 +239,7 @@ def run_modelo_work_wizard(
         bucket_id=bucket_id,
     )
 
-    active_prompter = prompter if prompter is not None else _QuestionaryTextPrompter()
+    active_prompter = _QuestionaryTextPrompter()
     try:
         steps = _outstanding_wizard_steps(unit)
     except RegistrySnapshotError as exc:
@@ -667,4 +604,4 @@ def _emit_wizard_result(
     _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 
-__all__ = ["override_wizard_prompter", "register_work_wizard_commands"]
+__all__ = ["register_work_wizard_commands"]

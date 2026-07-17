@@ -5,19 +5,19 @@ from __future__ import annotations
 import pytest
 
 from ......core.access_gate import LiveSubmitForbiddenError
-from ......core.errors import AeatError
+from ......core.errors import CadrumoError
 from ......domain.submission import SubmissionError, SubmissionPreflightError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def test_every_error_inherits_aeat_error() -> None:
+def test_every_error_inherits_cadrumo_error() -> None:
     for exc_cls in (
         LiveSubmitForbiddenError,
         SubmissionError,
         SubmissionPreflightError,
     ):
-        assert issubclass(exc_cls, AeatError)
+        assert issubclass(exc_cls, CadrumoError)
 
 
 def test_export_errors_are_canonical_access_gate_errors() -> None:

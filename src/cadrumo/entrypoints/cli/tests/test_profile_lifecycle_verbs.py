@@ -192,14 +192,13 @@ def test_config_unlock_is_no_longer_a_command() -> None:
     assert "No such command 'unlock'" in result.output
 
 
-def test_config_switch_reports_manifest_without_profile_record() -> None:
+def test_config_switch_reports_manifest_without_profile_record_through_lifecycle_boundary() -> None:
     stage_bucket_manifest("operator", label="operator")
 
     result = _invoke_config(("switch", "operator"))
 
     assert result.exit_code == 2, result.output
-    assert "readiness\tmissing_profile_record" in result.output
-    assert "profile_record\tmissing" in result.output
+    assert "Profile record was not found in the active bucket" in result.output
     assert "unknown profile" not in result.output.lower()
 
 
@@ -218,7 +217,7 @@ def test_config_profile_create_refuses_manifest_only_profile() -> None:
     stage_bucket_manifest("operator", label="operator")
 
     # Invoke through the root CLI so decorate_typer_app's error boundary is active
-    # and AeatError exceptions are rendered to output rather than propagating raw.
+    # and CadrumoError exceptions are rendered to output rather than propagating raw.
     result = _invoke_profile(
         (
             "create",
@@ -256,7 +255,7 @@ def test_repair_profile_named_active_clear_active_clears_pointer(_isolated_backe
 def test_config_profile_create_refuses_existing_profile() -> None:
     seed("operator")
 
-    # Invoke through the root CLI so the error boundary renders AeatError to output.
+    # Invoke through the root CLI so the error boundary renders CadrumoError to output.
     result = _invoke_profile(
         (
             "create",

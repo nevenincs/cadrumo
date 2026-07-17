@@ -41,6 +41,7 @@ from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...domain.user_profile import UserProfileStatus
 from ...tests.secure_sql import dev_test_database_password
+from ...tests.user_profile import register_minimal_profile
 from ..auth import inspect_operator_auth
 from ..auth import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
@@ -51,7 +52,6 @@ from ..state_projection import (
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
-from ..user_profile import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
 from ..workflow import WorkflowState, workflow_state_repository
 

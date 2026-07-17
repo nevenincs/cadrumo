@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from decimal import Decimal
-from typing import Literal, cast
+from typing import Literal
 
 from ...application.calculations import resolve_maritime_exemption
 from ...application.user_profile import fact_value
@@ -57,6 +57,40 @@ class ModeloMaritimeExemptionPreview:
     facts: MaritimeWorkerFacts
     result: MaritimeExemptionResult
     retmar_warning_error: ProfileCompletenessError | None = None
+
+
+def _vessel_flag(value: str | None) -> Literal["ES", "foreign"] | None:
+    match value:
+        case "ES":
+            return "ES"
+        case "foreign":
+            return "foreign"
+        case _:
+            return None
+
+
+def _waters_type(value: str | None) -> Literal["national", "international"] | None:
+    match value:
+        case "national":
+            return "national"
+        case "international":
+            return "international"
+        case _:
+            return None
+
+
+def _vessel_registry(
+    value: str | None,
+) -> Literal["REBECA", "rebeca_eu_eea", "scheduled_canary_route"] | None:
+    match value:
+        case "REBECA":
+            return "REBECA"
+        case "rebeca_eu_eea":
+            return "rebeca_eu_eea"
+        case "scheduled_canary_route":
+            return "scheduled_canary_route"
+        case _:
+            return None
 
 
 def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
@@ -87,34 +121,11 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
             return False
         return raw.strip().lower() in {"true", "1", "yes"}
 
-    # fact_value() returns unvalidated str from encrypted profile storage.
-    # Each Literal field on MaritimeWorkerFacts carries a closed value set;
-    # membership tests below narrow the runtime value and cast bridges the
-    # str→Literal narrowing that ty cannot express from a membership test.
-    # This is a genuine profile-storage adapter boundary.
-    _vf_raw = _raw("maritime_worker.vessel_flag")
-    # CAST-RATIONALE-MARITIME-LITERAL-FIELD: str->Literal narrowing at profile-storage boundary.
-    vessel_flag = cast(
-        "Literal['ES', 'foreign'] | None",
-        _vf_raw if _vf_raw in ("ES", "foreign") else None,
-    )
-    _wt_raw = _raw("maritime_worker.waters_type")
-    # CAST-RATIONALE-MARITIME-LITERAL-FIELD: str->Literal narrowing at profile-storage boundary.
-    waters_type = cast(
-        "Literal['national', 'international'] | None",
-        _wt_raw if _wt_raw in ("national", "international") else None,
-    )
-    _vr_raw = _raw("maritime_worker.vessel_registry")
-    # CAST-RATIONALE-MARITIME-LITERAL-FIELD: str->Literal narrowing at profile-storage boundary.
-    vessel_registry = cast(
-        "Literal['REBECA', 'rebeca_eu_eea', 'scheduled_canary_route'] | None",
-        _vr_raw if _vr_raw in ("REBECA", "rebeca_eu_eea", "scheduled_canary_route") else None,
-    )
     return MaritimeWorkerFacts(
         worker_class=_raw("maritime_worker.worker_class"),
-        vessel_flag=vessel_flag,
-        waters_type=waters_type,
-        vessel_registry=vessel_registry,
+        vessel_flag=_vessel_flag(_raw("maritime_worker.vessel_flag")),
+        waters_type=_waters_type(_raw("maritime_worker.waters_type")),
+        vessel_registry=_vessel_registry(_raw("maritime_worker.vessel_registry")),
         tuna_fleet=_bool("maritime_worker.tuna_fleet"),
         pending_eu_clearance=_bool("maritime_worker.pending_eu_clearance"),
         retmar_registered=_bool("maritime_worker.retmar_registered"),

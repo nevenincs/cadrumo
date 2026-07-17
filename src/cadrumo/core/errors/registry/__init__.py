@@ -2,7 +2,7 @@
 
 Each child module contributes ordered ``(qualname, ErrorCode)`` rows for
 one architectural layer. :mod:`core.errors._registry` imports the
-combined tuple and binds each :class:`core.errors.AeatError`
+combined tuple and binds each :class:`core.errors.CadrumoError`
 subclass to its declared metadata.
 """
 

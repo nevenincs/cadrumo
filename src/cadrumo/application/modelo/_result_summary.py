@@ -38,7 +38,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import CalculationRevision, WorkUnit
@@ -120,7 +120,7 @@ def calculation_result_summary(
     casilla_values = revision.casilla_values
     try:
         work_unit = work_unit_resolver(str(revision.work_unit_id))
-    except (LookupError, KeyError, AttributeError, AeatError) as exc:
+    except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
         _log.warning(
             "modelo result summary: unable to resolve work unit for revision=%s",
             revision.calculation_revision_id,
@@ -129,7 +129,7 @@ def calculation_result_summary(
         return None
     try:
         snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
-    except (LookupError, KeyError, AttributeError, AeatError) as exc:
+    except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
         _log.warning(
             "modelo result summary: unable to resolve registry snapshot for work_unit=%s",
             work_unit.work_unit_id,

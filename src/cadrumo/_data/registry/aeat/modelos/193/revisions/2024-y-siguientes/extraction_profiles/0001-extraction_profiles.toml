@@ -4,7 +4,7 @@
 #   136-144: "NÚMERO TOTAL DE PERCEPTORES"
 #   145-159: "BASE RETENCIONES E INGRESOS A CUENTA"
 #   160-174: "RETENCIONES E INGRESOS A CUENTA"
-# Source: src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_193/files/
+# Source: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/
 #   03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf pages 5-6.
 # The '\s+total' suffix in the base and retenciones patterns is a fixture-level
 # disambiguation convention (identical to M180 declaracion_pdf profile): the

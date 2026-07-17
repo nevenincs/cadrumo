@@ -8,7 +8,7 @@ from typing import Annotated
 import typer
 
 from ...core.i18n import tr
-from ._common import _emit_envelope
+from ._common import _emit_envelope, active_bucket_id_or_refuse
 
 audit_app = typer.Typer(
     name="audit",
@@ -31,15 +31,6 @@ def _evidence_bundle_service():
     return EvidenceBundleService()
 
 
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
-
-
 @audit_app.command(
     "show",
     help=tr(
@@ -55,7 +46,7 @@ def audit_show(
     ],
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditShowResult
 
@@ -106,7 +97,7 @@ def audit_check(
     ],
 ) -> None:
     """Re-verify the evidence bundle's integrity without mutating state."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
 
@@ -165,7 +156,7 @@ def audit_export(
     ] = False,
 ) -> None:
     """Write the evidence bundle as a ZIP archive to ``--output``."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     service = _evidence_bundle_service()
     output_path = service.export(
         bucket_id=bucket_id,
@@ -207,7 +198,7 @@ def audit_replay(
     ],
 ) -> None:
     """Replay the evidence bundle's case assertions without contacting AEAT."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditReplayResult
 

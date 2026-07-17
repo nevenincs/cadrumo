@@ -1,7 +1,7 @@
 rules:
   - id: no-any-annotation-in-domain-application
     message: |
-      `Any` annotation forbidden in src/aeat/domain/ and src/aeat/application/.
+      `Any` annotation forbidden in src/cadrumo/domain/ and src/cadrumo/application/.
       Replace with a typed alternative: pydantic model, TypedDict, Union, or
       `object` if the value is truly polymorphic. Type-system escapes in the
       core domain and application layers undermine the strictness contract
@@ -11,8 +11,12 @@ rules:
       - python
     paths:
       include:
-        - "/src/aeat/domain/"
-        - "/src/aeat/application/"
+        - "src/cadrumo/domain/**"
+        - "src/cadrumo/application/**"
+      exclude:
+        - "src/cadrumo/**/tests/**"
+        - "src/cadrumo/**/test_*.py"
+        - "src/cadrumo/**/_test_*.py"
     pattern-either:
       - pattern: |
           $X: Any

@@ -20,12 +20,12 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ...core.config import Settings, load_settings
 from ._embed_build import POTION_MODEL_ID, POTION_MODEL_REVISION
 from ._errors import CorpusSearchInputError
-from ._model_loader import load_static_model
+from ._model_loader import StaticEmbeddingModel, load_static_model
 
 if TYPE_CHECKING:
     import numpy as np
@@ -68,7 +68,7 @@ class QueryEmbedder:
         self._model_id = model_id
         self._revision = revision
         self._cache_dir = cache_dir if cache_dir is not None else search_model_cache_dir(settings)
-        self._model: Any | None = None
+        self._model: StaticEmbeddingModel | None = None
 
     @property
     def model_id(self) -> str:
@@ -82,7 +82,7 @@ class QueryEmbedder:
     def cache_dir(self) -> Path:
         return self._cache_dir
 
-    def _ensure_model(self) -> Any:
+    def _ensure_model(self) -> StaticEmbeddingModel:
         if self._model is None:
             self._cache_dir.mkdir(parents=True, exist_ok=True)
             self._model = load_static_model(self._model_id, revision=self._revision, cache_dir=self._cache_dir)

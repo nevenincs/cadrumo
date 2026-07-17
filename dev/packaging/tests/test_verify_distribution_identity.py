@@ -147,13 +147,13 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
     assert descriptions["product_review_required"] is True
     assert descriptions["model_facing_descriptions"] == {
         "compliant": True,
-        "count": 1625,
-        "expected_sha256": "5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0",
+        "count": 1633,
+        "expected_sha256": "2f58dacf1f917749e9510e7e5b706752992bd0eb997f0453fab82edda8391d6b",
         "language_labels_absent": True,
         "localization_target": False,
         "nonempty": True,
-        "sha256": "5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0",
-        "surface_counts": {"argument": 1240, "prompt": 35, "resource": 54, "tool": 296},
+        "sha256": "2f58dacf1f917749e9510e7e5b706752992bd0eb997f0453fab82edda8391d6b",
+        "surface_counts": {"argument": 1247, "prompt": 35, "resource": 54, "tool": 297},
         "surfaces": [
             "MCP argument descriptions",
             "MCP prompt descriptions",

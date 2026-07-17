@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
@@ -79,7 +79,7 @@ if TYPE_CHECKING:
 _FEEDBACK_PACKAGE_VERSION = 1
 
 
-class ReviewPackageFeedbackError(AeatError):
+class ReviewPackageFeedbackError(CadrumoError):
     """Base error for review-package feedback round-trip failures."""
 
 

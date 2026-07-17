@@ -1,9 +1,9 @@
-# Régimen simplificado silent-under-declaration ADVISORY. Casillas 47-58
-# (the régimen simplificado apartado, LIVA arts.
-# 122-124) are ALL input_kind = "manual" with no binding or formula — the
-# per-activity módulos computation (número de unidades de cada módulo x
-# importe del módulo, índices correctores, cuota mínima) is performed on the
-# AEAT off-form worksheet and only the totals reach the form. An
+# Régimen simplificado silent-under-declaration ADVISORY. The official
+# casillas 47-58 remain operator inputs, while internal support casillas and
+# registry formulas compute a reference cuota for the currently tabled
+# activities. Casilla 48 cannot yet be silently replaced by that reference:
+# real cuotas soportadas and the full activity/year catalogue remain outside
+# the first slice. An
 # estimación-objetiva filer under the régimen simplificado who declares the
 # 1T-3T "ingresos a cuenta" (casilla 47, LIVA art. 123.Cuatro pagos a cuenta
 # trimestrales) but leaves the 4T "cuota derivada del régimen simplificado"
@@ -18,10 +18,10 @@
 # are populated for the same filing and 48 resolves to zero, prompting the
 # operator to complete the off-form módulos worksheet before filing 4T.
 #
-# A future modulos_iva_aggregation source resolver over the shared
-# Orden-de-modulos dataset will compute casilla 48 directly and
-# this advisory becomes satisfied-by-construction, mirroring the retirement
-# pattern already applied to the régimen-general boxes above.
+# Once the existing registry-formula path has complete input and authority
+# coverage, it may own casilla 48 directly and this advisory becomes
+# satisfied-by-construction. A parallel source resolver is deliberately not
+# introduced.
 [[revisions.2023-y-siguientes.verification_predicates]]
 predicate_id = "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados"
 expression = 'implies_nonzero(["47", "48"])'

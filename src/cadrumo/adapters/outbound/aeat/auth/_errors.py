@@ -1,6 +1,6 @@
 """Shared exception taxonomy for outbound AEAT authentication.
 
-Every class here inherits from :class:`~core.errors.AeatError`, so the
+Every class here inherits from :class:`~core.errors.CadrumoError`, so the
 core error registry binds a stable :class:`~core.errors.ErrorCode` and
 locale message key to the public auth failure surface. Certificate and Cl@ve
 Móvil providers raise these errors with ``translated_message`` keys when a
@@ -16,10 +16,10 @@ See Also:
 
 from __future__ import annotations
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 
 
-class AuthError(AeatError):
+class AuthError(CadrumoError):
     """Base class for every outbound AEAT authentication domain error.
 
     Catch this at adapter or CLI boundaries that need one AEAT-auth arm while

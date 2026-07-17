@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ._config_timeouts import AeatTimeoutSettings
+from ._config_timeouts import CadrumoTimeoutSettings
 
 
-class AeatRuntimeSettings(AeatTimeoutSettings):
+class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     cadrumo_llm_openai_chat_completions_url: str = Field(
         default="https://api.openai.com/v1/chat/completions",
         description="OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies",

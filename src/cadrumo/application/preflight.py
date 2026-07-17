@@ -30,13 +30,13 @@ import sys
 from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ..core.config import Settings, load_settings
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.paths import (
     WINDOWS_MAX_PATH,
     windows_long_paths_enabled,
@@ -44,33 +44,7 @@ from ..core.paths import (
 )
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry import ModeloDefinition, RegistrySnapshot
     from ..domain.portals import PortalDriftEvent
-
-
-class _RegistryAuthorityLike(Protocol):
-    """Structural view of the registry authority the sweep consumes.
-
-    Declared as a :class:`typing.Protocol` so
-    :func:`probe_registry_referential_integrity` accepts an injected
-    authority in tests without importing the concrete
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
-    at module load and without a mock: any object exposing the real
-    ``modelos`` iterable of :class:`ModeloDefinition` records and a
-    ``snapshot`` builder returning a :class:`RegistrySnapshot` satisfies it.
-    """
-
-    @property
-    def modelos(self) -> tuple[ModeloDefinition, ...]: ...
-
-    def snapshot(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        revision_id: str | None = ...,
-    ) -> RegistrySnapshot: ...
 
 
 __all__ = [
@@ -150,7 +124,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
         check_id = f"auth-provider:{kind.value}"
         try:
             probe = probe_provider_configuration(kind.value, settings=settings)
-        except AeatError as exc:  # never crash the doctor on a probe failure
+        except CadrumoError as exc:  # never crash the doctor on a probe failure
             rows.append(
                 PreflightCheck(
                     check=check_id,
@@ -410,10 +384,7 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
 # ── #98 — registry referential integrity ─────────────────────────────────────
 
 
-def probe_registry_referential_integrity(
-    *,
-    authority: _RegistryAuthorityLike | None = None,
-) -> PreflightCheck:
+def probe_registry_referential_integrity() -> PreflightCheck:
     """Run the registry referential-integrity gate over every bundled revision.
 
     Drives the same ``check_all_id_references`` existence gate the
@@ -424,9 +395,7 @@ def probe_registry_referential_integrity(
     A dangling reference surfaces as a
     :class:`~domain.calculations.registry.RegistryValidationError`,
     which is caught and reported as an ``error`` row naming the count of
-    failing revisions — the probe never raises. ``authority`` overrides
-    the default bundled authority so the sweep can be exercised against a
-    controlled registry.
+    failing revisions — the probe never raises.
 
     Returns:
         A single :class:`PreflightCheck` row for the registry-integrity dimension.
@@ -437,19 +406,16 @@ def probe_registry_referential_integrity(
         bundled_authority,
     )
 
-    if authority is None:
-        try:
-            authority = bundled_authority()
-        except (RegistryValidationError, RegistrySnapshotError, AeatError) as exc:
-            return PreflightCheck(
-                check="registry:referential-integrity",
-                healthy=False,
-                severity=HealthSeverity.ERROR,
-                detail=f"the bundled registry failed to load: {type(exc).__name__}: {exc}",
-                remediation=(
-                    "inspect the registry TOML sources; run the registry validation suite for the failing modelo"
-                ),
-            )
+    try:
+        authority = bundled_authority()
+    except (RegistryValidationError, RegistrySnapshotError, CadrumoError) as exc:
+        return PreflightCheck(
+            check="registry:referential-integrity",
+            healthy=False,
+            severity=HealthSeverity.ERROR,
+            detail=f"the bundled registry failed to load: {type(exc).__name__}: {exc}",
+            remediation="inspect the registry TOML sources; run the registry validation suite for the failing modelo",
+        )
 
     revisions_checked = 0
     failures: list[str] = []

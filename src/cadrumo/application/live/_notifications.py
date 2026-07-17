@@ -34,7 +34,7 @@ exception class names, secure-object storage layout, and per-call
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, override
+from typing import override
 
 from pydantic import BaseModel, Field
 
@@ -141,7 +141,16 @@ def _notifications_repository(
     )
 
 
-class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapshot]):
+class _NotificationsCaptureRequest(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    snapshot: NotificationsSnapshot
+    authenticated_identity: str | None = None
+
+
+class NotificationsService(
+    StatelessSnapshotService[PersistedNotificationsSnapshot, _NotificationsCaptureRequest],
+):
     """Bucket-scoped persistence + read surface over notifications snapshots.
 
     The service is structurally read-only. There is no ``submit`` verb,
@@ -174,8 +183,10 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         """
         return self._capture_stateless(
             bucket_id=bucket_id,
-            snapshot=snapshot,
-            authenticated_identity=authenticated_identity,
+            capture=_NotificationsCaptureRequest(
+                snapshot=snapshot,
+                authenticated_identity=authenticated_identity,
+            ),
         )
 
     def show(
@@ -203,27 +214,27 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         return max(snapshots, key=lambda s: s.captured_at)
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
-    # contract uses **kwargs to allow concrete subclasses to accept caller-
-    # specific keyword arguments without a shared typed parameter set.
-    def _derive_snapshot_id(self, **kwargs: Any) -> str:
+    def _derive_snapshot_id(self, capture: _NotificationsCaptureRequest) -> str:
         return _derive_snapshot_id(
-            kwargs["snapshot"],
-            authenticated_identity=kwargs.get("authenticated_identity"),
+            capture.snapshot,
+            authenticated_identity=capture.authenticated_identity,
         )
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: StatelessSnapshotService[T]
-    # abstract _build_payload hook carries **kwargs: Any so concrete subclasses
-    # accept caller-specific keyword arguments without a shared typed set.
-    def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> PersistedNotificationsSnapshot:
-        snapshot: NotificationsSnapshot = kwargs["snapshot"]
+    def _build_payload(
+        self,
+        *,
+        snapshot_id: str,
+        bucket_id: str,
+        capture: _NotificationsCaptureRequest,
+    ) -> PersistedNotificationsSnapshot:
+        snapshot = capture.snapshot
         return PersistedNotificationsSnapshot(
             snapshot_id=snapshot_id,
             bucket_id=bucket_id,
             captured_at=snapshot.captured_at,
             source_url=str(snapshot.source_url),
-            authenticated_identity=_normalise_authenticated_identity(kwargs.get("authenticated_identity")),
+            authenticated_identity=_normalise_authenticated_identity(capture.authenticated_identity),
             rows=snapshot.rows,
             persisted_at=now(),
         )

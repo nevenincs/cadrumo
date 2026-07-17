@@ -1,226 +1,154 @@
-"""Unit tests for :func:`cadrumo.adapters.outbound.aeat.verify.verify_csv`.
-
-Exercises the borrowed-vs-self-owned browser-session lifecycle of
-:func:`verify_csv` using lightweight recording doubles that satisfy the
-:class:`cadrumo.adapters.outbound.aeat.verify.VerifyBrowserSessionLike` shape.
-"""
+"""Real-browser and pure-parser proofs for AEAT CSV verification."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from pathlib import Path
+from typing import cast
 
 import pytest
+from playwright.async_api import Error as PlaywrightError
+from playwright.async_api import Playwright
 
+from ......core.config import Settings
 from ......domain.calculations.registry import RegistryValidationError
 from ... import verify as verify_module
-from .. import (
-    VerifyBrowserKeyboardLike,
-    verify_csv,
+from ...browser import DefaultBrowserSession
+from ...browser.tests.real_http_boundary import (
+    open_real_browser_session,
+    opened_http_boundary,
 )
+from .. import verify_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-
-class _RecordingKeyboard:
-    """Recording double mirroring the Playwright keyboard surface."""
-
-    def __init__(self) -> None:
-        self.typed: list[str] = []
-        self.pressed: list[str] = []
-
-    async def type(self, value: str) -> None:
-        self.typed.append(value)
-
-    async def press(self, key: str) -> None:
-        self.pressed.append(key)
+_CSV = "ABCD1234EFGH5678"
+_AEAT = Settings.external_constants().aeat
+_RESULT_URL = f"{_AEAT.domains.www2}{_AEAT.sede_paths.cotejo_query}?CSV={_CSV}"
 
 
-class _RecordingPage:
-    """Recording double mirroring the Playwright page surface used by ``verify_csv``."""
-
-    def __init__(self, body: str) -> None:
-        self._body = body
-        self.goto_calls: list[str] = []
-        self.fill_calls: list[tuple[str, str]] = []
-        self.press_calls: list[tuple[str, str]] = []
-        self.keyboard: VerifyBrowserKeyboardLike = _RecordingKeyboard()
-
-    async def goto(self, url: str) -> None:
-        self.goto_calls.append(url)
-
-    async def fill(self, selector: str, value: str) -> None:
-        self.fill_calls.append((selector, value))
-
-    async def press(self, selector: str, key: str) -> None:
-        self.press_calls.append((selector, key))
-
-    async def content(self) -> str:
-        return self._body
-
-
-class _RecordingContext:
-    """Recording double for a Playwright browser context, returning a fixed page."""
-
-    def __init__(self, page: _RecordingPage) -> None:
-        self._page = page
-        self.close_calls = 0
-
-    async def new_page(self) -> _RecordingPage:
-        return self._page
-
-    async def close(self) -> None:
-        self.close_calls += 1
-
-
-class _RecordingBrowserSession:
-    """Recording double satisfying the ``VerifyBrowserSessionLike`` shape consumed by ``verify_csv``."""
-
-    def __init__(self, body: str) -> None:
-        self.page = _RecordingPage(body)
-        self.context = _RecordingContext(self.page)
-        self.create_context_calls = 0
-        self.close_calls = 0
-
-    async def create_context(
-        self,
-        *,
-        provisioner: object | None = None,
-        storage_state_path: Path | None = None,
-        storage_state: Mapping[str, object] | None = None,
-    ) -> _RecordingContext:
-        del provisioner, storage_state_path, storage_state
-        self.create_context_calls += 1
-        return self.context
-
-    async def close(self) -> None:
-        self.close_calls += 1
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "body, expected",
-    [
-        # AEAT confirmation tokens — each alone is sufficient.
-        ("<html><p>Documento válido en el Registro General.</p></html>", True),
-        ("<html><p>El CSV introducido es correcto.</p></html>", True),
-        # ASCII fallback without diacritics.
-        ("<html><p>Documento valido en el Registro.</p></html>", True),
-        # Unknown / not-found response.
-        ("<html><p>El CSV no se encuentra en el registro.</p></html>", False),
-        # Completely empty body.
-        ("", False),
-    ],
-)
-async def test_verify_csv_parse_contract(body: str, expected: bool) -> None:
-    """The AEAT response parser identifies valid documents by the presence
-    of the Spanish confirmation tokens ('válido', 'valido', 'correcto').
-    Any other body — including an empty or unknown response — returns False.
-
-    These assertions exercise the production parse path end-to-end through
-    the recording double; the exact HTML fragments mirror the categories
-    AEAT returns in practice so a regression in token matching fails here.
-    """
-    session = _RecordingBrowserSession(body)
-
-    result = await verify_csv(" abcd1234 ", browser=session)
-
-    assert result is expected, f"body {body!r} → expected {expected}, got {result}"
-
-
-@pytest.mark.asyncio
-async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
-    """Borrowed sessions remain caller-owned: the context is closed but
-    the session itself is NOT closed.
-
-    Parse result is a side-effect of the body; the session-lifetime
-    assertions are the primary contract here.  The body is chosen to
-    produce a known True result so the caller does not receive a
-    surprising value alongside the lifecycle guarantee.
-    """
-    session = _RecordingBrowserSession("<html>documento válido</html>")
-
-    assert isinstance(session, verify_module.VerifyBrowserSessionLike)
-    result = await verify_csv(" abcd1234 ", browser=session)
-
-    # Session-lifetime contract.
-    assert session.create_context_calls == 1
-    assert session.context.close_calls == 1  # context is always closed
-    assert session.close_calls == 0  # borrowed → caller keeps ownership
-    assert session.page.goto_calls == [verify_module._VERIFY_URL]
-    # Confirm parse result is coherent with the body (covered in detail
-    # by test_verify_csv_parse_contract).
-    assert result is True
-
-
-@pytest.mark.asyncio
-async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
-    """Self-owned sessions must be closed after the round-trip completes.
-
-    The body produces a False parse result (no confirmation token) which
-    verifies the self-ownership path is exercised on an unknown-document
-    response — the more common real-world outcome for a mis-typed CSV.
-    """
-    session = _RecordingBrowserSession("<html>documento desconocido</html>")
-    assert isinstance(session, verify_module.VerifyBrowserSessionLike)
-    session_like = session
-
-    async def _factory() -> verify_module.VerifyBrowserSessionLike:
-        return session_like
-
-    result = await verify_module.verify_csv("ABCD1234EFGH5678", browser_session_factory=_factory)
-
-    # Session-lifetime contract: self-owned session AND context are closed.
-    assert session.create_context_calls == 1
-    assert session.context.close_calls == 1
-    assert session.close_calls == 1  # self-owned → must close
-    # Parse result matches the body (no confirmation token → False).
-    assert result is False
-
-
-@pytest.mark.asyncio
-async def test_build_default_browser_session_raises_browser_adapter_type_error_on_wrong_type() -> None:
-    """When default_browser_session_factory returns a non-VerifyBrowserSessionLike
-    object, _build_default_browser_session must raise BrowserAdapterTypeError —
-    a typed, registered envelope — not the bare built-in TypeError.
-
-    A plain object that is not a VerifyBrowserSessionLike is returned by a
-    factory passed via the production DI seam; the raised exception class is
-    asserted directly so any regression to bare TypeError fails this test.
-    """
-    from ......core.config import Settings
-
-    async def _bad_factory(settings: Settings) -> object:
-        del settings
-        return object()
-
-    with pytest.raises(verify_module._BrowserAdapterTypeError) as exc_info:
-        await verify_module._build_default_browser_session(factory=_bad_factory)
-
-    assert "object" in str(exc_info.value)
-
-
-def test_browser_adapter_type_error_is_registered() -> None:
-    """BrowserAdapterTypeError must be present in ERROR_REGISTRY under the
-    expected code so the error infrastructure can build a typed envelope
-    without KeyError at runtime.
-    """
-    from ......core.errors import ERROR_REGISTRY
-
-    assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY, (
-        "'ERROR_SEDE_BROWSER_ADAPTER_TYPE' not found in ERROR_REGISTRY; "
-        "add it to src/cadrumo/core/errors/registry/_adapters.py"
+def _viewer_html(csv: str, *, origin: str = "") -> str:
+    source = f"{origin}{_AEAT.sede_paths.cotejo_document}?CSV={csv}"
+    return (
+        '<title>Visualización de documentos</title><button id="botonPantallaCompleta"></button>'
+        f'<iframe id="iframe-visualiza" src="{source}"></iframe>'
     )
 
 
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        (_viewer_html(_CSV), True),
+        (_viewer_html(_CSV, origin=_AEAT.domains.www2), True),
+        (_viewer_html(_CSV, origin="https://attacker.example"), False),
+        (_viewer_html("WRONG12345678901"), False),
+        ("<html><p>CSV incorrecto.</p></html>", False),
+        ("<html><p>Documento no válido.</p></html>", False),
+        ("<html><p>Documento no valido.</p></html>", False),
+        ("<html><p>El documento no es válido.</p></html>", False),
+        ("<html><p>Para el correcto funcionamiento de la sede.</p></html>", False),
+        ("<html><p>Documento válido en el Registro General.</p></html>", False),
+        (
+            "<p>No se ha podido recuperar ningún documento catalogado con ese CSV (Código Seguro de Verificación).</p>",
+            False,
+        ),
+        ("<p>No se ha encontrado ningún documento con los datos aportados.</p>", False),
+        ("<html><p>El CSV no se encuentra en el registro.</p></html>", False),
+        ("", False),
+    ],
+)
+def test_verify_csv_parse_contract(body: str, expected: bool) -> None:
+    """Only the exact CSV-bound document iframe satisfies the official contract."""
+    assert verify_module._response_confirms_valid_csv(body, expected_csv=_CSV, final_url=_RESULT_URL) is expected
+
+
+@pytest.mark.parametrize(
+    "final_url",
+    [
+        f"https://attacker.example{_AEAT.sede_paths.cotejo_query}?CSV={_CSV}",
+        f"{_AEAT.domains.www2}{_AEAT.sede_paths.cotejo_document}?CSV={_CSV}",
+        f"{_AEAT.domains.www2.replace('https://', 'http://')}{_AEAT.sede_paths.cotejo_query}?CSV={_CSV}",
+    ],
+)
+def test_verify_csv_rejects_wrong_final_surface(final_url: str) -> None:
+    """A viewer-shaped body cannot override wrong scheme, host, or route."""
+    assert not verify_module._response_confirms_valid_csv(
+        _viewer_html(_CSV),
+        expected_csv=_CSV,
+        final_url=final_url,
+    )
+
+
+@pytest.mark.asyncio
+async def test_verify_csv_keeps_borrowed_real_browser_available() -> None:
+    """Borrowed ownership leaves the connected browser usable by its caller."""
+    async with opened_http_boundary() as boundary:
+        playwright, session = await open_real_browser_session(
+            boundary=boundary,
+            settings=Settings(),
+            profile_name="verify-borrowed",
+        )
+        second_context = None
+        try:
+            concrete_session = session
+            assert verify_module._is_verify_browser_session_like(session)
+            assert await verify_csv(" abcd1234 ", browser=session) is False
+
+            browser = concrete_session._browser
+            assert browser is not None
+            assert browser.is_connected()
+            second_context = await browser.new_context()
+            page = await second_context.new_page()
+            await page.goto("data:text/html,<title>borrowed-still-open</title>")
+            assert await page.title() == "borrowed-still-open"
+        finally:
+            if second_context is not None:
+                await second_context.close()
+            await session.close()
+            await playwright.stop()
+
+
+@pytest.mark.asyncio
+async def test_verify_csv_closes_self_owned_real_playwright_runtime() -> None:
+    """The self-owned path stops its actual Playwright runtime after use."""
+    async with opened_http_boundary() as boundary:
+        retained_runtime: Playwright | None = None
+
+        async def factory() -> verify_module.VerifyBrowserSessionLike:
+            nonlocal retained_runtime
+            playwright, session = await open_real_browser_session(
+                boundary=boundary,
+                settings=Settings(),
+                profile_name="verify-self-owned",
+            )
+            retained_runtime = playwright
+            return cast(
+                verify_module.VerifyBrowserSessionLike,
+                DefaultBrowserSession(playwright=playwright, session=session),
+            )
+
+        assert await verify_csv("ABCD1234EFGH5678", browser_session_factory=factory) is False
+        assert retained_runtime is not None
+        with pytest.raises(PlaywrightError):
+            await retained_runtime.chromium.launch(headless=True)
+
+
+def test_verify_browser_session_type_guard_rejects_incompatible_object() -> None:
+    """The production type guard rejects objects without the session contract."""
+    assert not verify_module._is_verify_browser_session_like(object())
+
+
+def test_browser_adapter_type_error_is_registered() -> None:
+    """The adapter mismatch remains bound to the central error registry."""
+    from ......core.errors import ERROR_REGISTRY
+
+    assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY
+
+
 def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
-    """build_error_envelope must produce a valid ErrorEnvelope for BrowserAdapterTypeError
-    without raising — confirming the registry binding covers the full envelope pipeline.
-    """
+    """The registered adapter mismatch builds a typed public envelope."""
     from ......core.errors import build_error_envelope
     from ...sede import BrowserAdapterTypeError
 
-    exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type: <class 'object'>")
+    exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type")
     envelope = build_error_envelope(exc)
 
     assert envelope.code == "ERROR_SEDE_BROWSER_ADAPTER_TYPE"
@@ -230,13 +158,3 @@ def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
 def test_verify_csv_guard_rejects_non_read_method() -> None:
     with pytest.raises(RegistryValidationError, match="remote write method"):
         verify_module._assert_verify_http("POST", verify_module._VERIFY_URL)
-
-
-def test_verify_csv_guard_rejects_mutating_action() -> None:
-    with pytest.raises(RegistryValidationError, match="browser action token"):
-        verify_module._assert_verify_action("Presentar declaracion")
-
-
-def test_verify_csv_guard_rejects_unclassified_action() -> None:
-    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
-        verify_module._assert_verify_action("new-unreviewed-csv-action")

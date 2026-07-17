@@ -1,6 +1,6 @@
 """Payload-contract and registry-binding tests for bucket storage errors.
 
-The suite pins every bucket error as an :class:`~core.errors.AeatError` with a
+The suite pins every bucket error as an :class:`~core.errors.CadrumoError` with a
 registered code, distinct registry identity, safe operator suggestion, and
 structured context for bucket-id / lock-holder payloads. These contracts keep
 manifest, lockfile, recovery, and active-bucket failures observable without
@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
+from ......core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
 from .._errors import (
     BucketAlreadyPresentError,
     BucketBusyError,
@@ -49,8 +49,8 @@ _BUCKET_ERROR_CLASSES: tuple[type[BucketError], ...] = (
 
 
 @pytest.mark.parametrize("error_cls", _BUCKET_ERROR_CLASSES, ids=lambda cls: cls.__name__)
-def test_every_class_inherits_from_aeat_error(error_cls: type[BucketError]) -> None:
-    assert issubclass(error_cls, AeatError)
+def test_every_class_inherits_from_cadrumo_error(error_cls: type[BucketError]) -> None:
+    assert issubclass(error_cls, CadrumoError)
 
 
 @pytest.mark.parametrize("error_cls", _BUCKET_ERROR_CLASSES, ids=lambda cls: cls.__name__)

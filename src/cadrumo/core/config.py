@@ -32,7 +32,7 @@ from . import _config_live_tests as _live_test_config
 from ._auth_provider import AuthProviderKind as _AuthProviderKind
 from ._config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
-    AeatIntegrationSettings,
+    CadrumoIntegrationSettings,
 )
 from ._config_state_root import (
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
@@ -167,7 +167,7 @@ class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
             self.env_vars = original_env_vars
 
 
-class Settings(AeatIntegrationSettings):
+class Settings(CadrumoIntegrationSettings):
     """Application settings populated from environment variables and ``.env``.
 
     Field names map directly to env var names (uppercased). For example,
@@ -966,14 +966,16 @@ class Settings(AeatIntegrationSettings):
         default_factory=_default_status_detail_url_template,
         description=(
             "URL path template for an expediente detail page. "
-            "Must contain '{expediente_id}'. Overrideable per campaign."
+            "Must contain '{expediente_id}'. Override only when AEAT changes "
+            "the corresponding route."
         ),
     )
     aeat_status_notificaciones_path: str = Field(
         default_factory=_default_status_notificaciones_path,
         description=(
             "URL path for the 'Mis notificaciones' listing page. "
-            "Joined against aeat_base_url. Overrideable for campaign drift."
+            "Joined against aeat_base_url. Override only when AEAT changes "
+            "the corresponding route."
         ),
     )
 
@@ -990,7 +992,11 @@ class Settings(AeatIntegrationSettings):
         ge=1,
         description="Retention window in days for per-run trace directories; older run directories are pruned",
     )
-
+    cadrumo_runs_max_total_bytes: int = Field(
+        default=256 * 1024 * 1024,
+        ge=1,
+        description="Trace-store byte cap; after age pruning, remove oldest runs but always retain the newest",
+    )
     # ── Justificante parser ─────────────────────────────────────────────────
     cadrumo_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",

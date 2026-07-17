@@ -13,7 +13,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....core.resources import bundled_path
 
 _DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "scopes.toml")
@@ -21,7 +21,7 @@ _DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "sc
 ALL_TOKEN = "ALL"
 
 
-class UnknownScopeError(AeatError):
+class UnknownScopeError(CadrumoError):
     """Raised when a CLI-supplied scope is not in the shipped catalogue."""
 
 

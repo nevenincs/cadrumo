@@ -35,7 +35,6 @@ See Also:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import time
 from collections.abc import Mapping
@@ -65,7 +64,8 @@ from ._authenticator import (
     BrowserSessionFactory,
     BrowserSessionLike,
 )
-from ._browser_lifecycle import close_owned_browser_context, close_owned_browser_session
+from ._authenticator_types import _is_exact_active_provider_session
+from ._browser_lifecycle import _CloseIntentBarrier, close_owned_browser_context, close_owned_browser_session
 from ._clave_movil_metadata import ClaveMovilSessionMetadata
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_support import (
@@ -137,14 +137,18 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         self._settings = settings
         self._browser_session_factory = browser_session_factory
         self._navigation_timeout_ms = navigation_timeout_ms
-        self._lock = asyncio.Lock()
+        self._lifecycle = _CloseIntentBarrier()
         self._browser_session: BrowserSessionLike | None = None
         self._context: BrowserContextLike | None = None
         self._active_session: AeatSession | None = None
 
     # ── Protocol surface ────────────────────────────────────────────────────
 
-    async def authenticate(
+    async def authenticate(self) -> AeatSession:
+        """Run the provider-neutral Cl@ve Móvil login flow."""
+        return await self.authenticate_for_target(target_url=None)
+
+    async def authenticate_for_target(
         self,
         *,
         target_url: str | None = None,
@@ -158,7 +162,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         :class:`ClaveMovilSessionMetadata` and returns a session whose
         provider detail is :class:`ClaveMovilSessionDetail`.
         """
-        async with self._lock:
+        async with self._lifecycle.work():
             if self._active_session is not None:
                 raise AeatLoginAssertionError(
                     "ClaveMovilAuthProvider already has an active session; call close() before authenticating again",
@@ -207,7 +211,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         Returns:
             A 2-tuple of (:class:`AeatSession`, :class:`AeatLoginAssertion`).
         """
-        async with self._lock:
+        async with self._lifecycle.work():
             if self._active_session is not None:
                 raise AeatLoginAssertionError(
                     "ClaveMovilAuthProvider already has an active session; call close() first",
@@ -233,9 +237,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 )
 
             session_like = await self._resolve_browser_session()
+            self._browser_session = session_like
             context: BrowserContextLike | None = None
             try:
                 context = await session_like.create_context(storage_state=persisted.storage_state)
+                self._context = context
                 session = AeatSession(
                     authenticated_at=metadata.authenticated_at,
                     idle_deadline=metadata.idle_deadline,
@@ -262,7 +268,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 # read surface will use the session and fail as a read error
                 # if AEAT rejects it for the target application.
                 del target_url
-                assertion = await self.verify(session, target_url=None)
+                assertion = await self._verify_in_work(session, target_url=None)
                 # Refresh idle TTL on successful probe so long-running
                 # discovery sessions stay alive without re-auth. AEAT's
                 # own 18-minute idle window resets on every authenticated
@@ -300,7 +306,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     assertion.error_message,
                 )
                 return session, assertion
-            except Exception:  # cleanup on verify error then re-raise; Playwright+AeatError undocumented
+            except Exception:  # cleanup on verify error then re-raise; Playwright+CadrumoError undocumented
                 context_closed = await self._close_context(context, reason="verify cleanup")
                 closed = await self._close_browser_session(session_like)
                 self._browser_session = None if closed else session_like
@@ -308,7 +314,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 self._active_session = None
                 raise
 
-    async def verify(
+    async def verify(self, session: AeatSession) -> AeatLoginAssertion:
+        """Run the provider-neutral verification flow for ``session``."""
+        return await self.verify_for_target(session, target_url=None)
+
+    async def verify_for_target(
         self,
         session: AeatSession,
         *,
@@ -329,11 +339,30 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         Returns:
             An :class:`AeatLoginAssertion` describing the probe outcome.
         """
+        async with self._lifecycle.work():
+            return await self._verify_in_work(session, target_url=target_url)
+
+    async def _verify_in_work(
+        self,
+        session: AeatSession,
+        *,
+        target_url: str | None,
+    ) -> AeatLoginAssertion:
+        """Verify a session while the caller holds the provider work lease."""
         context = self._context
         if context is None:
             raise AeatLoginAssertionError(
                 "ClaveMovilAuthProvider.verify() requires an active browser context; call authenticate() first",
                 translated_message="adapters.auth.clave_movil.errors.verify_requires_active_context",
+            )
+        if not _is_exact_active_provider_session(
+            session,
+            self._active_session,
+            provider_kind=AuthProviderKind.CLAVE_MOVIL,
+            detail_type=ClaveMovilSessionDetail,
+        ):
+            raise AeatLoginAssertionError(
+                "ClaveMovilAuthProvider.verify() requires the exact active Cl@ve Móvil session",
             )
         session_landing_url = (
             session.provider_detail.landing_url
@@ -452,7 +481,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
 
     async def close(self) -> None:
         """Tear down any retained :class:`BrowserContextLike` and browser session."""
-        async with self._lock:
+        async with self._lifecycle.close():
             context_closed = await self._drop_context()
             browser_session_closed = await self._close_browser_session(self._browser_session)
             if browser_session_closed:
@@ -770,10 +799,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         attempt_context = self._attempt_context()
 
         session_like = await self._resolve_browser_session()
+        self._browser_session = session_like
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
             context = await session_like.create_context()
+            self._context = context
             page = await context.new_page()
             self._attach_dialog_autodismiss(page)
             try:
@@ -873,10 +904,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
                 except Exception as _exc:
                     log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
-            if not await self._close_context(context, reason="fresh-login cleanup"):
-                self._context = context
-            if not await self._close_browser_session(session_like):
-                self._browser_session = session_like
+            context_closed = await self._close_context(context, reason="fresh-login cleanup")
+            self._context = None if context_closed else context
+            session_closed = await self._close_browser_session(session_like)
+            self._browser_session = None if session_closed else session_like
             raise
 
         authenticated_at = now()
@@ -909,10 +940,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     _cleanup_exc,
                     exc_info=True,
                 )
-            if not await self._close_context(context, reason="persist-failure cleanup"):
-                self._context = context
-            if not await self._close_browser_session(session_like):
-                self._browser_session = session_like
+            context_closed = await self._close_context(context, reason="persist-failure cleanup")
+            self._context = None if context_closed else context
+            session_closed = await self._close_browser_session(session_like)
+            self._browser_session = None if session_closed else session_like
             raise
 
         session = self._fresh_login_session(
@@ -954,11 +985,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             )
 
         session_like = await self._resolve_browser_session()
+        self._browser_session = session_like
         context: BrowserContextLike | None = None
         try:
             context = await session_like.create_context(
                 storage_state=persisted.storage_state,
             )
+            self._context = context
             session = AeatSession(
                 authenticated_at=metadata.authenticated_at,
                 idle_deadline=metadata.idle_deadline,
@@ -975,7 +1008,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             self._context = context
             self._active_session = session
 
-            assertion = await self.verify(session, target_url=target_url)
+            assertion = await self._verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "
@@ -1006,7 +1039,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 else None,
             )
             return refreshed
-        except Exception:  # cleanup on resume error then re-raise; Playwright+AeatError undocumented
+        except Exception:  # cleanup on resume error then re-raise; Playwright+CadrumoError undocumented
             context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None
             self._context = None if context_closed else context

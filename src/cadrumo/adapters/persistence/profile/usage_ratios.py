@@ -39,6 +39,7 @@ from ....domain.usage_ratios import (
     derive_home_office_ratios_from_censo,
     usage_ratios_object_key,
 )
+from ..storage import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
@@ -50,8 +51,8 @@ __all__ = [
 ]
 
 _LOGGER = get_logger(__name__)
-_USAGE_RATIO_VERSION = 1
-_USAGE_RATIO_NAMESPACE = "cadrumo.domain.usage_ratios"
+_USAGE_RATIO_VERSION = USAGE_RATIO_PROFILE_NAMESPACE.schema_version
+_USAGE_RATIO_NAMESPACE = USAGE_RATIO_PROFILE_NAMESPACE.namespace
 
 
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:

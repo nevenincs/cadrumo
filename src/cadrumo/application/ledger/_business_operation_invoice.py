@@ -44,7 +44,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG, IntracomOperationType
 from ...core.config import Settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
@@ -71,11 +71,11 @@ class BusinessOperationInvoiceDirection(StrEnum):
     COLLECTIBLE_INVOICE = "collectible_invoice"
 
 
-class BusinessOperationInvoiceInputError(AeatError):
+class BusinessOperationInvoiceInputError(CadrumoError):
     """Raised when a CLI-supplied input violates the typed contract."""
 
 
-class BusinessOperationInvoiceNotFoundError(AeatError):
+class BusinessOperationInvoiceNotFoundError(CadrumoError):
     """Raised when a CLI lookup targets a missing record."""
 
 

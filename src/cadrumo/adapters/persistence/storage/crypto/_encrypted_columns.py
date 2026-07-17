@@ -27,7 +27,7 @@ All decorators and helpers resolve key bytes through
 :func:`~adapters.persistence.storage.master_key._active_session.get_active_master_key`
 on the active
 :class:`~adapters.persistence.storage.master_key._bucket_session.BucketSession`.
-Tests use :class:`~adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`,
+Tests use :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`,
 whose context manager enters a real session without touching the OS
 keychain or file backend.
 
@@ -74,13 +74,13 @@ class EncryptedPayload(BaseModel):
     data: object
 
 
-_AAD_STRING = b"aeat.column.encrypted_string.v1"
-_AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
-_AAD_JSON = b"aeat.column.encrypted_json.v1"
-_HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
+_AAD_STRING = b"cadrumo.column.encrypted_string.v1"
+_AAD_BYTES = b"cadrumo.column.encrypted_bytes.v1"
+_AAD_JSON = b"cadrumo.column.encrypted_json.v1"
+_HKDF_CONTEXT_COLUMN_LOOKUP = b"cadrumo.column.hashed_lookup.v1"
 
 
-_AAD_SECURE_OBJECT_PAYLOAD = b"aeat.secure-object.payload.v2"
+_AAD_SECURE_OBJECT_PAYLOAD = b"cadrumo.secure-object.payload.v2"
 
 
 def secure_object_payload_aad(namespace: str, object_key_digest: bytes, schema_version: int) -> bytes:

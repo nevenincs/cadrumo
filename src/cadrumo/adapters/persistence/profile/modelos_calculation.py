@@ -47,16 +47,16 @@ from ....domain.modelos import (
     assert_revision_snapshot_evidence_coverage,
     raise_catalogue_integrity_error,
 )
+from ..storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
-# namespace string preserved across rename to avoid orphaning persisted envelopes
-_CALCULATION_NAMESPACE = "cadrumo.domain.modelos.calculation_revisions"
-_CALCULATION_OBJECT_KEY = "catalogue"
-_CALCULATION_CATALOGUE_VERSION = 1
+_CALCULATION_NAMESPACE = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace
+_CALCULATION_OBJECT_KEY = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key()
+_CALCULATION_CATALOGUE_VERSION = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 

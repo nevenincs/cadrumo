@@ -2,27 +2,29 @@
 
 Rules in `.semgrep/rules/` enforce type-system and architectural discipline
 across the codebase. They prevent reintroduction of patterns that bypass
-the strict pydantic / typed-ID contracts established in `src/aeat/domain/`
-and `src/aeat/application/`.
+the strict pydantic / typed-ID contracts established in `src/cadrumo/domain/`
+and `src/cadrumo/application/`.
 
 ## Rules
 
 | File | Surface | Severity |
 |------|---------|----------|
-| `no-any-annotation.yml` | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
-| `no-dict-str-any.yml` | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
-| `no-cast-in-domain.yml` | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
-| `justify-ty-ignore.yml` | `src/aeat/` (excludes tests) | ERROR |
+| `no-any-annotation.yml` | `src/cadrumo/domain/`, `src/cadrumo/application/` | ERROR |
+| `no-dict-str-any.yml` | `src/cadrumo/domain/`, `src/cadrumo/application/` | ERROR |
+| `no-cast-in-domain.yml` | `src/cadrumo/domain/`, `src/cadrumo/application/` | ERROR |
 | `no-mapping-str-decimal-on-registry.yml` | Registry-tier models | ERROR |
-| `no-duplicate-ccaa-enum.yml` | Outside `domain/profile/_ccaa.py` | WARNING |
-| `no-duplicate-concept-models.yml` | `src/aeat/` (excludes tests) | WARNING |
+| `no-duplicate-ccaa-enum.yml` | Outside `domain/contribuyente/_ccaa.py` | ERROR |
+| `no-duplicate-concept-models.yml` | `src/cadrumo/` (excludes tests) | WARNING |
 
 ## CI invocation
 
-`semgrep --config .semgrep/rules/ --error src/aeat/`
+`semgrep --config .semgrep/rules/ --error src/cadrumo/`
 
 Failing rules are gating. Justified exceptions must use inline rule-id +
 rationale comments (semgrep `# nosem:<rule-id> reason: <why>`).
+Type-ignore rationale is enforced once, repository-wide, by
+`src/cadrumo/tests/test_type_ignore_rationale_inventory.py`; it is not
+duplicated as a Semgrep rule.
 
 ## Local dev
 

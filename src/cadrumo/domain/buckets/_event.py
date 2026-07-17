@@ -38,7 +38,7 @@ BucketActorLabel = Annotated[
 
 A non-empty string of at most 64 characters; trailing and leading
 whitespace is stripped at validation time. Typical values are the CLI
-command path (``"aeat.app.modelo.calculate"``) or an automated-agent
+command path (``"cadrumo.app.modelo.calculate"``) or an automated-agent
 slug (``"censo.sync"``).
 """
 _ObjectId = Annotated[

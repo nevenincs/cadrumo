@@ -20,7 +20,8 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Engine, text
 
 from ......core.config import Settings, override_settings
-from ... import EphemeralMasterKeyProvider, SensitivityClass
+from ......tests.master_key import EphemeralMasterKeyProvider
+from ... import SensitivityClass
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings

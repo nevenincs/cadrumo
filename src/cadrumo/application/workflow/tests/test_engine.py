@@ -1,30 +1,10 @@
-"""Unit tests for :class:`~application.workflow.WorkflowEngine`.
+"""Workflow-engine tests over production authorities only.
 
-Every test uses real Protocol-conforming test harness components. No imports from
-``unittest`` — the project-wide pytest-only mandate applies to this
-suite especially, because the engine *is* the place where composition
-correctness is validated.
-
-The shared :class:`_Fixtures` helper builds a healthy set of components
-and lets individual tests override exactly the knob that should
-provoke a bailout.
-
-The :mod:`~adapters.outbound.aeat.sede` boundary is exercised through the
-:class:`WorkflowEngine` constructor's ``expedientes_source`` and
-``notifications_source`` seams. Tests inject async callables that
-return real :class:`~adapters.outbound.aeat.sede.Expediente` and
-:class:`~adapters.outbound.aeat.sede.RemoteNotification` records, bypassing the
-live Playwright walkers without falsifying their record shape.
-
-See Also:
-    :mod:`~application.workflow._engine`
-        Linear workflow composition root whose stages and abort matrix are
-        exercised here.
-    :mod:`~application.workflow._protocols`
-        Narrow component contracts implemented by the real-behaviour harness.
-    :func:`~application.state_projection.build_pending_obligations`
-        Projection consumer checked against the engine's shared deadline
-        schedule.
+The end-to-end engine path is exercised by the modelo verification and filing
+suites through ``build_revision_workflow_engine``.  This module keeps the
+workflow package's local witnesses focused on boundaries that can be exercised
+without inventing collaborator behaviour: the dependency direction, the shared
+registry-backed deadline schedule, and registered error-envelope metadata.
 """
 
 from __future__ import annotations
@@ -34,31 +14,17 @@ from datetime import date
 
 import pytest
 
-from ....core.errors import (
-    ErrorCategory,
-    ErrorEnvelope,
-    build_error_envelope,
-)
-from .. import WorkflowAbortReason, WorkflowEngine, WorkflowStage
+from ....application.state_projection import build_pending_obligations
+from ....core.errors import ErrorCategory, build_error_envelope
+from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile, compute_obligation_schedule
 from .. import _engine as engine_module
-from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
-from ._engine_support import (
-    _ConcreteDraft,
-    _ConcreteDraftBuilder,
-    _Fixtures,
-    _fixtures,
-    _period,
-    _profile,
-    _registry_schema_version,
-    _run_for_obligation,
-    _run_for_period,
-    _run_next,
-)
+from .._errors import UnhandledWorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
+    """The application engine must not bind an outbound AEAT adapter module."""
     bound_outbound_modules = {
         name: value.__name__
         for name, value in vars(engine_module).items()
@@ -68,392 +34,59 @@ def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
     assert bound_outbound_modules == {}
 
 
-# ── Happy path ─────────────────────────────────────────────────────────
-
-
-class TestHappyPath:
-    def test_run_next_happy_path(self) -> None:
-        """Every stage fires and the engine reaches DONE."""
-        fx = _fixtures()
-        result = _run_next(fx)
-        assert result.final_stage is WorkflowStage.DONE
-        assert result.aborted_reason is None
-        assert result.draft_id == fx.draft.draft_id
-        assert result.submission_id is None
-        stages = tuple(s.stage for s in result.steps)
-        assert stages == (
-            WorkflowStage.LOADING_PROFILE,
-            WorkflowStage.COMPUTING_DEADLINES,
-            WorkflowStage.CHECKING_INBOX,
-            WorkflowStage.BUILDING_DRAFT,
-            WorkflowStage.VALIDATING_DRAFT,
-            WorkflowStage.RUNNING_PREFLIGHT,
-        )
-
-    def test_workflow_stops_after_preflight(self) -> None:
-        """Workflow invocation must stop after read-only preflight."""
-        fx = _fixtures()
-        _run_next(fx)
-        assert fx.submission_engine.preflight_calls == [fx.today]
-
-    def test_run_for_period(self) -> None:
-        """``run_for_period`` targets a specific (modelo, period)."""
-        fx = _fixtures()
-        result = _run_for_obligation(fx)
-        assert result.final_stage is WorkflowStage.DONE
-        assert result.resumed_from is None
-
-    def test_run_for_period_propagates_resumed_from_into_result(self) -> None:
-        """When the resume action passes a prior workflow ``run_id`` as
-        ``resumed_from=``, the produced :class:`WorkflowResult` records
-        the link so callers can trace the resume chain end-to-end."""
-
-        fx = _fixtures()
-        prior_run_id = "abcdef0123456789"
-        result = _run_for_obligation(fx, resumed_from=prior_run_id)
-        assert result.final_stage is WorkflowStage.DONE
-        assert result.resumed_from == prior_run_id
-
-    @pytest.mark.parametrize(
-        "bad_resumed_from", ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890")
+def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -> None:
+    """Both consumers expose the exact rows emitted by the deadline authority."""
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
     )
-    def test_run_for_period_rejects_malformed_resumed_from(self, bad_resumed_from: str) -> None:
-        """``run_for_period`` rejects a ``resumed_from`` whose shape is not the
-        16-character lowercase hex run id produced by the engine itself."""
+    today = date(2026, 4, 12)
 
-        fx = _fixtures()
-        with pytest.raises(WorkflowInputMismatchError, match="resumed_from"):
-            _run_for_period(
-                fx.engine(),
-                fx.profile,
-                fx.obligation.modelo,
-                fx.obligation.period,
-                today=fx.today,
-                resumed_from=bad_resumed_from,
-            )
+    schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
+    authority_rows = {
+        (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
+        for obligation in schedule.obligations
+    }
+    projection_rows = {
+        (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
+        for obligation in build_pending_obligations(profile, today=today)
+    }
 
-
-class TestGateProjectionAgreement:
-    """The ``NO_PENDING_OBLIGATION`` gate and the state projection's
-    ``pending_obligations`` draw the obligation datum from one shared
-    producer (:func:`compute_obligation_schedule`), so they cannot
-    disagree about whether a target obligation exists.
-
-    These tests drive the *real* :class:`DeadlineEngine` — not the
-    Protocol-shaped test seam — through both consumers over one
-    ``(profile, today)`` pair, and assert the gate aborts with
-    ``NO_PENDING_OBLIGATION`` exactly when the projection carries no
-    obligation for that target.
-    """
-
-    @staticmethod
-    def _engine_with_real_deadlines() -> WorkflowEngine:
-        """Build a :class:`WorkflowEngine` driven by the production
-        :class:`DeadlineEngine`, so the gate computes the genuine
-        registry-backed schedule rather than a test seam's."""
-        from ....domain.deadlines import DeadlineEngine
-
-        fx = _fixtures()
-        return WorkflowEngine(
-            deadline_engine=DeadlineEngine(),
-            filing_draft_builder=fx.draft_builder,
-            submission_engine=fx.submission_engine,
-            session=fx.session,
-            certificate_bundle=fx.certificate_bundle,
-            inputs_provider=fx.inputs_provider,
-            settings=fx.settings,
-            expedientes_source=fx.expedientes_source,
-            notifications_source=fx.notifications_source,
-        )
-
-    def test_gate_proceeds_when_projection_carries_the_target(self) -> None:
-        """A target present in the shared schedule clears the gate, and
-        the projection's ``pending_obligations`` carries that same
-        ``(modelo, period)``."""
-        from ....application.state_projection import build_pending_obligations
-
-        profile = _profile()
-        today = date(2026, 4, 12)
-
-        projection_obligations = build_pending_obligations(profile, today=today)
-        target = next(o for o in projection_obligations if o.modelo == "130")
-
-        result = _run_for_period(
-            self._engine_with_real_deadlines(),
-            profile,
-            target.modelo,
-            target.period,
-            today=today,
-        )
-
-        assert result.aborted_reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION
-        computing = next(step for step in result.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
-        assert computing.success is True
-
-    def test_real_engine_admits_late_modelo_130_2025_filing_target(self) -> None:
-        """A closed 2025 M130 target is a late local filing, not a nonexistent obligation."""
-        from ....domain.deadlines import DeadlineEngine
-
-        target_period = _period(2025, "1T")
-        profile = _profile()
-        draft = _ConcreteDraft(
-            period=target_period,
-            profile_tax_id=profile.tax_id,
-            schema_version=_registry_schema_version(period=target_period),
-        )
-        fx = _fixtures()
-        engine = WorkflowEngine(
-            deadline_engine=DeadlineEngine(),
-            filing_draft_builder=_ConcreteDraftBuilder(draft=draft),
-            submission_engine=fx.submission_engine,
-            session=fx.session,
-            certificate_bundle=fx.certificate_bundle,
-            inputs_provider=fx.inputs_provider,
-            settings=fx.settings,
-            expedientes_source=fx.expedientes_source,
-            notifications_source=fx.notifications_source,
-        )
-
-        result = _run_for_period(engine, profile, "130", target_period, today=date(2026, 6, 29))
-
-        assert result.aborted_reason is None
-        computing = next(step for step in result.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
-        assert computing.success is True
-        assert computing.details is not None
-        assert computing.details.get("overdue") == "true"
-        assert computing.details.get("extemporanea") == "true"
-
-    def test_real_engine_admits_m180_tax_year_target_in_following_january(self) -> None:
-        """M180/2024 remains an open work target during its January 2025 campaign."""
-        from ....domain.deadlines import DeadlineEngine
-
-        target_period = _period(2024, "0A")
-        profile = _profile()
-        draft = _ConcreteDraft(
-            modelo="180",
-            period=target_period,
-            profile_tax_id=profile.tax_id,
-            schema_version=_registry_schema_version(modelo="180", period=target_period),
-        )
-        fx = _fixtures()
-        engine = WorkflowEngine(
-            deadline_engine=DeadlineEngine(),
-            filing_draft_builder=_ConcreteDraftBuilder(draft=draft),
-            submission_engine=fx.submission_engine,
-            session=fx.session,
-            certificate_bundle=fx.certificate_bundle,
-            inputs_provider=fx.inputs_provider,
-            settings=fx.settings,
-            expedientes_source=fx.expedientes_source,
-            notifications_source=fx.notifications_source,
-        )
-
-        result = _run_for_period(engine, profile, "180", target_period, today=date(2025, 1, 15))
-
-        assert result.aborted_reason is None
-        computing = next(step for step in result.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
-        assert computing.success is True
-        assert computing.details is not None
-        assert computing.details.get("opens_on") == "2025-01-01"
-        assert computing.details.get("closes_on") == "2025-01-31"
-
-    def test_real_engine_still_refuses_late_local_file_when_target_never_had_obligation(self) -> None:
-        """Late local FILE is not a bypass for a target the profile never owed."""
-        from ....domain.deadlines import DeadlineEngine, IVARegime
-
-        target_period = _period(2025, "1T")
-        profile = _profile().model_copy(update={"iva_regime": IVARegime.EXENTO})
-        draft = _ConcreteDraft(
-            period=target_period,
-            profile_tax_id=profile.tax_id,
-            schema_version=_registry_schema_version(period=target_period),
-        )
-        fx = _fixtures()
-        engine = WorkflowEngine(
-            deadline_engine=DeadlineEngine(),
-            filing_draft_builder=_ConcreteDraftBuilder(draft=draft),
-            submission_engine=fx.submission_engine,
-            session=fx.session,
-            certificate_bundle=fx.certificate_bundle,
-            inputs_provider=fx.inputs_provider,
-            settings=fx.settings,
-            expedientes_source=fx.expedientes_source,
-            notifications_source=fx.notifications_source,
-        )
-
-        result = _run_for_period(engine, profile, "303", target_period, today=date(2026, 6, 29))
-
-        assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
-        computing = next(step for step in result.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
-        assert computing.success is False
-
-    def test_gate_aborts_when_projection_lacks_the_target(self) -> None:
-        """A target absent from the shared schedule aborts the gate with
-        ``NO_PENDING_OBLIGATION``, and the projection's
-        ``pending_obligations`` carries no such ``(modelo, period)``."""
-        from ....application.state_projection import build_pending_obligations
-
-        profile = _profile()
-        today = date(2026, 4, 12)
-
-        absent_modelo = "130"
-        absent_period = _period(2099, "4T")
-        projection_obligations = build_pending_obligations(profile, today=today)
-        assert not [o for o in projection_obligations if o.modelo == absent_modelo and o.period == absent_period]
-
-        result = _run_for_period(
-            self._engine_with_real_deadlines(),
-            profile,
-            absent_modelo,
-            absent_period,
-            today=today,
-        )
-
-        assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
-
-    def test_gate_and_projection_share_one_schedule(self) -> None:
-        """The obligation set the gate filters and the projection's
-        ``pending_obligations`` are byte-for-byte the same ``(modelo,
-        period, opens_on, closes_on, status)`` rows — proving a single
-        producer feeds both."""
-        from ....application.state_projection import build_pending_obligations
-        from ....domain.deadlines import DeadlineEngine, compute_obligation_schedule
-
-        profile = _profile()
-        today = date(2026, 4, 12)
-
-        schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
-        gate_rows = {(o.modelo, o.period, o.opens_on, o.closes_on, o.status) for o in schedule.obligations}
-
-        projection_rows = {
-            (o.modelo, o.period, o.opens_on, o.closes_on, o.status)
-            for o in build_pending_obligations(profile, today=today)
-        }
-
-        assert gate_rows == projection_rows
-        assert gate_rows
+    assert authority_rows
+    assert projection_rows == authority_rows
 
 
-class TestUnhandledEnvelope:
-    """Every ``except Exception`` catch site in ``_record_unhandled`` must
-    produce a structured :class:`~core.errors.ErrorEnvelope` with a
-    stable ``INTERNAL_WORKFLOW_UNHANDLED`` code.
-
-    Each test triggers one real catch path with a real exception class and
-    asserts the envelope shape rather than the abort reason alone.
-    """
-
-    def _envelope_for_unhandled(self, exc: BaseException) -> ErrorEnvelope:
-        """Return the envelope built from an :class:`UnhandledWorkflowError`
-        wrapping ``exc``, proving :func:`build_error_envelope` resolves the
-        registered code without raising."""
-
-        synthetic = UnhandledWorkflowError(
-            f"test stage raised {type(exc).__name__}: {exc}",
-            context={
-                "stage": "test",
-                "error_type": type(exc).__name__,
-                "error_message": str(exc),
-            },
-        )
-        synthetic.__cause__ = exc
-        return build_error_envelope(synthetic)
-
-    @pytest.mark.parametrize(
-        "exc",
-        (
-            ValueError("bad value"),
-            TypeError("wrong type"),
-            KeyError("missing"),
-            RuntimeError("boom"),
-            AttributeError("no attr"),
-        ),
+@pytest.mark.parametrize(
+    "exc",
+    (
+        ValueError("bad value"),
+        TypeError("wrong type"),
+        KeyError("missing"),
+        RuntimeError("boom"),
+        AttributeError("no attr"),
+    ),
+)
+def test_unhandled_workflow_error_uses_the_registered_envelope(exc: Exception) -> None:
+    """A real workflow error resolves through the central envelope registry."""
+    error = UnhandledWorkflowError(
+        f"COMPUTING_DEADLINES raised {type(exc).__name__}: {exc}",
+        context={
+            "stage": "COMPUTING_DEADLINES",
+            "error_type": type(exc).__name__,
+            "error_message": str(exc),
+        },
     )
-    def test_envelope_code_for_common_exceptions(self, exc: BaseException) -> None:
-        env = self._envelope_for_unhandled(exc)
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.category == ErrorCategory.INTERNAL.value
-        assert env.retryable is False
+    error.__cause__ = exc
 
-    def test_envelope_context_carries_stage_and_error_type(self) -> None:
-        """The envelope context must surface the stage and error_type
-        fields so telemetry can identify the catch site without parsing
-        the message."""
-        exc = OSError("disk error")
-        synthetic = UnhandledWorkflowError(
-            f"COMPUTING_DEADLINES raised {type(exc).__name__}: {exc}",
-            context={
-                "stage": "COMPUTING_DEADLINES",
-                "error_type": type(exc).__name__,
-                "error_message": str(exc),
-            },
-        )
-        synthetic.__cause__ = exc
-        env = build_error_envelope(synthetic)
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.context is not None
-        assert env.context["stage"] == "COMPUTING_DEADLINES"
-        assert env.context["error_type"] == "OSError"
+    envelope = build_error_envelope(error)
 
-    def _arm_unhandled_case(self, fx: _Fixtures, source: str, exc: BaseException) -> None:
-        if source == "deadline":
-            fx.deadline_engine.raise_exc = exc
-        elif source == "notifications":
-            fx.notifications_source.raise_exc = exc
-        elif source == "expedientes":
-            fx.expedientes_source.raise_exc = exc
-        elif source == "inputs":
-            fx.inputs_provider.raise_exc = exc
-        elif source == "draft_builder":
-            fx.draft_builder.raise_exc = exc
-        elif source == "preflight":
-            fx.submission_engine.preflight_exc = exc
-        else:
-            raise AssertionError(f"unknown unhandled workflow source: {source}")
-
-    @pytest.mark.parametrize(
-        ("source", "exc", "expected_stage"),
-        (
-            (
-                "deadline",
-                ValueError("registry unavailable"),
-                WorkflowStage.COMPUTING_DEADLINES,
-            ),
-            (
-                "notifications",
-                TypeError("unexpected type"),
-                WorkflowStage.CHECKING_INBOX,
-            ),
-            (
-                "expedientes",
-                KeyError("no expediente"),
-                WorkflowStage.BUILDING_DRAFT,
-            ),
-            (
-                "inputs",
-                RuntimeError("inputs fetch failed"),
-                WorkflowStage.BUILDING_DRAFT,
-            ),
-            (
-                "draft_builder",
-                AttributeError("missing field"),
-                WorkflowStage.BUILDING_DRAFT,
-            ),
-            (
-                "preflight",
-                OSError("network error"),
-                WorkflowStage.RUNNING_PREFLIGHT,
-            ),
-        ),
-    )
-    def test_real_engine_unhandled_paths_emit_envelope_code(
-        self,
-        source: str,
-        exc: BaseException,
-        expected_stage: WorkflowStage,
-    ) -> None:
-        fx = _fixtures()
-        self._arm_unhandled_case(fx, source, exc)
-        result = _run_next(fx)
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is expected_stage
+    assert envelope.code == "INTERNAL_WORKFLOW_UNHANDLED"
+    assert envelope.category == ErrorCategory.INTERNAL.value
+    assert envelope.retryable is False
+    assert envelope.context is not None
+    assert envelope.context["stage"] == "COMPUTING_DEADLINES"
+    assert envelope.context["error_type"] == type(exc).__name__

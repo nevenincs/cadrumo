@@ -22,12 +22,13 @@ from ....adapters.persistence.storage.bucket import (
     provision_bucket_directory,
     write_manifest,
 )
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....domain.user_profile import UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.user_profile import register_minimal_profile
 
 _STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 50, tzinfo=UTC)
 

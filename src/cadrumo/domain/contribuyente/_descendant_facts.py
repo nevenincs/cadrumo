@@ -25,7 +25,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from datetime import date
-from typing import Literal, cast
+from typing import Literal
 
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing import parse_iso8601_date
@@ -34,6 +34,18 @@ from .family import DescendantInfo
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
 _GASTOS_REALES_2024_PATH = "renta_family.gastos_guarderia_reales_2024"
+
+
+def _discapacidad_grade(value: int | None) -> Literal[0, 33, 65] | None:
+    match value:
+        case 0:
+            return 0
+        case 33:
+            return 33
+        case 65:
+            return 65
+        case _:
+            return None
 
 
 def descendant_facts_from_list(
@@ -132,10 +144,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
             DescendantInfo(
                 birth_date=birth_date,
                 adoption_date=adoption_date,
-                discapacidad_grado=cast(  # CAST-RATIONALE-DISCAPACIDAD-GRADO-LITERAL-NARROW
-                    "Literal[0, 33, 65] | None",
-                    disc_val,
-                ),
+                discapacidad_grado=_discapacidad_grade(disc_val),
                 convive_con_contribuyente=convive,
                 custodia_compartida=custodia,
                 meses_madre_trabajo_2024=meses,
@@ -216,16 +225,10 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if nif_raw:
         nif = nif_raw.strip().upper()
 
-    # CAST-RATIONALE-DISCAPACIDAD-LITERAL:
-    # val validated against (0, 33, 65) above; int|None cannot be narrowed to
-    # Literal[0,33,65]|None by mypy without cast.
     return DescendantInfo(
         birth_date=birth_date,
         adoption_date=adoption_date,
-        discapacidad_grado=cast(  # CAST-RATIONALE-DISCAPACIDAD-GRADO-LITERAL-NARROW
-            "Literal[0, 33, 65] | None",
-            discapacidad_grado,
-        ),
+        discapacidad_grado=_discapacidad_grade(discapacidad_grado),
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,

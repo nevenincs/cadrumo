@@ -48,13 +48,13 @@ from ...application.modelo import (
 )
 from ...core import Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
-from ._common import activate_subcommand_output_language
+from ._common import activate_subcommand_output_language, active_bucket_id_or_refuse
 from ._modelo_aggregate_cli import register_aggregate_commands
 from ._modelo_amend_wizard_cli import register_amend_wizard_commands
 from ._modelo_audit_cli import audit_app as audit_app
@@ -267,15 +267,6 @@ def _require_active_profile() -> None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
 
 
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
-
-
 def _guard_foral_profile_ccaa() -> None:
     """Render the application foral-profile refusal for work creation."""
     guard_active_profile_foral_ccaa()
@@ -298,11 +289,11 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
         return ()
     try:
         return declared_modelo_period_tokens(modelo)
-    except AeatError:
+    except CadrumoError:
         return ()
     except Exception:
         _log.debug(
-            "_declared_period_tokens: unexpected non-AeatError suppressed for modelo=%r",
+            "_declared_period_tokens: unexpected non-CadrumoError suppressed for modelo=%r",
             modelo,
             exc_info=True,
         )
@@ -1251,7 +1242,7 @@ register_reconcile_commands(
     require_active_profile=_require_active_profile,
     resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
     resolve_default_actor=_resolve_default_actor,
-    active_bucket_id=_active_bucket_id,
+    active_bucket_id=active_bucket_id_or_refuse,
 )
 
 
@@ -1280,7 +1271,7 @@ register_projection_commands(
 )
 
 
-register_iva_wallet_commands(app, active_bucket_id=_active_bucket_id)
+register_iva_wallet_commands(app, active_bucket_id=active_bucket_id_or_refuse)
 
 
 register_maritime_commands(
@@ -1294,14 +1285,14 @@ register_maritime_commands(
 register_m036_commands(
     app,
     require_active_profile=_require_active_profile,
-    active_bucket_id=_active_bucket_id,
+    active_bucket_id=active_bucket_id_or_refuse,
 )
 
 
 register_m145_communication_commands(
     app,
     require_active_profile=_require_active_profile,
-    active_bucket_id=_active_bucket_id,
+    active_bucket_id=active_bucket_id_or_refuse,
     parse_casilla_override=_parse_casilla_override,
     resolve_default_actor=_resolve_default_actor,
 )

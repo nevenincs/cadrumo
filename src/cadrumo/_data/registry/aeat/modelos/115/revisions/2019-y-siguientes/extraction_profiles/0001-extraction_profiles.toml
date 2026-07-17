@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 # (regex: ^\s*<N>\b...<amount>$) cannot match any casilla from a real AEAT M115 PDF.
 #
 # Label patterns grounded against the AEAT-published Diseno de Registro (DR) XLS:
-#   src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_115/files/
+#   src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_115/files/
 #     01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls
 #   Sheet "DR 11501", rows 16-20 (field descriptions, Windows-1252 decoded):
 #     row 16: "Retenciones e ingresos a cuenta. Numero perceptores [01]"
@@ -44,7 +44,7 @@ source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 # collide: the regex ^\s*Retenciones... does not match a line beginning with "Base".
 #
 # Synthetic round-trip fixture:
-#   src/aeat/tests/fixtures/justificantes/115/2024-1T.pdf
+#   src/cadrumo/tests/fixtures/justificantes/115/2024-1T.pdf
 
 [[revisions."2019-y-siguientes".extraction_profiles]]
 id = "modelo-115-declaracion-pdf"

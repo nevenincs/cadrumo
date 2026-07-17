@@ -6,7 +6,6 @@ import pytest
 from pydantic import ValidationError
 
 from ..runtime import ModeloOperatorProfile, filing_profile_from_taxpayer
-from ..testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -23,7 +22,7 @@ def test_modelo_operator_profile_uses_subject_tax_id_validation() -> None:
 
 def test_filing_profile_projection_keeps_validated_subject_tax_id() -> None:
     """The taxpayer-profile projector preserves the checked identity boundary."""
-    source = ModeloTestProfile(tax_id="12345678Z", display_name="Source identity")
+    source = ModeloOperatorProfile(tax_id="12345678Z", display_name="Source identity")
 
     projected = filing_profile_from_taxpayer(source, display_name=source.display_name)
 
@@ -34,4 +33,4 @@ def test_filing_profile_projection_keeps_validated_subject_tax_id() -> None:
 def test_modelo_test_profile_uses_subject_tax_id_validation() -> None:
     """The public filing test helper cannot smuggle malformed tax IDs."""
     with pytest.raises(ValidationError):
-        ModeloTestProfile(tax_id="12345678A", display_name="Invalid fixture identity")
+        ModeloOperatorProfile(tax_id="12345678A", display_name="Invalid fixture identity")

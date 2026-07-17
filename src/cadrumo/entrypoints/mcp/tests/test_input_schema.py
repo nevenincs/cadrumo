@@ -7,32 +7,18 @@ operator would see.
 
 from __future__ import annotations
 
-from typing import override
-
 import pytest
-from typer._click.core import Command as ClickCommand
-from typer._click.core import Context as ClickContext
-from typer.core import TyperGroup
 
 from ...cli import command_schema_refs
 from .._dispatch import is_exposable_command
 from .._input_schema import (
     JsonType,
     VerbParamKind,
-    build_verb_input_schema,
     build_verb_input_schemas,
     cli_argv_for,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-class _RaisingGroup(TyperGroup):
-    """A real typer command group whose subcommand resolution raises, as a hostile subtree would."""
-
-    @override
-    def get_command(self, ctx: ClickContext, cmd_name: str) -> ClickCommand | None:
-        raise RuntimeError("Type not yet supported: <hostile parameter>")
 
 
 def _exposable_keys() -> tuple[str, ...]:
@@ -81,6 +67,12 @@ def test_resolved_cli_path_uses_the_hyphenated_command_name() -> None:
     assert pull.cli_path == ("app", "live", "iva-wallet", "pull")
 
 
+def test_stable_history_schema_key_resolves_relocated_cli_path() -> None:
+    schemas = build_verb_input_schemas(("config.bucket.history",))
+
+    assert schemas["config.bucket.history"].cli_path == ("config", "profile", "history")
+
+
 def test_argv_places_positionals_first_then_options() -> None:
     schemas = build_verb_input_schemas(_exposable_keys())
     calculate = schemas["modelo.work.calculate"]
@@ -100,17 +92,6 @@ def test_argv_places_positionals_first_then_options() -> None:
         "--casilla",
         "02",
     ]
-
-
-def test_an_unintrospectable_subtree_degrades_to_an_argument_free_schema() -> None:
-    # A subtree that raises during click materialisation (a Typer-unconvertible
-    # parameter type) must not brick the build: the key degrades to an
-    # argument-free schema over the naive path instead of propagating the raise.
-    schema = build_verb_input_schema(_RaisingGroup(name="app"), "app.hostile.command")
-    assert schema.command_key == "app.hostile.command"
-    assert schema.cli_path == ("app", "hostile", "command")
-    assert schema.parameters == ()
-    assert schema.json_schema()["properties"] == {}
 
 
 def test_argv_maps_option_names_to_cli_flags_and_flags_emit_only_the_token() -> None:

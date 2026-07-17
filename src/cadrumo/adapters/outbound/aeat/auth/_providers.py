@@ -202,7 +202,7 @@ class BrowserContextKwargs(TypedDict, total=False):
     can return a partial mapping.
     """
 
-    client_certificates: list[dict[str, str]]
+    client_certificates: list[dict[str, str | bytes]]
 
 
 @runtime_checkable
@@ -248,7 +248,7 @@ class CertificateContextProvisioner:
             "client_certificates": [
                 {
                     "origin": AEAT_CERTIFICATE_PROTECTED_ORIGIN,
-                    "pfxPath": str(self._cert.source_path),
+                    "pfx": self._cert._pkcs12_bytes,
                     "passphrase": self._cert._password.get_secret_value(),
                 },
             ],

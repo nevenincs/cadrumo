@@ -263,7 +263,6 @@ class AeatLiveSafety(_Frozen):
     auth_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     wallet_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     declarations_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
-    csv_verify_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     consult_oracle_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     renta_web_open_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
 
@@ -271,7 +270,6 @@ class AeatLiveSafety(_Frozen):
         "auth_browser_action_patterns",
         "wallet_browser_action_patterns",
         "declarations_browser_action_patterns",
-        "csv_verify_browser_action_patterns",
         "consult_oracle_browser_action_patterns",
         "renta_web_open_browser_action_patterns",
         mode="before",

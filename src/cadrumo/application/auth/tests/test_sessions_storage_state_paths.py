@@ -22,16 +22,28 @@ tautologies.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.outbound.aeat.auth import _session_store
 from ....core import AuthProviderKind
+from ....core.config import override_settings
+from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
+from ...user_profile import profile_create_storage_span, profile_storage_session
+from ...workflow import workflow_state_repository
+from .._operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from .._sessions import storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PROFILE_A = "11111111-1111-4111-8111-111111111111"
+_PROFILE_B = "22222222-2222-4222-8222-222222222222"
 
 
 @pytest.fixture(autouse=True, name="_active_profile")
@@ -117,3 +129,82 @@ def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None
     attr = "storage_state"
     with pytest.raises(ValidationError, match="frozen"):
         setattr(result, attr, tmp_path / "other.json")
+
+
+# ---------------------------------------------------------------------------
+# Cross-bucket byte-identity: a provider or all-provider auth deletion in one
+# bucket must never touch the on-disk encrypted session state of an unrelated
+# bucket. Sessions are encrypted secure objects in each bucket's own storage,
+# so the durable proof is that the unrelated bucket's on-disk tree stays
+# byte-for-byte identical across the operation.
+# ---------------------------------------------------------------------------
+
+
+def _hash_bucket_tree(storage_root: Path, bucket_id: str) -> str:
+    """Return a stable fingerprint of every on-disk byte under one bucket's directory."""
+    bucket_dir = storage_root / "buckets" / bucket_id
+    digest = hashlib.sha256()
+    for file in sorted(p for p in bucket_dir.rglob("*") if p.is_file()):
+        digest.update(file.relative_to(bucket_dir).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(file.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _create_profile_with_certificate_session(bucket_id: str) -> None:
+    """Register a bucket, configure the certificate provider, and persist a real session."""
+    with profile_create_storage_span(bucket_id):
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=bucket_id))
+        configure_operator_auth("certificate")
+        session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+        _session_store.save(
+            session_path,
+            storage_state={"cookies": [], "origins": []},
+            metadata={"provider_kind": "certificate"},
+        )
+        assert _session_store.exists(session_path)
+
+
+def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_path: Path) -> None:
+    """A provider-scoped logout in bucket A leaves bucket B's session storage byte-identical."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, override_settings(cadrumo_active_profile=None):
+        _create_profile_with_certificate_session(_PROFILE_A)
+        _create_profile_with_certificate_session(_PROFILE_B)
+        unrelated_before = _hash_bucket_tree(storage_root, _PROFILE_B)
+
+        with profile_storage_session(_PROFILE_A):
+            session_a = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+            assert _session_store.exists(session_a)
+            result = logout_operator_auth(provider="certificate")
+            assert _session_store.exists(session_a) is False
+
+        unrelated_after = _hash_bucket_tree(storage_root, _PROFILE_B)
+
+        assert result.removed_sessions == 1
+        assert unrelated_after == unrelated_before
+
+        with profile_storage_session(_PROFILE_B):
+            assert _session_store.exists(storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state)
+
+
+def test_all_provider_reset_leaves_unrelated_bucket_session_bytes_identical(tmp_path: Path) -> None:
+    """An all-provider reset in bucket A leaves bucket B's session storage byte-identical."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, override_settings(cadrumo_active_profile=None):
+        _create_profile_with_certificate_session(_PROFILE_A)
+        _create_profile_with_certificate_session(_PROFILE_B)
+        unrelated_before = _hash_bucket_tree(storage_root, _PROFILE_B)
+
+        with profile_storage_session(_PROFILE_A):
+            session_a = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+            assert _session_store.exists(session_a)
+            result = reset_operator_auth(all_providers=True)
+            assert _session_store.exists(session_a) is False
+
+        unrelated_after = _hash_bucket_tree(storage_root, _PROFILE_B)
+
+        assert result.removed_sessions >= 1
+        assert unrelated_after == unrelated_before
+
+        with profile_storage_session(_PROFILE_B):
+            assert _session_store.exists(storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state)

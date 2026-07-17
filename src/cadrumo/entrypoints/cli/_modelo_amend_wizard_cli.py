@@ -21,17 +21,14 @@ an export file itself, mirroring how ``work wizard`` hands off to
 ``work calculate`` rather than re-deriving casilla values.
 
 A real interactive terminal is required by default, reusing the exact
-console-support detection and scripted-answer test-injection
+console-support detection and dynamic-answer protocol
 :mod:`_modelo_work_wizard_cli` establishes for the calculation-draft wizard
-(``_QuestionaryTextPrompter`` / ``_ScriptedTextPrompter`` / the
-``_TextAnswerPrompter`` protocol / the contextvar override pattern).
+(``_QuestionaryTextPrompter`` and the ``_TextAnswerPrompter`` protocol).
 """
 
 from __future__ import annotations
 
-import contextvars
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Annotated, Any
@@ -68,32 +65,7 @@ from ._modelo_work_wizard_cli import (
 if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, ModeloRecord, WorkUnit
 
-# Re-exported so tests can drive this wizard's scripted answers with the same
-# prompter type ``work wizard`` uses, without importing the sibling module
-# directly (mirrors ``override_wizard_prompter``'s public contract).
-__all__ = ["override_amend_wizard_prompter", "register_amend_wizard_commands"]
-
-
-_prompter_override: contextvars.ContextVar[_TextAnswerPrompter | None] = contextvars.ContextVar(
-    "modelo_amend_wizard_prompter_override",
-    default=None,
-)
-
-
-@contextmanager
-def override_amend_wizard_prompter(prompter: _TextAnswerPrompter) -> Iterator[None]:
-    """Route the next ``work amend-wizard`` invocation's prompts through ``prompter``.
-
-    Test-only entry point, mirroring
-    :func:`~._modelo_work_wizard_cli.override_wizard_prompter`. A real CLI
-    invocation never calls this; it always falls back to
-    :class:`~._modelo_work_wizard_cli._QuestionaryTextPrompter`.
-    """
-    token = _prompter_override.set(prompter)
-    try:
-        yield
-    finally:
-        _prompter_override.reset(token)
+__all__ = ["register_amend_wizard_commands"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,7 +145,6 @@ def register_amend_wizard_commands(
             bucket_id=bucket_id,
             actor=actor,
             output_language_opt=output_language_opt,
-            prompter=_prompter_override.get(),
         )
 
 
@@ -189,7 +160,6 @@ def run_modelo_work_amend_wizard(
     bucket_id: str | None,
     actor: str | None,
     output_language_opt: OutputLanguage | None,
-    prompter: _TextAnswerPrompter | None,
 ) -> None:
     deps.activate_output_language(ctx, output_language_opt)
     deps.require_active_profile()
@@ -223,7 +193,7 @@ def run_modelo_work_amend_wizard(
             ),
         ) from None
 
-    active_prompter = prompter if prompter is not None else _QuestionaryTextPrompter()
+    active_prompter = _QuestionaryTextPrompter()
 
     try:
         casilla_rows = _baseline_casilla_rows(unit)

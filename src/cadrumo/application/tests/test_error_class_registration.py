@@ -1,7 +1,7 @@
 """Real-behavior tests for application error-class registration.
 
 Asserts that every application-facing error class in this module is:
-  - a registered :class:`~cadrumo.core.errors.AeatError` subclass
+  - a registered :class:`~cadrumo.core.errors.CadrumoError` subclass
   - bound in :data:`~cadrumo.core.errors.ERROR_REGISTRY`
   - round-trips through :func:`~cadrumo.core.errors.build_error_envelope`
     producing a non-empty ``error_code`` field
@@ -28,7 +28,7 @@ from pydantic import BaseModel, SecretStr
 from ...core import BindingSourceKind
 from ...core.errors import (
     ERROR_REGISTRY,
-    AeatError,
+    CadrumoError,
     build_error_envelope,
     get_registered_error_code,
 )
@@ -42,8 +42,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _assert_registered_and_roundtrip(cls: type) -> None:
-    """Assert cls is AeatError-derived, registered, and produces a valid envelope."""
-    assert issubclass(cls, AeatError), f"{cls.__qualname__} must inherit from AeatError"
+    """Assert cls is CadrumoError-derived, registered, and produces a valid envelope."""
+    assert issubclass(cls, CadrumoError), f"{cls.__qualname__} must inherit from CadrumoError"
     code_obj = get_registered_error_code(cls)
     assert code_obj.code in ERROR_REGISTRY, f"{cls.__qualname__} error code {code_obj.code!r} not in ERROR_REGISTRY"
     instance = cls("registration-test sentinel")
@@ -278,7 +278,7 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
         cadrumo_cert_critical_days=30,
     )
 
-    with pytest.raises(AeatError, match=r"warn_days.*critical_days") as exc_info:
+    with pytest.raises(CadrumoError, match=r"warn_days.*critical_days") as exc_info:
         probe_provider_configuration(AuthProviderKind.CERTIFICATE.value, settings=settings)
     assert get_registered_error_code(exc_info.value).code == "AUTH_AUTH_VALIDATION"
 

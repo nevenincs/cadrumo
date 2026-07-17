@@ -19,7 +19,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 # UE-EEE branch's base_imponible (manual rendimientos_integros, optionally
 # reduced by gastos_deducibles per art 24.6) is computed from
 # rendimientos_integros via m210-base-imponible-2025
-# (src/aeat/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml).
+# (src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml).
 # A positive rendimientos_integros with a zero base_imponible is unexpected for
 # this branch (a registry/formula regression, not a routine operator choice),
 # so the guard is ADVISORY: the consequent IS formula-derived, but a

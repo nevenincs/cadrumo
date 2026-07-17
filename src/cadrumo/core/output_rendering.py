@@ -31,11 +31,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG
-from .errors import AeatError
+from .errors import CadrumoError
 from .redaction import redact_for_cli_output, redact_structured_for_cli_output
 
 
-class OutputRenderingError(AeatError):
+class OutputRenderingError(CadrumoError):
     """Raised when command output cannot be rendered safely.
 
     Used after payload normalization when a value still cannot be serialized as
@@ -44,7 +44,7 @@ class OutputRenderingError(AeatError):
     """
 
 
-class OutputFormatRefusedError(AeatError):
+class OutputFormatRefusedError(CadrumoError):
     """Raised when a command requests an unsupported :class:`OutputFormat`."""
 
 

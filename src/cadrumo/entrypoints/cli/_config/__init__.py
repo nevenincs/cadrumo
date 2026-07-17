@@ -17,14 +17,14 @@ from ....application.workflow import read_profile_bucket as _read_profile_bucket
 from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
 from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-from ....core.errors import AeatError as _AeatError
+from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from .._common import _emit, _emit_envelope
+from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .._errors import command_error_boundary as _command_error_boundary
@@ -40,7 +40,6 @@ from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_bundle import register_profile_bundle_commands
 from ._profile_readiness import (
-    _assert_profile_record_present,
     _emit_profile_record_missing,
     _emit_profile_record_unreadable,
     _read_profile_record,
@@ -86,8 +85,16 @@ def config_root(
 ) -> None:
     """Render config-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
+        from .._config_payloads import ConfigRootResult
+
         document = _build_help_document("config")
-        _emit(ctx, document, _render_help_text(document).splitlines())
+        result = ConfigRootResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(
+            ctx,
+            command="root.config",
+            result=result,
+            lines=_render_help_text(document).splitlines(),
+        )
         raise typer.Exit()
 
 
@@ -297,7 +304,7 @@ def config_profile_show(
             label=pointer.label,
         )
         raise typer.Exit(code=2) from exc
-    except _AeatError as exc:
+    except _CadrumoError as exc:
         _emit_profile_record_unreadable(
             ctx,
             profile_id=pointer.bucket_id,
@@ -1128,9 +1135,6 @@ _register_profile_capabilities(profile_app)
 _register_config_check(app)
 register_profile_bundle_commands(
     profile_app,
-    profile_state=_profile_state,
-    resolve_profile_by_label=_resolve_profile_by_label,
-    resolve_active_profile_pointer=_resolve_active_profile_pointer,
     atomic_create_profile=_atomic_create_profile,
 )
 
@@ -1150,7 +1154,6 @@ register_custody_commands(
     app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
     resolve_profile_by_label=_resolve_profile_by_label,
-    assert_profile_record_present=_assert_profile_record_present,
 )
 register_descendiente_commands(
     profile_app,

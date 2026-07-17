@@ -24,7 +24,7 @@ exception class names, secure-object storage layout, and per-call
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, override
+from typing import override
 
 from pydantic import BaseModel, Field
 
@@ -125,7 +125,7 @@ def _expedientes_repository(
     )
 
 
-class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot]):
+class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, ExpedientesCapture]):
     """Bucket-scoped persistence + read surface over expedientes snapshots.
 
     Structurally read-only per the live-AEAT charter. No submit, no
@@ -165,18 +165,17 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot])
         return max(snapshots, key=lambda s: s.captured_at)
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
-    # contract uses **kwargs to allow concrete subclasses to accept caller-
-    # specific keyword arguments without a shared typed parameter set.
-    def _derive_snapshot_id(self, **kwargs: Any) -> str:
-        return _derive_snapshot_id(kwargs["capture"])
+    def _derive_snapshot_id(self, capture: ExpedientesCapture) -> str:
+        return _derive_snapshot_id(capture)
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: StatelessSnapshotService[T]
-    # abstract _build_payload hook carries **kwargs: Any so concrete subclasses
-    # accept caller-specific keyword arguments without a shared typed set.
-    def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> PersistedExpedientesSnapshot:
-        capture: ExpedientesCapture = kwargs["capture"]
+    def _build_payload(
+        self,
+        *,
+        snapshot_id: str,
+        bucket_id: str,
+        capture: ExpedientesCapture,
+    ) -> PersistedExpedientesSnapshot:
         return PersistedExpedientesSnapshot(
             snapshot_id=snapshot_id,
             bucket_id=bucket_id,

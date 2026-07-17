@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import AeatError, build_error_envelope, resolve_error_message
+from ....core.errors import CadrumoError, build_error_envelope, resolve_error_message
 from ....core.resources import resources
 from .._calculate_input import (
     ModeloCalculateDecimalInputError,
@@ -26,7 +26,7 @@ def test_decimal_override_error_is_typed_registered_and_localized() -> None:
         _decimal("not-decimal", flag="--relation", key="iva_base")
 
     error = exc_info.value
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert error.translated_message == "application.modelo.errors.calculate_decimal_input_invalid"
     assert error.context == {"flag": "--relation", "key": "iva_base", "value": "not-decimal"}
     assert build_error_envelope(error).code
@@ -38,7 +38,7 @@ def test_empty_text_override_error_is_typed_registered_and_localized() -> None:
         _text_value("   ", key="tipo_renta")
 
     error = exc_info.value
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert error.translated_message == "application.modelo.errors.calculate_text_input_empty"
     assert error.context == {"key": "tipo_renta", "value": "   "}
     assert build_error_envelope(error).code
@@ -61,7 +61,7 @@ def test_m210_tipo_renta_fetch_gated_code_refuses_as_fetch_gated_not_invalid() -
         _validated_m210_tipo_renta_code("13", key="tipo_renta")
 
     error = exc_info.value
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert error.translated_message == "application.modelo.errors.calculate_m210_tipo_renta_fetch_gated"
     assert error.context is not None
     assert error.context["value"] == "13"
@@ -100,7 +100,7 @@ def test_unknown_relation_override_error_names_revision_relation_ids() -> None:
         _validated_relation_id("Bad Relation", relation_ids)
 
     error = exc_info.value
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert error.translated_message == "application.modelo.errors.calculate_relation_unknown"
     assert error.context is not None
     assert error.context["key"] == "Bad Relation"
@@ -113,7 +113,7 @@ def test_revision_pick_error_is_typed_registered_and_localized() -> None:
         ModeloRevisionPick(selector=ModeloCalculationRevisionSelector.EXPLICIT)
 
     error = exc_info.value
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert error.translated_message == "application.modelo.errors.revision_pick_explicit_id_required"
     assert build_error_envelope(error).code
     assert "calculation_revision_id" in resolve_error_message(error)

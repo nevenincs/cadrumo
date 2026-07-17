@@ -485,7 +485,7 @@ class TestSearchOptionSelection:
         tmp_path: Path,
     ) -> None:
         settings = Settings(cadrumo_token_dir=tmp_path)
-        profile = Profile(name="test-declarations", storage_state_path=tmp_path / "state.json")
+        profile = Profile(name="test-declarations")
         async with (
             shared_playwright_runtime() as playwright,
             opened_browser_page(playwright, settings, profile) as (page, _context),

@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     STORAGE_NAMESPACE_REGISTRY,
     UTC,
@@ -15,7 +16,6 @@ from ._secure_objects_support import (
     Base,
     ClassificationError,
     EnvelopeVersionError,
-    EphemeralMasterKeyProvider,
     Path,
     SecureObjectRecord,
     SecureObjectRepository,

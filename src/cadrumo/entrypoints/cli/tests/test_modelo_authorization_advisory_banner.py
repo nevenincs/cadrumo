@@ -51,7 +51,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _store_capital_withholding_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Unauthorized backend advisory profile",

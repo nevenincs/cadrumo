@@ -36,6 +36,7 @@ from ....application.user_profile import UserProfileLifecycleRepository
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .envelope_helpers import unwrap_envelope_notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -81,7 +82,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Descendiente entry surface test profile",
@@ -103,21 +104,6 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         ),
     )
     UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)
-
-
-def _create_work_unit(*, modelo: str, year: str, period: str, revision: str) -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", modelo,
-            "--year", year,
-            "--period", period,
-            "--revision", revision,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
 
 
 def _registry_first_tranche(year: int) -> Decimal:
@@ -157,7 +143,7 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
     assert list_payload["total"] == 1
     assert list_payload["descendientes"][0]["birth_date"] == "2015-04-01"
 
-    work_unit_id = _create_work_unit(modelo="100", year="2024", period="0A", revision="2024")
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
     calc_result = invoke_cached_cli(
         [
             "--format", "json",
@@ -192,7 +178,7 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_work_unit(modelo="100", year="2024", period="0A", revision="2024")
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
 
     calc_result = invoke_cached_cli(
         [
@@ -233,7 +219,7 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = _create_work_unit(modelo="100", year="2024", period="0A", revision="2024")
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
     calc_result = invoke_cached_cli(
         [
             "--format", "json",
@@ -319,7 +305,7 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
     assert list_result.exit_code == 0, list_result.output
     assert _payload(list_result.output)["total"] == 0
 
-    work_unit_id = _create_work_unit(modelo="100", year="2024", period="0A", revision="2024")
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
     calc_result = invoke_cached_cli(
         [
             "--format", "json",

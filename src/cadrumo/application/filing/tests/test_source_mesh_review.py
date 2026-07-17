@@ -51,7 +51,7 @@ from .. import (
     build_draft,
     build_runtime_schema_provider,
 )
-from ..testing import ModeloTestProfile
+from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -73,7 +73,7 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period=_PERIOD,
-        profile=ModeloTestProfile(tax_id="12345678Z", display_name="Source mesh review test"),
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Source mesh review test"),
         inputs={
             "01": Decimal("100"),
             "02": Decimal("25"),

@@ -1,17 +1,17 @@
 """Typed error hierarchy for corpus-manifest validation.
 
 Defines the leaf exceptions raised by the corpus-manifest loader and
-verifier. All inherit from :class:`core.errors.AeatError` so any
+verifier. All inherit from :class:`core.errors.CadrumoError` so any
 caller catching the framework's base error type also catches manifest
 failures.
 """
 
 from __future__ import annotations
 
-from ..errors import AeatError
+from ..errors import CadrumoError
 
 
-class CorpusManifestError(AeatError, ValueError):
+class CorpusManifestError(CadrumoError, ValueError):
     """Base error for any failure in corpus-manifest parsing or validation.
 
     Concrete failure modes derive from this class; callers can catch

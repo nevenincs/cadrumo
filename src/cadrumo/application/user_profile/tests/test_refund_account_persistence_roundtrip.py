@@ -97,7 +97,7 @@ def _populated_record() -> UserProfileRecord:
     created = datetime(2024, 2, 1, 8, 30, 0, tzinfo=UTC)
     updated = datetime(2024, 7, 9, 11, 15, 42, tzinfo=UTC)
     return UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=2,
         profile_id=_PROFILE_UUID,
         display_name="IVA refund operator (cuenta-devolución roundtrip)",

@@ -31,7 +31,7 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
         :class:`UserProfileSchemaLoadError`: If the schema file cannot be stated,
             parsed, or validated into :class:`ProfileSchemaDefinition`.
     """
-    target = path if path is not None else bundled_path("registry", "aeat", "user_profile", "schema.toml")
+    target = path if path is not None else bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
     resolved = target.resolve()
     try:
         stat = resolved.stat()

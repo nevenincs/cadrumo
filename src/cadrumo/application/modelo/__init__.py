@@ -519,7 +519,7 @@ from ._work_plazo import (
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
-from ._workflow_gate import workflow_period_for_work_unit
+from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
@@ -744,6 +744,7 @@ __all__ = [
     "build_feedback_package",
     "build_m145_communication_service_contract",
     "build_review_package",
+    "build_revision_deadline_window_checker",
     "build_work_calculate_input_bundle",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",

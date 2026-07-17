@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...domain.modelos import ModeloCode
 from ...domain.portals import (
@@ -29,7 +29,7 @@ from ...domain.portals import (
 )
 
 
-class PortalNotFoundError(AeatError):
+class PortalNotFoundError(CadrumoError):
     """Raised when portal lookup targets a :class:`Portal` absent from the registry."""
 
 

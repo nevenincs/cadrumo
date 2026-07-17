@@ -56,7 +56,6 @@ from .....core.config import (
     AEAT_CERTIFICATE_PROTECTED_PATH,
     AEAT_CERTIFICATE_PROTECTED_URL,
 )
-from .....core.file_permissions import restrict_file_permissions
 from . import _session_store as session_store
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
@@ -179,7 +178,6 @@ __all__ = [
     "health",
     "load_certificate",
     "operator_progress_sink",
-    "restrict_file_permissions",
     "select_provider",
     "session_store",
 ]

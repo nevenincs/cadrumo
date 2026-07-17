@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
-    from ...core.errors import AeatError
+    from ...core.errors import CadrumoError
     from ..workflow import WorkflowState
 
 import contextlib
@@ -51,9 +51,9 @@ from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._prompter import (
+    CanonicalAnswerPrompter,
     Prompter,
     QuestionaryPrompter,
-    ScriptedPrompter,
     WizardEditUnsupportedConsoleError,
     WizardUnsupportedConsoleError,
 )
@@ -590,8 +590,8 @@ def _scripted_from_canonical(
     canonical: dict[str, str],
     *,
     force_visible: frozenset[str] = frozenset(),
-) -> ScriptedPrompter:
-    """Build a ``ScriptedPrompter`` driven by the canonical-token dict.
+) -> CanonicalAnswerPrompter:
+    """Build a non-interactive prompter driven by the canonical-token dict.
 
     The scripted answer queue must match ``run_flow``'s question
     sequence exactly. Visibility is therefore evaluated with the same
@@ -612,7 +612,7 @@ def _scripted_from_canonical(
             value = canonical.get(question.id, question.default or "")
             answers.append(value)
             running[question.id] = value
-    return ScriptedPrompter(answers)
+    return CanonicalAnswerPrompter(answers)
 
 
 def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str | None:
@@ -935,8 +935,8 @@ def _enter_requested_output_language(kwargs: dict[str, object], language_stack: 
         language_stack.enter_context(override_settings(cadrumo_output_language=requested_language))
 
 
-def _render_error_inside_language_override(exc: AeatError) -> None:
-    """Freeze a translated AEAT error message before locale overrides unwind."""
+def _render_error_inside_language_override(exc: CadrumoError) -> None:
+    """Freeze a translated Cadrumo error message before locale overrides unwind."""
     translated_key = exc.translated_message
     if not isinstance(translated_key, str) or not translated_key:
         return
@@ -1293,7 +1293,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         import contextlib
 
-        from ...core.errors import AeatError
+        from ...core.errors import CadrumoError
 
         with contextlib.ExitStack() as _language_stack:
             # When the operator supplies `--output-language` on the
@@ -1308,7 +1308,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             _enter_requested_output_language(kwargs, _language_stack)
             try:
                 _execute_wizard_command(flow, mode, _prompter=_prompter, kwargs=kwargs)
-            except AeatError as exc:
+            except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
                 # unwinds) sees the already-localised string. Without this

@@ -26,17 +26,17 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ....core.errors import AeatError as _AeatError
+from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.money import round_to_cents as _quantize
 
 
-class AmortizacionLedgerError(_AeatError):
+class AmortizacionLedgerError(_CadrumoError):
     """Raised when an amortizacion ledger operation is invalid."""
 
 
-class InventoryLedgerError(_AeatError):
+class InventoryLedgerError(_CadrumoError):
     """Raised when an inventory ledger operation is invalid."""
 
 

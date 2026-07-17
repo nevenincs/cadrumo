@@ -25,27 +25,27 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ._catalogue import AuthProviderListing
 
 
-class AuthProviderReservedError(AeatError, ValueError):
+class AuthProviderReservedError(CadrumoError, ValueError):
     """Raised when a known provider slot is reserved but not implemented."""
 
 
-class AuthConfigureNoActiveBucketError(AeatError):
+class AuthConfigureNoActiveBucketError(CadrumoError):
     """Raised when auth configuration runs before an active profile bucket exists."""
 
 
-class AuthConfigureDanglingActiveProfileError(AeatError, ValueError):
+class AuthConfigureDanglingActiveProfileError(CadrumoError, ValueError):
     """Raised when the active-profile pointer does not resolve to a registered bucket."""
 
 
-class AuthLoginNotEnabledError(AeatError):
+class AuthLoginNotEnabledError(CadrumoError):
     """Raised when pytest invokes ``auth login`` without the live-test opt-in enabled."""
 
 
-class AuthLoginPreconditionError(AeatError):
+class AuthLoginPreconditionError(CadrumoError):
     """Raised when ``auth login`` cannot proceed because the configured provider is unusable."""
 
 
@@ -211,19 +211,19 @@ class AuthLoginResult(BaseModel):
     verification_status: str = ""
 
 
-class AuthOperationScopeConflictError(AeatError, ValueError):
+class AuthOperationScopeConflictError(CadrumoError, ValueError):
     """Raised when ``--provider`` and ``--all`` are requested together."""
 
 
-class AuthCleanupInProgressError(AeatError):
+class AuthCleanupInProgressError(CadrumoError):
     """Raised when a non-resume auth mutation meets durable cleanup intent."""
 
 
-class CertificateSecretMutationInProgressError(AeatError):
+class CertificateSecretMutationInProgressError(CadrumoError):
     """Raised when another auth mutation meets durable certificate-secret intent."""
 
 
-class AuthProviderNotConfiguredError(AeatError, ValueError):
+class AuthProviderNotConfiguredError(CadrumoError, ValueError):
     """Raised when an auth operation has neither an explicit nor configured provider."""
 
 
@@ -252,7 +252,7 @@ class AuthResetResult(BaseModel):
     removed_certificate_secrets: int
 
 
-class CertificateSourceNotFoundError(AeatError, KeyError):
+class CertificateSourceNotFoundError(CadrumoError, KeyError):
     """Raised when an operator names a certificate source that is not registered."""
 
 
@@ -301,7 +301,8 @@ class CertificateSourceCheckEntry(BaseModel):
     :func:`application.auth.probe_provider_configuration` runs for the
     single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
     ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
-    source in :class:`application.workflow.AuthState.certificate_sources`
+    source in the ``certificate_sources`` registry on
+    :class:`application.workflow.AuthState`
     rather than only the active ``certificate_path``. Never carries
     certificate passwords or key material.
 

@@ -44,7 +44,6 @@ See Also:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import time
 from collections.abc import Awaitable, Callable, Mapping
@@ -71,8 +70,9 @@ from ._authenticator_types import (
     BrowserPageLike,
     BrowserSessionFactory,
     BrowserSessionLike,
+    _is_exact_active_provider_session,
 )
-from ._browser_lifecycle import close_owned_browser_context, close_owned_browser_session
+from ._browser_lifecycle import _CloseIntentBarrier, close_owned_browser_context, close_owned_browser_session
 from ._clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ._clave_permanente_support import ClavePermanenteFailureMode
 from ._clave_permanente_support import classify_identity as _classify_identity
@@ -120,14 +120,18 @@ class ClavePermanenteAuthProvider:
         self._settings = settings
         self._browser_session_factory = browser_session_factory
         self._navigation_timeout_ms = navigation_timeout_ms
-        self._lock = asyncio.Lock()
+        self._lifecycle = _CloseIntentBarrier()
         self._browser_session: BrowserSessionLike | None = None
         self._context: BrowserContextLike | None = None
         self._active_session: AeatSession | None = None
 
     # ── Protocol surface ────────────────────────────────────────────────────
 
-    async def authenticate(
+    async def authenticate(self) -> AeatSession:
+        """Run the provider-neutral Cl@ve Permanente login flow."""
+        return await self.authenticate_for_target(target_url=None)
+
+    async def authenticate_for_target(
         self,
         *,
         target_url: str | None = None,
@@ -141,7 +145,7 @@ class ClavePermanenteAuthProvider:
         and returns a session whose provider detail is
         :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`.
         """
-        async with self._lock:
+        async with self._lifecycle.work():
             if self._active_session is not None:
                 raise AeatLoginAssertionError(
                     "ClavePermanenteAuthProvider already has an active session; "
@@ -175,7 +179,11 @@ class ClavePermanenteAuthProvider:
                 target_url=target_url,
             )
 
-    async def verify(
+    async def verify(self, session: AeatSession) -> AeatLoginAssertion:
+        """Run the provider-neutral verification flow for ``session``."""
+        return await self.verify_for_target(session, target_url=None)
+
+    async def verify_for_target(
         self,
         session: AeatSession,
         *,
@@ -191,10 +199,29 @@ class ClavePermanenteAuthProvider:
             An :class:`~adapters.outbound.aeat.auth.AeatLoginAssertion`
             describing the probe outcome.
         """
+        async with self._lifecycle.work():
+            return await self._verify_in_work(session, target_url=target_url)
+
+    async def _verify_in_work(
+        self,
+        session: AeatSession,
+        *,
+        target_url: str | None,
+    ) -> AeatLoginAssertion:
+        """Verify a session while the caller holds the provider work lease."""
         context = self._context
         if context is None:
             raise AeatLoginAssertionError(
                 "ClavePermanenteAuthProvider.verify() requires an active browser context; call authenticate() first",
+            )
+        if not _is_exact_active_provider_session(
+            session,
+            self._active_session,
+            provider_kind=AuthProviderKind.CLAVE_PERMANENTE,
+            detail_type=ClavePermanenteSessionDetail,
+        ):
+            raise AeatLoginAssertionError(
+                "ClavePermanenteAuthProvider.verify() requires the exact active Cl@ve Permanente session",
             )
         session_landing_url = (
             session.provider_detail.landing_url
@@ -309,7 +336,7 @@ class ClavePermanenteAuthProvider:
 
     async def close(self) -> None:
         """Tear down any retained :class:`~adapters.outbound.aeat.auth.BrowserContextLike` and browser session."""
-        async with self._lock:
+        async with self._lifecycle.close():
             context_closed = await self._drop_context()
             browser_session_closed = await self._close_browser_session(self._browser_session)
             if browser_session_closed:
@@ -524,16 +551,23 @@ class ClavePermanenteAuthProvider:
         click = getattr(page, "click", None)
         content = getattr(page, "content", None)
         if callable(fill):
+            # CAST-RATIONALE-CLAVE-PERMANENTE-FILL: runtime callable narrowing
+            # proves the optional Playwright page extension before invocation.
             fill_page = cast(Callable[..., Awaitable[object]], fill)
             await fill_page(surface.username_input_selector, dni_nie)
             await fill_page(surface.password_input_selector, password)
         if callable(click):
+            # CAST-RATIONALE-CLAVE-PERMANENTE-CLICK: runtime callable narrowing
+            # proves the optional Playwright page extension before invocation.
             click_page = cast(Callable[..., Awaitable[object]], click)
             await click_page(surface.submit_button_selector)
         if not callable(content):
             return
+        # CAST-RATIONALE-CLAVE-PERMANENTE-CONTENT: runtime callable narrowing
+        # proves the optional Playwright page extension before invocation.
         content_page = cast(Callable[[], Awaitable[object]], content)
-        html = cast(str, (await content_page()) or "")
+        content_value = await content_page()
+        html = content_value if isinstance(content_value, str) else ""
         normalized = html.casefold()
         if surface.elevation_sms_marker.casefold() in normalized:
             raise _login_error(
@@ -568,6 +602,8 @@ class ClavePermanenteAuthProvider:
         wait_for_url = getattr(page, "wait_for_url", None)
         if not callable(wait_for_url):
             return
+        # CAST-RATIONALE-CLAVE-PERMANENTE-WAIT: runtime callable narrowing
+        # proves the optional Playwright page extension before invocation.
         wait_for_page_url = cast(Callable[..., Awaitable[object]], wait_for_url)
         await wait_for_page_url(f"**{target_path}**", timeout=timeout_ms)
 
@@ -584,10 +620,12 @@ class ClavePermanenteAuthProvider:
         selector_url = self._selector_url(target_path)
 
         session_like = await self._resolve_browser_session()
+        self._browser_session = session_like
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
             context = await session_like.create_context()
+            self._context = context
             page = await context.new_page()
             try:
                 await page.goto(selector_url, timeout=self._navigation_timeout_ms)
@@ -621,10 +659,10 @@ class ClavePermanenteAuthProvider:
             landing_url = getattr(page, "url", None)
             await page.close()
         except Exception:
-            if not await self._close_context(context, reason="fresh-login cleanup"):
-                self._context = context
-            if not await self._close_browser_session(session_like):
-                self._browser_session = session_like
+            context_closed = await self._close_context(context, reason="fresh-login cleanup")
+            self._context = None if context_closed else context
+            session_closed = await self._close_browser_session(session_like)
+            self._browser_session = None if session_closed else session_like
             raise
 
         authenticated_at = now()
@@ -647,10 +685,10 @@ class ClavePermanenteAuthProvider:
                     _cleanup_exc,
                     exc_info=True,
                 )
-            if not await self._close_context(context, reason="persist-failure cleanup"):
-                self._context = context
-            if not await self._close_browser_session(session_like):
-                self._browser_session = session_like
+            context_closed = await self._close_context(context, reason="persist-failure cleanup")
+            self._context = None if context_closed else context
+            session_closed = await self._close_browser_session(session_like)
+            self._browser_session = None if session_closed else session_like
             raise
 
         session = self._fresh_login_session(
@@ -685,9 +723,11 @@ class ClavePermanenteAuthProvider:
             )
 
         session_like = await self._resolve_browser_session()
+        self._browser_session = session_like
         context: BrowserContextLike | None = None
         try:
             context = await session_like.create_context(storage_state=persisted.storage_state)
+            self._context = context
             session = AeatSession(
                 authenticated_at=metadata.authenticated_at,
                 idle_deadline=metadata.idle_deadline,
@@ -702,7 +742,7 @@ class ClavePermanenteAuthProvider:
             self._context = context
             self._active_session = session
 
-            assertion = await self.verify(session, target_url=target_url)
+            assertion = await self._verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Permanente resume failed live verification: "

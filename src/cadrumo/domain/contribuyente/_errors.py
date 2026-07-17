@@ -5,16 +5,16 @@ surfaced to RENTA verification, plus :class:`ProfileKeysRegistrationError`
 for the profile-key registry. The ledger error hierarchies live with their
 records in :mod:`domain.contribuyente.assets` (asset) and
 :mod:`domain.contribuyente.inventory` (inventory and amortizacion). Every
-class derives from :class:`core.errors.AeatError` so the shared
+class derives from :class:`core.errors.CadrumoError` so the shared
 error-code registration hook applies.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreError
+from ...core.errors import CadrumoError, CoreError
 
 
-class TaxResidenceProfileError(AeatError):
+class TaxResidenceProfileError(CadrumoError):
     """Base class for tax-residence profile failures.
 
     Concrete subclasses (:class:`ProfileNotConfiguredError`,

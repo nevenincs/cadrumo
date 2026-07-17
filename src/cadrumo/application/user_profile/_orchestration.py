@@ -45,7 +45,7 @@ from ...adapters.persistence.storage.bucket import (
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core import BucketPointer
 from ...core.config import load_settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
@@ -66,6 +66,7 @@ from ._profile_pointer_transaction import active_profile_pointer_transaction
 from ._profile_repository import ProfileRepository
 
 if TYPE_CHECKING:
+    from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ..workflow import WorkflowState
 
 _log = get_logger(__name__)
@@ -213,7 +214,7 @@ def _remove_create_span_artifacts(
     if not bucket_dir_existed:
         try:
             remove_profile_bucket_directory(profile_id)
-        except (AeatError, OSError):
+        except (CadrumoError, OSError):
             _log.debug("failed create-span bucket cleanup for profile %s", profile_id, exc_info=True)
 
     dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
@@ -250,6 +251,22 @@ def profile_storage_session(profile_id: str):
         activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=profile_id),
     ):
         yield profile_id
+
+
+@contextmanager
+def _profile_export_runtime(
+    profile_id: str,
+) -> Generator[BucketEventHistoryRepositoryProtocol]:
+    """Bind export serialization and audit persistence to one profile runtime."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import has_active_bucket_session
+    from ...core import resolve_active_bucket_id
+
+    if profile_id == resolve_active_bucket_id() and has_active_bucket_session():
+        yield BucketEventHistoryRepository()
+        return
+    with profile_storage_session(profile_id):
+        yield BucketEventHistoryRepository()
 
 
 @contextmanager
@@ -531,7 +548,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     """Trash-rename and remove a profile's on-disk bucket directory.
 
     Used both by atomic-create rollback and by
-    :func:`~cadrumo.application.config_reset.reset_config`. The
+    :func:`~cadrumo.application.config_reset.start_config_reset`. The
     directory is first renamed to a trash-prefix sibling so a crashed
     removal leaves a recoverable on-disk trace, then recursively
     deleted. When the rename is refused - Windows denies renaming a

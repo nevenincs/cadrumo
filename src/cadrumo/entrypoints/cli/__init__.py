@@ -330,7 +330,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     )
     from ...core import resolve_active_bucket_id
     from ...core.config import override_settings
-    from ...core.errors import AeatError
+    from ...core.errors import CadrumoError
     from ._errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()
@@ -349,12 +349,12 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         raise CliRefusedBoundaryError(
             translated_message="errors.refused.refused_profile_label_ambiguous",
         ) from exc
-    except AeatError:
+    except CadrumoError:
         return
     if pointer is None:
         try:
             inactive_bucket = read_profile_bucket_by_id(active)
-        except AeatError:
+        except CadrumoError:
             return
         if inactive_bucket is not None:
             raise CliRefusedBoundaryError(

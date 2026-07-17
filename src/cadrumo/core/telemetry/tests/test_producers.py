@@ -1,37 +1,23 @@
-"""Tests for the non-sensitive operational telemetry producers.
-
-Proves the whole gate-then-schema-then-emit pipeline end to end for each
-wired producer: consent-off (the default posture) emits nothing to the sink,
-a fully-permitted invocation dispatches exactly the allowlisted payload the
-registry declares, and a producer cannot be made to carry a sensitive field --
-the function signatures themselves accept only accounting/timing values.
-Uses a real, minimal in-memory :class:`~core.telemetry.TelemetrySink`
-implementation (not a mock), mirroring ``test_emit.py``'s sanctioned pure-logic
-test-double pattern.
-
-See Also:
-    :func:`~core.telemetry.emit_command_invocation_telemetry`:
-        Producer for command-count and duration metrics.
-    :func:`~core.telemetry.emit_llm_run_telemetry`:
-        Producer for non-sensitive local LLM run timing metrics.
-    :func:`~core.telemetry.build_telemetry_payload`:
-        Closed-schema allowlist builder shared by every producer.
-    :func:`~core.telemetry.emit_telemetry_event`:
-        Consent-gated dispatcher the producers call after schema validation.
-"""
+"""Real-HTTP tests for the non-sensitive operational telemetry producers."""
 
 from __future__ import annotations
+
+from collections.abc import Iterator
+from contextlib import contextmanager
+from queue import Empty, Queue
+from typing import cast
 
 import pytest
 
 from ...config import Settings
 from .. import (
-    TelemetryEventPayload,
+    HttpTelemetrySink,
     TelemetryTier,
     emit_command_invocation_telemetry,
     emit_error_frequency_telemetry,
     emit_llm_run_telemetry,
 )
+from .test_http_sink import _run_loopback_server, _stop_loopback_server
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -39,202 +25,152 @@ _WORKSPACE_HASH = "c" * 64
 _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
 
-class _RecordingSink:
-    """A real, minimal sink that records every payload it receives."""
-
-    def __init__(self) -> None:
-        self.received: list[TelemetryEventPayload] = []
-
-    def send(self, payload: TelemetryEventPayload) -> None:
-        self.received.append(payload)
+@contextmanager
+def _opened_http_sink() -> Iterator[tuple[HttpTelemetrySink, Queue[dict[str, object]]]]:
+    server, thread, events = _run_loopback_server()
+    try:
+        yield HttpTelemetrySink(endpoint=f"http://127.0.0.1:{server.server_port}/collect"), events
+    finally:
+        _stop_loopback_server(server, thread)
 
 
 def _permitted_settings() -> Settings:
     return Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
 
 
-# ── command-invocation producer ──────────────────────────────────────────
+def _received_payload(events: Queue[dict[str, object]]) -> dict[str, object]:
+    event = events.get(timeout=2)
+    assert event["path"] == "/collect"
+    assert event["content_type"] == "application/json"
+    payload = event["body"]
+    assert isinstance(payload, dict)
+    return cast("dict[str, object]", payload)
 
 
 def test_command_invocation_consent_off_emits_nothing() -> None:
-    settings = Settings()
-    sink = _RecordingSink()
-    result = emit_command_invocation_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=True,
-        duration_ms=120,
-        captured_at=_CAPTURED_AT,
-        settings=settings,
-        acknowledged=True,
-        sink=sink,
-    )
-    assert result is False
-    assert sink.received == []
+    with _opened_http_sink() as (sink, events):
+        result = emit_command_invocation_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            succeeded=True,
+            duration_ms=120,
+            captured_at=_CAPTURED_AT,
+            settings=Settings(),
+            acknowledged=True,
+            sink=sink,
+        )
+        assert result is False
+        with pytest.raises(Empty):
+            events.get_nowait()
 
 
-def test_command_invocation_permitted_dispatches_the_allowlisted_payload() -> None:
-    sink = _RecordingSink()
-    result = emit_command_invocation_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=True,
-        duration_ms=250,
-        captured_at=_CAPTURED_AT,
-        settings=_permitted_settings(),
-        acknowledged=True,
-        sink=sink,
-    )
+def test_command_invocation_permitted_dispatches_allowlisted_payload() -> None:
+    with _opened_http_sink() as (sink, events):
+        result = emit_command_invocation_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            succeeded=True,
+            duration_ms=250,
+            captured_at=_CAPTURED_AT,
+            settings=_permitted_settings(),
+            acknowledged=True,
+            sink=sink,
+        )
+        payload = _received_payload(events)
+
     assert result is True
-    assert len(sink.received) == 1
-    payload = sink.received[0]
-    assert payload.command == "diagnostics.command_invocation"
-    assert payload.counters == {"invocations": 1, "succeeded": 1, "failed": 0}
-    assert payload.timings_ms == {"duration": 250}
-    assert payload.succeeded is True
+    assert payload["command"] == "diagnostics.command_invocation"
+    assert payload["counters"] == {"invocations": 1, "succeeded": 1, "failed": 0}
+    assert payload["timings_ms"] == {"duration": 250}
+    assert payload["succeeded"] is True
 
 
-def test_command_invocation_failed_run_increments_the_failed_counter() -> None:
-    sink = _RecordingSink()
-    emit_command_invocation_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=False,
-        duration_ms=10,
-        captured_at=_CAPTURED_AT,
-        settings=_permitted_settings(),
-        acknowledged=True,
-        sink=sink,
-    )
-    payload = sink.received[0]
-    assert payload.counters == {"invocations": 1, "succeeded": 0, "failed": 1}
-    assert payload.succeeded is False
+def test_command_invocation_failed_run_increments_failed_counter() -> None:
+    with _opened_http_sink() as (sink, events):
+        emit_command_invocation_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            succeeded=False,
+            duration_ms=10,
+            captured_at=_CAPTURED_AT,
+            settings=_permitted_settings(),
+            acknowledged=True,
+            sink=sink,
+        )
+        payload = _received_payload(events)
+
+    assert payload["counters"] == {"invocations": 1, "succeeded": 0, "failed": 1}
+    assert payload["succeeded"] is False
 
 
-# ── LLM-run producer ─────────────────────────────────────────────────────
+def test_llm_run_not_acknowledged_emits_nothing() -> None:
+    with _opened_http_sink() as (sink, events):
+        result = emit_llm_run_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            succeeded=True,
+            duration_ms=4200,
+            captured_at=_CAPTURED_AT,
+            settings=_permitted_settings(),
+            acknowledged=False,
+            sink=sink,
+        )
+        assert result is False
+        with pytest.raises(Empty):
+            events.get_nowait()
 
 
-def test_llm_run_consent_off_emits_nothing() -> None:
-    settings = Settings()
-    sink = _RecordingSink()
-    result = emit_llm_run_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=True,
-        duration_ms=4200,
-        captured_at=_CAPTURED_AT,
-        settings=settings,
-        acknowledged=True,
-        sink=sink,
-    )
-    assert result is False
-    assert sink.received == []
+def test_llm_run_permitted_dispatches_allowlisted_payload() -> None:
+    with _opened_http_sink() as (sink, events):
+        result = emit_llm_run_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            succeeded=True,
+            duration_ms=4200,
+            captured_at=_CAPTURED_AT,
+            settings=_permitted_settings(),
+            acknowledged=True,
+            sink=sink,
+        )
+        payload = _received_payload(events)
 
-
-def test_llm_run_not_acknowledged_emits_nothing_even_when_opted_in() -> None:
-    sink = _RecordingSink()
-    result = emit_llm_run_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=True,
-        duration_ms=4200,
-        captured_at=_CAPTURED_AT,
-        settings=_permitted_settings(),
-        acknowledged=False,
-        sink=sink,
-    )
-    assert result is False
-    assert sink.received == []
-
-
-def test_llm_run_permitted_dispatches_the_allowlisted_payload() -> None:
-    sink = _RecordingSink()
-    result = emit_llm_run_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=True,
-        duration_ms=4200,
-        captured_at=_CAPTURED_AT,
-        settings=_permitted_settings(),
-        acknowledged=True,
-        sink=sink,
-    )
     assert result is True
-    payload = sink.received[0]
-    assert payload.command == "diagnostics.llm_run"
-    assert payload.counters == {"runs": 1, "succeeded": 1, "failed": 0}
-    assert payload.timings_ms == {"duration": 4200}
+    assert payload["command"] == "diagnostics.llm_run"
+    assert payload["counters"] == {"runs": 1, "succeeded": 1, "failed": 0}
+    assert payload["timings_ms"] == {"duration": 4200}
 
 
-def test_llm_run_gestor_mode_never_emits_even_fully_opted_in() -> None:
+def test_llm_run_gestor_mode_never_emits() -> None:
     settings = Settings(
         cadrumo_telemetry_opt_in=True,
         cadrumo_telemetry_tier=TelemetryTier.FULL,
         cadrumo_telemetry_gestor_mode=True,
     )
-    sink = _RecordingSink()
-    result = emit_llm_run_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        succeeded=True,
-        duration_ms=100,
-        captured_at=_CAPTURED_AT,
-        settings=settings,
-        acknowledged=True,
-        sink=sink,
-    )
-    assert result is False
-    assert sink.received == []
+    with _opened_http_sink() as (sink, events):
+        result = emit_llm_run_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            succeeded=True,
+            duration_ms=100,
+            captured_at=_CAPTURED_AT,
+            settings=settings,
+            acknowledged=True,
+            sink=sink,
+        )
+        assert result is False
+        with pytest.raises(Empty):
+            events.get_nowait()
 
 
-# ── error-frequency producer ─────────────────────────────────────────────
+def test_error_frequency_dispatches_closed_non_sensitive_payload() -> None:
+    with _opened_http_sink() as (sink, events):
+        result = emit_error_frequency_telemetry(
+            workspace_hash=_WORKSPACE_HASH,
+            error_kind="LLMClassifierError",
+            captured_at=_CAPTURED_AT,
+            settings=_permitted_settings(),
+            acknowledged=True,
+            sink=sink,
+        )
+        payload = _received_payload(events)
 
-
-def test_error_frequency_consent_off_emits_nothing() -> None:
-    settings = Settings()
-    sink = _RecordingSink()
-    result = emit_error_frequency_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        error_kind="LLMClassifierError",
-        captured_at=_CAPTURED_AT,
-        settings=settings,
-        acknowledged=True,
-        sink=sink,
-    )
-    assert result is False
-    assert sink.received == []
-
-
-def test_error_frequency_permitted_dispatches_the_closed_error_kind_label() -> None:
-    sink = _RecordingSink()
-    result = emit_error_frequency_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        error_kind="LLMClassifierError",
-        captured_at=_CAPTURED_AT,
-        settings=_permitted_settings(),
-        acknowledged=True,
-        sink=sink,
-    )
     assert result is True
-    payload = sink.received[0]
-    assert payload.command == "diagnostics.error_frequency"
-    assert payload.counters == {"occurrences": 1}
-    assert payload.error_kind == "LLMClassifierError"
-    assert payload.succeeded is False
-
-
-def test_error_frequency_rejects_a_sensitive_field_structurally() -> None:
-    """A caller cannot smuggle an extra field through the producer's payload.
-
-    The producer's ``build_telemetry_payload`` call constructs a
-    ``TelemetryEventPayload``, whose ``extra="forbid"`` config makes any
-    field beyond the declared allowlist structurally impossible -- proven
-    here by confirming the emitted payload carries no attribute for a
-    sensitive concept (there is no such kwarg to pass).
-    """
-    sink = _RecordingSink()
-    emit_error_frequency_telemetry(
-        workspace_hash=_WORKSPACE_HASH,
-        error_kind="LLMClassifierError",
-        captured_at=_CAPTURED_AT,
-        settings=_permitted_settings(),
-        acknowledged=True,
-        sink=sink,
-    )
-    payload = sink.received[0]
-    assert not hasattr(payload, "message")
-    assert not hasattr(payload, "context")
-    assert not hasattr(payload, "nif")
+    assert payload["command"] == "diagnostics.error_frequency"
+    assert payload["counters"] == {"occurrences": 1}
+    assert payload["error_kind"] == "LLMClassifierError"
+    assert payload["succeeded"] is False
+    assert {"message", "context", "nif"}.isdisjoint(payload)

@@ -136,6 +136,28 @@ class AeatSession(BaseModel):
         return reference > self.idle_deadline
 
 
+def _is_exact_active_provider_session(
+    session: AeatSession,
+    active_session: AeatSession | None,
+    *,
+    provider_kind: AuthProviderKind,
+    detail_type: type[BaseModel],
+) -> bool:
+    """Return whether ``session`` is the provider's exact retained session.
+
+    Identity is intentional: an equal reconstructed model is not bound to the
+    browser context owned by a provider instance. The provider kind and detail
+    type checks keep the shared predicate safe across certificate and Cl@ve
+    implementations.
+    """
+    return (
+        active_session is not None
+        and session is active_session
+        and active_session.provider_kind is provider_kind
+        and isinstance(active_session.provider_detail, detail_type)
+    )
+
+
 class _PersistedSessionInvalidError(AeatLoginAssertionError):
     """Raised when a persisted AEAT browser session cannot be trusted."""
 
@@ -156,6 +178,10 @@ class BrowserPageLike(Protocol):
         timeout: float | None = None,
     ) -> BrowserResponseLike | None:
         """Navigate to ``url`` and return the observed :class:`BrowserResponseLike`, if any."""
+        ...
+
+    async def click(self, selector: str) -> None:
+        """Click a selector while driving an authentication flow."""
         ...
 
     async def close(self) -> None:
@@ -202,7 +228,8 @@ class BrowserSessionLike(Protocol):
     The signature mirrors
     :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`:
     certificate auth may pass a context provisioner, while resume paths pass
-    either a storage-state path or an in-memory storage-state mapping.
+    decrypted in-memory storage state. Auth never asks the browser layer to
+    reopen a plaintext filesystem path.
 
     Every implementation owns a browser lifecycle and therefore provides
     deterministic asynchronous closure.
@@ -212,7 +239,6 @@ class BrowserSessionLike(Protocol):
         self,
         *,
         provisioner: object | None = None,
-        storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContextLike:
         """Create a :class:`BrowserContextLike` with optional auth provider state."""

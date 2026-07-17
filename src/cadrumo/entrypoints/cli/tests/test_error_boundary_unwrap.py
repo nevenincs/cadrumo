@@ -1,6 +1,6 @@
-"""Boundary test: SQLAlchemy-wrapped AeatError is forwarded as a clean refusal.
+"""Boundary test: SQLAlchemy-wrapped CadrumoError is forwarded as a clean refusal.
 
-When an :class:`cadrumo.core.errors.AeatError` is raised inside SQLAlchemy
+When an :class:`cadrumo.core.errors.CadrumoError` is raised inside SQLAlchemy
 bind-param processing (an encrypted-column codec that needs an unlocked
 session), SQLAlchemy catches it and re-raises it wrapped in a
 :class:`sqlalchemy.exc.StatementError`, with the original on ``orig``.
@@ -21,10 +21,10 @@ import sqlalchemy.exc as sa_exc
 import typer
 
 from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
-from ....core.errors import AeatError, build_error_envelope, render_error_text
+from ....core.errors import CadrumoError, build_error_envelope, render_error_text
 from .._errors import (
     CliUnexpectedBoundaryError,
-    _unwrap_aeat_error,
+    _unwrap_cadrumo_error,
     command_error_boundary,
 )
 
@@ -36,8 +36,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _ProbeRefusal = NoActiveBucketSessionError
 
 
-def test_unwrap_finds_aeat_error_through_sqlalchemy_orig() -> None:
-    """A StatementError carrying an AeatError on ``orig`` unwraps to it."""
+def test_unwrap_finds_cadrumo_error_through_sqlalchemy_orig() -> None:
+    """A StatementError carrying an CadrumoError on ``orig`` unwraps to it."""
 
     refusal = _ProbeRefusal("no active bucket session")
     statement_error = sa_exc.StatementError(
@@ -47,11 +47,11 @@ def test_unwrap_finds_aeat_error_through_sqlalchemy_orig() -> None:
         orig=refusal,
     )
 
-    assert _unwrap_aeat_error(statement_error) is refusal
+    assert _unwrap_cadrumo_error(statement_error) is refusal
 
 
-def test_unwrap_finds_aeat_error_through_cause_chain() -> None:
-    """An exception chained via ``__cause__`` unwraps to the AeatError."""
+def test_unwrap_finds_cadrumo_error_through_cause_chain() -> None:
+    """An exception chained via ``__cause__`` unwraps to the CadrumoError."""
 
     refusal = _ProbeRefusal("no active bucket session")
     try:
@@ -60,13 +60,13 @@ def test_unwrap_finds_aeat_error_through_cause_chain() -> None:
         except _ProbeRefusal as exc:
             raise RuntimeError("library wrapper") from exc
     except RuntimeError as wrapper:
-        assert _unwrap_aeat_error(wrapper) is refusal
+        assert _unwrap_cadrumo_error(wrapper) is refusal
 
 
 def test_unwrap_returns_none_for_plain_exception() -> None:
-    """A genuine non-AeatError exception unwraps to None."""
+    """A genuine non-CadrumoError exception unwraps to None."""
 
-    assert _unwrap_aeat_error(RuntimeError("genuine bug")) is None
+    assert _unwrap_cadrumo_error(RuntimeError("genuine bug")) is None
 
 
 def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
@@ -76,7 +76,7 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
 
     A traceback in the log is exactly what feeds the
     ``aeat config repair logs`` mis-render. The boundary must classify
-    the wrapped refusal as the typed AeatError, not as
+    the wrapped refusal as the typed CadrumoError, not as
     CliUnexpectedBoundaryError.
     """
 
@@ -111,10 +111,10 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
 def test_boundary_still_reports_genuine_bug_as_unexpected(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A genuine non-AeatError bug is still classified as unexpected.
+    """A genuine non-CadrumoError bug is still classified as unexpected.
 
     The unwrap must not swallow real defects: an exception with no
-    AeatError in its chain keeps the CliUnexpectedBoundaryError path
+    CadrumoError in its chain keeps the CliUnexpectedBoundaryError path
     and its diagnostic log line.
     """
 
@@ -134,10 +134,10 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     ]
 
 
-def test_cli_unexpected_boundary_error_is_aeat_error() -> None:
-    """Sanity: the unexpected-boundary wrapper is itself an AeatError."""
+def test_cli_unexpected_boundary_error_is_cadrumo_error() -> None:
+    """Sanity: the unexpected-boundary wrapper is itself an CadrumoError."""
 
-    assert issubclass(CliUnexpectedBoundaryError, AeatError)
+    assert issubclass(CliUnexpectedBoundaryError, CadrumoError)
 
 
 def test_unexpected_boundary_suggests_log_inspection_not_integrity_repair() -> None:

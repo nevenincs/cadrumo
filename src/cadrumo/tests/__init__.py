@@ -1,6 +1,7 @@
 """Project-bundled test plumbing, meta tests, and fixtures.
 
-This subpackage ships with ``aeat`` so the wheel is self-testable. It
+This subpackage provides cross-cutting test plumbing for package-root and
+project-structure validation across the repository. It
 hosts the pytest collection hook (``_marker_hook``), the dotenv loader
 the hook uses (``_env_loader``), repo-meta tests (release config,
 ``.env`` alignment, marker-taxonomy integrity), and the on-disk

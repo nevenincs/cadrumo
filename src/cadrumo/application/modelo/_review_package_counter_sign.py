@@ -52,7 +52,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 from ._review_package_signing import (
@@ -72,7 +72,7 @@ _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 _HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
-class ReviewPackageCounterSigningError(AeatError):
+class ReviewPackageCounterSigningError(CadrumoError):
     """Base error for review-package counter-signing/verification failures."""
 
 

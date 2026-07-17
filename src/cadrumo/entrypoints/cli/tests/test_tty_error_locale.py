@@ -46,9 +46,9 @@ def test_non_tty_refused_error_blank_suggestion_stripped() -> None:
     """A blank suggestion is stripped to empty string on the instance."""
 
     exc = NonTtyRefusedError("   ")
-    # suggestion attr stores the original; AeatError(suggestion=...) receives None
+    # suggestion attr stores the original; CadrumoError(suggestion=...) receives None
     assert exc.suggestion == "   "
-    # AeatError.suggestion kwarg carries the stripped value or None
+    # CadrumoError.suggestion kwarg carries the stripped value or None
     assert exc.args == ()
 
 

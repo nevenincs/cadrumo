@@ -5,18 +5,23 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from pathlib import Path
+from datetime import UTC, datetime, timedelta
 
 import psutil
 import pytest
 
 from ......core.config import Settings
 from ...browser import Profile, create_browser_session
+from .._authenticator_types import AeatSession
 from .._browser_lifecycle import (
     _CloseIntentBarrier,
     close_owned_browser_context,
     close_owned_browser_session,
 )
+from .._clave_movil import ClaveMovilAuthProvider
+from .._clave_permanente import ClavePermanenteAuthProvider
+from .._errors import AeatLoginAssertionError
+from .._providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -127,12 +132,12 @@ async def _wait_for_process_exit(pid: int, *, timeout_seconds: float = 10.0) -> 
 
 
 @pytest.mark.asyncio
-async def test_bounded_cleanup_retains_real_resources_for_retry(tmp_path: Path) -> None:
+async def test_bounded_cleanup_retains_real_resources_for_retry() -> None:
     """A timed-out cleanup leaves each real owner available for a successful retry."""
     settings = Settings()
     session = await create_browser_session(
         settings,
-        Profile(name="bounded-cleanup", storage_state_path=tmp_path / "storage.json"),
+        Profile(name="bounded-cleanup"),
     )
     driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
     context = await session.create_context()
@@ -165,3 +170,53 @@ async def test_bounded_cleanup_retains_real_resources_for_retry(tmp_path: Path) 
         owner="test-real-playwright-owner",
     )
     await _wait_for_process_exit(driver_pid)
+
+
+@pytest.mark.parametrize("provider_type", [ClaveMovilAuthProvider, ClavePermanenteAuthProvider])
+@pytest.mark.asyncio
+async def test_clave_provider_close_waits_for_its_active_work_lease(provider_type: type) -> None:
+    """Each real Cl@ve provider wires public close through the shared barrier."""
+    provider = provider_type(Settings())
+    async with provider._lifecycle.work():
+        close_task = asyncio.create_task(provider.close())
+        for _ in range(100):
+            if provider._lifecycle.close_intents == 1:
+                break
+            await asyncio.sleep(0)
+        assert provider._lifecycle.close_intents == 1
+        assert not close_task.done()
+
+    await asyncio.wait_for(close_task, timeout=1.0)
+    assert provider._lifecycle.close_intents == 0
+
+
+@pytest.mark.parametrize(
+    ("provider_type", "provider_detail"),
+    [
+        (ClaveMovilAuthProvider, ClaveMovilSessionDetail(dni_nie="12345678Z")),
+        (ClavePermanenteAuthProvider, ClavePermanenteSessionDetail(dni_nie="12345678Z")),
+    ],
+)
+@pytest.mark.asyncio
+async def test_clave_provider_close_intent_bars_public_verify_until_no_context_validation(
+    provider_type: type,
+    provider_detail: ClaveMovilSessionDetail | ClavePermanenteSessionDetail,
+) -> None:
+    """Public verify cannot enter while close owns the provider lifecycle."""
+    provider = provider_type(Settings())
+    authenticated_at = datetime.now(UTC)
+    session = AeatSession(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + timedelta(minutes=1),
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=provider_detail,
+    )
+
+    async with provider._lifecycle.close():
+        verify_task = asyncio.create_task(provider.verify(session))
+        await asyncio.sleep(0)
+        assert not verify_task.done()
+
+    with pytest.raises(AeatLoginAssertionError, match="requires an active browser context"):
+        await asyncio.wait_for(verify_task, timeout=1.0)

@@ -5,7 +5,7 @@
 #   manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/
 #   anexos/anexo-03-instrucciones-modelo-036/cumplimentacion-modelo/pagina-1.html
 # Fetched 2026-05-27 and saved to corpus:
-#   src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/
+#   src/cadrumo/_data/corpus/aeat_official/instructions/modelo_036/files/
 #     instrucciones-cumplimentacion-pagina-1.html
 # The AEAT table column header is "CAUSA DE PRESENTACIÓN" and the values
 # (ALTA/MODIFICACIÓN/BAJA) appear in the TIPO column.
@@ -27,7 +27,7 @@ target_casillas = [
     {casilla_id = "decl.event-kind", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Causas\s+de\s+presentaci[oó]n\s+de\s+la\s+declaraci[oó]n'},
 ]
 # Pattern grounded against AEAT-published Anexo 3 instructions (PAGINA 1 heading).
-# Synthetic round-trip fixture at src/aeat/tests/fixtures/justificantes/036/2025-alta.pdf
+# Synthetic round-trip fixture at src/cadrumo/tests/fixtures/justificantes/036/2025-alta.pdf
 # reproduces the AEAT-published section heading so the named_label parser can
 # locate and extract the event-kind value (Alta/Modificacion/Baja).
 # decl.vigencia-2025 is absent from target_casillas: it is an informational

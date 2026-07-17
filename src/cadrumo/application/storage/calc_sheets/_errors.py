@@ -1,16 +1,16 @@
 """Typed exception hierarchy for the calc-sheets application layer.
 
-Every subclass inherits from :class:`cadrumo.core.errors.AeatError`; the
+Every subclass inherits from :class:`cadrumo.core.errors.CadrumoError`; the
 project error registry's ``__init_subclass__`` hook binds each subclass
 to its declared :class:`cadrumo.core.errors.ErrorCode` row at import time.
 """
 
 from __future__ import annotations
 
-from ....core.errors import AeatError, CoreValidationError
+from ....core.errors import CadrumoError, CoreValidationError
 
 
-class CalcSheetsEngineError(AeatError):
+class CalcSheetsEngineError(CadrumoError):
     """Raised when the sheet-export engine encounters an unresolvable state.
 
     Covers unsupported registry rounding codes and missing dated parameter
@@ -25,11 +25,11 @@ class CalcSheetsRecordError(CoreValidationError):
     A1 column letters) that prevent SheetCellAddress construction.
     Inherits from :class:`~cadrumo.core.errors.CoreValidationError` so
     pydantic validators can surface it as structured validation failure
-    without losing the project-wide :class:`AeatError` contract.
+    without losing the project-wide :class:`CadrumoError` contract.
     """
 
 
-class CalcSheetsParityError(AeatError):
+class CalcSheetsParityError(CadrumoError):
     """Raised when a parity-harness scenario references unknown casillas.
 
     Fired when a test scenario's canonical casilla ids cannot all be resolved

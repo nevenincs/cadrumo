@@ -2,7 +2,7 @@
 
 Every error raised from :mod:`cadrumo.domain.portals` derives from
 :class:`PortalRegistryError`, which in turn derives from the project
-root :class:`cadrumo.core.errors.AeatError`. Two concrete subclasses cover the
+root :class:`cadrumo.core.errors.CadrumoError`. Two concrete subclasses cover the
 failure modes surfaced to external callers:
 
 - :class:`UnknownPortalError` — raised by registry lookups on an
@@ -13,10 +13,10 @@ failure modes surfaced to external callers:
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class PortalRegistryError(AeatError):
+class PortalRegistryError(CadrumoError):
     """Base class for every error raised from :mod:`cadrumo.domain.portals`."""
 
 

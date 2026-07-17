@@ -11,12 +11,14 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.ledger_cli import list_ledger_rows_via_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 _CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (
@@ -26,6 +28,7 @@ _FILES = (
     "n26-savings.csv",
 )
 _FIN_FIXTURES = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial"
+_list_rows = list_ledger_rows_via_cli
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -86,13 +89,6 @@ def _import_bbva() -> None:
         ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
-
-
-def _list_rows() -> list[dict[str, Any]]:
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    payload = json.loads(listed.output)
-    return payload.get("result", payload).get("rows", [])
 
 
 def _list_payload(*args: str) -> dict[str, Any]:

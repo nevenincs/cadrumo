@@ -131,11 +131,7 @@ def _is_transient_bucket_file(path: Path) -> bool:
     non-durable.
     """
     name = path.name
-    return (
-        name.endswith(".lock")
-        or name.endswith(".tmp")
-        or name.endswith("-shm")
-    )
+    return name.endswith(".lock") or name.endswith(".tmp") or name.endswith("-shm")
 
 
 __all__ = [

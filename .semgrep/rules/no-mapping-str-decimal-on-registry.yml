@@ -12,9 +12,9 @@ rules:
       - python
     paths:
       include:
-        - "/src/aeat/domain/calculations/registry/_bindings.py"
-        - "/src/aeat/domain/calculations/registry/_formula_runtime.py"
-        - "/src/aeat/domain/modelos/_calculation_revision.py"
+        - "src/cadrumo/domain/calculations/registry/_bindings.py"
+        - "src/cadrumo/domain/calculations/registry/_formula_runtime.py"
+        - "src/cadrumo/domain/modelos/_calculation_revision.py"
     pattern-either:
       - pattern: |
           class $CLASS(...):

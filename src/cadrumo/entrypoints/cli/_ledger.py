@@ -46,7 +46,6 @@ from ...domain.iva import (
 )
 from ...domain.transactions import (
     BusinessClassification,
-    Transaction,
     TransactionDirection,
     TransactionIdPrefixError,
     TransactionValidationError,
@@ -100,6 +99,7 @@ from ._ledger_ratios_cli import ratios_app, register_ratios_commands
 from ._ledger_read_cli import register_read_commands
 from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
+    _emit_update_result,
     _invoice_link_error_bad_parameter,
     _ledger_transaction_validation_bad,
     _ledger_validation_bad,
@@ -115,7 +115,6 @@ from ._ledger_support import (
     _validate_category_id,
 )
 from ._prorrata_register_cli import register_prorrata_register_commands
-from ._schemas import OutputSchema
 
 _log = get_logger(__name__)
 
@@ -172,40 +171,6 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
     return ManualLedgerTransactionPatch.model_validate(
         {key: value for key, value in values.items() if value is not None},
-    )
-
-
-def _emit_update_result(
-    ctx: typer.Context,
-    result_transaction: Transaction,
-    bucket_id: str,
-    events: tuple[str, ...],
-    *,
-    command: str,
-    result_cls: type[OutputSchema],
-) -> None:
-    transaction_payload = ledger_transaction_payload(result_transaction)
-    review_status = ledger_transaction_review_status(result_transaction)
-    result = result_cls.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "transaction_id": result_transaction.transaction_id,
-            "bucket_event_ids": list(events),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    _emit_envelope(
-        ctx,
-        command=command,
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
     )
 
 

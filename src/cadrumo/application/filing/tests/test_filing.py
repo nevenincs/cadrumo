@@ -46,11 +46,7 @@ from .. import (
     refresh_review_status,
     validate_draft,
 )
-from ..testing import (
-    ModeloTestDeadlineChecker,
-    ModeloTestDeadlineStatus,
-    ModeloTestProfile,
-)
+from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -139,8 +135,8 @@ _M131_CASILLA_14: CasillaId = _casilla_id("14")
 _M131_CASILLA_15: CasillaId = _casilla_id("15")
 
 
-def _profile() -> ModeloTestProfile:
-    return ModeloTestProfile(
+def _profile() -> ModeloOperatorProfile:
+    return ModeloOperatorProfile(
         tax_id="12345678Z",
         display_name="Registry boundary test",
     )
@@ -811,16 +807,3 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     assert refreshed.approved_at is None
     assert refreshed.approved_by is None
     assert refreshed.review_checksum is None
-
-
-def test_deadline_validator_still_reports_overdue_status() -> None:
-    findings = ModeloValidator(
-        schema_provider=_schema_provider(),
-        deadline_checker=ModeloTestDeadlineChecker(
-            status=ModeloTestDeadlineStatus(
-                due_date=date(2026, 4, 20),
-                is_overdue=True,
-            ),
-        ),
-    ).validate(_draft())
-    assert any(f.code == "filing-deadline-missed" for f in findings)

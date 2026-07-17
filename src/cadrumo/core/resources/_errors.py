@@ -10,10 +10,10 @@ error.
 
 from __future__ import annotations
 
-from ..errors import AeatError, CoreNotFoundError
+from ..errors import CadrumoError, CoreNotFoundError
 
 
-class ResourceLoadError(AeatError):
+class ResourceLoadError(CadrumoError):
     """Base class for every failure to load a bundled resource."""
 
 

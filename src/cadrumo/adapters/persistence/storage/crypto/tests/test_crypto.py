@@ -170,23 +170,23 @@ class TestHkdfDerivation:
     def test_deterministic_and_bound_to_context_and_salt(self) -> None:
         ikm = b"master-key-material"
         salt = b"per-store-salt"
-        first = derive_key(key_material=ikm, salt=salt, context=b"aeat.context.v1")
-        second = derive_key(key_material=ikm, salt=salt, context=b"aeat.context.v1")
+        first = derive_key(key_material=ikm, salt=salt, context=b"cadrumo.context.v1")
+        second = derive_key(key_material=ikm, salt=salt, context=b"cadrumo.context.v1")
         assert first == second
 
-        lookup_key = derive_key(key_material=ikm, salt=salt, context=b"aeat.lookup.v1")
-        envelope_key = derive_key(key_material=ikm, salt=salt, context=b"aeat.envelope.v1")
+        lookup_key = derive_key(key_material=ikm, salt=salt, context=b"cadrumo.lookup.v1")
+        envelope_key = derive_key(key_material=ikm, salt=salt, context=b"cadrumo.envelope.v1")
         assert lookup_key != envelope_key
 
-        salt_a_key = derive_key(key_material=ikm, salt=b"salt-a", context=b"aeat.context.v1")
-        salt_b_key = derive_key(key_material=ikm, salt=b"salt-b", context=b"aeat.context.v1")
+        salt_a_key = derive_key(key_material=ikm, salt=b"salt-a", context=b"cadrumo.context.v1")
+        salt_b_key = derive_key(key_material=ikm, salt=b"salt-b", context=b"cadrumo.context.v1")
         assert salt_a_key != salt_b_key
 
     def test_default_length_is_aes256_key_size(self) -> None:
         derived = derive_key(
             key_material=b"ikm",
             salt=b"salt",
-            context=b"aeat.context.v1",
+            context=b"cadrumo.context.v1",
         )
         assert len(derived) == KEY_SIZE
 
@@ -195,7 +195,7 @@ class TestHkdfDerivation:
             derived = derive_key(
                 key_material=b"ikm",
                 salt=b"salt",
-                context=b"aeat.context.v1",
+                context=b"cadrumo.context.v1",
                 length=length,
             )
             assert len(derived) == length
@@ -206,7 +206,7 @@ class TestHkdfDerivation:
                 derive_key(
                     key_material=b"ikm",
                     salt=b"salt",
-                    context=b"aeat.context.v1",
+                    context=b"cadrumo.context.v1",
                     length=length,
                 )
 
@@ -215,7 +215,7 @@ class TestHkdfDerivation:
             derive_key(
                 key_material=b"ikm",
                 salt=b"salt",
-                context=cast(bytes, "aeat.context.v1"),
+                context=cast(bytes, "cadrumo.context.v1"),
             )
 
     def test_derived_key_can_drive_encrypt_round_trip(self) -> None:

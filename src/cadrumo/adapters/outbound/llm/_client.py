@@ -61,9 +61,6 @@ class LLMClient:
             :class:`~adapters.outbound.llm.PromptRegistry` override.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
-        adapter_override: Optional
-            :class:`~adapters.outbound.llm._providers.base._ProviderAdapter`
-            override for tests and controlled flows.
     """
 
     def __init__(
@@ -76,7 +73,6 @@ class LLMClient:
         prompt_registry: PromptRegistry | None = None,
         caller: str = "cadrumo.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
-        adapter_override: _ProviderAdapter | None = None,
     ) -> None:
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
@@ -87,7 +83,6 @@ class LLMClient:
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.caller = caller
         self.prompt_id = prompt_id
-        self._adapter_override = adapter_override
         self._sweep_retention_stores()
 
     def _sweep_retention_stores(self) -> None:
@@ -133,7 +128,7 @@ class LLMClient:
             self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
             return response
 
-        adapter = self._adapter_override or self._build_adapter(provider)
+        adapter = self._build_adapter(provider)
         provider_request = ProviderRequest(
             request_id=request_id,
             model=model,

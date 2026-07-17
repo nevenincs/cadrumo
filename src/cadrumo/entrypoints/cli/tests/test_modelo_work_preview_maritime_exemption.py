@@ -17,23 +17,23 @@ to operators. Verifies the four observable contracts the verb must hold:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from ....application.modelo import maritime_facts_from_active_profile
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from .._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,
 )
+from .envelope_helpers import unwrap_schema_envelope as _unwrap
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,13 +61,6 @@ def _register_maritime_profile(*, overrides: dict[str, str]) -> None:
             enforce_unique_tax_id=False,
         ),
     )
-
-
-def _unwrap(output: str) -> dict[str, Any]:
-    raw = json.loads(output)
-    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
-        return raw["result"]
-    return raw
 
 
 class TestHelpSurfaceLocalisation:

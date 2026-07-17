@@ -26,10 +26,10 @@ See Also:
 
 from __future__ import annotations
 
-from ....core.errors import AeatError, CoreError
+from ....core.errors import CadrumoError, CoreError
 
 
-class OutboundStorageError(AeatError):
+class OutboundStorageError(CadrumoError):
     """Base class for every outbound storage-provider failure."""
 
 

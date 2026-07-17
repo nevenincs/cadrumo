@@ -2,7 +2,7 @@
 
 Exercises :mod:`~application.auth._certificate_secret_backend` against a
 real encrypted :class:`~adapters.persistence.storage.SecretStore` (an
-:class:`~adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`
+:class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`
 under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
 — no mocks or fakes) and the operator verbs
 (:func:`~application.auth.set_operator_certificate_source_secret`,
@@ -38,16 +38,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
+from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore, override_secret_store
+from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import (
     SECURE_STORAGE_BACKEND_LABEL,

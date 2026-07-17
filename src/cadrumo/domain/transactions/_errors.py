@@ -6,10 +6,10 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class TransactionError(AeatError):
+class TransactionError(CadrumoError):
     """Base error for every transaction-catalogue failure."""
 
 

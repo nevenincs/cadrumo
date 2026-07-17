@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime
+from ...core import M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -170,25 +170,6 @@ def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRe
     return sha256_hex("\n".join(lines).encode("utf-8"))
 
 
-def _source_resolution_was_assessed(
-    *,
-    work_unit: WorkUnit,
-    source_provenance: tuple[CalculationSourceRef, ...],
-    source_issues: tuple[CalculationSourceIssue, ...],
-) -> bool:
-    """Return whether the current M369 mesh sealed OSS source resolution.
-
-    This is intentionally derived at persistence from mesh-owned channels, not
-    supplied by a calculate caller. An unresolved no-source calculation carries
-    no positive trace and remains false; verification already fails it closed.
-    """
-    if str(work_unit.modelo) != Modelo.M369.value:
-        return False
-    return any(ref.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for ref in source_provenance) or any(
-        issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION for issue in source_issues
-    )
-
-
 def persist_calculation_revision(
     *,
     work_unit_id: str,
@@ -239,11 +220,6 @@ def persist_calculation_revision(
     source-connectivity change from the digest without decrypting the revision,
     instead of treating bucket history as the standalone provenance store.
     """
-    source_resolution_assessed = _source_resolution_was_assessed(
-        work_unit=work_unit,
-        source_provenance=source_provenance,
-        source_issues=source_issues,
-    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -258,7 +234,6 @@ def persist_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         detail_rows=detail_rows,
         source_issues=source_issues,
-        source_resolution_assessed=source_resolution_assessed,
     )
     revisions = calculation_repository.load()
     existing = revisions.get(revision_id)
@@ -298,7 +273,6 @@ def persist_calculation_revision(
         unresolved_outcomes=unresolved_outcomes,
         source_provenance=source_provenance,
         source_issues=source_issues,
-        source_resolution_assessed=source_resolution_assessed,
         detail_rows=detail_rows,
         created_at=now,
         updated_at=now,

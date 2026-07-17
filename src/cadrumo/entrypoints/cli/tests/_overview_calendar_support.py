@@ -17,7 +17,6 @@ from ....application.user_profile import (
     UserProfileLifecycleRepository,
     profile_create_storage_span,
     profile_storage_session,
-    register_minimal_profile,
 )
 from ....application.workflow import workflow_state_repository
 from ....core import Period
@@ -35,6 +34,7 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64

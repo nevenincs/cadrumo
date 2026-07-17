@@ -3,15 +3,15 @@
 Every exception raised by loading, verifying, fetching, or extracting
 from the AEAT *Manual práctico* corpus inherits from
 :class:`ManualError`, which in turn inherits from
-:class:`cadrumo.core.errors.AeatError`.
+:class:`cadrumo.core.errors.CadrumoError`.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class ManualError(AeatError):
+class ManualError(CadrumoError):
     """Base error for every :mod:`cadrumo.domain.manuals` failure mode."""
 
 

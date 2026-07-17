@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .....core.errors import AeatError, CoreError
+from .....core.errors import CadrumoError, CoreError
 from .. import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -153,7 +153,7 @@ def test_storage_error_hierarchy_unified() -> None:
     )
     for leaf in outbound_leaves:
         assert issubclass(leaf, OutboundStorageError), leaf.__name__
-        assert issubclass(leaf, AeatError), leaf.__name__
+        assert issubclass(leaf, CadrumoError), leaf.__name__
 
     assert issubclass(StorageCorruptionError, CoreError)
     assert not issubclass(StorageCorruptionError, OutboundStorageError)

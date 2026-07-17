@@ -151,20 +151,12 @@ def config_reset_status_command(
     from ....application.config_reset import config_reset_status
 
     operation = config_reset_status(operation_id)
-    projection = (
-        ConfigResetOperationPayload.from_operation(operation)
-        if operation is not None
-        else None
-    )
+    projection = ConfigResetOperationPayload.from_operation(operation) if operation is not None else None
     _emit_envelope(
         ctx,
         command="config.reset.status",
         result=ConfigResetStatusResult(operation=projection),
-        lines=(
-            _operation_lines(projection)
-            if projection is not None
-            else ("operation\t<none>",)
-        ),
+        lines=(_operation_lines(projection) if projection is not None else ("operation\t<none>",)),
     )
 
 

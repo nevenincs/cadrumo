@@ -136,7 +136,3 @@ def is_classified(state: BusinessClassification) -> bool:
         :attr:`BusinessClassification.MIXED`.
     """
     return state in CLASSIFIED_STATES
-
-
-"""String value emitted by older catalogues. Aliases to
-:attr:`BusinessClassification.NOT_YET_PROCESSED` on load."""

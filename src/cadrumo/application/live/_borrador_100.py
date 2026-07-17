@@ -21,7 +21,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, override
+from typing import override
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -52,10 +52,10 @@ type _BorradorValue = Decimal | str
 class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 100 borrador snapshot lookup misses by id.
 
-    :class:`SnapshotNotFoundError` inherits ``AeatError`` first, so MRO
+    :class:`SnapshotNotFoundError` inherits ``CadrumoError`` first, so MRO
     routes ``__init__`` through the structured constructor (accepts
     ``suggestion=`` / ``context=`` kwargs) rather than
-    :class:`KeyError`'s C-level constructor. Listing ``AeatError``
+    :class:`KeyError`'s C-level constructor. Listing ``CadrumoError``
     explicitly here would violate C3 linearization.
     """
 
@@ -188,7 +188,17 @@ class Borrador100SnapshotRepository:
         self._delegate.save(snapshot)
 
 
-class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
+class _Borrador100CaptureRequest(BaseModel):
+    model_config = _STRICT_FROZEN
+
+    filing_year: int
+    period: Period
+    captured_at: datetime
+    source_url: str
+    binding_values: Mapping[BindingId, _BorradorValue]
+
+
+class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador100CaptureRequest]):
     """Canonical backend service for bucket-scoped Modelo 100 borrador snapshots."""
 
     def __init__(
@@ -210,11 +220,13 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         binding_values: Mapping[BindingId, _BorradorValue],
     ) -> Borrador100Snapshot:
         return self._capture_with_lifecycle(
-            filing_year=filing_year,
-            period=period,
-            captured_at=captured_at,
-            source_url=source_url,
-            binding_values=binding_values,
+            _Borrador100CaptureRequest(
+                filing_year=filing_year,
+                period=period,
+                captured_at=captured_at,
+                source_url=source_url,
+                binding_values=binding_values,
+            ),
         )
 
     @override
@@ -250,37 +262,36 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     # ---- SnapshotService[Borrador100Snapshot] hooks ----------------------
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
-    # contract uses **kwargs to allow concrete subclasses to accept caller-
-    # specific keyword arguments without a shared typed parameter set.
-    def _derive_snapshot_id(self, **kwargs: Any) -> str:
+    def _derive_snapshot_id(self, capture: _Borrador100CaptureRequest) -> str:
         return derive_borrador_100_snapshot_id(
-            filing_year=kwargs["filing_year"],
-            period=kwargs["period"],
-            captured_at=kwargs["captured_at"],
-            source_url=kwargs["source_url"],
-            binding_values=kwargs["binding_values"],
+            filing_year=capture.filing_year,
+            period=capture.period,
+            captured_at=capture.captured_at,
+            source_url=capture.source_url,
+            binding_values=capture.binding_values,
         )
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
-    # _build_active_payload hook carries **kwargs: Any so concrete subclasses
-    # accept caller-specific keyword arguments without a shared typed set.
-    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> Borrador100Snapshot:
+    def _build_active_payload(
+        self,
+        *,
+        snapshot_id: str,
+        capture: _Borrador100CaptureRequest,
+    ) -> Borrador100Snapshot:
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
             modelo=Modelo.M100.value,
-            filing_year=kwargs["filing_year"],
-            period=kwargs["period"],
-            captured_at=kwargs["captured_at"],
-            source_url=kwargs["source_url"],
+            filing_year=capture.filing_year,
+            period=capture.period,
+            captured_at=capture.captured_at,
+            source_url=capture.source_url,
             state=SnapshotLifecycleState.ACTIVE,
-            binding_values=dict(kwargs["binding_values"]),
+            binding_values=dict(capture.binding_values),
         )
 
     @override
-    def _payload_axis_key(self, payload: Borrador100Snapshot) -> tuple[Any, ...]:
+    def _payload_axis_key(self, payload: Borrador100Snapshot) -> tuple[object, ...]:
         return (payload.modelo, payload.filing_year, payload.period)
 
     @override

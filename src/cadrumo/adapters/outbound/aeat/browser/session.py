@@ -3,7 +3,7 @@
 :class:`BrowserSession` is the concrete browser runtime behind the
 application auth providers and live Sede readers. It creates one
 Playwright ``BrowserContext`` at a time from a :class:`Profile`, optional
-persisted storage state, and an optional
+decrypted in-memory storage state, and an optional
 :class:`adapters.outbound.aeat.auth.BrowserContextProvisioner`.
 Certificate auth passes a
 :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner` so
@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -37,6 +36,7 @@ if TYPE_CHECKING:
         Response,
     )
 
+from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
@@ -78,8 +78,7 @@ class BrowserSession:
         Args:
             playwright: The Playwright instance.
             settings: Application configuration settings.
-            profile: The :class:`Profile` carrying locale, timezone, and
-                fallback storage-state path.
+            profile: The :class:`Profile` carrying browser locale and timezone.
             evasion_strategy: Optional :class:`EvasionStrategy`; defaults to
                 :class:`PlaywrightStealthEvasion`.
         """
@@ -94,7 +93,6 @@ class BrowserSession:
         self,
         *,
         provisioner: BrowserContextProvisioner | None = None,
-        storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
@@ -108,11 +106,8 @@ class BrowserSession:
         Args:
             provisioner: Optional :class:`BrowserContextProvisioner` used to
                 decorate the new context call.
-            storage_state_path: Optional path to a Playwright storage-state
-                JSON file; passed directly to ``browser.new_context``.
             storage_state: Optional in-memory storage state mapping passed
-                directly to ``browser.new_context``; takes precedence over
-                ``storage_state_path`` when both are supplied.
+                directly to ``browser.new_context``.
 
         Returns:
             A configured BrowserContext with evasion strategies
@@ -144,14 +139,23 @@ class BrowserSession:
             self._browser = browser
             try:
                 context_kwargs = self._build_context_kwargs(
-                    storage_state_path=storage_state_path,
                     storage_state=storage_state,
                     provisioner=provisioner,
                 )
-                context = await self._create_playwright_context(browser, context_kwargs)
+                context = await await_cancellation_complete(
+                    self._create_playwright_context(browser, context_kwargs),
+                    task_name="cadrumo-browser-context-create",
+                )
                 await self._apply_evasion(context)
                 logger.info("browser context create succeeded profile=%s", self.profile.name)
                 return context
+            except asyncio.CancelledError as cancellation:
+                await await_cancellation_complete(
+                    self._close_after_context_failure(),
+                    task_name="cadrumo-browser-context-cancel-cleanup",
+                    cancellation=cancellation,
+                )
+                raise cancellation from None
             except BrowserError:
                 await self._close_after_context_failure()
                 raise
@@ -224,7 +228,6 @@ class BrowserSession:
     def _build_context_kwargs(
         self,
         *,
-        storage_state_path: Path | None,
         storage_state: Mapping[str, object] | None,
         provisioner: BrowserContextProvisioner | None,
     ) -> dict[str, Any]:
@@ -245,8 +248,6 @@ class BrowserSession:
             context_kwargs["user_agent"] = self.profile.user_agent
         if storage_state is not None:
             context_kwargs["storage_state"] = storage_state
-        elif storage_state_path is not None and storage_state_path.exists():
-            context_kwargs["storage_state"] = str(storage_state_path)
         if provisioner is not None:
             context_kwargs.update(dict(provisioner.build_context_kwargs()))
         return context_kwargs
@@ -486,6 +487,4 @@ class BrowserSession:
 
 def _storage_state_source(context_kwargs: Mapping[str, object]) -> str:
     """Describe the storage-state input without logging secret material."""
-    if "storage_state" not in context_kwargs:
-        return "none"
-    return "inline" if isinstance(context_kwargs["storage_state"], Mapping) else "path"
+    return "inline" if "storage_state" in context_kwargs else "none"

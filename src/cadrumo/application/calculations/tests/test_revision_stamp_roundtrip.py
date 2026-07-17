@@ -1,7 +1,7 @@
 """Stamped_revision_id roundtrip and revision-stamp carry-gate tests.
 
-- ``_ObservationEnvelopePayload.stamped_revision_id`` survives the
-  encrypted-storage roundtrip as a required value.
+- :class:`ObservationEnvelopePayload` preserves the required
+  ``stamped_revision_id`` through a secure-repository round trip.
 - ``save_observation`` derives the law-determined stamp when callers omit it.
 - Anti-tautology proof: deleting ``stamped_revision_id`` from the on-disk JSON
   envelope refuses on reload.

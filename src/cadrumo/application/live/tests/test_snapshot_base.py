@@ -16,7 +16,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
 )
 from ....adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....core.identity import BucketId
 from ....tests.secure_sql import isolated_runtime_profile
 from .._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
@@ -70,6 +70,16 @@ class ProbeSnapshot(BaseModel):
             discard_reason=self.discard_reason,
         )
         return self
+
+
+class _ProbeCaptureRequest(BaseModel):
+    """Typed capture input for the lifecycle-service probe."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    axis_label: str = Field(min_length=1, max_length=64)
+    captured_at: datetime
+    payload_text: str
 
 
 def _probe_object_key(bucket_id: str, snapshot_id: str) -> str:
@@ -158,31 +168,37 @@ class ProbeRepository:
 # ---- Test service ---------------------------------------------------------
 
 
-class ProbeService(SnapshotService[ProbeSnapshot]):
+class ProbeService(SnapshotService[ProbeSnapshot, _ProbeCaptureRequest]):
     def __init__(self, *, bucket_id: str, repository: ProbeRepository) -> None:
         super().__init__(bucket_id=bucket_id, repository=repository)
 
     def capture(self, *, axis_label: str, captured_at: datetime, payload_text: str) -> ProbeSnapshot:
-        return self._capture_with_lifecycle(axis_label=axis_label, captured_at=captured_at, payload_text=payload_text)
+        return self._capture_with_lifecycle(
+            _ProbeCaptureRequest(
+                axis_label=axis_label,
+                captured_at=captured_at,
+                payload_text=payload_text,
+            ),
+        )
 
     @override
-    def _derive_snapshot_id(self, **kwargs: Any) -> str:
+    def _derive_snapshot_id(self, capture: _ProbeCaptureRequest) -> str:
         return derive_snapshot_id_from_json(
             {
-                "axis_label": kwargs["axis_label"],
-                "captured_at": kwargs["captured_at"].isoformat(),
-                "payload_text": kwargs["payload_text"],
+                "axis_label": capture.axis_label,
+                "captured_at": capture.captured_at.isoformat(),
+                "payload_text": capture.payload_text,
             },
         )
 
     @override
-    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> ProbeSnapshot:
+    def _build_active_payload(self, *, snapshot_id: str, capture: _ProbeCaptureRequest) -> ProbeSnapshot:
         return ProbeSnapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
-            axis_label=kwargs["axis_label"],
-            captured_at=kwargs["captured_at"],
-            payload_text=kwargs["payload_text"],
+            axis_label=capture.axis_label,
+            captured_at=capture.captured_at,
+            payload_text=capture.payload_text,
             state=SnapshotLifecycleState.ACTIVE,
         )
 
@@ -442,13 +458,13 @@ def test_service_constructor_rejects_bucket_mismatch(secure_objects: SecureObjec
 def test_borrador_snapshot_not_found_error_inherits_shared_base() -> None:
     error = BorradorSnapshotNotFoundError("borrador snapshot 'x' not found")
     assert isinstance(error, SnapshotNotFoundError)
-    assert isinstance(error, AeatError)
+    assert isinstance(error, CadrumoError)
     assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
-    assert issubclass(BorradorSnapshotNotFoundError, AeatError)
+    assert issubclass(BorradorSnapshotNotFoundError, CadrumoError)
 
 
 def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
-    # AeatError-first MRO means suggestion= is accepted (KeyError.__init__ rejects kwargs).
+    # CadrumoError-first MRO means suggestion= is accepted (KeyError.__init__ rejects kwargs).
     error = BorradorSnapshotNotFoundError(
         f"borrador snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
         suggestion="aeat app live borrador 100 list",

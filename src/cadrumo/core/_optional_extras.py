@@ -84,7 +84,7 @@ class MissingOptionalExtraError(CoreError, ImportError):
     """Raised when a feature is reached but its optional extra is not installed.
 
     Descends from :class:`~core.errors.CoreError` so the project-wide
-    :class:`~core.errors.AeatError` boundary sees the refusal, and from
+    :class:`~core.errors.CadrumoError` boundary sees the refusal, and from
     :class:`ImportError` so adapters that already catch import failures keep
     working. Application probes report the same missing package as a
     :class:`application.provisioning.DependencyStatus`; feature guards raise

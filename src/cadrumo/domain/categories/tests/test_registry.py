@@ -112,7 +112,7 @@ def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
 
 
 def test_load_category_profile_file_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
-    """Registry file access failures stay inside the AEAT exception hierarchy."""
+    """Registry file access failures stay inside the Cadrumo exception hierarchy."""
 
     missing = tmp_path / "missing-category-profile.toml"
 

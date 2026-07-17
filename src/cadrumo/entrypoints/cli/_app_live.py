@@ -51,7 +51,7 @@ from ._app_live_notifications_cli import notifications_app, register_notificatio
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
-from ._common import _emit_envelope
+from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_pull_year_range
 
 if TYPE_CHECKING:
     from ...application.live import VerifyVerdict
@@ -112,25 +112,6 @@ def _required_live_period_option(period: str, *, year: int) -> Period:
     if parsed is None:
         raise typer.BadParameter("--period is required")
     return parsed
-
-
-def _resolve_pull_year_range(
-    *,
-    year: int | None,
-    year_from: int | None,
-    year_to: int | None,
-) -> tuple[int, int]:
-    if year is not None and (year_from is not None or year_to is not None):
-        raise typer.BadParameter("use --year for a single-year pull or --from-year/--to-year for a range, not both")
-    if year is not None:
-        return year, year
-    if year_from is None and year_to is None:
-        raise typer.BadParameter("either --year or both --from-year and --to-year are required")
-    if year_from is None or year_to is None:
-        raise typer.BadParameter("--from-year and --to-year must be supplied together")
-    if year_from > year_to:
-        raise typer.BadParameter("--from-year must be less than or equal to --to-year")
-    return year_from, year_to
 
 
 def _live_iva_outcome_label(value: object) -> str:
@@ -1071,7 +1052,7 @@ def filed_pull_cmd(
 
     if period is not None or expediente_id is not None:
         raise typer.BadParameter("--period and --expediente are only valid for one --modelo with --year")
-    resolved_from, resolved_to = _resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
+    resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
         capture_filed_data_bulk(
             year_from=resolved_from,
@@ -1202,16 +1183,11 @@ def filed_pull_sources_cmd(
     _emit_envelope(ctx, command="app.live.filed.pull_sources", result=result, lines=lines)
 
 
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
-
-
-register_notifications_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+register_notifications_commands(
+    app,
+    active_bucket_id=active_bucket_id_or_refuse,
+    auth_preflight=_emit_live_auth_preflight,
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1219,16 +1195,24 @@ register_notifications_commands(app, active_bucket_id=_active_bucket_id, auth_pr
 register_portals_commands(app)
 
 
-register_expedientes_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+register_expedientes_commands(
+    app,
+    active_bucket_id=active_bucket_id_or_refuse,
+    auth_preflight=_emit_live_auth_preflight,
+)
 
 
-register_justificante_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+register_justificante_commands(
+    app,
+    active_bucket_id=active_bucket_id_or_refuse,
+    auth_preflight=_emit_live_auth_preflight,
+)
 
 
-register_verify_commands(app, active_bucket_id=_active_bucket_id, verify_expected=_verify_expected)
+register_verify_commands(app, active_bucket_id=active_bucket_id_or_refuse, verify_expected=_verify_expected)
 
 
-register_borrador_commands(app, active_bucket_id=_active_bucket_id)
+register_borrador_commands(app, active_bucket_id=active_bucket_id_or_refuse)
 
 __all__ = [
     "app",

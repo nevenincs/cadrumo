@@ -1,13 +1,13 @@
 """Domain error hierarchy for currency normalization and exchange-rate lookup.
 
-All exceptions extend :class:`~cadrumo.core.errors.AeatError` so callers can
+All exceptions extend :class:`~cadrumo.core.errors.CadrumoError` so callers can
 catch either the domain-specific type or the project-wide base class.
 """
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class CurrencyError(AeatError):
+class CurrencyError(CadrumoError):
     """Base exception for currency normalization."""
 
 

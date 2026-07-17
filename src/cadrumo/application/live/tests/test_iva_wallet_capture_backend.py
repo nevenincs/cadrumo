@@ -23,13 +23,14 @@ from ....domain.iva_compensation import (
     IvaCompensationReconciliationDecision,
 )
 from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root, isolated_runtime_profile
+from ....tests.user_profile import register_minimal_profile
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 

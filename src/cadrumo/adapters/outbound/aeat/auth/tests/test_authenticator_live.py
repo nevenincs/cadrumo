@@ -88,10 +88,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     from ...browser import Profile, create_browser_session
     from .. import BrowserSessionFactory
 
-    profile = Profile(
-        name="live-auth-gate",
-        storage_state_path=settings.cadrumo_token_dir / "live_auth_gate_state.json",
-    )
+    profile = Profile(name="live-auth-gate")
 
     async def factory(_settings: Any) -> Any:
         return await create_browser_session(settings, profile)

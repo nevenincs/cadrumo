@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class CategoryError(AeatError):
+class CategoryError(CadrumoError):
     """Base class for every error raised by :mod:`cadrumo.domain.categories`."""
 
 

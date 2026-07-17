@@ -436,12 +436,22 @@ def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
         return f"{label}{sep}{value}"
 
     redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
-    redacted = redact_for_log(redacted)
-    # The bare-UUID catch-all collapses every UUID to ``<profile-id>``; it is the
-    # other profile/bucket-identifier surface the opt-out un-redacts. PII, token,
-    # URL, and object-key passes above/below stay unconditional.
-    if not reveal_identifiers:
+
+    def _protect_revealed_uuid(match: re.Match[str]) -> str:
+        sentinel = f"\x00{len(protected)}\x00"
+        protected.append(match.group(0))
+        return sentinel
+
+    # Handle complete UUIDs before the generic log redactor. Some UUID prefixes
+    # also satisfy the NIF pattern (for example ``1470176e``); hashing that
+    # prefix first would corrupt the placeholder into ``sha256:<profile-id>``.
+    # The reveal opt-out protects the same bare-UUID surface so its value survives
+    # the downstream PII pass verbatim.
+    if reveal_identifiers:
+        redacted = _CLI_UUID_PATTERN.sub(_protect_revealed_uuid, redacted)
+    else:
         redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+    redacted = redact_for_log(redacted)
     redacted = _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     for index, original in enumerate(protected):
         redacted = redacted.replace(f"\x00{index}\x00", original)

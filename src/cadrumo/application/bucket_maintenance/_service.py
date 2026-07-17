@@ -115,35 +115,18 @@ _RESTORE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
 _ARCHIVE_SCHEMA_VERSION = 3
-
-#: Oldest sealed-archive schema version the import path keeps readable.
-#: Starts at the current version (no released archives exist below it);
-#: moves forward only through a deliberate, superseding decision.
-_ARCHIVE_DURABILITY_FLOOR = 3
 _RECOVERY_WRAP_SALT_BYTES = 16
 
 
-def ensure_archive_schema_readable(archive_schema_version: int) -> None:
+def ensure_archive_schema_supported(archive_schema_version: int) -> None:
     """Refuse a sealed-archive version this application cannot restore.
 
-    The gate is a ceiling with a durability floor, not an equality: a
-    version above ``_ARCHIVE_SCHEMA_VERSION`` was exported by a newer
-    application and is refused as such, and a version below
-    ``_ARCHIVE_DURABILITY_FLOOR`` predates the durability guarantee.
-
-    Unlike the secure-object and bundle tiers, the archive tier carries
-    NO upgrade dispatch: this is a range gate only, and nothing here
-    transforms an older archive layout on restore. The lineage gate
-    therefore pins ``_ARCHIVE_DURABILITY_FLOOR == _ARCHIVE_SCHEMA_VERSION``:
-    raising the current version forces an explicit decision in the same
-    change — raise the floor too (dropping older archives, the pre-release
-    posture) or land a version-aware reader/restore transform and widen
-    the gate then. A floor held below current without that machinery
-    would pass this gate green while restore misreads the old layout.
+    Only the current archive layout is restorable. A higher version is
+    identified as written by a newer application; a lower version is
+    unsupported and is never interpreted as the current layout.
 
     Raises:
-        BucketImportError: When the version is above the ceiling or below
-            the durability floor.
+        BucketImportError: When the version is not current.
     """
     if archive_schema_version > _ARCHIVE_SCHEMA_VERSION:
         raise BucketImportError(
@@ -153,7 +136,7 @@ def ensure_archive_schema_readable(archive_schema_version: int) -> None:
                 "max_supported": str(_ARCHIVE_SCHEMA_VERSION),
             },
         )
-    if archive_schema_version < _ARCHIVE_DURABILITY_FLOOR:
+    if archive_schema_version < _ARCHIVE_SCHEMA_VERSION:
         raise BucketImportError(
             translated_message="application.bucket_maintenance.errors.unsupported_archive_schema_version",
             context={"archive_schema_version": str(archive_schema_version)},
@@ -1000,7 +983,7 @@ class BucketMaintenanceService:
 
         contents = read_sealed_archive(command.source_path)
         header = contents.header
-        ensure_archive_schema_readable(header.archive_schema_version)
+        ensure_archive_schema_supported(header.archive_schema_version)
         existing = read_profile_bucket_by_id(header.bucket_id)
         if existing is not None and not command.force_replace:
             raise BucketImportError(

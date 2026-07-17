@@ -94,7 +94,6 @@ from ._errors import (
 )
 from ._evidence_advisory import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
-    MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
 from ._foreign_assets import (
@@ -223,7 +222,6 @@ __all__ = [
     "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
     "DEFERRED_SOURCE_KINDS",
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
-    "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",

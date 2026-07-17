@@ -32,7 +32,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..errors import AeatError as _AeatError
+from ..errors import CadrumoError as _CadrumoError
 from ..external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..paths import file_stat_fingerprint as _file_stat_fingerprint
 from ..resources import bundled_path as _bundled_path
@@ -40,7 +40,7 @@ from ..resources import bundled_path as _bundled_path
 _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 
 
-class TopicNotFoundError(_AeatError):
+class TopicNotFoundError(_CadrumoError):
     """Raised when a requested slug is absent from a :class:`TopicCatalogue`."""
 
 

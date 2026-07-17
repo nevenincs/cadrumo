@@ -15,7 +15,7 @@ from typing import Any, override
 import yaml
 
 from ..core.atomic_write import atomic_write_text
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
@@ -28,7 +28,7 @@ _log = get_logger(__name__)
 _YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
 
-class LocaleError(AeatError):
+class LocaleError(CadrumoError):
     """Raised on locale management and parsing errors."""
 
 

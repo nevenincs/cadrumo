@@ -37,12 +37,6 @@ from ...core import Modelo, Period, PeriodKind
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.contribuyente import (
-    CCAA,
-    ForalRegimeError,
-    TaxResidenceProfileError,
-    parse_tax_region,
-)
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.renta import (
@@ -55,8 +49,6 @@ from ...domain.renta import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
     normalize_spending_category,
-    resolve_region_category_profiles,
-    select_deductibility_profile,
 )
 from ...domain.transactions import (
     BusinessClassification,
@@ -66,8 +58,6 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
-from ..user_profile import UserProfileLifecycleRepository, fact_value
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
@@ -117,7 +107,6 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     AMOUNT_MISMATCH = "amount_mismatch"
     INVALID_LEDGER_FACT = "invalid_ledger_fact"
     INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"
-    REGION_UNDECLARED_FOR_OVERRIDE = "region_undeclared_for_override"
 
 
 class RentaLedgerAggregationIssue(BaseModel):
@@ -198,44 +187,6 @@ class RentaLedgerExpenseAggregation(BaseModel):
         return tuple(value)
 
 
-def _resolve_residence_ccaa(
-    *,
-    bucket_id: str,
-    profile_record: UserProfileRecord | None = None,
-) -> CCAA | None:
-    """Derive the ordinary-residence comunidad autonoma from the bucket's profile.
-
-    Reads the ``tax_residence.ccaa`` fact from the bucket's user profile and
-    parses it to the closed :class:`CCAA` enum. Returns ``None`` -- the D4
-    fail-closed outcome that falls the aggregation through to the state year
-    profile -- when no profile is selected, the fact is absent, or the recorded
-    region is a foral regime or otherwise unparseable. The value is inert while
-    :func:`resolve_region_category_profiles` returns an empty mapping (general
-    expense deductibility is state base-imponible law, invariant across
-    comunidades); it is derived here so a future territorial-regime override
-    selects by residence with no further caller wiring.
-
-    Args:
-        bucket_id: Stable bucket identifier used to load the user profile.
-        profile_record: Optional :class:`UserProfileRecord` override for testing;
-            when ``None`` the record is loaded from the bucket.
-    """
-    record = profile_record
-    if record is None:
-        try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
-        except ProfileNotFoundError:
-            return None
-
-    raw = fact_value(record, "tax_residence.ccaa")
-    if raw is None:
-        return None
-    try:
-        return parse_tax_region(raw)
-    except (ForalRegimeError, TaxResidenceProfileError):
-        return None
-
-
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
@@ -246,21 +197,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
     modelo: str = Modelo.M100.value,
-    profile_record: UserProfileRecord | None = None,
-    region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
-
-    Derives the ordinary-residence comunidad autonoma from the bucket's active
-    profile (``tax_residence.ccaa``) and threads it into the aggregation so a
-    territorial-regime deductibility override selects by residence; the axis is
-    fail-closed (an undeclared or unparseable region resolves to the state year
-    profile) and byte-identical while the override layer is empty. Pass
-    ``profile_record`` to supply the :class:`UserProfileRecord` directly (the
-    residence is otherwise loaded from the bucket), and ``region_category_overrides``
-    to supply the per-:class:`CCAA` override layer forwarded to
-    :func:`aggregate_renta_ledger_expenses` (defaulting to the empty
-    registry-provisioned layer, :func:`resolve_region_category_profiles`).
 
     Returns a :class:`RentaLedgerExpenseAggregation`.
     """
@@ -289,7 +227,6 @@ def aggregate_renta_ledger_expenses_from_repositories(
             context={"bucket_id": bucket_id, "repository_bucket_id": invoices_repository.bucket_id},
         )
     invoices = invoices_repository.load()
-    residence_ccaa = _resolve_residence_ccaa(bucket_id=bucket_id, profile_record=profile_record)
     return aggregate_renta_ledger_expenses(
         transactions,
         invoices,
@@ -299,8 +236,6 @@ def aggregate_renta_ledger_expenses_from_repositories(
         usage_ratios=usage_ratios,
         activity_key=activity_key,
         modelo=modelo,
-        residence_ccaa=residence_ccaa,
-        region_category_overrides=region_category_overrides,
     )
 
 
@@ -314,8 +249,6 @@ def aggregate_renta_ledger_expenses(
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
     modelo: str = Modelo.M100.value,
-    residence_ccaa: CCAA | None = None,
-    region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -332,12 +265,6 @@ def aggregate_renta_ledger_expenses(
             observations' provenance; defaults to ``"default"``.
         modelo: Modelo identifier (``"100"`` IRPF or ``"130"`` pagos
             fraccionados) selecting the per-modelo deductibility rules.
-        residence_ccaa: Optional ordinary residence comunidad autonoma, used only
-            to select a territorial-regime deductibility override; inert while the
-            override layer is empty and general expense deductibility is state law.
-        region_category_overrides: Optional per-:class:`CCAA` category-profile
-            override layer; defaults to :func:`resolve_region_category_profiles`
-            (empty) so every fact falls through to the state year profile.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -345,15 +272,9 @@ def aggregate_renta_ledger_expenses(
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
     profiles = resources().category_profiles.get(resolved_profile_year)
-    region_overrides = (
-        region_category_overrides
-        if region_category_overrides is not None
-        else resolve_region_category_profiles(resolved_profile_year)
-    )
     context = RentaDeductibilityContext(
         profile_year=resolved_profile_year,
         usage_ratios=dict(usage_ratios or {}),
-        residence_ccaa=residence_ccaa,
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
@@ -372,7 +293,6 @@ def aggregate_renta_ledger_expenses(
             resolved_period=resolved_period,
             resolved_profile_year=resolved_profile_year,
             profiles=profiles,
-            region_overrides=region_overrides,
             context=context,
             activity_key=activity_key,
         )
@@ -400,7 +320,6 @@ def _classify_renta_transaction(
     resolved_period: Period,
     resolved_profile_year: int,
     profiles: Mapping[SpendingCategory, CategoryProfile],
-    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
     context: RentaDeductibilityContext,
     activity_key: str,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
@@ -480,24 +399,6 @@ def _classify_renta_transaction(
             RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
             f"category {category.value!r} has no profile for {resolved_profile_year}",
         )
-    category_region_overrides = {
-        ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
-    }
-    selected_profile = select_deductibility_profile(
-        state_profile=profile,
-        region_override_profiles=category_region_overrides,
-        context=context,
-    )
-    if selected_profile is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
-            (
-                f"category {category.value!r} carries a territorial-regime deductibility override for "
-                f"{resolved_profile_year} but the residence comunidad autonoma is undeclared"
-            ),
-        )
-    profile = selected_profile
     evidence_payload = _purchase_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,

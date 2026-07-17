@@ -553,7 +553,7 @@ async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tm
     </body></html>
     """
     settings = Settings(cadrumo_token_dir=tmp_path)
-    profile = Profile(name="wallet-diagnostic", storage_state_path=tmp_path / "state.json")
+    profile = Profile(name="wallet-diagnostic")
 
     async with (
         shared_playwright_runtime() as playwright,

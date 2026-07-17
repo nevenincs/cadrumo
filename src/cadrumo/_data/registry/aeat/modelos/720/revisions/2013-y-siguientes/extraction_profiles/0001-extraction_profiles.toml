@@ -11,7 +11,7 @@ target_casillas = [
 # (1) AEAT-published diseño de registro (modelo_720.pdf), downloaded 2026-05-27 from
 #     https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
 #       DR_Resto_Mod/archivos/modelo_720.pdf
-#     saved at src/aeat/_data/corpus/aeat_official/instructions/modelo_720/files/
+#     saved at src/cadrumo/_data/corpus/aeat_official/instructions/modelo_720/files/
 #       modelo-720-aeat-dr.pdf
 #     Record-type-1 positions 5-8: EJERCICIO.
 # (2) Orden HAP/72/2013 Art. 7: "al que se refiera la información a suministrar" —
@@ -25,7 +25,7 @@ target_casillas = [
 # pair and cannot be extracted via named_label.  No AEAT-published source uses
 # "Tipo de declaración" as a labeled field for M720.
 #
-# Synthetic round-trip fixture at src/aeat/tests/fixtures/justificantes/720/2024-0A.pdf
+# Synthetic round-trip fixture at src/cadrumo/tests/fixtures/justificantes/720/2024-0A.pdf
 # reproduces the AEAT ejercicio label so the named_label parser can locate and
 # extract the value.
 confidence = "strict"

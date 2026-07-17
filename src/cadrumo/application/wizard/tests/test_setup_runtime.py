@@ -16,10 +16,10 @@ import pytest
 from ....core.setup_answers import SetupAnswers
 from ....domain.deadlines import LegalEntityForm
 from .._catalogue import SETUP_FLOW
-from .._errors import WizardScriptOverflowError
+from .._errors import WizardAnswerQueueOverflowError
 from .._models import WizardWidget
 from .._persistence import project_answers, serialise_answers
-from .._prompter import ScriptedPrompter
+from .._prompter import CanonicalAnswerPrompter
 from .._runner import run_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -109,7 +109,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
 
 
 def test_run_flow_collects_visible_questions_in_order() -> None:
-    prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
+    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
     answers = run_flow(SETUP_FLOW, prompter)
     assert isinstance(answers, SetupAnswers)
     assert answers.tax_id == "12345678Z"
@@ -118,7 +118,7 @@ def test_run_flow_collects_visible_questions_in_order() -> None:
 
 
 def test_run_flow_skips_spouse_questions_when_declaration_is_individual() -> None:
-    prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
+    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
     run_flow(SETUP_FLOW, prompter)
     # Every spouse question is joint-gated; none is asked for an
     # individual declaration (taxation_type != "2").
@@ -134,10 +134,10 @@ def test_runner_close_overflow_is_caught() -> None:
 
     extras = _scripted_answers_for_individual_declaration()
     extras.append("orphan")
-    prompter = ScriptedPrompter(extras)
-    with pytest.raises(WizardScriptOverflowError) as excinfo:
+    prompter = CanonicalAnswerPrompter(extras)
+    with pytest.raises(WizardAnswerQueueOverflowError) as excinfo:
         run_flow(SETUP_FLOW, prompter)
-    assert excinfo.value.translated_message == "errors.internal.internal_wizard_script_overflow"
+    assert excinfo.value.translated_message == "errors.internal.internal_wizard_answer_queue_overflow"
     assert excinfo.value.context == {
         "remaining_count": 1,
         "asked_count": len(_scripted_answers_for_individual_declaration()),
@@ -146,7 +146,7 @@ def test_runner_close_overflow_is_caught() -> None:
 
 
 def test_persist_answers_round_trip_via_project_answers() -> None:
-    prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
+    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
     answers = run_flow(SETUP_FLOW, prompter)
     assert isinstance(answers, SetupAnswers)
     canonical = serialise_answers(SETUP_FLOW, answers)
@@ -158,7 +158,7 @@ def test_persist_answers_round_trip_via_project_answers() -> None:
 
 
 def test_canonical_dict_only_carries_profile_bound_keys() -> None:
-    prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
+    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
     answers = run_flow(SETUP_FLOW, prompter)
     canonical = serialise_answers(SETUP_FLOW, answers)
     assert "identity.tax_id" in canonical
@@ -249,7 +249,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "",  # notes
         ],
     )
-    prompter = ScriptedPrompter(answers_deque)
+    prompter = CanonicalAnswerPrompter(answers_deque)
     answers = run_flow(SETUP_FLOW, prompter)
     assert isinstance(answers, SetupAnswers)
     assert "spouse-tax-id" in prompter.asked

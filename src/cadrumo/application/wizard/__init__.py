@@ -36,9 +36,9 @@ See Also:
 from . import _compiler as _compiler
 from ._catalogue import WIZARD_FLOWS
 from ._commands import build_wizard_command
-from ._errors import WizardScriptUnderflowError, WizardValidationError
+from ._errors import WizardAnswerQueueUnderflowError, WizardValidationError
 from ._persistence import project_answers
-from ._prompter import Prompter, QuestionaryPrompter, ScriptedPrompter, WizardUnsupportedConsoleError
+from ._prompter import CanonicalAnswerPrompter, Prompter, QuestionaryPrompter, WizardUnsupportedConsoleError
 from ._status import (
     WizardStatusError,
     WizardStatusReport,
@@ -49,10 +49,10 @@ from ._widgets import validate_widget_answer
 
 __all__ = [
     "WIZARD_FLOWS",
+    "CanonicalAnswerPrompter",
     "Prompter",
     "QuestionaryPrompter",
-    "ScriptedPrompter",
-    "WizardScriptUnderflowError",
+    "WizardAnswerQueueUnderflowError",
     "WizardStatusError",
     "WizardStatusReport",
     "WizardUnsupportedConsoleError",

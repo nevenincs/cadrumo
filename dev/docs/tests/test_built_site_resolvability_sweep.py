@@ -74,7 +74,9 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
     written into the tmp source copy by their generation hooks. Warnings are not
     fatal here (no ``-W``): the sweep asserts against the rendered tree, so an
     unrelated nitpick warning must not mask a real dead-link finding -- that
-    check belongs to the ``-n -W`` gate, this one reads the HTML.
+    check belongs to the ``-n -W`` gate, this one reads the HTML. The subprocess
+    uses one Sphinx worker because pytest already owns the outer parallelism;
+    nested ``-j auto`` pools are not deterministic across platforms.
     """
     docs_source = tmp_path / "docs-source"
     shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
@@ -94,7 +96,7 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
             "-b",
             "html",
             "-j",
-            "auto",
+            "1",
             str(docs_source),
             str(out),
         ],

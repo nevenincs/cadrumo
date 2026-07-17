@@ -17,7 +17,7 @@ See Also:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -28,6 +28,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ...calculations import ObservationEnvelopePayload
 from .. import empty_prior_filing_observations_fingerprint
 from .._review import _prior_filing_observations_fingerprint
 
@@ -63,24 +64,16 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
     )
 
 
-@dataclass(frozen=True)
-class _StoredObservation:
-    """Data-only carrier matching the fingerprint helper's structural shape."""
-
-    observation: RegistryModeloObservation
-    source_kind: str
-    member_nif: str | None
-    stamped_revision_id: str
-
-
 def _carrier(
     *, value: str, source_kind: str = "app_filing", stamped_revision_id: str = "2019-y-siguientes"
-) -> _StoredObservation:
-    return _StoredObservation(
+) -> ObservationEnvelopePayload:
+    return ObservationEnvelopePayload(
         observation=_prior_observation(value=value),
+        captured_at=datetime(2026, 1, 1, tzinfo=UTC),
         source_kind=source_kind,
         member_nif=None,
         stamped_revision_id=stamped_revision_id,
+        source_metadata={},
     )
 
 
@@ -100,7 +93,7 @@ def test_prior_filing_fingerprint_tracks_the_stamped_revision() -> None:
 
 def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> None:
     a = _carrier(value="100.00")
-    b = _StoredObservation(
+    b = ObservationEnvelopePayload(
         observation=RegistryModeloObservation(
             modelo="130",
             filing_year=2025,
@@ -114,9 +107,11 @@ def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> No
                 ),
             ),
         ),
+        captured_at=datetime(2026, 1, 2, tzinfo=UTC),
         source_kind="app_filing",
         member_nif=None,
         stamped_revision_id="2019-y-siguientes",
+        source_metadata={},
     )
 
     assert _prior_filing_observations_fingerprint([a, b]) == _prior_filing_observations_fingerprint([b, a])

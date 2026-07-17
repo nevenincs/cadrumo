@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import pytest
 import typer
@@ -17,6 +15,7 @@ from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .envelope_helpers import unwrap_cli_result as _json
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -78,15 +77,6 @@ def _isolated_cli_backend(tmp_path: Path):
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
-
-
-def _json(result) -> dict[str, Any]:
-    payload = json.loads(result.output)
-    assert isinstance(payload, dict), f"expected JSON object, got {type(payload).__name__}"
-    assert "schema_version" in payload and "result" in payload, f"missing CLI output envelope keys: {sorted(payload)}"
-    inner = payload["result"]
-    assert isinstance(inner, dict), f"expected result object, got {type(inner).__name__}"
-    return inner
 
 
 def _mounted_child_names(root_name: str) -> set[str]:

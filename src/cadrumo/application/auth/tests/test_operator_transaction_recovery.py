@@ -23,11 +23,8 @@ from ....core.config import load_settings
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-)
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import (
     AuthCleanupOperationKind,
     CertificateSecretMutationEventKind,

@@ -2,7 +2,7 @@
 
 These guard-violation errors are raised by the pure carry-forward,
 reconciliation, and balance logic. Each inherits from both
-:class:`~cadrumo.core.errors.AeatError` (so the failure reaches the typed error
+:class:`~cadrumo.core.errors.CadrumoError` (so the failure reaches the typed error
 registry with a stable code and structured context) and :exc:`ValueError` (so
 scalar validation and coercion failures retain the standard Python error
 category).
@@ -10,29 +10,29 @@ category).
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreError
+from ...core.errors import CadrumoError, CoreError
 
 
-class IvaCompensationCarryForwardPolicyError(AeatError, ValueError):
+class IvaCompensationCarryForwardPolicyError(CadrumoError, ValueError):
     """Raised when IVA compensation carry-forward lots violate policy."""
 
 
-class IvaCompensationSeedConflictError(AeatError, ValueError):
+class IvaCompensationSeedConflictError(CadrumoError, ValueError):
     """Raised when a seed is attempted for a period that already has a stored state."""
 
 
-class IvaCompensationYearRangeError(AeatError, ValueError):
+class IvaCompensationYearRangeError(CadrumoError, ValueError):
     """Raised when a filing_year or as_of_year falls outside the supported range [2000, 2099].
 
     Replaces bare :exc:`ValueError` at the year-range guards in
     :func:`iva_compensation_period_key` and
     :func:`build_iva_compensation_carry_forward_report`. Inherits from
     :exc:`ValueError` because these guards validate caller-supplied scalar year
-    values while still surfacing a typed AEAT error.
+    values while still surfacing a typed Cadrumo error.
     """
 
 
-class IvaCompensationDecimalParseError(AeatError, ValueError):
+class IvaCompensationDecimalParseError(CadrumoError, ValueError):
     """Raised when a casilla value cannot be coerced to :class:`~decimal.Decimal`.
 
     Replaces the bare :exc:`ValueError` re-raised from
@@ -42,11 +42,11 @@ class IvaCompensationDecimalParseError(AeatError, ValueError):
     """
 
 
-class IvaCompensationCasillaReferenceError(AeatError, ValueError):
+class IvaCompensationCasillaReferenceError(CadrumoError, ValueError):
     """Raised when IVA compensation input uses a noncanonical casilla reference."""
 
 
-class IvaCompensationReconciliationInputError(AeatError, ValueError):
+class IvaCompensationReconciliationInputError(CadrumoError, ValueError):
     """Raised when IVA compensation wallet reconciliation inputs are invalid."""
 
 

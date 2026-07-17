@@ -1,7 +1,7 @@
 """Static guard for production exception base classes.
 
 User/application-facing Cadrumo exceptions must derive from
-:class:`cadrumo.core.errors.AeatError` so they bind to the central error
+:class:`cadrumo.core.errors.CadrumoError` so they bind to the central error
 registry. A tiny allowlist remains for private implementation sentinels
 and structural mixin bases that are not raised directly.
 """
@@ -21,9 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _BARE_EXCEPTION_BASES = (Exception, ValueError, RuntimeError, KeyError, TypeError)
 _ALLOWLIST = {
-    "cadrumo.core.errors.AeatError": "central root of the registry-bound exception hierarchy",
+    "cadrumo.core.errors.CadrumoError": "central root of the registry-bound exception hierarchy",
     "cadrumo.application.live._snapshot_base.SnapshotNotFoundError": (
-        "structural KeyError mixin; concrete snapshot errors also inherit AeatError"
+        "structural KeyError mixin; concrete snapshot errors also inherit CadrumoError"
     ),
     "cadrumo.adapters.outbound.aeat._playwright.PlaywrightError": (
         "optional-extra fallback alias for playwright.async_api.Error; it must match the third-party "
@@ -75,8 +75,8 @@ _ALLOWLIST = {
         "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
     ),
     "cadrumo.core._config_state_root.FormerProductStateError": (
-        "raised from inside Settings/pydantic validation during bootstrap, before the AeatError "
-        "registry can be relied upon; the CLI boundary explicitly catches it ahead of the AeatError "
+        "raised from inside Settings/pydantic validation during bootstrap, before the CadrumoError "
+        "registry can be relied upon; the CLI boundary explicitly catches it ahead of the CadrumoError "
         "arm and translates it into a registered CliRefusedBoundaryError"
     ),
 }

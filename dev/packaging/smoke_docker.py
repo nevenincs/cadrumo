@@ -177,7 +177,7 @@ from pathlib import Path
 
 REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
-    "registry/aeat/user_profile/schema.toml",
+    "registry/cadrumo/user_profile/schema.toml",
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
 

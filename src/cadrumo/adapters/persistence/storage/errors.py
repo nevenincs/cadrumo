@@ -1,6 +1,6 @@
 """Storage-layer exceptions.
 
-All storage errors inherit from :class:`core.errors.AeatError` so callers can
+All storage errors inherit from :class:`core.errors.CadrumoError` so callers can
 catch domain-wide failures with a single base class.
 
 The class tree:
@@ -16,15 +16,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 
 
-class SecureStorageError(AeatError):
+class SecureStorageError(CadrumoError):
     """Base class for secure-storage failures.
 
     This named base keeps the encrypted persistence, secret-store,
     bucket-session, and per-bucket lifecycle surfaces catchable as one
-    family while still deriving from the central AEAT error registry.
+    family while still deriving from the central Cadrumo error registry.
     """
 
 
@@ -41,7 +41,7 @@ class RepositorySetupError(RepositoryError):
 
     Programming-contract guard: the attribute must be declared on the subclass
     before instantiation. Unlike a plain :class:`TypeError`, this error is
-    enrolled in the AEAT error registry so it produces a structured envelope
+    enrolled in the Cadrumo error registry so it produces a structured envelope
     rather than an opaque interpreter-level exception.
     """
 
@@ -279,7 +279,7 @@ class NamespaceRegistryError(StorageError, ValueError):
     :class:`~adapters.persistence.storage.StorageHierarchyRegistry` when a
     registry key, namespace slug, path segment, or uniqueness constraint is
     violated at construction time.  Inherits from :class:`StorageError` and
-    ultimately from :class:`~core.errors.AeatError` so callers can catch
+    ultimately from :class:`~core.errors.CadrumoError` so callers can catch
     it without importing Pydantic internals.
 
     Because these validators are called by Pydantic during model construction
