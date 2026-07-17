@@ -777,7 +777,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 472  # +8 mcp warm-serving + user_profile bundle-export/orchestration deferrals (was 464).
+_ALLOWLIST_EDGE_CEILING: int = (
+    472  # +8 mcp warm-serving + user_profile bundle-export/orchestration deferrals (was 464).
+)
 
 
 def _cadrumo_relative(dotted: str) -> str:
