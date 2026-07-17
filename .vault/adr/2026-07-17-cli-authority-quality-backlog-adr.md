@@ -7,6 +7,9 @@ modified: '2026-07-17'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
+  - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-research]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 # `cli-authority-quality-backlog` adr: `cli-authority-quality-backlog rescope grounding` | (**status:** `accepted`)
 
