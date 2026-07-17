@@ -63,6 +63,9 @@ _RETENTION = frozenset(
 #   - corpus-text cache: a single content-fingerprinted cache FILE, bounded by
 #     the finite bundled-corpus source set; stale keys are inert (they embed
 #     source size+mtime).
+#   - validation-verdict cache: one tiny fingerprint-keyed verdict FILE per
+#     registry root; a fingerprint change reuses the same filename (deleted and
+#     rewritten on mismatch), so the store never grows with tree edits.
 _UNBOUNDED_BY_DESIGN = frozenset(
     {
         "cadrumo_token_dir",
@@ -83,6 +86,7 @@ _UNBOUNDED_BY_DESIGN = frozenset(
         "cadrumo_usage_ratios_path",
         "cadrumo_registry_parity_store_dir",
         "cadrumo_corpus_text_cache_dir",
+        "cadrumo_validation_verdict_cache_dir",
     }
 )
 

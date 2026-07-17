@@ -114,6 +114,7 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_status_cache_dir": "cache/status-cache",
     "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
+    "cadrumo_validation_verdict_cache_dir": "cache/registry-verdict",
     # Durable generated outputs.
     "cadrumo_storage_backup_dir": "backups",
     "cadrumo_submissions_dir": "submissions",
@@ -525,6 +526,14 @@ class Settings(CadrumoIntegrationSettings):
         description=(
             "Directory for the registry corpus source-text validation cache "
             "(normalised text keyed by content fingerprint)"
+        ),
+    )
+    cadrumo_validation_verdict_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "cache" / "registry-verdict",
+        description=(
+            "Directory for the persistent registry-validation verdict cache "
+            "(a fingerprint-keyed proof that validate_registry ran green, so a "
+            "matching immutable tree skips runtime re-validation)"
         ),
     )
 
