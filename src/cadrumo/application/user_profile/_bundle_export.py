@@ -1,130 +1,225 @@
-"""Single application authority for portable profile-bundle publication."""
+"""Single application authority for portable profile-bundle publication.
+
+Both operator purposes -- portable transfer and the subject-access request --
+share this one service and one bundle schema; only their typed
+:class:`ProfileBundleExportPurpose` metadata differs. Publication is staged so a
+crash in any window recovers honestly: the service serializes to a restrictive
+temporary file, fsyncs it, records a durable ``PREPARED`` operation-state
+journal OUTSIDE the target artifact, atomically replaces the target, fsyncs the
+parent directory, and only then emits the completion event. A crash after
+``PREPARED`` but before publication is reconciled as prepared, never as
+complete, and the completion event never fires for an artifact that was not
+durably published. The sealed recovery archive is a separate surface and is not
+folded in here.
+"""
 
 from __future__ import annotations
 
-from enum import StrEnum
+import os
+import secrets
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, SecretStr
-
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import fsync_parent_dir
-from ...core.atomic_write import atomic_write_hardened_bytes, atomic_write_hardened_text
+from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.locks import exclusive_file_lock
 from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
+from ._bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportRequest,
+    ProfileBundleExportResult,
+    ProfileBundleExportTarget,
+    ProfileBundleExportTransport,
+    bundle_data_categories,
+)
+from ._bundle_export_operation import (
+    ProfileBundleExportJournalRepository,
+    ProfileBundleExportOperation,
+    ProfileBundleExportOperationStatus,
+    derive_export_operation_id,
+)
 
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ...domain.user_profile import UserProfilePortableExport
     from ..workflow import ProfileBucketPointer
 
-
-class ProfileBundleExportPurpose(StrEnum):
-    """Operator intent for one portable bundle publication."""
-
-    PORTABLE_TRANSFER = "portable_transfer"
-    SUBJECT_ACCESS = "subject_access"
+_STAGED_TEMP_SUFFIX = ".export-tmp"
 
 
-class ProfileBundleExportTransport(StrEnum):
-    """Wire protection applied to the published portable bundle."""
+@dataclass(frozen=True)
+class PreparedProfileExport:
+    """In-memory handle to one staged, journalled, not-yet-published export."""
 
-    CLEARTEXT_LOCAL = "cleartext_local"
-    PASSPHRASE_ENCRYPTED = "passphrase_encrypted"  # noqa: S105 - transport taxonomy, not a secret
-
-
-class ProfileBundleExportRequest(BaseModel):
-    """Typed request for the sole portable profile export operation."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_name: str | None = Field(default=None, min_length=1, max_length=160)
-    destination: Path
-    purpose: ProfileBundleExportPurpose
-    transport: ProfileBundleExportTransport
-    passphrase: SecretStr | None = None
-
-
-class ProfileBundleExportResult(BaseModel):
-    """Published profile-bundle identity and presentation metadata."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: str
-    display_name: str
-    destination: Path
-    bundle_schema_version: int
-    purpose: ProfileBundleExportPurpose
-    transport: ProfileBundleExportTransport
-    data_categories: tuple[str, ...]
-
-
-_CATEGORY_BY_BUNDLE_FIELD = {
-    "profile": "profile_identity_and_facts",
-    "work_units": "modelo_work_units",
-    "ledger_transactions": "ledger_transactions",
-    "calculation_revisions": "calculation_revisions",
-    "filing_records": "filing_records",
-}
+    operation: ProfileBundleExportOperation
+    staged_path: Path
+    pointer: ProfileBucketPointer
+    bundle: UserProfilePortableExport
+    request: ProfileBundleExportRequest
 
 
 def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleExportResult:
-    """Resolve, serialize, atomically publish, and record one profile export."""
+    """Resolve, serialize, atomically publish, and record one profile export.
+
+    Holds one exclusive lock on the resolved target for the whole publication so
+    a concurrent export to the same file is excluded, then composes
+    :func:`prepare_profile_export` and :func:`publish_prepared_export`.
+    """
+    journal = ProfileBundleExportJournalRepository()
+    try:
+        with exclusive_file_lock(request.destination):
+            prepared = prepare_profile_export(request, journal=journal)
+            return publish_prepared_export(prepared, journal=journal)
+    except ProfileExportError:
+        raise
+    except OSError as exc:
+        raise ProfileExportError(
+            "portable profile export could not publish its destination",
+            context={"destination": str(request.destination)},
+        ) from exc
+
+
+def prepare_profile_export(
+    request: ProfileBundleExportRequest,
+    *,
+    journal: ProfileBundleExportJournalRepository | None = None,
+) -> PreparedProfileExport:
+    """Serialize the bundle to a restrictive staged temp and record PREPARED.
+
+    Serializes the profile bundle, renders the transport payload, stages it to a
+    ``0o600`` sibling temporary file, fsyncs it, and writes a durable
+    ``PREPARED`` operation-state journal before any target replacement. A crash
+    after this call leaves a recoverable ``PREPARED`` record and an orphan
+    staged temp, never a published-looking target.
+    """
     from ._orchestration import _profile_export_runtime
 
+    repository = journal or ProfileBundleExportJournalRepository()
+    target = ProfileBundleExportTarget(destination=request.destination)
     pointer = _resolve_export_profile(request.profile_name)
-    with _profile_export_runtime(pointer.bucket_id) as event_repository:
+    _refuse_link_target(request.destination)
+    with _profile_export_runtime(pointer.bucket_id):
         bundle = _serialize_export_bundle(pointer.bucket_id)
         payload = _render_export_payload(bundle, request=request)
-        try:
-            with exclusive_file_lock(request.destination):
-                previous_target = _capture_export_target(request.destination)
-                atomic_write_hardened_text(request.destination, payload)
-                try:
-                    _record_profile_export(
-                        pointer=pointer,
-                        bundle=bundle,
-                        request=request,
-                        repository=event_repository,
-                    )
-                except Exception as exc:
-                    try:
-                        _restore_export_target(request.destination, previous_target)
-                    except Exception as compensation_exc:
-                        raise ProfileExportError(
-                            "profile export audit failed and its destination could not be restored",
-                            context={
-                                "destination": str(request.destination),
-                                "audit_error": type(exc).__name__,
-                                "compensation_error": type(compensation_exc).__name__,
-                            },
-                        ) from compensation_exc
-                    raise ProfileExportError(
-                        "profile export audit failed; its destination was restored",
-                        context={
-                            "destination": str(request.destination),
-                            "audit_error": type(exc).__name__,
-                        },
-                    ) from exc
-        except ProfileExportError:
-            raise
-        except OSError as exc:
-            raise ProfileExportError(
-                "portable profile export could not publish its destination",
-                context={"destination": str(request.destination)},
-            ) from exc
+    staged_path = _stage_export_tempfile(request.destination, payload.encode("utf-8"))
+    try:
+        categories = bundle_data_categories(bundle)
+        occurred_at = now().replace(microsecond=0)
+        operation = ProfileBundleExportOperation(
+            operation_id=derive_export_operation_id(
+                profile_id=pointer.bucket_id,
+                target_identity=target.identity,
+                purpose=request.purpose,
+            ),
+            status=ProfileBundleExportOperationStatus.PREPARED,
+            profile_id=pointer.bucket_id,
+            display_name=pointer.label,
+            target_identity=target.identity,
+            destination=str(request.destination),
+            staged_path=str(staged_path),
+            purpose=request.purpose,
+            transport=request.transport,
+            bundle_schema_version=bundle.bundle_schema_version,
+            data_categories=categories,
+            started_at=occurred_at,
+            updated_at=occurred_at,
+        )
+        repository.save(operation)
+    except BaseException:
+        staged_path.unlink(missing_ok=True)
+        raise
+    return PreparedProfileExport(
+        operation=operation,
+        staged_path=staged_path,
+        pointer=pointer,
+        bundle=bundle,
+        request=request,
+    )
 
+
+def publish_prepared_export(
+    prepared: PreparedProfileExport,
+    *,
+    journal: ProfileBundleExportJournalRepository | None = None,
+) -> ProfileBundleExportResult:
+    """Atomically replace the target, fsync, then emit the completion event.
+
+    Captures any pre-existing target, replaces it with the staged temp, fsyncs
+    the parent directory, then emits the ``PROFILE_EXPORTED`` completion event.
+    If the completion event fails, the target is restored to its captured state
+    and the journal removed, so no completion event is recorded for a target
+    that is not durably left published. On success the operation journal is
+    removed.
+    """
+    repository = journal or ProfileBundleExportJournalRepository()
+    request = prepared.request
+    destination = request.destination
+    from ._orchestration import _profile_export_runtime
+
+    previous_target = _capture_export_target(destination)
+    os.replace(prepared.staged_path, destination)
+    fsync_parent_dir(destination)
+    try:
+        with _profile_export_runtime(prepared.pointer.bucket_id) as event_repository:
+            _record_profile_export(
+                pointer=prepared.pointer,
+                bundle=prepared.bundle,
+                request=request,
+                repository=event_repository,
+            )
+    except Exception as exc:
+        try:
+            _restore_export_target(destination, previous_target)
+        except Exception as compensation_exc:
+            _safe_delete_journal(repository, prepared.operation.operation_id)
+            raise ProfileExportError(
+                "profile export audit failed and its destination could not be restored",
+                context={
+                    "destination": str(destination),
+                    "audit_error": type(exc).__name__,
+                    "compensation_error": type(compensation_exc).__name__,
+                },
+            ) from compensation_exc
+        _safe_delete_journal(repository, prepared.operation.operation_id)
+        raise ProfileExportError(
+            "profile export audit failed; its destination was restored",
+            context={
+                "destination": str(destination),
+                "audit_error": type(exc).__name__,
+            },
+        ) from exc
+    _safe_delete_journal(repository, prepared.operation.operation_id)
     return ProfileBundleExportResult(
-        profile_id=pointer.bucket_id,
-        display_name=pointer.label,
-        destination=request.destination,
-        bundle_schema_version=bundle.bundle_schema_version,
+        profile_id=prepared.pointer.bucket_id,
+        display_name=prepared.pointer.label,
+        destination=destination,
+        bundle_schema_version=prepared.bundle.bundle_schema_version,
         purpose=request.purpose,
         transport=request.transport,
-        data_categories=_bundle_data_categories(bundle),
+        data_categories=prepared.operation.data_categories,
     )
+
+
+def reconcile_prepared_exports(
+    *,
+    journal: ProfileBundleExportJournalRepository | None = None,
+) -> tuple[ProfileBundleExportOperation, ...]:
+    """Reconcile crash-interrupted exports honestly in a fresh process.
+
+    Every ``PREPARED`` operation-state journal is reported as prepared -- never
+    upgraded to complete -- its orphan staged temporary file is removed, and its
+    journal is cleared. No completion event is ever emitted here, so a crash
+    between ``PREPARED`` and publication can never surface a premature
+    ``PROFILE_EXPORTED`` event for an artifact that was not durably published.
+    """
+    repository = journal or ProfileBundleExportJournalRepository()
+    reconciled = repository.prepared()
+    for operation in reconciled:
+        _remove_orphan_staged_temp(operation)
+        repository.delete(operation.operation_id)
+    return reconciled
 
 
 def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
@@ -172,6 +267,57 @@ def _render_export_payload(
     return encrypted.model_dump_json(indent=2)
 
 
+def _stage_export_tempfile(destination: Path, data: bytes) -> Path:
+    """Stage ``data`` into a restrictive ``0o600`` sibling of ``destination``.
+
+    Distinct from the one-shot :func:`atomic_write_hardened_bytes` because the
+    durable ``PREPARED`` journal must land between the fsynced temp and the
+    atomic replace; this stages and fsyncs the temp only, leaving the replace to
+    :func:`publish_prepared_export`. Uses ``O_EXCL`` plus the platform inherit /
+    binary flags so a stray pre-existing temp is refused and newline bytes are
+    never CRLF-translated on Windows.
+    """
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = destination.with_name(f"{destination.name}.{os.getpid()}.{secrets.token_hex(4)}{_STAGED_TEMP_SUFFIX}")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    flags |= getattr(os, "O_NOINHERIT", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    flags |= getattr(os, "O_BINARY", 0)
+    created = False
+    try:
+        fd = os.open(tmp_path, flags, 0o600)
+        created = True
+        try:
+            view = memoryview(data)
+            offset = 0
+            while offset < len(view):
+                written = os.write(fd, view[offset:])
+                if written <= 0:
+                    raise OSError("profile export staged write made no progress")
+                offset += written
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+    except BaseException:
+        if created:
+            tmp_path.unlink(missing_ok=True)
+        raise
+    return tmp_path
+
+
+def _refuse_link_target(path: Path) -> None:
+    if path.is_symlink():
+        raise ProfileExportError(
+            "portable profile export refuses a symbolic-link destination",
+            context={"destination": str(path)},
+        )
+    if path.exists() and not path.is_file():
+        raise ProfileExportError(
+            "portable profile export destination must be a regular file",
+            context={"destination": str(path)},
+        )
+
+
 def _capture_export_target(path: Path) -> tuple[bool, bytes, int]:
     """Capture an existing regular target so a failed audit can restore it."""
     if path.is_symlink():
@@ -199,14 +345,23 @@ def _restore_export_target(path: Path, snapshot: tuple[bool, bytes, int]) -> Non
     fsync_parent_dir(path)
 
 
-def _bundle_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]:
-    categories = tuple(
-        category
-        for field_name in type(bundle).model_fields
-        if (category := _CATEGORY_BY_BUNDLE_FIELD.get(field_name)) is not None
-    )
-    carried = tuple(f"secure_object_namespace:{namespace}" for namespace in bundle.coverage_manifest.carried_namespaces)
-    return (*categories, *carried)
+def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:
+    """Delete a reconciled operation's orphan staged temp, never its target."""
+    staged = Path(operation.staged_path)
+    if str(staged) == operation.destination or not staged.name.endswith(_STAGED_TEMP_SUFFIX):
+        return
+    if staged.is_symlink():
+        return
+    staged.unlink(missing_ok=True)
+
+
+def _safe_delete_journal(repository: ProfileBundleExportJournalRepository, operation_id: str) -> None:
+    try:
+        repository.delete(operation_id)
+    except OSError:
+        from ...core.logging import get_logger
+
+        get_logger(__name__).debug("profile export journal cleanup failed", exc_info=True)
 
 
 def _record_profile_export(
@@ -256,9 +411,15 @@ def _record_profile_export(
 
 
 __all__ = [
+    "PreparedProfileExport",
     "ProfileBundleExportPurpose",
     "ProfileBundleExportRequest",
     "ProfileBundleExportResult",
+    "ProfileBundleExportTarget",
     "ProfileBundleExportTransport",
+    "bundle_data_categories",
     "export_profile_bundle",
+    "prepare_profile_export",
+    "publish_prepared_export",
+    "reconcile_prepared_exports",
 ]
