@@ -364,6 +364,21 @@ def split_transaction_with_classified_children(
             classified_children.append(bare_child)
             continue
         replacement, events = prepared
+        # A child's transaction_id is content-addressed over its RAW movement only.
+        # A classification patch must therefore never change it; if a caller ever
+        # passes a raw field (amount/date/counterparty), the replacement would land
+        # under a new id while siblings, lineage, and the result still name the
+        # stale id — a silently corrupted split group. Refuse rather than persist it.
+        if replacement.transaction_id != bare_child.transaction_id:
+            raise TransactionValidationError(
+                "split child classification changed its transaction id; a per-child "
+                "classification patch must not alter raw movement fields "
+                "(amount, currency, dates, counterparty, description)",
+                context={
+                    "expected_transaction_id": bare_child.transaction_id,
+                    "produced_transaction_id": replacement.transaction_id,
+                },
+            )
         # _prepare_manual_transaction_update rebuilds the row from the command and
         # does not carry split_lineage; restore the child's lineage so the split
         # group linkage survives the classification in the same atomic write.

@@ -210,6 +210,18 @@ def test_generic_field_edit_preserves_existing_evidence(
     assert persisted.purchase_invoice_evidence_id == purchase_evidence.invoice_id
 
 
+def test_bulk_classify_columns_never_carry_evidence_fields() -> None:
+    # bulk_classify_from_csv reaches _prepare_manual_transaction_update (the
+    # builder) directly, bypassing the wrapper's evidence guard. That is safe
+    # ONLY because the bulk CSV column allowlist excludes every evidence field.
+    # This gate keeps the two sets disjoint so a future column addition cannot
+    # open an unguarded evidence-write door through the bulk path.
+    from .._actions_manual import _EVIDENCE_PATCH_FIELDS
+    from .._models import BULK_CLASSIFY_ALLOWED_COLUMNS
+
+    assert not (BULK_CLASSIFY_ALLOWED_COLUMNS & _EVIDENCE_PATCH_FIELDS)
+
+
 def test_invoice_linkage_does_not_mutate_evidence(
     secure_objects: SecureObjectRepository,
 ) -> None:
