@@ -36,3 +36,4 @@ Submodules
    cadrumo.entrypoints.mcp._terminology_tools
    cadrumo.entrypoints.mcp._tools
    cadrumo.entrypoints.mcp._toolsets
+   cadrumo.entrypoints.mcp._transport
