@@ -35,6 +35,7 @@ from ._bundle_export_contracts import (
     bundle_data_categories,
 )
 from ._bundle_export_operation import (
+    ProfileBundleExportJournalNotFoundError,
     ProfileBundleExportJournalRepository,
     ProfileBundleExportOperation,
     ProfileBundleExportOperationStatus,
@@ -47,6 +48,11 @@ if TYPE_CHECKING:
     from ..workflow import ProfileBucketPointer
 
 _STAGED_TEMP_SUFFIX = ".export-tmp"
+
+# Reconcile takes each target lock non-blocking: a lock a live export already
+# holds means an in-flight publication, not a crash orphan, so reconcile skips
+# it rather than waiting.
+_RECONCILE_LOCK_TIMEOUT_S = 0.0
 
 
 @dataclass(frozen=True)
@@ -208,18 +214,56 @@ def reconcile_prepared_exports(
 ) -> tuple[ProfileBundleExportOperation, ...]:
     """Reconcile crash-interrupted exports honestly in a fresh process.
 
-    Every ``PREPARED`` operation-state journal is reported as prepared -- never
-    upgraded to complete -- its orphan staged temporary file is removed, and its
-    journal is cleared. No completion event is ever emitted here, so a crash
-    between ``PREPARED`` and publication can never surface a premature
-    ``PROFILE_EXPORTED`` event for an artifact that was not durably published.
+    Each ``PREPARED`` operation is reconciled only while holding the SAME
+    per-destination lock a live :func:`export_profile_bundle` holds across its
+    whole publication. An operation whose target lock cannot be acquired without
+    waiting is an in-flight export, not a crash orphan, and is skipped -- so a
+    reconcile running concurrently with a live same-target export can never
+    unlink its live staged temp or delete its journal (which would fail the live
+    ``os.replace``). Under the lock the operation is re-read: a still-``PREPARED``
+    operation is reported as prepared -- never upgraded to complete -- its orphan
+    staged temporary file is removed, and its journal is cleared. No completion
+    event is ever emitted here, so a crash between ``PREPARED`` and publication
+    can never surface a premature ``PROFILE_EXPORTED`` event for an artifact that
+    was not durably published.
     """
+    from ...core.locks_errors import LockAcquisitionError
+
     repository = journal or ProfileBundleExportJournalRepository()
-    reconciled = repository.prepared()
-    for operation in reconciled:
-        _remove_orphan_staged_temp(operation)
-        repository.delete(operation.operation_id)
-    return reconciled
+    reconciled: list[ProfileBundleExportOperation] = []
+    for operation in repository.prepared():
+        destination = Path(operation.destination)
+        if not destination.parent.exists():
+            # No live export can be staging beside a missing parent directory,
+            # so the journal is a bare orphan; clear it without a target lock.
+            repository.delete(operation.operation_id)
+            reconciled.append(operation)
+            continue
+        try:
+            with exclusive_file_lock(destination, timeout=_RECONCILE_LOCK_TIMEOUT_S):
+                current = _reload_prepared_operation(repository, operation.operation_id)
+                if current is None:
+                    continue
+                _remove_orphan_staged_temp(current)
+                repository.delete(current.operation_id)
+                reconciled.append(current)
+        except LockAcquisitionError:
+            continue
+    return tuple(reconciled)
+
+
+def _reload_prepared_operation(
+    repository: ProfileBundleExportJournalRepository,
+    operation_id: str,
+) -> ProfileBundleExportOperation | None:
+    """Re-read an operation under its target lock; ``None`` if no longer prepared."""
+    try:
+        current = repository.load(operation_id)
+    except ProfileBundleExportJournalNotFoundError:
+        return None
+    if current.status is not ProfileBundleExportOperationStatus.PREPARED:
+        return None
+    return current
 
 
 def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
