@@ -3411,11 +3411,11 @@ cli:
           jelentéséhez.
         use_help: Az aktív profil váltása egy meglévő sandboxra.
         use_name_help: A sandbox neve (előtag nélkül).
-      sar_catalogue_info: 'Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
-        tartalmazza: azonosító és profiladatok, modelo munkaegységek, főkönyvi tételek,
-        számítási revíziók és benyújtási nyilvántartások. A csatolt bizonyítékok bájtjai
+      sar_catalogue_info: Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
+        tartalmazza. A pontos kategóriák e válasz data_categories mezőjében és annak
+        géppel olvasható kontextusában szerepelnek. A csatolt bizonyítékok bájtjai
         és az AEAT-lekérések titkosított tárolóban maradnak; ezek beemeléséhez használja
-        a titkosított helyreállítási archívumot.'
+        a titkosított helyreállítási archívumot.
       sar_help: A profilhoz tárolt összes személyes adat exportálása GDPR hozzáférési
         archívumként (a hordozható profilcsomag).
       show:

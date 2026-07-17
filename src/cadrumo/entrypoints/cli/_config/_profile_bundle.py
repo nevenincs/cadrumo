@@ -130,12 +130,15 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
 
 
 def _build_sar_catalogue_notice(data_categories: tuple[str, ...]) -> Notice:
-    """Build the data-catalogue notice naming the personal-data categories held.
+    """Build the data-catalogue notice for the personal-data categories held.
 
     A GDPR right-of-access response must tell the subject what categories of
-    their personal data are held, not only hand over a blob. This info
-    :class:`Notice` enumerates the portable-bundle categories and carries them
-    machine-readably in ``context`` per
+    their personal data are held, not only hand over a blob. The authoritative
+    category set is the one the export service derives from the bundle schema
+    and its carried registry namespaces; this info :class:`Notice` points the
+    subject at that derived ``data_categories`` set (carried on the response and
+    machine-readably in ``context``) rather than re-enumerating a static list
+    the CLI would own and let drift, per
     ``cli-notices-are-the-only-diagnostic-channel``.
     """
     return Notice(
@@ -145,8 +148,8 @@ def _build_sar_catalogue_notice(data_categories: tuple[str, ...]) -> Notice:
             "cli.config.profile.sar_catalogue_info",
             default=(
                 "This archive holds every personal-data category kept for the "
-                "profile: identity and profile facts, modelo work units, ledger "
-                "transactions, calculation revisions, and filing records. "
+                "profile. The exact categories are listed in the data_categories "
+                "field of this response and its machine-readable context. "
                 "Attachment evidence bytes and AEAT captures stay in encrypted "
                 "storage; use the encrypted recovery archive to include them."
             ),

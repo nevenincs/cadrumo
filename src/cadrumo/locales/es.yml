@@ -3491,11 +3491,11 @@ cli:
           de todos.
         use_help: Cambia el perfil activo a un sandbox existente.
         use_name_help: Nombre del sandbox (sin el prefijo).
-      sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
-        del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
-        movimientos del libro, revisiones de cálculo y registros de presentación.
-        Los bytes de las pruebas adjuntas y las capturas de AEAT permanecen en almacenamiento
-        cifrado; utilice el archivo de recuperación cifrado para incluirlos.'
+      sar_catalogue_info: Este archivo contiene todas las categorías de datos personales
+        del perfil. Las categorías exactas figuran en el campo data_categories de
+        esta respuesta y en su contexto legible por máquina. Los bytes de las pruebas
+        adjuntas y las capturas de AEAT permanecen en almacenamiento cifrado; utilice
+        el archivo de recuperación cifrado para incluirlos.
       sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
         del interesado (RGPD): el paquete portátil del perfil.'
       show:

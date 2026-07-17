@@ -3454,11 +3454,11 @@ cli:
           tots.
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
-      sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
-        del perfil: identitat i dades del perfil, unitats de treball de models, moviments
-        del llibre, revisions de càlcul i registres de presentació. Els bytes de les
-        proves adjuntes i les captures d''AEAT resten en emmagatzematge xifrat; utilitzeu
-        l''arxiu de recuperació xifrat per incloure''ls.'
+      sar_catalogue_info: Aquest arxiu conté totes les categories de dades personals
+        del perfil. Les categories exactes figuren al camp data_categories d'aquesta
+        resposta i al seu context llegible per màquina. Els bytes de les proves adjuntes
+        i les captures d'AEAT resten en emmagatzematge xifrat; utilitzeu l'arxiu de
+        recuperació xifrat per incloure'ls.
       sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
         de l''interessat (RGPD): el paquet portàtil del perfil.'
       show:
