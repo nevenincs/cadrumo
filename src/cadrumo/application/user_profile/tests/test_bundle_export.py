@@ -20,11 +20,11 @@ from pydantic import SecretStr
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.user_profile import (
+    CoverageManifest,
     ProfileExportError,
     UserProfilePortableExport,
     UserProfileRecord,
 )
-from ....domain.user_profile._portable_export import CoverageManifest
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
