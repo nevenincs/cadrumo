@@ -275,11 +275,18 @@ def _finalise_reconciled_operation(
     *,
     published: bool,
 ) -> None:
-    """Emit the pending event for a published operation, or clear an orphan."""
+    """Emit the pending event for a published operation, or clear an orphan.
+
+    The staged temp is removed in BOTH cases: a harmless no-op after a normal
+    ``os.replace`` consumed it, and the necessary cleanup when the destination
+    already held byte-identical content from a prior identical export so the
+    digest matched without our replace ever running -- leaving no cleartext
+    ``.export-tmp`` bytes on disk past the operation
+    (``sensitive-financial-data-secure-storage-only``).
+    """
     if published:
         _emit_export_event(operation)
-    else:
-        _remove_orphan_staged_temp(operation)
+    _remove_orphan_staged_temp(operation)
     repository.delete(operation.operation_id)
 
 
