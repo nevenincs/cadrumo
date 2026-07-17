@@ -73,18 +73,21 @@ if TYPE_CHECKING:
 
 
 def _ask_wizard_text(prompter: QuestionaryPrompter, prompt: str, *, help_text: str | None) -> str:
-    """Ask one dynamic free-text wizard question, printing ``help_text`` first.
+    """Ask one dynamic free-text wizard question, showing ``help_text`` above it.
 
-    The console-support check runs before the help line so an unsupported host
-    refuses cleanly rather than printing guidance for a question it can never
-    ask. Help copy is emitted to stdout rather than through the prompter's
-    ``emit_progress`` logger hop because it is operator-facing guidance the
-    answer depends on, not progress telemetry.
+    The console-support check runs first, so an unsupported host refuses cleanly
+    rather than rendering guidance for a question it can never ask.
+
+    The help line rides on the prompt string rather than a bare ``print``
+    because the prompt is not written to stdout: it is rendered on the
+    prompter's own output device (the terminal in production, whatever an
+    embedding host declares otherwise). Printing help to stdout would interleave
+    operator prose with the ``--format json`` envelope and leave it unparseable
+    for a machine caller, which is the one thing stdout owes the agent operator.
     """
     prompter.ensure_interactive_environment()
-    if help_text:
-        print(help_text)  # noqa: T201 - operator-facing wizard help line, not a debug print
-    return prompter.ask_text(prompt)
+    rendered = f"{help_text}\n{prompt}" if help_text else prompt
+    return prompter.ask_text(rendered)
 
 
 @dataclass(frozen=True, slots=True)
