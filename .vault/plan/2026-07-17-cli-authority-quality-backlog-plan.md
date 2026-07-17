@@ -106,7 +106,7 @@ The duplication-authority audit flags two low-severity structural duplications o
 
 The S58 distribution close review found the publish-workflow guardrail test enforces its no-build/no-publish claim only through exact-substring not-in-workflow-text guards, so a differently-spelled build or publish command inside the validate job would slip past both the substring guard and the parsed-YAML presence checks. Harden the guardrail with a structural assertion over every validate-job step.
 
-- [ ] `P11.S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards, gated on the guardrail test failing if any validate-job step invokes a build or publish tool; `dev/release/tests/test_publish_workflow.py`.
+- [x] `P11.S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards, gated on the guardrail test failing if any validate-job step invokes a build or publish tool; `dev/release/tests/test_publish_workflow.py`.
 
 ## Description
 
