@@ -28,8 +28,8 @@ import pytest
 from ....core.config import override_settings
 from .. import _inprocess
 from .._inprocess import warm_capture_holder_age
-from .._server import _INPROCESS_MARKER, _WEDGE_FALLBACK_MARKER, _run_tool
 from .._tools import McpToolDescriptor, build_tool_descriptors
+from .._transport import _INPROCESS_MARKER, _WEDGE_FALLBACK_MARKER, _run_tool
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

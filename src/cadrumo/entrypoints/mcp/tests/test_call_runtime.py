@@ -89,7 +89,7 @@ def test_a_child_spawning_process_is_killed_as_a_tree() -> None:
 
 
 def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
-    from .._server import _timeout_refusal_envelope
+    from .._transport import _timeout_refusal_envelope
 
     envelope = _timeout_refusal_envelope(command_key="app.live.expedientes.pull", tier=CallTier.LIVE, timeout_s=420.0)
     assert envelope["status"] == "error"

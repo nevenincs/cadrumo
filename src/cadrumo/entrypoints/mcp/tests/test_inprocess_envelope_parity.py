@@ -34,8 +34,8 @@ from ....core.config import DEV_TEST_DATABASE_PASSWORD
 from ....tests import temporary_env
 from .._call_runtime import tier_for, timeout_seconds
 from .._inprocess import parse_cli_envelope, run_cli_in_process
-from .._server import _run_inprocess_tool, _run_subprocess_tool
 from .._tools import McpToolDescriptor, build_tool_descriptors
+from .._transport import _run_inprocess_tool, _run_subprocess_tool
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
