@@ -16,13 +16,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.hashing import sha256_hex
-
-if TYPE_CHECKING:
-    pass
-
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.hashing import sha256_hex
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventType
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -47,6 +43,7 @@ from ._actions_common import (
     _blocking_modelo_references,
     _bucket_event_repository,
     _build_bucket_event,
+    _invoice_repository,
     _normalise_timestamp,
     _raise_finalized_modelo_blocked,
     _require_actor,
@@ -56,11 +53,17 @@ from ._actions_common import (
     _transaction_modelo_source_ids,
     _transaction_repository,
 )
+from ._actions_manual import _command_from_patch, _prepare_manual_transaction_update
 from ._models import (
+    ManualLedgerTransactionPatch,
     MergeTransactionsResult,
     SplitChildCommand,
     SplitTransactionResult,
 )
+
+if TYPE_CHECKING:
+    from ...domain.attachments import AttachmentStoreProtocol
+    from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
 
 
 def split_transaction(
@@ -117,6 +120,64 @@ def split_transaction(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
+    parent_after, final_children, event, split_group_id, child_ids = _build_split_state(
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        children=children,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        reason=reason,
+        now=now,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+
+    updated_transactions = dict(catalogue.transactions)
+    updated_transactions[parent_after.transaction_id] = parent_after
+    for child_transaction in final_children:
+        updated_transactions[child_transaction.transaction_id] = child_transaction
+    new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
+
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=new_catalogue,
+        events=(event,),
+    )
+
+    return SplitTransactionResult(
+        bucket_id=bucket_id,
+        parent_transaction_id=parent_after.transaction_id,
+        split_group_id=split_group_id,
+        child_transaction_ids=child_ids,
+        parent_transaction=parent_after,
+        child_transactions=final_children,
+        bucket_event_id=event.event_id,
+    )
+
+
+def _build_split_state(
+    *,
+    catalogue: TransactionCatalogue,
+    bucket_id: str,
+    transaction_id: str,
+    children: tuple[SplitChildCommand, ...],
+    actor: str,
+    source_command: str,
+    reason: str,
+    now: datetime,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> tuple[Transaction, tuple[Transaction, ...], BucketEvent, str, tuple[str, ...]]:
+    """Build the parent transition, child rows, and split event in memory.
+
+    Resolves and guards the parent, validates the child amounts, and returns the
+    ``(parent_after, final_children, split_event, split_group_id, child_ids)``
+    tuple without persisting anything. Both :func:`split_transaction` and the
+    atomic evidence-driven classified split reuse this builder so the split shape
+    is defined once.
+    """
     parent = _resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
     _reject_split_with_finalized_modelo_blockers(
         parent=parent,
@@ -140,8 +201,8 @@ def split_transaction(
             child=child,
             index=index,
             occurred_at=now,
-            actor=trimmed_actor,
-            source_command=trimmed_source_command,
+            actor=actor,
+            source_command=source_command,
         )
         for index, child in enumerate(children)
     )
@@ -161,8 +222,8 @@ def split_transaction(
     parent_transition = TransactionLifecycleLineageEntry(
         previous_state=parent.lifecycle_state,
         state=TransactionLifecycleState.SPLIT,
-        actor=trimmed_actor,
-        source_command=trimmed_source_command,
+        actor=actor,
+        source_command=source_command,
         changed_at=now,
         reason=reason.strip() or "split",
     )
@@ -196,10 +257,10 @@ def split_transaction(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_SPLIT,
         occurred_at=now,
-        actor=trimmed_actor,
+        actor=actor,
         object_id=parent.transaction_id,
         payload={
-            "source_command": trimmed_source_command,
+            "source_command": source_command,
             "reason": reason.strip(),
             "split_group_id": split_group_id,
             "parent_transaction_id": parent.transaction_id,
@@ -207,28 +268,129 @@ def split_transaction(
             "child_count": str(len(child_ids)),
         },
     )
+    return parent_after, final_children, event, split_group_id, child_ids
+
+
+def split_transaction_with_classified_children(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    children: tuple[SplitChildCommand, ...],
+    child_classifications: tuple[ManualLedgerTransactionPatch, ...],
+    classified_by: str,
+    actor: str,
+    source_command: str = "aeat app ledger classify --read-evidence --auto-split --apply",
+    reason: str = "",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    attachment_store: AttachmentStoreProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> SplitTransactionResult:
+    """Split a parent and persist fully-classified children in ONE transaction.
+
+    This is the atomic evidence-driven split writer. It builds the parent
+    transition, every child, each child's inherited validated evidence link and
+    provenance, its classification and registry-derived IVA substrate, and every
+    audit event entirely in memory, then persists the whole set with a single
+    catalogue-and-events save. No generic field patch is issued after the split,
+    so there is no intermediate state in which a child exists split but
+    unclassified or evidence-less. Any child evidence-validation or build failure
+    raises before the save, leaving the parent ACTIVE and no child, catalogue
+    entry, or event persisted.
+
+    ``child_classifications`` is one
+    :class:`~cadrumo.application.ledger.ManualLedgerTransactionPatch` per child (in
+    the same order as ``children``) carrying the classification, IVA substrate, and
+    inherited evidence to stamp on that child. ``classified_by`` is the shared
+    provenance stamp (e.g. an ``llm:<model>`` label).
+
+    Returns a :class:`~cadrumo.application.ledger.SplitTransactionResult` whose
+    ``child_transactions`` are the classified, evidence-bearing children.
+    """
+    now = _normalise_timestamp(occurred_at)
+    trimmed_actor = _require_actor(actor, operation="ledger classified split")
+    trimmed_source_command = _require_source_command(source_command, operation="ledger classified split")
+    if len(children) < 2:
+        raise TransactionValidationError(
+            "ledger split requires at least two children",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
+        )
+    if len(children) != len(child_classifications):
+        raise TransactionValidationError(
+            "each split child must carry exactly one classification patch",
+            context={"children": len(children), "classifications": len(child_classifications)},
+        )
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    invoices_repo = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+    catalogue = repository.load()
+
+    parent_after, bare_children, split_event, split_group_id, child_ids = _build_split_state(
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        children=children,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        reason=reason,
+        now=now,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+
+    classified_children: list[Transaction] = []
+    child_events: list[BucketEvent] = []
+    for bare_child, patch in zip(bare_children, child_classifications, strict=True):
+        command = _command_from_patch(
+            bucket_id=bucket_id,
+            current=bare_child,
+            patch=patch,
+            actor=trimmed_actor,
+            source_command=trimmed_source_command,
+            classified_by_override=classified_by,
+        )
+        prepared = _prepare_manual_transaction_update(
+            current=bare_child,
+            command=command,
+            previous_transaction_id=bare_child.transaction_id,
+            now=now,
+            invoice_repository=invoices_repo,
+            attachment_store=attachment_store,
+        )
+        if prepared is None:
+            classified_children.append(bare_child)
+            continue
+        replacement, events = prepared
+        # _prepare_manual_transaction_update rebuilds the row from the command and
+        # does not carry split_lineage; restore the child's lineage so the split
+        # group linkage survives the classification in the same atomic write.
+        classified_children.append(replacement.model_copy(update={"split_lineage": bare_child.split_lineage}))
+        child_events.extend(events)
 
     updated_transactions = dict(catalogue.transactions)
     updated_transactions[parent_after.transaction_id] = parent_after
-    for child_transaction in final_children:
-        updated_transactions[child_transaction.transaction_id] = child_transaction
+    for classified_child in classified_children:
+        updated_transactions[classified_child.transaction_id] = classified_child
     new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
 
     _save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=new_catalogue,
-        events=(event,),
+        events=(split_event, *child_events),
     )
 
     return SplitTransactionResult(
         bucket_id=bucket_id,
-        parent_transaction_id=parent.transaction_id,
+        parent_transaction_id=parent_after.transaction_id,
         split_group_id=split_group_id,
         child_transaction_ids=child_ids,
         parent_transaction=parent_after,
-        child_transactions=final_children,
-        bucket_event_id=event.event_id,
+        child_transactions=tuple(classified_children),
+        bucket_event_id=split_event.event_id,
     )
 
 
