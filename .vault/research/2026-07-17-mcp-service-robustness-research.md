@@ -76,6 +76,31 @@ No stray stdout writers exist in the package; child output is piped, telemetry
 writes to files, `stdin` is `DEVNULL`-isolated, and encoding is explicit — the
 JSON-RPC stream itself is not at risk from child output.
 
+### Empirical latency decomposition (installed cohort, Windows workstation, 2026-07-17)
+
+Measured against the installed v0.2.1 cohort CLI with an isolated fresh state
+root, one step per subprocess exactly as the MCP serving path dispatches:
+`--version` 1.96 s (interpreter plus imports); `profile create` 4.3 s;
+`modelo work create` **49.6 s on first touch of a fresh state**, 10.0-10.2 s on
+every subsequent create in the same state; `modelo work calculate` 11.9-12.2 s
+per call; `modelo list` 5.4 s warm. In-process profiling attributes the
+recurring cost: full-registry validation (`validate_registry`) is ~5.8 s and
+runs once per process — legal-catalogue corpus verification (~1.9 s),
+catalogue-wide revision-section validation across all modelos (~2.5 s), and a
+semantic-role typo scan (~1.1 s) dominate — while a second snapshot in the
+same process costs 0.000 s. The warm per-call floor is therefore roughly 2 s
+interpreter + 6 s registry re-validation + 2 s storage/engine, re-paid on
+every tool call because each call is a fresh process (F2). The ~40 s
+first-touch cliff inside `work create` occurs between SQL-engine creation and
+the work-unit catalogue write (a silent log gap) and is a one-time per-state
+computation, not registry validation; it is what pushed the real Claude
+Desktop client past its 60 s request timeout in the S39 acceptance run. The
+functional result is correct in every lane (`DP200014:00562 == 23000.00`
+grounded); the latency is the defect. Remedy shape for the F2 ADR: persist the
+already-fingerprinted registry validation verdict across processes (the tree
+fingerprint is computed in under 1 s), and name the first-touch computation
+with a targeted trace before deciding its cache or deferral.
+
 ### Test-surface gap
 
 Before this feature nothing exercised loop responsiveness, slow calls, or
