@@ -79,6 +79,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
+  - '[[2026-07-17-cli-authority-verb-conformance-exec]]'
 ---
 
 # `cli-authority-verb-conformance` feature index
@@ -165,6 +166,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W02-P21-S78` - Prove file-only custody and typed keyring or unsecured refusals across the custody matrix
 - `2026-07-15-cli-authority-verb-conformance-W02-P21-S79` - Prove passphrase change preserves encrypted data and survives failed candidate confirmation
 - `2026-07-15-cli-authority-verb-conformance-W02-P21-S80` - Re-export only the explicit passphrase and recovery lifecycle operations
+- `2026-07-17-cli-authority-verb-conformance-exec` - P07.S41 secret-store DI seam removal (auth-cert-recovery-custody plan)
 
 ### plan
 
