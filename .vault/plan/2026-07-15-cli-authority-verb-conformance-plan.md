@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-16'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-research]]'
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S115, S117, S127, S184 -->
 
@@ -85,20 +95,20 @@ Separate session termination from destructive provider and credential reset whil
 
 - [x] `W02.P06.S37` - Atomically replace broad auth clear across backend and live CLI contracts with typed target-scoped logout_operator_auth and reset_operator_auth, complete provider session coverage, safe secret and lock cleanup, distinct schemas and events, exact contract/risk/help/write metadata, four-locale help, and real workflow and command tests without a compatibility wrapper; `src/cadrumo/application/auth/_operator_results.py; src/cadrumo/application/auth/_operator_scope.py; src/cadrumo/application/auth/_sessions.py; src/cadrumo/application/auth/_acquisition_lock.py; src/cadrumo/application/auth/_operator.py; src/cadrumo/application/auth/__init__.py; src/cadrumo/application/tests/test_cli_workflow_verification.py; src/cadrumo/application/auth/tests/test_operator_storage_session.py; src/cadrumo/entrypoints/cli/_config/_auth.py; src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/application/storage_write_policy.py; src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_risk_table.py; src/cadrumo/application/operator_surface/_help.py; src/cadrumo/core/errors/registry/_application_part1.py; src/cadrumo/locales/en.yml; src/cadrumo/locales/es.yml; src/cadrumo/locales/ca.yml; src/cadrumo/locales/hu.yml; src/cadrumo/entrypoints/cli/_config/tests/test_auth_round5_surface.py; src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py; src/cadrumo/entrypoints/cli/tests/test_output_language_parity.py; src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [x] `W02.P06.S43` - Prove logout preserves provider and certificate-source configuration while clearing real sessions; `src/cadrumo/application/auth/tests/test_operator_storage_session.py`.
-- [ ] `W02.P06.S44` - Prove reset removes provider state, sessions, locks, registrations, and secrets only for the explicit target; `src/cadrumo/application/auth/tests/test_operator.py`.
-- [ ] `W02.P06.S45` - Prove provider and all-provider deletion leave unrelated bucket session files byte-identical; `src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py`.
-- [ ] `W02.P06.S46` - Prove acquisition-lock cleanup is target scoped and repeatable with real lock files; `src/cadrumo/application/auth/tests/test_acquisition_lock.py`.
+- [x] `W02.P06.S44` - Prove reset removes provider state, sessions, locks, registrations, and secrets only for the explicit target; `src/cadrumo/application/auth/tests/test_operator.py`.
+- [x] `W02.P06.S45` - Prove provider and all-provider deletion leave unrelated bucket session files byte-identical; `src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py`.
+- [x] `W02.P06.S46` - Prove acquisition-lock cleanup is target scoped and repeatable with real lock files; `src/cadrumo/application/auth/tests/test_acquisition_lock.py`.
 
 ### Phase `W02.P07` - Unify active certificate credentials
 
 Resolve the selected certificate path and secure-storage secret once, delete the unreleased certificate keyring alternative, and feed check, status, test, and login from one typed bundle.
 
-- [ ] `W02.P07.S47` - Delete the certificate keyring backend, backend-kind selector, factory branch, exports, and certificate-specific keyring service and account code while retaining secure storage as the only certificate-secret backend and preserving independent master-key OS-keyring custody; `src/cadrumo/application/auth/_certificate_secret_backend.py; src/cadrumo/application/auth/__init__.py`.
+- [x] `W02.P07.S47` - Delete the certificate keyring backend, backend-kind selector, factory branch, exports, and certificate-specific keyring service and account code while retaining secure storage as the only certificate-secret backend and preserving independent master-key OS-keyring custody; `src/cadrumo/application/auth/_certificate_secret_backend.py; src/cadrumo/application/auth/__init__.py`.
 - [x] `W02.P07.S48` - Make the active certificate credential resolver and named-source certificate check use only selected-profile secure storage with explicit fail-closed absence, and make ordinary certificate-secret set/remove crash-resumable through one secret-free durable intent or outbox carrying a stable operation id, event kind and timestamp, prior-presence state, and non-secret completion witness, resuming pending mutations before accepting a new mutation without migration, fallback, probing, reconciliation, or a parallel secret writer; `src/cadrumo/application/auth/_certificate_sources_operator.py; src/cadrumo/application/auth/_certificate_secret_backend.py; src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py; src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
 - [x] `W02.P07.S49` - Route auth status, test, login, central session acquisition, live callers, state projection, and modelo provider construction through the active certificate credential resolver by centralizing exact certificate credential projection in the application provider factory and transporting explicit absent values without changing omitted-provider reporting semantics; `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py; src/cadrumo/adapters/persistence/storage/blob_store/tests/test_materialisation.py; src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py; src/cadrumo/adapters/persistence/storage/master_key/_master_key.py; src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py; src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_session.py; src/cadrumo/tests/secure_sql.py; src/cadrumo/application/auth/__init__.py; src/cadrumo/application/auth/_certificate_secret_backend.py; src/cadrumo/application/auth/_certificate_sources.py; src/cadrumo/application/auth/_certificate_sources_operator.py; src/cadrumo/application/auth/_operator.py; src/cadrumo/application/auth/_operator_scope.py; src/cadrumo/application/auth/_sessions.py; src/cadrumo/application/auth/tests/test_certificate_secret_backend.py; src/cadrumo/application/auth/tests/test_certificate_sources_check.py; src/cadrumo/application/auth/tests/test_operator.py; src/cadrumo/application/state_projection.py; src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
-- [ ] `W02.P07.S50` - Make the certificate authenticator and adapter provider factory consume the resolved typed active certificate credential directly, eliminating their independent path and password projection from Settings; `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py; src/cadrumo/adapters/outbound/aeat/auth/__init__.py; src/cadrumo/adapters/outbound/aeat/auth/tests`.
-- [ ] `W02.P07.S51` - Prove certificate secrets set, resolve, and remove only through real secure storage, force real event-commit failure after set and remove, then prove retry resumes the original operation, emits the original stable event exactly once, preserves SET versus ROTATED classification, and reports removal truthfully, and also prove no certificate keyring backend, selector, fallback, migration, probe, cleanup path, or parallel secret writer remains; `src/cadrumo/application/auth/tests/test_certificate_secret_backend.py; src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`.
-- [ ] `W02.P07.S52` - Prove register, select, check, status, test, and login consume the same resolved certificate bytes; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
+- [x] `W02.P07.S50` - Make the certificate authenticator and adapter provider factory consume the resolved typed active certificate credential directly, eliminating their independent path and password projection from Settings; `src/cadrumo/adapters/outbound/aeat/auth/_authenticator.py; src/cadrumo/adapters/outbound/aeat/auth/__init__.py; src/cadrumo/adapters/outbound/aeat/auth/tests`.
+- [x] `W02.P07.S51` - Prove certificate secrets set, resolve, and remove only through real secure storage, force real event-commit failure after set and remove, then prove retry resumes the original operation, emits the original stable event exactly once, preserves SET versus ROTATED classification, and reports removal truthfully, and also prove no certificate keyring backend, selector, fallback, migration, probe, cleanup path, or parallel secret writer remains; `src/cadrumo/application/auth/tests/test_certificate_secret_backend.py; src/cadrumo/application/auth/tests/test_operator_transaction_recovery.py`.
+- [x] `W02.P07.S52` - Prove register, select, check, status, test, and login consume the same resolved certificate bytes; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
 
 ### Phase `W02.P05` - Build resumable all-profile reset
 
