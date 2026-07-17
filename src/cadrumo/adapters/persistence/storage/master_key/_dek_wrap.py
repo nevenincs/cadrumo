@@ -50,7 +50,7 @@ def _associated_data(bucket_id: str) -> bytes:
     """Compose the AEAD additional-authenticated-data for one bucket."""
     if not bucket_id:
         raise _encryption_error("bucket_id must be non-empty")
-    return f"aeat.dek-wrap.v1:{bucket_id}".encode(_UTF_8_ENCODING)
+    return f"cadrumo.dek-wrap.v1:{bucket_id}".encode(_UTF_8_ENCODING)
 
 
 def _encryption_error(message: str) -> EncryptionError:

@@ -56,8 +56,8 @@ from ..errors import (
 
 _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
-_HKDF_CONTEXT_RECOVERY: Final[bytes] = b"aeat.recovery-key.master-wrap.v1"
-_RECOVERY_AAD: Final[bytes] = b"aeat.recovery-key.aad.v1"
+_HKDF_CONTEXT_RECOVERY: Final[bytes] = b"cadrumo.recovery-key.master-wrap.v1"
+_RECOVERY_AAD: Final[bytes] = b"cadrumo.recovery-key.aad.v1"
 
 
 class RecoveryKey(BaseModel):

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 
+from .....core.async_cleanup import close_async_resources
 from .....core.config import load_settings
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
@@ -35,6 +36,8 @@ async def run_health_check() -> None:
     settings = load_settings()
     logger.info("browser health check starting")
 
+    browser_session = None
+    context = None
     try:
         browser_session = await default_browser_session_factory(settings)
         try:
@@ -48,9 +51,12 @@ async def run_health_check() -> None:
                 raise BrowserError(f"Smoke test failed. Status: {response.status if response else 'Unknown'}")
 
             logger.info("browser health check passed title=%s", await page.title())
-            await context.close()
         finally:
-            await browser_session.close()
+            await close_async_resources(
+                context,
+                browser_session,
+                task_name="cadrumo-browser-health-close",
+            )
     except BrowserError:
         raise
     except PlaywrightError as e:

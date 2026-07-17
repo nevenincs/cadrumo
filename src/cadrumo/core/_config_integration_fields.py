@@ -1,8 +1,10 @@
 """Google, workbook-parity, and financial-ingest settings.
 
 Split from :mod:`~core.config` to keep the central settings facade within the
-line budget. :class:`~core.config.Settings` inherits these fields, so each field
-keeps the same ``AEAT_*`` environment variable name, validation, and default.
+line budget. :class:`~core.config.Settings` inherits these fields with their
+declared validation and defaults. Product-owned fields derive ``CADRUMO_*``
+environment names; authority-owned integration fields retain explicit
+``AEAT_*`` names.
 
 See Also:
     :class:`~core.config.Settings`
@@ -31,14 +33,14 @@ from typing import Final
 
 from pydantic import Field, field_validator
 
-from ._config_runtime_fields import AeatRuntimeSettings
+from ._config_runtime_fields import CadrumoRuntimeSettings
 from .external_constants import DEFAULT_CURRENCY
 from .paths import PROJECT_ROOT
 
 FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME: Final = "aeat-vault"
 
 
-class AeatIntegrationSettings(AeatRuntimeSettings):
+class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
     """Settings for external integration defaults and local financial stores."""
 
     # ── Google integration ───────────────────────────────────────────────
@@ -133,4 +135,4 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
     )
 
 
-__all__ = ["AeatIntegrationSettings"]
+__all__ = ["CadrumoIntegrationSettings"]

@@ -166,7 +166,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
 
 def test_certificate_protected_resource_authority_is_exact_and_composed() -> None:
     """Certificate authentication has one non-configurable www6 protected resource."""
-    from .. import (
+    from ..config import (
         AEAT_CERTIFICATE_PROTECTED_ORIGIN,
         AEAT_CERTIFICATE_PROTECTED_PATH,
         AEAT_CERTIFICATE_PROTECTED_URL,
@@ -178,10 +178,7 @@ def test_certificate_protected_resource_authority_is_exact_and_composed() -> Non
     assert constants.aeat.domains.www6 == AEAT_CERTIFICATE_PROTECTED_ORIGIN
     assert AEAT_CERTIFICATE_PROTECTED_PATH == "/wlpl/TEWV-CORE/ResumenVlt"
     assert constants.aeat.sede_paths.expedientes_resumen == AEAT_CERTIFICATE_PROTECTED_PATH
-    assert (
-        f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}{AEAT_CERTIFICATE_PROTECTED_PATH}"
-        == AEAT_CERTIFICATE_PROTECTED_URL
-    )
+    assert f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}{AEAT_CERTIFICATE_PROTECTED_PATH}" == AEAT_CERTIFICATE_PROTECTED_URL
 
 
 def test_clave_movil_surface_constants_are_typed() -> None:
@@ -263,7 +260,6 @@ def test_live_safety_action_patterns_are_centralized() -> None:
     assert pre303.wallet_discovered_entrypoint_action_label in safety.wallet_browser_action_patterns
     assert pre303.wallet_execute_read_action_label in safety.wallet_browser_action_patterns
     assert "buscar-declaraciones-presentadas" in safety.declarations_browser_action_patterns
-    assert "csv-verifier-query" in safety.csv_verify_browser_action_patterns
     assert "check-nif-*" in safety.consult_oracle_browser_action_patterns
     assert "requires-renta-web-open-driver" in safety.renta_web_open_browser_action_patterns
     assert "accept-identification" in safety.renta_web_open_browser_action_patterns
@@ -454,7 +450,7 @@ def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures
 
     checked_paths = (
         repo_path("src/cadrumo/domain/calculations/registry/tests/test_remote_state_guard.py"),
-        repo_path("src/cadrumo/domain/calculations/registry/tests/test_live_parity.py"),
+        repo_path("src/cadrumo/domain/calculations/registry/tests/test_oracle_parity.py"),
         repo_path("src/cadrumo/domain/calculations/registry/tests/test_groi_oracle.py"),
         repo_path("src/cadrumo/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py"),
     )

@@ -22,6 +22,7 @@ from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
 from .....core import Period
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -124,112 +125,111 @@ async def fetch_iva_compensation_wallet(
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
     browser_session = await default_browser_session_factory(settings)
+    context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
+        page = await context.new_page()
         try:
-            page = await context.new_page()
-            try:
-                await _open_authenticated_surface(
-                    page,
-                    browser_session=browser_session,
-                    settings=settings,
-                    selector_url=_PRE303_SELECTOR_URL,
-                    target_path=_PRE303.presentation_service_path,
-                    expected_url=_PRE303_PRESENTATION_URL,
-                    surface="pre303_presentation_service",
-                    target_year=target_period.filing_year,
-                    target_period=target_period,
-                )
-                if is_aeat_wallet_auth_gate_redirect(page.url):
-                    raise SedeNavigationError(
-                        "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
-                        failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
-                        context={
-                            "landing_url": _redacted_url(page.url),
-                            "expected_url": _redacted_url(_PRE303_PRESENTATION_URL),
-                            "surface": "pre303_presentation_service",
-                        },
-                        suggestion=(
-                            "Authenticate specifically for the Pre303 presentation service before reading "
-                            "the IVA compensation wallet."
-                        ),
-                    )
-                pre303_html = await page.content()
-                discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
-                    pre303_html,
-                    base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
-                )
-                if discovered_wallet_url is not None:
-                    wallet_execute_submitted = await _open_discovered_wallet_entrypoint(
-                        page,
-                        browser_session=browser_session,
-                        settings=settings,
-                        discovered_url=discovered_wallet_url,
-                        target_year=target_period.filing_year,
-                        target_period=target_period,
-                    )
-                else:
-                    wallet_execute_submitted = await _open_authenticated_surface(
-                        page,
-                        browser_session=browser_session,
-                        settings=settings,
-                        selector_url=_WALLET_SELECTOR_URL,
-                        target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-                        expected_url=_WALLET_URL,
-                        surface="iva_compensation_wallet",
-                        target_year=target_period.filing_year,
-                        target_period=target_period,
-                    )
-            except PlaywrightError as exc:
-                raise SedeNavigationError(
-                    f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
-                ) from exc
+            await _open_authenticated_surface(
+                page,
+                browser_session=browser_session,
+                settings=settings,
+                selector_url=_PRE303_SELECTOR_URL,
+                target_path=_PRE303.presentation_service_path,
+                expected_url=_PRE303_PRESENTATION_URL,
+                surface="pre303_presentation_service",
+                target_year=target_period.filing_year,
+                target_period=target_period,
+            )
             if is_aeat_wallet_auth_gate_redirect(page.url):
                 raise SedeNavigationError(
-                    "AEAT IVA compensation wallet rejected the authenticated session with 4033",
+                    "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
                     failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                     context={
                         "landing_url": _redacted_url(page.url),
-                        "expected_url": _redacted_url(_WALLET_URL),
-                        "surface": "iva_compensation_wallet",
+                        "expected_url": _redacted_url(_PRE303_PRESENTATION_URL),
+                        "surface": "pre303_presentation_service",
                     },
                     suggestion=(
-                        "Authenticate specifically for the Pre303 presentation service, then retry the "
-                        "read-only wallet capture."
+                        "Authenticate specifically for the Pre303 presentation service before reading "
+                        "the IVA compensation wallet."
                     ),
                 )
-            html = await page.content()
-            final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
-            if final_dump_dir is not None:
-                await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
-            try:
-                return parse_iva_compensation_wallet_html(
-                    html,
-                    taxpayer_nif=taxpayer_nif or session.identity_nif,
-                    authenticated_identity=session.identity_nif,
+            pre303_html = await page.content()
+            discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
+                pre303_html,
+                base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
+            )
+            if discovered_wallet_url is not None:
+                wallet_execute_submitted = await _open_discovered_wallet_entrypoint(
+                    page,
+                    browser_session=browser_session,
+                    settings=settings,
+                    discovered_url=discovered_wallet_url,
                     target_year=target_period.filing_year,
                     target_period=target_period,
-                    source_url=_WALLET_URL,
-                    captured_at=now(),
-                    allow_empty_wallet_shell=wallet_execute_submitted,
                 )
-            except SedeParseError as exc:
-                raise SedeParseError(
-                    str(exc),
-                    failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                    context=_wallet_page_shape_context(html, landing_url=page.url),
-                    suggestion=(
-                        "Inspect the captured AEAT wallet page shape and update the read-only parser or "
-                        "navigation chain; do not hard-code operator wallet values into tests."
-                    ),
-                ) from exc
-        finally:
-            try:
-                await context.close()
-            except Exception as exc:
-                log.debug("fetch_iva_compensation_wallet: context.close suppressed: %s", exc, exc_info=True)
+            else:
+                wallet_execute_submitted = await _open_authenticated_surface(
+                    page,
+                    browser_session=browser_session,
+                    settings=settings,
+                    selector_url=_WALLET_SELECTOR_URL,
+                    target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+                    expected_url=_WALLET_URL,
+                    surface="iva_compensation_wallet",
+                    target_year=target_period.filing_year,
+                    target_period=target_period,
+                )
+        except PlaywrightError as exc:
+            raise SedeNavigationError(
+                f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
+            ) from exc
+        if is_aeat_wallet_auth_gate_redirect(page.url):
+            raise SedeNavigationError(
+                "AEAT IVA compensation wallet rejected the authenticated session with 4033",
+                failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+                context={
+                    "landing_url": _redacted_url(page.url),
+                    "expected_url": _redacted_url(_WALLET_URL),
+                    "surface": "iva_compensation_wallet",
+                },
+                suggestion=(
+                    "Authenticate specifically for the Pre303 presentation service, then retry the "
+                    "read-only wallet capture."
+                ),
+            )
+        html = await page.content()
+        final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
+        if final_dump_dir is not None:
+            await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
+        try:
+            return parse_iva_compensation_wallet_html(
+                html,
+                taxpayer_nif=taxpayer_nif or session.identity_nif,
+                authenticated_identity=session.identity_nif,
+                target_year=target_period.filing_year,
+                target_period=target_period,
+                source_url=_WALLET_URL,
+                captured_at=now(),
+                allow_empty_wallet_shell=wallet_execute_submitted,
+            )
+        except SedeParseError as exc:
+            raise SedeParseError(
+                str(exc),
+                failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+                context=_wallet_page_shape_context(html, landing_url=page.url),
+                suggestion=(
+                    "Inspect the captured AEAT wallet page shape and update the read-only parser or "
+                    "navigation chain; do not hard-code operator wallet values into tests."
+                ),
+            ) from exc
     finally:
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-iva-wallet-close",
+        )
 
 
 async def _open_authenticated_surface(

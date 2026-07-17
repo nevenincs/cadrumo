@@ -142,11 +142,7 @@ class BucketSession:
             idle_window=idle_window,
             idle_deadline=opened_at + idle_window,
             unsecured_backend=unsecured_backend,
-            storage_root=(
-                storage_root.expanduser().resolve(strict=False)
-                if storage_root is not None
-                else None
-            ),
+            storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
         )
 
     @property

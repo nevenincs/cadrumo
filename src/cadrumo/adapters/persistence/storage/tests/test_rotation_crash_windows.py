@@ -30,11 +30,11 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict
 
+from .....tests.master_key import EphemeralMasterKeyProvider
 from .. import (
     BlobReference,
     EncryptedBlobStore,
     Envelope,
-    EphemeralMasterKeyProvider,
     RotationPlanEntry,
     SensitivityClass,
     load_encrypted_envelope,

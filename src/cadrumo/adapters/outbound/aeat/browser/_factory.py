@@ -31,9 +31,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
+from .....core.async_cleanup import (
+    close_async_resources,
+)
 from .....core.logging import get_logger
 from .profile import Profile
 from .session import BrowserSession
@@ -48,7 +50,6 @@ logger = get_logger(__name__)
 
 _DIAGNOSTIC_PROFILE_BUCKET_ID: Final = "diagnostic-probe"
 _PLAYWRIGHT_RUNTIME_LABEL: Final = "<playwright-runtime>"
-_BROWSER_CONTEXT_LABEL: Final = "<browser-context>"
 
 
 def _log_teardown_failure(
@@ -61,6 +62,23 @@ def _log_teardown_failure(
     """Log teardown degradation without serialising exception payloads."""
     log = logger.warning if warning else logger.debug
     log("%s resource=%s failure=%s", message, resource, type(exc).__name__)
+
+
+class _SharedPlaywrightRuntimeOwner:
+    """Retain a shared runtime until a stop attempt succeeds."""
+
+    def __init__(self, playwright: Playwright) -> None:
+        self.playwright = playwright
+        self._close_lock = asyncio.Lock()
+        self._stopped = False
+
+    async def close(self) -> None:
+        """Stop once, retaining the runtime for a later retry on failure."""
+        async with self._close_lock:
+            if self._stopped:
+                return
+            await self.playwright.stop()
+            self._stopped = True
 
 
 class DefaultBrowserSession:
@@ -106,7 +124,6 @@ class DefaultBrowserSession:
         self,
         *,
         provisioner: Any | None = None,
-        storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContext:
         """Delegate context creation to the underlying :class:`BrowserSession`.
@@ -118,7 +135,6 @@ class DefaultBrowserSession:
         """
         return await self._session.create_context(
             provisioner=provisioner,
-            storage_state_path=storage_state_path,
             storage_state=storage_state,
         )
 
@@ -138,6 +154,7 @@ class DefaultBrowserSession:
             if self._session_closed and self._playwright_stopped:
                 return
             session_error: BaseException | None = None
+            stop_error: Exception | None = None
             if not self._session_closed:
                 try:
                     await self._session.close()
@@ -148,7 +165,8 @@ class DefaultBrowserSession:
             if not self._playwright_stopped:
                 try:
                     await self._playwright.stop()
-                except Exception as exc:  # Playwright stop() exception surface is undocumented; teardown must not abort
+                except Exception as exc:  # Playwright stop() exception surface is undocumented
+                    stop_error = exc
                     _log_teardown_failure(
                         message="default_browser_session: playwright stop failed",
                         resource=_PLAYWRIGHT_RUNTIME_LABEL,
@@ -161,7 +179,14 @@ class DefaultBrowserSession:
                     # owns even when Browser.close() raised first.
                     self._session_closed = True
             if session_error is not None:
+                if stop_error is not None:
+                    session_error.add_note(
+                        "Playwright runtime teardown also failed "
+                        f"({type(stop_error).__name__}); the runtime remains retained for retry"
+                    )
                 raise session_error
+            if stop_error is not None:
+                raise stop_error
 
 
 async def default_browser_session_factory(settings: Settings) -> DefaultBrowserSession:
@@ -187,10 +212,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     # the Profile model satisfied without pretending to be a real
     # profile.
     bucket_id = resolve_active_bucket_id() or _DIAGNOSTIC_PROFILE_BUCKET_ID
-    # Profile.storage_state_path identifies this browser profile but is never
-    # loaded implicitly. Auth providers pass encrypted storage state explicitly.
-    storage_state_path = settings.cadrumo_token_dir / f"{bucket_id}-storage.json"
-    profile = Profile(name=bucket_id, storage_state_path=storage_state_path)
+    profile = Profile(name=bucket_id)
     return await create_browser_session(settings, profile)
 
 
@@ -203,6 +225,7 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
     stopped before the original failure is re-raised.
     """
     playwright = await _start_playwright()
+    runtime_owner = _SharedPlaywrightRuntimeOwner(playwright)
     try:
         session = BrowserSession(
             playwright=playwright,
@@ -215,14 +238,10 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
         # exception between here and the successful return leaks those
         # resources. Mirror the teardown DefaultBrowserSession.close()
         # performs on the happy path.
-        try:
-            await playwright.stop()
-        except Exception as stop_exc:
-            _log_teardown_failure(
-                message="browser factory: playwright.stop() during error teardown failed",
-                resource=_PLAYWRIGHT_RUNTIME_LABEL,
-                exc=stop_exc,
-            )
+        await close_async_resources(
+            runtime_owner,
+            task_name="cadrumo-browser-factory-error-close",
+        )
         raise
 
 
@@ -235,18 +254,14 @@ async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
     :func:`opened_browser_page`. The context manager owns only the Playwright
     runtime; each page/context pair is still owned by the helper that opens it.
     """
-    playwright = await _start_playwright()
+    owner = _SharedPlaywrightRuntimeOwner(await _start_playwright())
     try:
-        yield playwright
+        yield owner.playwright
     finally:
-        try:
-            await playwright.stop()
-        except Exception as stop_exc:
-            _log_teardown_failure(
-                message="browser factory: playwright.stop() during runtime teardown failed",
-                resource=_PLAYWRIGHT_RUNTIME_LABEL,
-                exc=stop_exc,
-            )
+        await close_async_resources(
+            owner,
+            task_name="cadrumo-shared-playwright-stop",
+        )
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PROVISIONER: provisioner is duck-
@@ -258,7 +273,6 @@ async def opened_browser_page(
     profile: Profile,
     *,
     provisioner: Any | None = None,
-    storage_state_path: Path | None = None,
     storage_state: dict[str, Any] | None = None,
 ) -> AsyncIterator[tuple[Page, BrowserContext]]:
     """Yield a :class:`BrowserSession` page/context pair and close both.
@@ -269,24 +283,20 @@ async def opened_browser_page(
     pair, and closes the context and browser session during teardown.
     """
     browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
-    context = await browser_session.create_context(
-        provisioner=provisioner,
-        storage_state_path=storage_state_path,
-        storage_state=storage_state,
-    )
+    context: BrowserContext | None = None
     try:
+        context = await browser_session.create_context(
+            provisioner=provisioner,
+            storage_state=storage_state,
+        )
         page = await context.new_page()
         yield page, context
     finally:
-        try:
-            await context.close()
-        except Exception as close_exc:
-            _log_teardown_failure(
-                message="browser factory: context.close() during teardown failed",
-                resource=_BROWSER_CONTEXT_LABEL,
-                exc=close_exc,
-            )
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-opened-browser-page-close",
+        )
 
 
 async def _start_playwright() -> Playwright:

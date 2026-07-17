@@ -44,15 +44,16 @@ from ....domain.modelos import (
     VerificationReportPersistenceError,
     raise_catalogue_integrity_error,
 )
+from ..storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
-_VERIFICATION_NAMESPACE = "cadrumo.domain.modelos.verification_reports"
-_VERIFICATION_OBJECT_KEY = "catalogue"
-_VERIFICATION_CATALOGUE_VERSION = 1
+_VERIFICATION_NAMESPACE = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.namespace
+_VERIFICATION_OBJECT_KEY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.require_default_object_key()
+_VERIFICATION_CATALOGUE_VERSION = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.schema_version
 _VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report_persistence"
 
 

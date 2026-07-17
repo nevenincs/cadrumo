@@ -47,14 +47,15 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventHistoryPersistenceError
+from ..storage import BUCKET_EVENT_HISTORY_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
-_NAMESPACE = "cadrumo.domain.buckets.event_history"
-_OBJECT_KEY = "catalogue"
-_CATALOGUE_VERSION = 1
+_NAMESPACE = BUCKET_EVENT_HISTORY_NAMESPACE.namespace
+_OBJECT_KEY = BUCKET_EVENT_HISTORY_NAMESPACE.require_default_object_key()
+_CATALOGUE_VERSION = BUCKET_EVENT_HISTORY_NAMESPACE.schema_version
 
 
 class BucketEventHistoryRepository:

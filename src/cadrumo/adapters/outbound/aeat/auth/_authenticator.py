@@ -42,6 +42,7 @@ from pydantic import ValidationError
 
 from .....application.auth_credentials import ActiveCertificateCredentials
 from .....core import AuthProviderDescription, AuthProviderKind
+from .....core.async_cleanup import close_async_resources
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.config import Settings as _Settings
 from .....core.logging import get_logger
@@ -62,6 +63,7 @@ from ._authenticator_types import (
     BrowserSessionFactory,
     BrowserSessionLike,
     CertificateHealthCheck,
+    _is_exact_active_provider_session,
     _PersistedSessionInvalidError,
 )
 from ._browser_lifecycle import _CloseIntentBarrier, close_owned_browser_context, close_owned_browser_session
@@ -124,10 +126,13 @@ def _require_exact_active_certificate_session(
     active_session: AeatSession | None,
 ) -> None:
     if (
-        active_session is None
-        or session is not active_session
-        or active_session.provider_kind is not AuthProviderKind.CERTIFICATE
-        or not isinstance(active_session.provider_detail, CertificateSessionDetail)
+        not _is_exact_active_provider_session(
+            session,
+            active_session,
+            provider_kind=AuthProviderKind.CERTIFICATE,
+            detail_type=CertificateSessionDetail,
+        )
+        or active_session is None
         or active_session.certificate_thumbprint is None
         or active_session.certificate_subject is None
     ):
@@ -224,26 +229,12 @@ class AeatAuthenticator:
         return self
 
     async def __aexit__(self, exc_type: object, *_exc_info: object) -> None:
-        if exc_type is None:
-            await self.close()
-            return
-        try:
-            await self.close()
-        except Exception as first_error:
-            log.warning(
-                "AeatAuthenticator: cleanup failed while preserving the primary context-manager exception; "
-                "retrying once failure=%s",
-                type(first_error).__name__,
-            )
-            try:
-                await self.close()
-            except Exception as retry_error:
-                log.warning(
-                    "AeatAuthenticator: cleanup retry failed while preserving the primary context-manager "
-                    "exception initial_failure=%s retry_failure=%s",
-                    type(first_error).__name__,
-                    type(retry_error).__name__,
-                )
+        """Close through the single owner-retaining asynchronous cleanup authority."""
+        del exc_type, _exc_info
+        await close_async_resources(
+            self,
+            task_name="cadrumo-aeat-authenticator-close",
+        )
 
     # ── Synchronous helpers ─────────────────────────────────────────────────
 
@@ -320,13 +311,15 @@ class AeatAuthenticator:
             nif = extract_nif_from_subject(cert)
 
             session_like = await self._resolve_browser_session()
+            self._browser_session = session_like
             try:
                 context = await session_like.create_context(
                     provisioner=CertificateContextProvisioner(cert),
                 )
+                self._context = context
             except Exception:
-                if not await self._close_browser_session(session_like):
-                    self._browser_session = session_like
+                if await self._close_browser_session(session_like):
+                    self._browser_session = None
                 raise
 
             storage_state_path = self._resolve_storage_state_path()
@@ -710,6 +703,7 @@ class AeatAuthenticator:
         is_valid = response_successful and final_resource_matches and bool(session.identity_nif)
         if response_successful and not final_resource_matches and error_message is None:
             error_message = "protected_resource_mismatch"
+        serialized_final_url = final._replace(query="", fragment="").geturl() if final is not None else None
         return AeatLoginAssertion(
             target_url=AEAT_CERTIFICATE_PROTECTED_URL,
             is_valid=is_valid,
@@ -719,7 +713,7 @@ class AeatAuthenticator:
             attempted_at=attempted_at,
             error_message=error_message,
             assertion_detail=CertificateLoginAssertionDetail(
-                final_url=final_url,
+                final_url=serialized_final_url,
                 response_successful=response_successful,
                 parsed_subject=session.certificate_subject,
             ),
@@ -783,6 +777,7 @@ class AeatAuthenticator:
         )
 
         session_like = await self._resolve_browser_session()
+        self._browser_session = session_like
         context: BrowserContextLike | None = None
         session: AeatSession | None = None
         resume_failed = False
@@ -791,6 +786,7 @@ class AeatAuthenticator:
                 provisioner=CertificateContextProvisioner(cert),
                 storage_state=persisted.storage_state,
             )
+            self._context = context
             session = AeatSession(
                 authenticated_at=metadata.authenticated_at,
                 idle_deadline=metadata.idle_deadline,
@@ -927,9 +923,13 @@ class AeatAuthenticator:
         )
         if not context_closed:
             self._context = context
+        elif self._context is context:
+            self._context = None
         browser_session_closed = await self._close_browser_session(session_like)
         if not browser_session_closed:
             self._browser_session = session_like
+        elif self._browser_session is session_like:
+            self._browser_session = None
         self._active_session = None
 
     def _resolve_storage_state_path(

@@ -1,4 +1,4 @@
-"""Shared contract test suite for :class:`SecureBoundRepository` subclasses.
+"""Shared contract support for :class:`SecureBoundRepository` subclasses.
 
 The 8 concrete secure-storage repositories (filing drafts, submissions,
 filing history, complementaria, justificantes, observations, assets,
@@ -54,22 +54,23 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import Engine, select
 
-from .....core.config import override_settings
-from .. import EphemeralMasterKeyProvider, SensitivityClass
-from ..crypto import (
+from ......core.config import override_settings
+from ......tests.master_key import EphemeralMasterKeyProvider
+from ... import SensitivityClass
+from ...crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ..errors import ClassificationError
-from ..sql import (
+from ...errors import ClassificationError
+from ...sql import (
     Base,
     SecureObjectRow,
 )
-from ..sql.engine import create_engine_from_settings, dispose_engine
-from ..sql.session import session_scope
-from ._envelope import Envelope
-from ._secure_repository import SecureBoundRepository
+from ...sql.engine import create_engine_from_settings, dispose_engine
+from ...sql.session import session_scope
+from .._envelope import Envelope
+from .._secure_repository import SecureBoundRepository
 
 _FOREIGN_CLASS_MAP: dict[SensitivityClass, SensitivityClass] = {
     SensitivityClass.AUDIT: SensitivityClass.OPERATIONAL,
@@ -223,7 +224,7 @@ def _database_payload_is_encrypted_audit_data[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     db_path: Path,
 ) -> None:
-    from .....tests.secure_sql import read_db_at_rest_bytes
+    from ......tests.secure_sql import read_db_at_rest_bytes
 
     repo = case.repository_factory()
     repo.save(case.first_payload)

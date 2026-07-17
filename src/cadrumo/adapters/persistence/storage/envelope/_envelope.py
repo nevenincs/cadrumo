@@ -265,8 +265,8 @@ def load_envelope[PayloadT: BaseModel](
     return envelope
 
 
-_HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"aeat.envelope.payload.v1"
-_CIPHER_ENVELOPE_AAD_PREFIX = b"aeat.envelope.cipher.v1::"
+_HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"cadrumo.envelope.payload.v1"
+_CIPHER_ENVELOPE_AAD_PREFIX = b"cadrumo.envelope.cipher.v1::"
 
 
 class CipherEnvelope(BaseModel):
@@ -350,7 +350,7 @@ def save_encrypted_envelope[T: BaseModel](
     attacker cannot relabel or cross-consumer-graft.
 
     The caller supplies ``master_key_provider`` explicitly. Tests can
-    pass :class:`~adapters.persistence.storage.EphemeralMasterKeyProvider`;
+    pass :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`;
     production callers pass the provider selected by the custody flow.
     This helper does not resolve settings, active sessions, or default
     key providers on its own.

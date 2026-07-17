@@ -1,18 +1,11 @@
 """Tests for the single remote-telemetry emit call site.
 
-Proves the consent gate composes correctly with the sink dispatch: a refused
-gate never touches the sink at all (true no-op), and a permitted gate hands
-the exact allowlisted payload to the sink. Uses a real, minimal in-memory
-:class:`~core.telemetry.TelemetrySink` implementation (not a mock) to observe dispatch --
-this is the sanctioned "test double for isolating pure logic" case
-(``aeat-local-execution`` / the project's real-behavior test mandate), since
-no external service or persistence boundary is involved.
+The real HTTP dispatch and refusal paths are exercised in
+``test_http_sink.py``. This module retains the default local-noop contract.
 
 See Also:
     :func:`~core.telemetry.emit_telemetry_event`:
         Consent-gated dispatcher under test.
-    :func:`~core.telemetry.telemetry_emit_permitted`:
-        Four-way gate composed before any sink receives a payload.
     :class:`~core.telemetry.LocalNoopTelemetrySink`:
         Default inert sink used when no transport is supplied.
     :class:`~core.telemetry.TelemetryEventPayload`:
@@ -38,21 +31,6 @@ _WORKSPACE_HASH = "b" * 64
 _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
 
-class _RecordingSink:
-    """A real, minimal sink that records every payload it receives.
-
-    Not a mock: it has no configured return values or call assertions built
-    in. It is genuine, tiny production-shaped code -- exactly what a caller
-    would write to inspect what a real sink would have received.
-    """
-
-    def __init__(self) -> None:
-        self.received: list[TelemetryEventPayload] = []
-
-    def send(self, payload: TelemetryEventPayload) -> None:
-        self.received.append(payload)
-
-
 def _payload() -> TelemetryEventPayload:
     return build_telemetry_payload(
         workspace_hash=_WORKSPACE_HASH,
@@ -60,43 +38,6 @@ def _payload() -> TelemetryEventPayload:
         succeeded=True,
         captured_at=_CAPTURED_AT,
     )
-
-
-def test_default_off_settings_never_touch_the_sink() -> None:
-    settings = Settings()
-    sink = _RecordingSink()
-    result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True, sink=sink)
-    assert result is False
-    assert sink.received == []
-
-
-def test_opted_in_but_not_acknowledged_never_touches_the_sink() -> None:
-    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.CRASH_ONLY)
-    sink = _RecordingSink()
-    result = emit_telemetry_event(_payload(), settings=settings, acknowledged=False, sink=sink)
-    assert result is False
-    assert sink.received == []
-
-
-def test_gestor_mode_never_touches_the_sink_even_when_fully_opted_in() -> None:
-    settings = Settings(
-        cadrumo_telemetry_opt_in=True,
-        cadrumo_telemetry_tier=TelemetryTier.FULL,
-        cadrumo_telemetry_gestor_mode=True,
-    )
-    sink = _RecordingSink()
-    result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True, sink=sink)
-    assert result is False
-    assert sink.received == []
-
-
-def test_fully_permitted_invocation_dispatches_the_exact_payload_to_the_sink() -> None:
-    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
-    sink = _RecordingSink()
-    payload = _payload()
-    result = emit_telemetry_event(payload, settings=settings, acknowledged=True, sink=sink)
-    assert result is True
-    assert sink.received == [payload]
 
 
 def test_default_sink_is_the_local_noop_and_produces_no_observable_side_effect() -> None:

@@ -9,9 +9,7 @@ Coverage:
   set to session_expired when the idle deadline has passed.
 - contract-D: resume_session raises AeatLoginAssertionError with translated_message
   set to storage_state_hash_mismatch when the storage-state hash does not match.
-- contract-E: _click_clave_movil_button raises AeatLoginAssertionError with
-  translated_message set to page_missing_click when page has no click attribute.
-- contract-F: locale keys for all four sites resolve to non-placeholder strings in
+- contract-E: locale keys for all four sites resolve to non-placeholder strings in
   the catalogue.
 """
 
@@ -41,7 +39,6 @@ _CLAVE_MOVIL_LOCALE_KEYS = [
     "adapters.auth.clave_movil.errors.no_persisted_session",
     "adapters.auth.clave_movil.errors.session_expired",
     "adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
-    "adapters.auth.clave_movil.errors.page_missing_click",
 ]
 _EXPIRED_AT = datetime(2026, 5, 28, 14, 25, 0, tzinfo=UTC)
 _LIVE_SESSION_AT = datetime(2099, 5, 28, 14, 30, 0, tzinfo=UTC)
@@ -66,20 +63,6 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
 
 def _secret_or_none(value: str | None) -> SecretStr | None:
     return None if value is None else SecretStr(value)
-
-
-class _MinimalPage:
-    """Page stand-in that omits the click attribute to trigger page_missing_click."""
-
-    def __init__(self) -> None:
-        self.url = ""
-
-    async def goto(self, url: str, *, timeout: float | None = None) -> None:
-        del timeout
-        self.url = url
-
-    async def close(self) -> None:
-        return None
 
 
 # ---------------------------------------------------------------------------
@@ -217,31 +200,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# contract-E: _click_clave_movil_button raises with page_missing_click
-# ---------------------------------------------------------------------------
-
-
-def test_click_clave_movil_button_missing_click_carries_translated_message(
-    tmp_path: Path,
-) -> None:
-    """_click_clave_movil_button raises AeatLoginAssertionError with page_missing_click
-    key when the page stand-in has no click attribute."""
-    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-    provider = ClaveMovilAuthProvider(settings)
-    page = _MinimalPage()  # no click() method
-
-    async def run() -> None:
-        with pytest.raises(AeatLoginAssertionError) as exc_info:
-            # Access the private method directly to isolate this raise.
-            await provider._click_clave_movil_button(page)
-        exc = exc_info.value
-        assert exc.translated_message == "adapters.auth.clave_movil.errors.page_missing_click"
-
-    asyncio.run(run())
-
-
-# ---------------------------------------------------------------------------
-# contract-F: locale keys resolve to non-placeholder strings
+# contract-E: locale keys resolve to non-placeholder strings
 # ---------------------------------------------------------------------------
 
 

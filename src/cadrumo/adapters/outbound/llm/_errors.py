@@ -2,7 +2,7 @@
 
 All public LLM exceptions inherit from
 :class:`~adapters.outbound.llm.LLMError`, which extends
-:class:`~core.errors.AeatError`. Provider adapters surface
+:class:`~core.errors.CadrumoError`. Provider adapters surface
 :exc:`~adapters.outbound.llm.LLMProviderError` and
 :exc:`~adapters.outbound.llm.LLMRateLimitError`, cache and usage storage
 surface :exc:`~adapters.outbound.llm.LLMCacheError`, and strict model
@@ -11,10 +11,10 @@ validators surface :exc:`~adapters.outbound.llm.LLMValidationError`.
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 
 
-class LLMError(AeatError):
+class LLMError(CadrumoError):
     """Base exception for public LLM package failures."""
 
 

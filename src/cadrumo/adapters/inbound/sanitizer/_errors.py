@@ -1,7 +1,7 @@
 """Domain errors raised by the :mod:`adapters.inbound.sanitizer` subpackage.
 
 All sanitiser errors inherit from
-:class:`core.errors.AeatError` so callers can catch the family
+:class:`core.errors.CadrumoError` so callers can catch the family
 without importing implementation details. The hierarchy mirrors the
 failure surfaces the sanitiser pipeline can encounter — source-parse
 failure, signature-present refusal, already-sanitised guard, and
@@ -10,12 +10,12 @@ unhandled PII surfaces.
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 
 _SANITIZER_SOURCE_LABEL = "<input-pdf>"
 
 
-class SanitizationError(AeatError):
+class SanitizationError(CadrumoError):
     """Base error for the :mod:`adapters.inbound.sanitizer` subpackage."""
 
 

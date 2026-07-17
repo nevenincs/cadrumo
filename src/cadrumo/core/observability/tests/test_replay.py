@@ -30,9 +30,9 @@ import pytest
 from ...config import Settings, override_settings
 from .. import (
     AeatCorpusDriftError,
-    AeatObservabilityError,
     ArgumentRecord,
     ArgumentSource,
+    CadrumoObservabilityError,
     RunOutcome,
     RunTrace,
     compute_corpus_sha256,
@@ -111,7 +111,7 @@ class TestReplayRun:
                 outcome=RunOutcome.OK,
             )
             save_trace(legacy_trace)
-            with pytest.raises(AeatObservabilityError, match="removed flag"):
+            with pytest.raises(CadrumoObservabilityError, match="removed flag"):
                 replay_run(legacy_trace.run_id)
 
     def test_replay_of_propagated_via_env_var(self, tmp_path: Path) -> None:

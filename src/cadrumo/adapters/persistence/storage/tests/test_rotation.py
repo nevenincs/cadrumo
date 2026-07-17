@@ -26,10 +26,10 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.external_constants import UTF_8_ENCODING
+from .....tests.master_key import EphemeralMasterKeyProvider
 from .. import (
     EncryptedBlobStore,
     Envelope,
-    EphemeralMasterKeyProvider,
     RotationPlanEntry,
     RotationSummary,
     SensitivityClass,

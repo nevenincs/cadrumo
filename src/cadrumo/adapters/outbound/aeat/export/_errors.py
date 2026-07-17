@@ -8,10 +8,10 @@ live-write refusal raised by :mod:`core.access_gate`.
 
 from __future__ import annotations
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 
 
-class ExportError(AeatError):
+class ExportError(CadrumoError):
     """Base class for outbound AEAT export-format adapter errors.
 
     Catch this root for failures emitted by registry-backed fichero-BOE

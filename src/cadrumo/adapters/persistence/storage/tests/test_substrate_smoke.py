@@ -18,11 +18,11 @@ from pathlib import Path
 import pytest
 
 from .....core import exclusive_file_lock
+from .....tests.master_key import EphemeralMasterKeyProvider
 from .....tests.secure_sql import dev_test_database_password
 from .. import (
     EncryptedBlobStore,
     Envelope,
-    EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     SecretRecord,
     SecretStore,

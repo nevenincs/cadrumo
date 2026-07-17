@@ -2,7 +2,7 @@
 
 Asserts that:
 - `MasterKeyReentrantError` is raised on re-entrant context-manager use.
-- The exception is a registered `AeatError` subclass with a bound `ErrorCode`.
+- The exception is a registered `CadrumoError` subclass with a bound `ErrorCode`.
 - `build_error_envelope` round-trips the exception to a well-formed `ErrorEnvelope`.
 """
 
@@ -13,8 +13,8 @@ import secrets
 import pytest
 
 from ......core.errors import ERROR_REGISTRY, build_error_envelope, render_error_text
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import MasterKeyKeychainLockedError
-from .. import EphemeralMasterKeyProvider
 from .._errors import MasterKeyReentrantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -12,7 +12,7 @@ Cl@ve Permanente login failures are raised as the existing registered
 :class:`~adapters.outbound.aeat.auth.AuthConfigurationError` /
 :class:`~adapters.outbound.aeat.auth.AuthError` classes (carrying a
 ``failure_mode`` key in ``context``) rather than new dedicated subclasses. Every
-:class:`~core.errors.AeatError` subclass requires a declared
+:class:`~core.errors.CadrumoError` subclass requires a declared
 :class:`~core.errors.ErrorCode` registry row with a locale-backed
 ``message_key``; reusing the already-registered Cl@ve Móvil-sibling base
 classes here avoids growing that registry (and its locale surface) as part of
