@@ -7,6 +7,9 @@ modified: '2026-07-17'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-07-17-ledger-evidence-atomicity-plan]]"
+  - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-research]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 # `ledger-evidence-atomicity` adr: `ledger-evidence-atomicity rescope grounding` | (**status:** `accepted`)
 
