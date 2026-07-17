@@ -29,6 +29,7 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
 from ....application.user_profile import fact_value, profile_storage_session
+from ....application.wizard import WIZARD_FLOWS
 from ....application.workflow import workflow_state_repository
 from ....core import read_pointer
 from ....core.config import load_settings
@@ -145,3 +146,114 @@ def test_interactive_create_under_json_keeps_stdout_parseable() -> None:
 
     assert result.exit_code == 0, result.output
     assert result.output.lstrip().startswith("{"), result.output
+
+
+# The pinned profile-create prompted-question inventory (see the P07.S20 decision
+# note in the cli-authority-quality-backlog plan): the full declared question set
+# of the setup flow, which is exactly the ``supplied_question_ids`` frozenset the
+# ``create`` path writes to the payload. This is the single place the inventory is
+# pinned; a legitimate add or drop updates this set here, and any silent change
+# fails the gate below.
+_EXPECTED_SETUP_QUESTION_IDS = frozenset(
+    {
+        "activity",
+        "activity-start-date",
+        "address-postcode",
+        "art109-activity-income-withholding-ge-70pct",
+        "bienes-extranjero-above-threshold",
+        "cloud-evidence-upload",
+        "country-of-fiscal-residence",
+        "does-intracomunitario",
+        "enrollment-large-company",
+        "enrollment-public-administration-budget-gt-6000000",
+        "entity-type",
+        "family-descendants-eu-eea-deduction",
+        "family-minor-children-in-unit",
+        "fiscal-residency",
+        "google-export",
+        "has-employees",
+        "incn-prior-12-months",
+        "irpf-estimation-regime",
+        "irpf-income-categories",
+        "irpf-special-regime",
+        "irpf-special-regime-start-date",
+        "iva-group-dominant-entity-enrolled",
+        "iva-group-member-enrolled",
+        "iva-intracommunity-operations-exceed-50000-eur",
+        "iva-oss-enrolled",
+        "iva-redeme-enrolled",
+        "iva-regime",
+        "iva-roi-enrolled",
+        "iva-sii-enrolled",
+        "legal-entity-form",
+        "legal-name",
+        "ley-49-2002-option-date",
+        "ley-49-2002-option-declared",
+        "ley-49-2002-renunciation-date",
+        "ley-49-2002-renunciation-declared",
+        "llm-vision",
+        "modelo-111-no-retenciones-periods",
+        "monedas-virtuales-extranjero-above-threshold",
+        "name",
+        "new-entity-first-two-profit-periods",
+        "notes",
+        "objective-estimation-modulos-iae-epigraph",
+        "objective-estimation-modulos-module-1-units",
+        "objective-estimation-modulos-module-2-units",
+        "objective-estimation-modulos-module-3-units",
+        "objective-estimation-modulos-module-4-units",
+        "objective-estimation-modulos-module-5-units",
+        "objective-estimation-modulos-module-6-units",
+        "objective-estimation-modulos-module-7-units",
+        "output-language",
+        "pays-capital-income-with-retencion",
+        "pays-professionals-with-retencion",
+        "pays-rent-with-retencion",
+        "representante-fiscal-nif",
+        "representante-fiscal-nombre",
+        "situacion-familiar",
+        "spouse-birth-date",
+        "spouse-disability-grade",
+        "spouse-eu-eea-country",
+        "spouse-eu-eea-resident",
+        "spouse-name",
+        "spouse-non-resident-irpf",
+        "spouse-sex",
+        "spouse-surnames",
+        "spouse-tax-id",
+        "surnames",
+        "tax-id",
+        "tax-residence-ccaa",
+        "taxation-type",
+        "taxpayer-birth-date",
+        "taxpayer-death-date",
+        "taxpayer-disability-grade",
+        "taxpayer-marital-status",
+        "taxpayer-marriage-date",
+        "taxpayer-sex",
+        "third-party-transactions-above-347-threshold",
+    }
+)
+_EXPECTED_SETUP_QUESTION_COUNT = 76
+
+
+def test_profile_create_prompted_question_inventory_is_pinned() -> None:
+    """A silent add, drop, or rename of a setup-flow question fails loudly.
+
+    The wizard surfaces one flow; ``create`` writes every declared question id to
+    the payload. Pinning the exact id set plus the declared count catches an added
+    or dropped question and a same-size rename swap, while conditional per-answer
+    visibility stays covered by the interactive persisted-fact tests above.
+    """
+    assert len(WIZARD_FLOWS) == 1, WIZARD_FLOWS
+    flow = WIZARD_FLOWS[0]
+    assert flow.id == "setup", flow.id
+
+    declared_ids = [question.id for section in flow.sections for question in section.questions]
+    surfaced_ids = frozenset(declared_ids)
+
+    # No id is declared twice (declared count == unique count) and the set is exactly
+    # the pinned inventory of the decided size.
+    assert len(declared_ids) == _EXPECTED_SETUP_QUESTION_COUNT
+    assert len(surfaced_ids) == _EXPECTED_SETUP_QUESTION_COUNT
+    assert surfaced_ids == _EXPECTED_SETUP_QUESTION_IDS
