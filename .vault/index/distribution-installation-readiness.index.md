@@ -32,9 +32,14 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S21]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S22]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S23]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P06-S04]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S28]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P06-S29]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S67]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S68]]'
+  - '[[2026-07-15-distribution-installation-readiness-W03-P07-S31]]'
+  - '[[2026-07-15-distribution-installation-readiness-W03-P07-S32]]'
+  - '[[2026-07-15-distribution-installation-readiness-W03-P07-S33]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P08-S39]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P08-S69]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
@@ -92,9 +97,14 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P05-S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S43` - Remove local release upload authority while retaining diagnostic build recipes
 - `2026-07-15-distribution-installation-readiness-W02-P05-S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot
+- `2026-07-15-distribution-installation-readiness-W02-P06-S04` - Define and validate the immutable cohort identity and digest contract
 - `2026-07-15-distribution-installation-readiness-W02-P06-S28` - Align MCPB platform and Python requirements with the command-bearing distribution
+- `2026-07-15-distribution-installation-readiness-W02-P06-S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort
 - `2026-07-15-distribution-installation-readiness-W02-P06-S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple
 - `2026-07-15-distribution-installation-readiness-W02-P06-S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions
+- `2026-07-15-distribution-installation-readiness-W03-P07-S31` - Record cohort source digests runtime platform client command transcript result and destination
+- `2026-07-15-distribution-installation-readiness-W03-P07-S32` - Require a complete same-cohort evidence set in release readiness
+- `2026-07-15-distribution-installation-readiness-W03-P07-S33` - Reject stale skipped ambient mismatched and incomplete release evidence
 - `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
 - `2026-07-15-distribution-installation-readiness-W03-P08-S69` - Capture each real Claude client's harness identifier inventory, MCP server name, English MCP product description, and Spanish MCP product description and compare them with the exact cohort
 
