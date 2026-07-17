@@ -6,6 +6,7 @@ tags:
 date: '2026-07-17'
 modified: '2026-07-17'
 related:
+  - '[[2026-07-17-ledger-evidence-atomicity-adr]]'
   - '[[2026-07-17-ledger-evidence-atomicity-plan]]'
 ---
 
@@ -14,6 +15,10 @@ related:
 Auto-generated index of all documents tagged with `#ledger-evidence-atomicity`.
 
 ## Documents
+
+### adr
+
+- `2026-07-17-ledger-evidence-atomicity-adr` - `ledger-evidence-atomicity` adr: `ledger-evidence-atomicity rescope grounding` | (**status:** `accepted`)
 
 ### plan
 
