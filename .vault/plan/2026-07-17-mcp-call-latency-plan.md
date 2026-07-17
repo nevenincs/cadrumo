@@ -132,13 +132,13 @@ Persist the compiled ModeloDefinition set fingerprint-keyed so warm processes sk
 
 Serve MCP tool calls through one warm in-process runtime with a concurrency cap and pre-provisioned launch, preserving byte-identical envelopes and idle-lock custody.
 
-- [ ] `P04.S11` - Add an in-process verb dispatch path that runs the already-importable per-verb command functions and envelope builders in one warm runtime instead of spawning a fresh aeat subprocess; `src/cadrumo/entrypoints/mcp/_inprocess.py`.
-- [ ] `P04.S12` - Route both the direct per-verb call and the meta-execute call through the warm in-process runtime while keeping the shared off-loop progress wrapper and the per-tier timeout ceilings; `src/cadrumo/entrypoints/mcp/_server.py`.
-- [ ] `P04.S13` - Replace the unbounded anyio thread-pool spawn with an explicit concurrency cap or request queue bounding concurrent in-process calls; `src/cadrumo/entrypoints/mcp/_call_runtime.py`.
-- [ ] `P04.S14` - Hold the warm runtime's decrypted bucket-session state under the existing idle-lock custody rules and restart a crashed runtime cleanly with no torn persisted state; `src/cadrumo/entrypoints/mcp/_server.py`.
-- [ ] `P04.S15` - Pre-provision the MCPB environment once and launch the interpreter directly thereafter, removing the per-session uv run resolution from the manifest launch; `packaging/mcpb/build.py`.
-- [ ] `P04.S16` - Prove CLI-versus-MCP envelope parity with a real-behavior oracle asserting byte-identical envelopes across the subprocess and in-process transports so D4 does not fork result shapes; `src/cadrumo/entrypoints/mcp/tests/test_inprocess_envelope_parity.py`.
-- [ ] `P04.S17` - Extend the loop-responsiveness regression to cover the warm path plus a custody test proving idle-lock relock and clean crash restart; `src/cadrumo/entrypoints/mcp/tests/test_server_loop_responsiveness.py`.
+- [x] `P04.S11` - Add an in-process verb dispatch path that runs the already-importable per-verb command functions and envelope builders in one warm runtime instead of spawning a fresh aeat subprocess; `src/cadrumo/entrypoints/mcp/_inprocess.py`.
+- [x] `P04.S12` - Route both the direct per-verb call and the meta-execute call through the warm in-process runtime while keeping the shared off-loop progress wrapper and the per-tier timeout ceilings; `src/cadrumo/entrypoints/mcp/_server.py`.
+- [x] `P04.S13` - Replace the unbounded anyio thread-pool spawn with an explicit concurrency cap or request queue bounding concurrent in-process calls; `src/cadrumo/entrypoints/mcp/_call_runtime.py`.
+- [x] `P04.S14` - Hold the warm runtime's decrypted bucket-session state under the existing idle-lock custody rules and restart a crashed runtime cleanly with no torn persisted state; `src/cadrumo/entrypoints/mcp/_server.py`.
+- [x] `P04.S15` - Pre-provision the MCPB environment once and launch the interpreter directly thereafter, removing the per-session uv run resolution from the manifest launch; `packaging/mcpb/build.py`.
+- [x] `P04.S16` - Prove CLI-versus-MCP envelope parity with a real-behavior oracle asserting byte-identical envelopes across the subprocess and in-process transports so D4 does not fork result shapes; `src/cadrumo/entrypoints/mcp/tests/test_inprocess_envelope_parity.py`.
+- [x] `P04.S17` - Extend the loop-responsiveness regression to cover the warm path plus a custody test proving idle-lock relock and clean crash restart; `src/cadrumo/entrypoints/mcp/tests/test_server_loop_responsiveness.py`.
 
 ### Phase `P05` - Measurement and closure
 
