@@ -67,8 +67,14 @@ def _run_concurrent_launches(
     logs: Path,
     timeout: float,
     count: int = 4,
+    label: str = "concurrent",
 ) -> None:
-    """Launch the real server concurrently after host-style provisioning."""
+    """Launch the real server ``count`` times, waiting for each to exit.
+
+    Every server reads ``DEVNULL`` stdin, hits EOF, and exits cleanly, so a launch
+    both provisions (on the bundle's first touch, through the bootstrap) and
+    returns. ``label`` distinguishes the retained per-launch logs.
+    """
     processes = [
         subprocess.Popen(  # noqa: S603 - fixed installed tool and bundle-owned server
             argv,
@@ -90,8 +96,8 @@ def _run_concurrent_launches(
         except subprocess.TimeoutExpired:
             process.kill()
             stdout, stderr = process.communicate()
-            failures.append(f"launch {index} timed out")
-        log = logs / f"concurrent-launch-{index}.log"
+            failures.append(f"{label} launch {index} timed out")
+        log = logs / f"{label}-launch-{index}.log"
         log.write_text(
             f"argv={json.dumps(argv)}\n"
             f"cwd={cwd}\n"
@@ -101,7 +107,7 @@ def _run_concurrent_launches(
             encoding=_UTF_8,
         )
         if process.returncode != 0:
-            failures.append(f"launch {index} exited {process.returncode}; retained log: {log}")
+            failures.append(f"{label} launch {index} exited {process.returncode}; retained log: {log}")
     if failures:
         raise SystemExit("; ".join(failures))
 
@@ -199,7 +205,7 @@ def run_mcpb_smoke(
     )
     manifest = json.loads((extracted / "manifest.json").read_text(encoding=_UTF_8))
     server = manifest["server"]["mcp_config"]
-    expected_args = ["run", "--directory", "${__dirname}", "src/server.py"]
+    expected_args = ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"]
     expected_sha256 = {
         "cadrumo": cohort.sha256["cadrumo"],
         "cadrumo-data-manuals": cohort.sha256["cadrumo-data-manuals"],
@@ -264,14 +270,43 @@ def run_mcpb_smoke(
     if "UV_PROJECT_ENVIRONMENT" in resolved_environment:
         raise SystemExit("MCPB must use the client-provisioned bundle environment")
     runtime_environment = extracted / ".venv"
+    provision_marker = runtime_environment / ".cadrumo-cohort"
     launch_environment = {**environment, **resolved_environment}
-    _run(
-        [str(uv), "sync", "--directory", str(extracted)],
+    # No pre-sync: the FIRST launch of the manifest command must exercise the
+    # bootstrap's own once-per-install provisioning, exactly as a real client's
+    # first `uv run --no-project` does (Desktop extracts and immediately launches;
+    # the first launch provisions). The launch reads DEVNULL stdin, so the server
+    # provisions, starts, hits EOF, and exits.
+    _run_concurrent_launches(
+        [str(uv), *server_args],
         cwd=run_root,
         env=launch_environment,
-        log=logs / "client-provision.log",
+        logs=logs,
         timeout=timeout_seconds,
+        count=1,
+        label="first",
     )
+    if not runtime_environment.is_dir():
+        raise SystemExit(f"bootstrap first launch did not provision the bundle venv: {runtime_environment}")
+    if not provision_marker.is_file():
+        raise SystemExit(f"bootstrap first launch wrote no cohort marker: {provision_marker}")
+    first_marker_mtime_ns = provision_marker.stat().st_mtime_ns
+    # The SECOND launch must direct-exec the provisioned interpreter with NO
+    # re-resolution: the bootstrap only rewrites the cohort marker when it
+    # provisions, so an unchanged marker mtime proves the second launch skipped
+    # provisioning entirely (the robustness research F4 remedy - no per-session
+    # `uv run` project resolution after the first).
+    _run_concurrent_launches(
+        [str(uv), *server_args],
+        cwd=run_root,
+        env=launch_environment,
+        logs=logs,
+        timeout=timeout_seconds,
+        count=1,
+        label="second",
+    )
+    if provision_marker.stat().st_mtime_ns != first_marker_mtime_ns:
+        raise SystemExit("bootstrap second launch re-provisioned instead of direct-execing the venv")
     _run_concurrent_launches(
         [str(uv), *server_args],
         cwd=run_root,
@@ -326,7 +361,8 @@ def run_mcpb_smoke(
                 "official_validator": f"@anthropic-ai/mcpb@{_MCPB_CLI_VERSION}",
                 "proof": {
                     "archive_construction": "passed",
-                    "client_style_provisioning": "passed into bundle .venv",
+                    "first_launch_provisioning": "passed into bundle .venv",
+                    "second_launch_direct_exec": "passed with no re-resolution",
                     "concurrent_server_launches": "passed",
                     "bundle_runtime_oracle": "passed outside a desktop client",
                     "project_independent_state": str(storage_root),

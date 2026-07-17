@@ -43,8 +43,19 @@ _REQUIRED_VERSION_ENV: Final[str] = "CADRUMO_MCP_REQUIRED_VERSION"
 _REQUIRED_COHORT_ENV: Final[str] = "CADRUMO_MCP_COHORT_SHA256"
 _STORAGE_ROOT_ENV: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
 _SERVER_ENTRY_POINT: Final[str] = "src/server.py"
+_SERVE_ENTRY_POINT: Final[str] = "src/_serve.py"
+#: The manifest launch: ``uv run --no-project`` runs the bootstrap on a bare
+#: interpreter with NO project resolution, so the per-session ``uv run`` project
+#: resolve/sync (robustness research F4) is paid only on the very first launch,
+#: inside the bootstrap, and never again. Every later session direct-execs the
+#: provisioned venv interpreter.
+_LAUNCH_ARGS: Final[list[str]] = ["run", "--no-project", "--directory", "${__dirname}", _SERVER_ENTRY_POINT]
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
-_SERVER_SOURCE: Final[str] = """\
+# The real server entry, run by the PROVISIONED venv interpreter. It verifies the
+# installed cohort wheel digests (the digest-pinned cohort guarantee) and starts
+# the server. It runs inside the venv where the cohort is installed, so
+# ``distribution(name)`` sees the bundle-local wheels exactly as before.
+_SERVE_SOURCE: Final[str] = """\
 from __future__ import annotations
 
 import json
@@ -79,6 +90,72 @@ for name, expected_sha256 in EXPECTED.items():
         )
 
 from cadrumo.entrypoints.mcp import main
+
+if __name__ == "__main__":
+    main()
+"""
+# The self-healing bootstrap launched by ``uv run --no-project`` (``src/server.py``).
+# On the first launch it provisions the bundle-local ``.venv`` once (``uv sync``),
+# recording the cohort digest in a marker; every launch then execs that provisioned
+# interpreter directly on ``src/_serve.py``, so no session after the first pays uv's
+# project resolution. A marker keyed by the cohort digest re-provisions after a
+# version upgrade; the digest-pin verification in ``_serve.py`` remains the final
+# guard against serving a mismatched cohort.
+_BOOTSTRAP_SOURCE: Final[str] = """\
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+_BUNDLE = Path(__file__).resolve().parents[1]
+_VENV = _BUNDLE / ".venv"
+_MARKER = _VENV / ".cadrumo-cohort"
+_SERVE = _BUNDLE / "src" / "_serve.py"
+
+
+def _cohort_digest():
+    return os.environ.get("CADRUMO_MCP_COHORT_SHA256", "")
+
+
+def _venv_python():
+    if sys.platform == "win32":
+        return _VENV / "Scripts" / "python.exe"
+    return _VENV / "bin" / "python"
+
+
+def _is_provisioned(python):
+    try:
+        return python.is_file() and _MARKER.read_text(encoding="utf-8") == _cohort_digest()
+    except OSError:
+        return False
+
+
+def _provision():
+    uv = shutil.which("uv")
+    if uv is None:
+        raise SystemExit("uv is required to provision the Cadrumo MCP environment on first launch")
+    result = subprocess.run(
+        [uv, "sync", "--directory", str(_BUNDLE)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        sys.stderr.write(result.stdout)
+        sys.stderr.write(result.stderr)
+        raise SystemExit("Cadrumo MCP environment provisioning failed")
+    _MARKER.write_text(_cohort_digest(), encoding="utf-8")
+
+
+def main():
+    python = _venv_python()
+    if not _is_provisioned(python):
+        _provision()
+    os.execv(str(python), [str(python), str(_SERVE)])
+
 
 if __name__ == "__main__":
     main()
@@ -127,8 +204,11 @@ def load_manifest() -> dict[str, object]:
         raise ManifestError("manifest server.mcp_config must be an object")
     if mcp_config.get("command") != _MCP_LAUNCHER:
         raise ManifestError("manifest server.mcp_config.command must be 'uv'")
-    if mcp_config.get("args") != ["run", "--directory", "${__dirname}", _SERVER_ENTRY_POINT]:
-        raise ManifestError("manifest server.mcp_config.args must launch the bundle-local server through UV")
+    if mcp_config.get("args") != _LAUNCH_ARGS:
+        raise ManifestError(
+            "manifest server.mcp_config.args must launch the bundle-local bootstrap "
+            "through 'uv run --no-project' so no session re-resolves the project",
+        )
     env = mcp_config.get("env")
     if not isinstance(env, dict):
         raise ManifestError("manifest server.mcp_config.env must be an object")
@@ -209,7 +289,8 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
         runtime_pyproject(cohort),
         encoding=_UTF_8,
     )
-    (server / "server.py").write_text(_SERVER_SOURCE, encoding=_UTF_8)
+    (server / "server.py").write_text(_BOOTSTRAP_SOURCE, encoding=_UTF_8)
+    (server / "_serve.py").write_text(_SERVE_SOURCE, encoding=_UTF_8)
 
 
 def _write_archive_member(
