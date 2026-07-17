@@ -12,8 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ....core.config import load_settings
-from ....core.resources import resolve_companion_binary
-from ....core.resources._boundary import packaged_data
+from ....core.resources import packaged_data, resolve_companion_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
@@ -64,11 +63,11 @@ def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
     try:
         node = packaged_data(_MANUAL_CORPUS_TEXT_DIR, *sidecar_parts)
         raw = node.read_text(encoding="utf-8")
-    except Exception:
+    except (OSError, UnicodeDecodeError):
         return None
     try:
         data: dict[str, object] = json.loads(raw)
-    except Exception:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return None
     stored_sha256 = data.get("source_sha256")
     if not isinstance(stored_sha256, str):
