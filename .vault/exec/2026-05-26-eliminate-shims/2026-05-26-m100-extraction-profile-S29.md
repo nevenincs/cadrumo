@@ -4,9 +4,8 @@ tags:
   - "#eliminate-shims"
 step_id: S29
 date: 2026-05-26
-modified: '2026-07-13'
+modified: '2026-07-17'
 related:
-  - "[[2026-05-10-eliminate-user-cli-shim-plan]]"
 ---
 
 # M100 declaracion_pdf extraction profile — second chunk (apartado-summary casillas)

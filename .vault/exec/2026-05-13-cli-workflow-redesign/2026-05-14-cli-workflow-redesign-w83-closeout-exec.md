@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'W83.P400..P404'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
   - "[[2026-05-12-aeat-cli-config-vs-setup-namespace-adr]]"
 ---
 

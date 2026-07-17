@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'W77.P370.S2131'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
@@ -186,7 +186,7 @@ sits in one exec doc.
 
 ### Additional ADRs (5 total, including initial composition-pattern ADR)
 
-- `2026-06-03-bucket-search-adr` — search-verb scoping to per-domain
+- `2026-05-12-cli-workflow-redesign-bucket-adr` — search-verb scoping to per-domain
   repository dispatch via a closed `BucketSearchScope` enum;
   recency-first ranking MVP; routes never touch `secure_objects`
   ciphertext directly.

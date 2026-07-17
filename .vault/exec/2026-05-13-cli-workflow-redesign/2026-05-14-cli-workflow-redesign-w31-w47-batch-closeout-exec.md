@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'W31..W47 (batch)'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
@@ -20,7 +20,6 @@ related:
   - "[[2026-05-13-cli-workflow-redesign-actor-attribution-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-app-modelo-discard-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]"
 ---
 
 # `cli-workflow-redesign` W31..W47 batch closeout
