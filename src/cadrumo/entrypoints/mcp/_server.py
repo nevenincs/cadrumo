@@ -6,8 +6,9 @@ refuses with the install hint and a non-zero exit instead of raising a raw
 ``ModuleNotFoundError`` - the same graceful-degradation contract the Google,
 browser, and Anthropic integrations follow. The tool list, annotations, and the
 forbidden-live-write block are sourced from the SDK-independent core in this
-package; ``call_tool`` runs the deterministic CLI in a subprocess and returns its
-JSON envelope as structured content. Alongside the per-verb tools the server
+package; ``call_tool`` runs the deterministic CLI - warm in-process for local
+verbs, a supervised subprocess for the AEAT-sede family (``_run_tool``) - and
+returns its JSON envelope as structured content. Alongside the per-verb tools the server
 advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floor
 tool (the universal operating-layer channel), and serves the operating
 layer through real ``resources`` handlers - the concrete ``cadrumo://`` skill / rule
@@ -39,6 +40,7 @@ import json
 import os
 import sys
 import sysconfig
+import threading
 import time
 import uuid
 from dataclasses import dataclass
@@ -89,6 +91,12 @@ from ._identity_gate import (
     SessionIdentityState,
     identity_elicitation_echo,
     identity_gate_refusal,
+)
+from ._inprocess import (
+    CompletedCliRun,
+    dispatch_verb_in_process,
+    parse_cli_envelope,
+    tier_runs_in_process,
 )
 from ._input_schema import cli_argv_for
 from ._meta_tools import (
@@ -165,6 +173,12 @@ _META_TOOLSETS_TOOL = "toolsets"
 # tier, declared risk, owning toolset, and reachable personas - so a model can
 # inspect a verb fully before spending an ``execute`` round-trip on it.
 _META_DESCRIBE_TOOL = "describe"
+
+# The telemetry ``executable`` observation for a call served through the warm
+# in-process runtime, where no child executable exists. It stands in the same
+# field the subprocess transport fills with the resolved CLI executable path, so
+# a payload-free telemetry row records which transport served the call.
+_INPROCESS_MARKER = "<in-process>"
 
 
 def emit_missing_sdk_refusal() -> None:
@@ -417,21 +431,79 @@ def _run_subprocess_tool(
             is_error=True,
             executable=result.executable,
         )
-    raw = result.stdout.strip() or result.stderr.strip()
-    try:
-        envelope = json.loads(raw)
-    except json.JSONDecodeError:
-        return SubprocessToolOutcome(
-            envelope={"status": "error", "raw": raw},
-            is_error=True,
-            executable=result.executable,
-        )
-    is_error = envelope.get("status") == "error" or result.returncode != 0
+    envelope, is_error = parse_cli_envelope(
+        CompletedCliRun(stdout=result.stdout, stderr=result.stderr, returncode=result.returncode),
+    )
     return SubprocessToolOutcome(
         envelope=envelope,
         is_error=is_error,
         executable=result.executable,
     )
+
+
+def _run_inprocess_tool(
+    descriptor: McpToolDescriptor,
+    arguments: dict[str, object],
+    *,
+    tier: CallTier,
+    timeout_s: float,
+) -> SubprocessToolOutcome:
+    """Serve one verb through the warm in-process runtime under a wall-clock ceiling.
+
+    The verb runs in the server process through the real CLI pipeline
+    (:func:`~entrypoints.mcp._inprocess.dispatch_verb_in_process`), reusing the
+    same command functions and envelope builders as the subprocess transport, so
+    the envelope - parsed through the same
+    :func:`~entrypoints.mcp._inprocess.parse_cli_envelope` - is byte-identical.
+    The per-tier ceiling is retained: an in-process call cannot be
+    force-terminated the way a supervised subprocess tree can, so the call runs in
+    a dedicated worker thread joined with the timeout, and on breach the same
+    localized timed-out refusal is returned while the abandoned worker finishes in
+    the background. This whole runner is itself dispatched off the event loop by
+    the shared progress wrapper, so the join never blocks the loop.
+    """
+    holder: dict[str, CompletedCliRun] = {}
+
+    def _target() -> None:
+        holder["run"] = dispatch_verb_in_process(descriptor.verb_schema, arguments)
+
+    worker = threading.Thread(target=_target, name="cadrumo-mcp-inprocess", daemon=True)
+    worker.start()
+    worker.join(timeout_s)
+    if worker.is_alive():
+        return SubprocessToolOutcome(
+            envelope=_timeout_refusal_envelope(
+                command_key=descriptor.command_key,
+                tier=tier,
+                timeout_s=timeout_s,
+            ),
+            is_error=True,
+            executable=_INPROCESS_MARKER,
+        )
+    envelope, is_error = parse_cli_envelope(holder["run"])
+    return SubprocessToolOutcome(envelope=envelope, is_error=is_error, executable=_INPROCESS_MARKER)
+
+
+def _run_tool(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> SubprocessToolOutcome:
+    """Dispatch one tool through the transport its call tier selects.
+
+    Local ``READ`` and ``MUTATE`` verbs run warm in-process (interpreter start,
+    the pydantic import floor, and the registry load are paid once per session,
+    not per call); the AEAT-sede / open-world ``LIVE`` family stays on the
+    supervised subprocess for its process-tree kill and operator progress sink.
+    Both transports self-enforce the per-tier timeout ceiling, return the same
+    :class:`SubprocessToolOutcome` shape, and parse through the same
+    :func:`~entrypoints.mcp._inprocess.parse_cli_envelope`, so the envelope cannot
+    fork between them. Both meta-execute and the direct per-verb path route
+    through here.
+    """
+    tier = tier_for(
+        read_only=descriptor.annotations.read_only_hint,
+        open_world=descriptor.annotations.open_world_hint,
+    )
+    if tier_runs_in_process(tier):
+        return _run_inprocess_tool(descriptor, arguments, tier=tier, timeout_s=timeout_seconds(tier))
+    return _run_subprocess_tool(descriptor, arguments)
 
 
 def build_meta_sdk_tools() -> list[Tool]:
@@ -796,7 +868,9 @@ def build_server(
         ``client_supports_elicitation=False``: handoff-tier CONFIRM refuses
         (fail-closed), non-handoff CONFIRM proceeds under the client's
         annotation-driven confirmation. Faithfulness and telemetry match the
-        direct path.
+        direct path. The dispatch transport - warm in-process for local verbs,
+        supervised subprocess for the AEAT-sede family - is chosen by
+        :func:`_run_tool`, so meta-execute and the direct path share it.
         """
         key = descriptor.command_key
         identity_refusal = identity_gate_refusal(key, state=identity_state)
@@ -823,7 +897,7 @@ def build_server(
             )
             return _refused_tool_outcome(advisory_line(faith))
         started = time.monotonic()
-        outcome = _run_subprocess_tool(descriptor, arguments)
+        outcome = _run_tool(descriptor, arguments)
         envelope = outcome.envelope
         is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
@@ -847,10 +921,15 @@ def build_server(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
     ) -> SubprocessToolOutcome:
-        """Run one direct per-verb CLI subprocess through the shared off-loop wrapper."""
+        """Run one direct per-verb call through the shared off-loop wrapper.
+
+        The transport (warm in-process for local verbs, supervised subprocess for
+        the AEAT-sede family) is chosen by :func:`_run_tool`; either way the
+        blocking work runs off the event loop so the session keeps serving.
+        """
         return await _run_offloop_with_progress(
             server,
-            partial(_run_subprocess_tool, descriptor, arguments),
+            partial(_run_tool, descriptor, arguments),
         )
 
     @server.list_tools()
