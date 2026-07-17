@@ -24,11 +24,13 @@ does execute today) and is the structural half of the fix:
    (no mocks, no stubs), that every catalogued wall's guarding test both
    COLLECTS and PASSES right now. A wall whose test has been deleted, renamed,
    or made uncollectible fails this assertion -- the "the wall reopened and
-   nobody noticed" failure mode issue ``#406`` names. Every catalogued wall's
-   node id runs inside ONE shared subprocess boot (the module-scoped
+   nobody noticed" failure mode issue ``#406`` names. Every catalogued wall
+   runs inside ONE shared subprocess boot (the module-scoped
    ``_batched_wall_results`` fixture, parsed from a real ``--junitxml``
    report), not one boot per wall, while each wall stays its own pytest test
-   item with its own pass/fail attribution.
+   item with its own pass/fail attribution -- see that fixture for why the
+   batch addresses modules plus ``-k`` rather than exact node ids, which is
+   what keeps one reopened wall from failing every other wall with it.
 3. :func:`test_a_regressed_wall_assertion_is_caught_by_the_gate` is the
    anti-tautology proof: it materialises a temporary sibling copy of a
    catalogued wall's test module with its core assertion deliberately flipped
@@ -54,7 +56,6 @@ import os
 import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path
 
 import pytest
@@ -70,31 +71,18 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 # covers the summed real runtime of every wall's own CLI-driven test, not
 # just one node's worth of interpreter/collection overhead.
 _SUBPROCESS_TIMEOUT_SECONDS = 600
-# A ~30-node `pytest <id1> <id2> ... -m integration -n0` invocation is, on a
-# heavily contended shared worktree (many concurrent agent processes reading,
-# writing, and compiling the SAME repository tree -- observed at 250+ live
-# `python.exe` processes during triage), occasionally hit by a collection-time
-# race that makes pytest report every single requested node id as
-# `ERROR: not found: ... (no match in any of [<Module ...>])` and exit 4 with
-# zero collected items -- confirmed by re-running the identical command
-# against the identical node ids back-to-back and observing it flip between a
-# clean full collection and a total wipeout with no source change in between.
-# This is a distinct signature from a REAL regression: a real regression still
-# collects and reports the other 28 walls normally, with only the regressed
-# wall's testcase failing or erroring. A full wipeout (every catalogued node
-# id absent from the parsed junit report) is retried a bounded number of times,
-# with a short backoff to let contention clear, before being treated as a
-# genuine result -- so the gate stays sensitive to a real reopened wall while
-# shedding this proven environmental race.
-_BATCH_COLLECTION_RETRY_ATTEMPTS = 10
-_BATCH_COLLECTION_RETRY_BACKOFF_SECONDS = 3.0
 
 #: Per-testcase pass/fail result keyed by (junit classname, test function name).
 #: ``None`` means the testcase passed; a non-``None`` value is its failure/error message.
 _JunitResults = dict[tuple[str, str], "str | None"]
 
 
-def _run_pytest_subprocess(*node_ids: str, junit_xml_path: Path | None = None) -> subprocess.CompletedProcess[str]:
+def _run_pytest_subprocess(
+    *args: str,
+    junit_xml_path: Path | None = None,
+    keyword_expression: str | None = None,
+    storage_root: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
     """Run the catalogued wall test(s) in a real, fresh ``pytest`` subprocess.
 
     Forces ``-m integration`` explicitly so the invocation is not silently
@@ -110,9 +98,26 @@ def _run_pytest_subprocess(*node_ids: str, junit_xml_path: Path | None = None) -
     collapsing the subprocess to just its own node(s)' cost.
 
     ``junit_xml_path``, when supplied, requests a structured JUnit XML report
-    at that path so a caller running MULTIPLE node ids in one boot can still
-    attribute pass/fail per node id (see :func:`_parse_junit_results`) rather
+    at that path so a caller running MULTIPLE walls in one boot can still
+    attribute pass/fail per wall (see :func:`_parse_junit_results`) rather
     than reading only the aggregate return code.
+
+    ``keyword_expression``, when supplied, is passed as ``-k`` to narrow a
+    whole-module ``args`` set down to the catalogued wall functions. See
+    :func:`_batched_wall_results` for why the batch addresses MODULES plus
+    ``-k`` rather than exact ``module::function`` node ids.
+
+    ``storage_root``, when supplied, sets ``CADRUMO_LOCAL_STORAGE_ROOT`` for
+    the subprocess. Callers running a module that lives OUTSIDE the repository
+    tree must supply it: pytest only loads conftests from the rootdir down to
+    the test file's own directory, so an out-of-tree module never traverses
+    ``conftest.py`` / ``src/cadrumo/conftest.py`` -- the two files that point
+    that variable at a process-private temp root BEFORE any Cadrumo import
+    resolves ``Settings``. Without it, the subprocess's collection-time imports
+    resolve the real platform state root and a retired former-product database
+    there trips ``FormerProductStateError`` at collection, so the run dies
+    before the wall's own assertion is ever reached. In-tree callers pass
+    ``None`` and let the conftest chain establish the root as usual.
     """
     argv = [
         sys.executable,
@@ -128,10 +133,16 @@ def _run_pytest_subprocess(*node_ids: str, junit_xml_path: Path | None = None) -
     ]
     if junit_xml_path is not None:
         argv.append(f"--junitxml={junit_xml_path}")
-    argv.extend(node_ids)
+    if keyword_expression is not None:
+        argv.extend(["-k", keyword_expression])
+    argv.extend(args)
+    env = None
+    if storage_root is not None:
+        env = {**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)}
     return subprocess.run(
         argv,
         cwd=_REPO_ROOT,
+        env=env,
         capture_output=True,
         text=True,
         check=False,
@@ -191,29 +202,47 @@ def _batched_wall_results() -> _JunitResults:
     its own pytest test item (same per-wall attribution and reporting
     granularity as before), only the expensive subprocess boot is shared.
 
-    Retries a bounded number of times ONLY on a total collection wipeout (zero
-    of the requested node ids reported at all -- see
-    ``_BATCH_COLLECTION_RETRY_ATTEMPTS``), which is the proven shared-worktree
-    contention race, not a real regression. A run that collects and reports
-    even one catalogued wall is accepted immediately and never retried, so a
-    genuine reopened wall (which still collects the other 28 normally) is
-    caught on the first pass.
+    Addresses the batch by MODULE path plus a ``-k`` selection of the
+    catalogued wall function names, NOT by exact ``module::function`` node
+    ids, and passes only modules that exist on disk. This is load-bearing for
+    per-wall attribution, not a stylistic choice. An unmatched command-line
+    argument is a pytest USAGE error (exit 4): pytest resolves every argument
+    before running anything, so ONE catalogued node id whose function has been
+    deleted or renamed aborts the entire batch -- zero tests run, the junit
+    report is empty, and all 29 walls then fail with the same misleading "not
+    reported by the batched subprocess run ... collection may have failed
+    entirely" message, hiding which wall actually reopened behind 28
+    false failures. A module path always resolves (existence is asserted by
+    :func:`test_catalogue_is_non_empty_and_entries_are_well_formed`, and a
+    module deleted underneath the catalogue is filtered out here), so the run
+    never dies on argument resolution; a wall whose function no longer exists
+    simply produces no testcase in the report and fails on its OWN
+    parametrized item, while every other wall still runs and reports normally.
+
+    This is strictly more sensitive than the exact-node-id form, not less: a
+    deleted, renamed, or uncollectible wall test is still absent from the
+    report and still fails its own item. ``-k`` matches substrings, so a run
+    may execute a few extra same-module tests whose names contain a catalogued
+    name; those simply never match a catalogued ``(classname, name)`` key and
+    are ignored.
+
+    No retry: the total-wipeout signature this fixture used to retry against
+    was never a contention race, it was this exit-4 argument-resolution abort
+    firing deterministically on the two catalogued walls whose guarding tests
+    had been deleted. With module-path arguments the wipeout is structurally
+    impossible, so a bounded retry would only multiply the runtime of a
+    genuinely failing run.
     """
-    node_ids = tuple(entry.node_id for entry in ACCEPTANCE_WALL_CATALOGUE)
-    expected_keys = {
-        (_junit_classname_for_module(entry.test_module), entry.test_function) for entry in ACCEPTANCE_WALL_CATALOGUE
-    }
-    results: _JunitResults = {}
-    for attempt in range(1, _BATCH_COLLECTION_RETRY_ATTEMPTS + 1):
-        with tempfile.TemporaryDirectory(prefix="acceptance-wall-junit-") as tmp_dir:
-            junit_xml_path = Path(tmp_dir) / "acceptance_wall_junit.xml"
-            _run_pytest_subprocess(*node_ids, junit_xml_path=junit_xml_path)
-            results = _parse_junit_results(junit_xml_path)
-        if expected_keys & results.keys():
-            break
-        if attempt < _BATCH_COLLECTION_RETRY_ATTEMPTS:
-            time.sleep(_BATCH_COLLECTION_RETRY_BACKOFF_SECONDS)
-    return results
+    modules = tuple(
+        dict.fromkeys(
+            entry.test_module for entry in ACCEPTANCE_WALL_CATALOGUE if (_REPO_ROOT / entry.test_module).is_file()
+        )
+    )
+    keyword_expression = " or ".join(dict.fromkeys(entry.test_function for entry in ACCEPTANCE_WALL_CATALOGUE))
+    with tempfile.TemporaryDirectory(prefix="acceptance-wall-junit-") as tmp_dir:
+        junit_xml_path = Path(tmp_dir) / "acceptance_wall_junit.xml"
+        _run_pytest_subprocess(*modules, junit_xml_path=junit_xml_path, keyword_expression=keyword_expression)
+        return _parse_junit_results(junit_xml_path)
 
 
 def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
@@ -254,8 +283,15 @@ def test_every_catalogued_wall_test_is_collectible_and_passes(
     classname = _junit_classname_for_module(entry.test_module)
     key = (classname, entry.test_function)
     assert key in _batched_wall_results, (
-        f"acceptance wall {entry.label} was not reported by the batched subprocess run "
-        f"(node id: {entry.node_id}) -- collection may have failed entirely"
+        f"acceptance wall {entry.label} has REOPENED: its guarding test was not reported by the "
+        f"batched subprocess run, which ran this wall's whole module and every other catalogued "
+        f"wall normally. The guarding test has therefore been deleted, renamed, or made "
+        f"uncollectible -- the exact failure mode issue #406 asks CI to surface.\n"
+        f"  node id: {entry.node_id}\n"
+        f"  capability now unguarded: {entry.capability}\n"
+        f"Repair the wall by restoring coverage for that capability. Re-pointing this entry at a "
+        f"test that does not exercise the capability, or deleting the entry, reopens the wall "
+        f"silently -- which is what this gate exists to prevent."
     )
     failure_message = _batched_wall_results[key]
     assert failure_message is None, (
@@ -277,7 +313,10 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate(tmp_path: Path) -> Non
 
     The module lives under pytest's isolated ``tmp_path`` rather than the source
     tree. Repository-wide scanners running on other xdist workers therefore
-    cannot observe a transient mutation-proof file.
+    cannot observe a transient mutation-proof file. Living out of tree costs the
+    run its conftest chain, so the subprocess is handed an explicit
+    ``storage_root`` -- see :func:`_run_pytest_subprocess` for why omitting it
+    kills the run at collection, long before the mutated assertion is reached.
     """
     guarded_entry = next(entry for entry in ACCEPTANCE_WALL_CATALOGUE if entry.issue == 224)
     original_module = _REPO_ROOT / guarded_entry.test_module
@@ -298,7 +337,9 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate(tmp_path: Path) -> Non
     mutated_module_path.write_text(mutated_source, encoding="utf-8")
     mutated_node_id = f"{mutated_module_path.as_posix()}::{guarded_entry.test_function}"
 
-    completed = _run_pytest_subprocess(mutated_node_id)
+    storage_root = tmp_path / "cadrumo-storage-root"
+    storage_root.mkdir()
+    completed = _run_pytest_subprocess(mutated_node_id, storage_root=storage_root)
 
     assert completed.returncode != 0, (
         "the mutated (deliberately regressed) wall test PASSED -- the gate "
