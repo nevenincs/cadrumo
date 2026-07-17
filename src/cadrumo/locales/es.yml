@@ -3036,9 +3036,14 @@ cli:
         non_interactive_passphrase_required: Esta orden necesita un terminal interactivo
           para solicitar la nueva contraseña. Proporciónala de forma no interactiva
           con --new-passphrase y --confirm-new-passphrase.
+        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
+        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
+        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
+        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
       new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
         de forma interactiva.
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
+      secrets_stdin_help: cli.config.custody.secrets_stdin_help
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
@@ -3226,6 +3231,16 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
+    passphrase:
+      change:
+        help: cli.config.passphrase.change.help
+      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
+      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+      errors:
+        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
+        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
+      help: cli.config.passphrase.help
+      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
@@ -4246,14 +4261,12 @@ cli:
           del operador y no se pueden vincular aquí. Para crear una factura de catálogo
           vinculable manualmente, ejecuta 'aeat app ledger invoice catalogue create'
           y pasa ese invoice_id a --invoice-id. Para adjuntar evidencia de factura
-          de compra, ejecuta 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
-          app ledger attach') con un id de 'aeat app ledger evidence add'.
-        missing_target: Indica al menos uno de --invoice-id o --evidence-id.
-      evidence_id_help: Id de evidencia de factura de compra generado por 'aeat app
-        ledger evidence add', adjuntado al movimiento.
-      help: Vincula un movimiento contable con una factura y/o con un registro de
-        evidencia de factura de compra en una única llamada canónica. Rechaza vínculos
-        entre buckets. Local; nunca contacta con AEAT.
+          de compra, ejecuta 'aeat app ledger attach' con un id de 'aeat app ledger
+          evidence add'.
+      help: Vincula un movimiento contable con una factura del catálogo de reconciliación
+        en una única llamada canónica. Para adjuntar evidencia de factura de compra,
+        usa 'aeat app ledger attach'. Rechaza vínculos entre buckets. Local; nunca
+        contacta con AEAT.
       id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
       invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
         factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue

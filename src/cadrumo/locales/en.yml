@@ -2807,8 +2807,17 @@ cli:
         non_interactive_passphrase_required: This command needs an interactive terminal
           to prompt for the new passphrase. Provide it non-interactively with --new-passphrase
           and --confirm-new-passphrase.
+        non_interactive_secret_required: This command needs an interactive terminal
+          to read the secret, or --secrets-stdin.
+        secrets_stdin_invalid_json: The --secrets-stdin payload is not a valid JSON
+          object.
+        secrets_stdin_missing_fields: The --secrets-stdin object is missing required
+          fields or has unexpected ones.
+        secrets_stdin_too_large: The --secrets-stdin payload is too large.
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
       new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
+      secrets_stdin_help: Read secrets as one JSON object from standard input instead
+        of prompting
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
@@ -2976,6 +2985,18 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
+    passphrase:
+      change:
+        help: Change the passphrase after verifying the current one
+      confirm_new_passphrase_prompt: 'Confirm new passphrase: '
+      current_passphrase_prompt: 'Current passphrase: '
+      errors:
+        current_passphrase_incorrect: The current passphrase is incorrect; the stored
+          key was not changed.
+        store_unprovisioned: The secret store is not provisioned; there is no passphrase
+          to change.
+      help: Rotate the file secret store's passphrase
+      new_passphrase_prompt: 'New passphrase: '
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
@@ -3917,15 +3938,11 @@ cli:
           by 'aeat app ledger invoice add' are operator invoice records and cannot
           be linked here. To create a linkable catalogue invoice manually, run 'aeat
           app ledger invoice catalogue create' and pass that invoice_id to --invoice-id.
-          To attach purchase-invoice evidence, run 'aeat app ledger link <tx> --evidence-id
-          <id>' (or 'aeat app ledger attach') with an id from 'aeat app ledger evidence
-          add'.
-        missing_target: Supply at least one of --invoice-id or --evidence-id.
-      evidence_id_help: Purchase-invoice evidence id minted by 'aeat app ledger evidence
-        add', attached to the transaction.
-      help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence
-        record in a single canonical call. Refuses cross-bucket links. Local-only;
-        never contacts AEAT.
+          To attach purchase-invoice evidence, run 'aeat app ledger attach' with an
+          id from 'aeat app ledger evidence add'.
+      help: Bind a ledger transaction to a reconciliation-catalogue invoice in one
+        atomic call. To attach purchase-invoice evidence, use 'aeat app ledger attach'.
+        Refuses cross-bucket links. Local-only; never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
       invoice_id_help: Rich invoice-catalogue id from an imported or reconciled invoice,
         or from 'aeat app ledger invoice catalogue create', bound bidirectionally
