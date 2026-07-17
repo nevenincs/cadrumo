@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import fsync_parent_dir
+from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.locks import exclusive_file_lock
 from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
@@ -359,37 +360,19 @@ def _render_export_payload(
 def _stage_export_tempfile(destination: Path, data: bytes) -> Path:
     """Stage ``data`` into a restrictive ``0o600`` sibling of ``destination``.
 
-    Distinct from the one-shot :func:`atomic_write_hardened_bytes` because the
-    durable ``PREPARED`` journal must land between the fsynced temp and the
-    atomic replace; this stages and fsyncs the temp only, leaving the replace to
-    :func:`publish_prepared_export`. Uses ``O_EXCL`` plus the platform inherit /
-    binary flags so a stray pre-existing temp is refused and newline bytes are
-    never CRLF-translated on Windows.
+    The write is routed through the sanctioned hardened-tier primitive
+    :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes` (``O_EXCL`` +
+    mode ``0o600`` + fsync + atomic create), which is the reviewed home for
+    restrictive file writes -- rather than an ad-hoc ``os.open``/``os.write``.
+    The staged sibling deliberately stays in place (the durable ``PREPARED``
+    journal lands between it and the final replace); :func:`publish_prepared_export`
+    performs the ``os.replace`` from this staged path onto the destination.
     """
-    destination.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = destination.with_name(f"{destination.name}.{os.getpid()}.{secrets.token_hex(4)}{_STAGED_TEMP_SUFFIX}")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    flags |= getattr(os, "O_NOINHERIT", 0)
-    flags |= getattr(os, "O_CLOEXEC", 0)
-    flags |= getattr(os, "O_BINARY", 0)
-    created = False
     try:
-        fd = os.open(tmp_path, flags, 0o600)
-        created = True
-        try:
-            view = memoryview(data)
-            offset = 0
-            while offset < len(view):
-                written = os.write(fd, view[offset:])
-                if written <= 0:
-                    raise OSError("profile export staged write made no progress")
-                offset += written
-            os.fsync(fd)
-        finally:
-            os.close(fd)
+        atomic_write_hardened_bytes(tmp_path, data)
     except BaseException:
-        if created:
-            tmp_path.unlink(missing_ok=True)
+        tmp_path.unlink(missing_ok=True)
         raise
     return tmp_path
 
