@@ -27,6 +27,7 @@ from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision,
 from ._snapshot import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._validate import RegistryValidator
+from ._validate_evidence import flush_corpus_text_cache
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -78,7 +79,10 @@ class ValidatedRegistryAuthority:
         """
         modelo = self.modelo(modelo_id)
         if not self._registry_validated and modelo_id not in self._validated_modelos:
-            self._validator.validate_modelo(modelo)
+            try:
+                self._validator.validate_modelo(modelo)
+            finally:
+                flush_corpus_text_cache()
             self._validated_modelos.add(modelo_id)
         return modelo
 
@@ -86,7 +90,13 @@ class ValidatedRegistryAuthority:
         """Validate the full registry tree once."""
         if self._registry_validated:
             return
-        self._validator.validate_registry(self.modelos)
+        try:
+            # Corpus-text extraction batches its disk-cache write behind a
+            # dirty flag; one flush per validation run replaces the per-miss
+            # full-file rewrite that was accidentally quadratic.
+            self._validator.validate_registry(self.modelos)
+        finally:
+            flush_corpus_text_cache()
         self._registry_validated = True
         self._validated_modelos.update(modelo.id for modelo in self.modelos)
 
