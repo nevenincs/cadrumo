@@ -30,7 +30,9 @@ import base64
 import binascii
 from collections.abc import Callable
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ValidationError
 
@@ -38,17 +40,21 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..bucket import RecoveryVerificationError
 from ..crypto import EncryptedBlob
-from ..errors import DecryptionError, StorageValidationError
+from ..errors import DecryptionError, SecretStoreError, StorageValidationError
 from ._bucket_session import BucketSession
 from ._recovery import (
     RecoveryKey,
     WrappedMasterKey,
+    atomically_install_verified_recovery,
     decode_mnemonic,
     generate_recovery_key,
     unwrap_master_key,
     wrap_master_key,
 )
 from ._recovery_record import RecoveryRecord
+
+if TYPE_CHECKING:
+    from ._master_key import FileFallbackMasterKeyProvider, MasterKeyProvider
 
 _GCM_TAG_BYTES = 16
 _HKDF_INFO = "cadrumo.recovery-key.master-wrap.v1"
@@ -201,11 +207,266 @@ def open_session_from_recovery(
     )
 
 
+# ---------------------------------------------------------------------------
+# Recovery lifecycle operations
+#
+# The typed operations below are the single authority for the operator-facing
+# recovery lifecycle (status, create, rotate, verify, recover). They enforce
+# three invariants the low-level primitives above do not:
+#
+#   * file custody only — mnemonic recovery rewraps the master key, which is a
+#     file-backend concept; keyring and unsecured custody refuse (S74);
+#   * create refuses an existing enrollment and rotate requires one (S72);
+#   * a candidate mnemonic is fully verified before the prior envelope is ever
+#     replaced (S73, via ``atomically_install_verified_recovery``).
+#
+# None of these operations serialize the mnemonic or the master key: their
+# result records carry only the non-secret recovery fingerprint and booleans.
+# ---------------------------------------------------------------------------
+
+
+class RecoveryEnrollmentMode(StrEnum):
+    """Whether an enrollment operation creates a first envelope or rotates one."""
+
+    CREATE = "create"
+    ROTATE = "rotate"
+
+
+class RecoveryLifecycleStatus(BaseModel):
+    """Read-only recovery enrollment status for a secret store."""
+
+    model_config = _STRICT_FROZEN
+
+    enrolled: bool
+    recovery_fingerprint: str | None = None
+
+
+class RecoveryEnrollmentOutcome(BaseModel):
+    """Result of a committed recovery ``create`` or ``rotate``.
+
+    Carries only the non-secret fingerprint of the freshly installed envelope
+    and whether the operation replaced a prior enrollment. The staged mnemonic
+    is never returned here; the caller displayed it during confirmation.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    recovery_fingerprint: str
+    rotated: bool
+
+
+class RecoveryVerifyOutcome(BaseModel):
+    """Result of checking an operator-supplied mnemonic against the envelope."""
+
+    model_config = _STRICT_FROZEN
+
+    verified: bool
+    recovery_fingerprint: str | None = None
+
+
+class RecoveryRecoverOutcome(BaseModel):
+    """Result of rewrapping the master key from the recovery envelope."""
+
+    model_config = _STRICT_FROZEN
+
+    recovery_fingerprint: str
+
+
+def _require_file_custody(provider: MasterKeyProvider) -> FileFallbackMasterKeyProvider:
+    """Return ``provider`` narrowed to the file backend, or refuse.
+
+    Mnemonic recovery rewraps the master key under a new file passphrase, which
+    only the encrypted-file backend supports. Keyring and unsecured custody are
+    refused with typed, remediating :class:`SecretStoreError` refusals rather
+    than silently succeeding or crashing later.
+    """
+    from ._master_key import (
+        FileFallbackMasterKeyProvider,
+        KeyringMasterKeyProvider,
+        UnsecuredMasterKeyProvider,
+    )
+
+    if isinstance(provider, FileFallbackMasterKeyProvider):
+        return provider
+    if isinstance(provider, KeyringMasterKeyProvider):
+        raise SecretStoreError(
+            "recovery and passphrase custody operations require the file secret-store "
+            "backend; the resolved backend is the OS keyring. Set "
+            "CADRUMO_SECRET_STORE_BACKEND=file and retry.",
+        )
+    if isinstance(provider, UnsecuredMasterKeyProvider):
+        raise SecretStoreError(
+            "recovery and passphrase custody operations require the file secret-store "
+            "backend; the resolved backend is unsecured, which holds no recoverable "
+            "master key. Set CADRUMO_SECRET_STORE_BACKEND=file and retry.",
+        )
+    raise SecretStoreError(
+        "recovery and passphrase custody operations require the file secret-store "
+        f"backend; the resolved backend {type(provider).__name__} is unsupported.",
+    )
+
+
+def recovery_status(*, path: Path) -> RecoveryLifecycleStatus:
+    """Report whether a recovery envelope is enrolled at ``path``.
+
+    Read-only. When enrolled, the returned status carries the non-secret
+    :attr:`RecoveryRecord.recovery_fingerprint` so the operator can correlate
+    the enrollment across verify and recover without exposing any secret.
+    """
+    if not path.is_file():
+        return RecoveryLifecycleStatus(enrolled=False, recovery_fingerprint=None)
+    envelope = load_recovery_envelope(path)
+    return RecoveryLifecycleStatus(enrolled=True, recovery_fingerprint=envelope.recovery_fingerprint)
+
+
+def _enroll_recovery(
+    *,
+    provider: MasterKeyProvider,
+    path: Path,
+    mode: RecoveryEnrollmentMode,
+    created_at: datetime,
+    confirm: Callable[[str], str],
+) -> RecoveryEnrollmentOutcome:
+    """Stage a candidate envelope, verify the retype, then atomically install it."""
+    file_provider = _require_file_custody(provider)
+    already_enrolled = path.is_file()
+    if mode is RecoveryEnrollmentMode.CREATE and already_enrolled:
+        raise SecretStoreError(
+            "recovery is already enrolled for this secret store; use recovery rotate "
+            "to replace the existing recovery envelope.",
+        )
+    if mode is RecoveryEnrollmentMode.ROTATE and not already_enrolled:
+        raise SecretStoreError(
+            "no recovery envelope is enrolled for this secret store; use recovery create "
+            "to enroll one before rotating.",
+        )
+
+    master_key = file_provider.get_master_key()
+    candidate = mint_recovery_envelope(dek=master_key, created_at=created_at)
+    retyped = confirm(candidate.mnemonic)
+    payload = candidate.envelope.model_dump_json().encode(_UTF_8_ENCODING)
+
+    def _verify_candidate() -> None:
+        if not verify_recovery_mnemonic(envelope=candidate.envelope, mnemonic=retyped):
+            raise RecoveryVerificationError(
+                "recovery confirmation did not match the staged recovery code; "
+                "the previous recovery envelope is unchanged.",
+            )
+
+    atomically_install_verified_recovery(path=path, payload=payload, verify=_verify_candidate)
+    return RecoveryEnrollmentOutcome(
+        recovery_fingerprint=candidate.envelope.recovery_fingerprint,
+        rotated=mode is RecoveryEnrollmentMode.ROTATE,
+    )
+
+
+def recovery_create(
+    *,
+    provider: MasterKeyProvider,
+    path: Path,
+    created_at: datetime,
+    confirm: Callable[[str], str],
+) -> RecoveryEnrollmentOutcome:
+    """Enroll a first recovery envelope; refuse if one already exists.
+
+    ``provider`` is the resolved :class:`MasterKeyProvider`; only the file
+    backend is accepted. ``confirm`` receives the staged 24-word mnemonic (the
+    caller writes it to the controlling terminal), returns the operator's
+    no-echo retype, and may raise to cancel. The candidate is fully verified
+    before any file is written, so a cancelled or mistyped confirmation leaves
+    the store with no envelope.
+    """
+    return _enroll_recovery(
+        provider=provider,
+        path=path,
+        mode=RecoveryEnrollmentMode.CREATE,
+        created_at=created_at,
+        confirm=confirm,
+    )
+
+
+def recovery_rotate(
+    *,
+    provider: MasterKeyProvider,
+    path: Path,
+    created_at: datetime,
+    confirm: Callable[[str], str],
+) -> RecoveryEnrollmentOutcome:
+    """Replace an existing recovery envelope; require an existing enrollment.
+
+    Two-phase like :func:`recovery_create`, against the file-backed
+    :class:`MasterKeyProvider`. The prior envelope survives a cancelled,
+    mistyped, or otherwise unverified candidate untouched, and is atomically
+    replaced only after the retype is fully verified.
+    """
+    return _enroll_recovery(
+        provider=provider,
+        path=path,
+        mode=RecoveryEnrollmentMode.ROTATE,
+        created_at=created_at,
+        confirm=confirm,
+    )
+
+
+def recovery_verify(
+    *,
+    provider: MasterKeyProvider,
+    path: Path,
+    mnemonic: str,
+) -> RecoveryVerifyOutcome:
+    """Verify ``mnemonic`` against the enrolled envelope without changing custody.
+
+    File custody only: ``provider`` must be a file-backed
+    :class:`MasterKeyProvider`. The envelope file is read, never written, so the
+    :attr:`RecoveryRecord.recovery_fingerprint` reported here is identical
+    before and after the call.
+    """
+    _require_file_custody(provider)
+    if not path.is_file():
+        return RecoveryVerifyOutcome(verified=False, recovery_fingerprint=None)
+    envelope = load_recovery_envelope(path)
+    verified = verify_recovery_mnemonic(envelope=envelope, mnemonic=mnemonic)
+    return RecoveryVerifyOutcome(verified=verified, recovery_fingerprint=envelope.recovery_fingerprint)
+
+
+def recovery_recover(
+    *,
+    provider: MasterKeyProvider,
+    path: Path,
+    mnemonic: str,
+) -> RecoveryRecoverOutcome:
+    """Rewrap the master key from ``mnemonic`` under the file provider's passphrase.
+
+    File custody only: ``provider`` must be a file-backed
+    :class:`MasterKeyProvider`. Unwraps the master key from the recovery
+    envelope and calls the file provider's ``complete_recovery`` to re-mint
+    ``master.key`` / ``master.kdf`` under its (new) passphrase. The recovery
+    envelope itself is never rewritten, so its fingerprint is preserved across
+    the operation.
+    """
+    file_provider = _require_file_custody(provider)
+    envelope = load_recovery_envelope(path)
+    established_fingerprint = envelope.recovery_fingerprint
+    master_key = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
+    file_provider.complete_recovery(master_key)
+    return RecoveryRecoverOutcome(recovery_fingerprint=established_fingerprint)
+
+
 __all__ = [
     "MintedRecovery",
+    "RecoveryEnrollmentMode",
+    "RecoveryEnrollmentOutcome",
+    "RecoveryLifecycleStatus",
+    "RecoveryRecoverOutcome",
+    "RecoveryVerifyOutcome",
     "load_recovery_envelope",
     "mint_recovery_envelope",
     "open_session_from_recovery",
+    "recovery_create",
+    "recovery_recover",
+    "recovery_rotate",
+    "recovery_status",
+    "recovery_verify",
     "save_recovery_envelope",
     "unwrap_recovery_envelope",
     "verify_recovery_mnemonic",

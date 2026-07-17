@@ -16,19 +16,32 @@ from __future__ import annotations
 
 import base64
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
 from ......core.errors import ERROR_REGISTRY, build_error_envelope
 from ...bucket import RecoveryVerificationError
+from ...errors import SecretStoreError
+from .._master_key import FileFallbackMasterKeyProvider
 from .._recovery import (
     decode_mnemonic,
     encode_mnemonic,
 )
 from .._recovery_facade import (
     MintedRecovery,
+    RecoveryEnrollmentOutcome,
+    RecoveryLifecycleStatus,
+    RecoveryRecoverOutcome,
+    RecoveryVerifyOutcome,
+    load_recovery_envelope,
     mint_recovery_envelope,
     open_session_from_recovery,
+    recovery_create,
+    recovery_recover,
+    recovery_rotate,
+    recovery_status,
+    recovery_verify,
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
 )
@@ -37,6 +50,7 @@ from .._recovery_record import RecoveryRecord
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
+_PASSPHRASE = "correct horse battery staple"  # noqa: S105 - synthetic test fixture
 
 _BIP39_ALL_ZERO_ENTROPY = bytes(32)
 _BIP39_ALL_ZERO_MNEMONIC = (
@@ -229,3 +243,208 @@ def test_unexpected_exception_from_decode_mnemonic_propagates_unchanged() -> Non
             mnemonic=minted.mnemonic,
             decoder=_raise_key_error,
         )
+
+
+# ---------------------------------------------------------------------------
+# S71/S72/S73/S76: recovery lifecycle operations against real encrypted files
+# ---------------------------------------------------------------------------
+
+
+def _provisioned_file_provider(store_dir: Path) -> FileFallbackMasterKeyProvider:
+    """Return a file provider with a real minted master key at ``store_dir``."""
+    provider = FileFallbackMasterKeyProvider(store_dir=store_dir, passphrase_callback=lambda: _PASSPHRASE)
+    provider.provision_master_key()
+    return provider
+
+
+def _recovery_path(store_dir: Path) -> Path:
+    return store_dir / "master.recovery.key"
+
+
+def _echo(mnemonic: str) -> str:
+    """A faithful operator retype: the confirmation matches the staged code."""
+    return mnemonic
+
+
+def _wrong_retype(_mnemonic: str) -> str:
+    """A mistyped confirmation: a different valid 24-word mnemonic."""
+    return encode_mnemonic(bytes([0x5A] * 32))
+
+
+def _cancel(_mnemonic: str) -> str:
+    raise KeyboardInterrupt("operator cancelled at the confirmation prompt")
+
+
+def test_recovery_create_enrolls_and_status_reports_fingerprint(tmp_path: Path) -> None:
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    assert recovery_status(path=path) == RecoveryLifecycleStatus(enrolled=False, recovery_fingerprint=None)
+
+    outcome = recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+
+    assert isinstance(outcome, RecoveryEnrollmentOutcome)
+    assert outcome.rotated is False
+    assert path.is_file()
+    status = recovery_status(path=path)
+    assert status.enrolled is True
+    assert status.recovery_fingerprint == outcome.recovery_fingerprint
+    # The installed envelope really unwraps the same master key.
+    envelope = load_recovery_envelope(path)
+    assert envelope.recovery_fingerprint == outcome.recovery_fingerprint
+
+
+def test_recovery_create_refuses_existing_enrollment(tmp_path: Path) -> None:
+    """S72: create refuses when a recovery envelope already exists, untouched."""
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+    original = path.read_bytes()
+
+    with pytest.raises(SecretStoreError, match="already enrolled"):
+        recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+
+    assert path.read_bytes() == original
+
+
+def test_recovery_rotate_requires_existing_enrollment(tmp_path: Path) -> None:
+    """S72: rotate refuses when no recovery envelope is enrolled yet."""
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    with pytest.raises(SecretStoreError, match="no recovery envelope is enrolled"):
+        recovery_rotate(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+
+    assert not path.exists()
+
+
+def test_recovery_rotate_replaces_envelope_after_confirmation(tmp_path: Path) -> None:
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    first = recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+    before = path.read_bytes()
+
+    later = datetime(2026, 6, 1, 9, 0, 0, tzinfo=UTC)
+    rotated = recovery_rotate(provider=provider, path=path, created_at=later, confirm=_echo)
+
+    assert rotated.rotated is True
+    assert rotated.recovery_fingerprint != first.recovery_fingerprint
+    assert path.read_bytes() != before
+    assert recovery_status(path=path).recovery_fingerprint == rotated.recovery_fingerprint
+
+
+def test_rotate_preserves_prior_envelope_on_failed_confirmation(tmp_path: Path) -> None:
+    """S73: a mistyped confirmation leaves the prior envelope byte-identical."""
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    created = recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+    before = path.read_bytes()
+
+    with pytest.raises(RecoveryVerificationError):
+        recovery_rotate(provider=provider, path=path, created_at=_NOW, confirm=_wrong_retype)
+
+    assert path.read_bytes() == before
+    # The original enrollment is still fully valid and identifiable.
+    assert recovery_status(path=path).recovery_fingerprint == created.recovery_fingerprint
+
+
+def test_rotate_preserves_prior_envelope_on_cancelled_confirmation(tmp_path: Path) -> None:
+    """S73: a cancelled confirmation propagates and never rewrites the envelope."""
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+    before = path.read_bytes()
+
+    with pytest.raises(KeyboardInterrupt):
+        recovery_rotate(provider=provider, path=path, created_at=_NOW, confirm=_cancel)
+
+    assert path.read_bytes() == before
+
+
+def test_create_writes_no_envelope_on_failed_confirmation(tmp_path: Path) -> None:
+    """S73: a first enrollment whose retype fails leaves the store with no envelope."""
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    with pytest.raises(RecoveryVerificationError):
+        recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_wrong_retype)
+
+    assert not path.exists()
+    assert recovery_status(path=path).enrolled is False
+
+
+def test_recovery_verify_reports_match_and_preserves_fingerprint(tmp_path: Path) -> None:
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    staged: dict[str, str] = {}
+
+    def _capture(mnemonic: str) -> str:
+        staged["mnemonic"] = mnemonic
+        return mnemonic
+
+    created = recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_capture)
+    before = path.read_bytes()
+
+    good = recovery_verify(provider=provider, path=path, mnemonic=staged["mnemonic"])
+    assert good == RecoveryVerifyOutcome(verified=True, recovery_fingerprint=created.recovery_fingerprint)
+
+    bad = recovery_verify(provider=provider, path=path, mnemonic=encode_mnemonic(bytes([0x11] * 32)))
+    assert bad.verified is False
+    assert bad.recovery_fingerprint == created.recovery_fingerprint
+
+    # Verification never rewrites the envelope.
+    assert path.read_bytes() == before
+
+
+def test_recovery_recover_rewraps_master_key_and_preserves_fingerprint(tmp_path: Path) -> None:
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+    original_master_key = provider.get_master_key()
+
+    staged: dict[str, str] = {}
+
+    def _capture(mnemonic: str) -> str:
+        staged["mnemonic"] = mnemonic
+        return mnemonic
+
+    created = recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_capture)
+    envelope_before = path.read_bytes()
+
+    new_passphrase = "brand new operator passphrase"  # noqa: S105 - synthetic test fixture
+    recovery_provider = FileFallbackMasterKeyProvider(store_dir=store_dir, passphrase_callback=lambda: new_passphrase)
+    outcome = recovery_recover(provider=recovery_provider, path=path, mnemonic=staged["mnemonic"])
+
+    assert isinstance(outcome, RecoveryRecoverOutcome)
+    assert outcome.recovery_fingerprint == created.recovery_fingerprint
+    # The recovery envelope file is never rewritten by recover.
+    assert path.read_bytes() == envelope_before
+    # The store now opens under the new passphrase and yields the same key.
+    reopened = FileFallbackMasterKeyProvider(store_dir=store_dir, passphrase_callback=lambda: new_passphrase)
+    assert reopened.get_master_key() == original_master_key
+
+
+def test_recovery_recover_refuses_wrong_mnemonic(tmp_path: Path) -> None:
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+    recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+
+    recovery_provider = FileFallbackMasterKeyProvider(
+        store_dir=store_dir, passphrase_callback=lambda: "some other pass"
+    )
+    with pytest.raises(RecoveryVerificationError):
+        recovery_recover(provider=recovery_provider, path=path, mnemonic=encode_mnemonic(bytes([0x22] * 32)))
