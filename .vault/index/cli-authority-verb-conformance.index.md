@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance'
-date: '2026-07-16'
-modified: '2026-07-16'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
@@ -47,8 +47,25 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S70]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S37]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S43]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S44]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S45]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S46]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S47]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S48]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S49]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S50]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S51]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S52]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S71]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S72]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S73]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S74]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S75]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S76]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S77]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S78]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S79]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S80]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S103]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S98]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S99]]'
@@ -129,6 +146,23 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S98` - Preserve config profile logout as the sole strong local-session logout command
 - `2026-07-15-cli-authority-verb-conformance-W04-P11-S99` - Remove config lock and its weaker session-only execution path without an alias
 - `2026-07-15-cli-authority-verb-conformance-W05-P16-S223` - Re-arm MCP identity confirmation when canonical profile logout clears the active taxpayer
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S44` - Prove reset removes provider state, sessions, locks, registrations, and secrets only for the explicit target
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S45` - Prove provider and all-provider deletion leave unrelated bucket session files byte-identical
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S46` - Prove acquisition-lock cleanup is target scoped and repeatable with real lock files
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S47` - Delete the certificate keyring backend, backend-kind selector, factory branch, exports, and certificate-specific keyring service and account code while retaining secure storage as the only certificate-secret backend and preserving independent master-key OS-keyring custody
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S50` - Make the certificate authenticator and adapter provider factory consume the resolved typed active certificate credential directly, eliminating their independent path and password projection from Settings
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S51` - Prove certificate secrets set, resolve, and remove only through real secure storage, force real event-commit failure after set and remove, then prove retry resumes the original operation, emits the original stable event exactly once, preserves SET versus ROTATED classification, and reports removal truthfully, and also prove no certificate keyring backend, selector, fallback, migration, probe, cleanup path, or parallel secret writer remains
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S52` - Prove register, select, check, status, test, and login consume the same resolved certificate bytes
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S71` - Expose distinct recovery status, create, rotate, verify, and recover application operations
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S72` - Make recovery create refuse an existing enrollment and rotate require an existing enrollment
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S73` - Preserve the prior recovery envelope until a candidate mnemonic has been fully verified
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S74` - Restrict recovery to file custody and return typed refusals for keyring and unsecured custody
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S75` - Preserve the established recovery fingerprint across verification and recovery operations
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S76` - Prove create refusal, rotate preconditions, candidate verification, and old-envelope survival with real encrypted files
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S77` - Prove mnemonic verification and recovery never serialize secret material
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S78` - Prove file-only custody and typed keyring or unsecured refusals across the custody matrix
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S79` - Prove passphrase change preserves encrypted data and survives failed candidate confirmation
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S80` - Re-export only the explicit passphrase and recovery lifecycle operations
 
 ### plan
 
