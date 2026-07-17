@@ -3,13 +3,20 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S37'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
 
-# Test non regional category profiles preserve existing Renta results
+# [RETIRED] Test non regional category profiles preserve existing Renta results
+
+## Reconciliation outcome
+
+Retired on 2026-07-17 with the dormant regional layer. Real registry-backed
+state-law deductibility tests remain; only the synthetic regional comparison
+was removed. The material below is historical execution evidence, not current
+architecture.
 
 ## Scope
 

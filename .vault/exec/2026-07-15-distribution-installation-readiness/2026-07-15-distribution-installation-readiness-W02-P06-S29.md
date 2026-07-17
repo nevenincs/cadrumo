@@ -9,9 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-
-
-
 # Bind MCPB contents signing identity and bootstrap to the immutable cohort
 
 ## Scope

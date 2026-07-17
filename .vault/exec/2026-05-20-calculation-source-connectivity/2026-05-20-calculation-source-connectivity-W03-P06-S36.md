@@ -3,13 +3,21 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S36'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
 
-# Derive Renta source region from TaxResidenceProfile CCAA
+# [RETIRED] Derive Renta source region from TaxResidenceProfile CCAA
+
+## Reconciliation outcome
+
+Retired on 2026-07-17. The profile read, region plumbing, and injectable
+override path existed only to activate an empty regional category layer in
+synthetic tests. They were removed while preserving real registry-backed
+state-law deductibility. The material below is historical execution evidence,
+not current architecture.
 
 ## Scope
 

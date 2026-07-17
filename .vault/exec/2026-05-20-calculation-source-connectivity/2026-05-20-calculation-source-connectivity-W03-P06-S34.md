@@ -3,13 +3,20 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S34'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
 
-# Extend category profile lookup to accept filing year and CCAA key
+# [RETIRED] Extend category profile lookup to accept filing year and CCAA key
+
+## Reconciliation outcome
+
+Retired on 2026-07-17. The selector layered an always-empty regional override
+onto a state-law category table and was reachable only through synthetic test
+profiles. The resolver, selector, exports, and synthetic coverage were removed.
+The material below is historical execution evidence, not current architecture.
 
 ## Scope
 

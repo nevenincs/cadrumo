@@ -3,48 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-16'
 step_id: 'S422'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cross-domain-continuity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S422 and 2026-05-26-cross-domain-continuity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated and ## Scope
-
-- `campaign-2026 tax-year-2025 material is not a substitute`
-- `src/cadrumo/_data/registry/aeat/modelos/100/`
-- `src/cadrumo/_data/corpus/`
-- `src/cadrumo/application/modelo/`
-- `src/cadrumo/**/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Ingest the officially published tax-year 2026 Modelo 100 revision when AEAT or BOE releases it, then prove a real tax-year 2026 Modelo 130-to-Modelo 100 projection is discoverable and calculated
 

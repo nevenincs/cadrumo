@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S1534-S1550'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
-  - '[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr]]'
 ---
 
 # `cli-workflow-redesign` `W52` registry provider integration closeout

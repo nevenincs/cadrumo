@@ -3,46 +3,11 @@ tags:
   - '#exec'
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
-modified: '2026-07-16'
+modified: '2026-07-17'
 step_id: 'S07'
 related:
   - "[[2026-07-16-protected-browser-certificate-auth-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace protected-browser-certificate-auth with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S07 and 2026-07-16-protected-browser-certificate-auth-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Replace synthetic decisive proof and lifecycle coverage with credential-free real browser and process behavior while retaining the external live protected oracle and ## Scope
-
-- `src/cadrumo/adapters/outbound/aeat/auth/tests`
-- `src/cadrumo/adapters/outbound/aeat/browser/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Replace synthetic decisive proof and lifecycle coverage with credential-free real browser and process behavior while retaining the external live protected oracle
 
 ## Scope
@@ -52,10 +17,14 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Drive exact protected-resource success and refusal branches through a real local HTTP boundary and production Playwright browser sessions.
+- Exercise provider ownership, concurrent close, bounded retry, storage-state round trip, cancellation cleanup, and process reaping with real browser resources.
+- Delete handwritten recording browser implementations and retain the credential-gated external AEAT protected-resource oracle as a separate acceptance check.
 
 ## Outcome
 
+Default credential-free tests now prove the decisive local browser and lifecycle behavior without mirroring provider logic. The external live oracle remains pinned to the canonical protected resource for real AEAT acceptance evidence.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Fresh semantic search resolved the shared real HTTP/Playwright boundary, real provider lifecycle tests, and the retained live oracle. Exact policy inventory found no recording, fake, stub, mock, monkeypatch, or xfail implementation in the scoped test trees. The focused six-file matrix passed 44 tests in 101.19 seconds. Independent code review reported PASS with no HIGH or MEDIUM findings.

@@ -3,10 +3,9 @@ tags:
   - '#exec'
   - '#pdf-import'
 date: '2026-04-22'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-04-20-pdf-import-plan]]'
-  - '[[2026-04-22-ruleset-architecture-adr]]'
   - '[[2026-04-22-real-pdf-import-wave-60-exhaustive-audit]]'
   - '[[2026-04-22-real-pdf-import-wave-62-exhaustive-audit]]'
   - '[[2026-04-22-real-pdf-import-wave-64-exhaustive-audit]]'

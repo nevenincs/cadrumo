@@ -3,48 +3,11 @@ tags:
   - '#exec'
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
-modified: '2026-07-16'
+modified: '2026-07-17'
 step_id: 'S02'
 related:
   - "[[2026-07-16-protected-browser-certificate-auth-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace protected-browser-certificate-auth with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S02 and 2026-07-16-protected-browser-certificate-auth-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Reconcile every still-accepted auth decision with the protected-browser authority and remove retired handshake marker and configurable-target clauses and ## Scope
-
-- `.vault/adr/2026-04-17-session-persistence-adr.md`
-- `.vault/adr/2026-04-17-aeat-access-gate-adr.md`
-- `.vault/adr/2026-04-18-auth-provider-abstraction-adr.md`
-- `.vault/adr/2026-04-18-auth-protocol-adr.md` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Reconcile every still-accepted auth decision with the protected-browser authority and remove retired handshake marker and configurable-target clauses
 
 ## Scope
@@ -56,10 +19,14 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Reconcile the four accepted auth decisions with the protected-resource browser proof and encrypted in-memory session boundary.
+- Link each retained decision to the current protected-browser ADR and research.
+- Remove authoritative handshake, backend-selector, context-marker, configurable-target, filesystem-state, and compatibility clauses while retaining each decision's independent scope.
 
 ## Outcome
 
+The four accepted decisions now agree on typed credentials, one application-owned `AuthProvider` protocol, mandatory closure, bucket-routed encrypted persistence, and the fixed protected-resource certificate proof.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Fresh Vault semantic search returned the reconciliation resolution and current accepted authority. Exact inspection confirmed all four decisions remain accepted and link to the current protected-browser records. Independent documentation review reported PASS with no HIGH or MEDIUM findings.
