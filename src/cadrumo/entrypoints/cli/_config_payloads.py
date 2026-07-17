@@ -1083,12 +1083,12 @@ class CertificateSourceSecretMutationPayload(OutputSchema):
 
     Mirrors :class:`application.auth.CertificateSourceSecretMutationResult`.
     Never carries the secret value itself — only whether one is now
-    registered, which backend holds it, and whether the call rotated an
-    existing secret.
+    registered and whether the call rotated an existing secret. Named
+    certificate secrets have exactly one storage authority (encrypted
+    secure storage), so no backend descriptor is projected.
     """
 
     name: str
-    backend: str = ""
     has_secret: bool = False
     rotated: bool = False
     removed: bool = False

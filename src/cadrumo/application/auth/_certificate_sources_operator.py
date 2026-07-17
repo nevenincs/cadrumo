@@ -51,7 +51,6 @@ from ..auth_credentials import (
     ActiveCertificateCredentials,
 )
 from ._certificate_secret_backend import (
-    SECURE_STORAGE_BACKEND_LABEL,
     SecureStorageCertificateSecretBackend,
 )
 from ._certificate_sources import (
@@ -472,7 +471,6 @@ def set_operator_certificate_source_secret(
         _finalize_certificate_secret_mutation(repository=repository, intent=intent)
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
-        backend=SECURE_STORAGE_BACKEND_LABEL,
         has_secret=True,
         rotated=intent.event_kind is CertificateSecretMutationEventKind.ROTATED,
     )
@@ -520,7 +518,6 @@ def remove_operator_certificate_source_secret(*, name: str) -> CertificateSource
             _finalize_certificate_secret_mutation(repository=repository, intent=intent)
     return CertificateSourceSecretMutationResult(
         name=normalized_name,
-        backend=SECURE_STORAGE_BACKEND_LABEL,
         has_secret=False,
         removed=intent is not None and intent.prior_present,
     )
@@ -689,7 +686,6 @@ def _finalize_certificate_secret_mutation(
                     current.source_name,
                     {
                         "name": current.source_name,
-                        "backend": SECURE_STORAGE_BACKEND_LABEL,
                         "operation_id": current.operation_id,
                     },
                     current.started_at,

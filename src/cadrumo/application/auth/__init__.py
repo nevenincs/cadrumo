@@ -196,7 +196,6 @@ from ._apoderado import (
     ApoderadoStatus,
 )
 from ._certificate_secret_backend import (
-    SECURE_STORAGE_BACKEND_LABEL,
     CertificateSecretBackend,
     SecureStorageCertificateSecretBackend,
 )
@@ -294,7 +293,6 @@ from ._sessions import (
 __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
-    "SECURE_STORAGE_BACKEND_LABEL",
     "ActiveAuthProjectionSnapshot",
     "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
