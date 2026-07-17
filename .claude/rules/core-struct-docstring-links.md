@@ -35,7 +35,7 @@ carries the `docs` marker for the documentation CI lane.
   newcomer must navigate to to work in an area: a central data/record aggregate, a
   domain authority/repository that owns access, or the primary closed-value enum
   defining a domain. Do NOT anchor ubiquitous infrastructure learned once and never
-  re-navigated (a base error such as `AeatError`, the `Settings` config aggregate),
+  re-navigated (a base error such as `CadrumoError`, the `Settings` config aggregate),
   error subclasses (handled, not navigated to), secondary sub-dimension enums when the
   primary is already anchored, or low-reach types only a couple of modules import. The
   28-anchor set was curated on this basis (import in-degree plus a per-domain discovery

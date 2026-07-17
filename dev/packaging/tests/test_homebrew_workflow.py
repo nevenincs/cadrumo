@@ -23,19 +23,14 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
     assert document["name"] == "Cadrumo Homebrew Acquisition"
     job = document["jobs"]["cadrumo-homebrew-acquisition"]
     rows = job["strategy"]["matrix"]["include"]
-    assert {
-        (row["runner"], row["expected_os"], row["expected_arch"])
-        for row in rows
-    } == {
+    assert {(row["runner"], row["expected_os"], row["expected_arch"]) for row in rows} == {
         ("macos-15-intel", "Darwin", "x86_64"),
         ("macos-15", "Darwin", "arm64"),
         ("ubuntu-24.04", "Linux", "x86_64"),
         ("ubuntu-24.04-arm", "Linux", "aarch64"),
     }
     assert job["strategy"]["fail-fast"] is False
-    preflight = next(
-        step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row"
-    )
+    preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")
     assert 'test "$(uname -s)" = "$EXPECTED_OS"' in preflight["run"]
     assert 'test "$(uname -m)" = "$EXPECTED_ARCH"' in preflight["run"]
     assert 'test -x "$BREW_PATH"' in preflight["run"]
@@ -51,7 +46,7 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
     assert 'test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"' in source_gate["run"]
-    assert '.github/workflows/packaging-smoke.yml' in source_gate["run"]
+    assert ".github/workflows/packaging-smoke.yml" in source_gate["run"]
     assert 'test "$(jq -r .conclusion <<<"$run_json")" = "success"' in source_gate["run"]
     assert 'test "$(jq -r .event <<<"$run_json")" = "push"' in source_gate["run"]
     assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in source_gate["run"]
@@ -68,15 +63,9 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     document = _workflow()
     steps = document["jobs"]["cadrumo-homebrew-acquisition"]["steps"]
     initialize = next(step for step in steps if step["name"] == "Initialize current-run evidence root")
-    generate = next(
-        step for step in steps if step["name"] == "Verify and generate the cohort-bound tap snapshot"
-    )
-    smoke = next(
-        step for step in steps if step["name"] == "Audit install and exercise Cadrumo through Homebrew"
-    )
-    upload = next(
-        step for step in steps if step["name"] == "Upload Cadrumo Homebrew acquisition evidence"
-    )
+    generate = next(step for step in steps if step["name"] == "Verify and generate the cohort-bound tap snapshot")
+    smoke = next(step for step in steps if step["name"] == "Audit install and exercise Cadrumo through Homebrew")
+    upload = next(step for step in steps if step["name"] == "Upload Cadrumo Homebrew acquisition evidence")
 
     assert initialize["id"] == "initialize"
     assert "GITHUB_RUN_ATTEMPT" in initialize["run"]
@@ -84,9 +73,7 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     assert "dev.packaging.python_cohort verify" in generate["run"]
     assert "packaging/homebrew/generate.py" in generate["run"]
     assert "dev/packaging/smoke_homebrew.py" in smoke["run"]
-    assert "--tap-name \"cadrumo-smoke/${MATRIX_ID}\"" in smoke["run"]
+    assert '--tap-name "cadrumo-smoke/${MATRIX_ID}"' in smoke["run"]
     assert upload["if"] == "always() && steps.initialize.outputs.ready == 'true'"
     assert upload["with"]["if-no-files-found"] == "error"
-    assert upload["with"]["name"] == (
-        "cadrumo-homebrew-acquisition-${{ matrix.id }}-${{ github.run_attempt }}"
-    )
+    assert upload["with"]["name"] == ("cadrumo-homebrew-acquisition-${{ matrix.id }}-${{ github.run_attempt }}")

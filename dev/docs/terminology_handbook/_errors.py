@@ -1,6 +1,6 @@
 """Errors raised by the Terminology Handbook loader.
 
-These errors are deliberately NOT part of the :class:`cadrumo.core.errors.AeatError`
+These errors are deliberately NOT part of the :class:`cadrumo.core.errors.CadrumoError`
 hierarchy. That hierarchy exists for operator-facing runtime failures
 that need a registered :class:`~cadrumo.core.errors.ErrorCode`, a translated
 message, and JSON-envelope redaction at the CLI boundary. The Handbook

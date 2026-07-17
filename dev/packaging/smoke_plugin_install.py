@@ -243,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.run_claude_session and not has_claude_credential:
         raise SystemExit("--run-claude-session requires ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN")
 
-    manifest = materialise_marketplace(marketplace, cohort_dir=cohort.directory)
+    manifest = materialise_marketplace(marketplace, cohort=cohort)
     _run(
         [str(claude), "plugin", "marketplace", "add", str(marketplace)],
         cwd=workspace,

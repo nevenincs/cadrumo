@@ -28,15 +28,15 @@ import pytest
 import typer
 from typer.main import get_command
 
+from cadrumo.entrypoints.schema_surface import GROUP_CALLBACK_SCHEMA_KEYS
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 _DOCS_CLI_DIR = Path(__file__).parent.parent.parent.parent.parent / "docs" / "cli"
 
 #: Group-callback emit sites that register a schema but are not CLI leaf
 #: commands — they appear as group callbacks, not reachable leaves.
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
-    {"root.status", "root.app", "ledger.participation", "contract", "agent", "quickfile"}
-)
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = GROUP_CALLBACK_SCHEMA_KEYS
 
 #: Generated pages that carry navigation or root-level behaviour rather than
 #: per-command sections.  Only the family pages emit ``**Registry key:**``
@@ -56,6 +56,14 @@ def _isolated_cadrumo_storage_root(tmp_path: Path) -> Iterator[None]:
 def _project_root() -> Path:
     """Return the project root, inferred from the location of this test file."""
     return Path(__file__).parent.parent.parent.parent.parent
+
+
+def _populate_schema_registry() -> None:
+    """Load schemas through the production payload-module discovery path."""
+    from cadrumo.entrypoints.cli._app_contract import _ensure_result_schemas_registered
+
+    failures = _ensure_result_schemas_registered()
+    assert failures == (), f"payload schema modules failed to import: {failures!r}"
 
 
 def _rendered_reference() -> dict[str, str]:
@@ -181,31 +189,9 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     under a group callback rather than a leaf command.
     """
     from cadrumo.core.json_contract import SCHEMA_REGISTRY
-    from cadrumo.entrypoints.cli import (
-        _app_live_payloads,
-        _bienes_inversion_payloads,
-        _config_payloads,
-        _diagnostics_payloads,
-        _ledger_catalogue_invoice_payloads,
-        _ledger_payloads,
-        _ledger_rule_payloads,
-        _modelo_amend_wizard_payloads,
-        _modelo_payloads,
-        _modelo_payloads_m036,
-        _modelo_payloads_m145,
-        _modelo_review_package_payloads,
-        _overview_payloads,
-        _payloads_modelo_reconcile,
-        _prorrata_register_payloads,
-        _registry_corpus_payloads,
-        _registry_diff_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
-    )
-    from cadrumo.entrypoints.cli._config import _google_payloads
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
+    _populate_schema_registry()
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())
     expected_reachable = live_keys | _GROUP_CALLBACK_EMIT_KEYS
@@ -231,31 +217,9 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     of the drift check.
     """
     from cadrumo.core.json_contract import SCHEMA_REGISTRY
-    from cadrumo.entrypoints.cli import (
-        _app_live_payloads,
-        _bienes_inversion_payloads,
-        _config_payloads,
-        _diagnostics_payloads,
-        _ledger_catalogue_invoice_payloads,
-        _ledger_payloads,
-        _ledger_rule_payloads,
-        _modelo_amend_wizard_payloads,
-        _modelo_payloads,
-        _modelo_payloads_m036,
-        _modelo_payloads_m145,
-        _modelo_review_package_payloads,
-        _overview_payloads,
-        _payloads_modelo_reconcile,
-        _prorrata_register_payloads,
-        _registry_corpus_payloads,
-        _registry_diff_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
-    )
-    from cadrumo.entrypoints.cli._config import _google_payloads
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
+    _populate_schema_registry()
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())
 
@@ -276,30 +240,8 @@ def test_documented_schema_classes_match_registry() -> None:
     projection that disagrees with the live registry.
     """
     from cadrumo.core.json_contract import SCHEMA_REGISTRY
-    from cadrumo.entrypoints.cli import (
-        _app_live_payloads,
-        _bienes_inversion_payloads,
-        _config_payloads,
-        _diagnostics_payloads,
-        _ledger_catalogue_invoice_payloads,
-        _ledger_payloads,
-        _ledger_rule_payloads,
-        _modelo_amend_wizard_payloads,
-        _modelo_payloads,
-        _modelo_payloads_m036,
-        _modelo_payloads_m145,
-        _modelo_review_package_payloads,
-        _overview_payloads,
-        _payloads_modelo_reconcile,
-        _prorrata_register_payloads,
-        _registry_corpus_payloads,
-        _registry_diff_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
-    )
-    from cadrumo.entrypoints.cli._config import _google_payloads
 
+    _populate_schema_registry()
     # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
     documented: dict[str, str] = {}
     for rel_path, content in sorted(_rendered_reference().items()):

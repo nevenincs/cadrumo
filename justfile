@@ -284,7 +284,7 @@ check-security:
 
 # Check if the RAG service daemon is running.
 check-rag:
-    @uv run --no-sync vaultspec-rag server status
+    @uv run --no-sync vaultspec-rag server status --port 8766
 
 # Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
 check-semantic:
@@ -334,7 +334,7 @@ test-unit:
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run --no-sync pytest -q -rs -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n0 -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked

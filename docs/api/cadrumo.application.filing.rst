@@ -22,7 +22,5 @@ Submodules
    cadrumo.application.filing._import
    cadrumo.application.filing._review
    cadrumo.application.filing._runtime_repository
-   cadrumo.application.filing._testing_registry
    cadrumo.application.filing.errors
    cadrumo.application.filing.runtime
-   cadrumo.application.filing.testing

@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.adapters.outbound.llm._providers.anthropic
    cadrumo.adapters.outbound.llm._providers.base
-   cadrumo.adapters.outbound.llm._providers.deterministic
    cadrumo.adapters.outbound.llm._providers.gemini
    cadrumo.adapters.outbound.llm._providers.local
    cadrumo.adapters.outbound.llm._providers.openai
