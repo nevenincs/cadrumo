@@ -38,8 +38,8 @@ Make attach the sole evidence mutation authority and expose one atomic invoice-o
 
 Make evidence-driven splitting persist parent, children, evidence links, provenance, classifications, and events in one transaction.
 
-- [ ] `P02.S04` - Make evidence-driven LLM splitting persist the parent transition, every child, inherited validated evidence links, provenance, classifications, and events in one atomic application transaction without generic field patching; `src/cadrumo/application/ledger/_actions_split_manual.py`.
-- [ ] `P02.S05` - Prove every LLM split child inherits the parent evidence and provenance consistently and any child validation or persistence failure leaves the parent, children, catalogue, and event history unchanged; `src/cadrumo/application/ledger/tests/test_llm_evidence_split_apply.py`.
+- [x] `P02.S04` - Make evidence-driven LLM splitting persist the parent transition, every child, inherited validated evidence links, provenance, classifications, and events in one atomic application transaction without generic field patching; `src/cadrumo/application/ledger/_actions_split_manual.py`.
+- [x] `P02.S05` - Prove every LLM split child inherits the parent evidence and provenance consistently and any child validation or persistence failure leaves the parent, children, catalogue, and event history unchanged; `src/cadrumo/application/ledger/tests/test_llm_evidence_split_apply.py`.
 
 ### Phase `P03` - Evidence and replay CLI door
 
