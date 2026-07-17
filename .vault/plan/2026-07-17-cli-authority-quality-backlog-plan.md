@@ -30,8 +30,8 @@ Make every accepted as_of argument effective or reject it explicitly, so the CLI
 
 Add the AST recurrence gate that prevents new reducible one-shot hash bodies without a mass rewrite of existing callers.
 
-- [ ] `P02.S04` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses; `src/cadrumo/core/tests/test_hashing_adoption.py`.
-- [ ] `P02.S05` - Prove the recurrence gate rejects a new reducible one-shot body and accepts every legitimate cryptographic use it must not block; `src/cadrumo/core/tests/test_hashing_adoption.py`.
+- [x] `P02.S04` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses; `src/cadrumo/core/tests/test_hashing_adoption.py`.
+- [x] `P02.S05` - Prove the recurrence gate rejects a new reducible one-shot body and accepts every legitimate cryptographic use it must not block; `src/cadrumo/core/tests/test_hashing_adoption.py`.
 
 ### Phase `P03` - Secure-object namespace adoption
 
