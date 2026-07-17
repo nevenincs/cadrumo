@@ -18,6 +18,7 @@ from dev.packaging.cohort_manifest import (
     SourceIdentity,
     create_manifest,
     load_release_cohort,
+    sha256_file,
     write_manifest,
 )
 from dev.packaging.evidence import (
@@ -27,6 +28,8 @@ from dev.packaging.evidence import (
     DestinationIdentity,
     DistributionEvidence,
     EvidenceStatus,
+    ExecutionIsolation,
+    InstalledExecutableIdentity,
     ResultIdentity,
     RuntimeIdentity,
     checkpoint_smoke_evidence,
@@ -108,6 +111,17 @@ def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
             version="1.26.0",
             executable=sys.executable,
         ),
+        isolation=ExecutionIsolation(
+            checkout_imports_removed=True,
+            ambient_product_executables_removed=True,
+            installed_executables=(
+                InstalledExecutableIdentity(
+                    name="cadrumo-mcp",
+                    path=sys.executable,
+                    sha256=sha256_file(Path(sys.executable)),
+                ),
+            ),
+        ),
         acquisition=AcquisitionIdentity(
             mechanism="local-immutable-cohort",
             source=cohort.manifest_path.as_uri(),
@@ -175,6 +189,7 @@ def test_passing_evidence_rejects_nonzero_command_and_skipped_status(tmp_path: P
             cohort=load_release_cohort(tmp_path / "cohort"),
             runtime=evidence.runtime,
             client=evidence.client,
+            isolation=evidence.isolation,
             acquisition=evidence.acquisition,
             commands=(CommandTranscript.model_validate(payload["commands"][0]),),
             result=evidence.result,
@@ -185,6 +200,26 @@ def test_passing_evidence_rejects_nonzero_command_and_skipped_status(tmp_path: P
     with pytest.raises(ValidationError):
         ResultIdentity.model_validate(
             {"status": "skipped", "assertions": ["not executed"], "observations": {}},
+        )
+
+
+def test_passing_evidence_rejects_ambient_or_checkout_execution(tmp_path: Path) -> None:
+    """A successful oracle still fails evidence validation without installed isolation."""
+    evidence = _passing_evidence(tmp_path)
+    unsafe = evidence.isolation.model_copy(update={"ambient_product_executables_removed": False})
+
+    with pytest.raises(ValidationError, match="checkout and ambient executable isolation"):
+        create_distribution_evidence(
+            row_id=evidence.row_id,
+            cohort=load_release_cohort(tmp_path / "cohort"),
+            runtime=evidence.runtime,
+            client=evidence.client,
+            isolation=unsafe,
+            acquisition=evidence.acquisition,
+            commands=evidence.commands,
+            result=evidence.result,
+            observed_at=evidence.observed_at,
+            destination=evidence.destination,
         )
 
 
