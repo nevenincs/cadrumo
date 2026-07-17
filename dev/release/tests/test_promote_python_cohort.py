@@ -46,7 +46,7 @@ from dev.release.promote_python_cohort import assert_pypi_destinations_absent, v
 pytestmark = [pytest.mark.hex_core]
 
 _VERSION = "0.99.0.dev1"
-_FAKE_COMMIT = "a" * 40
+_SAMPLE_COMMIT = "a" * 40
 
 
 # ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ def _write_artifact(directory: Path, filename: str, data: bytes) -> tuple[str, s
 def _make_cohort_dir(
     root: Path,
     *,
-    commit: str = _FAKE_COMMIT,
+    commit: str = _SAMPLE_COMMIT,
     version: str = _VERSION,
     description: str = "",
 ) -> Path:
@@ -372,7 +372,7 @@ def test_pypi_destinations_absent_passes_for_dev_version(tmp_path: Path) -> None
     cohort = PythonCohort(
         directory=tmp_path,
         manifest=tmp_path / "python-cohort.json",
-        source_commit=_FAKE_COMMIT,
+        source_commit=_SAMPLE_COMMIT,
         version="0.99.0.dev1",
         root_wheel=tmp_path / "cadrumo.whl",
         root_sdist=tmp_path / "cadrumo.tar.gz",
