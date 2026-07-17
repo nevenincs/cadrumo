@@ -15,15 +15,6 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `cli-authority-quality-backlog` plan
 
@@ -31,9 +22,9 @@ related:
 
 Make every accepted as_of argument effective or reject it explicitly, so the CLI stops accepting a parameter it silently ignores.
 
-- [ ] `P01.S01` - Make every accepted as_of argument participate in revision validity selection or reject it explicitly instead of silently ignoring it; `src/cadrumo/domain/calculations/registry/_queries.py`.
-- [ ] `P01.S02` - Reject an as_of argument on the unscoped registry discovery path with an instructive refusal naming the scoped form that honours it; `src/cadrumo/application/modelo/_registry_discovery.py`.
-- [ ] `P01.S03` - Prove historical as-of boundaries are honoured on the scoped path and refused explicitly on the unscoped path rather than silently ignored; `src/cadrumo/domain/calculations/registry/tests/test_queries.py`.
+- [x] `P01.S01` - Make every accepted as_of argument participate in revision validity selection or reject it explicitly instead of silently ignoring it; `src/cadrumo/domain/calculations/registry/_queries.py`.
+- [x] `P01.S02` - Reject an as_of argument on the unscoped registry discovery path with an instructive refusal naming the scoped form that honours it; `src/cadrumo/application/modelo/_registry_discovery.py`.
+- [x] `P01.S03` - Prove historical as-of boundaries are honoured on the scoped path and refused explicitly on the unscoped path rather than silently ignored; `src/cadrumo/domain/calculations/registry/tests/test_queries.py`.
 
 ### Phase `P02` - Hashing recurrence gate
 
