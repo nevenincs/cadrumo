@@ -43,8 +43,15 @@ class CohortBinding(BaseModel):
     cohort_id: str = Field(pattern=_SHA256_PATTERN)
     version: str = Field(min_length=1)
     source: SourceIdentity
+    created_at: datetime
     manifest_sha256: str = Field(pattern=_SHA256_PATTERN)
     artifacts: tuple[ArtifactRecord, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _timezone_aware(self) -> Self:
+        if self.created_at.tzinfo is None or self.created_at.utcoffset() is None:
+            raise ValueError("cohort created_at must carry a timezone")
+        return self
 
 
 class RuntimeIdentity(BaseModel):
@@ -67,6 +74,26 @@ class ClientIdentity(BaseModel):
     name: str = Field(min_length=1)
     version: str = Field(min_length=1)
     executable: str = Field(min_length=1)
+
+
+class InstalledExecutableIdentity(BaseModel):
+    """One exact installed command invoked by the retained transcript."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    name: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    path: str = Field(min_length=1)
+    sha256: str = Field(pattern=_SHA256_PATTERN)
+
+
+class ExecutionIsolation(BaseModel):
+    """Proof that installed bytes, not checkout or ambient commands, executed."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    checkout_imports_removed: bool
+    ambient_product_executables_removed: bool
+    installed_executables: tuple[InstalledExecutableIdentity, ...] = Field(min_length=1)
 
 
 class AcquisitionIdentity(BaseModel):
@@ -164,6 +191,7 @@ class EvidenceIdentityPayload(BaseModel):
     cohort: CohortBinding
     runtime: RuntimeIdentity
     client: ClientIdentity | None
+    isolation: ExecutionIsolation
     acquisition: AcquisitionIdentity
     commands: tuple[CommandTranscript, ...] = Field(min_length=1)
     result: ResultIdentity
@@ -176,8 +204,14 @@ class EvidenceIdentityPayload(BaseModel):
             raise ValueError("observed_at must carry a timezone")
         if self.result.status is EvidenceStatus.PASSED and any(command.exit_status != 0 for command in self.commands):
             raise ValueError("passing evidence cannot contain a failed command")
+        if self.result.status is EvidenceStatus.PASSED and not (
+            self.isolation.checkout_imports_removed and self.isolation.ambient_product_executables_removed
+        ):
+            raise ValueError("passing evidence requires checkout and ambient executable isolation")
         if self.result.status is EvidenceStatus.PASSED and self.destination.version != self.cohort.version:
             raise ValueError("passing evidence destination version must match the cohort")
+        if self.observed_at < self.cohort.created_at:
+            raise ValueError("evidence cannot predate cohort construction")
         return self
 
 
@@ -218,6 +252,7 @@ def bind_cohort(cohort: LoadedReleaseCohort) -> CohortBinding:
         cohort_id=manifest.cohort_id,
         version=manifest.version,
         source=manifest.source,
+        created_at=manifest.created_at,
         manifest_sha256=sha256_file(cohort.manifest_path),
         artifacts=manifest.artifacts,
     )
@@ -240,6 +275,7 @@ def create_distribution_evidence(
     cohort: LoadedReleaseCohort,
     runtime: RuntimeIdentity,
     client: ClientIdentity | None,
+    isolation: ExecutionIsolation,
     acquisition: AcquisitionIdentity,
     commands: tuple[CommandTranscript, ...],
     result: ResultIdentity,
@@ -253,6 +289,7 @@ def create_distribution_evidence(
         cohort=bind_cohort(cohort),
         runtime=runtime,
         client=client,
+        isolation=isolation,
         acquisition=acquisition,
         commands=commands,
         result=result,
