@@ -28,6 +28,11 @@ from ._snapshot import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
+from ._validate_verdict import (
+    certify_registry_validation,
+    compute_verdict_key,
+    registry_validation_is_certified,
+)
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -97,6 +102,15 @@ class ValidatedRegistryAuthority:
             self._validator.validate_registry(self.modelos)
         finally:
             flush_corpus_text_cache()
+        self._mark_registry_validated()
+
+    def _mark_registry_validated(self) -> None:
+        """Record that the full registry is validated for this instance.
+
+        Shared by the direct validation path and the verdict-skip path in
+        :func:`_load_authority`, so a fingerprint-certified load reaches the
+        same validated state without re-running validation.
+        """
         self._registry_validated = True
         self._validated_modelos.update(modelo.id for modelo in self.modelos)
 
@@ -275,5 +289,18 @@ def _load_authority(
         # so this lru_cache invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
     )
-    authority.validate_registry()
+    # ADR mcp-call-latency D1: a persisted green verdict keyed by the exact
+    # fingerprint tuples this lru_cache already keys on lets an immutable tree
+    # skip the multi-second re-validation. The build and continuous integration
+    # are the validation gate; the runtime asserts fingerprint identity only. A
+    # mismatch or a foreign verdict re-validates in full and rewrites the verdict.
+    verdict_key = compute_verdict_key(
+        registry_fingerprints=_registry_fingerprint,
+        source_evidence_fingerprints=_source_evidence_fingerprint,
+    )
+    if registry_validation_is_certified(root, verdict_key=verdict_key):
+        authority._mark_registry_validated()
+    else:
+        authority.validate_registry()
+        certify_registry_validation(root, verdict_key=verdict_key)
     return authority
