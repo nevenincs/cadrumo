@@ -98,7 +98,7 @@ translation. A failed check leaves its row open for a separate approved implemen
 
 - [ ] `W02.P06.S25` - Generate plugin bootstrap configuration that resolves the complete cohort; `src/cadrumo/agent/_workspace.py`.
 - [ ] `W02.P06.S26` - Byte-compare the complete generated marketplace plugin tree with its source authority; `src/cadrumo/agent/tests/test_marketplace_generation.py`.
-- [ ] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
+- [x] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
 - [ ] `W02.P06.S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort; `packaging/mcpb/build.py`.
 - [ ] `W02.P06.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
 - [ ] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.

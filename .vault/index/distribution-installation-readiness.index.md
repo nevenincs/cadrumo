@@ -32,6 +32,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S21]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S22]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S23]]'
+  - '[[2026-07-15-distribution-installation-readiness-W02-P06-S28]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S67]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S68]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P08-S39]]'
@@ -91,6 +92,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P05-S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S43` - Remove local release upload authority while retaining diagnostic build recipes
 - `2026-07-15-distribution-installation-readiness-W02-P05-S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot
+- `2026-07-15-distribution-installation-readiness-W02-P06-S28` - Align MCPB platform and Python requirements with the command-bearing distribution
 - `2026-07-15-distribution-installation-readiness-W02-P06-S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple
 - `2026-07-15-distribution-installation-readiness-W02-P06-S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions
 - `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
