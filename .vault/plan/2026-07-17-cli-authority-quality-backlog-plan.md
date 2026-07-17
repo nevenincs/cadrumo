@@ -84,7 +84,7 @@ Remove the shared-temp-dir race that flakes the acceptance-wall meta-test under 
 Turn two honestly-flagged coverage gaps into non-vacuous gates: the law-determined revision-resolution enforcement across select_revision callers, and a binding validator-dispatch completeness assertion.
 
 - [ ] `P09.S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it; `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`.
-- [ ] `P09.S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated; `src/cadrumo/domain/calculations/registry/tests/test_binding_build_validation.py`.
+- [x] `P09.S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated; `src/cadrumo/domain/calculations/registry/tests/test_binding_build_validation.py`.
 
 ### Phase `P10` - Entrypoints structural-duplication triage
 
