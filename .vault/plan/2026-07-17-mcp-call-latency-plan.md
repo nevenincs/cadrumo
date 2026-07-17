@@ -116,9 +116,9 @@ Persist a fingerprint-keyed validation verdict so a green tree skips runtime re-
 
 Extract the manual-PDF corpus text once at release build time, ship it content-keyed with the release, and remove end-user PDF extraction.
 
-- [ ] `P02.S05` - Extract the eleven bundled AEAT manual PDFs to normalised text once at build time and commit content-keyed sidecars hashed on source bytes, extending the existing extraction-sidecar pipeline; `dev/docs/preprocess/_html.py`.
-- [ ] `P02.S06` - Read the shipped content-keyed manual text at runtime and remove the end-user pypdfium2 extraction so no install runs PDF text extraction; `src/cadrumo/domain/calculations/registry/_validate_evidence.py`.
-- [ ] `P02.S07` - Prove with a real-behavior negative test that a content-key mismatch between shipped text and source bytes refuses or recomputes rather than serving stale text; `src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py`.
+- [x] `P02.S05` - Extract the eleven bundled AEAT manual PDFs to normalised text once at build time and commit content-keyed sidecars hashed on source bytes, extending the existing extraction-sidecar pipeline; `dev/docs/preprocess/_html.py`.
+- [x] `P02.S06` - Read the shipped content-keyed manual text at runtime and remove the end-user pypdfium2 extraction so no install runs PDF text extraction; `src/cadrumo/domain/calculations/registry/_validate_evidence.py`.
+- [x] `P02.S07` - Prove with a real-behavior negative test that a content-key mismatch between shipped text and source bytes refuses or recomputes rather than serving stale text; `src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py`.
 
 ### Phase `P03` - Compiled-registry cache (D3)
 
