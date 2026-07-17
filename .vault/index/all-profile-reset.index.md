@@ -24,6 +24,7 @@ related:
   - '[[2026-07-17-all-profile-reset-P03-S16]]'
   - '[[2026-07-17-all-profile-reset-P03-S17]]'
   - '[[2026-07-17-all-profile-reset-adr]]'
+  - '[[2026-07-17-all-profile-reset-audit]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
 ---
 
@@ -36,6 +37,10 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 ### adr
 
 - `2026-07-17-all-profile-reset-adr` - `all-profile-reset` adr: `all-profile-reset rescope grounding` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-17-all-profile-reset-audit` - `all-profile-reset` audit: `all-profile reset safety closure review`
 
 ### exec
 
