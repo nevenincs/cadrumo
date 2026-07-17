@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tomllib
 import zipfile
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.parser import Parser
@@ -22,7 +23,7 @@ from typing import Any, Final
 from packaging.requirements import Requirement
 
 from .installed_tax_oracle import run_installed_tax_oracle
-from .python_cohort import assert_installed_cohort, load_python_cohort
+from .python_cohort import assert_installed_cohort, digest_install_target, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
@@ -603,7 +604,11 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
 
 
 def _assert_export_surface(
-    name: str, names: set[str], *, present: set[str] = frozenset(), absent: set[str] = frozenset()
+    name: str,
+    names: set[str],
+    *,
+    present: AbstractSet[str] = frozenset(),
+    absent: AbstractSet[str] = frozenset(),
 ) -> None:
     """Assert selected packages are present or absent from one uv export."""
     missing = sorted(present - names)
@@ -739,7 +744,14 @@ def _install_wheel(
     """Install the command wheel and supplied companions into a fresh virtualenv."""
     venv = work_dir / "venv"
     _run([uv, "venv", str(venv), "--python", python], cwd=repo_root)
-    target = str(wheel) if not extras else f"cadrumo[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
+    # Digest-pinned direct URL requirements: the installer verifies every
+    # artifact's bytes at install time and records the digest channel that
+    # assert_installed_cohort later re-checks.
+    target = digest_install_target("cadrumo", wheel, extras=extras)
+    companion_targets = tuple(
+        digest_install_target(companion.name.split("-")[0].replace("_", "-"), companion)
+        for companion in companion_wheels
+    )
     _run(
         [
             uv,
@@ -748,7 +760,7 @@ def _install_wheel(
             "--python",
             str(_venv_python(venv)),
             target,
-            *(str(companion.resolve()) for companion in companion_wheels),
+            *companion_targets,
         ],
         cwd=repo_root,
     )
