@@ -34,7 +34,7 @@ _RETENTION_WIRING: dict[str, tuple[str, str]] = {
     "cadrumo_llm_run_telemetry_dir": ("adapters/outbound/llm/_client.py", "self.run_telemetry_recorder.prune"),
     "cadrumo_runs_dir": ("core/observability/_store.py", "prune_run_traces("),
     "cadrumo_registry_disk_cache_dir": (
-        "domain/calculations/registry/_loader.py",
+        "domain/calculations/registry/_compiled_cache.py",
         "_evict_stale_registry_pickles(",
     ),
     "cadrumo_wallet_diagnostic_dump_dir": (
