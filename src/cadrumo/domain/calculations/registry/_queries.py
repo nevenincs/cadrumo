@@ -664,6 +664,17 @@ class RegistryQueryService:
         period: str | None,
         as_of: date | None,
     ) -> tuple[ModeloDefinition, ModeloRevision, int | None, str | None]:
+        if as_of is not None:
+            # The unscoped path resolves the latest revision by period and has no
+            # filing-year context to gate an as_of date against a revision's
+            # validity window, so honouring the argument here is impossible.
+            # Refuse explicitly rather than accept-and-ignore (the accepted-parameter
+            # lie this contract closes); the *_for_scope queries honour as_of.
+            raise RegistryValidationError(
+                "as_of point-in-time selection is not honoured by the unscoped period query, "
+                "which resolves the latest revision by period; resolve with an explicit filing "
+                "year so the as_of date is gated against each revision's validity window.",
+            )
         definition = self._authority.validate_modelo(modelo.strip())
         if period is None:
             revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
