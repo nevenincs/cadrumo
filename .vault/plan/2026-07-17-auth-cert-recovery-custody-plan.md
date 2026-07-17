@@ -89,7 +89,7 @@ Cut the certificate and auth command grammar over to secure storage and remove b
 
 Move payload schemas, write-policy tokens, locales, MCP mirrors, help and risk metadata, and generated documentation for the auth, certificate, and recovery families.
 
-- [ ] `P06.S35` - Remove certificate backend selectors from every payload and schema projection while preserving independent master-key keyring custody contracts; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `P06.S35` - Remove certificate backend selectors from every payload and schema projection while preserving independent master-key keyring custody contracts; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `P06.S36` - Migrate the auth, certificate, and recovery help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
 - [ ] `P06.S37` - Migrate the four locale catalogues for the auth, certificate, and recovery families through the locales CLI; `src/cadrumo/locales/en.yml`.
 - [ ] `P06.S38` - Re-arm the MCP mirror for the accepted auth, certificate, and recovery verbs; `src/cadrumo/agent/`.
