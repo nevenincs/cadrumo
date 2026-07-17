@@ -24,6 +24,7 @@ from ...core.hashing import sha256_hex
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
 
+from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.errors import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_file
@@ -40,7 +41,6 @@ from ...domain.currency import (
     MonetaryAmount,
 )
 from ...domain.transactions import (
-    TX_BUCKET_NAMESPACE,
     BucketTransactionRef,
     ImportSummary,
     RawTransaction,
@@ -289,7 +289,9 @@ def import_ledger_transactions(
         imported_refs=tuple(imported_refs),
         skipped_refs=tuple(skipped_refs),
         likely_duplicate_refs=plan.likely_duplicate_refs,
-        catalogue_path=f"db://secure_objects/{TX_BUCKET_NAMESPACE}/transaction-catalogue:{bucket_id}",
+        catalogue_path=(
+            f"db://secure_objects/{TRANSACTION_CATALOGUE_NAMESPACE.namespace}/transaction-catalogue:{bucket_id}"
+        ),
     )
     if not imported_transactions:
         return LedgerImportOperationResult(summary=summary, import_batch_id=import_batch_id)
