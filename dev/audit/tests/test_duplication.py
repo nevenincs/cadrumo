@@ -46,12 +46,17 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 # a live run rather than hand-written.
 _DEFECT_STDOUT_EMPTY_SCAN = "\x1b[3m\x1b[90mtime\x1b[39m\x1b[23m: 0.135ms\n"
 
-# An absent npx is a missing machine capability, not a masked failure: the
-# unit-lane tests above still pin every classification rule without it.
-_npx_required = pytest.mark.skipif(
-    shutil.which("npx") is None,
-    reason="npx is not installed on this machine, so the real jscpd subprocess cannot run",
-)
+
+def _require_npx() -> None:
+    """Assert the real npx binary is present for an integration test.
+
+    The sanctioned convention for external-binary integration tests in this
+    repo is to assert the tool is present, not to self-skip when it is absent
+    (see ``dev/release/tests/test_justfile_release_guidance.py`` and
+    ``dev/packaging/tests/test_smoke_split_install_sequence.py``). ``skipif`` is
+    forbidden by ``test_no_skip_xfail`` for tests outside the source tree.
+    """
+    assert shutil.which("npx") is not None, "npx is required to run the real jscpd duplication scan"
 
 
 @pytest.mark.unit
@@ -112,7 +117,6 @@ def test_observed_zero_cannot_be_constructed_without_inspected_files() -> None:
         DuplicationResult.observed_zero(files_analyzed=0)
 
 
-@_npx_required
 @pytest.mark.integration
 def test_real_clean_subtree_scan_observes_zero() -> None:
     """A real zero-clone jscpd run over a real clone-free tree is observed_zero.
@@ -120,6 +124,7 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
     ``dev/audit`` is genuinely clone-free, so this is the only honest route to
     the green state: a real subprocess that really looked at real files.
     """
+    _require_npx()
     result = run_duplication_scan(_REPO_ROOT, source_root=Path("dev/audit"))
 
     assert result.outcome is DuplicationOutcome.OBSERVED_ZERO
@@ -128,7 +133,6 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
     assert result.files_analyzed > 0, "a green verdict must prove files were analysed"
 
 
-@_npx_required
 @pytest.mark.integration
 def test_real_production_tree_scan_reports_measured_clones() -> None:
     """The real production tree carries clones and must report them as AMBER debt.
@@ -138,6 +142,7 @@ def test_real_production_tree_scan_reports_measured_clones() -> None:
     real measured count over a real analysed corpus) rather than a brittle
     literal.
     """
+    _require_npx()
     result = run_duplication_scan(_REPO_ROOT)
 
     assert result.outcome is DuplicationOutcome.CLONES
@@ -150,20 +155,20 @@ def test_real_production_tree_scan_reports_measured_clones() -> None:
     assert result.duplicated_pct
 
 
-@_npx_required
 @pytest.mark.integration
 def test_real_bad_source_path_is_unavailable_not_green() -> None:
     """A real scan of a path that matches nothing must refuse to claim cleanliness."""
+    _require_npx()
     result = run_duplication_scan(_REPO_ROOT, source_root=Path("src/cadrumo/no-such-directory"))
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
     assert result.is_green is False
 
 
-@_npx_required
 @pytest.mark.integration
 def test_real_timeout_is_unavailable_not_green() -> None:
     """A real jscpd run cut off by the timeout must report unavailable."""
+    _require_npx()
     result = run_duplication_scan(_REPO_ROOT, timeout=0.001)
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
@@ -172,16 +177,16 @@ def test_real_timeout_is_unavailable_not_green() -> None:
 
 
 @pytest.mark.integration
-def test_real_nonzero_exit_is_unavailable_not_green(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_nonzero_exit_is_unavailable_not_green() -> None:
     """A real subprocess that exits non-zero must report unavailable.
 
-    The failure CONDITION is forced -- ``npx`` resolution is pointed at a real
-    interpreter that rejects jscpd's argv and exits non-zero -- rather than
-    stubbing the parser. A genuinely failing process is what is under test.
+    The failure CONDITION is forced through the injected ``which`` seam, not by
+    patching global state: the resolver returns a real Python interpreter, so
+    ``run_duplication_scan`` really launches ``<python> --yes jscpd@4.2.0 ...``,
+    which the interpreter rejects and exits non-zero. A genuinely failing
+    process is what is under test -- the parser is untouched.
     """
-    monkeypatch.setattr(shutil, "which", lambda _name: sys.executable)
-
-    result = run_duplication_scan(_REPO_ROOT)
+    result = run_duplication_scan(_REPO_ROOT, which=lambda _name: sys.executable)
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
     assert result.is_green is False
@@ -189,11 +194,14 @@ def test_real_nonzero_exit_is_unavailable_not_green(monkeypatch: pytest.MonkeyPa
 
 
 @pytest.mark.unit
-def test_missing_npx_is_unavailable_not_green(monkeypatch: pytest.MonkeyPatch) -> None:
-    """An absent npx must report unavailable rather than an accidental clean run."""
-    monkeypatch.setattr(shutil, "which", lambda _name: None)
+def test_missing_npx_is_unavailable_not_green() -> None:
+    """An absent npx must report unavailable rather than an accidental clean run.
 
-    result = run_duplication_scan(_REPO_ROOT)
+    The missing-executable condition is supplied through the injected ``which``
+    seam returning ``None`` -- a real resolver contract, not a patch of
+    ``shutil.which``.
+    """
+    result = run_duplication_scan(_REPO_ROOT, which=lambda _name: None)
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
     assert result.is_green is False
@@ -234,7 +242,6 @@ def test_console_report_names_unavailability_instead_of_claiming_clean() -> None
     assert "no clones found" not in rendered
 
 
-@_npx_required
 @pytest.mark.integration
 def test_health_report_duplication_dimension_is_amber_with_a_measured_count() -> None:
     """End-to-end: the health dashboard must not render the false green.
@@ -242,6 +249,7 @@ def test_health_report_duplication_dimension_is_amber_with_a_measured_count() ->
     The tree carries clones, so the honest verdict is AMBER carrying the count.
     Per the advisory clone-count policy this dimension is never RED on clones.
     """
+    _require_npx()
     dimension = audit_duplication(_REPO_ROOT)
 
     assert dimension.status is not Status.GREEN, "the production tree carries clones; GREEN is the reported lie"
