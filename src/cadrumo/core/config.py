@@ -833,6 +833,27 @@ class Settings(CadrumoIntegrationSettings):
             "multi-client host."
         ),
     )
+    cadrumo_mcp_warm_capture_wait_seconds: float = Field(
+        default=5.0,
+        gt=0,
+        description=(
+            "How long a warm in-process MCP call waits for the stdout-capture lock before "
+            "degrading to the supervised subprocess transport. Bounds the blast radius of a "
+            "slow or hung in-process verb: a call never queues forever behind the capture. "
+            "Comfortably covers a normal warm call's sub-second-to-low-single-digit hold."
+        ),
+    )
+    cadrumo_mcp_wedge_threshold_seconds: float = Field(
+        default=180.0,
+        gt=0,
+        description=(
+            "When a warm in-process call has held the stdout-capture lock past this many "
+            "seconds the warm transport is declared wedged and subsequent READ/MUTATE calls "
+            "route straight to the supervised subprocess (a warning Notice names the wedge) "
+            "until the wedged worker completes. Defaults to the MUTATE tier ceiling, the "
+            "longest an in-process call may legitimately run."
+        ),
+    )
     cadrumo_llm_usage_retention_days: int = Field(
         default=30,
         ge=1,

@@ -24,10 +24,16 @@ name with a stated reason rather than the comparison being loosened.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 
+from ....core.config import DEV_TEST_DATABASE_PASSWORD
+from ....tests import temporary_env
 from .._call_runtime import tier_for, timeout_seconds
+from .._inprocess import parse_cli_envelope, run_cli_in_process
 from .._server import _run_inprocess_tool, _run_subprocess_tool
 from .._tools import McpToolDescriptor, build_tool_descriptors
 
@@ -50,7 +56,14 @@ def _both_transports(command_key: str, arguments: dict[str, object]) -> tuple[di
         open_world=descriptor.annotations.open_world_hint,
     )
     subprocess_outcome = _run_subprocess_tool(descriptor, arguments)
-    inprocess_outcome = _run_inprocess_tool(descriptor, arguments, tier=tier, timeout_s=timeout_seconds(tier))
+    inprocess_outcome = _run_inprocess_tool(
+        descriptor,
+        arguments,
+        tier=tier,
+        timeout_s=timeout_seconds(tier),
+        acquire_timeout_s=30.0,
+    )
+    assert inprocess_outcome is not None, "warm capture should be free in a single-threaded parity run"
     return subprocess_outcome.envelope, inprocess_outcome.envelope
 
 
@@ -71,4 +84,44 @@ def test_refusal_envelope_is_byte_identical_across_transports() -> None:
     subprocess_envelope, inprocess_envelope = _both_transports("review.queue", {})
     assert subprocess_envelope["status"] == "error"
     assert inprocess_envelope["status"] == "error"
+    assert _canonical(subprocess_envelope) == _canonical(inprocess_envelope)
+
+
+@contextmanager
+def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
+    """Provision a real encrypted profile under an env-isolated storage root."""
+    with temporary_env(
+        CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
+        CADRUMO_SECRET_STORE_BACKEND="file",  # noqa: S106 - env var name, not a credential
+        CADRUMO_SECRET_STORE_DIR=str(tmp_path / "secrets"),
+        CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
+    ):
+        created = run_cli_in_process(
+            [
+                "--format", "json", "config", "profile", "create", "operator",
+                "--quiet", "--accept-defaults",
+                "--entity-type", "natural_person",
+                "--irpf-income-categories", "actividad_economica",
+                "--tax-id", "12345678Z",
+                "--name", "Operator",
+                "--surnames", "Parity",
+                "--activity", "design",
+            ],
+            acquire_timeout_s=30.0,
+        )  # fmt: skip
+        assert created is not None
+        _, is_error = parse_cli_envelope(created)
+        assert not is_error
+        yield
+
+
+def test_storage_touching_verb_envelope_is_byte_identical_across_transports(tmp_path: Path) -> None:
+    # With a real encrypted profile active, ``review.queue`` opens a bucket session
+    # and reads encrypted state on BOTH transports. The two envelopes must still be
+    # byte-identical - the parity guarantee the warm-vs-subprocess degradation
+    # fallback and the idle-lock custody both rely on for the storage path.
+    with _provisioned_profile_env(tmp_path):
+        subprocess_envelope, inprocess_envelope = _both_transports("review.queue", {})
+    assert subprocess_envelope["status"] == "success"
+    assert subprocess_envelope["active_profile"] == "operator"
     assert _canonical(subprocess_envelope) == _canonical(inprocess_envelope)
