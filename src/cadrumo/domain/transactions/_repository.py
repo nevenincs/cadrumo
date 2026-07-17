@@ -2,11 +2,12 @@
 
 This module owns the pure transaction-catalogue persistence vocabulary that
 carries no SQL/crypto coupling: the :class:`ImportSummary` record returned by a
-ledger import, the :func:`transaction_object_key` /
-:func:`transaction_index_object_key` secure-object key-derivation helpers, and
-the :data:`TX_BUCKET_NAMESPACE` / schema-version constants that name the
-persisted envelope contract. The concrete encrypted SQL repository lives in the
-persistence adapter
+ledger import and the :func:`transaction_object_key` /
+:func:`transaction_index_object_key` secure-object key-derivation helpers. The
+namespace and schema-version metadata are owned solely by the registry
+authority :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`;
+this domain port never redeclares them. The concrete encrypted SQL repository
+lives in the persistence adapter
 :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
 behind the read-side
 :class:`~cadrumo.domain.transactions.TransactionCatalogueRepositoryProtocol`; the
@@ -26,11 +27,6 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ._errors import LedgerStorageError
 from ._models import BucketTransactionRef
-
-# namespace / schema-version constants naming the persisted-envelope contract;
-# the concrete repository redeclares them adapter-side.
-_TX_CATALOGUE_VERSION = 1
-TX_BUCKET_NAMESPACE = "cadrumo.domain.transactions.bucket"
 
 
 def transaction_index_object_key(bucket_id: str) -> str:
@@ -107,7 +103,6 @@ class ImportSummary(BaseModel):
 
 
 __all__ = [
-    "TX_BUCKET_NAMESPACE",
     "ImportSummary",
     "transaction_index_object_key",
     "transaction_object_key",

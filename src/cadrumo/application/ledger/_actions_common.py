@@ -27,6 +27,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
+from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.time import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -46,7 +47,6 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.transactions import (
-    TX_BUCKET_NAMESPACE,
     BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
@@ -596,7 +596,7 @@ def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -
     if transaction is None:
         raise TransactionNotFoundError(
             f"transaction not found: {transaction_id}",
-            context={"namespace": TX_BUCKET_NAMESPACE, "transaction_id": transaction_id},
+            context={"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace, "transaction_id": transaction_id},
         )
     return transaction
 
