@@ -29,6 +29,7 @@ from pydantic import BaseModel, ConfigDict
 
 from .... import __version__
 from ....core.config import load_settings
+from ....core.external_constants import UTF_8_ENCODING
 from ._loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int], ...]
@@ -204,7 +205,7 @@ def read_verdict(path: Path) -> ValidationVerdict | None:
     if not path.is_file():
         return None
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding=UTF_8_ENCODING))
         return ValidationVerdict.model_validate(raw)
     except Exception:
         _LOGGER.debug("Ignoring unreadable or foreign validation verdict at %s; recomputing", path, exc_info=True)
@@ -216,7 +217,7 @@ def write_verdict(path: Path, verdict: ValidationVerdict) -> None:
     temp_name = None
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding="utf-8") as tf:
+        with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding=UTF_8_ENCODING) as tf:
             tf.write(verdict.model_dump_json())
             temp_name = tf.name
         os.replace(temp_name, path)
