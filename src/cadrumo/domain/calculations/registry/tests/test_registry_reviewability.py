@@ -26,6 +26,9 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     # _validate_verification_predicates.py module; this module holds only
     # the cross-reference, workbook-parity, verification-expectation
     # dispatch, application-link, and deadline-window section validators.
+    # _validate_evidence.py grew past the 300-line default with the S06
+    # sidecar-reading helper (_read_manual_pdf_sidecar + constants).
+    "_validate_evidence.py": 360,
     "_validate_surfaces.py": 350,
     "_validate_verification_predicates.py": 431,
     "_validate_cross_revision.py": 424,
