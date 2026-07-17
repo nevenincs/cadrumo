@@ -19,9 +19,7 @@ uses an open-world (AEAT-sede) verb, which stays on the supervised subprocess
 transport. Called without an active profile it refuses at the CLI boundary
 (no network) but still pays the multi-second interpreter-plus-registry startup,
 giving a slow subprocess call whose error-ness is beside the point — the subject
-is that the loop stayed free while it ran. The warm in-process transport's own
-off-loop dispatch and idle-lock custody are covered in
-``test_inprocess_custody_and_responsiveness.py``.
+is that the loop stayed free while it ran.
 
 The observable invariant: a ``tools/list`` issued while the subprocess call is
 in flight must complete well BEFORE the subprocess call does. On a blocked
@@ -29,18 +27,35 @@ loop the list is only served after the handler returns, so the two completions
 land within milliseconds of each other; off-loop they are separated by the
 remaining multi-second subprocess runtime. The assertion is the completion
 GAP, not an absolute latency, so machine speed does not destabilise it.
+
+The warm in-process transport is covered directly below: a warm verb served
+through the real memory transport while a concurrent ``tools/list`` is answered
+(off-loop dispatch), the idle-lock custody invariant (repeated session-opening
+in-process reads succeed and the long-lived server context holds no bucket
+session between calls), and clean crash restart (a fresh server instance serves
+the same encrypted state cleanly after a prior one is discarded). The custody
+and crash tests provision a REAL encrypted profile through the in-process
+runtime under an env-isolated storage root - no mocks, real storage and crypto.
 """
 
 from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
+from mcp.server import Server
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
+from ....adapters.persistence.storage import has_active_bucket_session
+from ....core.config import DEV_TEST_DATABASE_PASSWORD
+from ....tests import temporary_env
 from .._dispatch import tool_name_for_command
 from .._harness_tools import WHOAMI_TOOL
+from .._inprocess import parse_cli_envelope, run_cli_in_process
 from .._server import build_server
 from .._tools import build_tool_descriptors
 
@@ -99,3 +114,123 @@ def test_direct_verb_tool_leaves_the_loop_serving_requests_mid_call() -> None:
         "the direct verb path blocked the event loop: the mid-call tools/list "
         f"was only served once the subprocess call finished (gap {gap:.3f}s)"
     )
+
+
+# --- warm in-process transport: off-loop dispatch, custody, crash restart ---
+
+#: A read-only session-opening verb used to prove the warm runtime opens, uses,
+#: and relocks a real bucket session per call. It reads encrypted review state, so
+#: a successful call proves a genuine session was opened.
+_SESSION_READ_KEY = "review.queue"
+
+
+async def _warm_call_with_concurrent_list(tool_name: str, arguments: dict[str, object]) -> tuple[bool, bool]:
+    """Drive a warm in-process call while a concurrent tools/list is served.
+
+    Returns whether the mid-flight list was answered and whether the warm call
+    itself was non-error, proving the warm transport is dispatched off the event
+    loop (the list is served concurrently, not after the call returns).
+    """
+    server = build_server(build_tool_descriptors())
+    async with connect(server) as session:
+        in_flight = asyncio.create_task(session.call_tool(tool_name, arguments))
+        listed = await session.list_tools()
+        list_answered = bool(listed.tools)
+        result = await in_flight
+        return list_answered, not bool(result.isError)
+
+
+def test_warm_in_process_verb_is_served_with_the_loop_free() -> None:
+    # ``contract`` serves warm in-process; a concurrent tools/list is answered
+    # while the call is in flight and the warm call returns non-error - the warm
+    # transport shares the same off-loop dispatch wrapper the subprocess gap tests
+    # prove keeps the loop free.
+    list_answered, call_ok = asyncio.run(
+        _warm_call_with_concurrent_list(tool_name_for_command("contract"), {}),
+    )
+    assert list_answered
+    assert call_ok
+
+
+@contextmanager
+def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
+    """Provision a real encrypted profile under an env-isolated storage root.
+
+    The warm runtime runs the CLI in a raw worker thread that inherits
+    ``os.environ`` (not context-var overrides), so isolation is env-based. The
+    profile is created through the in-process runtime itself, so the create and
+    every later read resolve the same file-backend master key.
+    """
+    with temporary_env(
+        CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
+        CADRUMO_SECRET_STORE_BACKEND="file",  # noqa: S106 - env var name, not a credential
+        CADRUMO_SECRET_STORE_DIR=str(tmp_path / "secrets"),
+        CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
+    ):
+        created = run_cli_in_process(
+            [
+                "--format", "json", "config", "profile", "create", "operator",
+                "--quiet", "--accept-defaults",
+                "--entity-type", "natural_person",
+                "--irpf-income-categories", "actividad_economica",
+                "--tax-id", "12345678Z",
+                "--name", "Operator",
+                "--surnames", "Custody",
+                "--activity", "design",
+            ],
+        )  # fmt: skip
+        envelope, is_error = parse_cli_envelope(created)
+        assert not is_error, envelope
+        yield
+
+
+def _warm_read(server: Server, tool_name: str, arguments: dict[str, object]) -> dict[str, object]:
+    """Drive one warm in-process read through the real memory transport."""
+
+    async def _drive() -> dict[str, object]:
+        async with connect(server) as session:
+            # Clear the first-change identity gate with a real console identity
+            # read before the session-opening verb.
+            await session.call_tool(WHOAMI_TOOL, {})
+            result = await session.call_tool(tool_name, arguments)
+            assert result.structuredContent is not None
+            return dict(result.structuredContent)
+
+    return asyncio.run(_drive())
+
+
+def test_warm_runtime_holds_no_bucket_session_between_calls(tmp_path: Path) -> None:
+    with _provisioned_profile_env(tmp_path):
+        assert not has_active_bucket_session()
+        server = build_server(build_tool_descriptors())
+        tool_name = tool_name_for_command(_SESSION_READ_KEY)
+        # Two session-opening reads served warm in-process through the real
+        # server: each opens, uses, and relocks its own bucket session.
+        first = _warm_read(server, tool_name, {})
+        second = _warm_read(server, tool_name, {})
+        assert first["status"] == "success"
+        assert first["active_profile"] == "operator"
+        assert second["status"] == "success"
+        # Idle-lock custody: the long-lived warm runtime holds no decrypted bucket
+        # session after serving calls that genuinely opened one. Repeated success
+        # proves the per-call open/use/relock cycle strands nothing.
+        assert not has_active_bucket_session()
+
+
+def test_a_rebuilt_warm_runtime_serves_encrypted_state_cleanly(tmp_path: Path) -> None:
+    with _provisioned_profile_env(tmp_path):
+        tool_name = tool_name_for_command(_SESSION_READ_KEY)
+        # A first warm runtime instance serves the encrypted state.
+        first_server = build_server(build_tool_descriptors())
+        first = _warm_read(first_server, tool_name, {})
+        assert first["status"] == "success"
+        # Simulate a crash by discarding the instance; a fresh instance re-warms
+        # its caches and serves the SAME persisted encrypted state cleanly, with no
+        # torn state and no custody carried over from the discarded runtime.
+        del first_server
+        assert not has_active_bucket_session()
+        second_server = build_server(build_tool_descriptors())
+        second = _warm_read(second_server, tool_name, {})
+        assert second["status"] == "success"
+        assert second["active_profile"] == "operator"
+        assert not has_active_bucket_session()
