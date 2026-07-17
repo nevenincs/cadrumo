@@ -222,7 +222,7 @@ class TestWrappedMasterKeyPersistence:
 
 
 class TestInstallAfterVerification:
-    """S73: the atomic install runs only after a full verification passes."""
+    """The atomic install runs only after a full verification passes."""
 
     def test_installs_payload_when_verify_passes(self, tmp_path: Path) -> None:
         path = tmp_path / "secrets" / "master.recovery.key"
@@ -270,7 +270,7 @@ def _provisioned_file_provider(store_dir: Path) -> FileFallbackMasterKeyProvider
 
 
 class TestNoSecretSerialization:
-    """S77: mnemonic verification and recovery never serialize secret material."""
+    """Mnemonic verification and recovery never serialize secret material."""
 
     def test_persisted_envelope_never_contains_plaintext_mnemonic_or_master_key(self, tmp_path: Path) -> None:
         store_dir = tmp_path / "secrets"

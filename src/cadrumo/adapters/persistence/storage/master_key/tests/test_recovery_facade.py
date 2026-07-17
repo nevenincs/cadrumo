@@ -246,7 +246,7 @@ def test_unexpected_exception_from_decode_mnemonic_propagates_unchanged() -> Non
 
 
 # ---------------------------------------------------------------------------
-# S71/S72/S73/S76: recovery lifecycle operations against real encrypted files
+# Recovery lifecycle operations against real encrypted files
 # ---------------------------------------------------------------------------
 
 
@@ -296,7 +296,7 @@ def test_recovery_create_enrolls_and_status_reports_fingerprint(tmp_path: Path) 
 
 
 def test_recovery_create_refuses_existing_enrollment(tmp_path: Path) -> None:
-    """S72: create refuses when a recovery envelope already exists, untouched."""
+    """Create refuses when a recovery envelope already exists, untouched."""
     store_dir = tmp_path / "secrets"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
@@ -311,7 +311,7 @@ def test_recovery_create_refuses_existing_enrollment(tmp_path: Path) -> None:
 
 
 def test_recovery_rotate_requires_existing_enrollment(tmp_path: Path) -> None:
-    """S72: rotate refuses when no recovery envelope is enrolled yet."""
+    """Rotate refuses when no recovery envelope is enrolled yet."""
     store_dir = tmp_path / "secrets"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
@@ -340,7 +340,7 @@ def test_recovery_rotate_replaces_envelope_after_confirmation(tmp_path: Path) ->
 
 
 def test_rotate_preserves_prior_envelope_on_failed_confirmation(tmp_path: Path) -> None:
-    """S73: a mistyped confirmation leaves the prior envelope byte-identical."""
+    """A mistyped confirmation leaves the prior envelope byte-identical."""
     store_dir = tmp_path / "secrets"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
@@ -357,7 +357,7 @@ def test_rotate_preserves_prior_envelope_on_failed_confirmation(tmp_path: Path) 
 
 
 def test_rotate_preserves_prior_envelope_on_cancelled_confirmation(tmp_path: Path) -> None:
-    """S73: a cancelled confirmation propagates and never rewrites the envelope."""
+    """A cancelled confirmation propagates and never rewrites the envelope."""
     store_dir = tmp_path / "secrets"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
@@ -372,7 +372,7 @@ def test_rotate_preserves_prior_envelope_on_cancelled_confirmation(tmp_path: Pat
 
 
 def test_create_writes_no_envelope_on_failed_confirmation(tmp_path: Path) -> None:
-    """S73: a first enrollment whose retype fails leaves the store with no envelope."""
+    """A first enrollment whose retype fails leaves the store with no envelope."""
     store_dir = tmp_path / "secrets"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
