@@ -22,7 +22,12 @@ from .._compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
-from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache, load_registry_tree
+from .._loader import (
+    _collect_registry_tree_fingerprints,
+    _load_registry_tree_cached,
+    clear_fingerprint_cache,
+    load_registry_tree,
+)
 from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -96,3 +101,51 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
 
         assert load_compiled_registry_cache(root, fingerprints) is None
         assert not path.is_file()
+
+
+def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_toml(tmp_path: Path) -> None:
+    """Through the loader: a mutated on-disk cache is refused and TOML is recompiled.
+
+    This is the never-a-second-authority proof (ADR D3, S10). A cold
+    ``load_registry_tree`` compiles from TOML and writes the cache; that result
+    is the independent oracle. The on-disk cache is then mutated. A second load,
+    with the in-process memo cleared so it must consult disk, must refuse the
+    mutated cache (its integrity digest no longer matches), recompile from TOML,
+    and return a payload byte-equivalent to the cold compile - the cache can
+    never substitute a different authority for the one the TOML defines. A fresh
+    valid cache replaces the poisoned one, so the mutation does not persist.
+    """
+    cache_dir = tmp_path / "compiled-cache"
+    cache_dir.mkdir()
+
+    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(cache_dir)):
+        _load_registry_tree_cached.cache_clear()
+        clear_fingerprint_cache()
+        root = bundled_path("registry", "aeat").resolve()
+        fingerprints = _collect_registry_tree_fingerprints(root)
+
+        # Cold compile from TOML into the empty cache dir; this is the oracle.
+        reference_modelos, reference_catalogues = load_registry_tree(root)
+        assert reference_modelos, "sanity: the bundled tree must compile at least one modelo"
+        path = compiled_cache_path(root, fingerprints)
+        assert path.is_file(), "the cold compile must have written the cache"
+
+        # Mutate the on-disk cache so its embedded integrity digest no longer matches.
+        corrupted = bytearray(path.read_bytes())
+        corrupted[-1] ^= 0xFF
+        path.write_bytes(bytes(corrupted))
+
+        # Clear only the in-process memo so the next load must consult disk.
+        _load_registry_tree_cached.cache_clear()
+        rebuilt_modelos, rebuilt_catalogues = load_registry_tree(root)
+
+        # The mutated cache was refused; the loader rebuilt from TOML byte-equivalently.
+        assert rebuilt_modelos == reference_modelos
+        assert rebuilt_catalogues == reference_catalogues
+
+        # A fresh valid cache replaced the poisoned one, and it serves the real authority.
+        assert path.is_file()
+        reloaded = load_compiled_registry_cache(root, fingerprints)
+        assert reloaded is not None
+        assert reloaded[0] == reference_modelos
+        assert reloaded[1] == reference_catalogues
