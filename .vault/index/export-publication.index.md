@@ -12,7 +12,12 @@ related:
   - '[[2026-07-17-export-publication-S04]]'
   - '[[2026-07-17-export-publication-S05]]'
   - '[[2026-07-17-export-publication-S06]]'
+  - '[[2026-07-17-export-publication-S07]]'
+  - '[[2026-07-17-export-publication-S08]]'
+  - '[[2026-07-17-export-publication-S09]]'
+  - '[[2026-07-17-export-publication-S10]]'
   - '[[2026-07-17-export-publication-adr]]'
+  - '[[2026-07-17-export-publication-audit]]'
   - '[[2026-07-17-export-publication-plan]]'
 ---
 
@@ -26,6 +31,10 @@ Auto-generated index of all documents tagged with `#export-publication`.
 
 - `2026-07-17-export-publication-adr` - `export-publication` adr: `export-publication rescope grounding` | (**status:** `accepted`)
 
+### audit
+
+- `2026-07-17-export-publication-audit` - `export-publication` audit: `export durable-layer continuous-gate review`
+
 ### exec
 
 - `2026-07-17-export-publication-S01` - Define typed portable-transfer and subject-access export purposes, requests, results, target identity, and categories derived from the actual portable bundle schema and carried registered namespaces while keeping sealed recovery archives separate
@@ -34,6 +43,10 @@ Auto-generated index of all documents tagged with `#export-publication`.
 - `2026-07-17-export-publication-S04` - Re-export the typed profile export service as the sole public export orchestration API
 - `2026-07-17-export-publication-S05` - Prove portable-transfer and subject-access purposes use the same service and bundle schema, derive categories from serialized fields and registry-carried namespaces, and retain distinct purpose metadata
 - `2026-07-17-export-publication-S06` - Prove restrictive temporary permissions, same-target exclusion, every PREPARED and replace crash window, parent-directory durability, and fresh-process reconciliation without premature completion events
+- `2026-07-17-export-publication-S07` - Route both config profile export and subject-access-request through the sole portable-export application service and remove direct serialization, target writes, completion events, and static SAR category ownership from the CLI
+- `2026-07-17-export-publication-S08` - Migrate the export family help, risk, and cleartext handoff-risk metadata to the accepted grammar with equal classification for both purposes
+- `2026-07-17-export-publication-S09` - Regenerate the operator reference pages for portable export and subject access from the frozen live surface
+- `2026-07-17-export-publication-S10` - Gated requirement surfaced by the export durable-layer review, latent until S07 wires both export doors through the shared service: make reconcile_prepared_exports hold the per-destination lock (or a repository lock spanning staged-temp removal and journal delete) per operation, or guarantee the S07 call site runs reconcile only at exclusive startup, so a reconcile concurrent with a live same-target export cannot unlink the live staged temp and spuriously fail os.replace with a ProfileExportError
 
 ### plan
 
