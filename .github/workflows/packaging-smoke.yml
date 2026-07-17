@@ -37,14 +37,19 @@ jobs:
           python-version: "3.13"
           enable-cache: true
 
-      - name: Dependency surface preflight
-        run: python -m dev.packaging.dependency_surface
-
-      - name: Shipped data source preflight
-        run: python -m dev.packaging.source_preflight
-
       - name: Sync frozen development environment
         run: uv sync --frozen
+
+      # The preflights import dev.packaging.smoke_core, which needs third-party
+      # distributions (packaging, pydantic transitively); a bare setup-uv
+      # interpreter also lets the repo's own packaging/ namespace directory
+      # mask the missing PyPA library, so they must run inside the synced
+      # environment after uv sync.
+      - name: Dependency surface preflight
+        run: uv run --no-sync python -m dev.packaging.dependency_surface
+
+      - name: Shipped data source preflight
+        run: uv run --no-sync python -m dev.packaging.source_preflight
 
       - name: Cadrumo packaging preflight command tests
         run: just packaging-smoke-preflight-tests
