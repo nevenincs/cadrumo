@@ -51,6 +51,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+_UTF_8: Final[str] = "utf-8"
 _ANSI: Final = re.compile(r"\x1b\[[0-9;]*m")
 _FOUND: Final = re.compile(r"Found (\d+) clones?")
 _TABLE_PCT: Final = re.compile(r"\((\d+(?:\.\d+)?)%\)")
@@ -302,7 +303,7 @@ def run_duplication_scan(
             jscpd_command(npx, source_root),
             capture_output=True,
             text=True,
-            encoding="utf-8",
+            encoding=_UTF_8,
             errors="replace",
             check=False,
             cwd=repo_root,
