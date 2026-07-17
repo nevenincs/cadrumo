@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#centralized-output-redaction'
 date: '2026-05-28'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-28-centralized-output-redaction-research]]'
   - '[[2026-04-25-json-output-contract-adr]]'
@@ -47,10 +47,10 @@ The architecture must preserve existing output contracts while making privacy th
 
 The accepted architecture is:
 
-1. `src/aeat/core/redaction/__init__.py` owns the canonical redaction rule registry and structured redaction helpers.
-2. `src/aeat/core/output_rendering.py` becomes the central success-output privacy boundary. It redacts JSON payloads and text lines before serialization or printing.
-3. `src/aeat/entrypoints/cli/_common.py` routes `_emit` and `_emit_envelope` through the central output renderer. Any command bypassing `_emit` must have an explicit test-covered exception.
-4. `src/aeat/core/errors/_registry.py` and `src/aeat/core/logging.py` stop carrying independent sensitive-key taxonomies. They compose shared redaction rules and keep only transport-specific formatting behavior.
+1. `src/cadrumo/core/redaction/__init__.py` owns the canonical redaction rule registry and structured redaction helpers.
+2. `src/cadrumo/core/output_rendering.py` becomes the central success-output privacy boundary. It redacts JSON payloads and text lines before serialization or printing.
+3. `src/cadrumo/entrypoints/cli/_common.py` routes `_emit` and `_emit_envelope` through the central output renderer. Any command bypassing `_emit` must have an explicit test-covered exception.
+4. `src/cadrumo/core/errors/_registry.py` and `src/cadrumo/core/logging.py` stop carrying independent sensitive-key taxonomies. They compose shared redaction rules and keep only transport-specific formatting behavior.
 5. Bespoke auth, repair, diagnostics, and profile redactors are deleted or reduced to domain-specific shaping helpers that call the central policy.
 6. A mechanical inventory test guards production CLI output call sites so new `typer.echo`, direct writes, or unclassified `_emit` payloads cannot appear without an owning plan row.
 

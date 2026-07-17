@@ -3,9 +3,8 @@ tags:
   - '#adr'
   - '#iva-classification-enrichment'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-13-r1-vat-enumeration-adr]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"
   - "[[2026-04-27-modelo-303-calc-verify-adr]]"
@@ -55,7 +54,7 @@ already uses `BusinessClassification` as an entry filter), and force every
 downstream consumer that reads one axis to absorb the other.
 
 **Existing `IvaCategory` catalogue.** The `IvaCategory` enum in
-`src/aeat/domain/iva/_schema.py` already carries the authoritative 17-member
+`src/cadrumo/domain/iva/_schema.py` already carries the authoritative 17-member
 closed set including `INTRA_COMMUNITY_SUPPLY`,
 `INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`,
 `INTRA_COMMUNITY_TRIANGULATION`, and `EXPORT_THIRD_COUNTRY_ZERO_RATED` with
@@ -84,7 +83,7 @@ relationship to intra-community supply or third-country export. Grouping it
 with casillas 59 and 60 in the same implementation step would introduce
 incorrect logic and confusion for operators.
 
-**`EUMemberState` enum.** `src/aeat/domain/iva/_schema.py` already defines
+**`EUMemberState` enum.** `src/cadrumo/domain/iva/_schema.py` already defines
 a closed 27-member `EUMemberState` enum (ISO 3166-1 alpha-2, lowercase).
 Spain (`es`) is a member of the enum because it is an EU member state;
 however, a domestic-to-domestic transaction with `counterparty_eu_member_state
@@ -198,12 +197,12 @@ be `None` (non-EU destination); the engine emits
 
 - **S91** — Add `iva_category: IvaCategory | None = None` and
   `counterparty_eu_member_state: EUMemberState | None = None` to
-  `Transaction` in `src/aeat/domain/transactions/_models.py`. Add the two
+  `Transaction` in `src/cadrumo/domain/transactions/_models.py`. Add the two
   new `IvaLedgerAggregationIssueReason` members
   (`MISSING_COUNTERPARTY_EU_MEMBER_STATE`,
   `DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION`,
   `EU_MEMBER_STATE_ON_EXPORT_TRANSACTION`) to
-  `src/aeat/application/aggregation/_iva_ledger.py`. Update
+  `src/cadrumo/application/aggregation/_iva_ledger.py`. Update
   `_classify_iva_transaction` to branch on `iva_category` before the
   `_RATE_KIND_TO_DOMESTIC_CATEGORY` lookup and apply the D5 validation.
 

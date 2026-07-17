@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-01-semantic-cluster-hardening-research]]"
   - "[[2026-05-31-core-authority-adr]]"
@@ -14,7 +14,7 @@ related:
 ## Problem Statement
 
 The codebase is in a standardisation-and-hardening phase. ~1736 Python
-modules under `src/aeat` must be cross-referenced against the accepted ADRs
+modules under `src/cadrumo` must be cross-referenced against the accepted ADRs
 (master spine: the core-authority ADR) to guarantee that every module
 enrols into the same canonical base definitions, the centralised pydantic
 config, the typed-constant enums, and the central exception hierarchy; that
@@ -31,7 +31,7 @@ Two structural problems block a reliable pass:
    equivalent code across vocabulary mismatches.
 
 2. **The audit baseline is stale and untrustworthy.** Since the 2026-05-19
-   sweep, 408 Python modules were added and 1305 modified under `src/aeat`.
+   sweep, 408 Python modules were added and 1305 modified under `src/cadrumo`.
    The added modules are entirely unaudited and may bypass the canonical
    conventions. Prior research/audits were largely manual and the cadence
    self-reports a ~30% structural-incompleteness rate per pass, so their
@@ -49,7 +49,7 @@ Two structural problems block a reliable pass:
   manual audit docs; no dispatch harness). It already mandates a
   substitutability pre-filter created after the `PROMOTE-001` pass observed a
   96% false-positive rate from naive "X where canonical Y exists" flags.
-- The core-authority ADR already defines the canonical homes: `AeatError` /
+- The core-authority ADR already defines the canonical homes: `CadrumoError` /
   `CoreError` exception roots in `core/errors`; `STRICT_FROZEN_CONFIG` in
   `core/_models`; typed-constant `StrEnum`s and identity aliases in `core`;
   and an enforcement-test suite in `diagnostics`. This ADR consumes those as
@@ -120,7 +120,7 @@ over them ahead of the wider tree. Waves then proceed in user order:
   suspects; close every straggler the delta introduced.
 - **W3 Exception consolidation.** Fill the blank exception-restructure ADR;
   apply Decision 6; normalise error-module naming (Decision 7); re-verify all
-  23 package error bases still root at `AeatError`.
+  23 package error bases still root at `CadrumoError`.
 - **W4 Domain redefinition & taxonomy.** Re-confirm prior duplication-sweep
   conceptual leads against current state; apply Decisions 5 and 8.
 
@@ -135,7 +135,7 @@ flow, and the loader hydrates the typed enum on load. This enrols
 ### Decision 6 -- `DomainError` is deleted as dead code
 
 `DomainError` in `domain/_errors.py` is defined but used by none of the 23
-domain subpackages (all root directly at `AeatError`). It is deleted.
+domain subpackages (all root directly at `CadrumoError`). It is deleted.
 Safeguard: surrounding/related work is committed first, then `DomainError` is
 removed in its own clearly-messaged commit so any loss is git-traceable.
 
@@ -150,7 +150,7 @@ each a `relocation:`-tagged atomic commit with consumer updates.
 The `StrEnum` in `domain/portals` named `Subdomain` enumerates AEAT website
 hostnames (`SEDE`, `WWW1`, `CLAVE_GOB`) and has nothing to do with the
 business-domain layer. It is renamed (e.g. to a portal-host concept) to
-remove the vocabulary collision with `aeat.domain.*` and `tax_domain`.
+remove the vocabulary collision with `cadrumo.domain.*` and `tax_domain`.
 
 ### Open-question resolutions (signed off 2026-06-01)
 
@@ -180,7 +180,7 @@ canonical homes, no dead code, no vocabulary collisions.
 
 ## Alternatives Considered
 
-- **Build a committed semantic-audit CLI under `src/aeat` or `scripts/`.**
+- **Build a committed semantic-audit CLI under `src/cadrumo` or `scripts/`.**
   Rejected: audit machinery in production source violates source-hygiene; the
   cadence already provides the dispatch convention and output contract.
 - **Trust the prior research and only reconcile open items.** Rejected: the

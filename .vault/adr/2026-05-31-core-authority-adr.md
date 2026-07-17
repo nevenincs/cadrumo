@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#core-authority'
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-31-core-authority-action-tracker-v2-reference]]"
   - "[[2026-05-31-core-authority-types-v2-reference]]"
@@ -20,7 +20,7 @@ related:
 ## Problem Statement
 
 Six independent AST-level and GPU-accelerated semantic audits of 1,655 Python files
-under src/aeat/ reveal a codebase where cross-module shared definitions -- enums,
+under src/cadrumo/ reveal a codebase where cross-module shared definitions -- enums,
 constants, Protocols, TypeAliases, Literals, error hierarchies -- are declared wherever
 they first appear and consumed across layer boundaries in both legal and illegal
 directions. The audits surface 226 enum declarations distributed across domain /
@@ -52,7 +52,7 @@ current multi-declaration surface; this ADR makes them structurally enforceable.
 
 The protect list in the action tracker identifies 13 sites classified as legitimate
 architectural patterns: the core/identity/ re-export wall, the
-adapters/persistence/storage/ re-export wall, the aeat.application.auth hybrid canonical
+adapters/persistence/storage/ re-export wall, the cadrumo.application.auth hybrid canonical
 site, two lazy __getattr__ cycle-breakers in domain.transactions and domain.profile,
 one side-effect import in application.user_profile, one in domain.renta, three
 importlib.import_module cycle-breakers in core/profile.py, the tr brevity alias
@@ -226,7 +226,7 @@ Detection clause: any private _STRICT_FROZEN constant in a production module wit
 documented intentional divergence is a Rule 10 violation.
 ### Rule 11 -- enforcement-test extension
 
-The import-direction test in src/aeat/diagnostics/ is extended to 10 cumulative clauses
+The repository import-linter contract and architecture tests enforce 10 cumulative clauses
 (4 inherited from identity-primitives ADR + 6 new):
 
 - Clause 5: any domain.<a> module importing from domain.<b>._enums for a != b is a
@@ -244,8 +244,8 @@ The import-direction test in src/aeat/diagnostics/ is extended to 10 cumulative 
   _status, or _state using bare str with only a length/pattern constraint when a typed
   alias exists is a Rule 5 violation.
 
-The test MUST live in src/aeat/diagnostics/ and participate in the CI gate. Its absence
-or reduction below 10 clauses is a Rule 11 violation.
+The checks MUST participate in the CI gate. Their absence or reduction below
+10 clauses is a Rule 11 violation; no production diagnostics package owns test policy.
 ## Rationale
 
 **Rule 1** extends the identity-primitives placement test to all definition kinds using
@@ -277,7 +277,7 @@ Execution evidence (S31/S32) established incompatible value formats (ISO 3166-1 
 in CCAA vs lowercase Spanish names in CalendarCCAA) and different member sets (CalendarCCAA has
 24 members, CCAA includes territories not in CalendarCCAA). MERGE-002 is closed as wontfix.
 CalendarCCAA remains in domain/deadlines/_festivos.py as a domain-specific calendar enum;
-CCAA remains in domain/profile/_ccaa.py as the profile geographic enum. These are different
+CCAA remains in domain/contribuyente/_ccaa.py as the profile geographic enum. These are different
 domain concepts with the same general shape but incompatible value contracts.
 
 **Rule 8** resolves open question 4. Domain _repository.py protocols live in
@@ -435,7 +435,7 @@ aeat-architecture-boundaries no-shim rule.
 
 ### Enforcement test mandate
 
-The diagnostics test in src/aeat/diagnostics/ carries 10 cumulative clauses (4 from
+The import-linter and architecture-test gate carries 10 cumulative clauses (4 from
 identity-primitives ADR plus 6 from Rule 11). Its absence or reduction below 10 clauses
 is a Rule 11 violation.
 

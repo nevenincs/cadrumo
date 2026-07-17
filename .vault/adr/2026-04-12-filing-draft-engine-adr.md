@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#filing-draft-engine"
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-filing-draft-engine-research]]"
 ---
@@ -22,7 +22,7 @@ per-modelo builders) have nothing concrete to integrate against.
 
 ## Decision
 
-Introduce `aeat.application.filing` — a new subpackage that owns the typed
+Introduce `cadrumo.application.filing` — a new subpackage that owns the typed
 public API for building, validating, and inspecting `FilingDraft`
 records.
 
@@ -55,14 +55,14 @@ All boundary-crossing records are strict pydantic v2 models with
 
 `FilingBuilder` is an abstract base class with a single
 `build(period, profile, inputs) -> FilingDraft` method.
-Implementations live under `src/aeat/application/filing/_builders/` and are
+Implementations live under `src/cadrumo/application/filing/_builders/` and are
 registered via a private `_BUILDER_REGISTRY` keyed by modelo
 string ID. The PoC ships `Modelo130Builder` only.
 
 ### Validator
 
 `FilingValidator` is a concrete class that applies cross-cutting
-rules (deadline check via `DeadlineChecker` Protocol stub, profile
+rules (deadline check via the public deadline contract, profile
 applicability, schema-version compatibility, missing required
 casillas, out-of-range values, formula divergence). The validator
 is invoked once by `build_draft` and again by `validate_draft`.
@@ -79,17 +79,16 @@ is invoked once by `build_draft` and again by `validate_draft`.
 
 ### Cross-module Protocols
 
-`aeat.application.filing._protocols` declares Protocols for every upstream
-collaborator (`ModeloIdentity`, `CasillaSchema`, `CasillaCollection`,
-`CasillaSchemaProvider`, `DeadlineStatus`, `DeadlineChecker`). The
-PoC ships hand-written concrete implementations under
-`_builders/_modelo_130_schema.py` and the test doubles in
-`test_filing.py`. Production wiring will replace these on rebase
-once the upstream subpackages land.
+`cadrumo.application.filing._protocols` declares the narrow application ports
+needed from upstream collaborators (`ModeloIdentity`, `CasillaSchema`,
+`CasillaCollection`, `CasillaSchemaProvider`, `DeadlineStatus`,
+`DeadlineChecker`). Production wiring binds those ports to the canonical
+modelo, schema, and deadline public surfaces. Tests exercise the real builder,
+validator, and persisted boundary behavior with real domain records.
 
 ### Errors
 
-A small hierarchy under `aeat.core.errors.AeatError`:
+A small hierarchy under `cadrumo.core.errors.CadrumoError`:
 
 - `FilingDraftError` — base for the subpackage.
 - `FilingBuilderError` — builder selection / execution failure.
@@ -101,13 +100,13 @@ A small hierarchy under `aeat.core.errors.AeatError`:
 
 ### CLI
 
-A new `aeat.entrypoints.cli.filing` Typer sub-app wires four commands into the
+A new `cadrumo.entrypoints.cli.filing` Typer sub-app wires four commands into the
 root `aeat` CLI: `build`, `validate`, `show`, `list`. Drafts are
 written as JSON files under `AEAT_DRAFTS_DIR`.
 
 ### Settings
 
-Two additive settings on `aeat.core.config.Settings`:
+Two additive settings on `cadrumo.core.config.Settings`:
 
 - `aeat_drafts_dir: Path` — default `<PROJECT_ROOT>/var/drafts`.
 - `aeat_draft_fail_on_warning: bool` — default `False`.
@@ -120,9 +119,9 @@ Both are documented in `env/.env.example`; the alignment test in
 - Downstream issues (per-modelo builders, submission engine,
   storage integration) inherit a stable, frozen API surface and
   can pin the enum/model imports today.
-- The Protocol stubs for `aeat.domain.casillas`, `aeat.domain.schema`,
-  `aeat.domain.deadlines`, `aeat.domain.modelos` create a small rebase cost when
-  those subpackages land — explicitly accepted.
+- Narrow application ports keep the draft engine decoupled while all authority
+  remains in the canonical domain packages; no local duplicate schema or
+  deadline implementation is permitted.
 - The `FilingDraft.draft_id` is content-addressed and stable; the
   same `(modelo, period, profile, inputs)` tuple always produces
   the same id, which makes deduplication and idempotent retries

@@ -3,10 +3,9 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: '2026-04-22'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-export-first-adr]]"
-  - "[[2026-04-22-ruleset-architecture-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
 ---
@@ -15,7 +14,7 @@ related:
 ## status
 
 Accepted — 2026-04-22. Wave 75d opens the EPIC #201 execution
-thread with this ADR + the `src/aeat/adapters/outbound/aeat/export/_formats/`
+thread with this ADR + the `src/cadrumo/adapters/outbound/aeat/export/_formats/`
 module scaffold. Per-modelo schema implementation lands in
 wave 76+ research sub-waves. Modelo 130 is the first target.
 
@@ -31,7 +30,7 @@ The last three waves of EPIC #305 fixed the *produce* surface
 (rulesets + external-anchor tests + citation blocklist at
 waves 57b-75c). Every autónomo-core modelo (130/303/390) now has:
 
-- ✅ Schema defined in `src/aeat/domain/formulas/_rulesets/`
+- ✅ Schema defined in `src/cadrumo/domain/calculations/registry/`
 - ✅ Formula ruleset with 2024+2025 variants
 - ✅ Audit-against-provided tests
 - ✅ Filing builder (130 + 303 only)
@@ -47,11 +46,11 @@ C3h (docs), C3i (approval gate) are separate follow-on scope.
 
 ## decision
 
-### 1. Module layout — `src/aeat/adapters/outbound/aeat/export/_formats/`
+### 1. Module layout — `src/cadrumo/adapters/outbound/aeat/export/_formats/`
 
 One Python submodule per modelo-year pairing:
 
-    src/aeat/adapters/outbound/aeat/export/_formats/
+    src/cadrumo/adapters/outbound/aeat/export/_formats/
         __init__.py            # exports per-modelo serialisers by (modelo, año, template)
         _record_spec.py        # shared Pydantic model for fixed-width field specs
         modelo_130_2024.py     # Q3 2024+ rectificativa-capable schema
@@ -132,7 +131,7 @@ accidentally mix encodings.
 ### 5. Draft-lifecycle gate (C3i dependency)
 
 Not implemented in wave 75d. When C4 (`FilingDraftStatus.APPROVED`)
-lands, `aeat.adapters.outbound.aeat.export.export.serialise(draft)` will refuse
+lands, `cadrumo.adapters.outbound.aeat.export.export.serialise(draft)` will refuse
 unless `draft.status is FilingDraftStatus.APPROVED`. Until then
 the serialiser is unguarded — safe because there's no CLI wiring
 yet; it's pure library code with no side-effects.
@@ -197,13 +196,13 @@ yet; it's pure library code with no side-effects.
 - EPIC: #201 (this ADR's parent)
 - `.vault/adr/2026-04-17-export-first-adr.md` — charter-level
   decision that import is always Kent-uploads-file
-- `src/aeat/adapters/outbound/aeat/export/_engine.py` — preflight path (pre-export)
-- `src/aeat/adapters/outbound/aeat/export/_models.py` — `FilingDraft` shape
+- `src/cadrumo/adapters/outbound/aeat/export/_engine.py` — preflight path (pre-export)
+- `src/cadrumo/adapters/outbound/aeat/export/_models.py` — `FilingDraft` shape
 
 ## Amendment (2026-05-21): export layouts authored as registry TOML, not Python modules
 
 This ADR's original section 1 described per-modelo Python submodules
-under `src/aeat/adapters/outbound/aeat/export/_formats/` as the
+under `src/cadrumo/adapters/outbound/aeat/export/_formats/` as the
 authoring surface for `_RECORD_SPECS` tuples derived from the official
 AEAT Diseño de Registros. That authoring direction is superseded.
 
@@ -220,11 +219,11 @@ changes:
 
 - Export layouts for M130 and M303 are authored as `export_layouts`
   blocks inside the per-modelo registry TOML files
-  (`src/aeat/_data/registry/aeat/modelos/130.toml` and
-  `src/aeat/_data/registry/aeat/modelos/303.toml`), following the
+  (`src/cadrumo/_data/registry/aeat/modelos/130.toml` and
+  `src/cadrumo/_data/registry/aeat/modelos/303.toml`), following the
   pattern already shipped for modelos 180, 202, and 232.
 - The generic fixed-width serialiser and deserialiser in
-  `src/aeat/adapters/outbound/aeat/export/_formats/` are retained as
+  `src/cadrumo/adapters/outbound/aeat/export/_formats/` are retained as
   the runtime that consumes registry-authored export layouts at
   execution time; they are not the authoring surface.
 - Per-modelo Python format modules (`modelo_130_2024.py` etc.) are

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ccaa-in-profile'
 date: '2026-04-28'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-28-ccaa-in-profile-research]]'
   - '[[2026-04-27-modelo-100-renta-full-calc-adr]]'
@@ -20,7 +20,7 @@ Modelo 100 verification depends on Kent's ordinary CCAA for the autonomic genera
 
 The project already has three unrelated profile surfaces: financial usage ratios, browser sessions, and spending-category defaults. Tax residence is neither a browser profile nor a financial classification profile. It is personal local state that belongs to Kent's identity and filing context.
 
-`#216` is changing database-backed storage in a sibling branch. This issue must not depend on that moving surface. `aeat.core.config.Settings` is stable, but pure env-var storage would make a user-facing profile command less natural and would treat identity state as process configuration.
+`#216` is changing database-backed storage in a sibling branch. This issue must not depend on that moving surface. `cadrumo.core.config.Settings` is stable, but pure env-var storage would make a user-facing profile command less natural and would treat identity state as process configuration.
 
 País Vasco and Navarra are out of scope for this profile because `#424` owns foral regimes. The existing `CCAA` enum correctly excludes them, so the CLI must reject common foral spellings with a clear `ForalRegimeError`.
 
@@ -30,7 +30,7 @@ The profile model must use Pydantic v2 with `frozen=True`, `strict=True`, and `e
 
 ## Implementation
 
-Create a new top-level public `aeat.domain.profile` subpackage. It exports `KentTaxResidence`, `ResidenceChange`, `load_tax_residence`, `save_tax_residence`, `clear_tax_residence`, `default_path`, and the profile errors. `KentTaxResidence` carries `schema_version: str = "1"`, `ccaa: CCAA`, `tax_residence_since: date | None`, and `tax_residence_change_history: tuple[ResidenceChange, ...]`.
+Create a new top-level public `cadrumo.domain.contribuyente` subpackage. It exports `KentTaxResidence`, `ResidenceChange`, `load_tax_residence`, `save_tax_residence`, `clear_tax_residence`, `default_path`, and the profile errors. `KentTaxResidence` carries `schema_version: str = "1"`, `ccaa: CCAA`, `tax_residence_since: date | None`, and `tax_residence_change_history: tuple[ResidenceChange, ...]`.
 
 Persist as JSON at `XDG_CONFIG_HOME/aeat/tax-residence.json` on POSIX-like systems, `%APPDATA%\aeat\tax-residence.json` on Windows, and `~/.config/aeat/tax-residence.json` otherwise. Writes are atomic via a same-directory temporary file and `os.replace`.
 
@@ -42,7 +42,7 @@ Extend the setup wizard by adding a tax-region prompt and saving the tax-residen
 
 ## Rationale
 
-The new `aeat.domain.profile` namespace avoids polluting existing profile surfaces and leaves the database backend untouched. JSON under the OS config directory is stable, inspectable, and easy to set from the CLI or setup wizard. The model keeps forward-compatible change history without attempting same-year multi-residency logic.
+The new `cadrumo.domain.contribuyente` namespace avoids polluting existing profile surfaces and leaves the database backend untouched. JSON under the OS config directory is stable, inspectable, and easy to set from the CLI or setup wizard. The model keeps forward-compatible change history without attempting same-year multi-residency logic.
 
 ## Consequences
 

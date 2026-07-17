@@ -15,14 +15,8 @@ related:
   - "[[2026-07-04-google-sa-impersonation-adr]]"
   - "[[2026-05-14-ledger-transaction-lifecycle-adr]]"
 supersedes:
-  - '2026-05-13-google-oauth-snapshot-adr'
-  - '2026-05-13-google-oauth-inbound-adr'
-  - '2026-05-13-google-oauth-taxonomy-adr'
-  - '2026-05-13-google-oauth-calc-sheets-adr'
-  - '2026-05-13-google-oauth-twoway-adr'
-  - '2026-05-14-google-oauth-adr'
   - '2026-06-04-ledger-google-live-export-adr'
-modified: '2026-07-14'
+modified: '2026-07-17'
 ---
 # `google-optional-adapter-boundary` adr: `Google integration authority boundary and legacy-scope reconciliation` | (**status:** `accepted`)
 

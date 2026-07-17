@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#release-please"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-17'
 title: Release-please LOCAL-only autorelease — ADR
 related:
   - "[[2026-04-12-release-please-research]]"
@@ -63,7 +63,7 @@ reconstruct later.
      - `"separate-pull-requests": false`
      - `"draft": false`, `"prerelease": false`
      - `"changelog-path": "CHANGELOG.md"`
-     - `"extra-files": ["src/aeat/__init__.py"]` to keep
+     - `"extra-files": ["src/cadrumo/__init__.py"]` to keep
        `__version__` in lockstep with `pyproject.toml`.
    - `.release-please-manifest.json`:
      ```json
@@ -76,7 +76,7 @@ reconstruct later.
      and out of scope.
 
 5. **Version source of truth:** `pyproject.toml [project].version`
-   is the canonical version. `src/aeat/__init__.py __version__` is
+   is the canonical version. `src/cadrumo/__init__.py __version__` is
    a *mirror* kept in sync by release-please via `extra-files`. A
    unit test (`tests/test_release_config.py`) asserts the three
    surfaces (`pyproject.toml`, `__init__.py`, manifest) agree at
@@ -103,7 +103,7 @@ reconstruct later.
 
 8. **Test location exception:** `tests/test_release_config.py`
    lives at the top-level `tests/` directory, not colocated under
-   `src/aeat/`. Rationale: it validates project-meta files
+   `src/cadrumo/`. Rationale: it validates project-meta files
    (`pyproject.toml`, the manifest, `CHANGELOG.md`) that do not
    belong to any `aeat.*` subpackage. Colocating it would require
    inventing a synthetic `aeat.release` subpackage just to host

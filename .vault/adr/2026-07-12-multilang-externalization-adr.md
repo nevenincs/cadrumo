@@ -5,10 +5,8 @@ tags:
 date: '2026-07-12'
 related:
   - "[[2026-07-12-multilang-externalization-research]]"
-  - "[[2026-05-04-multilang-externalization-phase1-adr]]"
 supersedes:
-  - '2026-05-04-multilang-externalization-phase1-adr'
-modified: '2026-07-12'
+modified: '2026-07-17'
 ---
 
 # `multilang-externalization` adr: `runtime localization authority and externalization boundary` | (**status:** `accepted`)
@@ -29,7 +27,7 @@ teardown target with a precise runtime boundary.
 
 ## Considerations
 
-- `src/aeat/locales/{es,en,ca,hu}.yml` is the canonical catalogue family.
+- `src/cadrumo/locales/{es,en,ca,hu}.yml` is the canonical catalogue family.
 - `tr` is the central runtime renderer. It resolves the active output language,
   loads YAML catalogues, and retains `python-i18n` initialization/fallback under
   the same boundary.

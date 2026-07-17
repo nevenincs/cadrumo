@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-research]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
@@ -67,7 +67,7 @@ violates the registry's cross-reference policy.
 This ADR proposes the following concrete architecture.
 
 1. The live parity oracle backend lives under
-   `src/aeat/domain/calculations/registry/_live_parity.py` as a
+   `src/cadrumo/domain/calculations/registry/_live_parity.py` as a
    modelo-agnostic module.
 2. The backend exposes a `LiveParityOracle` Protocol with two contractual
    methods: `planned_operations(payload, expected)` and
@@ -179,14 +179,14 @@ each refusal path.
 
 ## Implementation Direction
 
-Create `src/aeat/domain/calculations/registry/_live_parity.py` with the
+Create `src/cadrumo/domain/calculations/registry/_live_parity.py` with the
 `LiveParityOracle` Protocol, the `ParityResult` and
 `ParityFieldComparison` records, the `LiveParityCatalogue`, and the
 `build_planned_operations`, `pre_flight_oracle_operations`,
 `evaluate_planned_operations`, and `assert_oracle_operations_allowed`
 helpers.
 
-Create `src/aeat/domain/calculations/registry/test_live_parity.py` with
+Create `src/cadrumo/domain/calculations/registry/test_live_parity.py` with
 modelo-agnostic tests that exercise the protocol contract, the catalogue,
 and the guard-refusal paths through a synthetic in-memory oracle. The
 tests must not touch any real AEAT surface; live tests live in the

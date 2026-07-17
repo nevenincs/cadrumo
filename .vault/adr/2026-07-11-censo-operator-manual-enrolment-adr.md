@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
-modified: '2026-07-15'
+modified: '2026-07-17'
 supersedes:
   - '2026-07-10-censo-g313-launcher-fix-adr'
 related:
@@ -150,7 +150,7 @@ Substrate deletion. The producerless snapshot substrate was deleted outright
 (`CensoSnapshot`, `CensoSnapshotService`, `CensoSnapshotRepository`,
 `CensoSnapshotNotFoundError`, `censo_snapshot_object_key`, `derive_censo_snapshot_id`),
 its `live_censo_snapshot` secure-object namespace registration, the custody-carry
-resolver for `aeat.application.live.censo_snapshot`, the `application/live` and storage
+resolver for `cadrumo.application.live.censo_snapshot`, the `application/live` and storage
 `__all__` re-exports, the `REFUSED_LIVE_CENSO_SNAPSHOT_NOT_FOUND` error-registry entry
 and its four locale leaves, the generated api stub, and the substrate tests. After the
 re-seat `_censo_sync` no longer imports from `application/live`.

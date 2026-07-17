@@ -6,7 +6,7 @@ date: '2026-06-12'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
 superseded_by: '2026-06-13-first-filer-attestation-adr'
-modified: '2026-07-15'
+modified: '2026-07-17'
 ---
 # `first-filer-attestation` adr: `censo-grounded activity-start scoping` | (**status:** `superseded`)
 
@@ -14,7 +14,7 @@ modified: '2026-07-15'
 
 ## Problem Statement
 
-A business whose first-ever filing is the period in which its economic activity begins cannot file that period locally. The cross-period clean-state gate (`src/aeat/application/calculations/_cross_period_clean_state.py`) demands official AEAT evidence of prior-period filings that, for a genuine first filer, never legally existed. Because local `file` requires a `verified_complete` revision and `verify` blocks on `cross_period_dependency_unclean`, the verify to export to file sequence is a closed loop with no legitimate offline exit.
+A business whose first-ever filing is the period in which its economic activity begins cannot file that period locally. The cross-period clean-state gate (`src/cadrumo/application/calculations/_cross_period_clean_state.py`) demands official AEAT evidence of prior-period filings that, for a genuine first filer, never legally existed. Because local `file` requires a `verified_complete` revision and `verify` blocks on `cross_period_dependency_unclean`, the verify to export to file sequence is a closed loop with no legitimate offline exit.
 
 The research `2026-06-12-first-filer-attestation-research` documents the worked failure case from round-5 operator testing: a business starting activity in 2025 4T truthfully binds `irpf.previous_year_economic_activity_net_income = 0` and `modelo-130-resultados-negativos-anteriores = 0`, yet `work verify` still blocks demanding a Modelo 100 year-2024 filing and a Modelo 130 2025-3T filing that were never owed. Every exit was mapped and confirmed closed: `export` refuses drafts, `file` refuses non-verified revisions, and the only gate-satisfying routes (`live filed pull-sources`, `reconcile file --file`, `filing-record import` with an official evidence kind) all demand official AEAT evidence of a filing the legal world never minted. The import honesty gate is correct to refuse a fabricated evidence id; the defect is not an inconsistent gate but the absence of any vocabulary, anywhere in the architecture, to express that no prior obligation existed.
 

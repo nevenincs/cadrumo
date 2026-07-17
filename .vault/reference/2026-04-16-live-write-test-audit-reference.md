@@ -3,10 +3,9 @@ tags:
   - "#reference"
   - "#live-write-test-audit"
 date: "2026-04-16"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-16-live-write-test-audit-research]]"
-  - "[[2026-04-12-submission-engine-adr]]"
 ---
 
 # `live-write-test-audit` reference: `suite-safety-surfaces`

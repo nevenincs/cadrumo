@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-lazy-subcommand-mutation'
 date: '2026-07-09'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-07-10-cli-lazy-subcommand-mutation-research]]'
 ---
@@ -25,14 +25,14 @@ incident fix.
 
 The mechanism, verified empirically against the live tree. Heavy sub-command
 groups register a `LazySubcommand` (in
-`src/aeat/entrypoints/cli/_command_suggestions.py`) instead of an
+`src/cadrumo/entrypoints/cli/_command_suggestions.py`) instead of an
 eagerly-imported Typer instance, so constructing the `aeat` app object never
 pays the roughly 0.6 s registry parse that every leaf command module pulls
 transitively. `AeatTyperGroup.get_command` triggers `LazySubcommand.load` on
 first dispatch into a subtree. `load` calls its `decorate` hook —
-`decorate_typer_app` in `src/aeat/entrypoints/cli/_errors.py` — on the factory's
+`decorate_typer_app` in `src/cadrumo/entrypoints/cli/_errors.py` — on the factory's
 return value, which for the `config` subtree is the module-level `config_app`
-object re-exported from `src/aeat/entrypoints/cli/_config/__init__.py`.
+object re-exported from `src/cadrumo/entrypoints/cli/_config/__init__.py`.
 `decorate_typer_app` walks the Typer tree recursively (`_decorate_typer_node`)
 and REPLACES every `registered_callback.callback`,
 `registered_commands[i].callback`, and `registered_groups[i].callback` in place
@@ -70,7 +70,7 @@ authorship.
 
 The perf path this loader protects is load-bearing and gated. The 0.6 s registry
 parse and a 2.0 s cold-start ceiling for `aeat --version` are enforced by
-`src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py`
+`src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`
 (`test_version_cold_start_completes_under_budget`,
 `test_importing_cli_package_does_not_import_registry`,
 `test_state_free_surface_does_not_import_registry`). Any change to the lazy-load
@@ -178,13 +178,13 @@ Fourth, regardless of A or C, codify the convention that tests and any embedder
 invoke the CLI through the root `aeat` app, not a sub-app Typer object directly —
 the durable, cross-session half of the lesson.
 
-Concrete code-surface footprint: `src/aeat/entrypoints/cli/_command_suggestions.py`
-(`LazySubcommand.load`, the `decorate` hook call); `src/aeat/entrypoints/cli/_errors.py`
+Concrete code-surface footprint: `src/cadrumo/entrypoints/cli/_command_suggestions.py`
+(`LazySubcommand.load`, the `decorate` hook call); `src/cadrumo/entrypoints/cli/_errors.py`
 (`decorate_typer_app` / `_decorate_typer_node`, and a new Click-tree walker);
-`src/aeat/entrypoints/cli/__init__.py` (the `_lazy` wiring that passes
+`src/cadrumo/entrypoints/cli/__init__.py` (the `_lazy` wiring that passes
 `decorate=_decorate_typer_app`); the shared sub-app objects are
-`src/aeat/entrypoints/cli/_config/__init__.py` (`config_app`) and its peers; the
-reproducing test lands under `src/aeat/entrypoints/cli/tests/`. No change to
+`src/cadrumo/entrypoints/cli/_config/__init__.py` (`config_app`) and its peers; the
+reproducing test lands under `src/cadrumo/entrypoints/cli/tests/`. No change to
 `config_app`'s definition or to any command body.
 
 ## Rationale

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#domain-boundary-audit'
 date: '2026-06-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-04-30-aeat-restructure-research]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
@@ -119,7 +119,7 @@ edges are exactly the managed debt D4 accepts. The import-surface cleanup is tra
 mechanically in plan Wave `W11` (Secure-storage public-surface import purity); the sibling
 adapter→application active-bucket-resolution inversion (`S60`/DB-31 B-4) is amplified into
 Wave `W10` (Active-bucket context resolution consolidated in core), which relocates
-`require_active_bucket_id` + `NoActiveProfileError` to a public `aeat.core` surface so every
+`require_active_bucket_id` + `NoActiveProfileError` to a public `cadrumo.core` surface so every
 layer depends inward.
 
 **D5 — `core` is the generic shared kernel only.** `core` holds cross-cutting

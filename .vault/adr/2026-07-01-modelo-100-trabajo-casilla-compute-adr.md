@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-research]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
 ---
 
-# `modelo-100-trabajo-casilla-compute` adr: `Modelo 100 trabajo-casilla auto-apply and cap: computed vs advisory` | (**status:** `proposed`)
+# `modelo-100-trabajo-casilla-compute` adr: `Modelo 100 trabajo-casilla auto-apply and cap: computed vs advisory` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -36,7 +36,7 @@ ADR decides how these three trabajo-net / previsión-social-cap gaps are modelle
 ## Considerations
 
 Figures verified verbatim against the bundled consolidated LIRPF
-`src/aeat/_data/corpus/normatives/html/ley-35-2006.html`:
+`src/cadrumo/_data/corpus/normatives/html/ley-35-2006.html`:
 
 - art. 19.2.f (anchor a19): "En concepto de otros gastos distintos de los anteriores,
   2.000 euros anuales", the +2.000 mobility increment (desempleado que acepta traslado,
@@ -91,7 +91,7 @@ figures ride the registry per revision, not Python literals (aeat-schema-central
 
 - **Locale corruption blocks Phase 1 prose.** New advisory findings need locale keys, and
   the locale catalogues are under a peer duplicate-key corruption. Phase 1 lands only once
-  that clears; keys are authored solely through `python -m aeat.locales set`
+  that clears; keys are authored solely through `python -m cadrumo.locales set`
   (aeat-locales-cli), never by hand.
 - **Parity gate on the 0019 COMPUTED flip (Phase 2).** AEAT lists 0019 as an INPUT box, so
   flipping it to COMPUTED requires the parity-gate treatment the art-20 ADR applied to 0023.

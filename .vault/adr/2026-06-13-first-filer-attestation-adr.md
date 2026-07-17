@@ -10,7 +10,7 @@ related:
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
 supersedes:
   - '2026-06-12-first-filer-attestation-adr'
-modified: '2026-07-15'
+modified: '2026-07-17'
 ---
 # `first-filer-attestation` adr: `operator-declared activity-start scoping (supersedes G313 grounding)` | (**status:** `accepted`)
 
@@ -30,7 +30,7 @@ to restore that reader.
 
 A business whose first-ever filing is the period in which its economic activity
 begins cannot file that period locally. The cross-period clean-state gate
-(`src/aeat/application/calculations/_cross_period_clean_state.py`) demands
+(`src/cadrumo/application/calculations/_cross_period_clean_state.py`) demands
 official AEAT evidence of prior-period filings that, for a genuine first filer,
 never legally existed. Local `file` requires a `verified_complete` revision, and
 `verify` blocks on `cross_period_dependency_unclean`, so the verify-export-file
@@ -73,10 +73,10 @@ distinct AEAT surfaces, confirmed against the authoritative AEAT sede:
   consultable data.
 
 The codebase reproduces the error:
-`src/aeat/adapters/outbound/aeat/sede/_censo_live.py` hardcodes
+`src/cadrumo/adapters/outbound/aeat/sede/_censo_live.py` hardcodes
 `G313_LAUNCHER_URL` to `/Sede/procedimientoini/G313.shtml` (the certificate
 procedure) while its docstring labels it "Mis Datos Censales" and its parser
-(`src/aeat/adapters/outbound/aeat/sede/_censo.py`) lifts the "Fecha de alta de la
+(`src/cadrumo/adapters/outbound/aeat/sede/_censo.py`) lifts the "Fecha de alta de la
 actividad" label from the data-page vocabulary. So the pull points at the
 certificate procedure but expects the data page.
 
@@ -88,7 +88,7 @@ censo pull has never returned a readable censo for a real profile: every
 authenticated `config profile censo pull` that reached AEAT refused with "AEAT
 sede G313 returned no readable censo for profile". The only `activity_start_date`
 ever populated for a real profile is the operator-typed
-`SetupAnswers.activity_start_date` (`src/aeat/core/setup_answers.py:214`,
+`SetupAnswers.activity_start_date` (`src/cadrumo/core/setup_answers.py:214`,
 ISO-8601 validated), which the deadline engine already consumes: `_engine.py:94`
 suppresses any obligation whose `closes_on < activity_start_date` (pre-start),
 fed from `profile.activity_start_date` at `_profiles.py:150` / `:240`.

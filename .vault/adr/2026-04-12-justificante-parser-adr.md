@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#justificante-parser'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-12-justificante-parser-research]]'
   - '[[2026-04-12-justificante-parser-plan]]'
@@ -68,7 +68,7 @@ lose accents on text extraction. The extractor normalises via
 
 ### 4. Error hierarchy
 
-All justificante errors inherit from :class:`aeat.core.errors.AeatError`:
+All justificante errors inherit from :class:`cadrumo.core.errors.CadrumoError`:
 
 - ``JustificanteError`` — root.
 - ``JustificanteParseError`` — any parse failure.
@@ -87,10 +87,11 @@ The live verification helper is a coroutine that accepts a CSV string
 result. **It never mutates AEAT-side state** — the public verify page is
 read-only by design, and we rely on that guarantee in the ADR.
 
-Because the live layer has a known flakiness in ``playwright_stealth``
-(`#41`), the live test ``pytest.skip``s on
-:class:`JustificanteVerificationError` instead of failing, so the unit
-suite remains the authoritative proof of parser correctness.
+Live verification is an explicit opt-in test surface and is absent from the
+default offline suite. Once enabled, a
+:class:`JustificanteVerificationError` is a real failure: it is never converted
+into a passing or ignored result. Parser correctness remains independently
+proved against the committed, licence-clean fixture corpus.
 
 ### 6. Fixture corpus: synthetic, committed, reference generator
 
@@ -106,7 +107,7 @@ only needed as a **dev dependency**, not a runtime dependency.
 ### 7. Public API surface
 
 Callers outside the subpackage must import **only** from
-:mod:`aeat.domain.justificante`. The private modules (``_schema``, ``_extract``,
+:mod:`cadrumo.domain.justificante`. The private modules (``_schema``, ``_extract``,
 ``_parser``, ``_parsers.*``, ``_verify``, ``_errors``) are implementation
 details and may be refactored without notice. The public exports are:
 
@@ -118,8 +119,8 @@ details and may be refactored without notice. The public exports are:
 
 ## Consequences
 
-- The submission engine (`#42`) can replace its Protocol stub for
-  ``Justificante`` with the real type on rebase.
+- The submission engine consumes the canonical ``Justificante`` type from the
+  public domain facade.
 - The status reader (`#43`) can pass a CSV string directly to
   ``verify_csv`` without depending on the justificante subpackage's
   persistence layer.

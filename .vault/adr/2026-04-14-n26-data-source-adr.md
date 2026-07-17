@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#n26-data-source"
 date: "2026-04-14"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-14-n26-data-source-research]]"
   - "[[2026-04-21-n26-data-source-audit]]"
@@ -62,12 +62,12 @@ The paired research document is `2026-04-14-n26-data-source-research`
 
 ## Constraints
 
-- Public API must continue to live under `aeat.domain.financial` and
-  `aeat.domain.financial.providers` only.
+- Provider parsing is exposed by `cadrumo.adapters.inbound.financial.providers`;
+  canonical raw transaction records come from `cadrumo.domain.transactions`.
 - New boundary types must be strict frozen pydantic v2 models with
   `enum.StrEnum` closed sets — the research records that the only
   cross-cutting type change required is a new `SourceFormat.PDF`
-  enum value in `src/aeat/domain/financial/_raw_transaction.py`.
+  enum value in `src/cadrumo/domain/transactions/_raw_transaction.py`.
 - No live tests against a real N26 account. Any provider that ships
   must honour the live-write safety charter and must not require
   hitting production banking infrastructure from CI.
@@ -75,7 +75,7 @@ The paired research document is `2026-04-14-n26-data-source-research`
   be scrubbed (synthetic IBAN / name / counterparty / amounts) with a
   consistent substitution so the fixtures exercise the parser
   end-to-end without leaking the user's real financial data.
-- No code changes under `src/aeat/` in this research issue. The ADR is
+- No code changes under `src/cadrumo/` in this research issue. The ADR is
   the terminal artefact for #106; implementation follows in the
   follow-up issues the PM will open.
 
@@ -92,7 +92,7 @@ the existing `CsvProvider` for the in-app CSV export channel.
 ## Implementation (shape for the follow-up issues, NOT code landed here)
 
 - **Primary path — `PdfN26Provider`** under
-  `src/aeat/domain/financial/providers/_pdf_n26.py`:
+  `src/cadrumo/adapters/inbound/financial/providers/_pdf_n26.py`:
   - Uses `pdfplumber` (MIT) as the sole new dependency; pinned in
     `pyproject.toml`.
   - Derives table boundaries from detected header-word positions on
@@ -122,13 +122,13 @@ the existing `CsvProvider` for the in-app CSV export channel.
   monthly statement cycle.
 - **Cross-cutting type change:** add `PDF = "pdf"` to the
   `SourceFormat` `StrEnum` in
-  `src/aeat/domain/financial/_raw_transaction.py`. One-line addition; no
+  `src/cadrumo/domain/transactions/_raw_transaction.py`. One-line addition; no
   other cross-cutting model changes.
 - **No new subpackages.** The implementation touches
-  `aeat.domain.financial.providers` only, plus the one-line enum addition
+  `cadrumo.adapters.inbound.financial.providers` only, plus the one-line enum addition
   above. Public API discipline holds.
 - **Testing:** colocated `@pytest.mark.unit` tests under
-  `src/aeat/domain/financial/providers/test_pdf_n26.py` against 3–5 scrubbed
+  `src/cadrumo/adapters/inbound/financial/providers/test_pdf_n26.py` against 3–5 scrubbed
   fixture PDFs the user supplies. No `@pytest.mark.live` tests for
   this provider. Live test gating continues to use
   `AEAT_LIVE_TESTS_ENABLED=1` as the canonical env var across the

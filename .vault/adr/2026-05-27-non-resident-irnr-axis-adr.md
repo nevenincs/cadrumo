@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#non-resident-irnr-axis'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
@@ -39,14 +39,13 @@ convenio, Spain-UK treaty post-Brexit.
 ### D2.1 — Add `fiscal_residency: FiscalResidency` enum to profile
 
 Add a closed `FiscalResidency` enum with members `RESIDENT` (IRPF filer) and
-`NON_RESIDENT` (IRNR filer). The field is mandatory on `TaxpayerProfile` with
-a default of `RESIDENT` for all existing records to preserve backward
-compatibility.
+`NON_RESIDENT` (IRNR filer). The field is mandatory on `TaxpayerProfile` and
+must be declared; absence is not interpreted as Spanish residence.
 
 ### D2.2 — Add `country_of_fiscal_residence: str` field to profile
 
 Add `country_of_fiscal_residence: str` as a mandatory ISO 3166-1 alpha-2
-country code. Defaults to `"es"` for existing records. The wizard captures
+country code. The wizard captures
 this during onboarding and the `work` CLI surface validates it against the
 list of countries with active double-taxation convenios published by AEAT.
 
@@ -59,7 +58,7 @@ benefit from the 19% rate vs the general 24% rate under LIRNR art. 25).
 
 ### D2.4 — Wire fiscal residency into the deadlines domain
 
-`DeadlineProfile` in `src/aeat/domain/deadlines/_profiles.py` receives a
+`DeadlineProfile` in `src/cadrumo/domain/deadlines/_profiles.py` receives a
 `fiscal_residency` field so deadline windows can differentiate between IRPF
 filing periods (April 1 – June 30) and IRNR submission periods
 (model-100 vs model-210 window).
@@ -95,22 +94,20 @@ for exhaustiveness guards on string comparisons.
   engine (M210). This is intentional: the schema axis is required now for
   correct deadline routing and advisory output; the M210 engine is a future
   campaign item.
-- **Backward compatibility.** Defaulting `fiscal_residency = RESIDENT` and
-  `country_of_fiscal_residence = "es"` on all existing records avoids a
-  migration. The trade-off is that existing profiles silently assume residency
-  even if the operator intended otherwise; this is an acceptable risk given
-  that all current beta personas are Spanish residents.
+- **No inferred residency.** Existing records without the axis require
+  operator resolution. The system does not silently declare Spanish residence
+  or manufacture a country of fiscal residence.
 - **Derived property vs stored field.** `ue_eee_status` is a pure derivation
   from `country_of_fiscal_residence` and does not need to be persisted. The
   trade-off is that the EU/EEA country list must be kept in sync with
   membership changes; the list is encoded as a `frozenset` constant in
-  `src/aeat/domain/deadlines/_models.py`.
+  `src/cadrumo/domain/deadlines/_models.py`.
 
 ## D5 — Consequences
 
 - `TaxpayerProfile` gains `fiscal_residency`, `country_of_fiscal_residence`,
-  and the derived `ue_eee_status` property. All existing persisted profiles
-  remain valid with their defaults.
+  and the derived `ue_eee_status` property. Records missing required residency
+  evidence are refused until corrected.
 - The wizard `_setup_answers.py` and `_catalogue.py` capture fiscal residency
   during onboarding. The 183-day advisory is emitted when a non-EU
   `country_of_fiscal_residence` is set, reminding the operator to confirm

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-latency-budget'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-ledger-filter-period-adr]]"
   - "[[2026-07-06-ledger-perf-optimization-research]]"
@@ -40,19 +40,19 @@ scale to meet a documented 3.0s P95 latency budget. The correctness half of #408
 closed and reviewed: all five ledger aggregators read the full encrypted catalogue via
 `TransactionCatalogueRepository.load()`, so the `OUTSIDE_PERIOD` silent-under-declaration
 bug class is eliminated. The performance half is NOT met. The standing benchmark
-(`src/aeat/application/aggregation/tests/test_ledger_scale_benchmark.py`, 30k tx / 10
+(`src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py`, 30k tx / 10
 years, n=20, nearest-rank P95, real adapters) measured in the latest #408 pass: ledger
 read P95 7.204s, modelo calculate (M130, 24 quarters) P95 7.828s, and the then
 index-backed annual expense aggregation P95 3.883s (mean 2.824s) — all over 3.0s.
 
 Root cause: every aggregation decrypt-scans the full per-bucket catalogue because the
 period/date fact lives only inside the encrypted payload. A plaintext routing index
-exists — `TransactionDateIndexRow` (`src/aeat/adapters/persistence/storage/sql/_orm.py`,
+exists — `TransactionDateIndexRow` (`src/cadrumo/adapters/persistence/storage/sql/_orm.py`,
 exactly five columns: `id`, `bucket_id`, `transaction_id`, `filing_date`,
 `filing_year`; schema locked by live-table introspection in
 `test_transaction_date_index.py`) — served through
 `TransactionCatalogueRepository.load_for_date_range`
-(`src/aeat/adapters/persistence/profile/transactions.py:336`). The simple approach,
+(`src/cadrumo/adapters/persistence/profile/transactions.py:336`). The simple approach,
 pre-filtering each aggregator's input with `load_for_date_range`, was implemented,
 proven wrong, and reverted (commit `765288da2e`; regression tests in `34ef174865`):
 pre-filtering makes the `OUTSIDE_PERIOD` diagnostic structurally unreachable (an
@@ -172,7 +172,7 @@ rows that undergo decrypt-and-validate, not by making crypto faster.
   transaction-date index key) is decided; it stays on full `.load()`.
 - Parent-feature stability: the date index, its schema-lock and fallback tests, the
   per-window memoization in `_MemoizedTransactionCatalogueRepository`
-  (`src/aeat/application/modelo/_calculation_actions.py`), and the scale benchmark are
+  (`src/cadrumo/application/modelo/_calculation_actions.py`), and the scale benchmark are
   all landed and green. The benchmark runs on a heavily shared machine; large
   run-to-run variance is documented in the #408 thread, so the budget verdict at
   implementation time must come from fresh paired runs, not from this ADR's

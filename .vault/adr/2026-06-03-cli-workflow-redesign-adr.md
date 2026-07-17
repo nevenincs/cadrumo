@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-cli-workflow-redesign-research]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
@@ -52,7 +52,7 @@ authority and is split out as a separate ADR scope. The composition pattern
 turns on three observations.
 
 First, the existing primitives are not isolated. `ProfileRepository.rename` is
-re-exported as `rename_profile` through `aeat.application.user_profile`.
+re-exported as `rename_profile` through `cadrumo.application.user_profile`.
 `delete_profile_with_lifecycle_span` and `remove_profile_bucket_directory`
 are co-exported at the same package boundary. The bundle serialiser and
 deserialiser, plus the `UserProfilePortableExport` contract and the
@@ -92,7 +92,7 @@ helper. The audit-finding `bind_error_code` opacity captured in
 `2026-06-03-cross-domain-continuity-audit.md` Finding 1 means any new error
 class declared by the service MUST land its `ErrorCode` registry entry in
 the same commit as the class declaration, or peer test runs see the
-`AeatError subclass ... is missing a declared ErrorCode registry entry`
+`CadrumoError subclass ... is missing a declared ErrorCode registry entry`
 refusal until the registry entry arrives.
 
 The `search` verb is not implementable under this ADR. Query syntax (literal
@@ -104,7 +104,7 @@ land before the search Step can open.
 
 ## Implementation
 
-The service lives at `src/aeat/application/bucket_maintenance/` as a new
+The service lives at `src/cadrumo/application/bucket_maintenance/` as a new
 package. The package `__init__.py` exposes the service class and the
 Pydantic command + result contracts; everything the operator-CLI handler
 imports comes through that top-level surface. Internal modules
@@ -133,7 +133,7 @@ bucket-search ADR.
 
 Pydantic command and result contracts (`RenameBucketCommand` /
 `RenameBucketResult`, etc.) live in `_contracts.py`. They use the existing
-`BucketId` core identity type from `src/aeat/core/identity.py`, the existing
+`BucketId` core identity type from `src/cadrumo/core/identity.py`, the existing
 `SensitivityClass` core enum for browse redaction, and the existing
 `BucketEventType` / `BucketEventObjectType` closed catalogues for event
 construction. The closed-set typing rule (per the architecture-boundaries
@@ -142,8 +142,8 @@ every closed-value field as its enum, never as a bare string.
 
 Three preconditions land alongside or before the per-verb implementation
 Steps: (1) `BUCKET = "bucket"` is added to `BucketEventObjectType` in
-`src/aeat/domain/buckets/_event.py` with a corresponding value-equality test
-in `src/aeat/domain/buckets/test_event_catalogue.py`; (2)
+`src/cadrumo/domain/buckets/_event.py` with a corresponding value-equality test
+in `src/cadrumo/domain/buckets/test_event_catalogue.py`; (2)
 `serialize_profile_bundle`, `deserialize_profile_bundle`,
 `UserProfilePortableExport`, and `SUPPORTED_BUNDLE_SCHEMA_VERSIONS` are
 promoted to the application package `__all__`; (3) the service-side error

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-domain-continuity'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-20-classification-harmonization-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
@@ -109,9 +109,9 @@ authority; a rule pass-over cannot revoke it without explicit consent.
   (pattern either matches or not), so confidence is inapplicable in the typical
   case.
 - `LedgerClassificationRule` is a domain entity — it belongs in
-  `src/aeat/domain/transactions/` and must not carry application or adapter
+  `src/cadrumo/domain/transactions/` and must not carry application or adapter
   imports.
-- The rule repository belongs in `src/aeat/application/ledger/` — application
+- The rule repository belongs in `src/cadrumo/application/ledger/` — application
   layer, not domain.
 - The CLI sub-app `rule` is a sub-command group under `aeat app ledger`, not a
   new root command (preserving the two-root `config` / `app` constraint from
@@ -132,7 +132,7 @@ rules (regex rules round-trip cleanly if a `pattern_kind` field with default
 
 ### D2 — Domain model: `LedgerClassificationRule`
 
-A frozen pydantic model in `src/aeat/domain/transactions/_classification_rule.py`:
+A frozen pydantic model in `src/cadrumo/domain/transactions/_classification_rule.py`:
 
 ```
 rule_id: str          # SHA-256 hex of (description_pattern + classification + category_id); 64 chars
@@ -151,7 +151,7 @@ same ID and the repository's `save` overwrites the prior entry.
 ### D3 — Storage: profile-scoped `SecureBoundRepository`
 
 Option A is chosen. `LedgerClassificationRuleRepository` in
-`src/aeat/application/ledger/_rule_repository.py`:
+`src/cadrumo/application/ledger/_rule_repository.py`:
 
 ```
 namespace  = "aeat.ledger.classification.rules"
@@ -164,7 +164,7 @@ sorted by `(priority, created_at)` ascending for deterministic ordering.
 
 ### D4 — Actions: `add_classification_rule` + `apply_classification_rules`
 
-Both actions in `src/aeat/application/ledger/_actions.py`.
+Both actions in `src/cadrumo/application/ledger/`.
 
 `add_classification_rule(bucket_id, pattern, classification, *, category_id, priority, actor, rule_repository)`:
 - Validates the regex compiles (`re.compile(pattern)` — raises `ValueError` on
@@ -212,7 +212,7 @@ stored before running `rule apply`.
 
 ### D8 — `apply_classification_rules` result model
 
-`ApplyRulesResult(BaseModel)` in `src/aeat/application/ledger/_models.py`:
+`ApplyRulesResult(BaseModel)` in `src/cadrumo/application/ledger/_models.py`:
 
 ```
 rules_evaluated: int

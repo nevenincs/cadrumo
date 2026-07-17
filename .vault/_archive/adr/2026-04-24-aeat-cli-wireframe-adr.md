@@ -6,7 +6,6 @@ date: '2026-04-24'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-17-export-first-adr]]"
-  - "[[2026-04-18-live-submit-cli-excision-adr]]"
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
 superseded_by: '2026-05-02-aeat-cli-redesign-adr'

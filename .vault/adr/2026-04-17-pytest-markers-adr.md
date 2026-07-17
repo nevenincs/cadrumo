@@ -2,20 +2,18 @@
 tags:
   - "#adr"
   - "#pytest-markers"
-date: 2026-04-17
-modified: '2026-07-10'
+date: '2026-04-17'
 related:
   - "[[2026-04-17-pytest-markers-research]]"
   - "[[2026-04-16-live-write-test-audit-adr]]"
   - "[[2026-04-16-live-write-test-audit-research]]"
-  - "[[2026-04-12-submission-engine-adr]]"
   - "[[2026-04-13-filing-complementaria-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
+superseded_by: '2026-06-05-test-topology-refactor-adr'
+modified: '2026-07-17'
 issue: "#163"
 charter: "#116"
 ---
-
-# `pytest-markers` adr: `granular-domain-markers-and-live-read-live-write-split` | (**status:** `accepted`)
+# `pytest-markers` adr: `granular-domain-markers-and-live-read-live-write-split` | (**status:** `superseded`)
 
 ## Problem Statement
 
@@ -28,19 +26,19 @@ Issue `#163` requires the taxonomy to be promoted to first-class markers, the li
 
 ## Considerations
 
-- Roughly 140 test modules live under `src/aeat/` (Rust-style colocated) plus a small `tests/` tree. 14 modules are currently `live`-marked; 0 exercise a live AEAT write under the proposed taxonomy.
+- Roughly 140 test modules live under `src/cadrumo/` (Rust-style colocated) plus a small `tests/` tree. 14 modules are currently `live`-marked; 0 exercise a live AEAT write under the proposed taxonomy.
 - The test suite already mandates module-level colocation, so a module-level `pytestmark = [...]` convention aligns with the existing layout better than per-function marker scattering (which is the current practice in ~80% of files).
 - The live-write ban must layer on top of charter `#116`, not replace any existing rule. The runtime refusal in `SubmissionEngine.__init__` (charter `R5`) and the `AEAT_LIVE_SUBMIT_ENABLED` env gate (`R3`) remain the canonical write-prevention guards. The pytest layer contributes defence in depth: a test cannot survive to runtime if it was never collected.
 - Any gate that relies only on an environment variable can be flipped by a CI runner, a leaked secret, or an automation script. A TTY check adds a physical-presence factor that is orders of magnitude harder to satisfy accidentally.
 - The charter `R4` operator-confirmation pattern (operator types a modelo+period phrase exactly) sets the precedent for a long, hard-to-type confirmation phrase. The pytest bypass reuses that shape.
 - Nine new markers must be registered in the pyproject markers table so pytest does not emit `PytestUnknownMarkWarning` for any path in the suite.
-- Env-var alignment between `env/.env.example`, `src/aeat/config.py` `Settings`, and `tests/test_config.py` is a repo-wide invariant; new env vars for the bypass must be staged in all three places in the implementation plan.
+- Env-var alignment between `env/.env.example`, `src/cadrumo/core/config.py` `Settings`, and `tests/test_config.py` is a repo-wide invariant; new env vars for the bypass must be staged in all three places in the implementation plan.
 
 ## Constraints
 
 - **Charter `#116` R1..R6 are invariant.** This ADR cannot weaken any of them; it can only add further enforcement layers.
 - **Zero `live_write` tests exist today and none are planned by this feature.** The marker and the bypass are dormant infrastructure, shipped so that any future write-shaped probe is required to carry the marker and is collection-banned by default.
-- **Rust-style colocation.** Tests live inside each module directory under `src/aeat/<subpackage>/test_*.py`. Module-level `pytestmark` is cheap to apply uniformly there.
+- **Rust-style colocation.** Tests live inside each module directory under `src/cadrumo/<subpackage>/test_*.py`. Module-level `pytestmark` is cheap to apply uniformly there.
 - **No mocks/patches in live tests.** `CLAUDE.md` already bans mocks in `live`-marked modules; the split inherits that ban across both `live_read` and `live_write`.
 - **pyproject `testpaths` includes both `src` and `tests`.** The conftest hook must live at a location pytest picks up for items under both trees - `tests/conftest.py` is the canonical choice.
 - **GitHub Actions CI runs `just test` on every PR.** `just test` must remain a fast unit-only run after the migration.
@@ -96,7 +94,7 @@ Missing or mismatching any one factor causes the collection hook to silently dro
 
 ### Marker integrity test
 
-`tests/test_marker_integrity.py` (new) walks every test module under `src/aeat/` and `tests/` via `ast`, asserts each module has exactly one module-level `pytestmark = [...]` assignment, and asserts the list contains exactly one access marker plus at least one domain marker. CI reports surface this as a unit-test failure rather than a pytest usage error, which is friendlier for drift triage.
+`tests/test_marker_integrity.py` (new) walks every test module under `src/cadrumo/` and `tests/` via `ast`, asserts each module has exactly one module-level `pytestmark = [...]` assignment, and asserts the list contains exactly one access marker plus at least one domain marker. CI reports surface this as a unit-test failure rather than a pytest usage error, which is friendlier for drift triage.
 
 ### Marker registration
 
@@ -117,7 +115,7 @@ Google scratch tests (`_test_docs_live.py`, `_test_drive_live.py`, `_test_sheets
 High-level, sequenced in one mechanical refactor PR:
 
 - Update `pyproject.toml`: register the nine new markers, remove `live`, change `addopts` to `-v --tb=short -m 'unit'`.
-- Add `aeat_live_write_unsafe_bypass: bool = False` and `aeat_live_write_unsafe_bypass_confirm: str = ""` to `src/aeat/config.py` `Settings` with loud warning descriptions, and mirror in `env/.env.example`. `tests/test_config.py` enforces alignment.
+- Add `aeat_live_write_unsafe_bypass: bool = False` and `aeat_live_write_unsafe_bypass_confirm: str = ""` to `src/cadrumo/core/config.py` `Settings` with loud warning descriptions, and mirror in `env/.env.example`. `tests/test_config.py` enforces alignment.
 - Rewrite `tests/conftest.py` with the `pytest_collection_modifyitems` hook shown in the research doc (three-factor bypass, drop semantics, usage-error raises).
 - Add `tests/test_marker_integrity.py`.
 - Migrate all ~130 test modules: insert module-level `pytestmark = [...]` with the correct access and domain markers per the inventory in the research doc, delete per-function `@pytest.mark.unit` / `@pytest.mark.live` decorators, rename remaining `@pytest.mark.live` function-level references to `live_read`.
@@ -126,7 +124,7 @@ High-level, sequenced in one mechanical refactor PR:
 
 Verification after the refactor:
 
-- `uv run pytest --collect-only src/aeat/adapters/outbound/aeat/export/ -m live_write` must collect zero items by default and continue to collect zero even with `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1` alone or `AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM` alone.
+- `uv run pytest --collect-only src/cadrumo/adapters/outbound/aeat/export/ -m live_write` must collect zero items by default and continue to collect zero even with `AEAT_LIVE_WRITE_UNSAFE_BYPASS=1` alone or `AEAT_LIVE_WRITE_UNSAFE_BYPASS_CONFIRM` alone.
 - `tests/test_marker_integrity.py` must pass.
 - `just test` must be unit-only. `just test-live` must union unit and live_read.
 - `tests/test_config.py` must pass with the two new env vars.
@@ -148,7 +146,7 @@ Verification after the refactor:
 - **Two-factor bypass without TTY check.** Rejected: both factors would be environment variables; any CI runner, any leaked `.env`, any automation script that exports the pair would satisfy the gate. The TTY check is the only factor that a non-interactive process cannot fabricate.
 - **Separate `live_scratch_write` marker for Google scratch round-trips.** Rejected for this feature: out of scope of charter `R1`, adds taxonomy surface area with no current consumer. Left as a future option if the project later wants to audit scratch writes separately.
 - **Additional `domain_llm`, `domain_identity`, `domain_config`, `domain_models` carve-outs.** Rejected: sub-folders of already-covered domains, do not survive the "is it a useful scoping axis for CI shards or audits?" test. Can be introduced later if their test populations grow.
-- **Placing the hook at repo-root `conftest.py` instead of `tests/conftest.py`.** Rejected for this feature: `tests/conftest.py` already exists and pytest picks it up for items under both `src/` and `tests/` because `testpaths` shares the rootdir. If verification shows items under `src/aeat/...` escape the hook, the plan verification step flags it and the fix is to add a `src/aeat/conftest.py` that re-exports the hook or to promote it to the repo root - mechanical, not architectural.
+- **Placing the hook at repo-root `conftest.py` instead of `tests/conftest.py`.** Rejected for this feature: `tests/conftest.py` already exists and pytest picks it up for items under both `src/` and `tests/` because `testpaths` shares the rootdir. If verification shows items under `src/cadrumo/...` escape the hook, the plan verification step flags it and the fix is to add a `src/cadrumo/conftest.py` that re-exports the hook or to promote it to the repo root - mechanical, not architectural.
 - **Removing charter `R5` runtime refusal now that the collection hook exists.** Explicitly rejected. The collection hook is additive defence in depth; `R5` remains the last-line runtime refusal and must not be weakened. The two layers are independent - removing either one weakens the safety posture.
 
 ## Consequences
@@ -181,7 +179,7 @@ Verification after the refactor:
 - Research: `[[2026-04-17-pytest-markers-research]]` - full current-state survey, per-module classification inventory, hook source sketch, recipe shapes.
 - Charter #116 (live-AEAT-write safety charter): rules R1..R6 referenced inline; R1 (no automated live write), R3 (`AEAT_LIVE_SUBMIT_ENABLED` must never be set in pytest context), R4 (operator confirmation phrase pattern), R5 (`SubmissionEngine.__init__` runtime refusal under `PYTEST_CURRENT_TEST`).
 - Prior audit: `[[2026-04-16-live-write-test-audit-adr]]` and `[[2026-04-16-live-write-test-audit-research]]` - established marker integrity as the primary test-boundary tripwire; this ADR formalises that principle into nine markers, a hook, and an integrity test.
-- Submission engine: `[[2026-04-12-submission-engine-adr]]` - source of the runtime refusal (R5) that this ADR layers on top of.
+- Submission engine: `retired architecture decision` - source of the runtime refusal (R5) that this ADR layers on top of.
 - Filing complementaria: `[[2026-04-13-filing-complementaria-adr]]` - consumer of the dry-run-only live submission path that remains `live_read` after the split.
-- Module structure: `[[2026-04-12-base-module-structure-adr]]` - Rust-style colocated tests convention that module-level `pytestmark` aligns with.
+- Module structure: `retired architecture decision` - Rust-style colocated tests convention that module-level `pytestmark` aligns with.
 - Issue #163 - originating feature request.

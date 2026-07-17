@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - "[[2026-04-25-error-code-registry-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
@@ -26,7 +26,7 @@ domain services.
 CLI logging and error handling MUST use the central facilities:
 `cadrumo.core.logging.get_logger(__name__)`,
 `cadrumo.core.logging.SecretScrubbingFilter`, and the public
-`cadrumo.core.errors` facade: `AeatError`, `ERROR_REGISTRY`, `ErrorCode`,
+`cadrumo.core.errors` facade: `CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`,
 `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`,
 `render_error_json`, `get_error_exit_code`, and
 `get_registered_error_code`. CLI command execution MUST pass through
@@ -45,18 +45,18 @@ CLI output MUST use the established emitters, including
 `aeat app overview status` crashes with:
 
 ```text
-ValueError: AeatError subclass cadrumo.application.modelo._action_errors.AmendmentVerificationRefusedError is missing a declared ErrorCode registry entry
+ValueError: CadrumoError subclass cadrumo.application.modelo._action_errors.AmendmentVerificationRefusedError is missing a declared ErrorCode registry entry
 ```
 
 The original defect was class-scoped: adding the missing row corrected one
-exception but did not prove that every other production `AeatError` had exactly
+exception but did not prove that every other production `CadrumoError` had exactly
 one code. Without structural enforcement, a gap remains quiet until the
 defining module is imported or the exception reaches the rendering boundary.
 
 ## Considerations
 
 `ERROR_REGISTRY` is the central authority for translating internal
-exceptions into operator-facing error envelopes. Any `AeatError` subclass
+exceptions into operator-facing error envelopes. Any `CadrumoError` subclass
 without an entry cannot be routed through `command_error_boundary`,
 `render_error_text`, or `render_error_json`. The defect is structural
 rather than localized: every subclass added in the future without an
@@ -75,7 +75,7 @@ silently violates that contract.
   queue MUST resolve against the same catalogue on the first registry lookup;
   it MUST NOT create a fallback or an alternate authority.
 - CI MUST deterministically import-walk the complete production `cadrumo.*`
-  package, prove every concrete `AeatError` has one registered code, and prove
+  package, prove every concrete `CadrumoError` has one registered code, and prove
   every code has one class owner.
 - No compatibility shim that ships a fallback `ErrorCode` for unregistered
   subclasses is acceptable; silent fallback masks the defect rather than
@@ -85,7 +85,7 @@ silently violates that contract.
 
 The package declares three complementary enforcement points; all MUST exist.
 
-1. **Class-declaration binding.** `AeatError.__init_subclass__` calls
+1. **Class-declaration binding.** `CadrumoError.__init_subclass__` calls
    `cadrumo.core.errors.bind_error_code`. Once the explicit qualified-class
    catalogue is loaded, declaring an unregistered subclass raises `ValueError`
    while its defining module is imported. Production does not perform a
@@ -103,12 +103,12 @@ The package declares three complementary enforcement points; all MUST exist.
 3. **CI exhaustiveness test.** The unit suite beside the central errors module
    uses deterministic `pkgutil.walk_packages` traversal rooted at `cadrumo`,
    imports every production package submodule, collects every concrete
-   `AeatError` subclass, and verifies:
+   `CadrumoError` subclass, and verifies:
    - every subclass binds to a declared code;
    - every code maps to exactly one subclass;
    - no qualified class or code is declared twice;
    - every category is represented; and
-   - production raise sites neither instantiate bare `AeatError` nor reference
+   - production raise sites neither instantiate bare `CadrumoError` nor reference
      an unresolved registered subclass.
 
 All three enforcement points consult the same explicit catalogue and public
@@ -119,7 +119,7 @@ land in that catalogue in the same change as the class.
 ## Rationale
 
 The defect class is registry drift: a structural invariant ("every concrete
-`AeatError` has exactly one `ErrorCode`") cannot depend on code review and
+`CadrumoError` has exactly one `ErrorCode`") cannot depend on code review and
 reactive patches. Declaration-time binding catches ordinary imports early,
 the narrowly scoped deferred queue handles only the registry's own
 initialization cycle, and the deterministic CI walk supplies complete-package
@@ -134,7 +134,7 @@ production startup traversal.
   first registry resolution, but it cannot manufacture a code or admit an
   undeclared class.
 - Full-package traversal is a CI responsibility, not a production startup cost.
-- Adding a new `AeatError` subclass requires adding the corresponding
+- Adding a new `CadrumoError` subclass requires adding the corresponding
   `ErrorCode` entry in the same PR. The CI test refuses merges
   otherwise.
 - The crash trail surfaced by the audit on `aeat app overview status` is

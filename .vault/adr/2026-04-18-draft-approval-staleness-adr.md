@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#draft-approval-staleness'
 date: '2026-04-18'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-18-draft-approval-staleness-research]]'
   - '[[2026-04-17-export-first-adr]]'
@@ -21,21 +21,21 @@ catalogue, category mappings, or schema/formula context change.
 
 ## Considerations
 
-The existing `draft_id` in `src/aeat/application/filing/_schema.py` is intentionally scoped
+The existing `draft_id` in `src/cadrumo/application/filing/_schema.py` is intentionally scoped
 to the filing payload. It is stable and useful, but it is not broad enough to
 represent the full review surface. The live-submit checksum in
-`src/aeat/adapters/outbound/aeat/export/_confirm.py` is likewise deterministic but remains
+`src/cadrumo/adapters/outbound/aeat/export/_confirm.py` is likewise deterministic but remains
 submission-oriented and draft-local.
 
 The branch already exposes the upstream state surfaces that can invalidate an
 approval:
 
-- filing payload identity and validation outcome in `src/aeat/filing`
+- filing payload identity and validation outcome in `src/cadrumo/filing`
 - transaction catalogue content and semantic classification state in
-  `src/aeat/domain/financial/transactions`
-- category profile mappings in `src/aeat/domain/financial/categories`
-- casilla schema and formula/ruleset context in `src/aeat/filing` and
-  `src/aeat/formulas`
+  `src/cadrumo/domain/transactions`
+- category profile mappings in `src/cadrumo/domain/categories`
+- casilla schema and formula/ruleset context in `src/cadrumo/filing` and
+  `src/cadrumo/formulas`
 
 The review decision therefore needs a persisted provenance object that can be
 recomputed against those same surfaces later. The resulting stale signal must

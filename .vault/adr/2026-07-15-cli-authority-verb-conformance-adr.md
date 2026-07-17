@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
@@ -69,9 +69,8 @@ application wildcards remain forbidden, and real-adapter test seams may cross
 through a shared `cadrumo.tests` helper only by a live, narrow route.
 
 This amendment also corrects this ADR's own accepted certificate-keyring
-migration language.  `cadrumo.core.COMPATIBILITY_REGIME` is currently
-`PRE_RELEASE`; therefore `no-legacy-compatibility` governs unchanged.  The
-unreleased certificate keyring backend, selector, schema, tests, and
+migration language. Cadrumo is unreleased, so `no-legacy-compatibility`
+governs unconditionally. The unreleased certificate keyring backend, selector, schema, tests, and
 documentation are deleted rather than migrated, reconciled, probed, cleaned up
 through a compatibility path, or preserved behind a fallback.  The native
 Windows Credential Manager, macOS Keychain, and Linux Secret Service migration
@@ -219,8 +218,8 @@ duplicates once DATA and AUTH move to their canonical doors.
 - Tests use real services, repositories, encrypted storage, pointer files,
   sessions, locks, certificate payloads, and CLI invocation.  Fakes, mocks,
   monkeypatches, skips, and mirrored business logic are forbidden.
-- `COMPATIBILITY_REGIME == PRE_RELEASE` is binding.  Delete the certificate
-  keyring backend and every selector, factory branch, schema field, locale,
+- The unconditional pre-release no-legacy hard cut is binding. Delete the
+  certificate keyring backend and every selector, factory branch, schema field, locale,
   test, documentation path, migration, reconciliation, fallback, and
   certificate-specific native integration obligation attached to it.  Do not
   disturb the separate master-key OS-keyring custody implementation.

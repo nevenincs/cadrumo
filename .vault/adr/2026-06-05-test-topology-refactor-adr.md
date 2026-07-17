@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#test-topology-refactor'
+  - "#adr"
+  - "#test-topology-refactor"
 date: '2026-06-05'
-modified: '2026-07-10'
 related:
-  - '[[2026-04-12-base-module-structure-adr]]'
-  - '[[2026-04-17-pytest-markers-research]]'
-  - '[[2026-04-21-integration-tests-ci-research]]'
-  - '[[2026-06-01-metastate-zero-tolerance-research]]'
-  - '[[2026-06-04-module-test-coverage-research]]'
+  - "[[2026-04-17-pytest-markers-research]]"
+  - "[[2026-04-21-integration-tests-ci-research]]"
+  - "[[2026-06-01-metastate-zero-tolerance-research]]"
+  - "[[2026-06-04-module-test-coverage-research]]"
+supersedes:
+  - '2026-04-17-pytest-markers-adr'
+modified: '2026-07-17'
 ---
-
 # `test-topology-refactor` adr: `hexagonal tests folders with marker-complete metadata-free suites` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -30,23 +30,37 @@ AEAT external state-changing operations are not a test category, not a marker, a
 
 Process and runtime-cost markers are not architectural vocabulary. Markers such as `fixture_tier_l3`, `workbook_parity`, `slow`, `inventory`, and campaign-derived selectors must be retired unless a later ADR proves that one of them represents a durable product boundary. Documentation-specific execution selectors may exist only in documentation tooling, not as general source-test architecture markers.
 
-The prior base module structure ADR accepted colocated tests directly under packages, with examples such as `src/aeat/domain/modelos/test_smoke.py`. That decision is superseded only for the final directory shape: test ownership stays domain-local, but test files must live under a `tests/` child directory of the owning package or module boundary.
+Earlier topology allowed tests directly beside production modules. The accepted
+final shape keeps domain-local ownership while requiring a `tests/` child
+directory under the owning `src/cadrumo` package boundary.
 
 Existing marker integrity checks and pytest configuration are structural gates, but their vocabulary is part of the refactor target. This refactor must keep strict marker enforcement while replacing non-hexagonal marker names, metadata markers, and any representation of forbidden AEAT external mutation.
 
-Pytest discovery remains anchored under `src/aeat`, but the delivered discovery pattern must be only `test_*.py`. The current `_test_*.py` pattern is a mistake to retire during this refactor. The new topology moves test files within that discovery root into domain-local `tests/` folders; it does not reintroduce a repository-root `tests/` tree.
+Pytest discovery remains anchored under `src/cadrumo`, and the discovery pattern
+is only `test_*.py`. Tests live in domain-local `tests/` folders; there is no
+parallel repository-root test implementation.
 
 The suite is too large to trust path movement alone. After each relocation slice, semantic verification must use the vaultspec RAG index and searches to find nearby test domains, stale duplicate assertions, and unmerged overlap.
 
 ## Constraints
 
-Every Python test file must live under a parent directory named `tests`. A package-level test for `src/aeat/application/modelo` belongs under `src/aeat/application/modelo/tests/`. A package-root or project-structure test belongs under the nearest legitimate `tests/` harness, such as `src/aeat/tests/`, only when it is truly cross-cutting.
+Every Python test file must live under a parent directory named `tests`. A
+package-level test for `src/cadrumo/application/modelo` belongs under
+`src/cadrumo/application/modelo/tests/`. A package-root or project-structure
+test belongs under `src/cadrumo/tests/` only when it is truly cross-cutting.
 
 Every Python test module filename must start with `test_`. Leading-underscore test filenames such as `_test_*.py` and suffix-style names such as `*_test.py` are invalid final topology, even when pytest can collect them.
 
 No new naked test files may be introduced beside production modules. A single test file still gets a `tests/` directory; small size is not an exception.
 
 Each test module must keep exactly one execution-scope marker and at least one hexagonal layer marker at module level. Deterministic offline tests use `unit`; deterministic cross-layer tests use `integration`; allowed online tests that read from AEAT or another external service use `aeat_live` plus the owning hexagonal layer marker.
+
+An owned local subprocess does not by itself make a test cross-layer or live.
+A deterministic test of one adapter owner may launch its production browser or
+worker process against local inputs and remain `unit`; it must own and reap the
+process and must not contact an external network or service. Plugin-provided
+browser fixtures and real remote navigation remain `aeat_live`, while a test
+that composes multiple project layers remains `integration`.
 
 Integration-style tests that compose multiple in-process project layers must not hide behind a vague unit marker. They carry `integration` when they verify cross-layer behavior and remain offline. Integration-style tests that call an allowed online service must carry `aeat_live`; they are not allowed to hide behind `unit`.
 
@@ -60,7 +74,10 @@ The relocation must preserve import behavior without relying on fakes, stubs, mo
 
 The target topology is domain-local `tests/` folders. A test that asserts one package's behavior moves into that package's `tests/` directory. A test that spans several packages moves to the narrowest shared architectural owner and carries all relevant domain markers. A cross-cutting integrity gate remains in the package-level test harness only when no more specific owner exists.
 
-The marker-integrity gate must be updated in the same migration stream so it scans the relocated files under `src/aeat`, continues to require module-level `pytestmark`, and additionally rejects any Python test file whose path lacks a `tests` segment or whose basename does not start with `test_`. During batch execution, temporary coexistence of old and new paths is allowed only inside an active, unclosed relocation slice; the closeout state has no fallback naked-test convention and no underscore-prefixed test pattern.
+The marker-integrity gate scans `src/cadrumo`, requires module-level
+`pytestmark`, and rejects any Python test file whose path lacks a `tests`
+segment or whose basename does not start with `test_`. The final topology has
+no naked-test fallback and no underscore-prefixed test pattern.
 
 Markers are reassigned during movement, not after movement. Relocation work must classify the owned hexagonal boundary first, then place the test under the matching owner, then verify the module-level `pytestmark` against the new marker registry.
 

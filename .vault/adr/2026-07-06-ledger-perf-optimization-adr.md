@@ -1,23 +1,24 @@
 ---
 tags:
-  - '#adr'
-  - '#ledger-perf-optimization'
+  - "#adr"
+  - "#ledger-perf-optimization"
 date: '2026-07-06'
-modified: '2026-07-10'
 related:
   - "[[2026-07-06-ledger-perf-optimization-reference]]"
   - "[[2026-07-06-ledger-perf-optimization-research]]"
   - "[[2026-07-05-ledger-latency-budget-adr]]"
   - "[[2026-07-06-ledger-latency-budget-adr]]"
+supersedes:
+  - '2026-07-06-ledger-latency-budget-adr'
+modified: '2026-07-17'
 ---
-
-# `ledger-perf-optimization` adr: `write-path serialization cost: dirty-set save vs serialization-carry cache` | (**status:** `proposed`)
+# `ledger-perf-optimization` adr: `write-path serialization cost: dirty-set save vs serialization-carry cache` | (**status:** `accepted`)
 
 ## Problem Statement
 
 Every ledger mutation — including a one-row `ledger add` / `update` / `classify` —
 funnels into `TransactionCatalogueRepository.save`
-(`src/aeat/adapters/persistence/profile/transactions.py:310`) or
+(`src/cadrumo/adapters/persistence/profile/transactions.py:310`) or
 `save_with_secure_object_writes` (`transactions.py:330`), whose `_reconcile`
 (`transactions.py:671`) discovers the changed row by re-deriving content identity for
 the ENTIRE catalogue: it re-parses the ~30k-id encrypted membership envelope

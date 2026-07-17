@@ -5,22 +5,19 @@ tags:
 date: '2026-05-21'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-research]]"
-  - "[[2026-04-21-declaracion-extractor-adr]]"
   - "[[2026-05-20-branch-reconciliation-audit]]"
   - "[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]"
   - "[[2026-05-28-borrador-extraction-architecture-research]]"
   - "[[2026-05-28-declaracion-extraction-architecture-research]]"
   - "[[2026-05-30-declaracion-extraction-architecture-research]]"
-supersedes:
-  - '2026-04-21-declaracion-extractor-adr'
-modified: '2026-07-15'
+modified: '2026-07-17'
 ---
 # `declaracion-extraction-architecture` adr: `registry-driven declaración extraction supersedes per-modelo extractor classes` | (**status:** `accepted`)
 
 ## Problem Statement
 
 A filed-declaración PDF is parsed in HEAD by a registry-profile-driven
-generic parser: `src/aeat/adapters/inbound/declaracion/_parser.py`
+generic parser: `src/cadrumo/adapters/inbound/declaracion/_parser.py`
 selects one `declaracion_pdf` `ExtractionProfileDefinition` from the
 loaded `RegistrySnapshot` and matches each `target_casillas` entry
 against the PDF text. There are no extractor classes and no
@@ -420,7 +417,7 @@ that state until real specimens are acquired and verified, per the
 
 ### New module: `test_verification_chain.py`
 
-`src/aeat/adapters/inbound/declaracion/test_verification_chain.py` (596 lines)
+`src/cadrumo/adapters/inbound/declaracion/test_verification_chain.py` (596 lines)
 implements the project-mission end-to-end fidelity gate. The test chain:
 
 1. `parse_declaracion(corpus_pdf)` → `DeclaracionObservation.values`
@@ -429,9 +426,9 @@ implements the project-mission end-to-end fidelity gate. The test chain:
 4. Assert `result.values[closure_casilla_id] == extracted[closure_casilla_id]`
 
 All centralized infrastructure confirmed: `calculate_registry_snapshot` from
-`aeat.domain.calculations.registry`, `RegistryValidationError` from same package,
-`DeclaracionParseError` from `aeat.adapters.inbound.declaracion`, `parse_declaracion`
-from `aeat.adapters.inbound.declaracion`, `FIXTURES_DIR` from `aeat.tests`.
+`cadrumo.domain.calculations.registry`, `RegistryValidationError` from same package,
+`DeclaracionParseError` from `cadrumo.adapters.inbound.declaracion`, `parse_declaracion`
+from `cadrumo.adapters.inbound.declaracion`, `FIXTURES_DIR` from `cadrumo.tests`.
 No new exceptions, no new schemas, no mocks.
 
 ### Per-modelo verdict
@@ -469,14 +466,14 @@ be generated with formula-consistent synthetic values.
 ### Audit findings (UNIT 1 + 2)
 
 **Extraction model:** The justificante surface uses **hardcoded regex-driven extraction** in
-`src/aeat/adapters/inbound/justificante/_extract.py` — NOT registry-profile-driven extraction.
+`src/cadrumo/adapters/inbound/justificante/_extract.py` — NOT registry-profile-driven extraction.
 The `ExtractionProfileDefinition` schema supports `surface = "justificante_pdf"` but the
 `validate_extraction_profile_artefacts` gate explicitly rejects any `justificante_pdf` profile
 that has `target_casillas`, blocking the registry-profile path at schema level. No
 `justificante_pdf` registry extraction profiles exist in the TOML tree.
 
 **Exception hierarchy pre-amendment:** `JustificanteParseError` in
-`src/aeat/domain/justificante/_errors.py` was a bare string-message exception.
+`src/cadrumo/domain/justificante/_errors.py` was a bare string-message exception.
 It had none of the `missing/malformed/ambiguous/coverage` structured attributes
 that `DeclaracionParseError` carries, which forced test code and callers to
 parse message strings to identify the failure kind — the exact brittleness class
@@ -513,10 +510,10 @@ task #41) are the discipline equivalent for the justificante surface.
 ### Alignment applied (UNIT 3)
 
 **UNIT 3(c) — Structured exception attributes (applied):**
-`JustificanteParseError` in `src/aeat/domain/justificante/_errors.py` now carries
+`JustificanteParseError` in `src/cadrumo/domain/justificante/_errors.py` now carries
 `missing`, `malformed`, `ambiguous`, and `coverage` structured attributes with the
 same type signature as `DeclaracionParseError`. All error-raising sites in
-`src/aeat/adapters/inbound/justificante/_extract.py` populate the appropriate
+`src/cadrumo/adapters/inbound/justificante/_extract.py` populate the appropriate
 attribute: `_require()` sets `missing=(field,)`, `_parse_decimal()` accepts an
 optional `field` argument and sets `malformed=(field,)` on parse failure,
 `_parse_datetime()` sets `malformed=("presented_at",)`, and the URL extractor sets
@@ -552,13 +549,13 @@ gate for this surface and was already in place.
 
 ### Audit findings
 
-The borrador surface (`src/aeat/adapters/inbound/borrador/`) was audited
+The borrador surface (`src/cadrumo/adapters/inbound/borrador/`) was audited
 for alignment with the registry-profile-driven extraction architecture this ADR
 established for the declaración surface.
 
 **Extraction model.** `parse_borrador` dispatches to a per-año concrete extractor
 class from `_REGISTRY_BY_AÑO: dict[int, type]` in
-`src/aeat/adapters/inbound/borrador/_extractors/__init__.py`. The single registered
+`src/cadrumo/adapters/inbound/borrador/_extractors/__init__.py`. The single registered
 class is `Modelo100ObservedV2025Extractor` (year 2025). There is no ABC, no
 `(modelo, año, revision)` tuple key, and no consultation of
 `RegistrySnapshot.extraction_profiles`. The per-año registry is a `dict[int, type]`
@@ -691,7 +688,7 @@ Research has now been authored at
 `2026-05-30-declaracion-extraction-architecture-research.md`
 and is the canonical input for the next-campaign ADR. Key findings:
 
-- The OCR evidence path (`src/aeat/application/ledger/_evidence.py`) is
+- The OCR evidence path (`src/cadrumo/application/ledger/_evidence.py`) is
   **entirely unimplemented**. `PurchaseInvoiceEvidence` stores file hashes and
   manual overrides; there is no OCR pipeline, no extraction confidence field,
   no extraction method field, and no OCR library dependency.

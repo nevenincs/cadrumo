@@ -3,12 +3,11 @@ tags:
   - "#adr"
   - "#submission-safety-sweep"
 date: "2026-04-16"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-16-submission-safety-sweep-research]]"
   - "[[2026-04-16-submission-safety-sweep-reference]]"
   - "[[2026-04-16-live-write-static-audit]]"
-  - "[[2026-04-12-submission-engine-adr]]"
 ---
 
 # `submission-safety-sweep` adr: `issues-142-146-live-write-hardening` | (**status:** `accepted`)
@@ -27,9 +26,9 @@ The current AEAT submission boundary still violates charter rules `R2` through `
 ## Constraints
 
 - No live AEAT write may occur during tests or verification.
-- The confirmation hook must remain private to `aeat.adapters.outbound.aeat.export`; it must not be re-exported or made part of the normal test seam.
+- The confirmation hook must remain private to `cadrumo.adapters.outbound.aeat.export`; it must not be re-exported or made part of the normal test seam.
 - The log must be durable and append-only in practice, but the implementation should stay within the current branch’s file-based persistence model rather than introducing a new storage backend.
-- The sweep should not attempt to complete the unfinished real-transport wiring in `aeat.adapters.outbound.aeat.browser.session` or the sibling-branch workflow composition.
+- The sweep should not attempt to complete the unfinished real-transport wiring in `cadrumo.adapters.outbound.aeat.browser.session` or the sibling-branch workflow composition.
 
 ## Implementation
 
@@ -41,8 +40,8 @@ The current AEAT submission boundary still violates charter rules `R2` through `
   - compute a stable filing checksum and assemble the operator-facing confirmation payload
   - call a private exact-phrase confirmation function immediately before dispatch
   - append a structured live-submit audit record to `.aeat/live-submit-audit.log` after the live attempt resolves
-- Add private modules `aeat.adapters.outbound.aeat.export._confirm` and `aeat.adapters.outbound.aeat.export._audit`; keep both outside the `aeat.adapters.outbound.aeat.export` public export surface.
-- Fail closed on CLI live surfaces that still depend on `aeat.entrypoints.cli.submission._helpers.build_engine()` and `_NullSession`; dry-run and read-only helper paths remain supported.
+- Add private modules `cadrumo.adapters.outbound.aeat.export._confirm` and `cadrumo.adapters.outbound.aeat.export._audit`; keep both outside the `cadrumo.adapters.outbound.aeat.export` public export surface.
+- Fail closed on CLI live surfaces that still depend on `cadrumo.entrypoints.cli.submission._helpers.build_engine()` and `_NullSession`; dry-run and read-only helper paths remain supported.
 - Retire the separate amendment/complementaria live gate: `aeat filing complementaria submit --live` must stop consulting `AEAT_LIVE_TESTS_ENABLED` and stop using `typer.confirm`; it must either flow into the same engine-owned live-submit barrier or fail closed when the transport remains stubbed.
 - Remove the legacy `override_confirmation` contract from the submission/workflow public APIs and let the engine-owned confirmation hook be the final live-write barrier.
 
@@ -57,4 +56,4 @@ The live-submit audit log is intentionally separate from `aeat_submissions_dir`:
 - Submission, workflow, and CLI tests will need broad signature updates because they currently rely on omitted `dry_run` defaults and the legacy `override_confirmation` shape.
 - The submission CLI will stop advertising a stubbed live success path until real transport wiring lands in a later branch.
 - The amendment and workflow CLI surfaces become thinner wrappers around the engine’s live-write contract instead of maintaining separate confirmation logic.
-- The new private confirmation/audit modules create a clearer safety boundary inside `aeat.adapters.outbound.aeat.export`, but future work will still be needed to finish real Playwright + certificate composition for genuine live filing.
+- The new private confirmation/audit modules create a clearer safety boundary inside `cadrumo.adapters.outbound.aeat.export`, but future work will still be needed to finish real Playwright + certificate composition for genuine live filing.

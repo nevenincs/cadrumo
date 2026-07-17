@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#t6-aggregation'
 date: '2026-04-30'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-30-t6-aggregation-research]]"
   - "[[2026-04-17-export-first-adr]]"
@@ -21,11 +21,13 @@ The existing formula engine is already strict and Decimal-only. The transaction 
 
 ## Constraints
 
-Live AEAT submission stays out of scope. All new boundary models are pydantic v2 frozen models. Imports inside `src/aeat` remain relative. User-facing errors must inherit from `AeatError` and be registered. CLI output must support the shared JSON schema registry. Tests must use real catalogue/profile instances and module-level `unit` plus `domain_financial_input` markers.
+Live AEAT submission stays out of scope. All new boundary models are pydantic v2 frozen models. Imports inside `src/cadrumo` remain relative. User-facing errors must inherit from `CadrumoError` and be registered. CLI output must support the shared JSON schema registry. Tests must use real catalogue/profile instances and module-level `unit` plus `domain_financial_input` markers.
 
 ## Implementation
 
-Create `src/aeat/domain/financial/aggregation/` as the T6 package. It owns `Period`, `CasillaAggregation`, `CasillaProvenance`, typed errors, the aggregation service, and a concrete `FinancialFilingInputsProvider`.
+Use `src/cadrumo/application/aggregation/` as the single aggregation boundary.
+It owns `Period`, `CasillaAggregation`, `CasillaProvenance`, typed errors, and
+the service that projects financial-domain evidence into filing inputs.
 
 `Period` is a strict frozen model with `raw`, `year`, optional `quarter`, optional `month`, `start`, `end`, and `period_type`. It accepts `YYYY-Qn`, `YYYYQn`, `YYYY-MM`, and `YYYY`; ambiguous or unsupported input raises `AggregationPeriodError`.
 

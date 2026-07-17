@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-m303-cross-period-carry-continuity-research]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
@@ -15,7 +15,7 @@ related:
 
 ## Problem Statement
 
-Three tests in `src/aeat/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`
+Three tests in `src/cadrumo/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py`
 are red on HEAD after the primitive-encoding commit (`6e5a316a6`). The
 in-period engine-recomputation correctness gate
 (`test_verification_chain.py`, 47/47 green) does not exercise the
@@ -28,7 +28,7 @@ The carry chain is fully wired in the registry: relation
 `iva.compensacion-disponible-fin-periodo`, target_binding =
 `modelo-303-compensacion-pendiente-anteriores`, offset = -1,
 period_alignment = previous_quarter) feeds binding-side casilla 110.
-The relation resolver in `src/aeat/application/calculations/_relation_prefill.py`
+The relation resolver in `src/cadrumo/application/calculations/_relation_prefill.py`
 pulls the saldo from the prior observation by exact casilla-id match.
 What broke is **not the wiring** — that was unchanged by `6e5a316a6`
 — but the **upstream production of `iva.compensacion-disponible-fin-periodo`**:
@@ -80,7 +80,7 @@ authorises three Phase-2 branches; only one will be executed.
 
 - The registry author site is shared with concurrent campaigns. Per
   `aeat-git-worktree-safety` and `aeat-swarm-orchestration`, any edit
-  to `src/aeat/_data/registry/aeat/modelos/303/` must be one atomic
+  to `src/cadrumo/_data/registry/aeat/modelos/303/` must be one atomic
   explicit-path commit and must `git log -1 -- <path>` before the
   edit to confirm no peer commit closed the gap.
 - The fix MUST NOT regress the 47/47 verification-chain greens. The
@@ -156,7 +156,7 @@ Conditional on the diagnostic:
 
 ### Phase 3 — Anti-regression contract
 
-A new test under `src/aeat/application/calculations/` that mutates a
+A new test under `src/cadrumo/application/calculations/` that mutates a
 primitive leaf in period N and asserts the carry-in saldo in period
 N+1 tracks accordingly. The shape mirrors the anti-tautology pattern
 the v2 spec ADR (Step §"Anti-tautology test") authored for

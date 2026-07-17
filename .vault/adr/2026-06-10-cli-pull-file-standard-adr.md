@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-pull-file-standard'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-cli-pull-file-standard-research]]'
   - '[[2026-06-10-live-justificante-reconcile-adr]]'
@@ -53,7 +53,7 @@ operator-directed standardization of an unreleased pre-beta CLI.
   the evidence stamp) is unchanged — this is a CLI-surface rename, not a logic
   change.
 - **Locale discipline.** Every renamed verb/flag moves its `*_help` key family
-  across all four catalogues via the `aeat.locales` CLI (`aeat-locales-cli`); the
+  across all four catalogues via the `cadrumo.locales` CLI (`aeat-locales-cli`); the
   parity and translation-honesty gates must stay green.
 - **Conformance gates.** The documented-command conformance test and the CLI
   grammar/subgroup tests must be updated and pass; the generated CLI reference is

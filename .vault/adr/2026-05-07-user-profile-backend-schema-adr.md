@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#user-profile-backend-schema'
 date: '2026-05-07'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-registry-dependencies-reference]]"
@@ -69,7 +69,7 @@ other team members.
 
 ## Implementation
 
-Create a centralized TOML schema at `registry/aeat/user_profile/schema.toml`.
+Create a centralized TOML schema at `registry/cadrumo/user_profile/schema.toml`.
 The schema is the authority for profile sections, canonical keys, field types,
 required and conditional requirements, effective-date semantics, validation
 constraints, registry selector projections, export-context projections,

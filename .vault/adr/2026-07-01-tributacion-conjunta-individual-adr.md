@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#tributacion-conjunta-individual'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-tributacion-conjunta-individual-research]]"
 ---
 
-# `tributacion-conjunta-individual` adr: `tributacion conjunta vs individual comparison surface` | (**status:** `proposed`)
+# `tributacion-conjunta-individual` adr: `tributacion conjunta vs individual comparison surface` | (**status:** `accepted`)
 
 ## Problem Statement
 

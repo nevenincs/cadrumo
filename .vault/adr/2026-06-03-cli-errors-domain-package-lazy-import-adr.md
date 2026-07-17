@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-cli-errors-domain-package-lazy-import-research]]"
   - "[[2026-06-03-user-profile-lazy-import-adr]]"
@@ -14,20 +14,20 @@ related:
 ## Problem Statement
 
 The CLI lazy-loading discipline gate at
-`src/aeat/entrypoints/cli/test_lazy_command_tree.py` reds five state-free-surface
+`src/cadrumo/entrypoints/cli/test_lazy_command_tree.py` reds five state-free-surface
 tests even after the parent campaign's application-package boundary fix landed
-(commit `20992e0d4` — `aeat.application.user_profile` is now lazy-by-default and
-the producer probe at `src/aeat/application/user_profile/test_lazy_boundary.py`
-confirms zero `aeat.domain.calculations.registry*` modules enter `sys.modules`
+(commit `20992e0d4` — `cadrumo.application.user_profile` is now lazy-by-default and
+the producer probe at `src/cadrumo/application/user_profile/test_lazy_boundary.py`
+confirms zero `cadrumo.domain.calculations.registry*` modules enter `sys.modules`
 on package import).
 
 A fresh-interpreter probe demonstrates the residual leak is orthogonal to the
-application boundary: `import aeat.entrypoints.cli._errors` places 69
-`aeat.domain.calculations.registry*` modules in `sys.modules`, identical to
+application boundary: `import cadrumo.entrypoints.cli._errors` places 69
+`cadrumo.domain.calculations.registry*` modules in `sys.modules`, identical to
 the count the CLI-side gate measures end-to-end. The chain is
 `cli/__init__.py:46` -> `cli/_errors.py:55` (a module-scope
 `from ...domain.user_profile import StoredProfileDriftError`) ->
-`aeat.domain.user_profile/__init__.py:22` (a module-scope
+`cadrumo.domain.user_profile/__init__.py:22` (a module-scope
 `from ._portable_export import UserProfilePortableExport`) ->
 `_portable_export.py:21` (`from ..modelos._calculation_revision import ...`) ->
 `_calculation_revision.py:52` (`from ..calculations.registry import CasillaObservation`).
@@ -45,7 +45,7 @@ of this vector in its "Findings — execution-time scope expansion" section and
 explicitly deferred the decision to a successor ADR rather than half-fix it
 under the parent's scope. The parent ADR also catalogued three candidate
 patterns: (E) lazy domain-package boundary, (F) consumer-side direct import,
-(G) lift `StoredProfileDriftError` up to `aeat.core`. This ADR adopts the
+(G) lift `StoredProfileDriftError` up to `cadrumo.core`. This ADR adopts the
 parent's nomenclature: the successor "Pattern (a) / (b) / (c)" in the
 dispatch brief maps to the parent's (E) / (F) / (G).
 
@@ -82,7 +82,7 @@ lightweight name expects it to resolve at module-load time. Routing every
 lightweight name through `__getattr__` would over-rotate; routing only the
 heavy ones keeps the cut at the cost boundary.
 
-The `aeat.domain.user_profile/__init__.py` does not currently implement a
+The `cadrumo.domain.user_profile/__init__.py` does not currently implement a
 module-level `__getattr__`. The pattern is new at this site (the parent
 ADR established it at the application-package boundary one layer up); the
 shape is mechanical and proven.
@@ -94,22 +94,22 @@ radius to the four-file set named in Implementation.
 
 ## Decision: Pattern (a) / (E) — lazy domain-package boundary via PEP 562 `__getattr__`
 
-Make `aeat.domain.user_profile/__init__.py` lazy-by-default for its heavy
+Make `cadrumo.domain.user_profile/__init__.py` lazy-by-default for its heavy
 re-export, `UserProfilePortableExport`. The lightweight error / value /
 schema / loader / registry-contract re-exports remain eager. The
 `UserProfilePortableExport` symbol is resolved on demand through a
 module-level `__getattr__` block (PEP 562). The `__all__` list does not
 change; the public surface is unchanged.
 
-After the change, importing `aeat.domain.user_profile` in a fresh
-interpreter places zero `aeat.domain.calculations.registry*` modules in
+After the change, importing `cadrumo.domain.user_profile` in a fresh
+interpreter places zero `cadrumo.domain.calculations.registry*` modules in
 `sys.modules`. The `cli/_errors.py` import of `StoredProfileDriftError`
 resolves through the eager error re-exports and never touches
 `_portable_export`. The five red CLI-gate tests go green; the producer
-probe at `src/aeat/application/user_profile/test_lazy_boundary.py`
+probe at `src/cadrumo/application/user_profile/test_lazy_boundary.py`
 continues to pass (the application boundary fix is preserved). The
 producer-side mirror probe at
-`src/aeat/domain/user_profile/test_lazy_boundary.py` lands alongside the
+`src/cadrumo/domain/user_profile/test_lazy_boundary.py` lands alongside the
 change to pin the domain-package contract at the layer where it actually
 lives.
 
@@ -126,7 +126,7 @@ which has been applied uniformly across the project. Granting an
 exception only for `cli/_errors.py` sets a precedent that any state-free
 CLI surface can dot into private submodules.
 
-**Pattern (c) / (G) — lift `StoredProfileDriftError` up to `aeat.core`**
+**Pattern (c) / (G) — lift `StoredProfileDriftError` up to `cadrumo.core`**
 relocates a domain-specific error class into a framework layer. The
 class is currently a `UserProfileError` subclass; the parent class chain
 either moves with it (cascading to every other `UserProfileError`
@@ -143,7 +143,7 @@ no re-litigation.
 
 The implementation is a single atomic relocation:
 
-- Convert `src/aeat/domain/user_profile/__init__.py` to dispatch the
+- Convert `src/cadrumo/domain/user_profile/__init__.py` to dispatch the
   `UserProfilePortableExport` symbol through a module-level `__getattr__`
   block (PEP 562). Remove the top-level
   `from ._portable_export import UserProfilePortableExport` line. Keep
@@ -157,7 +157,7 @@ The implementation is a single atomic relocation:
 - Keep `__all__` unchanged. The public surface is identical; a `dir()`
   call returns the same list.
 - Land a producer-side regression probe at
-  `src/aeat/domain/user_profile/test_lazy_boundary.py`. The probe runs
+  `src/cadrumo/domain/user_profile/test_lazy_boundary.py`. The probe runs
   a fresh subprocess (warm-cache pollution from other test modules
   is not adequate evidence), imports the domain package, and asserts
   the registry-module count is zero. This mirrors the application-side
@@ -236,9 +236,9 @@ the project's accumulated discipline coherent.
   re-export surface that spans the cost boundary.
 
   **How to apply:** when authoring or modifying an
-  `aeat.domain.<package>/__init__.py`, check whether any re-export
+  `cadrumo.domain.<package>/__init__.py`, check whether any re-export
   pulls another domain package (`modelos`, `calculations`,
   `transactions`) at module-load time. If yes, the re-export goes
   through `__getattr__`. A producer-side probe at
-  `aeat.domain.<package>.test_lazy_boundary.py` pins the contract at
+  `cadrumo.domain.<package>.test_lazy_boundary.py` pins the contract at
   the layer where the discipline lives.

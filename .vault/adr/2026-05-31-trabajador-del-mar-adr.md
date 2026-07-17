@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-31-trabajador-del-mar-research]]"
 ---
@@ -147,7 +147,7 @@ binding entry, not a new casilla.
 ### 5. Locales
 
 New locale keys for the worker class selector and each exemption variant. Locale
-scaffolding via python -m aeat.locales scaffold per project convention.
+scaffolding via python -m cadrumo.locales scaffold per project convention.
 ## Rationale
 
 Art. 7.p) is the primary and most tractable axis: it has a clear statutory formula,

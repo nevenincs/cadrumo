@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#renta-cuota-integra-state-scale'
 date: '2026-05-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-08-renta-cuota-integra-state-scale-research]]"
 ---
@@ -21,7 +21,7 @@ general (0528) and to the personal/family minimum (0530) are
 currently manual-input — operators must type the cuota themselves.
 Six parameters across six ejercicios (2020-2025) sit in an
 allow-list (`_PRE_STAGED_PARAMETERS` in
-`src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py`)
+`src/cadrumo/domain/calculations/registry/test_modelo_100_drift_detection.py`)
 explicitly because their consuming formula chain has not landed.
 
 ## Considerations
@@ -30,7 +30,7 @@ explicitly because their consuming formula chain has not landed.
   from the state progressive scale applied to the base liquidable
   general; the calculation outcome is legally fixed.
 - The registry's formula runtime already supports `op =
-  "lookup_bracket"` (`src/aeat/domain/calculations/registry/
+  "lookup_bracket"` (`src/cadrumo/domain/calculations/registry/
   _formula_runtime.py:164`) with the contract `[base_value,
   parameter_ref]` returning the cuota; no runtime extension is
   required.

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-21-work-verify-deadline-independence-adr]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
@@ -88,7 +88,7 @@ A four-layer gate spine, each layer derived from the one above it so no layer ca
 from the source of truth.
 
 **(a) Declarative manifest.** A single TOML file
-`src/aeat/_data/registry/aeat/authorization.toml` is the sole source of authorization
+`src/cadrumo/_data/registry/aeat/authorization.toml` is the sole source of authorization
 truth. It is fingerprinted into the registry cache as a first-class registry input.
 Default state is UNAUTHORIZED by **absence**: a modelo not listed is not authorized, and
 an empty manifest authorizes zero modelos. Each entry declares, at minimum, the modelo
@@ -147,7 +147,7 @@ un-fakeability for the non-calculating modelos.
 because no genuine cross-year calculation exists yet to record; they require engine-build
 steps the plan must budget explicitly. Two distinct shapes exist here, verified against
 the registry application-link declarations under
-`src/aeat/_data/registry/aeat/modelos/<id>/`:
+`src/cadrumo/_data/registry/aeat/modelos/<id>/`:
 
 - **No calculation surface at all** — 714 (Patrimonio wealth base year-over-year), 151,
   and 721 declare zero `surface = "calculation"` application-link in the registry today.

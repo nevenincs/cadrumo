@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m210-irnr-full-engine'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-27-non-resident-irnr-axis-adr]]"
   - "[[2026-04-21-calc-verification-adr]]"
@@ -29,7 +29,7 @@ Current state (post task #196 Path-B refusal stub):
 - `aeat app modelo work create --modelo 210` and downstream verbs
   refuse with a documented Path-B stub message.
 - No registry directory exists under
-  `src/aeat/_data/registry/aeat/modelos/210/`; no casillas, no
+  `src/cadrumo/_data/registry/aeat/modelos/210/`; no casillas, no
   formulas, no bindings, no deadline windows, no extraction profiles.
 - Persona testimonials surface real cuota arithmetic blocked by the
   stub: Olivia's rental of a Marbella flat (rendimientos
@@ -235,7 +235,7 @@ Parameter-lookup dispatch is the canonical pattern.
 
 ## D5 — Consequences
 
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/`
+- `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/`
   scaffold lands with parameters, casillas, formulas, bindings,
   deadline_windows, verification_predicates per Phase 1 scope.
 - M210 work create / calculate / verify operate end-to-end for

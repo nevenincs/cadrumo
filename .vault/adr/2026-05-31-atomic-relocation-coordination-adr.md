@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#atomic-relocation-coordination'
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-31-core-authority-adr]]"
   - "[[2026-05-30-identity-primitives-adr]]"
@@ -30,10 +30,10 @@ a coordination defect, not a known cost: every agent landing parallel work
 during the window observes false-failure signal, peer agents waste
 investigation turns, and the campaign's quality gate (suite must collect)
 is structurally unavailable. Examples observed today: `InvoiceKind` moved
-to `aeat.domain.iva._classification` but consumers still import from
-`aeat.domain.invoices`; `ModeloDraftStatus` moved to
-`aeat.domain.submission._protocols` but consumers still import from
-`aeat.adapters.outbound.aeat.export`; `PROMOTE001_PROTECT_LIST` removed
+to `cadrumo.domain.iva._classification` but consumers still import from
+`cadrumo.domain.invoices`; `ModeloDraftStatus` moved to
+`cadrumo.domain.submission._protocols` but consumers still import from
+`cadrumo.adapters.outbound.aeat.export`; `PROMOTE001_PROTECT_LIST` removed
 under the transient-metastate sweep audit recommendation while consumers
 remained in mid-deletion state.
 

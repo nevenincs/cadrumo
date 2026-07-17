@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-design-research]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
 ---
 
 # `cli-workflow-redesign` adr: `Profile-scoped bucket storage invariant` | (**status:** `accepted`)
@@ -17,9 +16,9 @@ related:
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 
 ## Problem Statement
 
@@ -198,7 +197,7 @@ despite the W77 closure claim. This amendment locks the maintenance
 surface so the gap is closed in a follow-up wave.
 
 Required application-layer surface: a `BucketMaintenanceService` under
-`src/aeat/application/bucket_maintenance/` exposing six lifecycle-state
+`src/cadrumo/application/bucket_maintenance/` exposing six lifecycle-state
 methods on the active profile bucket:
 
 - `browse(bucket_id, namespace_filter=None, cursor=None)` - paginated
@@ -266,7 +265,7 @@ The reconciliation is locked by `[[2026-06-03-cli-workflow-redesign-adr]]`
 - `import` composes the sealed-archive parse + two-tier collision
   guard (`bundle.profile_id` and bucket-id; refuse unless
   `force_replace=True`) + `deserialize_profile_bundle`.
-- `search` is scoped by `[[2026-06-03-bucket-search-adr]]` to
+- `search` is scoped by `[[2026-05-12-cli-workflow-redesign-bucket-adr]]` to
   per-domain repository dispatch via a closed `BucketSearchScope`
   enum (`LEDGER_TRANSACTION` / `MODELO_WORK_UNIT` /
   `BUCKET_EVENT_HISTORY` for the MVP). The search verb never
@@ -289,7 +288,7 @@ the `PROFILE` value the inner lifecycle events use.
 
 Required application-package re-export surface (landed 2026-06-03):
 the service consumes every cross-store mutation primitive through
-the top-level `aeat.application.user_profile` `__all__` re-export,
+the top-level `cadrumo.application.user_profile` `__all__` re-export,
 never through internal submodule imports. The promotion covers
 `rename_profile`, `delete_profile_with_lifecycle_span`,
 `remove_profile_bucket_directory`, `serialize_profile_bundle`,

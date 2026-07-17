@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-17'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
 ---
@@ -134,7 +134,7 @@ dev/agent scratch location, with schema
 `scratch/<yyyy-mm-dd>-<owner-or-session>-<label>/` for directories and the
 same stem for loose files; `.gitignore` keeps ignoring all of it, gains a
 `.runtime-*/` pattern (the ad-hoc `.runtime-sNN-*` convention is retired and
-its existing dirs cleaned up), repairs the dead `src/aeat/...` corpus-manual
+its existing dirs cleaned up), repairs the dead `src/cadrumo/...` corpus-manual
 rules to `src/cadrumo/...`, and broadens root-level scratch patterns so
 one-off scripts/dumps cannot land tracked. The currently tracked repo-root
 run artifacts (`revert.patch`, `rail-snap.md`, `add_frontmatter.py`,

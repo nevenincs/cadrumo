@@ -4,16 +4,13 @@ tags:
   - "#auth-cli"
 date: '2026-04-21'
 related:
-  - "[[2026-04-18-auth-protocol-adr]]"
-  - "[[2026-04-18-auth-provider-abstraction-adr]]"
-  - "[[2026-04-12-cert-auth-adr]]"
-  - "[[2026-04-17-aeat-access-gate-adr]]"
-  - "[[2026-04-21-clave-portal-reference]]"
-  - "[[2026-04-18-auth-protocol-research]]"
-  - "[[2026-04-18-aeat-auth-providers-research]]"
-  - "[[2026-04-27-auth-cli-research]]"
+  - '[[2026-04-18-auth-protocol-adr]]'
+  - '[[2026-04-18-auth-provider-abstraction-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
+  - '[[2026-04-17-aeat-access-gate-adr]]'
+  - '[[2026-04-27-auth-cli-research]]'
 superseded_by: '2026-05-12-cli-workflow-redesign-config-auth-shape-adr'
-modified: '2026-07-15'
+modified: '2026-07-17'
 ---
 # `auth-cli` adr: `issue-285 aeat auth login / list-providers / status / logout` | (**status:** `superseded`)
 

@@ -6,8 +6,7 @@ date: '2026-06-01'
 related:
   - "[[2026-06-01-docs-cli-buildtime-research]]"
 supersedes:
-  - '2026-05-30-docs-cli-conformance-adr'
-modified: '2026-07-10'
+modified: '2026-07-17'
 ---
 # `docs-cli-buildtime` adr: build-time CLI reference extraction | (**status:** `accepted`)
 

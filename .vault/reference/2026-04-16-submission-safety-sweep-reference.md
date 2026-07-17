@@ -3,12 +3,11 @@ tags:
   - "#reference"
   - "#submission-safety-sweep"
 date: "2026-04-16"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-16-submission-safety-sweep-research]]"
   - "[[2026-04-16-live-write-static-audit-reference]]"
   - "[[2026-04-16-live-write-static-audit]]"
-  - "[[2026-04-12-submission-engine-adr]]"
 ---
 
 # submission-safety-sweep reference brief

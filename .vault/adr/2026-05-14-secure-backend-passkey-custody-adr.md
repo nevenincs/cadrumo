@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'
-  - '[[2026-04-12-data-storage-adr]]'
   - '[[2026-05-08-secure-storage-legacy-path-audit-reference]]'
 ---
 
@@ -31,15 +30,15 @@ Three compounding defects make this a critical data-loss surface:
 - Custody opacity: the operator is never told which of three resolver
   backends won, nor where the key landed (research §2.5).
 - Dead-letter recovery surface: full BIP-39 recovery cryptography is
-  implemented in `src/aeat/adapters/persistence/storage/master_key/_recovery.py`
+  implemented in `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`
   but never wired to any CLI verb; the substrate's own error messages
   point operators at `aeat security recover` and `aeat security provision`
-  which do not exist anywhere in `src/aeat/entrypoints/cli/` (research §2.5,
+  which do not exist anywhere in `src/cadrumo/entrypoints/cli/` (research §2.5,
   §2.7).
 
 There is additionally no operator-facing lock or unlock concept. The
 master key is cached at ClassVar scope in
-`src/aeat/adapters/persistence/storage/master_key/_master_key.py`
+`src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`
 (lines 348-349 and 473-475 per research §2.6) for the entire process
 lifetime. A long-running invocation holds cleartext key material
 indefinitely with no operator control.
@@ -95,7 +94,7 @@ Technical inputs:
   output 32 bytes. This matches the parameters already present in
   `_master_key.py:89-105` per research §2.1.
 - BIP-39 24-word mnemonic primitives at
-  `src/aeat/adapters/persistence/storage/master_key/_recovery.py`
+  `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`
   (research §2.7 and §6.4) are already implemented; only the CLI
   wiring is missing.
 - The `dont_move_inflight_agent_work` and `no_backwards_compat_no_deprecation`
@@ -191,7 +190,7 @@ persists a value derived from the passphrase outside the OS keystore.
 
 At enrollment, after the passphrase is double-confirmed, the substrate
 generates a BIP-39 24-word recovery code via `generate_recovery_key`
-from `src/aeat/adapters/persistence/storage/master_key/_recovery.py`
+from `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`
 (research §2.7 documents the primitive as already implemented). The
 code is displayed once. The operator must re-type the words at three
 random positions (1Password-style confirm-by-retype) before the profile
@@ -263,7 +262,7 @@ via `os.replace`, the same pattern used in
 
 Full DEK rotation (re-encrypting every record under a fresh master
 DEK) is a separate concern handled by the `_rotation.py` primitives
-that exist at `src/aeat/adapters/persistence/storage/_rotation.py`
+that exist at `src/cadrumo/adapters/persistence/storage/_rotation.py`
 (research §2.7). That surface is out of scope for this ADR; it lands
 through a follow-up verb only after the passphrase-rewrap surface is
 stable. This ADR confines itself to passphrase rewrap.
@@ -433,33 +432,33 @@ this selection. The reasoning, validated against research §3.13 and
 
 The research enumerated the touch points; this ADR codifies them.
 
-- `src/aeat/application/setup/_service.py:12-57` — `initialize_workspace`
+- `src/cadrumo/application/setup/_service.py:12-57` — `initialize_workspace`
   no longer triggers lazy mint via `workflow_state_repository().update(...)`.
   The setup service receives an already-unlocked `BucketSession` from
   the CLI layer; if no session is present it refuses to proceed.
-- `src/aeat/entrypoints/cli/_config/__init__.py:628-695` —
+- `src/cadrumo/entrypoints/cli/_config/__init__.py:628-695` —
   `aeat config init` is rewritten to drive the enrollment flow:
   passphrase prompt with double-confirm, recovery-code generation and
   confirm-by-retype, manifest write, then setup-service invocation.
   The function signature gains `--accept-data-loss-risk`,
   `--persist-recovery-wrap`, and the non-interactive gate on
   `AEAT_SECRET_PASSPHRASE`.
-- `src/aeat/adapters/persistence/storage/master_key/_master_key.py` —
+- `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py` —
   the ClassVar caches at lines 348-349 and 473-475 are removed; the
   `BucketSession` instance state replaces them. The lazy-mint path at
   lines 432-453 is removed. The dead-letter references at lines
   558-563, 619-622, and 1056-1058 are rewritten to point at the
   canonical verbs. The `complete_recovery` path at lines 660-738 is
   wired through `aeat config recover`.
-- `src/aeat/adapters/persistence/storage/master_key/_recovery.py` —
+- `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py` —
   the existing primitives (`generate_recovery_key`, `wrap_master_key`,
   `save_wrapped_master_key`, `encode_mnemonic`, `decode_mnemonic`,
   `unwrap_master_key`) are wired into new CLI handlers under
   `aeat config recover`, `aeat config show-recovery`, and
   `aeat config verify-recovery`. The module gains no new primitives;
   only the CLI plumbing is added.
-- `src/aeat/application/wizard/_catalogue.py` and
-  `src/aeat/application/wizard/_prompter.py` — new catalogue entries
+- `src/cadrumo/application/wizard/_catalogue.py` and
+  `src/cadrumo/application/wizard/_prompter.py` — new catalogue entries
   for passphrase double-confirm, data-loss-risk acknowledgement,
   recovery-code display, recovery-code confirm-by-retype, and the
   `--persist-recovery-wrap` opt-in screen. The prompter gains a
@@ -468,11 +467,11 @@ The research enumerated the touch points; this ADR codifies them.
   new operator-facing string from decisions 2, 4, 5, 7, and 8 is
   added. The verbatim sentence from decision 8 is reviewed for
   translation parity.
-- `src/aeat/entrypoints/cli/_config/__init__.py` — new command bindings
+- `src/cadrumo/entrypoints/cli/_config/__init__.py` — new command bindings
   for `unlock`, `lock`, `rekey`, `show-recovery`, `verify-recovery`,
   and `recover --recovery-key`. The `aeat config set` verb gains the
   `idle-lock-minutes` and `keystore-cache` keys.
-- `src/aeat/core/config.py` — the `aeat_secret_store_dir` default is
+- `src/cadrumo/core/config.py` — the `aeat_secret_store_dir` default is
   preserved for headless deployments but the startup check from
   decision 3 refuses to operate when it resolves under the
   `aeat_database_url` parent. A new setting `aeat_idle_lock_minutes`

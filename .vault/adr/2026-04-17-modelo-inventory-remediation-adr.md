@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-inventory'
 date: '2026-04-17'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-17-modelo-inventory-remediation-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'
@@ -35,7 +35,7 @@ identified autonomo and SL scenarios.
 
 ## Constraints
 
-- No dataclasses may be introduced into the new `aeat.domain.modelos` work.
+- No dataclasses may be introduced into the new `cadrumo.domain.modelos` work.
 - Changes must remain within the issue-108 scope: inventory correctness,
   runtime applicability, CLI parity, and tests.
 - The implementation must use official AEAT/BOE sources as the authority
@@ -54,11 +54,11 @@ The remediation will apply these architectural decisions:
 - Keep `037` in the registry for historical and interpretive purposes,
   but revise its applicability and gotchas so it is no longer represented
   as the active current default after 2025-02-03.
-- Enrich `aeat.domain.deadlines.AutonomoProfile` with dedicated flags for:
+- Enrich `cadrumo.domain.deadlines.AutonomoProfile` with dedicated flags for:
   professional retenciones,
   the `130` 70-percent professional withholding exception,
   and the `347` threshold condition.
-- Update `aeat.domain.deadlines._applies` and `_calendar` to support `347` and
+- Update `cadrumo.domain.deadlines._applies` and `_calendar` to support `347` and
   the richer `130` / `111` / `190` runtime logic.
 - Update the modelos CLI so `year-plan` and profile projection use the
   expanded runtime shape instead of overloading `has_employees`.

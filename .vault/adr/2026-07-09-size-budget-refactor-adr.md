@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#size-budget-refactor'
 date: '2026-07-09'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-07-10-size-budget-refactor-research]]'
 ---
@@ -57,7 +57,7 @@ naive uniform fix would collide with in-flight peer work on those files.
 - A moved private symbol used by both the shrunk module and its new sibling
   is re-imported through the sibling (mirroring the existing
   `_calendar_models` / `_calendar_warnings` / `_coverage` pattern already
-  established in `aeat.application.overview`), never duplicated.
+  established in `cadrumo.application.overview`), never duplicated.
 
 ## Implementation
 

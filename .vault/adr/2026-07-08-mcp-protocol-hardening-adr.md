@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-08-mcp-protocol-hardening-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -20,7 +20,7 @@ second class of gaps: places where the console's use of the protocol is
 incomplete, lossy, or fragile regardless of how the surface is shaped. The
 sharpest is operational: every tool call is one blocking subprocess run with
 no timeout, no progress notification, and no cancellation
-(`src/aeat/entrypoints/mcp/_server.py`, lines 225–271), so a Playwright-backed
+(`src/cadrumo/entrypoints/mcp/_server.py`, lines 225–271), so a Playwright-backed
 AEAT portal pull that legitimately takes minutes hangs the client — and many
 clients time out a `tools/call` well under a minute, reading a legitimate
 slow pull as failure. Around it cluster: per-verb input schemas that

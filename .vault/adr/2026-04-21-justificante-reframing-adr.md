@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#justificante-reframing"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-justificante-reframing-research]]"
   - "[[2026-04-21-pdf-taxonomy-adr]]"
@@ -18,14 +18,14 @@ Across docs, issue titles, and contributor-facing commentary, "importing a justi
 
 ## Considerations
 
-- `aeat.domain.justificante` is a correctly-scoped module. Renaming breaks the amendment-baseline path (`#271`, `_complementaria._resolve_original_metadata`). The code stays.
+- `cadrumo.domain.justificante` is a correctly-scoped module. Renaming breaks the amendment-baseline path (`#271`, `_complementaria._resolve_original_metadata`). The code stays.
 - The name is Spanish, per project mandate ("Spanish is the default output language and authoritative AEAT terminology baseline"). Anglicising or Englishing the module name would regress that mandate.
 - EPIC #233's title reads "Kent can import a past filing he made outside the tool" and lists three backends: `--from-justificante`, `--from-aeat`, `--from-spreadsheet`. The umbrella EPIC #305 adds `--from-declaracion`, `--from-borrador`, `--from-predeclaracion`. Neither title is wrong, but #233 reads like the universe of past-filing imports when in fact it originally scoped the three specific backends listed. A small title polish + description comment makes the relationship explicit.
 - Kent needs one place to learn which PDF class is which. `docs/concepts/aeat-pdfs.md` (already queued in cluster A's plan) is that page.
 
 ## Constraints
 
-- **No code rename.** `aeat.domain.justificante` stays.
+- **No code rename.** `cadrumo.domain.justificante` stays.
 - **No public-API change.** `Justificante`, `parse_justificante`, `JustificanteError`, `SubmittedFiling.justificante_csv`, `SubmittedFiling.justificante_pdf_path` all keep their names.
 - **No CLI rename.** `aeat filing import --from-justificante` stays.
 - **No amendment-engine regression.** `_resolve_original_metadata` behaviour preserved.
@@ -40,7 +40,7 @@ Across docs, issue titles, and contributor-facing commentary, "importing a justi
 - One paragraph per class from the pdf-taxonomy ADR §1 table.
 - Each paragraph explicitly states: what Kent sees, where it comes from, which import backend consumes it (if any).
 - A "not an import source" subsection for *datos fiscales* and *datos personales*.
-- Cross-links to the per-class module under `src/aeat/<class>/` (when they exist).
+- Cross-links to the per-class module under `src/cadrumo/<class>/` (when they exist).
 
 ### 2. EPIC hygiene
 
@@ -55,7 +55,7 @@ Run a grep for occurrences of the word "justificante" in docstrings where it mig
 ### 4. Out of scope
 
 - `SubmittedFiling` field rename. `justificante_csv` and `justificante_pdf_path` are correctly named — the receipt is the artefact persisted there.
-- `aeat.domain.justificante` module rename, export rename.
+- `cadrumo.domain.justificante` module rename, export rename.
 - CLI flag rename.
 - Any translation of the Spanish module names to English.
 

@@ -5,10 +5,7 @@ tags:
 date: '2026-06-12'
 related:
   - "[[2026-06-12-live-pull-verification-sweep-research]]"
-supersedes:
-  - '2026-04-12-self-healing-sync-adr'
-  - '2026-04-12-notifications-inbox-adr'
-modified: '2026-07-10'
+modified: '2026-07-17'
 ---
 # `live-pull-verification-sweep` adr: `Authenticated pull-only live verification sweep: per-surface acceptance` | (**status:** `accepted`)
 

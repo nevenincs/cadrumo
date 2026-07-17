@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
-  - "[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
 
@@ -25,7 +24,7 @@ first-session blocker.
 
 ## Considerations
 
-- PROFILE_KEYS is a typed schema in the domain layer (`domain/profile/
+- PROFILE_KEYS is a typed schema in the domain layer (`domain/contribuyente/
   _keys.py`). It evolves as new modelos and regimes are added.
 - The schema includes key path, value type (string/enum/bool/int), valid
   enum values where applicable, default, and a short description.

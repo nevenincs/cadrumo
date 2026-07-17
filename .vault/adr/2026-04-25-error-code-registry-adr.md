@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#error-code-registry'
 date: '2026-04-25'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - "[[2026-04-25-error-code-registry-research]]"
   - "[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]"
@@ -21,7 +21,7 @@ error envelopes can drift into independent authorities.
 
 ## Considerations
 
-- The codebase standardises on typed `AeatError` subclasses and strict Pydantic
+- The codebase standardises on typed `CadrumoError` subclasses and strict Pydantic
   models, so the registry extends that hierarchy rather than introducing a
   parallel exception mechanism.
 - The canonical Python package is `cadrumo`; the sole human CLI executable is
@@ -39,7 +39,7 @@ error envelopes can drift into independent authorities.
   registry implementation modules directly.
 - The retired `aeat` Python import namespace MUST NOT be preserved through
   aliases, wrapper packages, fallback imports, or compatibility shims.
-- Every concrete production `AeatError` subclass MUST have exactly one declared
+- Every concrete production `CadrumoError` subclass MUST have exactly one declared
   `ErrorCode`, and every declared code MUST belong to exactly one subclass.
 - The registry MUST be the single authority for category, message key, default
   recovery command, retryability, and runbook identity.
@@ -59,7 +59,7 @@ error envelopes can drift into independent authorities.
   - strict, frozen Pydantic models for `ErrorCode` and `ErrorEnvelope`;
   - one explicit catalogue of qualified `cadrumo.*` exception classes and their
     `ErrorCode` records;
-  - class-declaration binding from each `AeatError` subclass to that catalogue;
+  - class-declaration binding from each `CadrumoError` subclass to that catalogue;
   - secret-scrubbing, localized rendering, deterministic JSON serialization,
     and category-owned exit-code mapping.
 - Keep the category policy separate from per-error metadata. Prefix and exit
@@ -69,7 +69,7 @@ error envelopes can drift into independent authorities.
   `cadrumo.entrypoints.cli._errors.command_error_boundary`, installed across the
   live Typer tree by `decorate_typer_app`.
 - Enforce the catalogue with tests that import-walk `cadrumo.*`, discover every
-  production `AeatError` subclass, reject missing or duplicate bindings, reject
+  production `CadrumoError` subclass, reject missing or duplicate bindings, reject
   orphan codes and categories, and validate every registered `aeat ...`
   suggestion against the live command tree.
 - The deferred binding queue exists only to complete the registry module's
@@ -86,7 +86,7 @@ decoration prevents command modules from creating competing rendering and exit
 policies.
 
 Finally, the registry uses one explicit catalogue of qualified exception classes
-and their `ErrorCode` records. Each `AeatError` subclass binds to that catalogue
+and their `ErrorCode` records. Each `CadrumoError` subclass binds to that catalogue
 at class-creation time, while exhaustive import-walk and raw-declaration tests
 prove that class ownership and code ownership remain one-to-one. This keeps the
 catalogue reviewable without allowing a second alias list or implicit duplicate
@@ -94,7 +94,7 @@ authority.
 
 ## Consequences
 
-- Adding or renaming a concrete `AeatError` requires updating the explicit
+- Adding or renaming a concrete `CadrumoError` requires updating the explicit
   catalogue in the same change; CI refuses incomplete or duplicate ownership.
 - Operator text and JSON errors remain consistent because both resolve through
   the same registered record and scrubbing pipeline.

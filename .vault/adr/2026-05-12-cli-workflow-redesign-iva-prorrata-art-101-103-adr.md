@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-research]]"
@@ -13,7 +13,10 @@ related:
 
 # `cli-workflow-redesign` adr: `IVA prorrata arts 101-103` | (**status:** `accepted`)
 
-> **PARTIALLY-SUPERSEDED 2026-05-19**: The module-path direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers and domain/vat migrates into domain/iva. The LIVA arts. 101-103 legal grounding, application-aggregation observation contract, the Modelo 303 and Modelo 390 binding-provider design, and the separation from app-ledger-ratios and domain/usage_ratios remain in force; the legal IVA prorrata substrate lives under domain/iva rather than domain/vat.
+This decision governs the current IVA prorrata substrate under
+`cadrumo.domain.iva`. Its LIVA articles 101-103 grounding, aggregation
+observation contract, Modelo 303/390 binding providers, and separation from
+general usage ratios remain binding. No `domain.vat` compatibility path exists.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
 
@@ -21,9 +24,9 @@ related:
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 ## Problem Statement
 
 The project has proportional expense usage ratios, but it does not implement
@@ -44,7 +47,7 @@ prorrata through a shim.
 
 ## Implementation
 
-Create a legal IVA prorrata substrate under `domain/vat`. Application
+Create a legal IVA prorrata substrate under `domain/iva`. Application
 aggregation emits prorrata observations for Modelo 303 and Modelo 390 binding
 providers. Profile/config stores regime axes and accepted percentages where
 needed, while calculation remains in the VAT substrate and aggregation layer.
