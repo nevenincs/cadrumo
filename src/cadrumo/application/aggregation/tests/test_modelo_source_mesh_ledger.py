@@ -15,6 +15,7 @@ from sqlalchemy import text
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
 from ....core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.classification import SensitivityClass
@@ -37,7 +38,6 @@ from ....domain.iva import (
 )
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions import (
-    TX_BUCKET_NAMESPACE,
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -669,7 +669,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     with session_scope(secure_objects._engine) as session:
         session.execute(
             text("UPDATE secure_objects SET payload = X'00' WHERE namespace = :namespace"),
-            {"namespace": TX_BUCKET_NAMESPACE},
+            {"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace},
         )
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation._source_mesh"):
@@ -701,7 +701,7 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
     # Per-row catalogue: a corrupt membership-index row makes load() fail closed
     # with StoredTransactionDriftError, the drift the resolver must degrade on.
     secure_objects.save(
-        namespace=TX_BUCKET_NAMESPACE,
+        namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
         object_key=transaction_index_object_key(_BUCKET_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,

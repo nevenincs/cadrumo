@@ -132,25 +132,30 @@ def test_evidence_add_id_is_accepted_by_create(profile: TestRuntimeProfile, pdf_
     assert persisted.purchase_invoice_evidence_id == evidence_id
 
 
-def test_evidence_add_id_is_accepted_by_update_patch(profile: TestRuntimeProfile, pdf_file: Path) -> None:
+def test_generic_update_patch_refuses_evidence_field(profile: TestRuntimeProfile, pdf_file: Path) -> None:
+    # The generic manual-field update door no longer accepts evidence: evidence
+    # catalogue and provenance mutation are reserved for `aeat app ledger attach`.
+    # A patch that sets purchase_invoice_evidence_id is refused, and the on-disk
+    # transaction stays evidence-free.
     evidence_id = _mint_evidence_id(profile, pdf_file)
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="update-evidence-add")
 
-    updated = update_manual_transaction_fields(
-        bucket_id=_BUCKET,
-        transaction_id=transaction_id,
-        patch=ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id),
-        actor="operator-A",
-        source_command="aeat app ledger link",
-        transaction_repository=_transaction_repository(profile),
-        bucket_event_repository=_event_repository(profile),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+    with pytest.raises(TransactionValidationError) as exc_info:
+        update_manual_transaction_fields(
+            bucket_id=_BUCKET,
+            transaction_id=transaction_id,
+            patch=ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id),
+            actor="operator-A",
+            source_command="aeat app ledger link",
+            transaction_repository=_transaction_repository(profile),
+            bucket_event_repository=_event_repository(profile),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
-    assert updated.transaction.purchase_invoice_evidence_id == evidence_id
+    assert "aeat app ledger attach" in str(exc_info.value)
     persisted = _transaction_repository(profile).load().get(transaction_id)
     assert persisted is not None
-    assert persisted.purchase_invoice_evidence_id == evidence_id
+    assert persisted.purchase_invoice_evidence_id is None
 
 
 def test_nonexistent_evidence_id_is_refused_with_instructive_message(profile: TestRuntimeProfile) -> None:

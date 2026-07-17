@@ -115,13 +115,18 @@ from ._actions_manual import (
     ledger_transaction_result_payload,
     ledger_transaction_review_payload,
     ledger_transaction_tracking_payload,
+    link_manual_transaction_invoice,
     list_manual_transactions,
     query_ledger_review_rows,
     summarize_manual_transactions,
     update_manual_transaction,
     update_manual_transaction_fields,
 )
-from ._actions_split_merge import merge_transactions, split_transaction
+from ._actions_split_merge import (
+    merge_transactions,
+    split_transaction,
+    split_transaction_with_classified_children,
+)
 from ._business_operation_invoice import (
     BusinessOperationInvoice,
     BusinessOperationInvoiceDirection,
@@ -355,6 +360,7 @@ __all__ = [
     "ledger_transaction_review_payload",
     "ledger_transaction_review_status",
     "ledger_transaction_tracking_payload",
+    "link_manual_transaction_invoice",
     "list_eligible_ratios_for_bucket",
     "list_manual_transactions",
     "mark_transaction_reviewed_excluded",
@@ -371,6 +377,7 @@ __all__ = [
     "saturate_llm_classification",
     "set_usage_ratio",
     "split_transaction",
+    "split_transaction_with_classified_children",
     "stash_manual_transaction",
     "suggest_evidence_split",
     "suggest_llm_classification",

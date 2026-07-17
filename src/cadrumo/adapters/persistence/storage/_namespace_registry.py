@@ -393,7 +393,11 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{modelo}:{filing_year}:{period}",
+    # Single-filer rows key on (modelo, filing_year, period); a per-grupo-member
+    # filing widens the same key with an optional trailing member NIF so two
+    # members' filings for one triple persist as distinct rows (the 353<-322
+    # per_grupo_member fan-in). Both live in this one namespace.
+    object_key_grammar="{modelo}:{filing_year}:{period}[:{member_nif}]",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
@@ -906,7 +910,12 @@ TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     owner="cadrumo.domain.transactions",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="transaction-catalogue:{bucket_id}",
+    # One secure-object row per transaction keyed transaction:{bucket_id}:{tx_id}
+    # (transaction_object_key), plus a single per-bucket membership-index row keyed
+    # transaction-index:{bucket_id} (transaction_index_object_key). The unrelated
+    # transaction-catalogue:{bucket_id} token is a BucketEvent audit object_id, not
+    # a secure-object key, and must not be conflated with this key grammar.
+    object_key_grammar="transaction:{bucket_id}:{transaction_id}; transaction-index:{bucket_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )

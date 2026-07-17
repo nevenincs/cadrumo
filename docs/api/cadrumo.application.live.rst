@@ -16,6 +16,7 @@ Submodules
    cadrumo.application.live._borrador_100
    cadrumo.application.live._errors
    cadrumo.application.live._expedientes
+   cadrumo.application.live._filed_capture_finalizer
    cadrumo.application.live._filed_data
    cadrumo.application.live._filed_data_capture
    cadrumo.application.live._filed_observation_persistence

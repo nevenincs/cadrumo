@@ -645,7 +645,7 @@ nitpick_ignore_regex = [
         r"py:.*",
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|mcp|"
         r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|numpy|"
-        r"prompt_toolkit|google|typing_extensions|asyncio|contextvars|"
+        r"prompt_toolkit|google|typing_extensions|asyncio|anyio|contextvars|"
         r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
     ),
     # Test modules are excluded from the documented API surface (see

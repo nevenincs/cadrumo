@@ -32,7 +32,11 @@ import pytest
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import CasillaId, RegistryCatalogues, RegistryValidator, validated_casilla_id
-from .._bindings import _BINDING_VALIDATOR_REGISTRY, validate_binding_selector_shape
+from .._bindings import (
+    _BINDING_SELECTOR_REGISTRY,
+    _BINDING_VALIDATOR_REGISTRY,
+    validate_binding_selector_shape,
+)
 from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
@@ -267,6 +271,56 @@ def test_dispatch_table_covers_every_validated_family() -> None:
     for case in _FAMILY_CASES:
         source = case[1]
         assert source in covered, f"family case {source!r} is not in the validator dispatch table"
+
+
+#: Binding source kinds resolved BEFORE the registry binding mesh (a pre-mesh
+#: gate / source-mesh decision), so they never appear as a
+#: ``DataBindingDefinition.source`` and carry no per-family selector or
+#: validator. Documented as mesh-only in ``core.aggregation.BindingSourceKind``
+#: (the borrador prefill decision and the M303 IVA-wallet compensación decision).
+_DOCUMENTED_MESH_ONLY_SOURCE_KINDS = frozenset(
+    {
+        BindingSourceKind.BORRADOR,
+        BindingSourceKind.IVA_WALLET_DECISION,
+    },
+)
+
+
+def test_every_binding_source_kind_is_validator_dispatched_or_documented_mesh_only() -> None:
+    """No BindingSourceKind ships unvalidated: it is dispatch-validated or documented mesh-only.
+
+    A new binding source kind must either register a per-family validator in
+    ``_BINDING_VALIDATOR_REGISTRY`` (and, by the selector/validator parity
+    asserted below, a strict selector model) or be enrolled in the pinned
+    mesh-only set. A member in NEITHER class fails here loudly, closing the gap
+    where a new registry-declarable source could compile and silently skip the
+    build-time binding validation the single-contract discipline requires.
+    """
+    validated = frozenset(_BINDING_VALIDATOR_REGISTRY)
+
+    # A legal binding source (one carrying a strict selector model) has EXACTLY
+    # one dispatch validator, and every dispatch validator has a selector model:
+    # no legal source ships unvalidated and no validator dangles without a shape.
+    assert validated == frozenset(_BINDING_SELECTOR_REGISTRY), (
+        "validator dispatch table and selector-model table have drifted: "
+        f"validator-only={sorted(str(s) for s in validated - frozenset(_BINDING_SELECTOR_REGISTRY))}, "
+        f"selector-only={sorted(str(s) for s in frozenset(_BINDING_SELECTOR_REGISTRY) - validated)}"
+    )
+
+    # The two classes are disjoint: a source is validator-dispatched XOR mesh-only.
+    assert validated.isdisjoint(_DOCUMENTED_MESH_ONLY_SOURCE_KINDS), (
+        "a documented mesh-only source also carries a dispatch validator: "
+        f"{sorted(str(s) for s in validated & _DOCUMENTED_MESH_ONLY_SOURCE_KINDS)}"
+    )
+
+    # Completeness: the two classes partition the whole enum, so a newly added
+    # member forces an explicit decision (validator + selector, or mesh-only).
+    unclassified = frozenset(BindingSourceKind) - validated - _DOCUMENTED_MESH_ONLY_SOURCE_KINDS
+    assert not unclassified, (
+        f"unclassified BindingSourceKind member(s): {sorted(str(s) for s in unclassified)} — "
+        "register a validator in _BINDING_VALIDATOR_REGISTRY (with its selector model), "
+        "or enroll the member in _DOCUMENTED_MESH_ONLY_SOURCE_KINDS with its mesh-only rationale"
+    )
 
 
 def test_isolated_revision_build_gate_runs_every_family() -> None:

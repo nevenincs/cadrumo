@@ -343,6 +343,7 @@ ignore_imports =
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.**
     cadrumo.application.live._errors -> cadrumo.adapters.**
     cadrumo.application.live._expedientes -> cadrumo.adapters.**
+    cadrumo.application.live._filed_capture_finalizer -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._filed_data -> cadrumo.adapters.**
     cadrumo.application.live._filed_data_capture -> cadrumo.adapters.**
     cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.**

@@ -67,9 +67,7 @@ def test_root_does_not_register_bare_audit_alias() -> None:
 
 
 def test_root_does_not_register_bare_run_alias() -> None:
-    """`aeat run` is not a root verb per the evidence-bundle contract.
-    Replay belongs under `aeat app modelo audit replay`, never at
-    the root."""
+    """`aeat run` is not a root verb per the evidence-bundle contract."""
 
     result = invoke_cached_cli(["run", "--help"])
     assert result.exit_code != 0, result.output
@@ -85,13 +83,14 @@ def test_app_does_not_register_audit_subgroup_outside_modelo() -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_modelo_audit_verbs_only_register_canonical_four() -> None:
-    """Only the four canonical audit verbs (show / check / export /
-    replay) are mounted under `aeat app modelo audit`. Any other leaf
-    (verify, status, list, browse, run, etc.) violates the ratified
-    grammar from the evidence-bundle contract."""
+def test_modelo_audit_verbs_only_register_canonical_three() -> None:
+    """Only the three canonical audit verbs (show / check / export) are mounted
+    under `aeat app modelo audit`. `replay` was retired (it duplicated `check`),
+    and any other leaf (verify, status, list, browse, run, etc.) violates the
+    ratified grammar from the evidence-bundle contract."""
 
     forbidden_leaves = (
+        ("replay",),
         ("verify",),
         ("run",),
         ("status",),
@@ -103,7 +102,15 @@ def test_modelo_audit_verbs_only_register_canonical_four() -> None:
         result = invoke_cached_cli(["app", "modelo", "audit", *leaf, "--help"])
         assert result.exit_code != 0, (leaf, result.output)
 
-    accepted_leaves = (("show",), ("check",), ("export",), ("replay",))
+    accepted_leaves = (("show",), ("check",), ("export",))
     for leaf in accepted_leaves:
         result = invoke_cached_cli(["app", "modelo", "audit", *leaf, "--help"])
         assert result.exit_code == 0, (leaf, result.output)
+
+
+def test_ledger_link_rejects_retired_evidence_id_grammar() -> None:
+    """`aeat app ledger link --evidence-id` was retired: evidence assignment is
+    reserved for `aeat app ledger attach`. The option must not resolve."""
+
+    result = invoke_cached_cli(["app", "ledger", "link", "0" * 64, "--evidence-id", "x", "--help"])
+    assert result.exit_code != 0, result.output

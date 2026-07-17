@@ -14,7 +14,7 @@ audit_app = typer.Typer(
     name="audit",
     help=tr(
         "cli.app.modelo.audit.group_help",
-        default="Evidence bundle audit verbs (show/check/export/replay).",
+        default="Evidence bundle audit verbs (show/check/export).",
     ),
     no_args_is_help=True,
 )
@@ -181,48 +181,6 @@ def audit_export(
         f"verification_state\t{bundle.verification_state.value}",
     ]
     _emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
-
-
-@audit_app.command(
-    "replay",
-    help=tr(
-        "cli.app.modelo.audit.replay_help",
-        default="Replay the bundle's evidence case (never contacts AEAT).",
-    ),
-)
-def audit_replay(
-    ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-) -> None:
-    """Replay the evidence bundle's case assertions without contacting AEAT."""
-    bucket_id = active_bucket_id_or_refuse()
-    report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditReplayResult
-
-    result = ModeloAuditReplayResult(
-        bundle_id=report.bundle_id,
-        verification_state=report.verification_state.value,
-        completeness_ratio=report.completeness_ratio,
-        findings=[
-            EvidenceBundleCheckFindingPayload(
-                check=f.check.value,
-                passed=f.passed,
-                detail=f.detail,
-            )
-            for f in report.findings
-        ],
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{report.bundle_id}",
-        f"verification_state\t{report.verification_state.value}",
-        f"completeness_ratio\t{report.completeness_ratio}",
-        f"findings\t{len(report.findings)}",
-    ]
-    _emit_envelope(ctx, command="modelo.audit.replay", result=result, lines=lines)
 
 
 __all__ = ["audit_app", "register_audit_commands"]

@@ -70,14 +70,6 @@ asserting a false expiry; renewing the underlying PKCS#12 bundle rotates
 the secret explicitly via the same verb.
 """
 
-SECURE_STORAGE_BACKEND_LABEL = "secure_storage"
-"""Stable label reported for the sole certificate-secret backend.
-
-Named certificate secrets have exactly one storage authority — encrypted
-secure storage — so this is a fixed descriptor for operator-facing result
-records, not a selector. No backend kind is persisted or chosen.
-"""
-
 _MUTATION_OPERATION_ID_METADATA_KEY = "certificate_secret_mutation_operation_id"
 
 
@@ -240,7 +232,6 @@ class SecureStorageCertificateSecretBackend:
 
 
 __all__ = [
-    "SECURE_STORAGE_BACKEND_LABEL",
     "CertificateSecretBackend",
     "SecureStorageCertificateSecretBackend",
 ]

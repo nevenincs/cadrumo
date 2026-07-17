@@ -41,12 +41,13 @@ from .. import (
     persist_filed_calculation_observation,
     persist_filed_justificante_metadata,
 )
-from .._errors import LiveApplicationInputError
-from .._filed_data_capture import _persist_latest_filed_calculation_observations_with_failures
+from .._errors import LiveApplicationError, LiveApplicationInputError
+from .._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .._filed_observation_persistence import (
     latest_declarations_by_period,
     persist_iva_compensation_history_observations_strict,
     persist_latest_filed_calculation_observations,
+    select_latest_filed_observations_in_history_order,
 )
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
@@ -141,28 +142,122 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
     assert loaded.source_metadata["aeat_justificante_csv"] == "CSV30320261T"
 
 
-def test_filed_capture_registry_enrollment_reports_incomplete_observation(tmp_path: Path) -> None:
+def test_filed_capture_best_effort_finalizer_reports_incomplete_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
             update={"extraction_coverage": {}},
         )
 
-        keys, failures = _persist_latest_filed_calculation_observations_with_failures(
+        finalization = finalize_filed_capture(
             (observation,),
             justificante_csvs_by_observation={},
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
         )
 
         stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
 
-    assert keys == ()
-    assert len(failures) == 1
-    assert failures[0].modelo == "303"
-    assert failures[0].year == 2026
-    assert failures[0].period == Period.from_year_and_code(2026, "1T")
-    assert failures[0].expediente_id == _SYNTHETIC_EXPEDIENTE_ID
-    assert failures[0].error_type == "SedeParseError"
-    assert "has no extraction coverage" in failures[0].message
+    assert finalization.calculation_observation_keys == ()
+    assert len(finalization.failures) == 1
+    assert finalization.failures[0].modelo == "303"
+    assert finalization.failures[0].year == 2026
+    assert finalization.failures[0].period == Period.from_year_and_code(2026, "1T")
+    assert finalization.failures[0].expediente_id == _SYNTHETIC_EXPEDIENTE_ID
+    assert finalization.failures[0].error_type == "SedeParseError"
+    assert "has no extraction coverage" in finalization.failures[0].message
     assert stored is None
+
+
+def test_filed_capture_fail_fast_finalizer_raises_on_incomplete_observation(tmp_path: Path) -> None:
+    """Single and source capture use FAIL_FAST: a registry-enrollment failure aborts."""
+    with _secure_backend(tmp_path):
+        observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
+            update={"extraction_coverage": {}},
+        )
+
+        with pytest.raises(LiveApplicationError, match="could not be enrolled as registry-grounded"):
+            finalize_filed_capture(
+                (observation,),
+                justificante_csvs_by_observation={},
+                policy=FiledCaptureFailurePolicy.FAIL_FAST,
+            )
+
+        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+    assert stored is None
+
+
+def test_all_capture_routes_share_one_selection_and_ordering_authority(tmp_path: Path) -> None:
+    """The finalizer and the calculation-history persistence produce identical ordered keys.
+
+    Both delegate to ``select_latest_filed_observations_in_history_order``, so a
+    duplicate-period batch (a later BAJA cannot supersede an earlier ALTA) and a
+    cross-year set persist the SAME keys in the SAME order via either route —
+    proving the capture finalizer and the history-persistence path cannot drift
+    apart, which the duplicated capture-side selector previously allowed.
+    """
+    observations = (
+        _prior_303_observation(
+            year=2026,
+            period="1T",
+            expediente_id="200030300000030Z",
+            pending_compensation=Decimal("20.00"),
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        ),
+        _prior_303_observation(
+            year=2026,
+            period="1T",
+            expediente_id="200030300000031Z",
+            status="BAJA",
+            pending_compensation=Decimal("99.00"),
+            presented_at=datetime(2026, 4, 25, 10, 0, 0, tzinfo=UTC),
+        ),
+        _prior_303_observation(
+            year=2025,
+            period="4T",
+            expediente_id="200030300000032Z",
+            pending_compensation=Decimal("10.00"),
+            presented_at=datetime(2026, 1, 20, 10, 0, 0, tzinfo=UTC),
+        ),
+    )
+
+    # Pure selection + ordering: the later BAJA is superseded by the earlier ALTA
+    # for 2026/1T, and the result is ordered by (year, history-period key).
+    selected = select_latest_filed_observations_in_history_order(observations)
+    assert tuple((obs.ejercicio, obs.period.registry_token, obs.expediente_id) for obs in selected) == (
+        (2025, "4T", "200030300000032Z"),
+        (2026, "1T", "200030300000030Z"),
+    )
+
+    # The finalizer persists those same keys in that same order via the shared authority.
+    with _secure_backend(tmp_path / "finalizer"):
+        finalization = finalize_filed_capture(observations, policy=FiledCaptureFailurePolicy.BEST_EFFORT)
+    # The calculation-history persistence route resolves identical keys/order.
+    with _secure_backend(tmp_path / "history"):
+        history_keys = persist_latest_filed_calculation_observations(observations)
+
+    assert finalization.failures == ()
+    assert finalization.calculation_observation_keys == history_keys == ("303:2025:4T", "303:2026:1T")
+
+
+def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tmp_path: Path) -> None:
+    """The strict IVA compensation persistence remains a distinct authority.
+
+    The finalizer promotes latest filed observations into calculation history;
+    the strict IVA path (``persist_iva_compensation_history_observations_strict``)
+    stays a separate function with its own reload-verification contract, so the
+    two are not collapsed by the finalizer consolidation.
+    """
+    observation = _prior_303_observation(
+        pending_compensation=Decimal("5.00"),
+        expediente_id="200030300000040Z",
+        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+    )
+    with _secure_backend(tmp_path):
+        strict_keys = persist_iva_compensation_history_observations_strict((observation,))
+        strict_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+
+    assert strict_keys == ("303:2026:1T",)
+    assert strict_history is not None
+    assert finalize_filed_capture is not persist_iva_compensation_history_observations_strict
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:

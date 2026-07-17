@@ -183,7 +183,6 @@ class BucketEventType(StrEnum):
     # audit verb-group (evidence bundle)
     MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
     MODELO_AUDIT_EXPORTED = "modelo.audit.exported"
-    MODELO_AUDIT_REPLAYED = "modelo.audit.replayed"
     # live AEAT read surface.
     # Every event below records a READ-ONLY capture; submission is
     # permanently forbidden per the live-AEAT charter.

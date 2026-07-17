@@ -1951,10 +1951,8 @@ cli:
           s'escriu l'últim).
         force_incomplete_help: Permetre l'exportació quan la verificació indiqui que
           el paquet és incomplet.
-        group_help: Verbs d'auditoria del paquet d'evidència (show/check/export/replay).
+        group_help: Verbs d'auditoria del paquet d'evidència (show/check/export).
         output_help: Ruta de sortida per al ZIP del paquet.
-        replay_help: Reproduir la verificació del cas d'evidència per al lliurament
-          forense; mai contacta amb AEAT ni realitza tramesses.
         show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
@@ -3008,9 +3006,14 @@ cli:
         non_interactive_passphrase_required: Aquesta ordre necessita un terminal interactiu
           per demanar la nova contrasenya. Proporciona-la de manera no interactiva
           amb --new-passphrase i --confirm-new-passphrase.
+        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
+        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
+        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
+        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
       new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
+      secrets_stdin_help: cli.config.custody.secrets_stdin_help
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
@@ -3196,6 +3199,16 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
+    passphrase:
+      change:
+        help: cli.config.passphrase.change.help
+      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
+      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+      errors:
+        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
+        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
+      help: cli.config.passphrase.help
+      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
@@ -3454,11 +3467,11 @@ cli:
           tots.
         use_help: Canvia el perfil actiu a un sandbox existent.
         use_name_help: Nom del sandbox (sense el prefix).
-      sar_catalogue_info: 'Aquest arxiu conté totes les categories de dades personals
-        del perfil: identitat i dades del perfil, unitats de treball de models, moviments
-        del llibre, revisions de càlcul i registres de presentació. Els bytes de les
-        proves adjuntes i les captures d''AEAT resten en emmagatzematge xifrat; utilitzeu
-        l''arxiu de recuperació xifrat per incloure''ls.'
+      sar_catalogue_info: Aquest arxiu conté totes les categories de dades personals
+        del perfil. Les categories exactes figuren al camp data_categories d'aquesta
+        resposta i al seu context llegible per màquina. Els bytes de les proves adjuntes
+        i les captures d'AEAT resten en emmagatzematge xifrat; utilitzeu l'arxiu de
+        recuperació xifrat per incloure'ls.
       sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
         de l''interessat (RGPD): el paquet portàtil del perfil.'
       show:
@@ -4206,14 +4219,12 @@ cli:
           l'operador i no es poden vincular aquí. Per crear manualment una factura
           de catàleg vinculable, executa 'aeat app ledger invoice catalogue create'
           i passa aquest invoice_id a --invoice-id. Per adjuntar evidència de factura
-          de compra, executa 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
-          app ledger attach') amb un id d''aeat app ledger evidence add'.
-        missing_target: Indica almenys un de --invoice-id o --evidence-id.
-      evidence_id_help: Id d'evidència de factura de compra generat per 'aeat app
-        ledger evidence add', adjuntat al moviment.
-      help: Vincula un moviment del llibre amb una factura i/o amb un registre d'evidència
-        de factura de compra en una única crida canònica. Rebutja vincles entre buckets.
-        Local; mai contacta amb AEAT.
+          de compra, executa 'aeat app ledger attach' amb un id d''aeat app ledger
+          evidence add'.
+      help: Vincula un moviment del llibre amb una factura del catàleg de reconciliació
+        en una única crida canònica. Per adjuntar evidència de factura de compra,
+        usa 'aeat app ledger attach'. Rebutja vincles entre buckets. Local; mai
+        contacta amb AEAT.
       id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id del catàleg de factures enriquit, procedent d'una factura
         importada, reconciliada o creada amb 'aeat app ledger invoice catalogue create',

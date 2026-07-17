@@ -33,7 +33,6 @@ from .._ledger_payloads import (
     LedgerHistoryEventPayload,
     LedgerHistoryResult,
     LedgerImportTransactionRefPayload,
-    LedgerLinkEvidenceUpdatePayload,
     LedgerLinkResult,
     LedgerListRowPayload,
     LedgerPeriodPayload,
@@ -189,32 +188,10 @@ def test_bulk_result_rejects_extra_field() -> None:
         )
 
 
-def test_link_result_carries_transaction_and_typed_evidence_update() -> None:
-    """Link carries a transaction slot and a typed evidence_update payload."""
-    evidence = LedgerLinkEvidenceUpdatePayload.model_validate(
-        {
-            "bucket_id": "default",
-            "transaction_id": "a" * 64,
-            "review_status": "pending",
-            "transaction": _transaction_payload(),
-        },
-    )
+def test_link_result_is_invoice_only() -> None:
+    """`ledger link` carries only invoice-link metadata; no evidence slots exist
+    on the result (evidence assignment is the separate `attach` operation)."""
     result = LedgerLinkResult.model_validate(
-        {
-            "operation": "ledger.link",
-            "bucket_id": "default",
-            "transaction_id": "a" * 64,
-            "evidence_id": "ev-1",
-            "actor": "operator",
-            "transaction": _transaction_payload(),
-            "evidence_update": evidence.model_dump(mode="json"),
-        },
-    )
-    assert result.transaction is not None
-    assert result.evidence_update is not None
-    assert result.evidence_update.transaction.transaction_id == "a" * 64
-    # Invoice-only link: both slots are None.
-    invoice_only = LedgerLinkResult.model_validate(
         {
             "operation": "ledger.link",
             "bucket_id": "default",
@@ -223,8 +200,10 @@ def test_link_result_carries_transaction_and_typed_evidence_update() -> None:
             "actor": "operator",
         },
     )
-    assert invoice_only.transaction is None
-    assert invoice_only.evidence_update is None
+    assert result.invoice_id == "inv-1"
+    assert not hasattr(result, "evidence_id")
+    assert not hasattr(result, "evidence_update")
+    assert not hasattr(result, "transaction")
 
 
 def test_list_row_payload_carries_full_contract_and_round_trips() -> None:

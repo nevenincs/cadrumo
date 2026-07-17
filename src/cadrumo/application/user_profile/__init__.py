@@ -115,11 +115,17 @@ if TYPE_CHECKING:
         encrypt_profile_bundle_for_passphrase,
     )
     from ._bundle_export import (
+        PreparedProfileExport,
         ProfileBundleExportPurpose,
         ProfileBundleExportRequest,
         ProfileBundleExportResult,
+        ProfileBundleExportTarget,
         ProfileBundleExportTransport,
+        bundle_data_categories,
         export_profile_bundle,
+        prepare_profile_export,
+        publish_prepared_export,
+        reconcile_prepared_exports,
     )
     from ._capabilities import (
         CapabilityDecision,
@@ -316,11 +322,17 @@ def __getattr__(name: str):
 
         return getattr(_bundle, name)
     if name in (
+        "PreparedProfileExport",
         "ProfileBundleExportPurpose",
         "ProfileBundleExportRequest",
         "ProfileBundleExportResult",
+        "ProfileBundleExportTarget",
         "ProfileBundleExportTransport",
+        "bundle_data_categories",
         "export_profile_bundle",
+        "prepare_profile_export",
+        "publish_prepared_export",
+        "reconcile_prepared_exports",
     ):
         from . import _bundle_export
 
@@ -453,10 +465,12 @@ __all__ = [
     "EditProfileSectionCommand",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
+    "PreparedProfileExport",
     "ProfileAlreadyRegisteredError",
     "ProfileBundleExportPurpose",
     "ProfileBundleExportRequest",
     "ProfileBundleExportResult",
+    "ProfileBundleExportTarget",
     "ProfileBundleExportTransport",
     "ProfileId",
     "ProfileImportResult",
@@ -489,6 +503,7 @@ __all__ = [
     "UserProfileStatus",
     "active_profile_pointer_transaction",
     "build_lifecycle_service",
+    "bundle_data_categories",
     "carried_namespace_definitions",
     "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
@@ -503,10 +518,13 @@ __all__ = [
     "logout_active_profile",
     "mint_recovery_code",
     "missing_filing_baseline_flags",
+    "prepare_profile_export",
     "profile_create_storage_span",
     "profile_storage_session",
     "projection_for_taxpayer",
+    "publish_prepared_export",
     "reactivate_profile_with_lifecycle_span",
+    "reconcile_prepared_exports",
     "record_to_path_values",
     "record_to_values",
     "recover_secret_store",

@@ -16,11 +16,33 @@ from datetime import date
 
 from ...core import Period, TaxDomain
 from ...core.resources import resources
-from ...domain.calculations.registry import InputKind, ModeloSupportMatrixReport, RegistryQueryService
+from ...domain.calculations.registry import (
+    InputKind,
+    ModeloSupportMatrixReport,
+    RegistryQueryService,
+    RegistryValidationError,
+)
 
 
 def _service() -> RegistryQueryService:
     return RegistryQueryService(resources().modelos.authority)
+
+
+def _refuse_unscoped_as_of(*, as_of: date | None, scoped_form: str) -> None:
+    """Refuse an as_of argument on an unscoped discovery query, naming the scoped form.
+
+    The unscoped path resolves the latest revision by period and cannot gate a
+    point-in-time ``as_of`` against a revision's validity window; honouring it
+    needs a filing year. Rather than accept-and-silently-ignore the argument
+    (the accepted-parameter lie this contract closes), refuse it here at the
+    operator-facing boundary and name the scoped query that does honour it.
+    """
+    if as_of is not None:
+        raise RegistryValidationError(
+            f"as_of is only honoured by the filing-year-scoped registry query; the unscoped "
+            f"query resolves the latest revision by period and cannot apply a historical "
+            f"boundary. Re-run {scoped_form} with an explicit filing year to honour as_of.",
+        )
 
 
 def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
@@ -57,6 +79,7 @@ def registry_list_modelos(*, year: int | None = None, domain: TaxDomain | None =
 
 def registry_describe_modelo(modelo: str, *, period: str | None = None, as_of: date | None = None):
     """Return the registry modelo description report."""
+    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_describe_modelo_for_scope")
     return _service().describe_modelo(modelo, period=period, as_of=as_of)
 
 
@@ -95,6 +118,7 @@ def registry_casillas(
     form_number: str | None = None,
 ):
     """Return the registry casilla report."""
+    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casillas_for_scope")
     return _service().casillas(
         modelo,
         period=period,
@@ -155,6 +179,7 @@ def registry_casilla(
     as_of: date | None = None,
 ):
     """Return the single-casilla semantic detail report."""
+    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casilla_for_registry_scope")
     return _service().casilla(modelo, casilla, period=period, as_of=as_of)
 
 
@@ -177,6 +202,7 @@ def registry_casilla_for_registry_scope(
 
 def registry_bindings(modelo: str, *, period: str | None = None, as_of: date | None = None):
     """Return the registry bindings report for a modelo and optional period."""
+    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_bindings_for_year")
     return _service().bindings(modelo, period=period, as_of=as_of)
 
 
@@ -197,6 +223,7 @@ def registry_bindings_for_scope(modelo: str, *, period: Period, as_of: date | No
 
 def registry_formulas(modelo: str, *, period: str | None = None, as_of: date | None = None):
     """Return the registry formulas report."""
+    _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_formulas_for_scope")
     return _service().formulas(modelo, period=period, as_of=as_of)
 
 

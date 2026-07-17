@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,7 @@ from pydantic import ValidationError
 from .....core.resources import resources
 from .. import CasillaId, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
-from .._errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from .._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from .._queries import BindingSelectorQueryProjection, ModeloFormulaRow, RegistryQueryService
 from .._schema import InputKind
 from ._loader_directory_mode_support import write_fragmented_revision
@@ -405,3 +406,50 @@ def test_input_casilla_id_map_exposes_only_canonical_ids() -> None:
     canonical = "iva.compensacion-pendiente-periodos-anteriores"
     assert id_map[canonical] == canonical
     assert "110" not in id_map
+
+
+def test_unscoped_query_refuses_as_of_instead_of_silently_ignoring_it() -> None:
+    """The unscoped period query refuses an as_of argument rather than accepting-and-ignoring it.
+
+    The unscoped resolver selects the latest revision by period and has no
+    filing-year context to gate an as_of date, so honouring it is impossible; it
+    must refuse explicitly (the accepted-parameter lie the as-of-honesty contract
+    closes) rather than silently return the current view.
+    """
+    service = _service()
+    a_date = date(2024, 6, 1)
+    unscoped_calls = (
+        lambda: service.describe_modelo("303", period="1T", as_of=a_date),
+        lambda: service.casillas("303", period="1T", as_of=a_date),
+        lambda: service.bindings("303", period="1T", as_of=a_date),
+        lambda: service.formulas("303", period="1T", as_of=a_date),
+    )
+    for call in unscoped_calls:
+        with pytest.raises(RegistryValidationError, match="as_of"):
+            call()
+
+    # The refusal is scoped to the ignored argument: without as_of the same
+    # unscoped query still resolves, so the honesty fix did not break the path.
+    assert service.casillas("303", period="1T") is not None
+
+
+def test_scoped_query_honours_the_as_of_validity_window() -> None:
+    """The scoped query gates revision selection by the as_of date window.
+
+    Proves as_of participates rather than being ignored: an as_of inside the
+    resolved revision's validity window still resolves, while an as_of before
+    every declared window is honoured and refuses instead of returning the
+    current view.
+    """
+    service = _service()
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    within_window = snapshot.revision.valid_from
+
+    # Baseline resolution and an as_of inside the window both resolve.
+    assert service.casillas_for_scope("100", filing_year=2025, period="0A") is not None
+    assert service.casillas_for_scope("100", filing_year=2025, period="0A", as_of=within_window) is not None
+
+    # An as_of before every revision's validity window is honoured: it gates the
+    # selection and refuses rather than silently returning a revision.
+    with pytest.raises(NoRevisionForPeriodError):
+        service.casillas_for_scope("100", filing_year=2025, period="0A", as_of=date(1990, 1, 1))

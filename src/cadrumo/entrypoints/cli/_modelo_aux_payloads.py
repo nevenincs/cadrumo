@@ -102,17 +102,6 @@ class ModeloAuditExportResult(OutputSchema):
     records: int
 
 
-@register_schema("modelo.audit.replay")
-class ModeloAuditReplayResult(OutputSchema):
-    """Evidence bundle replay result (audit replay)."""
-
-    operation: str = "modelo.audit.replay"
-    bundle_id: str
-    verification_state: str
-    completeness_ratio: float
-    findings: list[EvidenceBundleCheckFindingPayload]
-
-
 class WorkUnitHistoryEventPayload(OutputSchema):
     """One event row in a work-unit history stream."""
 

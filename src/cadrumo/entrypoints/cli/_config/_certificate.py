@@ -436,7 +436,6 @@ def certificate_secret_set(
 
     payload = CertificateSourceSecretMutationPayload(
         name=result.name,
-        backend=result.backend,
         has_secret=result.has_secret,
         rotated=result.rotated,
     )
@@ -446,7 +445,6 @@ def certificate_secret_set(
         result=payload,
         lines=(
             f"name\t{result.name}",
-            f"backend\t{result.backend}",
             f"rotated\t{result.rotated}",
         ),
     )
@@ -497,7 +495,6 @@ def certificate_secret_remove(
 
     payload = CertificateSourceSecretMutationPayload(
         name=result.name,
-        backend=result.backend,
         has_secret=result.has_secret,
         removed=result.removed,
     )
@@ -507,7 +504,6 @@ def certificate_secret_remove(
         result=payload,
         lines=(
             f"name\t{result.name}",
-            f"backend\t{result.backend}",
             f"removed\t{result.removed}",
         ),
     )

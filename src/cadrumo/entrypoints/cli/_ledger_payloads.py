@@ -1095,41 +1095,20 @@ class LedgerPreflightResult(OutputSchema):
     ready: bool
 
 
-class LedgerLinkEvidenceUpdatePayload(OutputSchema):
-    """Typed evidence-update projection nested in ``ledger link``.
-
-    Mirrors
-    :class:`LedgerTransactionResultPayload`: the
-    single-transaction mutation result produced when ``link`` attaches
-    purchase-invoice evidence to the transaction. Replaces the former bare
-    ``dict[str, object]`` ``evidence_update`` field.
-    """
-
-    bucket_id: str
-    transaction_id: str
-    review_status: str
-    transaction: TransactionPayload
-
-
 @register_schema("ledger.link")
 class LedgerLinkResult(OutputSchema):
     """JSON envelope for ``aeat app ledger link``.
 
-    ``link`` projects the ``transaction`` it mutated (the evidence
-    attachment) alongside the link metadata; ``evidence_update`` is the typed
-    :class:`LedgerLinkEvidenceUpdatePayload`.
-    Both are ``None`` on an invoice-only link, where no single-transaction
-    mutation projection is produced.
+    ``link`` establishes an invoice-only bidirectional relationship and carries
+    only the link metadata. Evidence assignment is a separate operation
+    (``aeat app ledger attach``) and never rides on this result.
     """
 
     operation: str
     bucket_id: str
     transaction_id: str
-    invoice_id: str | None = None
-    evidence_id: str | None = None
+    invoice_id: str
     actor: str
-    transaction: TransactionPayload | None = None
-    evidence_update: LedgerLinkEvidenceUpdatePayload | None = None
 
 
 # ---------------------------------------------------------------------------

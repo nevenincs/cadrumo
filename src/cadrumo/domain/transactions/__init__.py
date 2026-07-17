@@ -169,7 +169,6 @@ from ._service import (
 
 if TYPE_CHECKING:
     from ._repository import (
-        TX_BUCKET_NAMESPACE,
         ImportSummary,
         transaction_index_object_key,
         transaction_object_key,
@@ -179,7 +178,6 @@ if TYPE_CHECKING:
 _LAZY_REPOSITORY_NAMES = frozenset(
     {
         "ImportSummary",
-        "TX_BUCKET_NAMESPACE",
         "transaction_index_object_key",
         "transaction_object_key",
     },
@@ -192,8 +190,8 @@ def __getattr__(name: str):
     The concrete :class:`TransactionCatalogueRepository` now lives in the
     persistence adapter
     :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`;
-    only the pure port surface (``ImportSummary``, the key-derivation helpers,
-    and the namespace constant) is resolved here.
+    only the pure port surface (``ImportSummary`` and the key-derivation
+    helpers) is resolved here.
     """
     if name in _LAZY_REPOSITORY_NAMES:
         from . import _repository
@@ -211,7 +209,6 @@ __all__ = [
     "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
-    "TX_BUCKET_NAMESPACE",
     "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",

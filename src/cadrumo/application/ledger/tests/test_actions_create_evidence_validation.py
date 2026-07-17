@@ -20,6 +20,7 @@ from ._action_test_support import (
     TransactionDirection,
     TransactionValidationError,
     _repositories,
+    attach_manual_transaction_evidence,
     create_manual_transaction,
     date,
     datetime,
@@ -31,6 +32,24 @@ from ._action_test_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = ["secure_objects"]
+
+
+def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, idempotency_key: str) -> str:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="material oficina",
+            idempotency_key=idempotency_key,
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+    )
+    return created.ref.transaction_id
 
 
 def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_objects: SecureObjectRepository) -> None:
@@ -150,3 +169,118 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
+
+
+# ── attach-time parity: the same missing / cross-bucket policy as create ──────
+#
+# Create validates evidence through _verify_evidence_references on the command;
+# attach delegates to the same validator via the manual-write path. These tests
+# assert the attach door enforces byte-for-byte the same refusals as create, so
+# neither door is a weaker route into the evidence catalogue.
+
+
+def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repository.save(InvoiceCatalogue())
+    transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-missing-evidence")
+
+    with pytest.raises(TransactionValidationError, match="purchase_invoice_evidence_id"):
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id="missing-purchase-evidence",
+            actor="operator-B",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+
+    persisted = transaction_repository.load().get(transaction_id)
+    assert persisted is not None
+    assert persisted.purchase_invoice_evidence_id is None
+
+
+def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
+    other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": _OTHER_BUCKET_ID})
+    invoice_repository.save(InvoiceCatalogue.from_invoices((other_bucket_invoice,)))
+    transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-cross-bucket-evidence")
+
+    with pytest.raises(TransactionValidationError, match="command bucket"):
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
+            actor="operator-B",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+
+    persisted = transaction_repository.load().get(transaction_id)
+    assert persisted is not None
+    assert persisted.purchase_invoice_evidence_id is None
+
+
+def test_attach_rejects_missing_attachment_manifest(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-missing-attachment")
+
+    with pytest.raises(TransactionValidationError, match="attachment_ids"):
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=transaction_id,
+            attachment_ids=("a" * 64,),
+            actor="operator-B",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            attachment_store=AttachmentStore(objects=secure_objects),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+
+    persisted = transaction_repository.load().get(transaction_id)
+    assert persisted is not None
+    assert persisted.attachment_ids == ()
+
+
+def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    store = AttachmentStore(objects=secure_objects)
+    body = b"%PDF-1.4\nother bucket evidence\n%%EOF"
+    attachment_id = store.put_bytes(body)
+    store.write_manifest(
+        Attachment(
+            attachment_id=attachment_id,
+            kind=AttachmentKind.INVOICE_PDF,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="other-bucket.pdf",
+            sha256=hashlib.sha256(body).hexdigest(),
+            mime_type="application/pdf",
+            bytes_size=len(body),
+            captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
+            bucket_id=_OTHER_BUCKET_ID,
+            captured_by="operator-B",
+            source_command="aeat app ledger attach",
+        ),
+    )
+    transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-cross-bucket-attachment")
+
+    with pytest.raises(TransactionValidationError, match="command bucket"):
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=transaction_id,
+            attachment_ids=(attachment_id,),
+            actor="operator-B",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            attachment_store=store,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
+
+    persisted = transaction_repository.load().get(transaction_id)
+    assert persisted is not None
+    assert persisted.attachment_ids == ()

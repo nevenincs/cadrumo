@@ -36,12 +36,20 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_link_requires_at_least_one_target() -> None:
-    """Neither --invoice-id nor --evidence-id supplied surfaces as
-    BadParameter; the canonical call is meant to bind something."""
+def test_link_requires_invoice_id() -> None:
+    """`link` is invoice-only: --invoice-id is required, so a bare call refuses."""
 
     result = _invoke(["app", "ledger", "link", "0" * 64])
     assert result.exit_code != 0, result.output
+
+
+def test_link_rejects_removed_evidence_id_grammar() -> None:
+    """The retired `--evidence-id` option must be gone: evidence assignment is
+    reserved for `aeat app ledger attach`. Passing it is an unknown-option error."""
+
+    result = _invoke(["app", "ledger", "link", "0" * 64, "--invoice-id", "inv-1", "--evidence-id", "ev-123"])
+    assert result.exit_code != 0, result.output
+    assert "--evidence-id" in result.output or "No such option" in result.output
 
 
 def test_link_refuses_unknown_transaction_id() -> None:
@@ -49,7 +57,7 @@ def test_link_refuses_unknown_transaction_id() -> None:
     refused before either repository write is attempted."""
 
     result = _invoke(
-        ["app", "ledger", "link", "0" * 64, "--evidence-id", "ev-123"],
+        ["app", "ledger", "link", "0" * 64, "--invoice-id", "inv-123"],
     )
     assert result.exit_code != 0, result.output
 
