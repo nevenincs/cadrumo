@@ -278,6 +278,36 @@ def test_export_publishes_into_a_freshly_created_parent_directory(tmp_path: Path
         assert published.profile.profile_id == bucket_id
 
 
+def test_reconcile_skips_a_prepared_operation_whose_target_lock_is_held(tmp_path: Path) -> None:
+    from ....core.locks import exclusive_file_lock
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "portable.json"
+
+        prepared = prepare_profile_export(_request(destination))
+        staged = Path(prepared.staged_path)
+        repository = ProfileBundleExportJournalRepository()
+        assert len(repository.prepared()) == 1
+        assert staged.exists()
+
+        # A live export holds the destination lock across its whole publication.
+        # Reconcile must not touch this in-flight operation.
+        with exclusive_file_lock(destination):
+            reconciled = reconcile_prepared_exports()
+
+        assert reconciled == ()
+        assert staged.exists()
+        assert len(repository.prepared()) == 1
+
+        # Once the lock is released, the same operation reconciles normally.
+        cleared = reconcile_prepared_exports()
+        assert len(cleared) == 1
+        assert cleared[0].operation_id == prepared.operation.operation_id
+        assert not staged.exists()
+        assert not destination.exists()
+
+
 def test_same_target_export_is_excluded_while_the_target_lock_is_held(tmp_path: Path) -> None:
     from ....core.locks import exclusive_file_lock
 
