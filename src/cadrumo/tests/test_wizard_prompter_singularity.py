@@ -51,11 +51,11 @@ import pytest
 
 from ._inventory import aeat_relative, production_ast_items, qualified_name, repo_relative
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from pathlib import Path
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 CANONICAL_PROMPTER_MODULE = "application/wizard/_prompter.py"
