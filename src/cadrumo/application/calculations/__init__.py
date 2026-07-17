@@ -135,6 +135,7 @@ from ._observations_repository import (
     ObservationEnvelopePayload,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
+    member_observation_key,
     observation_key,
     observation_key_for_token,
 )
@@ -240,6 +241,7 @@ __all__ = [
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
     "m111_no_retenciones_periods_for_bucket",
+    "member_observation_key",
     "observation_key",
     "observation_key_for_token",
     "partition_cross_period_requirements_by_activity_start",
