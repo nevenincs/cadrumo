@@ -12,6 +12,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+  - '[[2026-07-17-export-publication-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -35,6 +36,8 @@ related:
 - [ ] `S07` - Route both config profile export and subject-access-request through the sole portable-export application service and remove direct serialization, target writes, completion events, and static SAR category ownership from the CLI; `src/cadrumo/entrypoints/cli/_config/_profile_export.py`.
 - [ ] `S08` - Migrate the export family help, risk, and cleartext handoff-risk metadata to the accepted grammar with equal classification for both purposes; `src/cadrumo/application/operator_surface/_risk_table.py`.
 - [ ] `S09` - Regenerate the operator reference pages for portable export and subject access from the frozen live surface; `docs/reference/import-export-and-evidence.md`.
+- [ ] `S10` - Gated requirement surfaced by the export durable-layer review, latent until S07 wires both export doors through the shared service: make reconcile_prepared_exports hold the per-destination lock (or a repository lock spanning staged-temp removal and journal delete) per operation, or guarantee the S07 call site runs reconcile only at exclusive startup, so a reconcile concurrent with a live same-target export cannot unlink the live staged temp and spuriously fail os.replace with a ProfileExportError; `the gate is a test that holds the destination lock and proves reconcile does not remove the live staged temp or raise a spurious ProfileExportError; `src/cadrumo/application/user_profile/_bundle_export.py, src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
+- [ ] `S11` - Decide and implement whether a crash after os.replace succeeds but before the PROFILE_EXPORTED audit event eventually emits that event: adopt the three-phase journal (PREPARED, then replace plus fsync transitioning to COMPLETED, then emit the event; reconcile completes a COMPLETED-but-eventless operation), closing the un-audited data-egress window and wiring the currently-dead COMPLETED operation-state enum; this is a data-egress audit-completeness posture item with limited privacy impact (a local file at the operator's own path, not remote transmission); the gate is that no durably-published bundle lacks a PROFILE_EXPORTED event after reconcile; `src/cadrumo/application/user_profile/_bundle_export.py, src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
 ## Description
 
 Collapse two CLI-owned export writers onto one durable publication service. Portable profile export and the subject-access request each independently implement serialization, directory creation, publication, and event sequencing from inside the CLI. That is two parallel writers for the same durable artifact, each with its own crash behaviour, and neither with a recoverable preparation state.
