@@ -34,6 +34,7 @@ from ....core import Period, resolve_active_bucket_id
 from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -59,6 +60,41 @@ _CORRECTED_INGRESOS = Decimal("1100.00")
 # only the unified rectificativa mechanism can file it.
 _M303_BASELINE_BASE_GENERAL = Decimal("10000.00")
 _M303_CORRECTED_BASE_GENERAL = Decimal("9000.00")
+
+# The fields `WorkAmendWizardResult` mirrors from `WorkAmendResult` whose values
+# must be identical for the same amendment expressed through either surface.
+# Deliberately excluded: the wizard-only additions (`corrected_casillas`,
+# `export_next_action`, `amendment_reason`, `operation`), and the mirrored fields
+# that identify the individual filing and so differ by construction
+# (`amends_filing_record_id`, `filing_record_id`, `work_unit_id`,
+# `calculation_revision_id`, `period`, `filed_at`) -- each asserted separately.
+_AMEND_PARITY_SPINE = (
+    "amendment_kind",
+    "status",
+    "external_evidence",
+    "kind",
+    "live_submission",
+    "aeat_accepted",
+    "modelo",
+    "filing_year",
+    "bucket_id",
+    "filed_by",
+    "notes",
+    "superseded_at",
+    "superseded_by_filing_record_id",
+)
+
+
+def _casilla_observation(revision_payload, casilla_id: str):
+    """Return the single persisted observation for ``casilla_id``.
+
+    ``casilla_values`` and ``observations`` are keyed by the same casilla id, so
+    the lookup is exact; the uniqueness assertion keeps a future duplicate-row
+    regression from silently picking the first match.
+    """
+    rows = [row for row in revision_payload["observations"] if row["casilla_id"] == casilla_id]
+    assert len(rows) == 1, f"expected exactly one observation for casilla {casilla_id}, got {len(rows)}"
+    return rows[0]
 
 
 def _invoke(args: list[str]):
@@ -361,6 +397,116 @@ def test_amend_wizard_composes_shared_amend_path_not_a_parallel_one() -> None:
         == str(_CORRECTED_INGRESOS)
     )
     assert wizard_payload["amendment_kind"] == hand_built_payload["amendment_kind"] == "complementaria"
+
+
+def test_amend_wizard_composes_shared_amend_path_for_a_rectificativa() -> None:
+    """A wizard-built rectificativa and a hand-built ``work amend`` rectificativa agree exactly.
+
+    The complementaria parity case above can only ever prove the *complementaria*
+    limb: M130 has no rectificativa regime (no bundled diseño grounds adoption),
+    so the kind is the one thing it cannot vary. The rectificativa is a
+    legally-distinct mechanism -- it REPLACES the prior filing rather than
+    supplementing it (LGT art. 120.4, Orden HAC/819/2024) -- and travels a
+    different branch of ``amend_modelo_revision``'s kind guard, so parity across
+    it is a separate claim needing its own proof.
+
+    Two independently-seeded M303 2025 baselines (different quarters, both
+    post-unification and so rectificativa-effective) are amended identically: one
+    through the guided wizard, one through the raw ``work amend`` flag grammar.
+    Both must resolve to the same persisted outcome -- proof the wizard is a
+    guided front end over the one ``amend_modelo_revision`` path
+    (``composition-service-no-parallel-write-path``) for this kind too, not a
+    second, independently-derived amendment surface.
+    """
+    _create_profile()
+
+    wizard_unit_id = _create_m303_work_unit()
+    wizard_baseline_filing_id = _import_external_m303_baseline(
+        wizard_unit_id,
+        csv="JUST-2025-303-1T-RECT-WIZARD",
+        period="1T",
+    )
+    wizard_result = _invoke_with_typed_answers(
+        ["--format", "json", "app", "modelo", "work", "amend-wizard", wizard_unit_id],
+        ("07", str(_M303_CORRECTED_BASE_GENERAL), "rectificativa", "wizard-driven rectificativa"),
+    )
+    assert wizard_result.exit_code == 0, wizard_result.output
+    wizard_payload = _payload(wizard_result.output)
+
+    hand_unit_id = create_modelo_work_unit_via_cli(
+        modelo="303",
+        filing_year=2025,
+        period="2T",
+        revision="2023-y-siguientes",
+    )
+    hand_baseline_filing_id = _import_external_m303_baseline(
+        hand_unit_id,
+        csv="JUST-2025-303-2T-RECT-HANDBUILT",
+        period="2T",
+    )
+    hand_built_result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "amend",
+            "--from-filing-record", hand_baseline_filing_id,
+            "--kind", "rectificativa",
+            "--reason", "hand-built rectificativa",
+            "--set", f"07={_M303_CORRECTED_BASE_GENERAL}",
+        ],
+    )  # fmt: skip
+    assert hand_built_result.exit_code == 0, hand_built_result.output
+    hand_built_payload = _payload(hand_built_result.output)
+
+    # The kind survives both surfaces identically, and each amendment supersedes
+    # its own AEAT-attested baseline with an internal filing envelope.
+    assert wizard_payload["amendment_kind"] == hand_built_payload["amendment_kind"] == "rectificativa"
+    assert wizard_payload["status"] == hand_built_payload["status"] == "vigente"
+    assert wizard_payload["external_evidence"] is None
+    assert hand_built_payload["external_evidence"] is None
+    assert wizard_payload["amends_filing_record_id"] == wizard_baseline_filing_id
+    assert hand_built_payload["amends_filing_record_id"] == hand_baseline_filing_id
+
+    # Every field the two payloads share must agree. `WorkAmendWizardResult`
+    # mirrors `WorkAmendResult` and adds only the wizard's own audit surface
+    # (`corrected_casillas`, `export_next_action`, `amendment_reason`), so the
+    # mirrored spine below is precisely what a parity claim can range over. The
+    # remaining mirrored fields (the four ids, `period`, `filed_at`) identify the
+    # two independent filings and differ by construction.
+    for field in _AMEND_PARITY_SPINE:
+        assert wizard_payload[field] == hand_built_payload[field], field
+
+    # The persisted revisions agree -- the parity claim is about stored state,
+    # not merely the emitted payload.
+    wizard_revision = _payload(
+        _invoke(
+            ["--format", "json", "app", "modelo", "work", "revision", wizard_payload["calculation_revision_id"]],
+        ).output,
+    )
+    hand_built_revision = _payload(
+        _invoke(
+            [
+                "--format", "json",
+                "app", "modelo", "work", "revision", hand_built_payload["calculation_revision_id"],
+            ],
+        ).output,
+    )  # fmt: skip
+    assert (
+        wizard_revision["casilla_values"]["07"]
+        == hand_built_revision["casilla_values"]["07"]
+        == str(_M303_CORRECTED_BASE_GENERAL)
+    )
+
+    # The corrected casilla carries identical legal grounding through both
+    # surfaces. The persisted observation is where that grounding actually has to
+    # survive (``aeat-calculation-grounding``), and unlike the wizard-only
+    # ``corrected_casillas`` audit trail it is emitted by both paths, so it is the
+    # one place the two can be compared on grounding at all.
+    wizard_obs = _casilla_observation(wizard_revision, "07")
+    hand_built_obs = _casilla_observation(hand_built_revision, "07")
+    assert wizard_obs["value"] == hand_built_obs["value"] == str(_M303_CORRECTED_BASE_GENERAL)
+    assert wizard_obs["legal_refs"], "corrected casilla must carry legal_refs"
+    assert wizard_obs["legal_refs"] == hand_built_obs["legal_refs"]
+    assert wizard_obs["source_refs"] == hand_built_obs["source_refs"]
 
 
 def test_amend_wizard_no_selection_refuses_instructively() -> None:
