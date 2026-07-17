@@ -56,6 +56,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W05-P11-S51]]'
   - '[[2026-07-15-distribution-installation-readiness-W05-P11-S56]]'
   - '[[2026-07-15-distribution-installation-readiness-W05-P12-S57]]'
+  - '[[2026-07-15-distribution-installation-readiness-W05-P12-S58]]'
   - '[[2026-07-15-distribution-installation-readiness-W05-P12-S60]]'
   - '[[2026-07-15-distribution-installation-readiness-W05-P12-S71]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -139,6 +140,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W05-P11-S51` - Define the installation guide information architecture and evidence-backed claim boundaries
 - `2026-07-15-distribution-installation-readiness-W05-P11-S56` - Fail documentation checks when an advertised channel lacks matching acquisition evidence
 - `2026-07-15-distribution-installation-readiness-W05-P12-S57` - Run the path-scoped formatting tests and vault checks for every touched implementation surface
+- `2026-07-15-distribution-installation-readiness-W05-P12-S58` - Perform a formal safety intent and quality review of the finished distribution implementation
 - `2026-07-15-distribution-installation-readiness-W05-P12-S60` - Create step execution records rebuild the feature index and close only evidenced rows
 - `2026-07-15-distribution-installation-readiness-W05-P12-S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions
 
