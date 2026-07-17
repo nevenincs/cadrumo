@@ -36,18 +36,16 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import importlib
 import logging
 import os
 import pickle
+import sys
 import tempfile
 import time
 from pathlib import Path
 
-# S08 reuses the loader's fingerprint key, loader-code fingerprint, and eviction
-# helper as the canonical source; S09 relocates them into this module as their
-# permanent home and flips the import direction (loader -> compiled cache).
-from ._loader import _evict_stale_registry_pickles, _registry_disk_cache_key
-from ._loader_cache import registry_disk_cache_dir
+from ._loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
 from ._schema import ModeloDefinition, RegistryCatalogues
 
 CompiledRegistryPayload = tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]
@@ -64,6 +62,134 @@ _READ_ATTEMPTS = 3
 _READ_RETRY_BASE_DELAY_SECONDS = 0.01
 
 _LOGGER = logging.getLogger(__name__)
+
+_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
+
+_EMBEDDED_SCHEMA_CORE_MODULES = (
+    # Cross-package core modules whose TYPES are EMBEDDED in the pickled compiled
+    # (modelos, catalogues) objects. The registry-package hash below covers the
+    # schema MODELS and the compiler/resolvers, but the compiled objects also
+    # embed core primitives defined OUTSIDE the registry package -- a change to
+    # one of these (a new BindingSourceKind member, a BindingAggregation field,
+    # a SensitivityClass value, a Period/TaxDomain shape) alters the pickled
+    # object semantics without touching any registry module, so it must be in
+    # the key too. Extend this tuple when a new core type becomes embedded in
+    # the compiled objects; `test_embedded_schema_core_modules_all_resolve`
+    # guards it against drift to a non-existent module.
+    "cadrumo.core.aggregation",  # BindingSourceKind / BindingAggregation / BindingTypedEnumKind
+    "cadrumo.core.classification",  # SensitivityClass
+    "cadrumo.core._period",  # Period
+    "cadrumo.core._tax_domain",  # TaxDomain
+)
+
+
+def _compute_loader_code_fingerprint() -> str:
+    """Return a content hash of the loader/compiler/schema source.
+
+    The compiled-registry cache stores COMPILED ``(modelos, catalogues)``
+    objects. The tree fingerprint keys only the TOML inputs, so a change to the
+    compilation logic (or to a core type embedded in the compiled objects) that
+    produces DIFFERENT compiled objects from IDENTICAL TOML is invisible to the
+    tree key -- a stale cache from a prior session would be served for the
+    current loader. The hand-maintained
+    :data:`_REGISTRY_TREE_CACHE_SCHEMA_VERSION` only guards this when a developer
+    remembers to bump it. Folding a content hash of the source into the cache key
+    closes the gap automatically:
+
+    * every registry-package module (excluding its tests) -- the schema models,
+      the compiler, and the resolvers; and
+    * the cross-package core modules whose types are embedded in the compiled
+      objects (:data:`_EMBEDDED_SCHEMA_CORE_MODULES`).
+
+    Any change to either surface yields a new key, so pre-change caches can never
+    be served. Best-effort per surface: an unreadable registry tree (e.g. a
+    zip-imported install) falls back to the interpreter version + bytecode cache
+    tag; an unresolvable core module folds in a stable marker so the key stays
+    deterministic and distinct rather than crashing.
+    """
+    hasher = hashlib.sha256()
+    try:
+        package_dir = Path(__file__).resolve().parent
+        source_files = sorted(
+            path for path in package_dir.rglob("*.py") if "tests" not in path.relative_to(package_dir).parts
+        )
+        for path in source_files:
+            hasher.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
+            hasher.update(path.read_bytes())
+    except OSError:
+        hasher.update(sys.version.encode("utf-8"))
+        hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))
+
+    for module_name in _EMBEDDED_SCHEMA_CORE_MODULES:
+        try:
+            module = importlib.import_module(module_name)
+            module_file = getattr(module, "__file__", None)
+            if module_file is None:
+                hasher.update(f"unresolved:{module_name}".encode())
+                continue
+            hasher.update(module_name.encode("utf-8"))
+            hasher.update(Path(module_file).read_bytes())
+        except (OSError, ImportError):
+            hasher.update(f"unresolved:{module_name}".encode())
+    return hasher.hexdigest()
+
+
+_LOADER_CODE_FINGERPRINT = _compute_loader_code_fingerprint()
+
+
+def _registry_disk_cache_key(
+    root: str,
+    fingerprints: FingerprintTuples,
+    *,
+    loader_code_fingerprint: str = _LOADER_CODE_FINGERPRINT,
+) -> str:
+    """Compute the compiled-cache key.
+
+    The key binds the compiled payload to (1) the schema-version marker, (2) a
+    content hash of the loader/compiler/schema source (so a code change that
+    alters compiled semantics invalidates the cache even without a manual version
+    bump), (3) the registry root path, and (4) the per-TOML tree fingerprints
+    (path, size, mtime_ns). ``loader_code_fingerprint`` is injected for test
+    isolation; production always uses :data:`_LOADER_CODE_FINGERPRINT`.
+    """
+    hasher = hashlib.sha256()
+    hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
+    hasher.update(loader_code_fingerprint.encode("utf-8"))
+    hasher.update(root.encode("utf-8"))
+    for item in fingerprints:
+        hasher.update(item[0].encode("utf-8"))
+        hasher.update(str(item[1]).encode("utf-8"))
+        hasher.update(str(item[2]).encode("utf-8"))
+    return hasher.hexdigest()
+
+
+def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) -> None:
+    """Keep only the newest ``registry_disk_cache_max_entries`` caches, prune the rest.
+
+    One cache accumulates per registry-tree fingerprint, so a long-lived cache
+    directory (an editable checkout re-compiling after successive registry edits)
+    would otherwise grow without bound. Called after a successful write; entirely
+    best-effort -- a prune failure (a permission error, a concurrent writer's
+    unlink, a file that vanished mid-scan) is logged and swallowed. Eviction must
+    never crash a registry load; the worst case is a few extra stale files.
+    """
+    keep = registry_disk_cache_max_entries()
+    try:
+        entries: list[tuple[int, Path]] = []
+        for cache_path in cache_dir.glob(f"{_CACHE_FILENAME_PREFIX}*{_CACHE_FILENAME_SUFFIX}"):
+            try:
+                entries.append((cache_path.stat().st_mtime_ns, cache_path))
+            except OSError:
+                continue
+    except OSError:
+        logger.debug("Could not enumerate compiled registry caches in %s", cache_dir, exc_info=True)
+        return
+    entries.sort(reverse=True)
+    for _mtime_ns, stale in entries[keep:]:
+        try:
+            stale.unlink()
+        except OSError:
+            logger.debug("Could not evict stale compiled registry cache %s", stale, exc_info=True)
 
 
 def compiled_cache_path(root: Path, fingerprints: FingerprintTuples) -> Path:
