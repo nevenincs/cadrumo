@@ -373,3 +373,24 @@ and authoritative-source grounding, and the MCP evidence binds its child invocat
 the Cellar-owned CLI identity. Cleanup removed the formula, installed prefix, and tap
 with no retained formulas, taps, or errors. No blocking S23 finding remains. Hosted
 Linux and macOS coverage remains open under S24.
+
+## S28 MCPB runtime-requirement review
+
+**Pass.** Reviewed the MCPB v0.4 manifest, bundle builder, emitted runtime
+project, complete real-cohort archive tests, retained provisioned runtime, and
+installed MCP oracle. The compatibility declaration advertises only Python
+`>=3.13,<3.14`; it makes no operating-system or client-support claim. The
+bundle launches UV against its own project and `src/server.py`, with all three
+`0.2.1` product distributions resolved from bundle-local wheels and bound to
+their stamped digests.
+
+The retained virtual environment is CPython 3.13.11. Retained evidence SHA-256
+`d2106e7e227fe876ea5bd2628d26276f15dec51c36f9e97cc004780f889f890c`
+binds MCPB SHA-256
+`8615c66cc05441a8b60f82ccef7f5a1374af81dd37890acf03a6341c62f24cd2`
+to source commit `11c82d2f030c1e75d6b34606e3373421c4f5bce5` and the exact embedded
+cohort. The installed MCP oracle returned `DP200014:00562 == 23000.00` under
+`modelo-200-cuota-integra`. Focused Ruff passed and all eight real-cohort MCPB
+archive tests passed. No S28 finding remains. This disposition does not approve
+S29 signing/cohort acceptance, S30 per-client installation, or the English-only
+descriptions that keep S68 open.
