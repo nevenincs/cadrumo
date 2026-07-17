@@ -32,6 +32,7 @@ from .. import (
     profile_storage_session,
     reconcile_prepared_exports,
 )
+from .._bundle_export import _STAGED_TEMP_SUFFIX
 from .._bundle_export_operation import ProfileBundleExportJournalRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -249,6 +250,37 @@ def test_reconcile_completion_is_idempotent_for_a_published_operation(tmp_path: 
         second = reconcile_prepared_exports()
         assert second == ()
         assert len(_export_events(bucket_id)) == 1
+
+
+def test_digest_matched_reconcile_leaves_no_cleartext_staged_temp(tmp_path: Path) -> None:
+    # Sensitive-data posture: even in the coincidental edge where a pre-replace
+    # crash leaves the destination already holding byte-identical content from a
+    # prior identical export (so the digest matches without our replace running),
+    # reconcile must not leave the cleartext staged .export-tmp on disk.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        bucket_id = _create_profile()
+        destination = tmp_path / "portable.json"
+
+        prepared = prepare_profile_export(_request(destination))
+        staged = Path(prepared.staged_path)
+        # A prior identical export having landed exactly these bytes, then a
+        # crash before this operation's os.replace: the destination coincidentally
+        # matches the recorded digest while the staged temp still exists.
+        destination.write_bytes(staged.read_bytes())
+        assert staged.exists()
+        repository = ProfileBundleExportJournalRepository()
+        assert len(repository.prepared()) == 1
+        events_before = len(_export_events(bucket_id))
+
+        reconciled = reconcile_prepared_exports()
+
+        assert len(reconciled) == 1
+        assert repository.list() == ()
+        assert len(_export_events(bucket_id)) == events_before + 1
+        assert destination.exists()
+        # The cleartext staged temp must be gone.
+        assert not staged.exists()
+        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
 
 
 def test_completed_export_leaves_no_journal_and_one_event(tmp_path: Path) -> None:
