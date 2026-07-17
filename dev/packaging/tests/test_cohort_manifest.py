@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from dev.packaging.cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     ArtifactKind,
+    ArtifactRecord,
     BuildIdentity,
     SourceIdentity,
     create_manifest,
@@ -109,4 +110,29 @@ def test_manifest_rejects_an_incomplete_artifact_set(tmp_path: Path) -> None:
             created_at=datetime.now(UTC),
             builder=_build_identity(),
             artifacts=rows[:-1],
+        )
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        ".",
+        "../escape",
+        "..\\escape",
+        "a\\b",
+        "a/./b",
+        "a//b",
+        "C:/escape",
+        "/absolute",
+    ),
+)
+def test_artifact_record_rejects_nonportable_paths(path: str) -> None:
+    """Persisted paths use one traversal-free POSIX grammar on every host."""
+    with pytest.raises(ValidationError, match="normalized relative POSIX path"):
+        ArtifactRecord(
+            name="mcpb",
+            kind=ArtifactKind.MCPB,
+            path=path,
+            sha256="a" * 64,
+            size=1,
         )

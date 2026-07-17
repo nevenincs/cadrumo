@@ -71,7 +71,13 @@ class ArtifactRecord(BaseModel):
     @classmethod
     def _relative_normal_path(cls, value: str) -> str:
         path = PurePosixPath(value)
-        if path.is_absolute() or ".." in path.parts or path.as_posix() != value:
+        if (
+            path.is_absolute()
+            or value == "."
+            or "\\" in value
+            or any(part in {"", ".", ".."} or ":" in part for part in path.parts)
+            or path.as_posix() != value
+        ):
             raise ValueError("artifact path must be one normalized relative POSIX path")
         return value
 
