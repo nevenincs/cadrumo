@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -12,6 +13,7 @@ from pathlib import Path
 
 from ....core.config import load_settings
 from ....core.resources import resolve_companion_binary
+from ....core.resources._boundary import packaged_data
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
 
@@ -20,6 +22,68 @@ _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 _LOGGER = logging.getLogger(__name__)
 
 _CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
+
+# Shipped sidecar constants (see dev/packaging/extract_manual_corpus_text.py).
+# Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
+# where the path is source.corpus_path with the leading "corpus/" prefix stripped.
+_MANUAL_CORPUS_TEXT_DIR = "manual_corpus_text"
+_CORPUS_PATH_PREFIX = "corpus/"
+_SIDECAR_SUFFIX = ".corpus_text.json"
+
+
+def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
+    """Return the shipped normalised text for a manual-PDF source, or ``None``.
+
+    Reads the content-keyed sidecar committed under
+    ``_data/manual_corpus_text/`` that was built by
+    ``dev/packaging/extract_manual_corpus_text.py``.  Verifies the
+    sha256 of ``source_path``'s bytes against the sidecar's stored
+    ``source_sha256`` before returning the text, so a modified or
+    replaced PDF never silently serves stale text.
+
+    Returns ``None`` when:
+    - the sidecar is absent (not yet generated or path unexpected),
+    - the sidecar cannot be parsed as valid JSON,
+    - the sha256 of ``source_path`` does not match ``source_sha256``.
+
+    The caller falls back to on-demand pypdfium2 extraction on ``None``.
+    End-user machines should never reach that path: the shipped sidecar
+    covers every ``manual_pdf`` source the registry declares.
+
+    Args:
+        corpus_path: The source's :attr:`SourceReference.corpus_path`,
+            e.g. ``"corpus/manuals/renta/2020/part1/source.pdf"``.
+        source_path: Resolved on-disk path to the source PDF bytes.
+    """
+    if not corpus_path.startswith(_CORPUS_PATH_PREFIX):
+        return None
+    relative = corpus_path[len(_CORPUS_PATH_PREFIX) :]
+    # Build the sidecar Traversable under the bundled _data tree.
+    sidecar_parts = relative.split("/")
+    sidecar_parts[-1] = sidecar_parts[-1] + _SIDECAR_SUFFIX
+    try:
+        node = packaged_data(_MANUAL_CORPUS_TEXT_DIR, *sidecar_parts)
+        raw = node.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    try:
+        data: dict[str, object] = json.loads(raw)
+    except Exception:
+        return None
+    stored_sha256 = data.get("source_sha256")
+    if not isinstance(stored_sha256, str):
+        return None
+    actual_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    if actual_sha256 != stored_sha256:
+        _LOGGER.warning(
+            "Manual PDF sidecar sha256 mismatch for %s; falling back to on-demand extraction",
+            corpus_path,
+        )
+        return None
+    normalised = data.get("normalised_text")
+    if not isinstance(normalised, str):
+        return None
+    return normalised
 
 
 @lru_cache(maxsize=4096)
@@ -272,10 +336,18 @@ class EvidenceValidator:
             return normalised
 
         if source.kind == "manual_pdf":
-            text = _extract_pdf_text_impl(str(source_path))
+            # Try the shipped content-keyed sidecar first; verify sha256 before
+            # using it so a modified source PDF never serves stale text.  The
+            # sidecar is generated once at build time by
+            # dev/packaging/extract_manual_corpus_text.py and shipped with the
+            # cadrumo wheel — end-user machines should never reach the fallback.
+            sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path)
+            if sidecar_text is not None:
+                normalised = sidecar_text
+            else:
+                normalised = normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
         else:
-            text = source_path.read_text(encoding="utf-8", errors="replace")
-        normalised = normalise_corpus_text(text)
+            normalised = normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
 
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised
