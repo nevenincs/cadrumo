@@ -188,8 +188,7 @@ def test_no_module_global_override_state_in_production(source_tree_ast: Mapping[
     ]
 
     assert violations == [], (
-        "no production module may declare a module-global override slot; "
-        "use real DI instead:\n" + "\n".join(violations)
+        "no production module may declare a module-global override slot; use real DI instead:\n" + "\n".join(violations)
     )
 
 
