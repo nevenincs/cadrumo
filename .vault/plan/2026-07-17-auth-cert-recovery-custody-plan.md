@@ -81,9 +81,9 @@ Cut the passphrase and recovery command grammar over to the landed backend autho
 
 Cut the certificate and auth command grammar over to secure storage and remove backend selection and keyring spellings.
 
-- [ ] `P05.S32` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
-- [ ] `P05.S33` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
-- [ ] `P05.S34` - Require yes for auth reset while keeping auth status and auth test non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
+- [x] `P05.S32` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
+- [x] `P05.S33` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
+- [x] `P05.S34` - Require yes for auth reset while keeping auth status and auth test non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
 
 ### Phase `P06` - Contract migration for these families
 
