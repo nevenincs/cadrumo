@@ -102,7 +102,7 @@ Remove the module-global test-double seam from the production secret-store facto
 
 - [x] `P07.S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers; `delete override_secret_store, the module-global _override_store, its if-override branch, and both blob_store and storage __init__ facade exports; migrate the four consuming tests to pass an EphemeralMasterKeyProvider-backed SecretStore explicitly, in one atomic relocation commit including apidocs scaffold; `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py`.
 - [x] `P07.S42` - Add an AST recurrence gate, patterned on test_wizard_prompter_singularity.py, that bans module-global _override_* factory state and public override_* setters in production, exempting only the sanctioned core.config.override_settings; `src/cadrumo/adapters/persistence/storage/blob_store/tests/test_materialisation.py`.
-- [ ] `P07.S43` - Sweep the storage facade and generated API docs for the removed override_secret_store export and update the import-hygiene baseline after the seam removal; `src/cadrumo/adapters/persistence/storage/__init__.py`.
+- [x] `P07.S43` - Sweep the storage facade and generated API docs for the removed override_secret_store export and update the import-hygiene baseline after the seam removal; `src/cadrumo/adapters/persistence/storage/__init__.py`.
 
 ## Description
 
