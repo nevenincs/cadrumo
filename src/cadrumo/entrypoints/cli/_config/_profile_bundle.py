@@ -1,8 +1,8 @@
 """Profile bundle import/export command registration for ``aeat config profile``.
 
-Profile import/export emits
-:class:`BucketEventHistoryRepository` lifecycle events
-around portable bundle writes and reads.
+Profile import emits a lifecycle event after restoring a portable bundle.
+Profile export delegates resolution, serialization, publication, and event
+recording to the application-layer export authority.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core.errors import AeatError as _AeatError
+from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -25,53 +25,21 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 _PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 if TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer, WorkflowStateRepository
     from ....domain.buckets import BucketEventType
 
 
 def register_profile_bundle_commands(
     profile_app: typer.Typer,
     *,
-    profile_state: Callable[[], WorkflowStateRepository],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
     atomic_create_profile: Callable[..., str],
 ) -> None:
     """Register profile bundle import/export commands."""
-    _register_profile_export_command(
-        profile_app,
-        profile_state=profile_state,
-        resolve_profile_by_label=resolve_profile_by_label,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-    )
-    _register_profile_sar_command(
-        profile_app,
-        profile_state=profile_state,
-        resolve_profile_by_label=resolve_profile_by_label,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-    )
+    _register_profile_export_command(profile_app)
+    _register_profile_sar_command(profile_app)
     _register_profile_import_command(profile_app, atomic_create_profile=atomic_create_profile)
 
 
-#: Personal-data categories the portable bundle carries, surfaced in the SAR
-#: data catalogue so a subject can see what the archive holds. These mirror the
-#: v3 :class:`UserProfilePortableExport` typed fields.
-_SAR_DATA_CATEGORIES: tuple[str, ...] = (
-    "profile_identity_and_facts",
-    "modelo_work_units",
-    "ledger_transactions",
-    "calculation_revisions",
-    "filing_records",
-)
-
-
-def _register_profile_sar_command(
-    profile_app: typer.Typer,
-    *,
-    profile_state: Callable[[], WorkflowStateRepository],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-) -> None:
+def _register_profile_sar_command(profile_app: typer.Typer) -> None:
     @profile_app.command(
         "subject-access-request",
         help=tr(
@@ -101,71 +69,59 @@ def _register_profile_sar_command(
         ),
     ) -> None:
         """Produce the operator's own personal-data archive (GDPR right of access)."""
-        from ....application.user_profile import profile_storage_session, serialize_profile_bundle
-        from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
+        from ....application.user_profile import (
+            ProfileBundleExportPurpose,
+            ProfileBundleExportRequest,
+            ProfileBundleExportTransport,
+            export_profile_bundle,
+        )
+        from ....application.workflow import ProfileLabelAmbiguousError
+        from ....domain.user_profile import ProfileNotFoundError
         from .._config_payloads import ConfigProfileSubjectAccessRequestResult
 
         _activate_subcommand_output_language(ctx, output_language)
-        profile_state().load()
-        if name is not None:
-            pointer = resolve_profile_by_label(name)
-        else:
-            pointer = resolve_active_profile_pointer()
-            if pointer is None:
-                raise _CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
-
-        def _serialize_and_record() -> UserProfilePortableExport:
-            serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
-            _emit_profile_lifecycle_event(
-                event_type=BucketEventType.PROFILE_EXPORTED,
-                bucket_id=pointer.bucket_id,
-                object_id=pointer.bucket_id,
-                payload={
-                    "display_name": pointer.label or "",
-                    "out": str(out),
-                    "schema_version": str(serialized.bundle_schema_version),
-                    "subject_access_request": "true",
-                },
-            )
-            return serialized
-
         try:
-            from ....adapters.persistence.storage.master_key import has_active_bucket_session
-            from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-
-            if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
-                bundle = _serialize_and_record()
-            else:
-                with profile_storage_session(pointer.bucket_id):
-                    bundle = _serialize_and_record()
+            export = export_profile_bundle(
+                ProfileBundleExportRequest(
+                    profile_name=name,
+                    destination=out,
+                    purpose=ProfileBundleExportPurpose.SUBJECT_ACCESS,
+                    transport=ProfileBundleExportTransport.CLEARTEXT_LOCAL,
+                ),
+            )
+        except ProfileLabelAmbiguousError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ) from exc
         except ProfileNotFoundError as exc:
+            if name is None:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.errors.no_active_profile",
+                ) from exc
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
-                context={"name": pointer.label},
+                context={"name": name},
             ) from exc
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
 
         result = ConfigProfileSubjectAccessRequestResult(
-            profile_id=pointer.bucket_id,
-            display_name=pointer.label,
-            out=str(out),
-            schema_version=bundle.bundle_schema_version,
-            data_categories=list(_SAR_DATA_CATEGORIES),
+            profile_id=export.profile_id,
+            display_name=export.display_name,
+            out=str(export.destination),
+            schema_version=export.bundle_schema_version,
+            data_categories=list(export.data_categories),
         )
         sensitivity_notice = _build_export_sensitivity_notice(out)
-        catalogue_notice = _build_sar_catalogue_notice()
+        catalogue_notice = _build_sar_catalogue_notice(export.data_categories)
         _emit_envelope(
             ctx,
             command="config.profile.subject_access_request",
             result=result,
             lines=(
-                f"profile_id\t{pointer.bucket_id}",
-                f"display_name\t{pointer.label}",
+                f"profile_id\t{export.profile_id}",
+                f"display_name\t{export.display_name}",
                 f"out\t{out}",
-                f"schema_version\t{bundle.bundle_schema_version}",
-                f"data_categories\t{','.join(_SAR_DATA_CATEGORIES)}",
+                f"schema_version\t{export.bundle_schema_version}",
+                f"data_categories\t{','.join(export.data_categories)}",
                 f"INFO\t{catalogue_notice.message}",
                 f"WARNING\t{sensitivity_notice.message}",
             ),
@@ -173,7 +129,7 @@ def _register_profile_sar_command(
         )
 
 
-def _build_sar_catalogue_notice() -> Notice:
+def _build_sar_catalogue_notice(data_categories: tuple[str, ...]) -> Notice:
     """Build the data-catalogue notice naming the personal-data categories held.
 
     A GDPR right-of-access response must tell the subject what categories of
@@ -195,17 +151,11 @@ def _build_sar_catalogue_notice() -> Notice:
                 "storage; use the encrypted recovery archive to include them."
             ),
         ),
-        context={"data_categories": ",".join(_SAR_DATA_CATEGORIES)},
+        context={"data_categories": ",".join(data_categories)},
     )
 
 
-def _register_profile_export_command(
-    profile_app: typer.Typer,
-    *,
-    profile_state: Callable[[], WorkflowStateRepository],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-) -> None:
+def _register_profile_export_command(profile_app: typer.Typer) -> None:
     @profile_app.command(
         "export",
         help=tr(
@@ -251,82 +201,70 @@ def _register_profile_export_command(
         ),
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
+        from pydantic import SecretStr
+
         from ....application.user_profile import (
-            encrypt_profile_bundle_for_passphrase,
-            profile_storage_session,
-            serialize_profile_bundle,
+            ProfileBundleExportPurpose,
+            ProfileBundleExportRequest,
+            ProfileBundleExportTransport,
+            export_profile_bundle,
         )
-        from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
+        from ....application.workflow import ProfileLabelAmbiguousError
+        from ....domain.user_profile import ProfileNotFoundError
         from .._config_payloads import ConfigProfileExportResult
 
         _activate_subcommand_output_language(ctx, output_language)
         _validate_export_transport_options(passphrase=passphrase, cleartext_local=cleartext_local)
-        profile_state().load()
-        if name is not None:
-            pointer = resolve_profile_by_label(name)
-        else:
-            pointer = resolve_active_profile_pointer()
-            if pointer is None:
+        try:
+            export = export_profile_bundle(
+                ProfileBundleExportRequest(
+                    profile_name=name,
+                    destination=out,
+                    purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+                    transport=(
+                        ProfileBundleExportTransport.CLEARTEXT_LOCAL
+                        if passphrase is None
+                        else ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED
+                    ),
+                    passphrase=SecretStr(passphrase) if passphrase is not None else None,
+                ),
+            )
+        except ProfileLabelAmbiguousError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ) from exc
+        except ProfileNotFoundError as exc:
+            if name is None:
                 raise _CliRefusedBoundaryError(
                     translated_message="cli.config.errors.no_active_profile",
-                )
-
-        def _serialize_and_record() -> UserProfilePortableExport:
-            serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
-            _emit_profile_lifecycle_event(
-                event_type=BucketEventType.PROFILE_EXPORTED,
-                bucket_id=pointer.bucket_id,
-                object_id=pointer.bucket_id,
-                payload={
-                    "display_name": pointer.label or "",
-                    "out": str(out),
-                    "schema_version": str(serialized.bundle_schema_version),
-                },
-            )
-            return serialized
-
-        try:
-            from ....adapters.persistence.storage.master_key import has_active_bucket_session
-            from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-
-            if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
-                bundle = _serialize_and_record()
-            else:
-                with profile_storage_session(pointer.bucket_id):
-                    bundle = _serialize_and_record()
-        except ProfileNotFoundError as exc:
+                ) from exc
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
-                context={"name": pointer.label},
+                context={"name": name},
             ) from exc
-        out.parent.mkdir(parents=True, exist_ok=True)
         if passphrase is None:
-            out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
             notices = (_build_export_sensitivity_notice(out),)
             transport = "cleartext-local"
         else:
-            encrypted = encrypt_profile_bundle_for_passphrase(bundle, passphrase=passphrase)
-            out.write_text(encrypted.model_dump_json(indent=2), encoding="utf-8")
             notices = (_build_encrypted_export_notice(out),)
             transport = "passphrase-encrypted"
 
         export_result = ConfigProfileExportResult(
-            profile_id=pointer.bucket_id,
-            display_name=pointer.label,
-            out=str(out),
-            schema_version=bundle.bundle_schema_version,
+            profile_id=export.profile_id,
+            display_name=export.display_name,
+            out=str(export.destination),
+            schema_version=export.bundle_schema_version,
         )
         _emit_envelope(
             ctx,
             command="config.profile.export",
             result=export_result,
             lines=(
-                f"profile_id\t{pointer.bucket_id}",
-                f"display_name\t{pointer.label}",
+                f"profile_id\t{export.profile_id}",
+                f"display_name\t{export.display_name}",
                 f"out\t{out}",
                 f"transport\t{transport}",
-                f"schema_version\t{bundle.bundle_schema_version}",
+                f"schema_version\t{export.bundle_schema_version}",
                 *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
             ),
             notices=notices,
@@ -483,7 +421,7 @@ def _register_profile_import_command(
                 translated_message="cli.config.profile.import_encrypted_bundle_invalid",
                 context={"path": str(path)},
             ) from exc
-        except _AeatError:
+        except _CadrumoError:
             raise
         except Exception as exc:
             from ....core.logging import get_logger

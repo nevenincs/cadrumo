@@ -25,13 +25,14 @@ the reviewed harness markdown (no secrets, no tax data) and computes no value.
 from __future__ import annotations
 
 import filecmp
+import hashlib
 import json
 import shutil
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from importlib import metadata as _metadata
 from importlib.resources.abc import Traversable  # nosem
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -39,9 +40,6 @@ from .. import __version__
 from ..core import PRODUCT_IDENTITY
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from . import harness_root, iter_operator_rules, iter_personas
-
-if TYPE_CHECKING:
-    from dev.packaging.python_cohort import PythonCohort
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -182,23 +180,21 @@ class MarketplaceManifest(BaseModel):
     plugin: PluginManifest
 
 
+class _PluginPythonCohort(Protocol):
+    """Validated Python release cohort consumed by the plugin emitter."""
+
+    directory: Path
+    source_commit: str
+    version: str
+    root_wheel: Path
+    manuals_wheel: Path
+    official_wheel: Path
+    sha256: Mapping[str, str]
+
+
 def _write_json(dest_dir: Path, name: str, document: object) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
     (dest_dir / name).write_text(json.dumps(document, indent=2) + "\n", encoding=_UTF_8)
-
-
-def _load_plugin_python_cohort(cohort_dir: Path) -> PythonCohort:
-    """Load the exact release cohort through its single packaging authority."""
-    try:
-        from dev.packaging.python_cohort import load_python_cohort
-    except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            "cohort-bound plugin generation requires the source checkout's dev.packaging.python_cohort authority",
-        ) from exc
-    try:
-        return load_python_cohort(cohort_dir)
-    except SystemExit as exc:
-        raise ValueError(str(exc)) from exc
 
 
 _PERSONA_CONFIG_KEY = "persona"
@@ -374,7 +370,7 @@ def _emit_plugin_agents(output_dir: Path) -> int:
     return count
 
 
-def _cohort_wheels(cohort: PythonCohort) -> dict[str, Path]:
+def _cohort_wheels(cohort: _PluginPythonCohort) -> dict[str, Path]:
     return {
         "cadrumo": cohort.root_wheel,
         "cadrumo-data-manuals": cohort.manuals_wheel,
@@ -382,7 +378,7 @@ def _cohort_wheels(cohort: PythonCohort) -> dict[str, Path]:
     }
 
 
-def _mcp_args(version: str, cohort: PythonCohort | None) -> list[str]:
+def _mcp_args(version: str, cohort: _PluginPythonCohort | None) -> list[str]:
     if cohort is None:
         return ["--from", f"{_PYPI_DISTRIBUTION}[agent]=={version}", _MCP_CONSOLE_SCRIPT]
     root = f"{_CLAUDE_PLUGIN_ROOT}/{_PLUGIN_ARTIFACTS_SUBDIR.as_posix()}"
@@ -398,7 +394,7 @@ def _mcp_args(version: str, cohort: PythonCohort | None) -> list[str]:
     ]
 
 
-def _mcp_config_document(version: str, cohort: PythonCohort | None) -> dict[str, object]:
+def _mcp_config_document(version: str, cohort: _PluginPythonCohort | None) -> dict[str, object]:
     """Build the plugin's ``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server."""
     return {
         "mcpServers": {
@@ -417,7 +413,7 @@ def _mcp_config_document(version: str, cohort: PythonCohort | None) -> dict[str,
 
 def _materialise_plugin_python_cohort(
     output_dir: Path,
-    cohort: PythonCohort | None,
+    cohort: _PluginPythonCohort | None,
 ) -> None:
     artifact_dir = output_dir / _PLUGIN_ARTIFACTS_SUBDIR
     if artifact_dir.exists():
@@ -434,6 +430,12 @@ def _materialise_plugin_python_cohort(
     wheels = _cohort_wheels(cohort)
     for distribution in _PYTHON_COHORT_WHEELS:
         source = wheels[distribution]
+        actual_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        if actual_digest != cohort.sha256[distribution]:
+            raise ValueError(
+                f"cohort artifact digest mismatch for {distribution!r}: "
+                f"expected {cohort.sha256[distribution]}, got {actual_digest}",
+            )
         destination = artifact_dir / source.name
         shutil.copy2(source, destination)
         if not filecmp.cmp(source, destination, shallow=False):
@@ -456,7 +458,7 @@ def materialise_plugin(
     *,
     version: str | None = None,
     persona_default: str = "",
-    cohort_dir: Path | None = None,
+    cohort: _PluginPythonCohort | None = None,
 ) -> PluginManifest:
     """Write the shipped harness under ``output_dir`` as a Claude plugin.
 
@@ -466,16 +468,15 @@ def materialise_plugin(
     tree with Claude-native frontmatter, and the ``.mcp.json`` stdio server
     declaration, all from the single authored harness source. The ``version`` is
     resolved from installed package metadata when no cohort is supplied;
-    ``persona_default`` seeds the ``userConfig`` persona default. With
-    ``cohort_dir``, the plugin embeds and launches the canonical immutable root
-    wheel plus both mandatory companions. Otherwise it resolves the published
-    distribution at the exact plugin version. Neither path uses an ambient
-    product executable or project checkout.
+    ``persona_default`` seeds the ``userConfig`` persona default. With a
+    validated ``cohort``, the plugin embeds and launches the canonical immutable
+    root wheel plus both mandatory companions. Otherwise it resolves the
+    published distribution at the exact plugin version. Neither path uses an
+    ambient product executable or project checkout.
 
     Returns:
         :class:`PluginManifest` describing the plugin written.
     """
-    cohort = None if cohort_dir is None else _load_plugin_python_cohort(cohort_dir)
     if cohort is not None and version is not None and version != cohort.version:
         raise ValueError(
             f"plugin version {version!r} does not match Python cohort version {cohort.version!r}",
@@ -530,7 +531,7 @@ def materialise_marketplace(
     *,
     version: str | None = None,
     persona_default: str = "",
-    cohort_dir: Path | None = None,
+    cohort: _PluginPythonCohort | None = None,
 ) -> MarketplaceManifest:
     """Write the marketplace-served tree under ``output_dir`` from the harness source.
 
@@ -548,7 +549,7 @@ def materialise_marketplace(
         output_dir / _MARKETPLACE_PLUGINS_SUBDIR / _PLUGIN_NAME,
         version=version,
         persona_default=persona_default,
-        cohort_dir=cohort_dir,
+        cohort=cohort,
     )
 
     return MarketplaceManifest(

@@ -18,6 +18,7 @@ from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app
+from ....tests.user_profile import register_minimal_profile
 from .. import _import_failure_surface, _startup_import_error_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -134,7 +135,7 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+    from ....application.user_profile import profile_create_storage_span
     from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()
@@ -332,7 +333,9 @@ def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> Non
     assert text_result.exit_code == 0, text_result.output
     assert "Overall\t" in text_result.output
     assert "registry.load" in text_result.output
-    payload = json.loads(_json_output(json_result))
+    envelope = json.loads(_json_output(json_result))
+    assert envelope["command"] == "config.repair"
+    payload = envelope["result"]
     assert payload["registry"]["available"] is True
     assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output

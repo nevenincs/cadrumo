@@ -40,8 +40,8 @@ from pathlib import Path
 
 import pytest
 
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import build_tool_descriptors
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ContradictionScenario, check_contradiction_scenario
@@ -127,7 +127,7 @@ def _dispatch_readiness() -> bool:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.readiness"  # sanity: real payload shape, not a stray success envelope
     return bool(payload["ready"])
 

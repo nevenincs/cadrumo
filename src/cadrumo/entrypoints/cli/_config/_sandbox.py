@@ -114,7 +114,7 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
             SandboxSourceNotFoundError,
             create_sandbox,
         )
-        from .._config_payloads import ConfigProfileSandboxCreateResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxCreateResult
 
         try:
             outcome = create_sandbox(CreateSandboxCommand(name=name, from_profile=from_profile))
@@ -182,7 +182,8 @@ def _register_sandbox_list_command(app: typer.Typer) -> None:
         from ....application.bucket_maintenance import SANDBOX_LABEL_PREFIX
         from ....application.workflow import list_profile_buckets
         from ....core import resolve_active_bucket_id
-        from .._config_payloads import ConfigProfileSandboxListResult, ProfilePointerPayload
+        from .._config_payloads import ProfilePointerPayload
+        from .._config_sandbox_payloads import ConfigProfileSandboxListResult
 
         active = resolve_active_bucket_id()
         buckets = list_profile_buckets()
@@ -239,7 +240,7 @@ def _register_sandbox_use_command(app: typer.Typer) -> None:
         from ....application.user_profile import select_profile_with_lifecycle_span
         from ....application.workflow import read_profile_bucket
         from ....domain.user_profile import ProfileNotFoundError
-        from .._config_payloads import ConfigProfileSandboxUseResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxUseResult
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -312,7 +313,7 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
         )
         from ....application.workflow import read_profile_bucket
         from ....domain.buckets import BucketDeleteRefusedError
-        from .._config_payloads import ConfigProfileSandboxDiscardResult, SandboxNamespacePayload
+        from .._config_sandbox_payloads import ConfigProfileSandboxDiscardResult, SandboxNamespacePayload
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -446,7 +447,7 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
             list_sandboxes,
         )
         from ....core import resolve_active_bucket_id
-        from .._config_payloads import ConfigProfileSandboxPruneResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxPruneResult
 
         sandboxes = list_sandboxes()
         active_bucket_id = resolve_active_bucket_id()
@@ -554,7 +555,7 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
         )
         from ....application.workflow import read_profile_bucket
         from ....domain.buckets import BucketArchiveRefusedError
-        from .._config_payloads import ConfigProfileSandboxArchiveResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxArchiveResult
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -658,7 +659,7 @@ def _register_sandbox_restore_command(app: typer.Typer) -> None:
             sandbox_label,
         )
         from ....application.workflow import read_profile_bucket
-        from .._config_payloads import ConfigProfileSandboxRestoreResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxRestoreResult
 
         label = sandbox_label(name)
         # The sandbox is dormant (tombstoned) after an archive, so the
@@ -740,7 +741,7 @@ def _register_sandbox_usage_command(app: typer.Typer) -> None:
             sandbox_label,
         )
         from ....application.workflow import read_profile_bucket
-        from .._config_payloads import (
+        from .._config_sandbox_payloads import (
             ConfigProfileSandboxUsageResult,
             SandboxDiskUsagePayload,
             SandboxDiskUsageSubdirPayload,
@@ -852,7 +853,7 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
             sandbox_label,
         )
         from ....application.workflow import ProfileLabelAmbiguousError, read_profile_bucket
-        from .._config_payloads import ConfigProfileSandboxMergeResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxMergeResult
 
         label = sandbox_label(name)
         source_pointer = read_profile_bucket(label)

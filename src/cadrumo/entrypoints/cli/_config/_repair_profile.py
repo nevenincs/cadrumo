@@ -12,7 +12,7 @@ from collections.abc import Callable
 import typer
 
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-from ....core.errors import AeatError as _AeatError
+from ....core.errors import CadrumoError as _CadrumoError
 from ....core.i18n import tr
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
@@ -136,18 +136,21 @@ def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, 
     return {str(k): v for k, v in redacted.items()}
 
 
-def profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
-    """Return the operator command for repairing a missing profile record."""
+def _profile_record_repair_next_action(profile_id: str, *, label: str) -> str:
+    """Return the operator command for repairing an unavailable profile record."""
     if profile_id == _resolve_active_bucket_id():
         return "aeat config repair profile --clear-active --yes"
     return f"aeat config repair profile --profile {label}"
+
+
+def profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
+    """Return the operator command for repairing a missing profile record."""
+    return _profile_record_repair_next_action(profile_id, label=label)
 
 
 def profile_record_unreadable_next_action(profile_id: str, *, label: str) -> str:
     """Return the operator command for repairing an unreadable profile record."""
-    if profile_id == _resolve_active_bucket_id():
-        return "aeat config repair profile --clear-active --yes"
-    return f"aeat config repair profile --profile {label}"
+    return _profile_record_repair_next_action(profile_id, label=label)
 
 
 def _emit_profile_record_status(
@@ -191,7 +194,7 @@ def _emit_profile_record_status(
             ),
         )
         raise typer.Exit(code=2) from None
-    except _AeatError as exc:
+    except _CadrumoError as exc:
         _emit_profile_record_unreadable_repair(
             ctx,
             pointer=pointer,

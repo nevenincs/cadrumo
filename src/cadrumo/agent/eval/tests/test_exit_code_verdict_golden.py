@@ -39,20 +39,16 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ExitCodeScenario, check_exit_code_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FILING_YEAR = 2025
 _PERIOD = "1T"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 def _create_profile() -> None:
@@ -173,7 +169,7 @@ def _dispatch_m130_verify_with_cross_period_finding() -> tuple[int, dict[str, An
             "--modelo", "130", "--year", str(_FILING_YEAR), "--period", _PERIOD,
         ],
     )  # fmt: skip
-    payload = unwrap_schema_envelope(verified.output)
+    payload = require_schema_envelope(verified.output)
     assert payload["granted_verificado_completo"] is False, verified.output
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean", verified.output
 
@@ -219,7 +215,7 @@ def test_exit_1_with_findings_reads_as_an_actionable_verdict_not_a_crash() -> No
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert result.passed, result.failures
@@ -254,7 +250,7 @@ def test_runner_rejects_an_exit_1_with_no_continuation_guidance() -> None:
         scenario,
         exit_code=exit_code,
         envelope=stripped,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -287,7 +283,7 @@ def test_runner_rejects_an_exit_code_mismatch() -> None:
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -333,7 +329,7 @@ def test_runner_rejects_a_fabricated_continuation_command() -> None:
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed

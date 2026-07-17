@@ -2,19 +2,18 @@
 
 Verifies two contracts introduced by contract:
 
-1. AeatError subclasses that escape a config command surface produce a
+1. CadrumoError subclasses that escape a config command surface produce a
    typed error envelope — the command_error_boundary receives the typed
-   AeatError and emits a structured stderr payload with a non-zero exit code.
+   CadrumoError and emits a structured stderr payload with a non-zero exit code.
 
-2. Unexpected (non-AeatError) exceptions from config command handlers are
-   wrapped in ConfigBoundaryError so the exit is typed, not a bare crash.
-   For the _emit_profile_record_status / _assert_profile_record_present sites
-   (catches 1-3) the custom "profile_record_unreadable" payload is still
-   emitted and exit code 2 is returned, with the cause chained through a
-   ConfigBoundaryError rather than the raw exception.
+2. Unexpected (non-CadrumoError) exceptions from config command handlers are
+   wrapped in ConfigBoundaryError so the exit is typed, not a bare crash. The
+   profile-show read boundary emits its typed ``profile_record_unreadable``
+   result and exits with code 2, chaining ConfigBoundaryError rather than the
+   raw exception.
 
 3. The profile-import parse-failure path (catch 4) continues to emit a
-   CliRefusedBoundaryError when model_validate_json raises a non-AeatError.
+   CliRefusedBoundaryError when model_validate_json raises a non-CadrumoError.
 """
 
 from __future__ import annotations
@@ -61,15 +60,15 @@ def _create_profile(name: str = "test-operator") -> None:
 
 
 # ---------------------------------------------------------------------------
-# G1: AeatError subclass surfaces as a typed error envelope
+# G1: CadrumoError subclass surfaces as a typed error envelope
 # ---------------------------------------------------------------------------
 
 
-def test_aeat_error_from_config_profile_show_unknown_name_emits_typed_envelope() -> None:
+def test_cadrumo_error_from_config_profile_show_unknown_name_emits_typed_envelope() -> None:
     """config profile show with an unregistered name raises CliRefusedBoundaryError.
 
     The _resolve_profile_by_label helper raises CliRefusedBoundaryError
-    (an AeatError subclass) when the name is not found. The
+    (an CadrumoError subclass) when the name is not found. The
     command_error_boundary catches it and emits an error payload on
     stderr. The CLI exits with a non-zero code.
 
@@ -85,11 +84,11 @@ def test_aeat_error_from_config_profile_show_unknown_name_emits_typed_envelope()
     assert isinstance(result.exception, SystemExit) or result.exit_code != 0
 
 
-def test_aeat_error_from_config_switch_missing_profile_emits_typed_envelope() -> None:
+def test_cadrumo_error_from_config_switch_missing_profile_emits_typed_envelope() -> None:
     """config switch on an unregistered profile name emits a refused boundary.
 
     _read_profile_bucket returns None for an unknown name; _CliRefusedBoundaryError
-    (an AeatError) is raised.  The command_error_boundary catches it verbatim
+    (an CadrumoError) is raised.  The command_error_boundary catches it verbatim
     and emits a structured error payload with a non-zero exit code.
     """
     result = invoke_cached_cli(["config", "switch", "no-such-profile"])
@@ -97,8 +96,8 @@ def test_aeat_error_from_config_switch_missing_profile_emits_typed_envelope() ->
     assert result.exit_code != 0
 
 
-def test_aeat_error_envelope_is_well_formed_in_json_mode() -> None:
-    """In --format json mode, an AeatError refusal emits a parseable JSON error envelope."""
+def test_cadrumo_error_envelope_is_well_formed_in_json_mode() -> None:
+    """In --format json mode, an CadrumoError refusal emits a parseable JSON error envelope."""
     result = invoke_cached_cli(["--format", "json", "config", "profile", "show", "no-such-profile"])
 
     assert result.exit_code != 0
@@ -111,7 +110,7 @@ def test_aeat_error_envelope_is_well_formed_in_json_mode() -> None:
 
 
 # ---------------------------------------------------------------------------
-# G2: Non-AeatError exceptions surface as ConfigBoundaryError (catches 1-3)
+# G2: Non-CadrumoError exceptions surface as ConfigBoundaryError (catches 1-3)
 # ---------------------------------------------------------------------------
 
 
@@ -119,10 +118,10 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
     """Overwrite the per-bucket SQLite DB file with garbage bytes.
 
     A real on-disk corruption is the authentic trigger for a non-
-    ``AeatError`` failure in ``_read_profile_record`` — SQLAlchemy
+    ``CadrumoError`` failure in ``_read_profile_record`` — SQLAlchemy
     raises ``DatabaseError`` / ``OperationalError`` when it tries to
     open the corrupted file. This drives the catch-all branch that
-    wraps non-``AeatError`` exceptions into ``ConfigBoundaryError``.
+    wraps non-``CadrumoError`` exceptions into ``ConfigBoundaryError``.
 
     Layout per ``_bucket_session.py``:
     ``<storage_root>/buckets/<bucket_id>/db/cadrumo.db``.
@@ -135,17 +134,17 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
         db_path.write_bytes(b"\x00" * 1024)  # SQLite header is 16 bytes; 1 KiB of NULs is enough
 
 
-def test_non_aeat_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_path: Path) -> None:
-    """A non-AeatError escaping _read_profile_record is wrapped as ConfigBoundaryError.
+def test_non_cadrumo_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_path: Path) -> None:
+    """A non-CadrumoError escaping _read_profile_record is wrapped as ConfigBoundaryError.
 
     The config_profile_show handler (catch 3) splits the except arm:
-    AeatError propagates verbatim; any other exception is wrapped in
+    CadrumoError propagates verbatim; any other exception is wrapped in
     ConfigBoundaryError before the custom "profile_record_unreadable" payload
     is emitted.
 
-    The non-AeatError is triggered by a real on-disk corruption of the
+    The non-CadrumoError is triggered by a real on-disk corruption of the
     per-bucket SQLite database (SQLAlchemy raises DatabaseError, not an
-    AeatError subclass), exercising the catch-all wrap into
+    CadrumoError subclass), exercising the catch-all wrap into
     ConfigBoundaryError.
     """
     _create_profile("boundary-probe")
@@ -158,10 +157,10 @@ def test_non_aeat_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_
     assert "profile_record_unreadable" in output_text or "unreadable" in output_text
 
 
-def test_non_aeat_error_cause_chain_reaches_config_boundary_error(tmp_path: Path) -> None:
+def test_non_cadrumo_error_cause_chain_reaches_config_boundary_error(tmp_path: Path) -> None:
     """ConfigBoundaryError wraps the raw exception and is chained from typer.Exit.
 
-    After catch 3 wraps a non-AeatError into ConfigBoundaryError, the
+    After catch 3 wraps a non-CadrumoError into ConfigBoundaryError, the
     ``raise typer.Exit(code=2) from boundary`` statement chains the
     ConfigBoundaryError as the __cause__ of the SystemExit.
 
@@ -188,23 +187,23 @@ def test_non_aeat_error_cause_chain_reaches_config_boundary_error(tmp_path: Path
         if cause is not None:
             assert isinstance(cause, ConfigBoundaryError)
             # Real-failure trigger raises a SQLAlchemy DatabaseError or
-            # similar; the wrapped original_exception is non-AeatError.
-            from .....core.errors import AeatError
+            # similar; the wrapped original_exception is non-CadrumoError.
+            from .....core.errors import CadrumoError
 
-            assert not isinstance(cause.original_exception, AeatError)
+            assert not isinstance(cause.original_exception, CadrumoError)
 
 
 # ---------------------------------------------------------------------------
-# G3: Catch 4 (profile import) — non-AeatError parse errors → CliRefusedBoundaryError
+# G3: Catch 4 (profile import) — non-CadrumoError parse errors → CliRefusedBoundaryError
 # ---------------------------------------------------------------------------
 
 
 def test_profile_import_with_invalid_json_raises_refused_boundary(tmp_path: Path) -> None:
     """config profile import with a non-JSON file surfaces as CliRefusedBoundaryError.
 
-    model_validate_json raises ValueError (a non-AeatError) on bad input.
-    The narrowed catch 4 re-raises AeatError as-is and wraps everything
-    else in _CliRefusedBoundaryError (an AeatError) with the
+    model_validate_json raises ValueError (a non-CadrumoError) on bad input.
+    The narrowed catch 4 re-raises CadrumoError as-is and wraps everything
+    else in _CliRefusedBoundaryError (an CadrumoError) with the
     "import_invalid_bundle" locale message.
 
     Real-behavior test: we write a real file with invalid JSON content and
@@ -224,9 +223,9 @@ def test_profile_import_with_structurally_invalid_bundle_surfaces_as_refused(
 ) -> None:
     """config profile import with valid JSON but wrong schema structure → refused boundary.
 
-    pydantic's model_validate_json raises ValidationError (a non-AeatError)
+    pydantic's model_validate_json raises ValidationError (a non-CadrumoError)
     when the JSON schema does not match UserProfilePortableExport. The
-    narrowed catch 4 wraps it in _CliRefusedBoundaryError (a typed AeatError).
+    narrowed catch 4 wraps it in _CliRefusedBoundaryError (a typed CadrumoError).
     """
     wrong_schema_bundle = tmp_path / "wrong.json"
     wrong_schema_bundle.write_text(json.dumps({"not": "a valid bundle"}), encoding="utf-8")
@@ -237,7 +236,7 @@ def test_profile_import_with_structurally_invalid_bundle_surfaces_as_refused(
 
 
 # ---------------------------------------------------------------------------
-# G4: ConfigBoundaryError is a registered AeatError subclass (structural)
+# G4: ConfigBoundaryError is a registered CadrumoError subclass (structural)
 # ---------------------------------------------------------------------------
 
 
@@ -309,37 +308,37 @@ def test_config_switch_against_locked_store_json_envelope_is_passphrase_refusal(
     assert "repair profile" not in stderr_payload, stderr_payload
 
 
-def test_config_switch_against_corrupt_record_still_routes_to_repair(tmp_path: Path) -> None:
-    """A genuinely-corrupt record still reports unreadable and routes to repair.
+def test_config_switch_against_corrupt_store_uses_canonical_boundary(tmp_path: Path) -> None:
+    """A corrupt store fails through the lifecycle command boundary.
 
-    This is the locked-vs-corrupt distinction's negative pole: with the
-    passphrase available but the per-bucket database physically corrupted,
-    ``config switch`` cannot read the record, so reporting
-    ``profile_record_unreadable`` and prescribing the ``config repair
-    profile`` recovery verb is correct and must survive the locked-store fix.
+    ``config switch`` no longer pre-reads the profile through a second
+    readiness path. The canonical selection lifecycle owns the storage access,
+    and its unexpected database failure is classified by the shared command
+    boundary instead of being relabelled as a profile-record repair result.
     """
     _create_profile("corrupt-switch-probe")
     _corrupt_bucket_db(tmp_path)
 
     result = invoke_cached_cli(["config", "switch", "corrupt-switch-probe"])
 
-    assert result.exit_code == 2, result.output
-    combined = result.output
-    assert "profile_record_unreadable" in combined or "unreadable" in combined, combined
-    assert "repair profile" in combined, combined
+    assert result.exit_code == 6, result.output
+    combined = result.output + (result.stderr if hasattr(result, "stderr") else "")
+    assert "profile_record_unreadable" not in combined, combined
+    assert "repair profile" not in combined, combined
+    assert "config repair logs" in combined, combined
 
 
-def test_config_boundary_error_is_registered_aeat_error_subclass() -> None:
-    """ConfigBoundaryError is an AeatError with a registered ErrorCode.
+def test_config_boundary_error_is_registered_cadrumo_error_subclass() -> None:
+    """ConfigBoundaryError is an CadrumoError with a registered ErrorCode.
 
-    Structural assertion: every AeatError subclass declared in the codebase
+    Structural assertion: every CadrumoError subclass declared in the codebase
     must have a registered ErrorCode or __init_subclass__ raises. Verify
     the class was successfully declared by instantiating it.
     """
-    from .....core.errors import AeatError, get_registered_error_code
+    from .....core.errors import CadrumoError, get_registered_error_code
 
     err = ConfigBoundaryError(RuntimeError("probe"))
-    assert isinstance(err, AeatError)
+    assert isinstance(err, CadrumoError)
     code = get_registered_error_code(err)
     assert code.code == "ERROR_CONFIG_BOUNDARY"
     assert err.original_exception is not None

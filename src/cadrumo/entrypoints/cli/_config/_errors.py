@@ -1,7 +1,7 @@
 """Typed error boundary for the config CLI subpackage.
 
 :exc:`ConfigBoundaryError` wraps unexpected
-(non-:class:`AeatError`)
+(non-:class:`CadrumoError`)
 exceptions that escape the config command surface so they reach the
 structured error-rendering pipeline as a typed envelope rather than being
 swallowed or reported as bare Python exceptions.
@@ -16,7 +16,7 @@ class ConfigBoundaryError(CoreError):
     """Raised when an unexpected exception escapes a config CLI boundary.
 
     Any exception raised inside a config command that is not already a typed
-    :class:`AeatError` subclass is wrapped here so downstream
+    :class:`CadrumoError` subclass is wrapped here so downstream
     renderers always receive a typed envelope with a registered
     :class:`ErrorCode`.
 
