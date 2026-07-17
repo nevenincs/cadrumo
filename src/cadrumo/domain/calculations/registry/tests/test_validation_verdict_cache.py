@@ -1,4 +1,4 @@
-"""Regression pin for the persistent validation-verdict cache (ADR D1).
+"""Regression pin for the persistent validation-verdict cache.
 
 These real-behavior tests exercise the bundled registry, real corpus-text
 extraction, and the real filesystem under isolated per-test cache directories.
