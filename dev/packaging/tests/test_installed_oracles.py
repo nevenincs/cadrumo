@@ -17,7 +17,7 @@ import tomllib
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -369,6 +369,17 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
     }
 
 
+def _as_plugin_cohort(cohort: PythonCohort) -> Any:
+    """Adapt a PythonCohort to the marketplace materialiser's protocol.
+
+    PythonCohort satisfies the runtime protocol exactly; the materialiser
+    annotates its mutable digest mapping as a read-only Mapping protocol,
+    which static structural typing cannot prove for a frozen dataclass
+    (same documented cast as the release-cohort builder).
+    """
+    return cast("Any", cohort)
+
+
 def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     installed_cohort: InstalledCohort,
 ) -> None:
@@ -377,7 +388,7 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     marketplace = cohort.work_dir / "cohort-marketplace"
     manifest = materialise_marketplace(
         marketplace,
-        cohort=cohort.python_cohort,
+        cohort=_as_plugin_cohort(cohort.python_cohort),
     )
     plugin_root = marketplace / "plugins" / "cadrumo"
     assert manifest.plugin.version == cohort.metadata["versions"]["cadrumo"]
@@ -428,12 +439,20 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
         materialise_marketplace(
             cohort.work_dir / "wrong-version-marketplace",
             version="999.0.0",
-            cohort=cohort.python_cohort,
+            cohort=_as_plugin_cohort(cohort.python_cohort),
         )
-    with (cohort.cohort_dir / cohort.data_wheels[1].name).open("ab") as handle:
+    # Tamper a COPY of the cohort, never the shared supplied directory: this
+    # probe previously appended the drift bytes to the real
+    # ``var/packaging-smoke-cohort`` member in place and left it corrupted,
+    # which poisoned every later same-cohort lane in the campaign (the Docker
+    # lane's digest gate refused the mutated ``cadrumo-data-official`` wheel).
+    drift_dir = cohort.work_dir / "drift-probe-cohort"
+    shutil.copytree(cohort.cohort_dir, drift_dir)
+    drift_cohort = load_python_cohort(drift_dir)
+    with (drift_dir / cohort.data_wheels[1].name).open("ab") as handle:
         handle.write(b"foreign same-name bytes")
     with pytest.raises(ValueError, match="cohort artifact digest mismatch"):
         materialise_marketplace(
             cohort.work_dir / "drifted-cohort-marketplace",
-            cohort=cohort.python_cohort,
+            cohort=_as_plugin_cohort(drift_cohort),
         )
