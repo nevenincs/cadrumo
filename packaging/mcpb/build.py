@@ -43,6 +43,7 @@ _REQUIRED_VERSION_ENV: Final[str] = "CADRUMO_MCP_REQUIRED_VERSION"
 _REQUIRED_COHORT_ENV: Final[str] = "CADRUMO_MCP_COHORT_SHA256"
 _STORAGE_ROOT_ENV: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
 _SERVER_ENTRY_POINT: Final[str] = "src/server.py"
+_ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
 _SERVER_SOURCE: Final[str] = """\
 from __future__ import annotations
 
@@ -211,6 +212,28 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
     (server / "server.py").write_text(_SERVER_SOURCE, encoding=_UTF_8)
 
 
+def _write_archive_member(
+    archive: zipfile.ZipFile,
+    *,
+    source: Path,
+    member: str,
+) -> None:
+    """Stream one file into the MCPB with reproducible ZIP metadata."""
+    info = zipfile.ZipInfo(member, date_time=_ZIP_TIMESTAMP)
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.create_system = 3
+    info.external_attr = (0o100644 & 0xFFFF) << 16
+    with (
+        source.open("rb") as source_handle,
+        archive.open(
+            info,
+            mode="w",
+            force_zip64=True,
+        ) as destination_handle,
+    ):
+        shutil.copyfileobj(source_handle, destination_handle, length=1024 * 1024)
+
+
 def build(*, cohort_dir: Path, dist_dir: Path | None = None) -> Path:
     """Build an unsigned MCPB containing one exact immutable product cohort."""
     cohort = load_cohort(cohort_dir)
@@ -228,7 +251,11 @@ def build(*, cohort_dir: Path, dist_dir: Path | None = None) -> Path:
         ) as archive:
             for path in sorted(stage.rglob("*")):
                 if path.is_file():
-                    archive.write(path, path.relative_to(stage).as_posix())
+                    _write_archive_member(
+                        archive,
+                        source=path,
+                        member=path.relative_to(stage).as_posix(),
+                    )
     sys.stdout.write(
         f"built {bundle} [UNSIGNED; assembly only; client installation unproved]\n",
     )
