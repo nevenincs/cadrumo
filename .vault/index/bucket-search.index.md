@@ -4,9 +4,8 @@ tags:
   - '#index'
   - '#bucket-search'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
-  - '[[2026-06-03-bucket-search-adr]]'
   - '[[2026-06-04-bucket-search-research]]'
 ---
 
@@ -17,8 +16,6 @@ Auto-generated index of all documents tagged with `#bucket-search`.
 ## Documents
 
 ### adr
-
-- `2026-06-03-bucket-search-adr` - `bucket-search` adr: `BucketMaintenanceService search verb scoping` | (**status:** `accepted`)
 
 ### research
 

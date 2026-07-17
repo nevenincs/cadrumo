@@ -3,13 +3,13 @@ tags:
   - '#research'
   - '#deterministic-output-replay-substrate'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related: []
 ---
 
 # `deterministic-output-replay-substrate` research: `deterministic output and golden capture substrate`
 
-The `agent-harness` ADR (`2026-06-30-agent-harness-adr`, accepted) commits, in its Q5 eval-substrate decision, to a golden-task replay gate that captures the expected tool trajectory AND the expected result payloads, plus a determinism-replay mode that re-runs a captured trajectory and asserts identical output — non-determinism is itself an assurance failure in regulated tax work. This research grounds whether the substrate that gate needs exists at HEAD, and finds it does not: a record/replay subsystem exists but captures inputs plus state fingerprints and never the result JSON, and several `--format json` payloads carry wall-clock and uuid fields that cannot be isolated for replay. The deliverable is the reusable substrate — clock seam, identity-determinism levers, golden result-payload capture, and a canonicalise/mask compare layer — that makes any `--format json` run deterministic and assertable. Authoring the AEAT-worked-example tax scenarios and the trajectory assertions is out of scope; that work belongs to the harness eval gate and stands on this substrate.
+The `agent-harness` ADR (`2026-07-02-agent-harness-refoundation-adr`, accepted) commits, in its Q5 eval-substrate decision, to a golden-task replay gate that captures the expected tool trajectory AND the expected result payloads, plus a determinism-replay mode that re-runs a captured trajectory and asserts identical output — non-determinism is itself an assurance failure in regulated tax work. This research grounds whether the substrate that gate needs exists at HEAD, and finds it does not: a record/replay subsystem exists but captures inputs plus state fingerprints and never the result JSON, and several `--format json` payloads carry wall-clock and uuid fields that cannot be isolated for replay. The deliverable is the reusable substrate — clock seam, identity-determinism levers, golden result-payload capture, and a canonicalise/mask compare layer — that makes any `--format json` run deterministic and assertable. Authoring the AEAT-worked-example tax scenarios and the trajectory assertions is out of scope; that work belongs to the harness eval gate and stands on this substrate.
 
 Scope and confirmation: every cited source file was read at HEAD and confirmed to have no working-tree modification, so the findings reflect committed state. The one nearby peer edit found (`src/aeat/application/user_profile/_bundle.py`) is not a file this design touches.
 

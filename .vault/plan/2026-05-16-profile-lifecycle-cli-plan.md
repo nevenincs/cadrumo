@@ -3,14 +3,12 @@ tags:
   - '#plan'
   - '#profile-lifecycle-cli'
 date: '2026-05-16'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-research]]'
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
 ---

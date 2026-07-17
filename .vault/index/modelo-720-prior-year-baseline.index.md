@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-720-prior-year-baseline'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-06-02-modelo-720-prior-year-baseline-research]]'
@@ -39,8 +39,8 @@ Auto-generated index of all documents tagged with `#modelo-720-prior-year-baseli
 ### adr
 
 - `2026-06-02-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `modelo 720 prior-year asset baseline and re-declaration trigger` | (**status:** `accepted`)
-- `2026-07-05-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `M720 class-code taxonomy` | (**status:** `proposed`)
-- `2026-07-05-modelo-720-row-carrier-adr` - `modelo-720-prior-year-baseline` adr: `M720 row-carrier source mesh` | (**status:** `proposed`)
+- `2026-07-05-modelo-720-prior-year-baseline-adr` - `modelo-720-prior-year-baseline` adr: `M720 class-code taxonomy` | (**status:** `accepted`)
+- `2026-07-05-modelo-720-row-carrier-adr` - `modelo-720-prior-year-baseline` adr: `M720 row-carrier source mesh` | (**status:** `accepted`)
 
 ### audit
 

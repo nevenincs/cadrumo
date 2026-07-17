@@ -8,8 +8,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
 ---
 
-
-
 # `mcpb-signing-publisher` research: trusted, cohort-bound MCPB signing
 
 This research resolves whether a public Cadrumo MCPB can be signed reproducibly,

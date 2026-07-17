@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#agent-harness-close'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-agent-harness-plan]]"
   - "[[2026-07-02-agent-harness-audit]]"
   - "[[2026-07-02-agent-harness-content-review-audit]]"
-  - "[[2026-07-01-agent-harness-adr]]"
+  - "[[2026-07-02-agent-harness-refoundation-adr]]"
 ---
 
 # `agent-harness-close` audit: `epic close honesty review`

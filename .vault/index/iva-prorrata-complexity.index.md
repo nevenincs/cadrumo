@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-prorrata-complexity'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S01]]'
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S02]]'
@@ -50,7 +50,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 ### adr
 
 - `2026-07-07-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
-- `2026-07-08-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `proposed`)
+- `2026-07-08-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `accepted`)
 
 ### audit
 

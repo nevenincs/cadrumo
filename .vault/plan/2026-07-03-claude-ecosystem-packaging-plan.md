@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-16'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
@@ -12,15 +12,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
+<!-- RETIRED: S43, S44, S45, S46, S47 -->
 
 # `claude-ecosystem-packaging` plan
 
@@ -175,16 +167,9 @@ owns their executable cohort-bound closure.
 
 Install the plugin from the marketplace into Claude Code CLI, Claude Desktop, and Cowork, resolving the cloud-vs-local MCP execution question; operator-gated where a real client or account is required.
 
-- [ ] `W05.P12.S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor); `docs/verification/claude-code-install-proof.md`.
-- [ ] `W05.P12.S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install); `docs/verification/claude-desktop-install-proof.md`.
-- [ ] `W05.P12.S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install); `docs/verification/cowork-install-proof.md`.
-
 ### Phase `W05.P13` - Golden itinerary and support matrix
 
 Run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 harness and record the verified support matrix the userdocs will state.
-
-- [ ] `W05.P13.S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness; `docs/verification/regularizar-atrasos-itinerary-proof.md`.
-- [ ] `W05.P13.S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state; `docs/verification/support-matrix.md`.
 
 ## Description
 

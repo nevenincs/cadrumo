@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-verify-nonzero-guards'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-W01-P01-S01]]'
   - '[[2026-06-30-modelo-verify-nonzero-guards-W01-P01-S02]]'
@@ -60,7 +60,7 @@ Auto-generated index of all documents tagged with `#modelo-verify-nonzero-guards
 
 ### adr
 
-- `2026-06-30-modelo-verify-nonzero-guards-adr` - `modelo-verify-nonzero-guards` adr: `Close silent-under-declaration gaps on unguarded manual-base self-assessment modelos` | (**status:** `proposed`)
+- `2026-06-30-modelo-verify-nonzero-guards-adr` - `modelo-verify-nonzero-guards` adr: `Close silent-under-declaration gaps on unguarded manual-base self-assessment modelos` | (**status:** `accepted`)
 
 ### audit
 

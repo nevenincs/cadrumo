@@ -6,13 +6,12 @@ tags:
   - "#plan"
   - "#modelo-inventory"
 date: '2026-04-13'
-modified: '2026-07-12'
+modified: '2026-07-17'
 related:
   - "[[2026-04-13-modelo-inventory-adr]]"
   - "[[2026-04-13-modelo-inventory-research]]"
   - "[[2026-04-12-deadline-engine-adr]]"
   - "[[2026-04-12-trilingual-i18n-adr]]"
-  - "[[2026-04-12-casilla-db-adr]]"
   - '[[2026-07-12-modelo-inventory-audit]]'
 ---
 # modelo-inventory plan (#108)

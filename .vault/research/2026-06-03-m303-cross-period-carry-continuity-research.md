@@ -3,12 +3,12 @@ tags:
   - '#research'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'
   - '[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]'
   - '[[2026-06-02-m303-parser-engine-totals-impedance-adr]]'
-  - '[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]'
+  - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
 ---
 
 # `m303-cross-period-carry-continuity` research: M303 cross-period compensación carry continuity regression after primitive-encoding
@@ -271,5 +271,5 @@ based on which row diverged.
 - `.vault/adr/2026-06-03-m303-synthetic-generator-primitive-spec-adr.md`
 - `.vault/adr/2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr.md`
 - `.vault/adr/2026-06-02-m303-parser-engine-totals-impedance-adr.md`
-- `.vault/adr/2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr.md`
+- `.vault/adr/2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr.md`
 - Commit `6e5a316a6 fix(m303): wire primitive cuota leaves into synthetic fixtures and extractor`

@@ -3,17 +3,10 @@ tags:
   - '#plan'
   - '#secure-persistence-enforcement'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-research]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
-  - '[[2026-04-27-secure-persistence-foundation-research]]'
-  - '[[2026-04-27-secure-persistence-foundation-adr]]'
-  - '[[2026-04-27-secure-persistence-foundation-plan]]'
-  - '[[secure-persistence-foundation.index]]'
-  - '[[2026-04-30-secure-persistence-foundation-final-security-audit]]'
-  - '[[2026-04-30-secure-persistence-foundation-final-security-resolution-audit]]'
-  - '[[2026-04-30-secure-persistence-foundation-wave7-audit]]'
   - '[[2026-05-05-codebase-sanitization-audit]]'
 ---
 

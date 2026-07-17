@@ -3,11 +3,8 @@ tags:
   - '#research'
   - '#google-oauth'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 related:
-  - "[[2026-05-13-google-oauth-plan]]"
-  - "[[2026-05-12-google-oauth-adr]]"
-  - "[[2026-05-13-google-oauth-adr]]"
   - "[[2026-06-05-secure-storage-production-hardening-w12-p26-s379-review-audit]]"
   - "[[2026-07-12-google-oauth-audit]]"
   - '[[2026-07-12-google-oauth-adr]]'

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-plan]]'
@@ -417,7 +417,7 @@ largest gaps. R1/R2/R4/R5 are clean and genuinely delivered; R6 is wired
    (h) **LOW** — tighten `is_handoff_denied` to the modelo family; promote
        corpus_search errors to `AeatError` (L1).
 5. **Ratify the ADRs.** `2026-07-02-agent-harness-refoundation-adr` is
-   `proposed` and extends the also-`proposed` `2026-07-01-agent-harness-adr`
+   `proposed` and extends the also-`proposed` `2026-07-02-agent-harness-refoundation-adr`
    (L3); owner sign-off (especially R9's off-host consent posture) is the gate
    before the D1-D7 / R1-R9 decisions are `accepted`.
 

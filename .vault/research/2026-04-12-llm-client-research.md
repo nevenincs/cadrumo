@@ -3,10 +3,8 @@ tags:
   - "#research"
   - "#llm-client"
 date: "2026-04-12"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-12-base-module-structure-adr]]"
-  - "[[2026-04-12-base-module-structure-reference]]"
 ---
 
 # `llm-client` research: `provider-survey-and-package-fit`

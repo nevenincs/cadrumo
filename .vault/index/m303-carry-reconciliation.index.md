@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-carry-reconciliation'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 
 ### adr
 
-- `2026-06-21-m303-carry-reconciliation-adr` - `m303-carry-reconciliation` adr: `Modelo 303 refunded period generates zero carry-forward: disposition feeds compensacion-disponible` | (**status:** `proposed`)
+- `2026-06-21-m303-carry-reconciliation-adr` - `m303-carry-reconciliation` adr: `Modelo 303 refunded period generates zero carry-forward: disposition feeds compensacion-disponible` | (**status:** `accepted`)

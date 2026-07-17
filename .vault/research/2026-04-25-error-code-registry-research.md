@@ -3,9 +3,8 @@ tags:
   - '#research'
   - '#error-code-registry'
 date: '2026-04-25'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-18-live-submit-cli-excision-adr]]"
 ---
 
 # `error-code-registry` research: `iteration-6-error-registry-shape`

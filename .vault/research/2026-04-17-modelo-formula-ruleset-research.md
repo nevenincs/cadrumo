@@ -3,14 +3,11 @@ tags:
   - '#research'
   - '#modelo-formulas'
 date: '2026-04-17'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - '[[2026-04-12-casilla-db-adr]]'
-  - '[[2026-04-12-casilla-db-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-research]]'
   - '[[2026-04-12-filing-draft-engine-adr]]'
-  - '[[2026-04-12-base-module-structure-adr]]'
   - '[[2026-04-12-trilingual-i18n-adr]]'
 ---
 

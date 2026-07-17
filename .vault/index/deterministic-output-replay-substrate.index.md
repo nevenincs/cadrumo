@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#deterministic-output-replay-substrate'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#deterministic-output-replay-
 
 ### adr
 
-- `2026-06-30-deterministic-output-replay-substrate-adr` - `deterministic-output-replay-substrate` adr: `deterministic output and golden capture substrate` | (**status:** `proposed`)
+- `2026-06-30-deterministic-output-replay-substrate-adr` - `deterministic-output-replay-substrate` adr: `deterministic output and golden capture substrate` | (**status:** `accepted`)
 
 ### research
 

@@ -3,18 +3,18 @@ tags:
   - '#research'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'
   - '[[2026-06-10-ledger-amount-direction-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
-  - '[[2026-06-30-agent-harness-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]'
 ---
 
 # `ledger-add-idempotency` research: `manual ledger add idempotency and verify-report retry shape`
 
-The `aeat` CLI's target operator is an autonomous LLM agent (`2026-06-30-agent-harness-adr`)
+The `aeat` CLI's target operator is an autonomous LLM agent (`2026-07-02-agent-harness-refoundation-adr`)
 that retries uncertain or failed calls. Two single-subject mutating verbs are not
 retry-safe: a retried `ledger add` double-writes a duplicate transaction, and a repeated
 non-granting `modelo verify` accumulates time-stamped reports. The first silently corrupts

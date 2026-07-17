@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-domain-continuity'
 date: '2026-05-26'
-modified: '2026-07-15'
+modified: '2026-07-16'
 tier: L4
 related:
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -17,16 +17,6 @@ related:
   - '[[2026-07-11-article-20-uno-26-correction-adr]]'
   - '[[2026-07-10-cross-domain-continuity-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: P02, P64, S01, S324, S417 -->
 
@@ -479,7 +469,6 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 ### Phase `W09.P39` - _missing_refs utility duplication consolidation
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
-
 
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 

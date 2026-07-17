@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#security-supply-chain-2026-05-30'
 date: '2026-05-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related: []
 ---
 
@@ -144,18 +144,12 @@ hijacked at the TLS layer (PyTorch CDN compromise is the realistic
 threat). No remediation required given lockfile coverage; called out
 for completeness.
 
-### F9 — `pytest-rerunfailures` and `time-machine` carry no audit floor (LOW)
+### F9 — Removed test-control plugins (RESOLVED)
 
-`pyproject.toml:152,161`. These are test-only deps but
-`pytest-rerunfailures` ships as a pytest plugin that auto-loads on every
-`pytest` invocation. A future major could change rerun semantics and
-mask flaky-test bugs (which is itself a security signal: flaky security
-gates are weaker security gates). `time-machine` patches the C clock and
-is loaded as a plugin too; a malicious release would affect every test
-run.
-
-Remediation: cap both at the next major. Audit plugin auto-load behaviour
-on each upgrade.
+The test-only `pytest-rerunfailures` and `time-machine` dependencies were
+removed on 2026-07-17. Retry semantics and global clock mutation conflict with
+the accepted real-behaviour test posture, so neither plugin now auto-loads in
+pytest. `pytest-httpx` and `syrupy` were removed in the same reconciliation.
 
 ### F10 — No SBOM, no `uv pip audit` / `pip-audit` step in CI (LOW)
 

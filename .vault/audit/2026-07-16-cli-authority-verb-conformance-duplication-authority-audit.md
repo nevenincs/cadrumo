@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance'
 date: '2026-07-16'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
@@ -150,7 +150,7 @@ Existing results are snapshot evidence from the revisions and working-tree state
 
 - Setup and operator guidance: `docs/workstation-setup.md` owns installation; `docs/how-to/quickstart.md` and `docs/how-to/onboarding.md` own first-use orientation. `docs/how-to/profile-setup.md`, `docs/how-to/protect-data-access.md`, `docs/how-to/authenticate-with-aeat.md`, `docs/how-to/ledger-evidence.md`, and `docs/how-to/import-bank-statements.md` own procedures. `docs/reference/commands-and-configuration.md` and `docs/reference/import-export-and-evidence.md` own stable command and artefact semantics. Live `aeat ... --help` owns exact syntax.
 
-- Governing constraints: `aeat-architecture-boundaries`, `aeat-documentation-workflow`, `aeat-swarm-audit-cadence`, `aeat-swarm-orchestration`, `no-legacy-compatibility`, `compatibility-lifecycle-checkpoint`, `service-imports-via-top-level-reexports`, `composition-service-no-parallel-write-path`, `plan-closure-requires-exec-records`, `full-tree-gate-must-distinguish-owner`, and `aeat-campaign-close-honesty-review` govern boundary direction, hard-cutover discipline, swarm discovery, audit method, documentation, evidence, and honest closure.
+- Governing constraints: `aeat-architecture-boundaries`, `aeat-documentation-workflow`, `aeat-swarm-audit-cadence`, `aeat-swarm-orchestration`, `no-legacy-compatibility`, `service-imports-via-top-level-reexports`, `composition-service-no-parallel-write-path`, `plan-closure-requires-exec-records`, `full-tree-gate-must-distinguish-owner`, and `aeat-campaign-close-honesty-review` govern boundary direction, hard-cutover discipline, swarm discovery, audit method, documentation, evidence, and honest closure.
 
 - Terminology authority: the curated sources and generated coverage under `src/cadrumo/_data/terminology/` control accepted product language. `terminology-single-declaration`, `terminology-scaffold-preserve-contract`, and `glossary-concepts-are-taxpayer-facing` prevent competing declarations. Generated terminology and CLI references are regenerated rather than hand-maintained.
 

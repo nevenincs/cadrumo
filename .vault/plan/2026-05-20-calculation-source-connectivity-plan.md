@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#calculation-source-connectivity'
 date: '2026-05-20'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-05-20-calculation-source-connectivity-research]]'
@@ -73,7 +73,7 @@ Adapt invoice, evidence, payable, collectible, counterpart, and withholding sour
 - [x] `W02.P05.S26` - Adapt purchase invoice evidence records into source mesh resolution; `src/aeat/application/ledger/_evidence.py`.
 - [x] `W02.P05.S27` - Adapt payable invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
 - [x] `W02.P05.S28` - Adapt collectible invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
-- [x] `W02.P05.S29` - Adjudicate counterpart source provider against accepted 2026-07-04-counterpart-source-provider-adr (Option D): repository-backed provider in the counterpart family module, owned_sources narrowed to the two reserved kinds, RESERVED and non-enrolled until the first M347 declaring binding co-lands enrollment plus the S21 correctness gate; `src/aeat/application/aggregation/_counterpart.py`.
+- [x] `W02.P05.S29` - Adjudicate counterpart source provider against accepted 2026-07-05-cpdefix-followup-allgreen-adr (Option D): repository-backed provider in the counterpart family module, owned_sources narrowed to the two reserved kinds, RESERVED and non-enrolled until the first M347 declaring binding co-lands enrollment plus the S21 correctness gate; `src/aeat/application/aggregation/_counterpart.py`.
 - [x] `W02.P05.S30` - Enroll retenciones aggregation through repository backed source resolution; `src/aeat/application/aggregation/_retenciones.py`.
 - [x] `W02.P05.S31` - Test invoice ledger cross references produce stable source refs; `src/aeat/application/aggregation/test_source_mesh_invoices.py`.
 - [x] `W02.P05.S32` - Test retenciones source observations are period and source kind filtered; `src/aeat/application/aggregation/test_source_mesh_retenciones.py`.
