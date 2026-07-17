@@ -1053,3 +1053,87 @@ def test_every_carried_store_round_trips_through_recovery(
                 except Exception as exc:
                     failures.append(f"{case.namespace}: {exc!r}")
             assert not failures, "stores lost across recovery:\n" + "\n".join(failures)
+
+
+# ---------------------------------------------------------------------------
+# S74/S78: recovery lifecycle custody matrix.
+#
+# The recovery and passphrase lifecycle operations rewrap the master key under
+# a file passphrase, which only the encrypted-file backend supports. This
+# matrix proves the file backend works and that the keyring and unsecured
+# backends refuse every lifecycle operation with a typed SecretStoreError
+# before touching any custody artefact.
+# ---------------------------------------------------------------------------
+
+_RECOVERY_NOW = datetime(2026, 6, 30, 6, 0, 0, tzinfo=UTC)
+_RECOVERY_PASSPHRASE = "correct horse battery staple"  # noqa: S105 - synthetic test fixture
+
+
+def test_file_custody_supports_the_full_recovery_lifecycle(tmp_path: Path) -> None:
+    from ....adapters.persistence.storage.master_key import (
+        FileFallbackMasterKeyProvider,
+        RecoveryEnrollmentOutcome,
+        recovery_create,
+        recovery_recover,
+        recovery_rotate,
+        recovery_status,
+        recovery_verify,
+    )
+
+    store_dir = tmp_path / "secrets"
+    provider = FileFallbackMasterKeyProvider(store_dir=store_dir, passphrase_callback=lambda: _RECOVERY_PASSPHRASE)
+    provider.provision_master_key()
+    path = store_dir / "master.recovery.key"
+
+    assert recovery_status(path=path).enrolled is False
+
+    staged: dict[str, str] = {}
+
+    def _capture(mnemonic: str) -> str:
+        staged["mnemonic"] = mnemonic
+        return mnemonic
+
+    created = recovery_create(provider=provider, path=path, created_at=_RECOVERY_NOW, confirm=_capture)
+    assert isinstance(created, RecoveryEnrollmentOutcome)
+    assert recovery_status(path=path).enrolled is True
+    assert recovery_verify(provider=provider, path=path, mnemonic=staged["mnemonic"]).verified is True
+
+    rotated = recovery_rotate(provider=provider, path=path, created_at=_RECOVERY_NOW, confirm=_capture)
+    assert rotated.rotated is True
+
+    recover_provider = FileFallbackMasterKeyProvider(
+        store_dir=store_dir, passphrase_callback=lambda: "a new passphrase"
+    )
+    recovered = recovery_recover(provider=recover_provider, path=path, mnemonic=staged["mnemonic"])
+    assert recovered.recovery_fingerprint == rotated.recovery_fingerprint
+
+
+@pytest.mark.parametrize("backend", ["keyring", "unsecured"])
+def test_non_file_custody_refuses_every_recovery_operation(tmp_path: Path, backend: str) -> None:
+    from ....adapters.persistence.storage import SecretStoreError
+    from ....adapters.persistence.storage.master_key import (
+        KeyringMasterKeyProvider,
+        UnsecuredMasterKeyProvider,
+        recovery_create,
+        recovery_recover,
+        recovery_rotate,
+        recovery_verify,
+    )
+
+    provider = KeyringMasterKeyProvider() if backend == "keyring" else UnsecuredMasterKeyProvider()
+    path = tmp_path / "secrets" / "master.recovery.key"
+
+    def _echo(mnemonic: str) -> str:
+        return mnemonic
+
+    with pytest.raises(SecretStoreError):
+        recovery_create(provider=provider, path=path, created_at=_RECOVERY_NOW, confirm=_echo)
+    with pytest.raises(SecretStoreError):
+        recovery_rotate(provider=provider, path=path, created_at=_RECOVERY_NOW, confirm=_echo)
+    with pytest.raises(SecretStoreError):
+        recovery_verify(provider=provider, path=path, mnemonic="a b c")
+    with pytest.raises(SecretStoreError):
+        recovery_recover(provider=provider, path=path, mnemonic="a b c")
+
+    # A refused operation never creates the recovery envelope.
+    assert not path.exists()
