@@ -173,7 +173,7 @@ def _inprocess_timeout_notice(*, command_key: str) -> Notice:
     existing record as a no-op; it never double-writes).
     """
     message = tr(
-        "mcp.call.timeout.may_complete",
+        "mcp.call.timeout_may_complete",
         command=command_key,
         default=(
             "'{command}' exceeded its time limit; the operation may still be completing in the "
@@ -183,7 +183,7 @@ def _inprocess_timeout_notice(*, command_key: str) -> Notice:
     )
     return Notice(
         severity=NoticeSeverity.WARNING,
-        code="mcp.call.timeout.may_complete",
+        code="mcp.call.timeout_may_complete",
         message=message,
         suggestion=None,
         context={"command": command_key, "idempotent_retry": "safe"},
