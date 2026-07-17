@@ -10,7 +10,12 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.iva import IvaCategory
-from ....domain.transactions import BusinessClassification, TransactionLifecycleState
+from ....domain.transactions import (
+    BusinessClassification,
+    SplitRole,
+    TransactionLifecycleState,
+    TransactionValidationError,
+)
 from .. import (
     LLMProvider,
     LLMSplitApplyResult,
@@ -139,3 +144,87 @@ def test_apply_child_numbers_are_registry_derived_not_model(
     assert sorted(child.raw.amount for child in children) == [Decimal("96.80"), Decimal("145.20")]
     for child in children:
         assert child.iva_rate == Decimal("0.21")
+
+
+def test_split_children_retain_lineage_and_evidence_provenance(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    # The atomic writer persists classification AND split lineage AND inherited
+    # evidence provenance for every child in one transaction: no child is left
+    # split-but-unclassified or lineage-less.
+    repository, events, objects = repositories
+    evidence_id = _seed_received_invoice(objects)
+    tx_id = _seed_parent(repository, evidence_id=evidence_id)
+
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        provider=LLMProvider.CLAUDE,
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+        transaction_repository=repository,
+        read_evidence=False,
+    )
+    result = apply_evidence_split(
+        suggestion,
+        bucket_id=_BUCKET,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+
+    catalogue = repository.load()
+    parent = catalogue.get(tx_id)
+    assert parent is not None
+    assert parent.lifecycle_state is TransactionLifecycleState.SPLIT
+    assert parent.split_lineage is not None
+    assert parent.split_lineage.role is SplitRole.PARENT
+    for child_id in result.child_transaction_ids:
+        child = catalogue.get(child_id)
+        assert child is not None
+        assert child.business_classification is BusinessClassification.BUSINESS
+        assert child.split_lineage is not None
+        assert child.split_lineage.role is SplitRole.CHILD
+        assert child.split_lineage.split_group_id == result.split_group_id
+        assert tx_id in child.split_lineage.sibling_transaction_ids
+        assert child.purchase_invoice_evidence_id == evidence_id
+        provenance_ids = {entry.evidence_id for entry in child.evidence_provenance}
+        assert evidence_id in provenance_ids
+
+
+def test_split_child_evidence_failure_leaves_everything_unchanged(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    # A parent carrying an evidence id whose record does not exist forces the
+    # per-child evidence validation to fail during the atomic build. Because the
+    # single save never runs, the parent stays ACTIVE, no child is persisted, and
+    # the event history is unchanged.
+    repository, events, _objects = repositories
+    tx_id = _seed_parent(repository, evidence_id="nonexistent-evidence-record")
+    events_before = dict(events.load().events)
+
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        provider=LLMProvider.CLAUDE,
+        proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+        transaction_repository=repository,
+        read_evidence=False,
+    )
+
+    with pytest.raises(TransactionValidationError):
+        apply_evidence_split(
+            suggestion,
+            bucket_id=_BUCKET,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+            occurred_at=_NOW,
+        )
+
+    catalogue = repository.load()
+    parent = catalogue.get(tx_id)
+    assert parent is not None
+    assert parent.lifecycle_state is TransactionLifecycleState.ACTIVE
+    assert parent.split_lineage is None
+    # Only the parent row exists: no split children were persisted.
+    assert tuple(catalogue.transactions) == (tx_id,)
+    assert events.load().events == events_before
