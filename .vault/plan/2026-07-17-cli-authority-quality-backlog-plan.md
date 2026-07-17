@@ -14,15 +14,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `cli-authority-quality-backlog` plan
 
@@ -86,7 +77,7 @@ Pin the prompted-question inventory the profile-create wizard surfaces so a sile
 
 Remove the shared-temp-dir race that flakes the acceptance-wall meta-test under concurrent pytest workers.
 
-- [ ] `P08.S22` - Give the acceptance-wall meta-test a per-worker unique temp root via tmp_path_factory so concurrent pytest workers no longer share a PID-keyed directory and race; `src/cadrumo/tests/test_acceptance_wall_catalogue.py`.
+- [x] `P08.S22` - Give the acceptance-wall meta-test a per-worker unique temp root via tmp_path_factory so concurrent pytest workers no longer share a PID-keyed directory and race; `src/cadrumo/tests/test_acceptance_wall_catalogue.py`.
 
 ### Phase `P09` - Coverage-gap enforcement passes
 
