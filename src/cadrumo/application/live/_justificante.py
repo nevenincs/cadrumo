@@ -48,7 +48,7 @@ import base64
 import binascii
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -341,7 +341,22 @@ class JustificanteCaptureSnapshotRepository:
         )
 
 
-class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnapshot]):
+class _JustificanteCaptureRequest(BaseModel):
+    model_config = _STRICT_FROZEN
+
+    modelo: str
+    filing_year: int
+    period: Period
+    expediente_id: str
+    csv: str
+    pdf_bytes: bytes
+    pdf_sha256: str
+    captured_at: datetime
+
+
+class JustificanteCaptureSnapshotService(
+    SnapshotService[JustificanteCaptureSnapshot, _JustificanteCaptureRequest],
+):
     """Canonical backend service for bucket-scoped live justificante captures."""
 
     def __init__(
@@ -375,14 +390,16 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
         ``(modelo, filing_year, period)`` axis.
         """
         return self._capture_with_lifecycle(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            expediente_id=expediente_id,
-            csv=csv,
-            pdf_bytes=pdf_bytes,
-            pdf_sha256=pdf_sha256,
-            captured_at=captured_at,
+            _JustificanteCaptureRequest(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                expediente_id=expediente_id,
+                csv=csv,
+                pdf_bytes=pdf_bytes,
+                pdf_sha256=pdf_sha256,
+                captured_at=captured_at,
+            ),
         )
 
     @override
@@ -424,39 +441,38 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
     # ---- SnapshotService hooks -------------------------------------------
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: SnapshotService[T] abstract hook
-    # contract uses **kwargs to allow concrete subclasses to accept caller-
-    # specific keyword arguments without a shared typed parameter set.
-    def _derive_snapshot_id(self, **kwargs: Any) -> str:
+    def _derive_snapshot_id(self, capture: _JustificanteCaptureRequest) -> str:
         return derive_justificante_capture_snapshot_id(
-            modelo=kwargs["modelo"],
-            filing_year=kwargs["filing_year"],
-            period=kwargs["period"],
-            pdf_sha256=kwargs["pdf_sha256"],
+            modelo=capture.modelo,
+            filing_year=capture.filing_year,
+            period=capture.period,
+            pdf_sha256=capture.pdf_sha256,
         )
 
     @override
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: SnapshotService[T] abstract
-    # _build_active_payload hook carries **kwargs: Any so concrete subclasses
-    # accept caller-specific keyword arguments without a shared typed set.
-    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> JustificanteCaptureSnapshot:
+    def _build_active_payload(
+        self,
+        *,
+        snapshot_id: str,
+        capture: _JustificanteCaptureRequest,
+    ) -> JustificanteCaptureSnapshot:
         return JustificanteCaptureSnapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
-            modelo=kwargs["modelo"],
-            filing_year=kwargs["filing_year"],
-            period=kwargs["period"],
-            expediente_id=kwargs["expediente_id"],
-            csv=kwargs["csv"],
-            pdf_sha256=kwargs["pdf_sha256"],
-            pdf_base64=base64.b64encode(kwargs["pdf_bytes"]).decode("ascii"),
+            modelo=capture.modelo,
+            filing_year=capture.filing_year,
+            period=capture.period,
+            expediente_id=capture.expediente_id,
+            csv=capture.csv,
+            pdf_sha256=capture.pdf_sha256,
+            pdf_base64=base64.b64encode(capture.pdf_bytes).decode("ascii"),
             source_kind=JUSTIFICANTE_CAPTURE_SOURCE_KIND,
-            captured_at=kwargs["captured_at"],
+            captured_at=capture.captured_at,
             state=SnapshotLifecycleState.ACTIVE,
         )
 
     @override
-    def _payload_axis_key(self, payload: JustificanteCaptureSnapshot) -> tuple[Any, ...]:
+    def _payload_axis_key(self, payload: JustificanteCaptureSnapshot) -> tuple[object, ...]:
         return (payload.modelo, payload.filing_year, payload.period)
 
     @override
@@ -724,12 +740,12 @@ def register_capture_as_filing_evidence(
 def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
     if filing.member_nif is not None and filing.member_nif.strip():
         return filing.member_nif.strip().upper()
-    from ...core.errors import AeatError
+    from ...core.errors import CadrumoError
     from ..user_profile import UserProfileLifecycleRepository, record_to_values
 
     try:
         record = UserProfileLifecycleRepository(bucket_id=filing.bucket_id).load(filing.bucket_id)
-    except (AeatError, OSError) as exc:
+    except (CadrumoError, OSError) as exc:
         raise LiveApplicationInputError(
             "cannot stamp live-capture evidence without the filing profile tax identity",
         ) from exc

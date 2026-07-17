@@ -1,4 +1,4 @@
-"""The corpus-search errors are registered AeatError codes, not bare Exceptions.
+"""The corpus-search errors are registered CadrumoError codes, not bare Exceptions.
 
 A corpus-search failure that reaches the CLI boundary must render as its proper
 category envelope — a ``REFUSED`` input/dependency refusal, an ``ERROR`` base —
@@ -13,15 +13,15 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import AeatError, ErrorCategory, build_error_envelope
+from ....core.errors import CadrumoError, ErrorCategory, build_error_envelope
 from .._errors import CorpusSearchDependencyError, CorpusSearchError, CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_all_corpus_errors_are_registry_bound_aeat_errors() -> None:
+def test_all_corpus_errors_are_registry_bound_cadrumo_errors() -> None:
     for cls in (CorpusSearchError, CorpusSearchInputError, CorpusSearchDependencyError):
-        assert issubclass(cls, AeatError)
+        assert issubclass(cls, CadrumoError)
         assert cls.code.code  # a bound, registered ErrorCode
 
 
@@ -50,5 +50,5 @@ def test_dependency_error_carries_its_install_hint_suggestion() -> None:
 
 def test_context_stays_a_dict_even_when_unset() -> None:
     # The surface's always-a-dict `.context` contract must survive promotion
-    # (AeatError's own base leaves it None when unset).
+    # (CadrumoError's own base leaves it None when unset).
     assert CorpusSearchError("x").context == {}

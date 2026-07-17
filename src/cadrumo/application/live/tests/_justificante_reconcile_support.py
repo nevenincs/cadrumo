@@ -5,15 +5,10 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
 
-from pydantic import AnyHttpUrl
-
-from ....adapters.outbound.aeat.sede import Declaracion, Expediente, JustificanteRef, SedeCapture
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....core.config import Settings
 from ....domain.modelos import (
     ExternalEvidence,
     ModeloCode,
@@ -27,15 +22,12 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
-
-if TYPE_CHECKING:
-    from ....adapters.outbound.aeat.auth import AeatSession
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 _EXP_130_1T = "202613000010001A"
-_AEAT = Settings.external_constants().aeat
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 45, tzinfo=UTC)
 
 
@@ -141,51 +133,3 @@ def _seed_unverified_filing(
     repo = ModeloRecordCatalogueRepository()
     repo.save(upsert_filing_record(repo.load(), filing))
     return filing
-
-
-def _capture_providers(*, pdf_bytes: bytes):
-    async def _session() -> tuple[AeatSession, Settings]:
-        return cast("tuple[AeatSession, Settings]", (object(), object()))
-
-    async def _declarations(session: object, settings: object, *, modelo: str, year: int):
-        return (
-            Declaracion(
-                modelo="130",
-                ejercicio=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                expediente_id=_EXP_130_1T,
-                estado="ALTA",
-                presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
-            ),
-        )
-
-    async def _expedientes(session: object, settings: object, *, modelo: str):
-        return (
-            Expediente(
-                expediente_id=_EXP_130_1T,
-                modelo="130",
-                ejercicio=2026,
-                category_path=("AEAT", "Modelo 130"),
-                detail_url=AnyHttpUrl(
-                    f"{_AEAT.domains.sede}"
-                    f"{_AEAT.sede_paths.expediente_detail_template.format(expediente_id=_EXP_130_1T)}",
-                ),
-            ),
-        )
-
-    async def _capture(session: object, settings: object, *, expediente: Expediente):
-        ref = JustificanteRef(
-            csv="ABCD1234EFGH5678",
-            expediente_id=expediente.expediente_id,
-            cotejo_url=AnyHttpUrl(f"{_AEAT.domains.sede}{_AEAT.sede_paths.cotejo_query}?CSV=ABCD1234EFGH5678"),
-            pdf_url=AnyHttpUrl(f"{_AEAT.domains.sede}{_AEAT.sede_paths.cotejo_document}?CSV=ABCD1234EFGH5678"),
-        )
-        return SedeCapture(
-            expediente=expediente,
-            ref=ref,
-            pdf_bytes=pdf_bytes,
-            pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
-            captured_at=datetime(2026, 4, 18, 10, 0, tzinfo=UTC),
-        )
-
-    return _session, _declarations, _expedientes, _capture

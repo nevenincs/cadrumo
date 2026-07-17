@@ -51,7 +51,10 @@ from ._acquisition_lock import (
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
 from ._certificate_secret_backend import SecureStorageCertificateSecretBackend
-from ._credential_resolution import resolve_active_certificate_credentials
+from ._credential_resolution import (
+    ActiveAuthProjectionSnapshot,
+    active_auth_projection_span,
+)
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from ._operator_probes import (
@@ -451,24 +454,50 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
         provider_kind = _provider_kind_or_none(provider)
         requested_provider = provider_kind.value if provider_kind is not None else None
 
-        from ..state_projection import build_operator_state_projection
-
-        projection = build_operator_state_projection(
+        with active_auth_projection_span(
+            settings=resolved_settings,
             requested_provider=requested_provider,
-            probe_live_backend=True,
-            include_workspace_summary=False,
-            include_pending_obligations=False,
-        )
-        status = _auth_status_from_projection(projection)
-        session_probe = _probe_local_session(status.provider, settings=resolved_settings)
-        return AuthTestResult(
-            **status.model_dump(),
-            persisted_session_present=session_probe.present,
-            persisted_session_expired=session_probe.expired,
-            persisted_session_state=session_probe.state,
-            probe_summary=projection.auth.probe_summary or session_probe.summary,
-            probe_result=projection.auth.probe_result,
-        )
+        ) as snapshot:
+            return _test_operator_auth_from_snapshot(
+                snapshot,
+                requested_provider=requested_provider,
+                resolved_settings=resolved_settings,
+            )
+
+
+def _test_operator_auth_from_snapshot(
+    snapshot: ActiveAuthProjectionSnapshot,
+    *,
+    requested_provider: str | None,
+    resolved_settings: Settings,
+) -> AuthTestResult:
+    """Build one auth-test result without reopening its witnessed storage route.
+
+    The persisted-session probe re-enters :func:`active_profile_storage_span`,
+    but the caller still owns the outer projection span. Its active-profile
+    override names ``snapshot.bucket_id`` and its bucket session remains current,
+    so the re-entrant span selects that session without consulting a changed
+    pointer or opening another bucket.
+    """
+    from ..state_projection import build_operator_state_projection
+
+    projection = build_operator_state_projection(
+        auth_snapshot=snapshot,
+        requested_provider=requested_provider,
+        probe_live_backend=True,
+        include_workspace_summary=False,
+        include_pending_obligations=False,
+    )
+    status = _auth_status_from_projection(projection)
+    session_probe = _probe_local_session(status.provider, settings=resolved_settings)
+    return AuthTestResult(
+        **status.model_dump(),
+        persisted_session_present=session_probe.present,
+        persisted_session_expired=session_probe.expired,
+        persisted_session_state=session_probe.state,
+        probe_summary=projection.auth.probe_summary or session_probe.summary,
+        probe_result=projection.auth.probe_result,
+    )
 
 
 def build_live_auth_preflight_report(
@@ -493,56 +522,67 @@ def build_live_auth_preflight_report(
         with _active_profile_storage_span(settings):
             return build_live_auth_preflight_report(provider, settings=None)
 
-    resolved_settings = settings or load_settings()
-    provider_kind = _provider_kind_or_none(provider)
-    if provider_kind is None:
-        try:
-            provider_kind = _configured_or_default_provider(resolved_settings)
-        except ValueError:
-            provider_kind = None
-    probe = test_operator_auth(
-        provider_kind.value if provider_kind is not None else provider,
+    resolved_settings = load_settings()
+    requested_kind = _provider_kind_or_none(provider)
+    requested_provider = requested_kind.value if requested_kind is not None else None
+    fallback_provider = (resolved_settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
+    with active_auth_projection_span(
         settings=resolved_settings,
-    )
-    profile_tax_id_present, provider_identity_present, identity_alignment = _live_auth_identity_state(
-        provider_kind,
-        settings=resolved_settings,
-    )
-    certificate_path = Path(probe.certificate_path) if probe.certificate_path else None
-    return LiveAuthPreflightReport(
-        provider=probe.provider,
-        configured=probe.configured,
-        available=probe.available,
-        active_profile=probe.active_profile,
-        active_profile_status=probe.active_profile_status,
-        active_profile_registered=probe.active_profile_registered,
-        active_profile_record_present=probe.active_profile_record_present,
-        profile_tax_id_present=profile_tax_id_present,
-        provider_identity_present=provider_identity_present,
-        identity_alignment=identity_alignment,
-        identity_kind=_live_auth_identity_kind(provider_kind, settings=resolved_settings),
-        auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
-        prefer_non_qr=(
-            resolved_settings.cadrumo_clave_prefer_non_qr if provider_kind is AuthProviderKind.CLAVE_MOVIL else None
-        ),
-        timeout_ms=resolved_settings.cadrumo_clave_movil_timeout_ms
-        if provider_kind is AuthProviderKind.CLAVE_MOVIL
-        else None,
-        dni_fecha_configured=bool((resolved_settings.cadrumo_clave_movil_dni_fecha or "").strip())
-        if provider_kind is AuthProviderKind.CLAVE_MOVIL
-        else None,
-        nie_soporte_configured=bool(unwrap_optional_secret(resolved_settings.cadrumo_clave_movil_nie_soporte).strip())
-        if provider_kind is AuthProviderKind.CLAVE_MOVIL
-        else None,
-        certificate_path_configured=certificate_path is not None,
-        certificate_file_present=bool(
-            certificate_path is not None and certificate_path.is_file(),
-        ),
-        persisted_session_present=probe.persisted_session_present,
-        persisted_session_expired=probe.persisted_session_expired,
-        persisted_session_state=probe.persisted_session_state,
-        probe_result=probe.probe_result,
-    )
+        requested_provider=requested_provider,
+        fallback_provider=fallback_provider,
+    ) as snapshot:
+        provider_kind = snapshot.provider
+        probe = _test_operator_auth_from_snapshot(
+            snapshot,
+            requested_provider=(provider_kind.value if provider_kind is not None else None),
+            resolved_settings=resolved_settings,
+        )
+        profile_tax_id_present, provider_identity_present, identity_alignment = _live_auth_identity_state(
+            provider_kind,
+            settings=resolved_settings,
+            state=snapshot.state,
+        )
+        certificate_path = Path(probe.certificate_path) if probe.certificate_path else None
+        return LiveAuthPreflightReport(
+            provider=probe.provider,
+            configured=probe.configured,
+            available=probe.available,
+            active_profile=probe.active_profile,
+            active_profile_status=probe.active_profile_status,
+            active_profile_registered=probe.active_profile_registered,
+            active_profile_record_present=probe.active_profile_record_present,
+            profile_tax_id_present=profile_tax_id_present,
+            provider_identity_present=provider_identity_present,
+            identity_alignment=identity_alignment,
+            identity_kind=_live_auth_identity_kind(provider_kind, settings=resolved_settings),
+            auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
+            prefer_non_qr=(
+                resolved_settings.cadrumo_clave_prefer_non_qr if provider_kind is AuthProviderKind.CLAVE_MOVIL else None
+            ),
+            timeout_ms=(
+                resolved_settings.cadrumo_clave_movil_timeout_ms
+                if provider_kind is AuthProviderKind.CLAVE_MOVIL
+                else None
+            ),
+            dni_fecha_configured=(
+                bool((resolved_settings.cadrumo_clave_movil_dni_fecha or "").strip())
+                if provider_kind is AuthProviderKind.CLAVE_MOVIL
+                else None
+            ),
+            nie_soporte_configured=(
+                bool(unwrap_optional_secret(resolved_settings.cadrumo_clave_movil_nie_soporte).strip())
+                if provider_kind is AuthProviderKind.CLAVE_MOVIL
+                else None
+            ),
+            certificate_path_configured=certificate_path is not None,
+            certificate_file_present=bool(
+                certificate_path is not None and certificate_path.is_file(),
+            ),
+            persisted_session_present=probe.persisted_session_present,
+            persisted_session_expired=probe.persisted_session_expired,
+            persisted_session_state=probe.persisted_session_state,
+            probe_result=probe.probe_result,
+        )
 
 
 async def login_operator_auth(
@@ -578,46 +618,52 @@ async def login_operator_auth(
                 pytest_current_test=pytest_current_test,
             )
     resolved_settings = load_settings()
-    provider_kind = _provider_kind_or_none(provider)
-    if provider_kind is None:
-        provider_kind = _configured_or_default_provider(resolved_settings)
-    _implemented_provider(provider_kind.value)
+    requested_kind = _provider_kind_or_none(provider)
+    requested_provider = requested_kind.value if requested_kind is not None else None
+    fallback_provider = (resolved_settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
+    with active_auth_projection_span(
+        settings=resolved_settings,
+        requested_provider=requested_provider,
+        fallback_provider=fallback_provider,
+    ) as snapshot:
+        provider_kind = snapshot.provider
+        if provider_kind is None:
+            raise AuthLoginPreconditionError(
+                translated_message="application.auth.operator.errors.provider_not_configured",
+            )
+        _implemented_provider(provider_kind.value)
 
-    from ...core.access_gate import AeatAccessGate, AeatLiveReadNotEnabledError
+        from ...core.access_gate import AeatAccessGate, AeatLiveReadNotEnabledError
 
-    gate = AeatAccessGate(resolved_settings)
-    # During pytest, the live-test opt-in remains the first refusal so
-    # test execution cannot accidentally reach external services.
-    # Outside pytest, auth login is an operational read surface and
-    # proceeds to provider readiness/session checks.
-    try:
-        gate.require_live_read(pytest_current_test=pytest_current_test)
-    except AeatLiveReadNotEnabledError as exc:
-        raise AuthLoginNotEnabledError(
-            translated_message="application.auth.operator.login.refused_live_tests_disabled",
-            context={"provider": provider_kind.value},
-        ) from exc
+        gate = AeatAccessGate(resolved_settings)
+        # During pytest, the live-test opt-in remains the first refusal so
+        # test execution cannot accidentally reach external services.
+        # Outside pytest, auth login is an operational read surface and
+        # proceeds to provider readiness/session checks.
+        try:
+            gate.require_live_read(pytest_current_test=pytest_current_test)
+        except AeatLiveReadNotEnabledError as exc:
+            raise AuthLoginNotEnabledError(
+                translated_message="application.auth.operator.login.refused_live_tests_disabled",
+                context={"provider": provider_kind.value},
+            ) from exc
 
-    certificate_credentials = (
-        resolve_active_certificate_credentials(settings=resolved_settings)
-        if provider_kind is AuthProviderKind.CERTIFICATE
-        else None
-    )
+        certificate_credentials = snapshot.certificate_credentials
 
-    # Provider-specific local-readiness preconditions. A certificate
-    # provider with no path / a missing file / an unreadable bundle
-    # cannot authenticate; refuse here with prose, rather than letting
-    # the raw bundle-load exception escape.
-    _assert_login_precondition(
-        resolved_settings,
-        provider_kind,
-        certificate_credentials=certificate_credentials,
-    )
+        # Provider-specific local-readiness preconditions. A certificate
+        # provider with no path / a missing file / an unreadable bundle
+        # cannot authenticate; refuse here with prose, rather than letting
+        # the raw bundle-load exception escape.
+        _assert_login_precondition(
+            resolved_settings,
+            provider_kind,
+            certificate_credentials=certificate_credentials,
+        )
 
-    from ...domain.buckets import BucketEventType
-    from ..workflow import workflow_state_repository
+        from ...domain.buckets import BucketEventType
+        from ..workflow import workflow_state_repository
 
-    with _active_profile_storage_span(resolved_settings) as bucket_id:
+        bucket_id = snapshot.bucket_id
         if bucket_id is None:
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
@@ -645,16 +691,16 @@ async def login_operator_auth(
                 ),
             )
 
-    return AuthLoginResult(
-        provider=provider_kind.value,
-        authenticated=True,
-        reused_persisted_session=result.reused_persisted_session,
-        fresh=result.fresh,
-        removed_sessions=len(result.removed_sessions),
-        acquired_lock=result.acquired_lock is not None,
-        reset_lock_state=result.reset_lock.state.value if result.reset_lock is not None else "",
-        verification_status=getattr(result.assertion, "status", "") or "",
-    )
+        return AuthLoginResult(
+            provider=provider_kind.value,
+            authenticated=True,
+            reused_persisted_session=result.reused_persisted_session,
+            fresh=result.fresh,
+            removed_sessions=len(result.removed_sessions),
+            acquired_lock=result.acquired_lock is not None,
+            reset_lock_state=result.reset_lock.state.value if result.reset_lock is not None else "",
+            verification_status=getattr(result.assertion, "status", "") or "",
+        )
 
 
 def _verified_session_update(
@@ -1325,11 +1371,7 @@ def _assert_login_precondition(
     reloads or reconstructs certificate credentials independently.
     """
     if provider_kind is AuthProviderKind.CERTIFICATE:
-        cert_path = (
-            certificate_credentials.certificate_path
-            if certificate_credentials is not None
-            else None
-        )
+        cert_path = certificate_credentials.certificate_path if certificate_credentials is not None else None
         if cert_path is None:
             raise AuthLoginPreconditionError(
                 translated_message="application.auth.operator.login.refused_certificate_path_unset",
@@ -1363,17 +1405,6 @@ def _provider_kind_or_none(provider: str | None) -> AuthProviderKind | None:
         return None
     listing = _implemented_provider(provider)
     return AuthProviderKind(listing.id)
-
-
-def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
-    from ..workflow import workflow_state_repository
-
-    state = workflow_state_repository().load()
-    if state.auth.provider:
-        return AuthProviderKind(state.auth.provider)
-    if settings.cadrumo_auth_provider is not None:
-        return settings.cadrumo_auth_provider
-    return AuthProviderKind.CERTIFICATE
 
 
 def _append_bucket_event(

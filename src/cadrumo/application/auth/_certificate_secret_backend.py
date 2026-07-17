@@ -86,8 +86,8 @@ class CertificateSecretBackend(Protocol):
     """Typed seam for reading, writing, and removing a named certificate secret.
 
     Every method is keyed by the certificate source's registered
-    ``name`` (see
-    :attr:`~application.workflow.CertificateSourceRecord.name`), scoping the
+    ``name`` (the key carried by
+    :class:`~application.workflow.CertificateSourceRecord`), scoping the
     secret to that one source. The sole implementation
     (:class:`~application.auth.SecureStorageCertificateSecretBackend`)
     scopes storage to the active profile bucket so two profiles never share

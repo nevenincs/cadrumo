@@ -53,7 +53,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.time import now as _utc_now
 
@@ -63,7 +63,7 @@ if TYPE_CHECKING:
 _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 
 
-class RecipientReplayGuardError(AeatError):
+class RecipientReplayGuardError(CadrumoError):
     """Base error for recipient-package replay-guard failures."""
 
 

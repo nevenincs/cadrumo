@@ -335,7 +335,7 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     """TaxationComparisonError is bound in ERROR_REGISTRY and envelopes cleanly.
 
     Registry membership: confirms the class received an ErrorCode via
-    AeatError.__init_subclass__ and that the code appears in ERROR_REGISTRY.
+    CadrumoError.__init_subclass__ and that the code appears in ERROR_REGISTRY.
 
     Envelope round-trip: instantiates the exception, builds an ErrorEnvelope
     via build_error_envelope, and asserts the envelope fields carry the

@@ -17,7 +17,7 @@ import pytest
 
 from ...core.errors import (
     ERROR_REGISTRY,
-    AeatError,
+    CadrumoError,
     ErrorEnvelope,
     build_error_envelope,
     get_registered_error_code,
@@ -31,9 +31,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-def _assert_enrolled(error_cls: type[AeatError], message: str = "test trigger") -> ErrorEnvelope:
+def _assert_enrolled(error_cls: type[CadrumoError], message: str = "test trigger") -> ErrorEnvelope:
     """Raise *error_cls*, catch it, and assert registry round-trip."""
-    assert issubclass(error_cls, AeatError), f"{error_cls} is not an AeatError subclass"
+    assert issubclass(error_cls, CadrumoError), f"{error_cls} is not an CadrumoError subclass"
     try:
         raise error_cls(message)
     except error_cls as exc:
@@ -99,25 +99,25 @@ def test_repair_decision_not_found_is_subtype_of_repair_integrity() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract — SnapshotNotFoundError (now AeatError + KeyError)
+# contract — SnapshotNotFoundError (now CadrumoError + KeyError)
 # ---------------------------------------------------------------------------
 
 
 def test_snapshot_not_found_error_enrolled() -> None:
     from ..live import SnapshotNotFoundError
 
-    assert issubclass(SnapshotNotFoundError, AeatError), "SnapshotNotFoundError must inherit AeatError"
+    assert issubclass(SnapshotNotFoundError, CadrumoError), "SnapshotNotFoundError must inherit CadrumoError"
     assert issubclass(SnapshotNotFoundError, KeyError), "SnapshotNotFoundError must still inherit KeyError"
     envelope = _assert_enrolled(SnapshotNotFoundError, "snapshot abc not found")
     assert envelope.code == "FAIL_SNAPSHOT_NOT_FOUND"
 
 
 def test_snapshot_not_found_subclasses_still_work() -> None:
-    """Per-service subclasses remain catchable as both AeatError and KeyError."""
+    """Per-service subclasses remain catchable as both CadrumoError and KeyError."""
     from ..live import BorradorSnapshotNotFoundError, SnapshotNotFoundError
 
     assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
-    assert issubclass(BorradorSnapshotNotFoundError, AeatError)
+    assert issubclass(BorradorSnapshotNotFoundError, CadrumoError)
     assert issubclass(BorradorSnapshotNotFoundError, KeyError)
 
 

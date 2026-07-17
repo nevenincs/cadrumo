@@ -117,7 +117,10 @@ def _spanish_stemmer() -> _SpanishStemmer | None:
         return None
     # CAST-RATIONALE-SPANISH-STEMMER-PROTOCOL: snowballstemmer ships no static
     # return protocol, while this boundary consumes only its stemWords method.
-    return cast("_SpanishStemmer", snowballstemmer.stemmer("spanish"))
+    return cast(  # nosemgrep: no-cast-in-domain-application reason: untyped library result satisfies _SpanishStemmer.
+        "_SpanishStemmer",
+        snowballstemmer.stemmer("spanish"),
+    )
 
 
 def _stem_terms(stemmer: _SpanishStemmer | None, terms: Sequence[str]) -> list[str]:

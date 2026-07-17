@@ -167,7 +167,6 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
         target=_calculation_revision(work_unit),
         profile=profile,
         transaction_repository=None,
-        invoice_repository=None,
     )
 
     matching = [

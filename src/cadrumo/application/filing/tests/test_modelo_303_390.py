@@ -20,7 +20,7 @@ from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.submission import ModeloDraftStatus
 from .. import ModeloInputs, build_draft, build_runtime_schema_provider, export_draft
-from ..testing import ModeloTestProfile
+from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -35,8 +35,8 @@ _M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id(
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio", surface="_M390_EJERCICIO_CASILLA")
 
 
-def _profile() -> ModeloTestProfile:
-    return ModeloTestProfile(
+def _profile() -> ModeloOperatorProfile:
+    return ModeloOperatorProfile(
         tax_id="12345678Z",
         display_name="Registry boundary IVA test",
     )

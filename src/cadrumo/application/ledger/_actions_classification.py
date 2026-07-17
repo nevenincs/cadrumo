@@ -27,8 +27,9 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.transactions import LedgerClassificationRule
+    from ._rule_repository import LedgerClassificationRuleRepository
 
-from ...core.errors import AeatError, resolve_error_message
+from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
     BucketEvent,
@@ -254,8 +255,8 @@ def _apply_bulk_classify_rows(
             all_events.extend(events)
             all_event_ids.extend(event.event_id for event in events)
             applied += 1
-        except (AeatError, ValidationError, ValueError) as exc:
-            reason = resolve_error_message(exc) if isinstance(exc, AeatError) else str(exc)
+        except (CadrumoError, ValidationError, ValueError) as exc:
+            reason = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
             apply_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,
@@ -341,7 +342,7 @@ def add_classification_rule(
     category_id: str | None = None,
     priority: int = 100,
     actor: str,
-    rule_repository: object | None = None,
+    rule_repository: LedgerClassificationRuleRepository | None = None,
 ) -> LedgerClassificationRule:
     """Persist a new ledger classification rule and return it.
 
@@ -356,19 +357,10 @@ def add_classification_rule(
     regex, as validated by
     :class:`~domain.transactions.LedgerClassificationRule`.
     """
-    from typing import cast
-
     from ...domain.transactions import LedgerClassificationRule
     from ._rule_repository import LedgerClassificationRuleRepository
 
-    repo: LedgerClassificationRuleRepository = (
-        # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: ``rule_repository`` is typed
-        # ``object | None`` to keep the public signature injection-friendly;
-        # the non-None guard ensures narrowing is safe here.
-        cast(LedgerClassificationRuleRepository, rule_repository)
-        if rule_repository is not None
-        else LedgerClassificationRuleRepository()
-    )
+    repo = rule_repository if rule_repository is not None else LedgerClassificationRuleRepository()
     rule = LedgerClassificationRule.create(
         description_pattern=description_pattern,
         classification=classification,
@@ -388,7 +380,7 @@ def apply_classification_rules(
     source_command: str = "aeat app ledger rule apply",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    rule_repository: object | None = None,
+    rule_repository: LedgerClassificationRuleRepository | None = None,
 ) -> ApplyRulesResult:
     """Apply stored classification rules to unclassified ACTIVE transactions.
 
@@ -403,20 +395,11 @@ def apply_classification_rules(
 
     Returns an :class:`~application.ledger.ApplyRulesResult`.
     """
-    from typing import cast
-
     from ._rule_repository import LedgerClassificationRuleRepository
 
     tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    rule_repo: LedgerClassificationRuleRepository = (
-        # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: same injection-friendly
-        # ``object | None`` pattern as ``add_classification_rule``; the
-        # non-None guard ensures the cast is safe at this point.
-        cast(LedgerClassificationRuleRepository, rule_repository)
-        if rule_repository is not None
-        else LedgerClassificationRuleRepository()
-    )
+    rule_repo = rule_repository if rule_repository is not None else LedgerClassificationRuleRepository()
 
     rules: tuple[LedgerClassificationRule, ...] = rule_repo.list_rules()
     catalogue = tx_repo.load()

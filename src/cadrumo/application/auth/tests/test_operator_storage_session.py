@@ -24,11 +24,8 @@ from ....core.config import load_settings, override_settings
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from ....domain.contribuyente import required_profile_keys
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-)
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import (
     load_persisted_session,

@@ -40,7 +40,8 @@ from ....domain.modelos import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 

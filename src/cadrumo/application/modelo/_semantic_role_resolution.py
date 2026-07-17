@@ -54,7 +54,7 @@ class SemanticRoleCasillaAmbiguity:
     casilla_ids: tuple[CasillaId, ...]
 
     def context(self) -> dict[str, object]:
-        """Return structured error context for AeatError envelopes."""
+        """Return structured error context for CadrumoError envelopes."""
         return {
             "semantic_role": self.semantic_role,
             "modelo": self.modelo_id,

@@ -26,6 +26,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests.user_profile import register_minimal_profile
 from ...filing import (
     ModeloDraft,
     ModeloDraftStatus,
@@ -33,11 +34,7 @@ from ...filing import (
     ModeloValue,
     ModeloValueKind,
 )
-from ...user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-)
+from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import (
     ReviewItemKind,

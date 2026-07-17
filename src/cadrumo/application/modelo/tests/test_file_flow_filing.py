@@ -18,8 +18,6 @@ from ._file_flow_support import (
     T3,
     T4,
     T5,
-    AuthProvider,
-    BucketEventType,
     CalculationRevisionState,
     CalculationRevisionStateError,
     Decimal,
@@ -154,75 +152,6 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
     )
     assert current is not None
     assert current.filing_record_id == filing.filing_record_id
-
-
-def test_file_proceeds_locally_when_auth_provider_unavailable(repos: Repos) -> None:
-    """The local file transition does not gate on auth-provider readiness.
-
-    Per the operator ruling that auth readiness binds only live, AEAT-touching
-    purposes (not the local build/verify/file/export flow), filing a verified
-    revision locally proceeds even when the auth provider is unavailable, and
-    the provider is never consulted. The refuse-before-state-write atomicity of
-    a genuinely-applicable gate is covered by
-    ``test_file_refuses_future_period_before_filing_window_opens`` (the deadline
-    gate). The live-purpose half of the ruling — an unavailable auth provider
-    still refuses a live/AEAT-touching flow — is pinned in
-    ``test_preflight.py::test_gate_4_unavailable_provider_surfaces_structured_context``.
-    """
-
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
-    verify_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
-
-    unavailable_provider = AuthProvider(available=False)
-    filing = file_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T3,
-        auth_provider=unavailable_provider,
-    )
-
-    # Auth readiness gates only live purposes: the local file flow never
-    # consults the provider, so an unavailable one does not block it.
-    assert unavailable_provider.describe_calls == 0
-    assert filing.status is ModeloRecordStatus.VIGENTE
-    refreshed_revision = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
-    assert refreshed_revision.state is CalculationRevisionState.PRESENTADO
-    assert target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == (filing,)
-    filed_events = bv_repo.load().for_bucket(
-        work_unit.bucket_id,
-        event_types=(BucketEventType.MODELO_FILED,),
-    )
-    assert filed_events != ()
 
 
 def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing(repos: Repos) -> None:

@@ -63,7 +63,7 @@ from ...adapters.persistence.storage.master_key import KdfParams
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer
 from ...core.config import load_settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
@@ -263,7 +263,7 @@ class ProfileRepository:
         Raises:
             ProfileNotFoundError: If the profile already carries a
                 manifest (it is already a registered profile).
-            AeatError: If an error occurs during the all-or-nothing write.
+            CadrumoError: If an error occurs during the all-or-nothing write.
             OSError: If a filesystem error occurs during directory staging.
             UserProfileValidationError: If the routing profile id does not
                 match the resolved profile id.
@@ -787,7 +787,7 @@ class ProfileRepository:
 
                 with profile_storage_session(summary.profile_id):
                     aggregate = self.load(summary.profile_id)
-            except (AeatError, OSError, ValidationError) as exc:
+            except (CadrumoError, OSError, ValidationError) as exc:
                 # One torn / unreadable bucket must not prevent an operator
                 # from registering a completely different taxpayer. Emit an
                 # operator-visible warning and continue scanning the remaining
