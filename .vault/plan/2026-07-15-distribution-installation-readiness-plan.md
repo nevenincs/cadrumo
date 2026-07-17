@@ -128,7 +128,7 @@ Make the protected manual OIDC workflow consume stored tested artifacts and remo
 
 - [x] `W04.P09.S42` - Verify cohort hashes evidence completeness and destination versions before any upload; `dev/release/promote_python_cohort.py`.
 - [x] `W04.P09.S43` - Remove local release upload authority while retaining diagnostic build recipes; `justfile`.
-- [ ] `W04.P09.S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts; `dev/release/tests/test_publish_workflow.py`.
+- [x] `W04.P09.S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts; `dev/release/tests/test_publish_workflow.py`.
 
 ## Wave `W05` - Document measured reality and close
 
