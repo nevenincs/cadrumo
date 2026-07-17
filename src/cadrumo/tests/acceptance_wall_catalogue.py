@@ -204,6 +204,14 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "An Autoliquidacion Rectificativa IVA correction on Modelo 303 files through the guided amend wizard."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
+        test_function="test_amend_wizard_files_m303_autoliquidacion_rectificativa",
+    ),
+    AcceptanceWallEntry(
+        internal_reference="amend-wizard-complementaria (wall #419 capability/test split)",
+        capability=(
+            "A complementaria correction on an AEAT-attested Modelo 130 filing runs through the guided amend wizard."
+        ),
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
         test_function="test_amend_wizard_drives_full_prompt_sequence_and_files_correction",
     ),
     AcceptanceWallEntry(

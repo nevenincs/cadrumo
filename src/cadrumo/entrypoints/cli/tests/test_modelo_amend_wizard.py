@@ -35,7 +35,7 @@ from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
-from ._modelo_work_ux_support import _create_m130_work_unit
+from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -50,6 +50,15 @@ _TAX_ID = "12345678Z"
 _BASELINE_INGRESOS = Decimal("1000.00")
 _BASELINE_GASTOS = Decimal("250.00")
 _CORRECTED_INGRESOS = Decimal("1100.00")
+
+# M303 casilla 07 is the régimen-general 21% base imponible; the 2023-y-siguientes
+# revision declares no required-manual casillas, so a baseline carrying 07 alone is
+# a legitimate amendable AEAT-attested filing. The correction LOWERS the declared
+# base: under the pre-rectificativa dual regime that direction is a solicitud de
+# rectificación (LGT art. 120.3) that a self-filed complementaria cannot carry, so
+# only the unified rectificativa mechanism can file it.
+_M303_BASELINE_BASE_GENERAL = Decimal("10000.00")
+_M303_CORRECTED_BASE_GENERAL = Decimal("9000.00")
 
 
 def _invoke(args: list[str]):
@@ -95,7 +104,7 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _seed_justificante(*, csv: str, period: str = "1T") -> None:
+def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025) -> None:
     """Persist the stored receipt metadata a justificante-bound evidence import requires.
 
     ``import_external_filing_evidence`` refuses a justificante-bound evidence
@@ -106,9 +115,9 @@ def _seed_justificante(*, csv: str, period: str = "1T") -> None:
     body = f"{csv}-pdf".encode()
     receipt = Justificante(
         csv=csv,
-        modelo="130",
-        period=Period.from_year_and_code(2025, period),
-        ejercicio="2025",
+        modelo=modelo,
+        period=Period.from_year_and_code(filing_year, period),
+        ejercicio=str(filing_year),
         presentation_id=None,
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
         tax_id=_TAX_ID,
@@ -142,6 +151,104 @@ def _import_external_baseline(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["filing_record_id"]
+
+
+def _import_external_m303_baseline(
+    work_unit_id: str,
+    *,
+    csv: str = "JUST-2025-303-1T-AMEND-WIZARD",
+    period: str = "1T",
+) -> str:
+    """Import an AEAT-attested M303 baseline filing and return its filing_record_id."""
+    _seed_justificante(csv=csv, period=period, modelo="303")
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "filing-record", "import", work_unit_id,
+            "--evidence-kind", "aeat_justificante_pdf",
+            "--evidence-id", csv,
+            "--set", f"07={_M303_BASELINE_BASE_GENERAL}",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)["filing_record_id"]
+
+
+def test_amend_wizard_files_m303_autoliquidacion_rectificativa() -> None:
+    """An Autoliquidación Rectificativa on M303 files through the guided wizard.
+
+    Modelo 303 adopts the unified ``autoliquidación rectificativa`` (LGT art. 120.4,
+    Orden HAC/819/2024) from the "ejercicio 2024 a partir de periodos 09 y 3T"
+    diseño onward, so 2025 1T is rectificativa-effective: the kind prompt offers
+    ``rectificativa`` and the amendment files under that legally-distinct regime,
+    which REPLACES the prior filing rather than supplementing it. The correction
+    here LOWERS the declared base imponible -- a direction a self-filed
+    complementaria could not lawfully carry (it is a solicitud de rectificación,
+    LGT art. 120.3, pre-unification) -- so a rectificativa is the only mechanism
+    that can file it.
+    """
+    _create_profile()
+    work_unit_id = _create_m303_work_unit()
+    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+
+    result = _invoke_with_typed_answers(
+        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
+        ("07", str(_M303_CORRECTED_BASE_GENERAL), "rectificativa", "overstated base imponible"),
+    )
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output
+
+    payload = _payload(result.output)
+    assert payload["work_unit_id"] == work_unit_id
+    assert payload["amendment_kind"] == "rectificativa"
+    assert payload["amendment_reason"] == "overstated base imponible"
+    assert payload["status"] == "vigente"
+    # The rectificativa REPLACES the AEAT-attested baseline: the new record is an
+    # internal filing envelope pointing back at the filing it supersedes.
+    assert payload["external_evidence"] is None
+    assert payload["amends_filing_record_id"] == baseline_filing_id
+
+    corrected = payload["corrected_casillas"]
+    assert len(corrected) == 1
+    assert corrected[0]["number"] == "07"
+    assert corrected[0]["previous_value"] == str(_M303_BASELINE_BASE_GENERAL)
+    assert corrected[0]["corrected_value"] == str(_M303_CORRECTED_BASE_GENERAL)
+    assert corrected[0]["legal_refs"], "corrected casilla must carry legal_refs"
+
+    # The correction is persisted, not merely reported.
+    revision = _payload(
+        _invoke(
+            ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
+        ).output,
+    )
+    assert Decimal(revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
+
+
+def test_amend_wizard_refuses_complementaria_where_m303_rectificativa_has_replaced_it() -> None:
+    """M303 2025 1T is post-unification: ``complementaria`` is not a permitted kind.
+
+    Proof the wizard's kind prompt is period-aware rather than accepting any member
+    of the amendment-kind enum: once a modelo's orden establishes the rectificativa,
+    it replaces the complementaria for ordinary corrections, so answering
+    ``complementaria`` is refused and nothing is filed.
+    """
+    _create_profile()
+    work_unit_id = _create_m303_work_unit()
+    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+
+    result = _invoke_with_typed_answers(
+        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
+        ("07", str(_M303_CORRECTED_BASE_GENERAL), "complementaria", "should not file"),
+    )
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+
+    # Nothing was filed: the AEAT-attested baseline is still the current record.
+    records = _payload(
+        _invoke(["--format", "json", "app", "modelo", "filing-record", "list"]).output,
+    )
+    current = [row for row in records["records"] if row["status"] == "vigente"]
+    assert [row["filing_record_id"] for row in current] == [baseline_filing_id]
 
 
 def test_amend_wizard_drives_full_prompt_sequence_and_files_correction() -> None:
