@@ -1,0 +1,235 @@
+---
+tags:
+  - '#plan'
+  - '#cli-authority-quality-backlog'
+date: '2026-07-17'
+modified: '2026-07-17'
+tier: L2
+related:
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
+  - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
+  - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #plan) and one feature tag.
+     Replace cli-authority-quality-backlog with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
+     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
+     Phases above Steps. L4 = Epic above Waves above Phases above
+     Steps; PM association required. Pre-existing plans without this
+     field default to L2.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
+     carries the AUTHORIZING documents (ADR, research, reference, prior
+     plan) for every Step in this plan; Steps inherit this chain;
+     per-row reference footers do not exist.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+
+<!-- HIERARCHY AND TIERS:
+     Epic > Wave > Phase > Step. Step is the canonical leaf-row
+     noun. Execution Record artifact: <Step Record>.
+     Tier is declared in frontmatter as tier: L1/L2/L3/L4
+     (mandatory for new plans; pre-existing plans without the
+     field default to L2 and the writer adds the field on first
+     edit). The tier selects containers:
+       L1 = Steps only.
+       L2 = Phases above Steps.
+       L3 = Waves above Phases above Steps.
+       L4 = Epic above Waves above Phases above Steps; MUST declare
+            a project-management association in the Epic intent
+            block prose.
+     Selection is by complexity criteria, not container counting.
+     Writer never invents containers to qualify a tier. -->
+
+<!-- IDENTIFIERS AND ROW CONTRACT:
+     S##, P##, W## are flat, per-document, append-only, immutable.
+     Promotion adds containers without renumbering. Gaps are not
+     reused.
+     Display paths are computed from current grouping:
+       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
+       Phase heading:        L2 P##       L3/L4 W##.P##
+       Wave heading:                      L3/L4 W##
+     Row format:
+       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
+     Two-state checkboxes only ([ ] open, [x] closed). No per-row
+     reference footers; wiki-links and markdown links are forbidden
+     in plan body. Authorizing documents go in the plan's `related:`
+     frontmatter once.
+     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
+     (U+2013) are forbidden. Step rows within a Phase are
+     contiguous. -->
+
+<!-- NO COMPRESSION:
+     N self-similar actions = N rows. Never collapse into "for each
+     X, do Y" / "across all callers, do Z" / "in every module,
+     replace W". The rule applies at every tier including L1. -->
+
+<!-- VAULTSPEC-CORE VAULT PLAN CLI:
+     The `vaultspec-core vault plan` CLI is the canonical surface for
+     structural manipulation of this plan document. Writers and
+     executors MUST use `vaultspec-core vault plan step add/insert/move/
+     remove/check/uncheck/toggle/edit`,
+     `vaultspec-core vault plan phase add/move/remove/edit`,
+     `vaultspec-core vault plan wave add/move/remove/edit`,
+     `vaultspec-core vault plan epic intent`, and
+     `vaultspec-core vault plan tier promote/demote` for every
+     identifier-affecting change rather than hand-editing the row
+     grammar. Hand edits are tolerated by the parser but flagged by
+     `vaultspec-core vault plan check`; canonical-identifier preservation is
+     guaranteed only when the CLI performs the mutation. Run
+     `vaultspec-core vault plan --help` for the full subcommand
+     surface. -->
+
+# `cli-authority-quality-backlog` plan
+
+### Phase `P01` - Registry as-of honesty
+
+Make every accepted as_of argument effective or reject it explicitly, so the CLI stops accepting a parameter it silently ignores.
+
+
+<!-- One-line headline summary plan. -->
+
+- [ ] `P01.S01` - Make every accepted as_of argument participate in revision validity selection or reject it explicitly instead of silently ignoring it; `src/cadrumo/domain/calculations/registry/_queries.py`.
+- [ ] `P01.S02` - Reject an as_of argument on the unscoped registry discovery path with an instructive refusal naming the scoped form that honours it; `src/cadrumo/application/modelo/_registry_discovery.py`.
+- [ ] `P01.S03` - Prove historical as-of boundaries are honoured on the scoped path and refused explicitly on the unscoped path rather than silently ignored; `src/cadrumo/domain/calculations/registry/tests/test_queries.py`.
+
+### Phase `P02` - Hashing recurrence gate
+
+Add the AST recurrence gate that prevents new reducible one-shot hash bodies without a mass rewrite of existing callers.
+
+- [ ] `P02.S04` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses; `src/cadrumo/core/tests/test_hashing_adoption.py`.
+- [ ] `P02.S05` - Prove the recurrence gate rejects a new reducible one-shot body and accepts every legitimate cryptographic use it must not block; `src/cadrumo/core/tests/test_hashing_adoption.py`.
+
+### Phase `P03` - Secure-object namespace adoption
+
+Make the namespace registry the sole metadata authority and prove each storage binding consumes a registered definition.
+
+- [ ] `P03.S06` - Correct namespace registry metadata drift and make each namespace definition the sole authority for identifier, schema version, sensitivity, default object key, key grammar, owner, and custody; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
+- [ ] `P03.S07` - Remove duplicate namespace, version, sensitivity, catalogue-key, and custody literals from transaction, invoice, modelo participation, and bucket persistence consumers and bind them to registry definitions; `src/cadrumo/domain/transactions/`.
+- [ ] `P03.S08` - Remove duplicate namespace metadata from profile, calculation, aggregation, and filed-observation repositories and bind repository construction to registry definitions; `src/cadrumo/application/user_profile/`.
+- [ ] `P03.S09` - Remove duplicate namespace and custody declarations from Clave, LLM cache and usage, bundle, attachment, and secure-storage consumers without conflating certificate custody with master-key keyring custody; `src/cadrumo/adapters/outbound/aeat/auth/`.
+- [ ] `P03.S10` - Replace literal-membership namespace checks with a non-vacuous production-root adoption gate that recognizes cadrumo-prefixed declarations, detects local metadata declarations, and proves each storage binding consumes the registered definition; `src/cadrumo/application/tests/test_storage_namespace_adoption.py`.
+
+### Phase `P04` - Filed capture finalizer
+
+Give filed observation persistence sole ownership of selection, ordering, and writes behind one typed finalizer.
+
+- [ ] `P04.S11` - Make filed observation persistence the sole owner of latest-record selection, deterministic history ordering, metadata enrollment, and calculation-observation writes and remove the duplicate selector and persistence loop from capture orchestration; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [ ] `P04.S12` - Introduce one typed filed-capture finalizer and failure accumulator used by single, bulk, and source capture with explicit fail-fast single and source policy and best-effort bulk policy; `src/cadrumo/application/live/_filed_capture_finalizer.py`.
+- [ ] `P04.S13` - Prove identical latest selection and history ordering across all capture routes, their distinct failure policies, and preservation of the separate strict IVA compensation persistence path; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
+
+### Phase `P05` - LLM review workflow typing
+
+Type the language-model review workflow with mandatory invocation origins after ledger evidence atomicity lands.
+
+- [ ] `P05.S14` - Define typed LLM review requests, decisions, results, and mandatory invocation origins without an application-layer default CLI source command; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
+- [ ] `P05.S15` - Implement one application review workflow for suggest, saturate, review, apply, reject, evidence no-split, and evidence split while composing existing canonical persistence primitives; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
+- [ ] `P05.S16` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults; `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`.
+- [ ] `P05.S17` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries; `src/cadrumo/application/ledger/tests/test_llm_reject.py`.
+
+## Description
+
+Absorb the residue of the CLI authority campaign that is real work but carries neither an operator-safety defect nor a false-green risk. Every phase here is independently closeable and none blocks another plan. This plan is deferrable against spare capacity; it is not a prerequisite for any successor.
+
+Registry as-of honesty ships narrowly. The unscoped registry query accepts an as_of argument and silently ignores it, which is an accepted-parameter lie: the operator asks for a historical view, receives a current one, and gets no signal that the request was discarded. The fix is small and worth shipping on its own: honour the argument in revision validity selection, or refuse it with an instructive message naming the scoped form that does honour it. The decision record keeps scoped and unscoped selection distinct on purpose, so this is a honesty fix, not a merge.
+
+Hashing narrows to the recurrence gate. The eighteen exact one-shot bodies and four reducible file-hash bodies repeat substitutable mechanics, but rewriting them is low-value churn against a canonical service that already exists. Only the AST recurrence gate carries durable value: it prevents new reducible bodies from landing while allowing streaming, keyed, derivation, and certificate uses that are not substitutable and must not be blocked.
+
+Namespace adoption, filed capture, and the language-model review workflow are each genuine single-authority consolidations with no safety urgency. The namespace adoption check currently passes without proving binding, which makes it a weak gate rather than a wrong one. The language-model review phase depends on ledger evidence atomicity landing first, because both touch split persistence.
+
+## Steps
+
+<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
+`L4`) determines the structure under this section:
+
+- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
+- `L2`: one or more `### Phase` blocks each containing Step rows.
+- `L3`: one or more `## Wave` blocks each containing Phase blocks.
+- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
+
+<!-- Replace this scaffold with the tier-appropriate structure for your plan.
+Format examples for each block type are embedded below as commented
+templates. -->
+
+<!-- IMPORTANT: This document must be updated between execution runs to
+     track progress. -->
+
+<!-- PHASE BLOCK FORMAT (L2, L3, L4):
+     ### Phase `P02` - rewrite the writer-agent contract
+
+     One sentence stating what this Phase delivers.
+
+     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
+     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
+
+     At L3/L4 the Phase heading uses the ancestor-aware path
+     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
+
+<!-- WAVE BLOCK FORMAT (L3, L4):
+     ## Wave `W01` - language-only convention rollout
+
+     One paragraph stating what this Wave delivers, which downstream
+     Wave depends on it, and which authorizing documents back it.
+
+     ### Phase `W01.P01` - ...
+     ### Phase `W01.P02` - ...
+
+     The Wave intent paragraph is mandatory. -->
+
+<!-- EPIC INTENT BLOCK FORMAT (L4 only):
+     ## Epic intent
+
+     One paragraph stating the strategic goal, the external project-
+     management association (milestone name, project board identifier,
+     roadmap entry), the timeline horizon, and the teams or agents
+     involved.
+
+     ## Wave `W01` - ...
+     ## Wave `W02` - ...
+
+     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
+     L3. The plan title (the level-one # heading at the top of the
+     document) is the Epic title; no separate Epic heading is emitted. -->
+
+## Parallelization
+
+The registry as-of, hashing recurrence gate, namespace adoption, and filed capture phases are mutually independent and touch disjoint files. Any of them may run alone at any time.
+
+The language-model review workflow phase has one hard dependency: the ledger evidence atomicity plan must land first, because both modify split persistence and the review workflow must compose the atomic writer rather than the generic patch path it replaces. Do not start this phase before that plan closes.
+
+Within the namespace adoption phase, the registry metadata correction must land before the consumer-binding steps, which are otherwise independent of each other and may run in parallel across their disjoint consumer packages.
+
+## Verification
+
+The scoped registry path honours historical as-of boundaries, the unscoped path refuses as_of with an instructive message naming the scoped form, and no path silently ignores the argument. Scoped and unscoped parity holds everywhere as_of is not involved, and the intentional distinction between bindings and casilla detail reports survives.
+
+The hashing recurrence gate rejects a newly introduced reducible one-shot body and accepts every legitimate streaming, keyed-hash, key-derivation, certificate, and digest-byte use it must not block. Existing callers are not rewritten.
+
+The namespace adoption gate is non-vacuous: it proves each production storage binding consumes a registered definition rather than checking literal membership, detects a local metadata redeclaration, and does not conflate certificate custody with master-key keyring custody.
+
+Filed capture proves identical latest selection and history ordering across every capture route, preserves each route's distinct failure policy with single and source fail-fast and bulk best-effort, and preserves the separate strict IVA compensation persistence path.
+
+The language-model review workflow proves suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and route parity against real persistence and real model subprocess boundaries, with the two CLI intents retaining distinct invocation origins.
+
+Each phase closes independently with its own focused verification and its own fresh-context honesty review.
+
