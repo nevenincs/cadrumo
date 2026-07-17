@@ -156,29 +156,52 @@ _SANCTIONED_REVISION_ID_SITES = frozenset(
 )
 
 
-def _production_select_revision_calls() -> list[tuple[str, int, frozenset[str]]]:
-    """AST-collect every production ``select_revision(...)`` call site.
+def _select_revision_calls_in_tree(tree: ast.AST, relpath: str) -> list[tuple[str, int, frozenset[str]]]:
+    """Extract every ``select_revision(...)`` call from one parsed module tree.
 
-    Returns ``(repo-relative posix path, line number, keyword-name set)`` for
-    each call outside the test tree. ``filing_year`` and ``period`` are
-    keyword-only parameters of ``select_revision``, so their presence in the
-    keyword-name set is a faithful proxy for "the law-determined axes drove
-    this selection".
+    Returns ``(relpath, line number, keyword-name set)`` per call. ``filing_year``
+    and ``period`` are keyword-only parameters of ``select_revision``, so their
+    presence in the keyword-name set is a faithful proxy for "the law-determined
+    axes drove this selection". Shared by the production audit and its
+    discrimination proof so both exercise the identical extraction logic.
     """
+    calls: list[tuple[str, int, frozenset[str]]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else None
+        if name != "select_revision":
+            continue
+        keywords = frozenset(kw.arg for kw in node.keywords if kw.arg is not None)
+        calls.append((relpath, node.lineno, keywords))
+    return calls
+
+
+def _law_determined_violations(
+    calls: list[tuple[str, int, frozenset[str]]],
+) -> tuple[list[tuple[str, int, list[str]]], list[str]]:
+    """Classify call sites: under-specified selections and unsanctioned injections.
+
+    ``under_specified`` are calls missing a law-determined axis (``filing_year``
+    or ``period``) — a revision-id-only or otherwise non-period-driven selection.
+    ``unsanctioned`` are modules that pass ``revision_id`` into resolution outside
+    the two sanctioned assertion sites. Both classes are the injection defect the
+    revision-resolution-is-law-determined rule bars.
+    """
+    under_specified = [(rel, line, sorted(kw)) for rel, line, kw in calls if not {"filing_year", "period"} <= kw]
+    unsanctioned = sorted({rel for rel, _line, kw in calls if "revision_id" in kw} - _SANCTIONED_REVISION_ID_SITES)
+    return under_specified, unsanctioned
+
+
+def _production_select_revision_calls() -> list[tuple[str, int, frozenset[str]]]:
+    """AST-collect every production ``select_revision(...)`` call site (tests excluded)."""
     calls: list[tuple[str, int, frozenset[str]]] = []
     for path in _CADRUMO_ROOT.rglob("*.py"):
         if "tests" in path.parts or path.name == "conftest.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            func = node.func
-            name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else None
-            if name != "select_revision":
-                continue
-            keywords = frozenset(kw.arg for kw in node.keywords if kw.arg is not None)
-            calls.append((path.relative_to(_CADRUMO_ROOT).as_posix(), node.lineno, keywords))
+        calls.extend(_select_revision_calls_in_tree(tree, path.relative_to(_CADRUMO_ROOT).as_posix()))
     return calls
 
 
@@ -200,16 +223,45 @@ def test_every_production_select_revision_call_is_law_determined() -> None:
         "be vacuous — confirm the resolver name or path traversal did not drift"
     )
 
-    under_specified = [(rel, line, sorted(kw)) for rel, line, kw in calls if not {"filing_year", "period"} <= kw]
+    under_specified, unsanctioned = _law_determined_violations(calls)
     assert not under_specified, (
         "select_revision call(s) omit the law-determined filing_year/period axes, so "
         f"selection is not period-driven (an injection risk): {under_specified}"
     )
-
-    revision_id_sites = {rel for rel, _line, kw in calls if "revision_id" in kw}
-    unsanctioned = revision_id_sites - _SANCTIONED_REVISION_ID_SITES
     assert not unsanctioned, (
         "new production site(s) pass revision_id into select_revision resolution; prove they "
         "only assert-equal against the law-determined pick (never inject) and, if so, enroll "
-        f"them in _SANCTIONED_REVISION_ID_SITES: {sorted(unsanctioned)}"
+        f"them in _SANCTIONED_REVISION_ID_SITES: {unsanctioned}"
     )
+
+
+def test_law_determined_gate_catches_injected_revision_id_selection() -> None:
+    """Discrimination proof: the audit FAILS on a deliberately-wrong injection.
+
+    Feeds synthetic module sources through the SAME extraction and classification
+    the production gate runs, proving the gate cannot silently pass green while the
+    invariant is broken. A revision-id-only selection (no law-determined axes) is
+    flagged as under-specified; a ``revision_id`` fed into resolution from an
+    unsanctioned module is flagged as an unsanctioned injection; and the correct
+    law-determined assertion shape passes clean.
+    """
+    rogue_rel = "application/modelo/_rogue_injection_path.py"
+
+    # (a) revision_id-only selection: the law-determined axes are absent entirely.
+    injected = ast.parse("select_revision(definition, revision_id=stored_unit.revision_id)")
+    under, _unsanctioned = _law_determined_violations(_select_revision_calls_in_tree(injected, rogue_rel))
+    assert under, "gate FAILED to flag a revision_id-only injection (missing law-determined axes)"
+
+    # (b) revision_id passed into resolution from an unsanctioned module.
+    rogue_site = ast.parse("select_revision(definition, filing_year=y, period=p, revision_id=stored_unit.revision_id)")
+    _under, unsanctioned = _law_determined_violations(_select_revision_calls_in_tree(rogue_site, rogue_rel))
+    assert unsanctioned == [rogue_rel], (
+        f"gate FAILED to flag a revision_id injected from an unsanctioned site: {unsanctioned}"
+    )
+
+    # (c) the correct law-determined shape is NOT false-flagged.
+    law_determined = ast.parse("select_revision(definition, filing_year=y, period=p)")
+    under_ok, unsanctioned_ok = _law_determined_violations(
+        _select_revision_calls_in_tree(law_determined, "application/modelo/_ok_path.py"),
+    )
+    assert not under_ok and not unsanctioned_ok, "gate false-flagged a correct law-determined call"
