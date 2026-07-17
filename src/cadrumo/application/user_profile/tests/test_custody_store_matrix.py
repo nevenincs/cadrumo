@@ -46,7 +46,12 @@ from ....tests.custody_store_matrix_adapters import (
     save_usage_ratios,
     secure_object_repository_for_active_bucket,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
+from ....tests.secure_sql import (
+    TestRuntimeProfile,
+    dev_test_database_password,
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+)
 from ...bucket_maintenance import (
     BucketMaintenanceService,
     ExportBucketCommand,
@@ -1101,8 +1106,9 @@ def test_file_custody_supports_the_full_recovery_lifecycle(tmp_path: Path) -> No
     rotated = recovery_rotate(provider=provider, path=path, created_at=_RECOVERY_NOW, confirm=_capture)
     assert rotated.rotated is True
 
+    _new_passphrase = f"{dev_test_database_password()}-rotated"
     recover_provider = FileFallbackMasterKeyProvider(
-        store_dir=store_dir, passphrase_callback=lambda: "a new passphrase"
+        store_dir=store_dir, passphrase_callback=lambda: _new_passphrase
     )
     recovered = recovery_recover(provider=recover_provider, path=path, mnemonic=staged["mnemonic"])
     assert recovered.recovery_fingerprint == rotated.recovery_fingerprint
