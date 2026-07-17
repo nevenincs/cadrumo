@@ -66,7 +66,7 @@ Give filed observation persistence sole ownership of selection, ordering, and wr
 Type the language-model review workflow with mandatory invocation origins after ledger evidence atomicity lands.
 
 - [x] `P05.S14` - Define typed LLM review requests, decisions, results, and mandatory invocation origins without an application-layer default CLI source command; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
-- [ ] `P05.S15` - Implement one application review workflow for suggest, saturate, review, apply, reject, evidence no-split, and evidence split while composing existing canonical persistence primitives; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
+- [x] `P05.S15` - Implement one application review workflow for suggest, saturate, review, apply, reject, evidence no-split, and evidence split while composing existing canonical persistence primitives; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
 - [ ] `P05.S16` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults; `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`.
 - [ ] `P05.S17` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries; `src/cadrumo/application/ledger/tests/test_llm_reject.py`.
 
