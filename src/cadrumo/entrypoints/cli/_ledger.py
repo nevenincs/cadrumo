@@ -27,6 +27,7 @@ from ...application.ledger import (
     LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
+    attach_manual_transaction_evidence,
     create_manual_transaction,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
@@ -980,11 +981,12 @@ def ledger_link(
 
     evidence_result_payload: LedgerTransactionResultPayload | None = None
     if evidence_id is not None:
-        evidence_patch = ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id)
-        evidence_result = update_manual_transaction_fields(
+        # Evidence assignment always passes through the attach authority, the sole
+        # evidence-write door (the generic field-update path refuses evidence).
+        evidence_result = attach_manual_transaction_evidence(
             bucket_id=bucket_id,
             transaction_id=resolved_id,
-            patch=evidence_patch,
+            purchase_invoice_evidence_id=evidence_id,
             actor=actor_label,
             source_command="aeat app ledger link",
         )
