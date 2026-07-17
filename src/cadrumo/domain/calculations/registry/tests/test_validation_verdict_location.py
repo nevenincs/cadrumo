@@ -50,6 +50,7 @@ def test_distinct_roots_get_distinct_verdict_files(tmp_path: Path) -> None:
 def test_bundled_verdict_path_is_a_sibling_of_the_bundled_tree() -> None:
     bundled_root = bundled_path("registry", "aeat").resolve()
     shipped = bundled_verdict_path(bundled_root)
+    assert shipped is not None
     assert shipped == bundled_root.parent / "aeat-validation-verdict.json"
     # The shipped verdict is never inside the fingerprinted tree it certifies.
     assert bundled_root not in shipped.parents
@@ -105,15 +106,22 @@ def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path:
 
 
 def test_compute_verdict_key_is_sensitive_to_every_input() -> None:
-    base = {
-        "registry_fingerprints": (("a.toml", 1, 2),),
-        "source_evidence_fingerprints": (("b.pdf", 3, 4),),
-        "package_version": "1.0.0",
-    }
-    key = compute_verdict_key(**base)
-    assert key != compute_verdict_key(**{**base, "package_version": "1.0.1"})
-    assert key != compute_verdict_key(**{**base, "registry_fingerprints": (("a.toml", 1, 3),)})
-    assert key != compute_verdict_key(**{**base, "source_evidence_fingerprints": (("b.pdf", 9, 4),)})
+    reg = (("a.toml", 1, 2),)
+    src = (("b.pdf", 3, 4),)
+    key = compute_verdict_key(registry_fingerprints=reg, source_evidence_fingerprints=src, package_version="1.0.0")
+    assert key != compute_verdict_key(
+        registry_fingerprints=reg, source_evidence_fingerprints=src, package_version="1.0.1"
+    )
+    assert key != compute_verdict_key(
+        registry_fingerprints=(("a.toml", 1, 3),),
+        source_evidence_fingerprints=src,
+        package_version="1.0.0",
+    )
+    assert key != compute_verdict_key(
+        registry_fingerprints=reg,
+        source_evidence_fingerprints=(("b.pdf", 9, 4),),
+        package_version="1.0.0",
+    )
     # A tuple moving between the two groups must not collide (group label mixed in).
     swapped = compute_verdict_key(
         registry_fingerprints=(("b.pdf", 3, 4),),

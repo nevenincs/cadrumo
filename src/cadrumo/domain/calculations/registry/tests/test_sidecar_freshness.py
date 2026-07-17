@@ -112,7 +112,7 @@ def test_corpus_text_normaliser_inlined_copy_is_byte_equal_to_canonical() -> Non
     - Whitespace collapsing
     - Lowercasing
     """
-    from dev.packaging.extract_manual_corpus_text import (
+    from dev.packaging.extract_manual_corpus_text import (  # type: ignore[reportMissingImports]  # dev/ tooling module; resolves at runtime, not on the type-check src roots
         _normalise_corpus_text as inlined,
     )
 

@@ -17,6 +17,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._compiled_cache import (
+    CompiledRegistryPayload,
     _encode_frame,
     compiled_cache_path,
     load_compiled_registry_cache,
@@ -33,7 +34,7 @@ from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int], ...], object]:
+def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int], ...], CompiledRegistryPayload]:
     """Compile the real bundled registry once and return its root, fingerprints, and payload."""
     clear_fingerprint_cache()
     root = bundled_path("registry", "aeat").resolve()
@@ -97,7 +98,7 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
         path.parent.mkdir(parents=True, exist_ok=True)
         # A frame with a valid schema version and a matching digest, but a foreign
         # payload object -- integrity passes, the structural type-check must not.
-        path.write_bytes(_encode_frame(("not", "a", "compiled", "registry")))  # type: ignore[arg-type]
+        path.write_bytes(_encode_frame(("not", "a", "compiled", "registry")))  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert load_compiled_registry_cache(root, fingerprints) is None
         assert not path.is_file()
