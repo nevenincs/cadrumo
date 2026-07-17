@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'

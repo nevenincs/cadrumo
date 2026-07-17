@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#calc-engine-grounding-swarm"
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: S05
 related:
   - '[[2026-05-21-calculation-grounding-swarm-r2-audit]]'

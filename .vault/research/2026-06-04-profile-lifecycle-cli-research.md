@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#profile-lifecycle-cli'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related: []
 ---
 

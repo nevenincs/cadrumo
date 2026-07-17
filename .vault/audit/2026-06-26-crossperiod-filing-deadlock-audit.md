@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'

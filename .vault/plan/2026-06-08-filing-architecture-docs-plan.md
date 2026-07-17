@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#filing-architecture-docs'
 date: '2026-06-08'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-06-08-filing-architecture-docs-research]]'

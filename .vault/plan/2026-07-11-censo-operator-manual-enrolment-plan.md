@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
-modified: '2026-07-14'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'

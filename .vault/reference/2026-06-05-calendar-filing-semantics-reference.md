@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#calendar-filing-semantics'
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-04-calendar-live-filing-integration-reference]]'
   - '[[2026-06-05-calendar-live-operational-hardening-plan]]'

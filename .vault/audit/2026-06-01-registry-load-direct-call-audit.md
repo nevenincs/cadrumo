@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-load-direct-call'
 date: '2026-06-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
   - "[[2026-05-28-codebase-solidification-plan]]"

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-
-
-
 # Install MCPB through each claimed client and require the real tax-work tool call
 
 ## Scope

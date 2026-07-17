@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-07-12'
+modified: '2026-07-17'
 related:
   - "[[2026-04-29-rental-income-hardening-adr]]"
   - "[[2026-04-29-rental-income-hardening-research]]"

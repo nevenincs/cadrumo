@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-19'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-19-schema-hardening-enrollment-campaign-queue-audit]]"
   - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"

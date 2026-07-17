@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S12'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"

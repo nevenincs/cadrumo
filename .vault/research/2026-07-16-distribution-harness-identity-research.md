@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#distribution-harness-identity'
 date: '2026-07-16'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'

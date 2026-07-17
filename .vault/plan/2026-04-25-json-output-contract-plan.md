@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#json-output-contract'
 date: '2026-04-25'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-25-json-output-contract-research]]"
   - "[[2026-04-25-json-output-contract-adr]]"

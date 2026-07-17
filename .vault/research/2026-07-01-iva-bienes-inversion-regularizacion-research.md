@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
   - "[[2026-06-21-m390-iva-carry-boxes-adr]]"

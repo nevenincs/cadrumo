@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#docs-terminology-search'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-17'
 step_id: 'S09'
 related:
   - "[[2026-07-13-docs-terminology-search-plan]]"

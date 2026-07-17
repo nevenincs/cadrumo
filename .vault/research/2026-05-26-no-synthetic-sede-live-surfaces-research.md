@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit]]'

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#aeat-cli-gap-discovery'
 date: '2026-05-08'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-08-aeat-cli-hardening-plan]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"

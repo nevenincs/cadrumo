@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#registry-validator-baseline-repair'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L1
 related:
   - '[[2026-06-04-registry-validator-baseline-repair-adr]]'

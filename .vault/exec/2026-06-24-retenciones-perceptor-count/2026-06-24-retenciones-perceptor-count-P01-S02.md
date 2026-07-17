@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#retenciones-perceptor-count'
 date: '2026-06-24'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S02'
 related:
   - "[[2026-06-24-retenciones-perceptor-count-plan]]"

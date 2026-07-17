@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#distribution-harness-identity'
 date: '2026-07-16'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
   - '[[2026-07-16-distribution-harness-identity-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'

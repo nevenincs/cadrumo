@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 step_id: 'S17'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"

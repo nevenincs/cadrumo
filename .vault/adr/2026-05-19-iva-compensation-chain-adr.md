@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-compensation-chain'
 date: '2026-05-19'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
   - '[[2026-04-12-modelo-303-390-adr]]'

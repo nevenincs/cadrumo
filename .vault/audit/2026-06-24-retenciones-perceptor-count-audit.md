@@ -8,7 +8,7 @@ related:
   - "[[2026-06-24-retenciones-perceptor-count-plan]]"
 promoted_to:
   - 'rule:uncommitted-wip-is-not-orphaned'
-modified: '2026-06-28'
+modified: '2026-07-17'
 ---
 # `retenciones-perceptor-count` audit: `Shared-worktree WIP-discard incident + RET-1 P02 live-contention; uncommitted is not orphaned`
 

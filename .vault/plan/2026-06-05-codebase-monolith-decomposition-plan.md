@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#codebase-monolith-decomposition'
 date: '2026-06-05'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'

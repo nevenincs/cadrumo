@@ -4,7 +4,7 @@ description: Cross-domain roadmap consolidating Phase 1 (AEAT loop), Phase 2 (fi
 type: reference
 tags: ["#reference", "#roadmap"]
 date: 2026-04-13
-modified: '2026-07-10'
+modified: '2026-07-17'
 ---
 
 # Cohesive project roadmap (2026-04-13 snapshot)
