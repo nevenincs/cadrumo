@@ -314,6 +314,13 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         if build_root.exists():
             shutil.rmtree(build_root)
 
+    # uv seeds its --out-dir with a `.gitignore`; that is a build-tool artifact,
+    # not a cohort member, and the release-cohort completeness check refuses any
+    # file the manifest does not declare.
+    uv_gitignore = output / ".gitignore"
+    if uv_gitignore.exists():
+        uv_gitignore.unlink()
+
     root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
     root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")
     manuals_wheel = _single(
