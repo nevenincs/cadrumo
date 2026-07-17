@@ -55,8 +55,28 @@ jobs:
       - name: Cadrumo packaging preflight command tests
         run: just packaging-smoke-preflight-tests
 
+      # The hosted runner ships ~14 GB free; the multi-lane campaign plus two
+      # Docker lanes starved it twice (runner lost communication mid-step).
+      # Reclaim the preinstalled toolchains the job never uses, and sample
+      # disk/memory every minute during the one-invocation campaign so a
+      # resource death names its lane in the interleaved output. The campaign
+      # stays a single `just packaging-smoke-ci` invocation so every lane
+      # consumes the same cohort bytes built once.
+      - name: Reclaim runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+          free -m
+
       - name: Cadrumo immutable-cohort packaging campaign
-        run: just packaging-smoke-ci
+        run: |
+          ( while true; do echo "[resources $(date -u +%H:%M:%S)] $(df -h --output=avail / | tail -1 | tr -d ' ') free disk, $(free -m | sed -n 2p | awk '{print $7}') MiB avail mem"; sleep 60; done ) &
+          sampler=$!
+          just packaging-smoke-ci
+          status=$?
+          kill "$sampler" 2>/dev/null || true
+          exit "$status"
 
       - name: Checkpoint packaging evidence
         if: always()
