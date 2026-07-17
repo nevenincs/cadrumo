@@ -40,6 +40,7 @@ else:
         from playwright.async_api import Error as PlaywrightError
         from playwright.async_api import TimeoutError as PlaywrightTimeoutError
     except ImportError:  # the optional `browser` extra is not installed
+
         class PlaywrightError(Exception):
             """Fallback for ``playwright.async_api.Error`` when the browser extra is absent.
 
@@ -58,6 +59,7 @@ else:
             so timeout mapping remains importable even when Playwright is not
             installed.
             """
+
 
 __all__ = [
     "BrowserContext",

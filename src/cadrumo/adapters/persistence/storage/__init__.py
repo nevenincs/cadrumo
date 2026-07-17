@@ -244,7 +244,6 @@ from .errors import (
     UnsecuredModeRefusedError,
 )
 from .master_key import (
-    EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
@@ -298,6 +297,7 @@ from .secret_store import (
     SecretStore,
 )
 from .sql import (
+    Base,
     SecureObjectDeletion,
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
@@ -404,6 +404,7 @@ __all__ = [
     "AeadAlgorithm",
     "AtRestTreatment",
     "AttachmentStore",
+    "Base",
     "BlobIntegrityError",
     "BlobManifest",
     "BlobNotFoundError",
@@ -426,7 +427,6 @@ __all__ = [
     "EncryptionMetadata",
     "Envelope",
     "EnvelopeVersionError",
-    "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "HashedLookup",
     "KeyDerivationError",

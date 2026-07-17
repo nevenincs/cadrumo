@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 from pydantic import AnyUrl, Field
 
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
@@ -441,9 +442,11 @@ async def collect_nif_iva_check_observations(
             context={"stage": "unknown", "cause_type": type(exc).__name__},
         ) from exc
     finally:
-        if context is not None:
-            await context.close()
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-nif-iva-check-close",
+        )
 
 
 async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:

@@ -99,7 +99,9 @@ async def close_owned_browser_session(
 
     Returns ``True`` when no session exists or teardown completes. A timeout or
     close failure is logged and returns ``False`` so the provider retains the
-    session reference and a later :meth:`close` call can retry.
+    session reference and a later
+    :meth:`~cadrumo.adapters.outbound.aeat.auth.BrowserSessionLike.close`
+    call can retry.
     """
     if session is None:
         return True

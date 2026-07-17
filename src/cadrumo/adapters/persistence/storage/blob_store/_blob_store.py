@@ -73,8 +73,8 @@ from ..master_key import MasterKeyProvider, get_active_master_key
 
 _log = get_logger(__name__)
 
-_BLOB_AAD = b"aeat.blob.payload.v1"
-_DEK_AAD = b"aeat.blob.dek-wrap.v1"
+_BLOB_AAD = b"cadrumo.blob.payload.v1"
+_DEK_AAD = b"cadrumo.blob.dek-wrap.v1"
 _BLOB_ERROR_CONTEXT = {"surface": "encrypted_blob_store"}
 _BLOB_MANIFEST_PATH_KEY = "blob_manifest"
 _BLOB_MANIFEST_PATH_DEFINITION = STORAGE_NAMESPACE_REGISTRY.path_by_key(_BLOB_MANIFEST_PATH_KEY)

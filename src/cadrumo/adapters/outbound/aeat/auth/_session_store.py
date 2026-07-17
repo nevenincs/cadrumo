@@ -55,7 +55,7 @@ class FormerProductAuthSessionStateError(AuthError):
     ``Settings``/pydantic bootstrap, so no bootstrap-cycle constraint bars it
     from the registry-bound hierarchy: it derives from the same
     :class:`AuthError` base as every other outbound AEAT authentication
-    domain error, so a caller catching ``AuthError`` (or ``AeatError``) at an
+    domain error, so a caller catching ``AuthError`` (or ``CadrumoError``) at an
     adapter or CLI boundary observes this refusal too, instead of it
     propagating as an unclassified internal error.
     """

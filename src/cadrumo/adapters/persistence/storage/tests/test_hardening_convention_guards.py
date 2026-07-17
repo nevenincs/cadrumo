@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
+from .....core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
 from .....locales.manager import LocaleManager
 from .....tests import (
     SRC_CADRUMO,
@@ -42,7 +42,7 @@ _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
 _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py",
     "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
-    "src/cadrumo/adapters/persistence/storage/envelope/_repository_test_suite.py",
+    "src/cadrumo/adapters/persistence/storage/envelope/tests/_repository_contract_support.py",
     "src/cadrumo/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_apply_batch.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py",
@@ -52,7 +52,6 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_schema_lineage.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py",
     "src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py",
@@ -518,8 +517,8 @@ def _import_secure_storage_error_modules() -> None:
         importlib.import_module(module_name)
 
 
-def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
-    discovered: set[type[AeatError]] = set()
+def _iter_error_subclasses(root: type[CadrumoError]) -> set[type[CadrumoError]]:
+    discovered: set[type[CadrumoError]] = set()
     for subclass in root.__subclasses__():
         discovered.add(subclass)
         discovered.update(_iter_error_subclasses(subclass))

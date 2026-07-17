@@ -1,13 +1,13 @@
 """Static enforcement of the :data:`~core.errors.ERROR_REGISTRY` invariants.
 
 Walks every importable module under ``cadrumo``, discovers each
-:class:`~core.errors.AeatError` subclass, and asserts:
+:class:`~core.errors.CadrumoError` subclass, and asserts:
 
 * every subclass binds to a registered :class:`~core.errors.ErrorCode`,
 * each registered code maps to exactly one subclass (no aliasing),
 * every :class:`~core.errors.ErrorCategory` has at least one
   registered code, and
-* no production raise site instantiates :class:`~core.errors.AeatError`
+* no production raise site instantiates :class:`~core.errors.CadrumoError`
   directly or references an unregistered subclass.
 
 Runs at unit-test scope — failures here are CI-blocking so missing
@@ -35,7 +35,7 @@ from pathlib import Path
 import pytest
 
 from ....tests import module_name, production_ast_items, repo_relative
-from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
+from .. import ERROR_REGISTRY, CadrumoError, ErrorCategory, get_registered_error_code
 from ..registry import _ALL_DECLARED_ERROR_CODES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -52,8 +52,8 @@ def _import_all_cadrumo_modules() -> None:
         importlib.import_module(name)
 
 
-def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
-    discovered: set[type[AeatError]] = set()
+def _iter_error_subclasses(root: type[CadrumoError]) -> set[type[CadrumoError]]:
+    discovered: set[type[CadrumoError]] = set()
     for subclass in root.__subclasses__():
         if ".tests." in subclass.__module__ or ".test_" in subclass.__module__:
             continue
@@ -99,7 +99,7 @@ def _looks_like_cadrumo_error_reference(node: ast.expr, known_names: set[str]) -
 
 def test_every_cadrumo_error_subclass_has_a_registered_code() -> None:
     _import_all_cadrumo_modules()
-    subclasses = _iter_error_subclasses(AeatError)
+    subclasses = _iter_error_subclasses(CadrumoError)
     ordered = sorted(subclasses, key=lambda error_type: f"{error_type.__module__}.{error_type.__name__}")
 
     missing = [
@@ -126,7 +126,7 @@ def test_modelo_calculate_input_errors_have_registered_codes() -> None:
     concrete_errors = [
         error_type
         for _, error_type in inspect.getmembers(module, inspect.isclass)
-        if error_type.__module__ == module.__name__ and issubclass(error_type, AeatError)
+        if error_type.__module__ == module.__name__ and issubclass(error_type, CadrumoError)
     ]
 
     assert concrete_errors
@@ -140,7 +140,7 @@ def test_modelo_calculate_input_errors_have_registered_codes() -> None:
 
 def test_every_registered_code_maps_to_exactly_one_error_subclass() -> None:
     _import_all_cadrumo_modules()
-    subclasses = _iter_error_subclasses(AeatError)
+    subclasses = _iter_error_subclasses(CadrumoError)
     reverse: dict[str, list[str]] = {}
     for error_type in subclasses:
         code = get_registered_error_code(error_type)
@@ -161,9 +161,9 @@ def test_raise_sites_do_not_use_bare_cadrumo_error_and_reference_registered_subc
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
     _import_all_cadrumo_modules()
-    subclasses = _iter_error_subclasses(AeatError)
+    subclasses = _iter_error_subclasses(CadrumoError)
     index = {error_type.__name__: error_type for error_type in subclasses}
-    known_names = set(index) | {"AeatError"}
+    known_names = set(index) | {"CadrumoError"}
 
     direct_base_raises: list[str] = []
     unresolved_targets: list[str] = []
@@ -173,10 +173,10 @@ def test_raise_sites_do_not_use_bare_cadrumo_error_and_reference_registered_subc
         last_token = rendered.rsplit(".", 1)[-1]
         if resolved is None and last_token in index:
             resolved = index[last_token]
-        if resolved is AeatError:
+        if resolved is CadrumoError:
             direct_base_raises.append(f"{repo_relative(path)}:{rendered}")
             continue
-        if isinstance(resolved, type) and issubclass(resolved, AeatError):
+        if isinstance(resolved, type) and issubclass(resolved, CadrumoError):
             error_type = index.get(resolved.__name__, resolved)
             code = get_registered_error_code(error_type)
             if code.code not in ERROR_REGISTRY:

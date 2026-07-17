@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
@@ -167,7 +167,7 @@ class InventoryLedgerRepository:
             if record is None:
                 return InventoryLedgerDocument()
             return InventoryLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        except (OSError, AeatError) as exc:
+        except (OSError, CadrumoError) as exc:
             _log.debug(
                 "inventory ledger load failed",
                 extra={

@@ -2,9 +2,8 @@
 
 Public surface for at-rest key custody. Re-exports the provider family
 (:class:`MasterKeyProvider`, :class:`KeyringMasterKeyProvider`,
-:class:`FileFallbackMasterKeyProvider`,
-:class:`UnsecuredMasterKeyProvider`, and
-:class:`EphemeralMasterKeyProvider`), the
+:class:`FileFallbackMasterKeyProvider`, and
+:class:`UnsecuredMasterKeyProvider`), the
 :func:`get_master_key_provider` resolver, and the
 :func:`activate_master_key_provider` / :func:`activate_session`
 context managers that bind unlocked key material to the active bucket
@@ -47,10 +46,10 @@ from ._active_session import (
 )
 from ._bucket_session import BucketSession
 from ._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
+from ._errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
 from ._master_key import (
-    EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
@@ -73,6 +72,7 @@ from ._master_key_derivation import (
     ARGON2_TIME_COST,
     derive_kek_with_params,
 )
+from ._provider_session import exit_provider_session
 from ._recovery import (
     RecoveryKey,
     WrappedMasterKey,
@@ -100,11 +100,11 @@ __all__ = [
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
     "BucketSession",
-    "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
     "KeyringMasterKeyProvider",
     "MasterKeyProvider",
+    "MasterKeyReentrantError",
     "MintedRecovery",
     "NoActiveBucketSessionError",
     "RecoveryKey",
@@ -122,6 +122,7 @@ __all__ = [
     "derive_kek_with_params",
     "encode_mnemonic",
     "evaluate_idle",
+    "exit_provider_session",
     "generate_recovery_key",
     "get_active_master_key",
     "get_master_key_provider",

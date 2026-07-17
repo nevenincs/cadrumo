@@ -90,7 +90,7 @@ def test_minted_envelope_is_strict_recovery_record() -> None:
 
     assert isinstance(minted.envelope, RecoveryRecord)
     assert minted.envelope.mnemonic_word_count == 24
-    assert minted.envelope.hkdf_info == "aeat.recovery-key.master-wrap.v1"
+    assert minted.envelope.hkdf_info == "cadrumo.recovery-key.master-wrap.v1"
     assert minted.envelope.created_at == _NOW
     # 24-word BIP-39 English mnemonic
     assert len(minted.mnemonic.split()) == 24
@@ -119,7 +119,7 @@ def test_unwrap_with_malformed_envelope_raises_recovery_verification_error() -> 
         nonce_b64=base64.b64encode(b"short").decode("ascii"),
         tag_b64=minted.envelope.tag_b64,
         mnemonic_word_count=24,
-        hkdf_info="aeat.recovery-key.master-wrap.v1",
+        hkdf_info="cadrumo.recovery-key.master-wrap.v1",
         created_at=_NOW,
     )
 

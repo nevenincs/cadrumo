@@ -42,6 +42,7 @@ from ....domain.filing import (
     ModeloComplementaria,
     ModeloSustitutiva,
 )
+from ..storage import FILING_AMENDMENTS_NAMESPACE
 from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -51,9 +52,8 @@ type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
 _log = get_logger(__name__)
 
-_AMENDMENT_ENVELOPE_VERSION = 1
-# namespace string preserved across rename to avoid orphaning persisted envelopes
-_AMENDMENT_NAMESPACE = "cadrumo.domain.filing.amendments"
+_AMENDMENT_ENVELOPE_VERSION = FILING_AMENDMENTS_NAMESPACE.schema_version
+_AMENDMENT_NAMESPACE = FILING_AMENDMENTS_NAMESPACE.namespace
 
 
 class ModeloAmendmentRepository:

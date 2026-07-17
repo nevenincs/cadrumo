@@ -287,7 +287,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_CONFIG_RESET_OPERATION_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_aeat_core_not_found",
+            message_key="errors.error.error_cadrumo_core_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -320,7 +320,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_aeat_core_not_found",
+            message_key="errors.error.error_cadrumo_core_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -767,22 +767,22 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardScriptUnderflowError",
+        "cadrumo.application.wizard._errors.WizardAnswerQueueUnderflowError",
         ErrorCode(
-            code="INTERNAL_WIZARD_SCRIPT_UNDERFLOW",
+            code="INTERNAL_WIZARD_ANSWER_QUEUE_UNDERFLOW",
             category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_script_underflow",
+            message_key="errors.internal.internal_wizard_answer_queue_underflow",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardScriptOverflowError",
+        "cadrumo.application.wizard._errors.WizardAnswerQueueOverflowError",
         ErrorCode(
-            code="INTERNAL_WIZARD_SCRIPT_OVERFLOW",
+            code="INTERNAL_WIZARD_ANSWER_QUEUE_OVERFLOW",
             category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_script_overflow",
+            message_key="errors.internal.internal_wizard_answer_queue_overflow",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

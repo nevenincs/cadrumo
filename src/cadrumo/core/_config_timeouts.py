@@ -20,7 +20,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
-class AeatTimeoutSettings(BaseSettings):
+class CadrumoTimeoutSettings(BaseSettings):
     """Playwright browser-stage and live-IVA surface timeout fields.
 
     :class:`~core.config.Settings` mixes in this base class so these fields

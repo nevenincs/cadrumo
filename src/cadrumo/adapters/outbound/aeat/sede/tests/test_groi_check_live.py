@@ -23,7 +23,6 @@ import asyncio
 
 import pytest
 
-from ......core import require_active_bucket_id
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
@@ -67,11 +66,10 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 
 async def _assert_form_shape() -> None:
     settings = Settings()
-    storage_state_path = settings.cadrumo_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
     session = await default_browser_session_factory(settings)
     context = None
     try:
-        context = await session.create_context(storage_state_path=storage_state_path)
+        context = await session.create_context()
         from playwright.async_api import Page as _Page
 
         _raw = await context.new_page()
@@ -104,11 +102,10 @@ async def _assert_form_shape() -> None:
 
 async def _query_live_body_text(nif: str) -> str:
     settings = Settings()
-    storage_state_path = settings.cadrumo_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
     session = await default_browser_session_factory(settings)
     context = None
     try:
-        context = await session.create_context(storage_state_path=storage_state_path)
+        context = await session.create_context()
         from playwright.async_api import Page as _Page
 
         _raw = await context.new_page()

@@ -25,7 +25,7 @@ from .. import (
     LoadedCertificate,
     load_certificate,
 )
-from .._fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import SECRET_PASSPHRASE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _VALID_NOT_BEFORE = datetime(2026, 5, 28, 14, 0, 0, tzinfo=UTC)
@@ -170,12 +170,14 @@ def test_context_provisioner_pins_exact_origin_and_materialises_secret(tmp_path:
             password=SecretStr(SECRET_PASSPHRASE),
         ),
     )
+    validated_bytes = loaded._pkcs12_bytes
+    p12.write_bytes(b"mutated-after-validation")
 
     assert CertificateContextProvisioner(loaded).build_context_kwargs() == {
         "client_certificates": [
             {
                 "origin": AEAT_CERTIFICATE_PROTECTED_ORIGIN,
-                "pfxPath": str(p12),
+                "pfx": validated_bytes,
                 "passphrase": SECRET_PASSPHRASE,
             },
         ],
@@ -194,7 +196,7 @@ async def test_context_provisioner_constructs_real_playwright_context(tmp_path: 
     )
     session = await create_browser_session(
         Settings(),
-        Profile(name="certificate-context", storage_state_path=tmp_path / "storage.json"),
+        Profile(name="certificate-context"),
     )
     context = await session.create_context(provisioner=CertificateContextProvisioner(loaded))
     try:

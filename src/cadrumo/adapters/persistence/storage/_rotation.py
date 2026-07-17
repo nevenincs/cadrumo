@@ -400,7 +400,7 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_attachments_dir) / "manifests",
-            hkdf_context=b"aeat.domain.attachments.manifest.v1",
+            hkdf_context=b"cadrumo.domain.attachments.manifest.v1",
         ),
         RotationPlanEntry(
             # Single-file envelope: ``cadrumo_usage_ratios_path`` defaults
@@ -418,7 +418,7 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_submissions_dir),
-            hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
+            hkdf_context=b"cadrumo.adapters.outbound.aeat.export.filing.v1",
         ),
         # Amendments share one HKDF context across two store dirs.
         # ``ModeloAmendmentRepository`` is one consumer identity but it

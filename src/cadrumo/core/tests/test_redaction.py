@@ -146,6 +146,17 @@ def test_cli_output_text_bucket_id_tabular_heuristic_cases() -> None:
             assert fragment not in rendered
 
 
+def test_cli_output_history_row_redacts_nif_shaped_uuid_as_one_identifier() -> None:
+    """A bare history-row UUID becomes one profile placeholder before NIF redaction."""
+
+    line = f"2026-01-01T00:00:00+00:00\tCREATED\tPROFILE\t{_NIF_SHAPED_UUID}\toperator"
+
+    rendered = redact_for_cli_output(line)
+
+    assert rendered == (f"2026-01-01T00:00:00+00:00\tCREATED\tPROFILE\t{CLI_PROFILE_ID_PLACEHOLDER}\toperator")
+    assert "sha256:<profile-id>" not in rendered
+
+
 def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> None:
     """The reveal opt-out exposes profile/bucket ids but keeps PII and keys redacted."""
 

@@ -112,15 +112,9 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             tail = f"{tail}?{parsed.query}"
         return tail
 
-    async def _click_clave_movil_button(self, page: object) -> None:
-        """Click the configured Cl@ve entry button on a duck-typed page object."""
-        click = getattr(page, "click", None)
-        if click is None:
-            raise AeatLoginAssertionError(
-                "Playwright page does not expose click(); cannot drive Cl@ve Móvil entry",
-                translated_message="adapters.auth.clave_movil.errors.page_missing_click",
-            )
-        await click(self._clave_surface().authorize_button_selector)
+    async def _click_clave_movil_button(self, page: BrowserPageLike) -> None:
+        """Click the configured Cl@ve entry button on the required browser page contract."""
+        await page.click(self._clave_surface().authorize_button_selector)
 
     async def _extract_verification_code(self, page: BrowserPageLike) -> str | None:
         wait_for = getattr(page, "wait_for_selector", None)

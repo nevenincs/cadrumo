@@ -11,7 +11,7 @@ import pytest
 
 from .....core import BucketPointer, write_pointer
 from .....core.config import Settings, StorageRouteKind, override_settings
-from .....core.errors import AeatError, resolve_error_message
+from .....core.errors import CadrumoError, resolve_error_message
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageValidationError
@@ -210,7 +210,7 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in issue.recovery_hint
     with pytest.raises(StorageValidationError) as raised:
         runtime.require_ready()
-    assert isinstance(raised.value, AeatError)
+    assert isinstance(raised.value, CadrumoError)
     assert raised.value.context is not None
     assert "CADRUMO_DATABASE_URL" in str(raised.value.context["recovery"])
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in str(raised.value.context["recovery"])

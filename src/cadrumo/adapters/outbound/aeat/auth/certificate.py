@@ -18,7 +18,7 @@ Design constraints:
 * Parsed private-key material and the raw PKCS#12 bytes live in
   :class:`pydantic.PrivateAttr` fields on :class:`LoadedCertificate`,
   so they can never be leaked via ``model_dump`` or ``repr``.
-* All errors inherit from :class:`core.errors.AeatError` via
+* All errors inherit from :class:`core.errors.CadrumoError` via
   :class:`CertificateError`.
 
 See Also:

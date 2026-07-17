@@ -3,7 +3,7 @@
 Each class carries a structured payload (active bucket id, holding PID,
 conflicting bucket id, recovery context) so callers can render typed
 diagnostics without re-parsing the message string. Every class inherits
-from :class:`core.errors.AeatError`; the project error registry's
+from :class:`core.errors.CadrumoError`; the project error registry's
 ``__init_subclass__`` hook binds each subclass to its declared
 :class:`core.errors.ErrorCode` row at import time.
 """

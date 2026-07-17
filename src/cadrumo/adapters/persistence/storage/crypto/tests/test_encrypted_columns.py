@@ -18,8 +18,8 @@ import pytest
 from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, StorageValidationError
-from ...master_key import EphemeralMasterKeyProvider
 from .. import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
 from .._crypto import encrypt_record
 from .._encrypted_columns import _AAD_JSON, _AAD_STRING

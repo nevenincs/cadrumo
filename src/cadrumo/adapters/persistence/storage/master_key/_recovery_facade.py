@@ -51,7 +51,7 @@ from ._recovery import (
 from ._recovery_record import RecoveryRecord
 
 _GCM_TAG_BYTES = 16
-_HKDF_INFO = "aeat.recovery-key.master-wrap.v1"
+_HKDF_INFO = "cadrumo.recovery-key.master-wrap.v1"
 
 
 class MintedRecovery(BaseModel):

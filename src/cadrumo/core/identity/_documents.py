@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 from enum import StrEnum
 
-from ..errors import AeatError
+from ..errors import CadrumoError
 
 _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}
@@ -77,7 +77,7 @@ class IdentityDocument(StrEnum):
     CIF = "CIF"
 
 
-class IdentityError(AeatError, ValueError):
+class IdentityError(CadrumoError, ValueError):
     """Raised when a candidate string is not a valid Spanish identity document.
 
     Bound to the registered error code ``INTEGRITY_IDENTITY_DOCUMENT``

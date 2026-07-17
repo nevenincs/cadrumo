@@ -332,10 +332,7 @@ async def _open_register_page(
         )
     from .....core import require_active_bucket_id
 
-    profile = Profile(
-        name=require_active_bucket_id(),
-        storage_state_path=storage_state_path,
-    )
+    profile = Profile(name=require_active_bucket_id())
     if playwright is not None:
         async with _opened_browser_session(playwright, settings, profile, storage_state) as (page, context):
             yield page, context

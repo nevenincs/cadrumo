@@ -80,6 +80,7 @@ from ....domain.transactions import (
     transaction_index_object_key,
     transaction_object_key,
 )
+from ..storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ..storage.sql import _orm
 from ..storage.sql.session import session_scope
 
@@ -92,10 +93,8 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 _log = get_logger(__name__)
 
-# namespace / schema-version strings preserved across the relocation to avoid
-# orphaning persisted envelopes; redeclared here as the persisted-envelope contract.
-_TX_CATALOGUE_VERSION = 1
-TX_BUCKET_NAMESPACE = "cadrumo.domain.transactions.bucket"
+_TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
 
 
 class _TransactionIndex(BaseModel):

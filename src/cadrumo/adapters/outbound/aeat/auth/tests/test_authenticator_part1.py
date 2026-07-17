@@ -12,7 +12,8 @@ from ......core.i18n import tr
 from .. import AuthConfigurationError
 from .. import _authenticator as authenticator_module
 from .._authenticator import _require_exact_active_certificate_session
-from .._providers import ClaveMovilSessionDetail
+from .._authenticator_types import _is_exact_active_provider_session
+from .._providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -68,6 +69,41 @@ def test_exact_active_certificate_session_guard_rejects_copies_and_other_provide
     )
     with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
         _require_exact_active_certificate_session(wrong_provider, wrong_provider)
+
+
+@pytest.mark.parametrize(
+    ("kind", "detail"),
+    [
+        (AuthProviderKind.CLAVE_MOVIL, ClaveMovilSessionDetail(dni_nie="12345678Z")),
+        (AuthProviderKind.CLAVE_PERMANENTE, ClavePermanenteSessionDetail(dni_nie="12345678Z")),
+    ],
+)
+def test_exact_active_provider_session_predicate_rejects_equal_reconstructions(
+    kind: AuthProviderKind,
+    detail: ClaveMovilSessionDetail | ClavePermanenteSessionDetail,
+) -> None:
+    """Only the retained provider session object is browser-context-bound."""
+    current = datetime.now(UTC)
+    active = AeatSession(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=detail,
+    )
+
+    assert _is_exact_active_provider_session(
+        active,
+        active,
+        provider_kind=kind,
+        detail_type=type(detail),
+    )
+    assert not _is_exact_active_provider_session(
+        active.model_copy(),
+        active,
+        provider_kind=kind,
+        detail_type=type(detail),
+    )
 
 
 def test_extract_nif_from_serial_with_idces_prefix(tmp_path: Path) -> None:

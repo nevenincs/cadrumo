@@ -31,7 +31,7 @@ from . import BucketPointer
 from ._fsync import fsync_parent_dir
 
 if TYPE_CHECKING:  # pragma: no cover — annotation-only import
-    from .errors import AeatError
+    from .errors import CadrumoError
 
 _POINTER_FILENAME = "active-profile"
 
@@ -246,7 +246,7 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     restore_pointer(root, pointer.to_toml().encode("utf-8"))
 
 
-def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[AeatError]) -> str:
+def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[CadrumoError]) -> str:
     """Resolve an explicit-or-active profile bucket id for a runtime repository.
 
     Single canonical home for the per-domain repository bucket-id resolution
@@ -268,7 +268,7 @@ def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[Aeat
         The resolved bucket id.
 
     Raises:
-        AeatError: The supplied ``error_type`` when ``bucket_id`` is blank or no
+        CadrumoError: The supplied ``error_type`` when ``bucket_id`` is blank or no
             active profile bucket can be resolved.
     """
     if bucket_id is not None:

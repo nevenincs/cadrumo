@@ -73,11 +73,6 @@ from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._config_state_root import FormerProductStateError
-from ._config_support import (
-    AEAT_CERTIFICATE_PROTECTED_ORIGIN,
-    AEAT_CERTIFICATE_PROTECTED_PATH,
-    AEAT_CERTIFICATE_PROTECTED_URL,
-)
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import (
@@ -142,13 +137,6 @@ from ._result_disposition import (
 )
 from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
-from .compatibility_lifecycle import (
-    COMPATIBILITY_REGIME,
-    RELEASED_FORMAT_FLOORS,
-    CompatibilityRegime,
-    expected_floor,
-    lineage_obligations,
-)
 from .external_constants import M347_THRESHOLD_EUR
 from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
 from .secure_object_write import (
@@ -192,14 +180,10 @@ __all__: list[str] = [
     "ABSENT_SECURE_OBJECT_REVISION_ID",
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "AEAT_AUTHORITY_SHORT_NAME",
-    "AEAT_CERTIFICATE_PROTECTED_ORIGIN",
-    "AEAT_CERTIFICATE_PROTECTED_PATH",
-    "AEAT_CERTIFICATE_PROTECTED_URL",
     "ANTHROPIC_EXTRA",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",
-    "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
@@ -216,7 +200,6 @@ __all__: list[str] = [
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
     "PRODUCT_IDENTITY",
-    "RELEASED_FORMAT_FLOORS",
     "STRICT_FROZEN_CONFIG",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
@@ -227,7 +210,6 @@ __all__: list[str] = [
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
-    "CompatibilityRegime",
     "ConvenioOverrideKind",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",
@@ -269,7 +251,6 @@ __all__: list[str] = [
     "clear_pointer",
     "derive_result_disposition",
     "exclusive_file_lock",
-    "expected_floor",
     "foreign_asset_class_declaration_threshold",
     "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
@@ -277,7 +258,6 @@ __all__: list[str] = [
     "freeze_toml_value",
     "fsync_parent_dir",
     "iban_mod_97",
-    "lineage_obligations",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "optional_extra_available",

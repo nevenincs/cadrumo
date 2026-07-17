@@ -140,7 +140,7 @@ async def _wait_for_descendants(
 
 
 @pytest.mark.asyncio
-async def test_live_bot_detection_probe(tmp_path) -> None:
+async def test_live_bot_detection_probe() -> None:
     """Test the browser session against a live bot detection probe.
 
     Gated by the ``aeat_live`` module-level marker (excluded from the default
@@ -150,7 +150,7 @@ async def test_live_bot_detection_probe(tmp_path) -> None:
     requires_live_enabled()
 
     settings = load_settings()
-    profile = Profile(name="live_test", storage_state_path=tmp_path / "live_state.json")
+    profile = Profile(name="live_test")
 
     async with async_playwright() as p:
         session = BrowserSession(playwright=p, settings=settings, profile=profile)
@@ -169,12 +169,12 @@ async def test_live_bot_detection_probe(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_live_browser_session_reaps_driver_descendants_across_cycles(tmp_path) -> None:
+async def test_live_browser_session_reaps_driver_descendants_across_cycles() -> None:
     """A real BrowserSession must fully reap browser OS processes on close."""
     requires_live_enabled()
 
     settings = load_settings()
-    profile = Profile(name="live_test_reap", storage_state_path=tmp_path / "live_reap_state.json")
+    profile = Profile(name="live_test_reap")
 
     async with async_playwright() as p:
         driver_pid = p._impl_obj._connection._transport._proc.pid

@@ -21,6 +21,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -91,18 +92,17 @@ async def _open_browser_page(
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     browser_session = await default_browser_session_factory(settings)
+    context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
-        try:
-            page = await context.new_page()
-            yield context, page
-        finally:
-            try:
-                await context.close()
-            except Exception as exc:
-                log.debug("sede walker: context.close suppressed: %s", exc, exc_info=True)
+        page = await context.new_page()
+        yield context, page
     finally:
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-sede-walker-close",
+        )
 
 
 async def walk_expedientes_tree(
