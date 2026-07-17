@@ -9,6 +9,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-16-distribution-harness-identity-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
+  - '[[2026-07-17-distribution-installation-readiness-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -148,6 +149,12 @@ Write availability language and the support matrix only for channels with passin
 - [ ] `P04.S23` - Document Claude Code, Desktop, and Cowork plugin and MCPB acquisition with real verification commands (lifted from distribution W05.P11.S54); `docs/how-to/connect-an-agent.md`.
 - [ ] `P04.S24` - Publish the measured platform, client, and channel support matrix (lifted from distribution W05.P11.S55); `docs/updates.md`.
 - [ ] `P04.S25` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence (lifted from distribution W05.P12.S59); `.vault/audit/2026-07-17-post-release-distribution-close-audit.md`.
+
+### Phase `P05` - Harness-identity brand migration (operator-gated)
+
+The distribution identity verifier honestly fails: generated harness identifiers (7 personas, 34 skills, 7 rules) carry no cadrumo- prefix and the MCP plugin, marketplace, and MCPB product descriptions are English-only rather than bilingual EN and ES. Distribution steps W02.P06.S67 and S68 are intentionally left open because bringing them green requires a brand-identifier rename plus a bilingual product-description migration that the accepted distribution-harness-identity ADR does not authorize. This phase tracks that migration; it is BLOCKED pending explicit operator authorization, parallel to the held publish approval, per the cadrumo-product-authority-names brand-identifier discipline.
+
+- [ ] `P05.S26` - BLOCKED pending explicit operator authorization (brand-identifier migration per cadrumo-product-authority-names): harness-identity migration renaming the generated harness identifiers to the cadrumo- prefix and authoring bilingual EN and ES MCP product descriptions (model-facing descriptions stay EN-only), then close distribution S67 and S68; gate is verify_distribution_identity.py exits 0 with report.ok True; `src/cadrumo/_data/agent, src/cadrumo/agent, packaging/mcpb/manifest.json, dev/packaging/verify_distribution_identity.py`.
 
 ## Description
 
