@@ -467,11 +467,31 @@ def _run_inprocess_tool(
     localized timed-out refusal is returned while the abandoned worker finishes in
     the background. This whole runner is itself dispatched off the event loop by
     the shared progress wrapper, so the join never blocks the loop.
+
+    Idle-lock custody (D4): the warm runtime never retains decrypted bucket-session
+    key material between calls. The CLI opens and closes its own bucket session
+    within the call, and the worker runs in its OWN thread context (a raw thread
+    does not inherit the server's ``ContextVar`` state), so the session the CLI
+    binds cannot leak into the long-lived server context. The ``finally`` relock is
+    defence in depth: it evicts and zeroises any residual session before the worker
+    context ends, covering both an unexpected in-call fault and a timed-out worker
+    that finishes in the background after its ceiling was reported. A crashed server
+    process holds no decrypted state on disk and re-warms its caches on restart, so
+    restart is clean and single-writer persistence is unchanged (the atexit hook
+    zeroises any still-bound session on interpreter exit).
     """
     holder: dict[str, CompletedCliRun] = {}
 
     def _target() -> None:
-        holder["run"] = dispatch_verb_in_process(descriptor.verb_schema, arguments)
+        try:
+            holder["run"] = dispatch_verb_in_process(descriptor.verb_schema, arguments)
+        finally:
+            # Relock: evict and zeroise any bucket session still bound in this
+            # worker's context so no decrypted key material survives the call.
+            # Idempotent - a no-op when the CLI already closed its session.
+            from ...adapters.persistence.storage import close_active_bucket_session
+
+            close_active_bucket_session()
 
     worker = threading.Thread(target=_target, name="cadrumo-mcp-inprocess", daemon=True)
     worker.start()
