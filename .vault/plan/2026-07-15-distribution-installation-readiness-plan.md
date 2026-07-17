@@ -145,7 +145,7 @@ Align README and user guides with the measured support matrix and prevent docume
 
 Run feature-scoped quality, architecture, documentation, and honest-close reviews with execution records for every completed step.
 
-- [ ] `W05.P12.S57` - Run the path-scoped formatting tests and vault checks for every touched implementation surface; `.vault/exec/2026-07-15-distribution-installation-readiness`.
+- [x] `W05.P12.S57` - Run the path-scoped formatting tests and vault checks for every touched implementation surface; `.vault/exec/2026-07-15-distribution-installation-readiness`.
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
 - [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; `leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
