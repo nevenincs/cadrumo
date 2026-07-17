@@ -34,6 +34,7 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S67]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S68]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P08-S39]]'
+  - '[[2026-07-15-distribution-installation-readiness-W03-P08-S69]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
@@ -91,6 +92,7 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P06-S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple
 - `2026-07-15-distribution-installation-readiness-W02-P06-S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions
 - `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
+- `2026-07-15-distribution-installation-readiness-W03-P08-S69` - Capture each real Claude client's harness identifier inventory, MCP server name, English MCP product description, and Spanish MCP product description and compare them with the exact cohort
 
 ### plan
 
