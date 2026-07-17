@@ -15,6 +15,14 @@ related:
 
 # `cli-authority-verb-conformance` plan
 
+## Status: rescoped and split
+
+This plan is SUPERSEDED. It stands at 64 of 254 steps complete and has been rescoped and split into six smaller, individually-closeable successor plans. It is not abandoned and it is not complete; every unlanded step below remains honestly unchecked and now lives in a successor plan instead. The rescope record `2026-07-17-cli-authority-verb-conformance-audit` documents the disposition, and the duplication-authority audit's cluster table is the successor index.
+
+Successor plan stems, in execution order: `2026-07-17-duplication-evidence-repair-plan`, `2026-07-17-auth-cert-recovery-custody-plan`, `2026-07-17-all-profile-reset-plan`, `2026-07-17-ledger-evidence-atomicity-plan`, `2026-07-17-export-publication-plan`, `2026-07-17-cli-authority-quality-backlog-plan`.
+
+Landed and carried forward as done: the architecture-measurement prerequisite (W01), the active-profile pointer and strong-logout cluster (W02.P04), authentication custody (W02.P06), certificate custody (W02.P07), and passphrase and recovery custody (W02.P21). Do not re-execute steps from this document; work its successors.
+
 ## Wave `W01` - Restore trustworthy architecture measurement
 
 Repair the import graph and its count ratchets first; every later Wave depends on an uncached five-contract pass and a non-vacuous ledger inventory.
