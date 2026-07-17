@@ -27,10 +27,41 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+if TYPE_CHECKING:
+    from anyio import CapacityLimiter
+
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+#: Process-wide bound on MCP calls dispatched off the event loop at once, built
+#: lazily on first use from the settings-derived capacity so the anyio default
+#: (40 threads) never governs. Both transports share it: it caps concurrent
+#: supervised subprocess spawns (robustness research F3 - an unbounded burst
+#: thrashes CPU/RAM) and concurrent warm in-process worker threads. Cached as a
+#: singleton because a ``CapacityLimiter`` must live for the whole server session,
+#: not be rebuilt per call.
+_SERVING_LIMITER: CapacityLimiter | None = None
+
+
+def serving_capacity_limiter() -> CapacityLimiter:
+    """Return the shared, settings-sized limiter bounding off-loop MCP dispatch.
+
+    Sizes the limiter from ``cadrumo_mcp_serving_concurrency`` on first use and
+    reuses it thereafter. Passed to ``anyio.to_thread.run_sync`` so the explicit
+    cap replaces the anyio default thread-pool bound for every tool call - the
+    robustness research F3 remedy.
+    """
+    global _SERVING_LIMITER
+    if _SERVING_LIMITER is None:
+        from anyio import CapacityLimiter
+
+        from ...core.config import load_settings
+
+        _SERVING_LIMITER = CapacityLimiter(load_settings().cadrumo_mcp_serving_concurrency)
+    return _SERVING_LIMITER
 
 
 class CallTier(StrEnum):

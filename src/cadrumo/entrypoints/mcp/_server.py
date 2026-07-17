@@ -52,7 +52,13 @@ from typing import TYPE_CHECKING
 
 from ...core import PRODUCT_IDENTITY
 from ...core.external_constants import UTF_8_ENCODING
-from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
+from ._call_runtime import (
+    CallTier,
+    run_supervised,
+    serving_capacity_limiter,
+    tier_for,
+    timeout_seconds,
+)
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
@@ -714,18 +720,19 @@ async def _run_offloop_with_progress[T](
     import anyio
     from anyio.to_thread import run_sync
 
+    limiter = serving_capacity_limiter()
     progress_token = None
     with contextlib.suppress(LookupError, AttributeError):
         meta = server.request_context.meta
         progress_token = getattr(meta, "progressToken", None) if meta is not None else None
 
     if progress_token is None:
-        return await run_sync(work)
+        return await run_sync(work, limiter=limiter)
 
     holder: dict[str, T] = {}
 
     async def _work() -> None:
-        holder["result"] = await run_sync(work)
+        holder["result"] = await run_sync(work, limiter=limiter)
         task_group.cancel_scope.cancel()
 
     async def _heartbeat() -> None:
@@ -1256,7 +1263,7 @@ def build_server(
         resolver_args: dict[str, object] = {}
         if resolution.id_arg is not None:
             resolver_args[resolution.id_arg] = identity
-        outcome = await run_sync(_run_subprocess_tool, descriptor, resolver_args)
+        outcome = await run_sync(_run_subprocess_tool, descriptor, resolver_args, limiter=serving_capacity_limiter())
         envelope = outcome.envelope
         is_error = outcome.is_error
         result = envelope.get("result")
