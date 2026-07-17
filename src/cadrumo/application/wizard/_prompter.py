@@ -168,18 +168,55 @@ class QuestionaryPrompter:
     ``questionary.confirm``, ``SELECT`` → ``questionary.select``,
     ``CHECKBOX`` → ``questionary.checkbox``, ``PATH`` →
     ``questionary.path``, ``INTEGER`` → ``questionary.text`` with a
-    numeric validator. The class accepts an optional
-    ``input`` / ``output`` pair so tests can drive it through
-    :func:`prompt_toolkit.input.create_pipe_input`.
+    numeric validator.
+
+    The optional ``input`` / ``output`` pair names the devices the prompts run
+    against; leaving both ``None`` (the production default) binds them to the
+    process stdio. This is ``prompt_toolkit``'s own IO-injection contract, the
+    same one :func:`prompt_toolkit.application.current.create_app_session` uses to
+    host a session away from process stdio, so a host that declares its IO — and
+    a headless harness driving the flow through
+    :func:`prompt_toolkit.input.create_pipe_input` — reach the prompter by the
+    same route. See :meth:`from_ambient_app_session`.
     """
 
     def __init__(self, *, input: Input | None = None, output: Output | None = None) -> None:
         self._input = input
         self._output = output
 
+    @classmethod
+    def from_ambient_app_session(cls) -> QuestionaryPrompter:
+        """Build a prompter bound to the IO the ambient ``prompt_toolkit`` app session declares.
+
+        ``prompt_toolkit`` lets an embedding host declare the IO devices every
+        prompt in a scope should use, via
+        :func:`prompt_toolkit.application.current.create_app_session`. That is the
+        library's own mechanism for hosting prompts somewhere other than the
+        process stdio (a telnet/SSH server serving one session per connection is
+        the documented case), and it is equally what drives a prompt from an
+        in-memory pipe.
+
+        Reading ``_input``/``_output`` rather than the public ``input``/``output``
+        properties is deliberate and mirrors ``create_app_session``'s own
+        implementation: the public properties *lazily construct* a real terminal
+        device on first access, so touching them here would both defeat the
+        detection (a device always materialises) and leak a terminal object into
+        the parent session. The private attributes stay ``None`` until a host
+        explicitly declares IO.
+
+        Outside such a session — every production ``aeat`` invocation — both are
+        ``None``, so the returned prompter is un-injected and
+        :meth:`ensure_interactive_environment` applies the full non-TTY /
+        Windows-no-console refusal.
+        """
+        from prompt_toolkit.application.current import get_app_session
+
+        session = get_app_session()
+        return cls(input=session._input, output=session._output)
+
     def prepare(self, flow: WizardFlow) -> None:
         """Verify prompt support and explain the setup flow before progress starts."""
-        self._ensure_interactive_environment()
+        self.ensure_interactive_environment()
         question_total = sum(len(section.questions) for section in flow.sections)
         required_total = sum(1 for section in flow.sections for question in section.questions if question.required)
         self.emit_progress(
@@ -201,8 +238,13 @@ class QuestionaryPrompter:
         """
         _log.info("wizard.progress text=%r", text)
 
-    def _ensure_interactive_environment(self) -> None:
-        """Fail before progress when this process cannot host an interactive prompt."""
+    def ensure_interactive_environment(self) -> None:
+        """Fail before progress when this process cannot host an interactive prompt.
+
+        A prompter carrying explicit IO (see
+        :meth:`from_ambient_app_session`) is already bound to a device that can
+        host a prompt, so the process-stdio probe below does not apply to it.
+        """
         if self._input is not None or self._output is not None:
             return
         if not sys.stdin.isatty():
@@ -239,7 +281,7 @@ class QuestionaryPrompter:
         try:
             match question.widget:
                 case WizardWidget.TEXT:
-                    return self._ask_text(prompt, default)
+                    return self.ask_text(prompt, default=default)
                 case WizardWidget.SECRET:
                     return self._ask_secret(prompt)
                 case WizardWidget.CONFIRM:
@@ -257,13 +299,31 @@ class QuestionaryPrompter:
                 translated_message="wizard.errors.unsupported_console",
             ) from exc
 
-    def _ask_text(self, prompt: str, default: str | None) -> str:
-        result = questionary.text(
-            prompt,
-            default=default or "",
-            input=self._input,
-            output=self._output,
-        ).ask()
+    def ask_text(self, prompt: str, *, default: str | None = None) -> str:
+        """Render an already-rendered free-text ``prompt`` and return the answer.
+
+        The plain-text primitive underneath :meth:`ask`'s ``TEXT`` widget,
+        public because not every caller's prompt copy comes from a static
+        :class:`WizardQuestion`. A prompt whose text is assembled at runtime —
+        the modelo wizard's ``Casilla 06 (Retenciones e ingresos a cuenta)``,
+        built from a registry-resolved casilla label — has no catalogue key to
+        name, so it supplies the rendered string directly instead.
+
+        Raises:
+            WizardUnsupportedConsoleError: When the host terminal cannot host an
+                interactive prompt (Windows no-console, TTY misconfiguration).
+        """
+        try:
+            result = questionary.text(
+                prompt,
+                default=default or "",
+                input=self._input,
+                output=self._output,
+            ).ask()
+        except _NO_CONSOLE_ERRORS as exc:
+            raise WizardUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console",
+            ) from exc
         return _stringify(result)
 
     def _ask_secret(self, prompt: str) -> str:
