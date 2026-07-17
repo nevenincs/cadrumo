@@ -125,6 +125,65 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
     assert {"mcpb_tool:search", "mcpb_tool:execute"} <= surfaces
 
 
+def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:
+    """Every real product-copy field stays failed while its shipped copy is English-only."""
+    descriptions = verify_distribution_identity(_REPO_ROOT).to_document()["product_descriptions"]
+
+    assert descriptions["ok"] is False
+    assert descriptions["required_languages"] == ["English", "Spanish"]
+    assert descriptions["required_claims"] == [
+        "capability",
+        "safety",
+        "privacy",
+        "on_host_storage",
+        "human_confirmation",
+        "never_files_live",
+    ]
+    assert descriptions["model_facing_descriptions"] == {
+        "localization_target": False,
+        "surfaces": [
+            "MCP argument descriptions",
+            "MCP prompt descriptions",
+            "MCP resource descriptions",
+            "MCP tool descriptions",
+        ],
+    }
+    observations = descriptions["observations"]
+    assert [(row["surface"], row["field"]) for row in observations] == [
+        ("claude_plugin_client_display", "description"),
+        ("claude_marketplace_client_display", "description"),
+        ("claude_marketplace_plugin_client_display", "description"),
+        ("mcpb_client_display", "description"),
+        ("mcpb_client_display", "long_description"),
+    ]
+    assert all(row["value"] for row in observations)
+    assert all(row["english_label"] is False for row in observations)
+    assert all(row["spanish_label"] is False for row in observations)
+    assert all(row["english_text"] == "" for row in observations)
+    assert all(row["spanish_text"] == "" for row in observations)
+    assert all(row["unlabeled_text"] == row["value"] for row in observations)
+    assert all(row["compliant"] is False for row in observations)
+    assert all(
+        [claim["name"] for claim in row["claims"]] == descriptions["required_claims"]
+        and all(claim["parity"] is False for claim in row["claims"])
+        for row in observations
+    )
+    assert [
+        {claim["name"] for claim in row["claims"] if claim["english"]}
+        for row in observations
+    ] == [
+        {"capability", "safety", "never_files_live"},
+        {"capability"},
+        {"capability", "safety", "never_files_live"},
+        {"capability", "safety", "never_files_live"},
+        set(descriptions["required_claims"]),
+    ]
+    assert all(
+        all(claim["spanish"] is False for claim in row["claims"])
+        for row in observations
+    )
+
+
 def test_cli_returns_nonzero_and_emits_the_real_failure_report() -> None:
     """An unprefixed shipped harness must make the production CLI fail closed."""
     completed = subprocess.run(
@@ -145,6 +204,7 @@ def test_cli_returns_nonzero_and_emits_the_real_failure_report() -> None:
     assert document["authored_inventory"]["skill"]["count"] == 34
     assert document["authored_inventory"]["rule"]["count"] == 7
     assert document["product_identity"]["ok"] is True
+    assert document["product_descriptions"]["ok"] is False
 
 
 def test_verifier_rejects_a_mixed_repository_revision(tmp_path: Path) -> None:
