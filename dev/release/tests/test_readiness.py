@@ -381,14 +381,14 @@ def test_no_open_release_blockers_is_advisory_when_gh_not_installed(tmp_path: Pa
     assert "not found on PATH" in check.detail
 
 
-def test_build_report_ok_when_every_blocking_check_passes(tmp_path: Path) -> None:
-    """A clean repo tree with the network check skipped reports an overall OK verdict."""
+def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Path) -> None:
+    """Version parity alone cannot authorize a release with no installed evidence."""
     root = _make_repo_root(tmp_path)
 
     report = readiness.build_report(root, skip_network=True)
 
-    assert report.ok is True
-    assert report.blocking_failures == ()
+    assert report.ok is False
+    assert {check.name for check in report.blocking_failures} == {"distribution-evidence-complete"}
 
 
 def test_build_report_blocks_on_a_real_version_drift(tmp_path: Path) -> None:
@@ -410,13 +410,13 @@ def test_report_to_dict_roundtrips_through_json(tmp_path: Path) -> None:
     report = readiness.build_report(root, skip_network=True)
     payload = json.loads(json.dumps(report.to_dict()))
 
-    assert payload["ok"] is True
+    assert payload["ok"] is False
     assert isinstance(payload["checks"], list)
     assert all({"name", "severity", "passed", "detail"} <= set(entry) for entry in payload["checks"])
 
 
-def test_main_cli_json_contract_exits_zero_on_clean_report(tmp_path: Path) -> None:
-    """The `main()` entry point prints valid JSON and returns exit code 0 for a clean report."""
+def test_main_cli_json_contract_blocks_without_distribution_evidence(tmp_path: Path) -> None:
+    """The JSON contract exits nonzero when required installed evidence is absent."""
     root = _make_repo_root(tmp_path)
     driver = tmp_path / "drive_readiness.py"
     driver.write_text(
@@ -434,9 +434,9 @@ def test_main_cli_json_contract_exits_zero_on_clean_report(tmp_path: Path) -> No
         text=True,
         check=False,
     )
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 1, result.stderr
     payload = json.loads(result.stdout)
-    assert payload["ok"] is True
+    assert payload["ok"] is False
 
 
 def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:
