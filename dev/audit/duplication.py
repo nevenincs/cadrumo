@@ -45,6 +45,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -278,15 +279,21 @@ def run_duplication_scan(
     *,
     source_root: Path = _PRODUCT_SOURCE_ROOT,
     timeout: float = _JSCPD_TIMEOUT_SECONDS,
+    which: Callable[[str], str | None] = shutil.which,
 ) -> DuplicationResult:
     """Run jscpd over ``source_root`` and classify the outcome.
 
     This is the single entry point for every duplication consumer. ``npx`` is
-    resolved through :func:`shutil.which` because on Windows the real executable
-    is a ``.cmd`` shim that ``CreateProcess`` cannot launch by bare name (the
-    same idiom as ``dev/docs/build.py``).
+    resolved through ``which`` -- :func:`shutil.which` in production -- because
+    on Windows the real executable is a ``.cmd`` shim that ``CreateProcess``
+    cannot launch by bare name (the same idiom as ``dev/docs/build.py``). The
+    resolver is an injected seam (the prompt_toolkit ``input=``/``output=``
+    contract, not a patch): a caller may supply a real resolver that returns
+    ``None`` to exercise the missing-executable path, or one pointing at a
+    different real executable to exercise the non-zero-exit path, without
+    mutating global process state.
     """
-    npx = shutil.which("npx")
+    npx = which("npx")
     if npx is None:
         return DuplicationResult.unavailable("npx was not found on PATH")
 
