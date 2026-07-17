@@ -18,7 +18,7 @@ def test_dependency_surface_summary_names_runtime_optional_registry() -> None:
     summary = _summary()
 
     assert summary["ok"] is True
-    assert summary["registry_extras"] == ["anthropic", "browser", "google", "ofx"]
+    assert summary["registry_extras"] == ["anthropic", "browser", "google"]
     assert summary["project_dependency_count"] > 0
     assert summary["optional_dependency_count"] >= len(summary["registry_extras"])
     assert summary["dev_only_dependency_count"] > 0
@@ -36,6 +36,6 @@ def test_dependency_surface_cli_json_contract() -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["ok"] is True
-    assert payload["registry_extras"] == ["anthropic", "browser", "google", "ofx"]
+    assert payload["registry_extras"] == ["anthropic", "browser", "google"]
     assert payload["project_dependency_count"] > 0
     assert payload["dev_dependency_count"] >= payload["dev_only_dependency_count"] > 0

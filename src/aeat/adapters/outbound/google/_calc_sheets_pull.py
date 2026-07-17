@@ -304,7 +304,7 @@ def _drive_service(credentials: object) -> _GoogleResource:
     except ImportError as exc:
         raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
@@ -316,7 +316,7 @@ def _sheets_service(credentials: object) -> _GoogleResource:
     except ImportError as exc:
         raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)

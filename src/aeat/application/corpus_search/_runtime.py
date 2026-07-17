@@ -14,7 +14,7 @@ See Also:
     :func:`~application.corpus_search.hybrid_search`
         Retrieval primitive this runtime service provisions and calls.
     :func:`~application.corpus_search.ensure_corpus_embeddings`
-        Build-once semantic-vector cache behind the ``cadrumo[search]`` extra.
+        Build-once semantic-vector cache behind the ``aeat-cli[search]`` extra.
     :class:`~application.corpus_search.QueryEmbedder`
         Live-query embedder used only when semantic vectors are available.
 """
@@ -89,7 +89,7 @@ def ensure_corpus_embeddings(
     """Return the corpus vectors, building them once behind the ``search`` extra.
 
     This is the runtime build step for the semantic half (the decision recorded
-    for the S79/S87 question): corpus vectors are BUILT behind the ``cadrumo[search]``
+    for the S79/S87 question): corpus vectors are BUILT behind the ``aeat-cli[search]``
     extra on first use, never shipped in the wheel (``shipped-search-licence-clean``
     keeps the wheel free of the ~0.5 GB model weights and the derived matrix). It
     mirrors :func:`ensure_corpus_index`: the first call is the one slow build (it

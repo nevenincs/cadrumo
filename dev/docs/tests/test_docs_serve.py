@@ -5,9 +5,8 @@ surfaces (the narrative corpus and the ``src/aeat`` docstring source) and that
 the self-regenerated trees are excluded from the watch set so a rebuild cannot
 loop on its own output; and that the start-idempotent running-server awareness
 (:func:`dev.docs.serve.resolve_target` and its probe/state helpers) attaches to
-a healthy peer, starts on a free port, respawns a dirty server it owns, evicts
-a foreign squatter from the canonical port the docs own, refuses a foreign-held
-pinned non-canonical port, and never scans away from the strict target port.
+a healthy peer, starts on a free port, respawns a dirty server it owns, and
+refuses a foreign-held pinned port.
 """
 
 from __future__ import annotations
@@ -37,7 +36,6 @@ from dev.docs.serve import (
     read_state,
     resolve_target,
     serve_command,
-    start_ipv6_relay,
     write_state,
 )
 
@@ -85,15 +83,9 @@ def test_default_host_binds_every_interface() -> None:
     assert _DEFAULT_HOST == "0.0.0.0"  # noqa: S104 - asserting the intended LAN-reachable bind
 
 
-def test_default_port_is_the_owned_canonical_port() -> None:
-    """The canonical port avoids the crowded 8000 and the resident RAG cluster.
-
-    8765/8766 are the vaultspec-rag stack (qdrant HTTP + service) and
-    8767/8770 its dashboards on developer machines; the docs' strict eviction
-    semantics must never point a kill at those.
-    """
-    assert _DEFAULT_PORT == 8788
-    assert _DEFAULT_PORT not in {8000, 8765, 8766, 8767, 8770}
+def test_default_port_is_not_the_crowded_8000() -> None:
+    """The default port avoids the conventional 8000."""
+    assert _DEFAULT_PORT != 8000
 
 
 @pytest.mark.parametrize(
@@ -176,29 +168,6 @@ def test_probe_port_serving_against_a_live_sphinx_page(sphinx_http_server: int) 
     assert probe_port("127.0.0.1", sphinx_http_server) is PortStatus.SERVING
 
 
-def test_ipv6_relay_bridges_to_the_ipv4_listener(sphinx_http_server: int) -> None:
-    """The IPv6 relay makes the IPv4-only server answer on [::1] at the same port.
-
-    Windows resolves the machine's own hostname to IPv6 first, so without the
-    relay a browser at http://<hostname>:<port>/ gets connection-refused while
-    curl over 127.0.0.1 works — the docs must be reachable over both stacks.
-    The fetch goes over the real IPv6 loopback socket (not probe_port, whose
-    bind-availability check cannot see a wildcard-IPv6 listener from a specific
-    ::1 bind on Windows).
-    """
-    import urllib.request
-
-    relay = start_ipv6_relay(sphinx_http_server)
-    if relay is None:
-        pytest.skip("IPv6 is unavailable on this host")
-    try:
-        with urllib.request.urlopen(f"http://[::1]:{sphinx_http_server}/", timeout=3) as response:
-            assert response.status == 200
-            assert _looks_like_sphinx(response.read().decode("utf-8", "replace"))
-    finally:
-        relay.close()
-
-
 # ── State file round-trip ─────────────────────────────────────────────────────
 
 
@@ -240,62 +209,61 @@ def _resolve(
     requested_port: int | None,
     probe: dict[int, PortStatus],
     owned: set[int] | None = None,
-    default_port: int = 8788,
+    default_port: int = 8765,
+    scan_limit: int = 5,
 ) -> Resolution:
     owned = owned or set()
     return resolve_target(
         requested_port=requested_port,
         default_port=default_port,
+        scan_limit=scan_limit,
         probe=lambda port: probe.get(port, PortStatus.FREE),
         owned_stale=lambda port: port in owned,
     )
 
 
 def test_resolve_attaches_to_a_healthy_peer() -> None:
-    """A serving canonical port yields ATTACH on that exact port."""
-    result = _resolve(requested_port=None, probe={8788: PortStatus.SERVING})
-    assert result == Resolution(ServeAction.ATTACH, 8788)
+    """A serving port yields ATTACH on that exact port."""
+    result = _resolve(requested_port=None, probe={8765: PortStatus.SERVING})
+    assert result == Resolution(ServeAction.ATTACH, 8765)
 
 
 def test_resolve_starts_on_a_free_default_port() -> None:
-    """A free canonical port yields START."""
+    """A free default port yields START (the 'dead → respawn' fresh launch)."""
     result = _resolve(requested_port=None, probe={})
-    assert result == Resolution(ServeAction.START, 8788)
+    assert result == Resolution(ServeAction.START, 8765)
 
 
 def test_resolve_respawns_a_dirty_port_we_own() -> None:
     """A dirty port whose live server we started yields RESPAWN."""
-    result = _resolve(requested_port=None, probe={8788: PortStatus.DIRTY}, owned={8788})
-    assert result == Resolution(ServeAction.RESPAWN, 8788)
+    result = _resolve(requested_port=None, probe={8765: PortStatus.DIRTY}, owned={8765})
+    assert result == Resolution(ServeAction.RESPAWN, 8765)
 
 
-def test_resolve_evicts_a_stranger_from_the_canonical_port() -> None:
-    """The canonical port is OURS: a foreign squatter resolves to EVICT, never a scan."""
-    result = _resolve(requested_port=None, probe={8788: PortStatus.DIRTY}, owned=set())
-    assert result == Resolution(ServeAction.EVICT, 8788)
-
-
-def test_resolve_never_scans_away_from_the_strict_port() -> None:
-    """A dirty canonical port with free neighbours still resolves to the canonical port."""
+def test_resolve_auto_skips_a_dirty_stranger_to_next_free_port() -> None:
+    """Auto mode steps past a foreign-held port to the next free one."""
     result = _resolve(
         requested_port=None,
-        probe={8788: PortStatus.DIRTY, 8789: PortStatus.FREE, 8790: PortStatus.SERVING},
+        probe={8765: PortStatus.DIRTY, 8766: PortStatus.DIRTY, 8767: PortStatus.FREE},
         owned=set(),
     )
-    assert result.port == 8788
-    assert result.action is ServeAction.EVICT
+    assert result == Resolution(ServeAction.START, 8767)
 
 
-def test_resolve_explicit_non_canonical_port_blocks_on_a_foreign_process() -> None:
-    """A pinned non-canonical port held by a stranger is BLOCKED, never evicted."""
+def test_resolve_auto_attaches_to_a_peer_found_while_scanning() -> None:
+    """Auto mode attaches to a healthy peer discovered past a busy port."""
+    result = _resolve(
+        requested_port=None,
+        probe={8765: PortStatus.DIRTY, 8766: PortStatus.SERVING},
+        owned=set(),
+    )
+    assert result == Resolution(ServeAction.ATTACH, 8766)
+
+
+def test_resolve_explicit_port_blocks_on_a_foreign_process() -> None:
+    """A pinned port held by a stranger is BLOCKED, never silently moved."""
     result = _resolve(requested_port=9100, probe={9100: PortStatus.DIRTY}, owned=set())
     assert result == Resolution(ServeAction.BLOCKED, 9100)
-
-
-def test_resolve_explicit_canonical_pin_still_evicts() -> None:
-    """Pinning the canonical port explicitly keeps the eviction claim semantics."""
-    result = _resolve(requested_port=8788, probe={8788: PortStatus.DIRTY}, owned=set())
-    assert result == Resolution(ServeAction.EVICT, 8788)
 
 
 def test_resolve_explicit_port_attaches_or_respawns_when_ours() -> None:
@@ -304,3 +272,10 @@ def test_resolve_explicit_port_attaches_or_respawns_when_ours() -> None:
     assert _resolve(requested_port=9100, probe={9100: PortStatus.DIRTY}, owned={9100}) == Resolution(
         ServeAction.RESPAWN, 9100
     )
+
+
+def test_resolve_auto_blocks_when_every_scanned_port_is_a_stranger() -> None:
+    """Auto mode gives up (BLOCKED) when the whole scan window is foreign."""
+    busy = {port: PortStatus.DIRTY for port in range(8765, 8770)}
+    result = _resolve(requested_port=None, probe=busy, owned=set(), scan_limit=5)
+    assert result.action is ServeAction.BLOCKED

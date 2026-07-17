@@ -19,4 +19,4 @@ def test_missing_sdk_refusal_exits_non_zero_with_install_hint(capsys: pytest.Cap
         emit_missing_sdk_refusal()
     assert exc.value.code == 3
     captured = capsys.readouterr()
-    assert "cadrumo[agent]" in captured.err
+    assert "aeat-cli[agent]" in captured.err

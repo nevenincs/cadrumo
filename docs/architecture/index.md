@@ -322,4 +322,4 @@ Use this overview to orient, then drop into the detail:
 - **Getting it running** - {doc}`/how-to/quickstart` to install and prepare a
   first filing.
 - **Contributing** - the project source and issue tracker live on
-  [GitHub](https://github.com/nevenincs/cadrumo).
+  [GitHub](https://github.com/wgergely/aeat).

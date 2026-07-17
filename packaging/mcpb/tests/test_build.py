@@ -141,17 +141,3 @@ def test_sign_returns_false_without_fabricating_when_the_signer_fails(
     monkeypatch.setattr(BUILD.subprocess, "run", _failing_run)
 
     assert BUILD._sign(bundle) is False
-
-
-def test_manifest_version_matches_the_package_release() -> None:
-    """The bundle manifest must move in lockstep with the pyproject version.
-
-    The honesty review found the served plugin pinned a release two minors
-    behind source; this gate keeps at least the in-repo manifest honest.
-    """
-    import tomllib
-
-    repo_root = Path(__file__).resolve().parents[3]
-    manifest = json.loads((repo_root / "packaging" / "mcpb" / "manifest.json").read_text("utf-8"))
-    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text("utf-8"))
-    assert manifest["version"] == pyproject["project"]["version"]

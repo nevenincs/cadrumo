@@ -1,8 +1,7 @@
 """The risk table agrees with the two independent risk declarations (H3 cross-checks).
 
 Two parity gates that catch a mis-declaration by cross-referencing surfaces that
-declare risk-adjacent facts independently (ADR ``mcp-protocol-hardening`` H3, and
-the adjudication's A5/A6 rulings):
+declare risk-adjacent facts independently:
 
 - The live-write tripwire: any exposed command whose leaf is ``submit`` /
   ``present`` / ``send`` MUST declare ``live_write`` - the never-live-submit axis
@@ -13,7 +12,7 @@ the adjudication's A5/A6 rulings):
   guard (``PROFILE_BOUND_WRITE_VERB_PATHS``) maps to a command whose family is
   mutating, and no read-only-family command owns a write path - catching drift on
   BOTH the write guard and the manifest mutability (the write guard is itself
-  fail-open on renames per ``cadrumo-pull-and-file-standard``).
+  fail-open on renames per ``aeat-cli-pull-and-file-standard``).
 """
 
 from __future__ import annotations

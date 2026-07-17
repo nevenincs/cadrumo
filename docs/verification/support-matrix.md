@@ -23,15 +23,15 @@ sibling install-proof documents.
 ## Launch-variant note — RESOLVED (2026-07-04, v0.1.1 full release)
 
 The complete distribution is live on PyPI with no size grant:
-`cadrumo 0.1.1` (41.3 MB slim wheel), `cadrumo-data-manuals 0.1.1` (76.7 MB)
-and `cadrumo-data-official 0.1.1` (62.4 MB) — the corpus companions split
+`aeat-cli 0.1.1` (41.3 MB slim wheel), `aeat-data-manuals 0.1.1` (76.7 MB)
+and `aeat-data-official 0.1.1` (62.4 MB) — the corpus companions split
 along the directory seam so each clears the 100 MB cap. End-to-end proof
 on a fresh venv from the index only: `pip install
-"cadrumo[corpus-sources,agent]"` resolves all three, and
+"aeat-cli[corpus-sources,agent]"` resolves all three, and
 `aeat app registry verify` runs byte-exact clean (exit 0; 46 modelos,
 518 application links) with the binaries resolved through the `aeat_data`
 namespace seam. The installed plugin pins
-`uvx --from "cadrumo[agent]==0.1.1" aeat-mcp`; the harness floor
+`uvx --from "aeat-cli[agent]==0.1.1" aeat-mcp`; the harness floor
 round-trip through the published chain was verified live on 0.1.0 and the
 transport is unchanged. Note: 0.1.0's `corpus-sources` extra is
 unresolvable on the index (it pinned the never-published single

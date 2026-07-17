@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _write_pyproject(root: Path, version: str) -> None:
-    (root / "pyproject.toml").write_text(f'[project]\nname = "cadrumo"\nversion = "{version}"\n', encoding="utf-8")
+    (root / "pyproject.toml").write_text(f'[project]\nname = "aeat-cli"\nversion = "{version}"\n', encoding="utf-8")
 
 
 def _write_init(root: Path, version: str) -> None:

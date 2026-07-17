@@ -1,4 +1,4 @@
-"""Packaging gate for the two ``cadrumo-data-*`` corpus companion distributions.
+"""Packaging gate for the two ``aeat-data-*`` corpus companion distributions.
 
 The wheel-split decision moves the corpus source binaries
 (``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the slim ``aeat`` wheel. Because
@@ -6,8 +6,8 @@ the full binary set exceeds PyPI's 100 MB per-file cap, it is split along the
 corpus directory seam into TWO sub-cap companions, each under the cap so no size
 grant is needed:
 
-* ``cadrumo-data-manuals`` ships ``corpus/manuals``.
-* ``cadrumo-data-official`` ships ``corpus/aeat_official`` and ``corpus/normatives``.
+* ``aeat-data-manuals`` ships ``corpus/manuals``.
+* ``aeat-data-official`` ships ``corpus/aeat_official`` and ``corpus/normatives``.
 
 Both ship subtrees of the SAME ``aeat_data`` PEP 420 implicit namespace package
 (NEITHER ships ``aeat_data/__init__.py``, which would collide on a joint
@@ -77,15 +77,15 @@ class _Companion:
 # binaries; the exhaustiveness test proves that against the live tracked tree.
 _COMPANIONS = (
     _Companion(
-        dist_name="cadrumo-data-manuals",
+        dist_name="aeat-data-manuals",
         project_dir="aeat_data_manuals",
-        wheel_glob="cadrumo_data_manuals-*.whl",
+        wheel_glob="aeat_data_manuals-*.whl",
         owned_subdirs=("manuals",),
     ),
     _Companion(
-        dist_name="cadrumo-data-official",
+        dist_name="aeat-data-official",
         project_dir="aeat_data_official",
-        wheel_glob="cadrumo_data_official-*.whl",
+        wheel_glob="aeat_data_official-*.whl",
         owned_subdirs=("aeat_official", "normatives"),
     ),
 )
@@ -177,7 +177,7 @@ def built_wheels() -> dict[str, _BuiltWheel]:
     """Build both companion wheels once and return them keyed by distribution name."""
     if shutil.which("uv") is None:
         raise AssertionError(
-            "uv binary not found on PATH; the cadrumo-data distribution gate cannot run without the build driver",
+            "uv binary not found on PATH; the aeat-data distribution gate cannot run without the build driver",
         )
     return {companion.dist_name: _build_wheel(companion) for companion in _COMPANIONS}
 
@@ -206,8 +206,8 @@ def test_companion_packages_exactly_its_owned_subtree(built_wheels: dict[str, _B
 
 def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWheel]) -> None:
     """The two companions share no member and together ship the full tracked corpus set."""
-    manuals = _corpus_members(built_wheels["cadrumo-data-manuals"])
-    official = _corpus_members(built_wheels["cadrumo-data-official"])
+    manuals = _corpus_members(built_wheels["aeat-data-manuals"])
+    official = _corpus_members(built_wheels["aeat-data-official"])
     overlap = sorted(manuals & official)
     assert not overlap, f"the two companions ship {len(overlap)} shared corpus member(s): {overlap[:10]!r}"
 
@@ -261,26 +261,6 @@ def test_companion_version_matches_root_distribution() -> None:
             f"{root_version!r}; each companion must ship version-locked to the runtime wheel that resolves it — "
             "bump all together"
         )
-
-
-def test_corpus_sources_extra_pins_the_root_version() -> None:
-    """The root `corpus-sources` extra pins each companion at exactly the root version.
-
-    The companions are exact-version-locked to the runtime wheel, so a root
-    version bump that updates the companion pyprojects but forgets these
-    `==` pins would leave `cadrumo[corpus-sources]` resolving a stale (or
-    unpublished) companion release. This closes the drift gap that let the
-    root reach 0.2.0 while the pins and companions sat at 0.1.1.
-    """
-    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        root_project = tomllib.load(handle)["project"]
-    root_version = str(root_project["version"])
-    pins = root_project["optional-dependencies"]["corpus-sources"]
-    expected = {f"{companion.dist_name}=={root_version}" for companion in _COMPANIONS}
-    assert set(pins) == expected, (
-        f"corpus-sources must pin exactly {sorted(expected)!r} (the root version), got {sorted(pins)!r}; "
-        "bump the pins together with the root and companion versions"
-    )
 
 
 def test_companion_wheel_is_under_the_pypi_file_cap(built_wheels: dict[str, _BuiltWheel]) -> None:

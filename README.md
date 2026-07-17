@@ -1,16 +1,14 @@
-# Cadrumo
+# aeat
 
-A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness. Published on PyPI as [`cadrumo`](https://pypi.org/project/cadrumo/); the command-line tool it installs is named `aeat` after the forms it computes.
+A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness.
 
-At the core of Cadrumo is a comprehensive command line (`aeat`) that you and your agent operate together. It's for autónomos, small businesses, and the people who help them file. It ingests your financial records, calculates each modelo's figures, and prepares the filing: checked against the form's rules, grounded in the regulation that defines each casilla, and exported ready to upload. Your responsibility is to verify the result and to file it yourself, through the official channels of the Agencia Estatal de Administración Tributaria (AEAT).
+At the core of `aeat` is a comprehensive command line that you and your agent operate together. It's for autónomos, small businesses, and the people who help them file. It ingests your financial records, calculates each modelo's figures, and prepares the filing: checked against the form's rules, grounded in the regulation that defines each casilla, and exported ready to upload. Your responsibility is to verify the result and to file it yourself, through the official channels of the Agencia Estatal de Administración Tributaria (AEAT).
 
 You run it as a Claude plugin, through any Model Context Protocol (MCP) client, or directly at the terminal. Describe your situation in plain language; the assistant drives the toolkit, and the deterministic engine computes every figure and cites the legal rule behind it.
 
 > **Verify everything.** `aeat` works to ground every figure in current regulation and cites its sources, but it can make mistakes. Never accept a result blindly. You remain responsible for every declaration you file, and the authors accept no liability for incorrect output.
 >
-> **Status: beta.** Expect breaking changes between versions. The web home is [cadrumo.neve.md](https://cadrumo.neve.md); this repository is the canonical source.
->
-> **Not affiliated with the AEAT.** Cadrumo/`aeat` is an independent open-source project published by Gergely Wootsch ([neve.md](https://neve.md)). It is not official software and is not affiliated with, endorsed, sponsored, or approved by the Agencia Estatal de Administración Tributaria or any other public administration. It never files taxes on your behalf.
+> **Status: beta.** Expect breaking changes between versions. The web home at `aeat.neve.md` is under construction; until it lands, this repository is the canonical source.
 
 ## What you use it for
 
@@ -54,7 +52,7 @@ Consequential actions pass a human-in-the-loop gate: reads run freely, local cha
 
 ### The CLI as the brain
 
-Under the harness sits `aeat`, a Python CLI published on PyPI as [`cadrumo`](https://pypi.org/project/cadrumo/). It's a self-contained tax engine and works without any AI in the loop:
+Under the harness sits `aeat`, a Python CLI published on PyPI as [`aeat-cli`](https://pypi.org/project/aeat-cli/). It's a self-contained tax engine and works without any AI in the loop:
 
 - Modelo definitions live in a versioned registry compiled from TOML. Every casilla carries the legal references and official sources that define it, keyed by filing year and revision.
 - Every command emits a versioned JSON envelope with a stable exit-code table and typed notices, so an assistant or a script reads outcomes without scraping text.
@@ -65,7 +63,7 @@ Under the harness sits `aeat`, a Python CLI published on PyPI as [`cadrumo`](htt
 
 ### The Claude plugin (recommended)
 
-You need [Claude Code](https://claude.com/claude-code) or the Claude desktop app, plus [uv](https://docs.astral.sh/uv/); the plugin launches the published `cadrumo` package with `uvx`.
+You need [Claude Code](https://claude.com/claude-code) or the Claude desktop app, plus [uv](https://docs.astral.sh/uv/); the plugin launches the published `aeat-cli` package with `uvx`.
 
 ```
 /plugin marketplace add nevenincs/neve-marketplace
@@ -79,14 +77,14 @@ One install carries the skills, the personas, and the operating console. Then as
 If you prefer the terminal, or want the console in a different MCP client:
 
 ```bash
-uv tool install cadrumo
+uv tool install aeat-cli
 aeat --version
 ```
 
 Every command carries its own `--help`. Any MCP client runs the same console with:
 
 ```bash
-uvx --from "cadrumo[agent]" aeat-mcp
+uvx --from "aeat-cli[agent]" aeat-mcp
 ```
 
 If you want to inspect or adapt the harness itself, `aeat app agent --output=<dir>` writes it to disk as a Claude-native workspace, and `aeat app agent --output=<dir> --layout=plugin` writes the plugin tree.
@@ -108,11 +106,10 @@ Run `just docs` to build the rendered site, which adds the command-line and API 
 - Building, checking, and exporting happen locally. Live AEAT access is read-only - pulling your justificantes, notifications, and censo data - and each profile opts in to it per capability.
 - Ledger rows, invoices, and evidence bytes persist only inside encrypted storage on your machine. There's no cloud backend.
 - When an assistant operates the toolkit, your chat provider sees the conversation and the figures discussed in it, nothing more.
-- Neither the software nor the website sends anything to the authors: no telemetry, no analytics, no tracking. The full policy is in [`PRIVACY.md`](PRIVACY.md).
 
 ## Getting help
 
-Report bugs and ask questions on the [issue tracker](https://github.com/nevenincs/cadrumo/issues). Report a security vulnerability privately instead, following [`SECURITY.md`](SECURITY.md).
+Report bugs and ask questions on the [issue tracker](https://github.com/nevenincs/aeat/issues). Report a security vulnerability privately instead, following [`SECURITY.md`](SECURITY.md).
 
 ## Contributing
 
@@ -121,12 +118,10 @@ Report bugs and ask questions on the [issue tracker](https://github.com/neveninc
 - Adding a modelo to the registry starts with `python -m dev.registry.newmodelo scaffold <modelo-id> <revision-id>`, which writes the authoring skeleton and prints the contributor checklist.
 - The agent-driven contribution workflow is documented in [`CLAUDE.md`](CLAUDE.md).
 
-## License and legal
+## License
 
-- Apache 2.0. See [LICENSE](LICENSE) and the attribution in [NOTICE](NOTICE). Copyright 2026 Gergely Wootsch ([neve.md](https://neve.md)) and the cadrumo contributors.
-- Third-party attributions: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) (engine) and [`frontend/THIRD_PARTY_NOTICES.md`](frontend/THIRD_PARTY_NOTICES.md) (website).
-- Privacy: we never collect, receive, or share your data — [`PRIVACY.md`](PRIVACY.md). The website's aviso legal, privacy, and cookie notice (EN/ES/CA) live at [cadrumo.neve.md/#/legal](https://cadrumo.neve.md/#/legal).
+Apache 2.0. See [LICENSE](LICENSE).
 
 ## Disclaimer
 
-This project is not a substitute for professional tax advice, and it isn't affiliated with AEAT: references to "AEAT", modelo numbers, and casillas are purely descriptive of the official public forms and rules the software computes against. It never submits filings; you upload any exported file through AEAT's official tools yourself and remain responsible for every declaration. The authors accept no liability for filings produced or actions taken with this software. Read the [full disclaimer](docs/disclaimer.md) before relying on `aeat`.
+This project is not a substitute for professional tax advice, and it isn't affiliated with AEAT. It never submits filings; you upload any exported file through AEAT's official tools yourself and remain responsible for every declaration. The authors accept no liability for filings produced or actions taken with this software. Read the [full disclaimer](docs/disclaimer.md) before relying on `aeat`.

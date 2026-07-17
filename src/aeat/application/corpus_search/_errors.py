@@ -52,7 +52,7 @@ class CorpusSearchDependencyError(CorpusSearchError):
     The lexical index and the citation lookup run on the standard library
     plus ``snowballstemmer`` and are always importable. Only the
     build-time embedding precompute and the runtime query embedder need
-    the semantic stack (``model2vec``), which rides the ``cadrumo[search]``
+    the semantic stack (``model2vec``), which rides the ``aeat-cli[search]``
     extra; when it is absent the surface refuses with an install hint
     (``suggestion``) rather than crashing, and the degraded lexical-only
     mode stays live.

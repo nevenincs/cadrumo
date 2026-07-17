@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from importlib import metadata as _metadata
-from importlib.resources.abc import Traversable
+from importlib.resources.abc import Traversable  # nosem
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -74,7 +74,7 @@ _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 # The plugin's stdio MCP server. ``uvx`` boots ``aeat-mcp`` from the published
 # wheel pinned to the plugin's own version (D2a), so a machine with ``uv`` but no
 # project checkout runs the exact server the plugin release was cut against. The
-# PyPI distribution name (``cadrumo``, the operator's registered project) differs
+# PyPI distribution name (``aeat-cli``, the operator's registered project) differs
 # from the plugin name (``aeat``) and the import package (``aeat``); the pin MUST
 # carry the ``[agent]`` extra — the MCP SDK the server runs on rides that extra,
 # and a bare install makes ``aeat-mcp`` refuse with the install hint. The active
@@ -85,7 +85,7 @@ _MCP_CONFIG = ".mcp.json"
 _MCP_SERVER_NAME = "aeat"
 _MCP_LAUNCHER = "uvx"
 _MCP_CONSOLE_SCRIPT = "aeat-mcp"
-_PYPI_DISTRIBUTION = "cadrumo"
+_PYPI_DISTRIBUTION = "aeat-cli"
 _MCP_PERSONA_ENV = "AEAT_MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 # The advertised-tool-surface toggle (ADR mcp-progressive-discovery P1). ``core``

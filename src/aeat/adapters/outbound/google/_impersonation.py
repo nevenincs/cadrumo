@@ -286,7 +286,7 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
         raise GoogleAuthAdcUnavailableError(
             f"google-auth is not importable: {exc}",
             context={"target_principal": config.target_principal},
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
         ) from exc
 
     try:

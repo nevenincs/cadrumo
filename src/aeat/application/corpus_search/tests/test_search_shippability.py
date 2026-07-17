@@ -88,7 +88,7 @@ def test_embed_surface_carries_degraded_mode(tmp_path: Path) -> None:
         return
     with pytest.raises(CorpusSearchDependencyError) as exc_info:
         embed_corpus(chunks, matrix_path=tmp_path / "m.npy", chunk_ids_path=tmp_path / "ids.json")
-    assert exc_info.value.suggestion == "pip install cadrumo[search]"
+    assert exc_info.value.suggestion == "pip install aeat-cli[search]"
 
 
 def test_corpus_search_package_ships_no_model_artifacts() -> None:

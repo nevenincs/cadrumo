@@ -4,36 +4,14 @@ Use this when you are new to `aeat` and want the shortest path from local
 records to a file you can upload yourself through the Agencia Estatal de
 Administracion Tributaria (AEAT) portal.
 
-Cadrumo, invoked as the `aeat` command, prepares, checks, and exports local
-files for Spanish tax forms. It does not submit filings to AEAT. You remain responsible for reviewing and filing
+`aeat` prepares, checks, and exports local files for Spanish tax forms. It does
+not submit filings to AEAT. You remain responsible for reviewing and filing
 through official AEAT channels.
 
 This page follows one complete path: create a profile, add two transactions,
 then calculate, verify, and export a Modelo 130 for the first quarter of 2026.
 Every command below is run in order. It links to deeper guides whenever a step
 has tax-specific setup or review choices.
-
-## 1. Install the CLI
-
-Install the `cadrumo` package from PyPI. Any tool that installs Python
-applications works; `pip` is the plainest path:
-
-```bash
-pip install cadrumo
-```
-
-Confirm the command is on your path:
-
-```bash
-aeat --version
-```
-
-To use Cadrumo with an AI agent later, install the agent extra instead; see
-[Connect an agent](connect-an-agent.md):
-
-```bash
-pip install "cadrumo[agent]"
-```
 
 ## Before you start: the master-key passphrase
 

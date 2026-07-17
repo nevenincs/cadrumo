@@ -3,23 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cadrumo-data-manuals"
+name = "aeat-data-manuals"
 # Version-locked to the root `aeat` distribution. This is a synced literal kept
 # equal to the `version` field of the repository-root pyproject.toml; the parity
 # gate `dev/packaging/tests/test_aeat_data_distribution.py` fails loudly if the
 # two ever drift, so the companion can only ship at the same version as the
 # runtime wheel that resolves it. Bump both (and the sibling
-# `cadrumo-data-official`) together on every release.
-version = "0.2.0"
-description = "AEAT/BOE práctico manuals (corpus source binaries) for the cadrumo distribution"
+# `aeat-data-official`) together on every release.
+version = "0.1.1"
+description = "AEAT/BOE práctico manuals (corpus source binaries) for the aeat distribution"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
-# Explicit so the wheel/sdist always carry the Apache 4(d) attribution chain
-# (dist-info/licenses/{LICENSE,NOTICE}); the NOTICE also scopes the licence
-# to packaging/derived works, never the official AEAT/BOE documents
-# (license-posture ADR).
-license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
 ]
@@ -33,12 +28,12 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nevenincs/cadrumo"
-Issues = "https://github.com/nevenincs/cadrumo/issues"
-Repository = "https://github.com/nevenincs/cadrumo"
+Homepage = "https://github.com/wgergely/aeat"
+Issues = "https://github.com/wgergely/aeat/issues"
+Repository = "https://github.com/wgergely/aeat"
 
 # This companion ships a subtree of the SAME `aeat_data` PEP 420 implicit
-# namespace package as the sibling `cadrumo-data-official`: NEITHER wheel ships
+# namespace package as the sibling `aeat-data-official`: NEITHER wheel ships
 # `aeat_data/__init__.py` (a joint install would collide on that path), so
 # `importlib.resources.files("aeat_data")` resolves a MultiplexedPath over both
 # installed portions. There is therefore no discoverable package to select —

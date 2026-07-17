@@ -212,7 +212,7 @@ packaging-smoke-extras: packaging-smoke-source
 packaging-smoke-dev: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_dev
 
-# Build the slim cadrumo wheel plus both cadrumo-data-* companions, install the slim
+# Build the slim aeat wheel plus both aeat-data-* companions, install the slim
 # wheel alone (loud advisory path; verification verbs refuse instructively),
 # then add both companions and prove byte-identical source verification.
 packaging-smoke-split: packaging-smoke-source
@@ -421,9 +421,8 @@ docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
 # Serve documentation with live reload on docs/ and src/aeat/ edits. Binds every
-# interface on the docs' canonical port 8788, claimed strictly: attaches to a
-# healthy running server, evicts an invalid squatter, and errors rather than
-# drifting to another port. The first serve builds before opening the browser.
+# interface on a non-default port; auto-picks a free port when PORT is omitted,
+# and attaches to (instead of colliding with) an already-running server.
 docs-serve PORT="":
     uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 
@@ -444,18 +443,6 @@ docs-check:
     @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/aeat/tests/test_docstring_core_struct_links.py -m docs
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/aeat
-
-# Create or update the private Cadrumo docs stack.
-docs-stack-deploy:
-    uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
-
-# Build and publish the complete Cadrumo docs site.
-docs-deploy:
-    uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
-
-# Build and publish the Cadrumo landing page to the site root.
-frontend-deploy:
-    uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
 
 # ── Database migrations ──────────────────────────────────────────────────────
 
@@ -499,7 +486,7 @@ release-readiness-json:
 release-rollback version:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Rollback procedure for cadrumo v{{version}} (RELEASING.md#rollback-procedure):"
+    echo "Rollback procedure for aeat-cli v{{version}} (RELEASING.md#rollback-procedure):"
     echo ""
     echo "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
     echo "   widespread regression, or a compatibility mis-computation) — see"
@@ -511,7 +498,7 @@ release-rollback version:
     echo "     git push origin main --tags"
     echo "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
     echo "   NOT delete the artifact; it only stops new installs from resolving it):"
-    echo "     https://pypi.org/manage/project/cadrumo/release/{{version}}/  -> Options -> Yank release"
+    echo "     https://pypi.org/manage/project/aeat-cli/release/{{version}}/  -> Options -> Yank release"
     echo "4. Publish a corrected patch release following the emergency hotfix cycle"
     echo "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
     echo "5. Update docs/updates.md per its critical-updates contract and note the"
@@ -521,7 +508,7 @@ release-rollback version:
 release-rollback version:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    Write-Host "Rollback procedure for cadrumo v{{version}} (RELEASING.md#rollback-procedure):"
+    Write-Host "Rollback procedure for aeat-cli v{{version}} (RELEASING.md#rollback-procedure):"
     Write-Host ""
     Write-Host "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
     Write-Host "   widespread regression, or a compatibility mis-computation) - see"
@@ -533,7 +520,7 @@ release-rollback version:
     Write-Host "     git push origin main --tags"
     Write-Host "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
     Write-Host "   NOT delete the artifact; it only stops new installs from resolving it):"
-    Write-Host "     https://pypi.org/manage/project/cadrumo/release/{{version}}/  -> Options -> Yank release"
+    Write-Host "     https://pypi.org/manage/project/aeat-cli/release/{{version}}/  -> Options -> Yank release"
     Write-Host "4. Publish a corrected patch release following the emergency hotfix cycle"
     Write-Host "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
     Write-Host "5. Update docs/updates.md per its critical-updates contract and note the"
@@ -676,10 +663,10 @@ release-apply:
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
 
-# Publish the slim cadrumo wheel+sdist to PyPI. LOCAL-ONLY and HUMAN-GATED:
+# Publish the slim aeat wheel+sdist to PyPI. LOCAL-ONLY and HUMAN-GATED:
 # refuses in CI, needs a scoped token in UV_PUBLISH_TOKEN, and only runs
 # with the literal confirmation argument. See RELEASING.md for the full
-# release sequence (name claim, cadrumo-data-* companion publish, marketplace push).
+# release sequence (name claim, aeat-data-* companion publish, marketplace push).
 [unix]
 publish confirm="":
     #!/usr/bin/env bash
@@ -709,7 +696,7 @@ publish confirm="":
     uv build --out-dir var/release/dist
     echo "▶ uv publish (aeat v$VERSION)"
     uv publish var/release/dist/*
-    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/cadrumo/$VERSION/"
+    echo "✔ published aeat v$VERSION — verify at https://pypi.org/project/aeat-cli/$VERSION/"
 
 [windows]
 publish confirm="":
@@ -744,9 +731,9 @@ publish confirm="":
     Write-Host "▶ uv publish (aeat v$version)"
     & uv publish (Get-ChildItem var/release/dist/*)
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/cadrumo/$version/"
+    Write-Host "✔ published aeat v$version - verify at https://pypi.org/project/aeat-cli/$version/"
 
-# Publish BOTH cadrumo-data-* corpus companions to PyPI in one gated run (same
+# Publish BOTH aeat-data-* corpus companions to PyPI in one gated run (same
 # gates as publish). Both are sub-cap and need no per-file size grant
 # (RELEASING.md); they are version-locked to aeat, so bump all three together.
 [unix]
@@ -772,9 +759,9 @@ publish-data confirm="":
     rm -rf var/release/dist-data
     uv build --project packaging/aeat_data_manuals --out-dir var/release/dist-data
     uv build --project packaging/aeat_data_official --out-dir var/release/dist-data
-    echo "▶ uv publish (cadrumo-data-manuals + cadrumo-data-official)"
+    echo "▶ uv publish (aeat-data-manuals + aeat-data-official)"
     uv publish var/release/dist-data/*
-    echo "✔ published cadrumo-data-manuals + cadrumo-data-official — verify at https://pypi.org/project/cadrumo-data-manuals/ and https://pypi.org/project/cadrumo-data-official/"
+    echo "✔ published aeat-data-manuals + aeat-data-official — verify at https://pypi.org/project/aeat-data-manuals/ and https://pypi.org/project/aeat-data-official/"
 
 [windows]
 publish-data confirm="":
@@ -802,7 +789,7 @@ publish-data confirm="":
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     & uv build --project packaging/aeat_data_official --out-dir var/release/dist-data
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ uv publish (cadrumo-data-manuals + cadrumo-data-official)"
+    Write-Host "▶ uv publish (aeat-data-manuals + aeat-data-official)"
     & uv publish (Get-ChildItem var/release/dist-data/*)
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published cadrumo-data-manuals + cadrumo-data-official - verify at https://pypi.org/project/cadrumo-data-manuals/ and https://pypi.org/project/cadrumo-data-official/"
+    Write-Host "✔ published aeat-data-manuals + aeat-data-official - verify at https://pypi.org/project/aeat-data-manuals/ and https://pypi.org/project/aeat-data-official/"

@@ -1,16 +1,15 @@
-# Cadrumo
+# aeat-cli
 
-Cadrumo is a helper for preparing your Spanish tax forms. It ships as the
-`aeat` command-line application.
+`aeat` is a helper for preparing your Spanish tax forms.
 
-This is the landing page for Cadrumo's documentation. It shows how to
+This is the landing page for the `aeat` command-line application. It shows how to
 turn local records into checked modelo figures and export files. You upload those
 files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
-project source is on [GitHub](https://github.com/nevenincs/cadrumo).
+project source is on [GitHub](https://github.com/wgergely/aeat).
 
-Cadrumo is for autónomos, small businesses, and the people who help them prepare
+`aeat` is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The
-project is in beta, so expect changes between versions.
+project is pre-alpha, so expect breaking changes between versions.
 
 The guides on this page are ordered by the usual filing path. Start at the first
 thing you have not done yet. The path runs from installing the CLI and setting up
@@ -75,23 +74,21 @@ tax-field decisions.
 Use this when you need to see which modelos are due and which period to prepare.
 :::
 
-:::{grid-item-card} Prepare Your Filings
+:::{grid-item-card} Follow the Filing Workflow
 :link: how-to/filing-spine
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this for the repeatable loop - prepare, verify, export, file through
-AEAT, reconcile - and the per-modelo recipes: 036, 100 (Renta), 130, 303,
-349, and 390.
+Use this when you want the full repeatable loop: prepare, verify, export, file
+through AEAT, and keep local history.
 :::
 
-:::{grid-item-card} Follow a Whole Filing Year
+:::{grid-item-card} Build Your First Modelo 130 Filing
 :link: tutorials/index
 :link-type: doc
 :class-card: aeat-route-card
 
-Two guided lifecycle tutorials: the income-tax year (Modelo 130 into the
-annual Renta) and the IVA year (Modelo 303 into the annual 390).
+A guided walkthrough from setup through the final local export.
 :::
 
 ::::

@@ -15,7 +15,7 @@ official AEAT sources before you file.
 :class-container: aeat-route-grid
 
 :::{grid-item-card} Latest download
-:link: https://github.com/nevenincs/cadrumo/releases/latest
+:link: https://github.com/wgergely/aeat/releases/latest
 :link-type: url
 :class-card: aeat-route-card
 
@@ -24,7 +24,7 @@ installed version before preparing any filing records.
 :::
 
 :::{grid-item-card} Critical updates
-:link: https://github.com/nevenincs/cadrumo/releases
+:link: https://github.com/wgergely/aeat/releases
 :link-type: url
 :class-card: aeat-route-card
 
@@ -33,7 +33,7 @@ and known limitations before changing versions.
 :::
 
 :::{grid-item-card} Report an issue
-:link: https://github.com/nevenincs/cadrumo/issues
+:link: https://github.com/wgergely/aeat/issues
 :link-type: url
 :class-card: aeat-route-card
 
@@ -42,7 +42,7 @@ release notes that need clarification.
 :::
 
 :::{grid-item-card} Source repository
-:link: https://github.com/nevenincs/cadrumo
+:link: https://github.com/wgergely/aeat
 :link-type: url
 :class-card: aeat-route-card
 

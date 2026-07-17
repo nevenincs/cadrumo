@@ -92,11 +92,11 @@ def test_probe_optional_extra_present_for_an_installed_package() -> None:
 
 
 def test_probe_optional_extra_absent_names_the_install_command() -> None:
-    """A missing extra reports unavailable with a `pip install cadrumo[<extra>]` remediation, never raising."""
+    """A missing extra reports unavailable with a `pip install aeat-cli[<extra>]` remediation, never raising."""
     extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
     status = probe_optional_extra(extra)
     assert status.available is False
-    assert status.remediation == "pip install cadrumo[ghost]"
+    assert status.remediation == "pip install aeat-cli[ghost]"
 
 
 def test_probe_optional_extras_covers_every_declared_extra() -> None:
@@ -116,9 +116,9 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
     assert raised.value.extra is extra
-    assert raised.value.install_hint == "pip install cadrumo[ghost]"
-    assert "pip install cadrumo[ghost]" in str(raised.value)
-    assert raised.value.suggestion == "pip install cadrumo[ghost]"
+    assert raised.value.install_hint == "pip install aeat-cli[ghost]"
+    assert "pip install aeat-cli[ghost]" in str(raised.value)
+    assert raised.value.suggestion == "pip install aeat-cli[ghost]"
     assert raised.value.context == {
         "extra": "ghost",
         "import_name": "aeat_definitely_not_installed_xyz",

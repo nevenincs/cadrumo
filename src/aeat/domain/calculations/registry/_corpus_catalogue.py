@@ -12,7 +12,7 @@ are excluded from the slim ``aeat`` runtime wheel and shipped in an optional
 ``aeat_data`` companion distribution. The gate is companion-aware: a binary that
 is PRESENT (in the runtime tree or the companion) stays byte-exact hash-enforced
 exactly as before; a companion binary that is ABSENT from both roots yields an
-accumulable, loud advisory naming the missing set and the ``cadrumo[corpus-sources]``
+accumulable, loud advisory naming the missing set and the ``aeat-cli[corpus-sources]``
 install hint rather than hard-failing — the split-install degradation is loud,
 never silent. Every non-binary corpus file (extracted text, normative HTML, XSD)
 stays in the runtime wheel, so its absence remains a hard failure as before.
@@ -30,7 +30,7 @@ from ....core.resources import resolve_companion_binary
 from ._errors import RegistryValidationError
 from ._schema import SourceReference
 
-CORPUS_SOURCES_INSTALL_HINT = "pip install 'cadrumo[corpus-sources]'"
+CORPUS_SOURCES_INSTALL_HINT = "pip install 'aeat-cli[corpus-sources]'"
 """Operator install command that adds the optional ``aeat_data`` companion.
 
 Named in every companion-absent advisory so an operator whose split install
@@ -185,7 +185,7 @@ def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) 
     Present binaries stay byte-exact hash-enforced (a mismatch or an absent
     non-companion file raises :class:`RegistryValidationError`). Absent companion
     binaries are accumulated into ONE loud advisory naming the missing set and
-    the ``cadrumo[corpus-sources]`` install hint: the advisory is both emitted
+    the ``aeat-cli[corpus-sources]`` install hint: the advisory is both emitted
     through :class:`CorpusCompanionAdvisory` (so a split-install run surfaces it
     loudly at first registry load) and returned to the caller, so the
     degradation is never silenced. When every declared binary is present the

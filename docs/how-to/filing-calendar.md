@@ -1,10 +1,8 @@
 # Plan your filing calendar
 
-This page covers the filing calendar: how to see what may be due, what is
-overdue, and what to prepare next for the
-[active profile](profile-setup.md#what-the-active-profile-means), and which
-`--year` and `--period` tokens address each filing window. A modelo is a
-Spanish tax form.
+Use this guide when you want to understand what may be due, what is overdue,
+and what to prepare next for the [active profile](profile-setup.md#what-the-active-profile-means).
+A modelo is a Spanish tax form.
 
 These commands are local unless a command is under `aeat app live`. Local
 calendar commands read the [active profile](profile-setup.md#what-the-active-profile-means)
@@ -146,54 +144,21 @@ aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --show-suppressed
 Suppressed entries include obligations that do not apply given your profile
 facts, or that are incomplete. Each entry shows why it was suppressed.
 
-## Period tokens and dates
+## When is year-end, and how long are periods?
 
-Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as shown
-above. Modelo work commands instead separate the filing year from the registry
-period:
-
-```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
-```
-
-The period tokens are:
-
-- `1T`: first quarter, January 1 through March 31
-- `2T`: second quarter, April 1 through June 30
-- `3T`: third quarter, July 1 through September 30
-- `4T`: fourth quarter, October 1 through December 31
-- `0A`: annual period, January 1 through December 31
-- `01` through `12`: monthly periods
-
-Which tokens a modelo accepts is modelo-specific, not universal. A quarterly
-modelo such as 130 accepts only `1T` through `4T`; an annual modelo such as 390
-accepts only `0A`; Modelo 303 accepts `1T` through `4T` and `01` through `12`,
-but not `0A`. A token the modelo does not accept is refused (for example, 303
-with `0A` reports "no revision for ... period='0A'"). To see the tokens one
-modelo accepts, run `aeat app modelo describe 303` and read its `Períodos`
-line.
-
-Every command takes the year separately with `--year` and the period as one of
-these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
-accepted; pass `--year 2026 --period 1T` instead.
-
-The `ledger list` and `ledger review` commands filter by period through
-`--filter` clauses. The period token and the year travel as two separate
-clauses, using the same AEAT tokens:
+Use the year you are preparing and the date window you care about. A full
+calendar year window is:
 
 ```bash
-aeat app ledger list --filter period=1T --filter year=2026
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
-Pass the bare token to `period=` and the year to `year=`. The two clauses go
-together: `--filter period=1T` without `--filter year=2026` is refused.
-Combined forms such as `period=2026-1T` or `period=2026Q1` are not accepted.
+Quarterly filing periods use `1T`, `2T`, `3T`, and `4T`. Annual filings use
+`0A`. Monthly periods use two-digit month tokens such as `01` and `12`.
 
-For local planning, year-end is December 31 of the filing year. Annual period
-`0A` covers the full calendar year. The fourth quarter `4T` also ends on
-December 31, but it is still a quarterly period, not an annual return. The
-calendar commands above show deadlines after holiday and business-day
-adjustments.
+For a compact explanation of period codes, quarter boundaries, and annual
+year-end - all addressed with `--year 2026 --period 1T` - see
+[Understand filing periods](filing-periods.md).
 
 ## What should I do with one modelo?
 
@@ -235,6 +200,7 @@ For exact command flags and output fields, use the
 
 - [Set up your taxpayer profile](profile-setup.md)
 - [Check AEAT notifications](check-aeat-notifications.md)
+- [Understand filing periods](filing-periods.md)
 - [Work with Transactions](import-bank-statements.md)
 - [Quickstart: produce a modelo file](quickstart.md)
 - [CLI reference](../cli/index.rst)

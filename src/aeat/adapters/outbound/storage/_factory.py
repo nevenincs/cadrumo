@@ -151,7 +151,7 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
         raise OutboundStorageError(
             "google-auth is not importable",
             context={"dependency": "google-auth"},
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
             translated_message="adapters.outbound.storage.factory.errors.google_auth_import_failed",
         ) from exc
     return Credentials(

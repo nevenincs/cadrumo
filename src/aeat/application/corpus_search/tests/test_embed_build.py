@@ -1,6 +1,6 @@
 """Real-behavior tests for the build-time embedding precompute.
 
-model2vec rides the capability-gated ``cadrumo[search]`` extra. These tests
+model2vec rides the capability-gated ``aeat-cli[search]`` extra. These tests
 branch on its real presence — never skip: when the extra is absent (the
 shippable degraded default) they assert the typed refusal with the
 install hint; when it is present they assert a real tiny embed. The
@@ -58,7 +58,7 @@ def test_embed_corpus_matches_environment_capability(tmp_path: Path) -> None:
     if not _MODEL2VEC_PRESENT:
         with pytest.raises(CorpusSearchDependencyError) as exc_info:
             embed_corpus(chunks, matrix_path=matrix_path, chunk_ids_path=chunk_ids_path)
-        assert exc_info.value.suggestion == "pip install cadrumo[search]"
+        assert exc_info.value.suggestion == "pip install aeat-cli[search]"
         assert not matrix_path.exists()
         return
     result = embed_corpus(chunks, matrix_path=matrix_path, chunk_ids_path=chunk_ids_path)

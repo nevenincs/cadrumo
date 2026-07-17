@@ -33,7 +33,7 @@ _TRACKED_DATA_ROOTS = (
 _SOURCE_DATA_PREFIX = "src/aeat/_data/"
 _WHEEL_DATA_PREFIX = "aeat/_data"
 # Corpus source binaries excluded from the slim ``aeat`` wheel by the wheel-split
-# build config; they ship in the two ``cadrumo-data-*`` companion distributions. A
+# build config; they ship in the two ``aeat-data-*`` companion distributions. A
 # tracked source path is one of these when it lives under ``_data/corpus`` and
 # carries a binary suffix, so the wheel-bundling parity check must not expect it
 # in the
@@ -394,7 +394,7 @@ def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
 
     Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
-    two ``cadrumo-data-*`` companions, so they are legitimately absent from the
+    two ``aeat-data-*`` companions, so they are legitimately absent from the
     archive.
     Test modules under a ``_data`` ``tests/`` folder are excluded by the
     data-budget wheel boundary (tests serve no installed consumer) and are
@@ -449,7 +449,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     """Return normalized package names from a requirements export.
 
     A dependency resolved through a ``[tool.uv.sources]`` path source (the
-    not-yet-published ``cadrumo-data-*`` companions) exports as a bare local path
+    not-yet-published ``aeat-data-*`` companions) exports as a bare local path
     row (``./packaging/aeat_data_manuals``) rather than a requirement string;
     resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
@@ -546,7 +546,7 @@ def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=repo_root)
-    wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
+    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
     _assert_wheel_contains_tracked_data(repo_root, wheels[0], expected_data_paths)
@@ -565,7 +565,7 @@ def _install_wheel(
     """Install the built wheel into a fresh virtualenv and return the venv path."""
     venv = work_dir / "venv"
     _run([uv, "venv", str(venv), "--python", python], cwd=repo_root)
-    target = str(wheel) if not extras else f"cadrumo[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
+    target = str(wheel) if not extras else f"aeat-cli[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
     _run(
         [uv, "pip", "install", "--python", str(_venv_python(venv)), target],
         cwd=repo_root,
@@ -683,7 +683,7 @@ finally:
 try:
     LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install cadrumo[anthropic]":
+    if exc.suggestion != "pip install aeat-cli[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {{exc.suggestion!r}}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")

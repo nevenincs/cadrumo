@@ -78,8 +78,8 @@ request AEAT rejects.
 
 - [Authenticate with AEAT](../how-to/authenticate-with-aeat.md) - set up
   read-only live access.
-- [Check AEAT notifications and live observations](../how-to/check-aeat-notifications.md) -
-  what live reads cover and how to run them.
+- [Read live AEAT data](../how-to/read-live-aeat-data.md) - what live reads
+  cover and how to run them.
 - [RB-001 Renew a certificate](RB-001-certificate-expired.md) - the expiry case.
 - [Diagnose and repair your local setup](../how-to/troubleshooting.md) - the
   full symptom index.

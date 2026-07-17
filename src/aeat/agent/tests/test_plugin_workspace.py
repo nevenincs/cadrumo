@@ -117,13 +117,13 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     materialise_plugin(tmp_path, version="1.2.3")
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     assert document["version"] == "1.2.3"
-    # The surface option ships defaulting to the orientation core (ADR P1).
+    # The surface option defaults to the orientation core.
     assert document["userConfig"]["surface"]["default"] == "core"
 
     mcp = json.loads((tmp_path / ".mcp.json").read_text(encoding=_UTF_8))
     server = mcp["mcpServers"]["aeat"]
     assert server["command"] == "uvx"
-    assert server["args"] == ["--from", "cadrumo[agent]==1.2.3", "aeat-mcp"]
+    assert server["args"] == ["--from", "aeat-cli[agent]==1.2.3", "aeat-mcp"]
     assert server["env"] == {
         "AEAT_MCP_PERSONA": "${user_config.persona}",
         "AEAT_MCP_SURFACE": "${user_config.surface}",

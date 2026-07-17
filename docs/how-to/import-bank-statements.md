@@ -1,10 +1,9 @@
 # Work with Transactions
 
-This page covers the ledger's transaction workflow: importing your bank
-statement, adding any missing transactions by hand, reviewing and correcting
-them, and checking readiness before a calculation. A line on a bank statement
-is just a date and an amount - the tax meaning is added later, in
-classification.
+Use this guide to bring your bank movements into aeat so they can feed your
+tax calculations. Import your bank statement, add any missing transactions by
+hand, review and correct them, then hand them to classification before running
+a calculation.
 
 Your bank records are not added automatically. aeat imports only when you run
 an import command. Tax calculations use the transactions you have saved under
@@ -413,17 +412,8 @@ Run preflight before calculating a modelo:
 aeat app ledger preflight --year 2026 --period 1T
 ```
 
-Preflight looks at each record inside the period and flags anything still
-missing before any sums are trusted:
-
-- no business-versus-personal decision yet
-- no category on a deductible cost
-- no base amount, IVA amount, or IVA rate where one is expected
-- a mixed cost with no split reference attached
-- an amount in a currency the tool cannot convert to euros
-
-The check changes nothing; it names the rows that are not ready so you fix
-the raw material before trusting any total. Fix the rows it names, then run
+Preflight reports missing facts such as category, taxable base, IVA amount, IVA
+rate, currency, or proportionality reference. Fix the rows it names, then run
 preflight again.
 
 Check the overall ledger state:

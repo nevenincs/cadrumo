@@ -399,7 +399,7 @@ def absent_corpus_companion_binaries(registry_root: Path, *, source_root: Path) 
     companion. An empty tuple means every declared binary is present and
     byte-integrity verifiable; a non-empty tuple is the loud advisory the
     split-install path surfaces, naming the missing set and the
-    ``cadrumo[corpus-sources]`` install hint. The ``aeat app registry``
+    ``aeat-cli[corpus-sources]`` install hint. The ``aeat app registry``
     verification verbs consult this to refuse instructively when the companion
     is required and absent.
     """

@@ -125,7 +125,7 @@ def _google_service(credentials: object, service_name: str, version: str) -> Any
     except ImportError as exc:
         raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build(service_name, version, credentials=credentials, cache_discovery=False)

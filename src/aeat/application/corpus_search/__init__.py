@@ -13,7 +13,7 @@ stack over the bundled BOE/AEAT corpus, built from the already-shipped
   returns verbatim authoritative text;
 * the build-time embedding precompute
   (:mod:`~application.corpus_search._embed_build`) — the semantic half,
-  gated behind the ``cadrumo[search]`` extra, that ships its corpus vectors
+  gated behind the ``aeat-cli[search]`` extra, that ships its corpus vectors
   as plain data.
 
 The lexical index and the citation lookup carry the degraded, no-download

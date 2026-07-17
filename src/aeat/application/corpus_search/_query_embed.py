@@ -5,7 +5,7 @@ The corpus vectors are precomputed at build time and ship as data
 runtime ONLY to embed the operator's live query into the same vector space so a
 cosine search can run.
 This module owns that one live use of ``model2vec``, behind the capability-
-gated ``cadrumo[search]`` extra: absent the extra, :func:`search_extra_available`
+gated ``aeat-cli[search]`` extra: absent the extra, :func:`search_extra_available`
 reports ``False`` and the retrieval layer degrades to lexical-only, while
 constructing/using a :class:`QueryEmbedder` refuses with the install hint.
 

@@ -24,7 +24,7 @@ from .smoke_pip_core import _create_pip_venv, _install_target_with_pip
 
 def _install_all_extras_with_pip(work_dir: Path, wheel: Path, venv_path: Path) -> None:
     """Install the built wheel through the public ``all`` extra."""
-    target = f"cadrumo[all] @ {wheel.resolve().as_uri()}"
+    target = f"aeat-cli[all] @ {wheel.resolve().as_uri()}"
     _install_target_with_pip(work_dir, target, venv_path)
 
 

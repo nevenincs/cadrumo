@@ -40,12 +40,12 @@ def test_input_error_renders_as_refused_not_internal() -> None:
 def test_dependency_error_carries_its_install_hint_suggestion() -> None:
     error = CorpusSearchDependencyError(
         "semantic query embedder needs the search extra",
-        suggestion='pip install "cadrumo[search]"',
+        suggestion='pip install "aeat-cli[search]"',
     )
     envelope = build_error_envelope(error)
     assert envelope.category == ErrorCategory.REFUSED.value
     # The raise-site suggestion overrides the registered default and survives.
-    assert envelope.suggestion == 'pip install "cadrumo[search]"'
+    assert envelope.suggestion == 'pip install "aeat-cli[search]"'
 
 
 def test_context_stays_a_dict_even_when_unset() -> None:

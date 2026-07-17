@@ -5,7 +5,7 @@ Two invariants the wheel split rests on:
 * a corpus binary that is PRESENT stays byte-exact hash-enforced — corrupting a
   present, cited binary still hard-fails (the gate did not go soft), and
 * a companion corpus binary that is ABSENT surfaces a loud advisory naming the
-  file and the ``cadrumo[corpus-sources]`` install hint and is never silently
+  file and the ``aeat-cli[corpus-sources]`` install hint and is never silently
   accepted, while an absent NON-companion corpus file (extracted text, HTML)
   still hard-fails exactly as before.
 

@@ -4,7 +4,7 @@ Both the build-time precompute
 (:mod:`~application.corpus_search._embed_build`) and the runtime query embedder
 (:mod:`~application.corpus_search._query_embed`) load the same
 ``potion-multilingual-128M`` static model behind the capability-gated
-``cadrumo[search]`` extra. This module is the one place that lazily imports
+``aeat-cli[search]`` extra. This module is the one place that lazily imports
 ``model2vec`` and refuses with an install hint when it is absent, so neither
 consumer duplicates the gate and the degraded lexical-only mode never depends
 on the semantic stack at import time.
@@ -19,7 +19,7 @@ from typing import Any
 from ._errors import CorpusSearchDependencyError
 
 #: Install hint surfaced on every semantic-stack refusal.
-SEARCH_EXTRA_HINT = "pip install cadrumo[search]"
+SEARCH_EXTRA_HINT = "pip install aeat-cli[search]"
 
 _DEFAULT_DIMENSIONS = 256
 
@@ -41,7 +41,7 @@ def load_static_model(model_id: str, *, revision: str, cache_dir: Path | None = 
     """
     try:
         # IMPORT-RATIONALE-OPTIONAL-SEARCH-EXTRA: model2vec rides the optional
-        # cadrumo[search] extra; a bare-core install lacks it, so the import is
+        # aeat-cli[search] extra; a bare-core install lacks it, so the import is
         # lazy and its typing is unresolved until the extra is present.
         from model2vec import (
             StaticModel,  # type: ignore[import-not-found, unused-ignore]  # TYPE-IGNORE-RATIONALE-optextra: model2vec is an optional extra without shipped type stubs

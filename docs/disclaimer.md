@@ -1,6 +1,6 @@
 # Disclaimer
 
-Cadrumo, shipped as the `aeat` software utility, is not a tax advisor. It gives no tax, legal,
+`aeat` is a software utility, not a tax advisor. It gives no tax, legal,
 accounting, or financial advice, creates no advisory relationship, and is not
 affiliated with, endorsed by, or connected to the Agencia Estatal de
 Administración Tributaria (AEAT).

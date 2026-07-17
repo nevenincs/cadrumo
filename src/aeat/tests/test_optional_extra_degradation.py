@@ -6,7 +6,7 @@ The optional integration stacks (``google`` / ``browser`` / ``anthropic``) live 
 ``sys.meta_path`` finder that makes the package genuinely unimportable, the same
 condition a fresh ``pip install aeat`` (no extras) produces — rather than a mock.
 With the extra blocked the core CLI must still build, and reaching the feature
-must raise the feature's own typed error naming ``pip install cadrumo[<extra>]``.
+must raise the feature's own typed error naming ``pip install aeat-cli[<extra>]``.
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ import importlib.abc
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
-from pathlib import Path
 from types import ModuleType
 from typing import override
 
@@ -68,42 +67,11 @@ def test_blocker_actually_blocks() -> None:
 def test_cli_builds_with_every_optional_extra_blocked() -> None:
     """A fresh-install operator with no extras can still build and run the core CLI."""
 
-    with _block_imports(
-        "anthropic", "playwright", "playwright_stealth", "googleapiclient", "google_auth_oauthlib", "ofxtools"
-    ):
+    with _block_imports("anthropic", "playwright", "playwright_stealth", "googleapiclient", "google_auth_oauthlib"):
         from ..entrypoints.cli import app
 
         result = invoke_uncached_typer_app(app, ["--help"])
     assert result.exit_code == 0, result.output
-
-
-def test_ofx_source_refuses_instructively_without_the_extra(tmp_path: Path) -> None:
-    """An OFX-looking source without the extra raises the typed refusal with the install hint."""
-    from ..adapters.inbound.financial.providers import OfxProvider
-    from ..core import MissingOptionalExtraError
-
-    source = tmp_path / "statement.ofx"
-    source.write_bytes(b"OFXHEADER:100\r\n<OFX><BANKTRANLIST></BANKTRANLIST></OFX>")
-    provider = OfxProvider()
-    with _block_imports("ofxtools"):
-        with pytest.raises(MissingOptionalExtraError) as raised:
-            provider.validate_source(source)
-        with pytest.raises(MissingOptionalExtraError):
-            list(provider.ingest(source))
-    assert raised.value.install_hint == "pip install cadrumo[ofx]"
-
-
-def test_non_ofx_probe_degrades_to_a_miss_without_the_extra(tmp_path: Path) -> None:
-    """Auto-detection of other formats keeps working: a non-OFX candidate is a plain probe miss."""
-    from ..adapters.inbound.financial.providers import OfxProvider
-
-    source = tmp_path / "statement.csv"
-    source.write_text("date,amount\n2026-01-01,10.00\n", encoding="utf-8")
-    provider = OfxProvider()
-    with _block_imports("ofxtools"):
-        validation = provider.validate_source(source)
-    assert validation.is_valid is False
-    assert any("pip install cadrumo[ofx]" in warning for warning in validation.warnings)
 
 
 def test_playwright_error_aliases_import_as_plain_fallbacks_without_the_extra() -> None:
@@ -134,7 +102,7 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     client = LLMClient(settings=load_settings())
     with _block_imports("anthropic"), pytest.raises(LLMConfigError) as raised:
         client._build_adapter(LLMProvider.ANTHROPIC)
-    assert raised.value.suggestion == "pip install cadrumo[anthropic]"
+    assert raised.value.suggestion == "pip install aeat-cli[anthropic]"
 
 
 @pytest.mark.asyncio
@@ -147,7 +115,7 @@ async def test_browser_boundary_refuses_instructively_without_the_extra() -> Non
 
         with pytest.raises(BrowserError) as raised:
             await _factory._start_playwright()
-    assert raised.value.suggestion == "pip install cadrumo[browser]"
+    assert raised.value.suggestion == "pip install aeat-cli[browser]"
 
 
 def test_google_extra_unavailable_is_observed_by_the_probe_without_the_extra() -> None:

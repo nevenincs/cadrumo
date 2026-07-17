@@ -64,7 +64,7 @@ def register(app: typer.Typer) -> None:
         if cap_enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not any_provider:
             issues.append("cloud_evidence_upload is on but no cloud LLM provider CLI is on PATH (claude / agy / codex)")
         if cap_enabled[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
-            issues.append("google_export is on but the 'google' extra is not installed (pip install cadrumo[google])")
+            issues.append("google_export is on but the 'google' extra is not installed (pip install aeat-cli[google])")
 
         ok = not issues
         result = ConfigCheckResult.model_validate(

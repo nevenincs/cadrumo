@@ -16,8 +16,8 @@ or the corpus-split escape hatch declared below.
 
 The corpus-split escape hatch has since been PARTIALLY realised at the wheel
 boundary: the wheel-split decision ships the corpus source binaries
-(``corpus/**/*.{pdf,xls,xlsx}``) in the two ``cadrumo-data-manuals`` /
-``cadrumo-data-official`` companions and the derived runtime surfaces in the slim
+(``corpus/**/*.{pdf,xls,xlsx}``) in the two ``aeat-data-manuals`` /
+``aeat-data-official`` companions and the derived runtime surfaces in the slim
 ``aeat`` wheel — from the ONE source tree, which is unchanged, so the 550 MiB
 total-tree gate still stands and still guards every byte. But a single total
 ceiling could now be silently EVADED by the split: runtime (slim-wheel) payload

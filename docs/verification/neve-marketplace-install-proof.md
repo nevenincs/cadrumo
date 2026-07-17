@@ -20,7 +20,7 @@ pre-staged wheels.
      aeat@neve (scope: user)"; disabled-by-default surfaced as designed.
    - `claude plugin enable aeat@neve` → enabled.
 3. **PyPI-launched local server** — the installed plugin's `.mcp.json` runs
-   `uvx --from "cadrumo[agent]==0.1.1" aeat-mcp`, resolving the published
+   `uvx --from "aeat-cli[agent]==0.1.1" aeat-mcp`, resolving the published
    package from the index.
 4. **Live tool round-trip** — a session of the Claude desktop app's embedded
    runtime, restricted to `mcp__plugin_aeat_aeat__*`, called the harness floor

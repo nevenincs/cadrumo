@@ -48,7 +48,7 @@ class _UnavailableEmbedder(QueryEmbedder):
 
     @override
     def embed_query(self, text: str) -> np.ndarray:
-        raise CorpusSearchDependencyError("model2vec absent", suggestion="pip install cadrumo[search]")
+        raise CorpusSearchDependencyError("model2vec absent", suggestion="pip install aeat-cli[search]")
 
 
 def _index_and_chunks(tmp_path: Path) -> tuple[Path, list[str]]:

@@ -8,7 +8,7 @@ semantically-related chunk a lexical query misses — the whole point of shippin
 the semantic half.
 
 It is gated on `search_extra_available()` rather than skipped: with the
-`cadrumo[search]` extra present it runs the real proof (building a real embedding
+`aeat-cli[search]` extra present it runs the real proof (building a real embedding
 matrix via `embed_corpus` and querying with the real `QueryEmbedder`); without
 it, it asserts the degraded lexical-only contract. Both branches assert real
 behaviour — there is no `skip`/`xfail`.

@@ -9,7 +9,7 @@ that ships the corpus vectors carries a degraded, no-download semantic
 mode: the "more-like-this-document" primitive here runs over the shipped
 matrix with numpy alone and never touches the model.
 
-``model2vec`` rides the capability-gated ``cadrumo[search]`` extra. When it
+``model2vec`` rides the capability-gated ``aeat-cli[search]`` extra. When it
 is absent this module still imports (the degraded lexical-only mode stays
 live) and :func:`embed_corpus` refuses with an install hint rather than
 crashing, mirroring every other optional-integration boundary in the
@@ -19,7 +19,7 @@ lexical-only surface never depends on it at import time.
 See Also:
     :func:`~application.corpus_search.ensure_corpus_embeddings`
         Runtime build-once cache that calls this precompute behind the
-        ``cadrumo[search]`` extra.
+        ``aeat-cli[search]`` extra.
     :class:`~application.corpus_search.QueryEmbedder`
         Live-query half that embeds operator text into the same vector space.
     :func:`~application.corpus_search.hybrid_search`
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 # to the result record for provenance. Measured footprint at this revision:
 # ~0.5 GB per weight file (safetensors), ~2.1 GB resident in the HF hub cache
 # (onnx + safetensors + no-symlink blob duplication) — the first-use download
-# cost of opting into the ``cadrumo[search]`` extra.
+# cost of opting into the ``aeat-cli[search]`` extra.
 POTION_MODEL_ID = "minishlab/potion-multilingual-128M"
 POTION_MODEL_REVISION = "73908c3438cf03b6a01bcb9611d62b23d0726f08"
 

@@ -1,12 +1,8 @@
 # Classify transactions
 
-This page covers the classification of ledger transactions: deciding whether a
-row is business, personal, or mixed, adding the category and tax fields a
-calculation needs, recording mixed-use shares, batch and rule-based
-classification, and the review queue that lists everything still waiting for a
-decision. Use it after transactions are in the active profile's ledger -
-imported rows have dates and amounts, but they do not yet say how the tax
-calculation should treat them.
+Use this guide after transactions are in the active profile's ledger. Imported
+rows have dates and amounts, but they do not yet say how the tax calculation
+should treat them.
 
 Classifying a transaction only changes the record on your computer — nothing is sent to AEAT.
 
@@ -95,12 +91,7 @@ EU suppliers, or recargo de equivalencia. Run
 
 A mixed-use transaction is one you use partly for business and partly
 personally, such as a phone bill, a car cost, or a home-office expense. Record
-the business share so the calculation counts only the deductible part. The
-split can come from three places, in rising order of grounding: a percentage
-on a single record, a saved default ratio for a whole category, or a ratio
-worked out from your registered facts (for example, the registered home-office
-area against the size of your home). All three keep only the part of a cost
-that genuinely belongs to the business.
+the business share so the calculation counts only the deductible part.
 
 A `MIXED` row needs a proportionality reference before a modelo can calculate
 from it. The reference is a saved category ratio applied through
@@ -228,43 +219,6 @@ fill in tax amounts such as taxable base, IVA rate, or IRPF category.
 
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full
 provider, preview, apply, and override flow.
-
-## See everything that still needs a decision
-
-The review queue is one profile-wide list of everything that still wants your
-attention before a filing: transactions without a classification, invoice
-records that are unmatched or disputed, and verification findings on modelo
-drafts. Each row names the exact command that resolves it, so the queue is a
-to-do list you can work through top to bottom. The queue is read-only; items
-clear when you fix the underlying record with the command the row names.
-
-```bash
-aeat app review queue
-```
-
-Each row shows the item id, its kind, the affected record, the period, a
-severity (`critical`, `high`, `normal`, or `info`), and a final column with
-the command to run next. Narrow the list by kind, modelo, or state:
-
-```bash
-aeat app review queue --kind ledger_transaction
-aeat app review queue --kind modelo_finding --modelo 303
-aeat app review queue --state all
-```
-
-Accepted `--kind` tokens are `ledger_transaction`, `purchase_invoice_evidence`,
-`payable_invoice`, `collectible_invoice`, and `modelo_finding`. The default
-state is `pending`. Inspect one item in full, including the suggested next
-command, with `aeat app review view <item-id>`. Modelo findings are grounded
-in registry rules; add `--explain` to show the legal references, or use the
-global `--format json` flag (before the command) for a `legal_refs` field on
-every row.
-
-Transaction items clear when you classify the row (this page). Invoice items
-clear when you link or update the invoice - see
-[Attach invoices and receipts](ledger-evidence.md). Modelo findings clear when
-you fix the reported values and verify again - see
-[Verify a filing](verification-reports.md).
 
 ## Confirm readiness
 

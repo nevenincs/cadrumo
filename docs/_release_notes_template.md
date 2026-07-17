@@ -3,7 +3,7 @@ orphan: true
 ---
 
 <!--
-Release notes template for cadrumo. Copy this block, fill it in from the
+Release notes template for aeat-cli. Copy this block, fill it in from the
 `just release` dry-run log (conventional-commit groups since the last tag),
 and paste it as the GitHub Release body when the tag is pushed. This is a
 hand-filled template, not generated automatically — release-please writes
@@ -11,7 +11,7 @@ CHANGELOG.md; this template is the longer-form human-readable companion for
 the GitHub Release page.
 -->
 
-# cadrumo vX.Y.Z
+# aeat-cli vX.Y.Z
 
 Released: YYYY-MM-DD
 Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hours)
@@ -36,13 +36,13 @@ Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hours)
 ## Upgrade
 
 ```
-uvx --from cadrumo==X.Y.Z aeat --version
+uvx --from aeat-cli==X.Y.Z aeat --version
 ```
 
 or, for an existing install:
 
 ```
-uv tool upgrade cadrumo
+uv tool upgrade aeat-cli
 ```
 
 ## Rollback
@@ -54,6 +54,6 @@ PyPI without breaking anyone pinned to an earlier pin.
 ## Verification
 
 - [ ] `just packaging-smoke` green on Linux/WSL
-- [ ] `uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine
-- [ ] `pip install "cadrumo[corpus-sources]"` pulls both data companions and
+- [ ] `uvx --from aeat-cli==X.Y.Z aeat --version` resolves on a clean machine
+- [ ] `pip install "aeat-cli[corpus-sources]"` pulls both data companions and
       `aeat app registry verify` runs clean

@@ -1,10 +1,8 @@
 # How your records become tax figures
 
-This page covers where the numbers on your tax form come from: how a plain
-bank movement turns into a figure for each numbered box on an official form,
-and why the tool is built to let you explain every figure later. It walks
-through the idea, not the buttons - the how-to guides linked from each
-section carry the commands.
+This page explains where the numbers on your tax form come from. It walks through the idea, not the buttons. You'll see how a plain bank movement turns into a figure for each numbered box on an official form, and why the tool is built to let you explain every figure later.
+
+This is background reading. When you're ready to actually do each step, follow the links to the how-to guides.
 
 The forms in question are modelos that you send to the {term}`AEAT`. Each modelo is made of {term}`casillas <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
 
@@ -24,20 +22,29 @@ To give a movement tax meaning, you turn it into a sorted, categorized record. A
 
 A record that has all of this is ready to feed into a calculation. To do this for your own movements, see [Classify transactions](../how-to/classify-transactions.md).
 
-## Splitting a mixed cost, and checking readiness
+## Three ways to split a mixed cost
 
-Some costs serve both your business and your private life - a phone bill,
-home internet, a home office. Only the business share counts, and the split
-can come from a percentage on the single record, a saved default for the
-whole category, or a ratio worked out from your registered facts - see
-[the mixed-use workflow](../how-to/classify-transactions.md#classify-mixed-use-transactions).
+Some costs serve both your business and your private life - a phone bill, home internet, the electricity in a home office. You can't deduct the whole amount, only the business share. The tool lets that split come from three places, depending on how precise you need to be.
 
-Before the tool adds anything up, a readiness check flags each record in the
-period that is still missing a decision, a category, a tax figure, a split
-reference, or a convertible currency. The check changes nothing; it tells
-you which records are not ready so you fix the raw material before trusting
-any total - see the readiness section of
-[Import bank statements](../how-to/import-bank-statements.md).
+The first is a percentage on a single record. You say this one phone bill is 60 percent business, and only that one record is split that way.
+
+The second is a default for a whole category. You set a business share once for, say, all utility costs, and every record in that category inherits it unless you override it.
+
+The third is a ratio worked out from your official registration details. If you've recorded the facts behind your activity - for example, the size of a registered home office against the size of your home - the tool can work out the business share from those facts instead of asking you to guess a number.
+
+All three describe the same idea: keep only the part of a cost that genuinely belongs to the business.
+
+## A readiness check before any sums
+
+Before the tool adds anything up, it can check whether your records are sound. The readiness check looks at each record that falls inside the period you're filing and flags anything still missing:
+
+- No business-versus-personal decision yet.
+- No category on a deductible cost.
+- No base amount, IVA (value-added tax) amount, or IVA rate where one is expected.
+- A mixed cost with no split reference attached.
+- An amount in a currency the tool can't yet convert to euros.
+
+The check changes nothing. It just tells you which records aren't ready, so you fix the raw material before trusting any total. For how to run it, see the readiness section of [Import bank statements](../how-to/import-bank-statements.md).
 
 ## Which form, and which period
 
@@ -45,7 +52,7 @@ A calculation is always for one form, one year, and one period. The period decid
 
 A period is a quarter, a single month, or a whole year. The tool turns it into a start and end date, then keeps only the records whose date falls inside that window. A first-quarter filing sees January through March; a March filing sees only March.
 
-Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see [Period tokens and dates](../how-to/filing-calendar.md#period-tokens-and-dates).
+Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see [Filing periods](../how-to/filing-periods.md).
 
 ## From records to numbered boxes
 

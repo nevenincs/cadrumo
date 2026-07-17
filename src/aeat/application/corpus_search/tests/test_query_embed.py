@@ -1,6 +1,6 @@
 """Real-behavior tests for the runtime query embedder.
 
-model2vec rides the ``cadrumo[search]`` extra. These tests never skip: they
+model2vec rides the ``aeat-cli[search]`` extra. These tests never skip: they
 branch on its real presence and assert the correct behavior for the
 environment, and they never trigger the optional model download (the
 shippability contract forbids depending on it), so the actual embed is
@@ -54,7 +54,7 @@ def test_embed_query_matches_environment_capability(tmp_path: Path) -> None:
     if not _MODEL2VEC_PRESENT:
         with pytest.raises(CorpusSearchDependencyError) as exc_info:
             embedder.embed_query("recargo por declaración extemporánea")
-        assert exc_info.value.suggestion == "pip install cadrumo[search]"
+        assert exc_info.value.suggestion == "pip install aeat-cli[search]"
         return
     # With the extra present, availability is reported and construction stands;
     # the actual embed is a network-download path the unit gate does not drive.

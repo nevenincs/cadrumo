@@ -326,7 +326,7 @@ finally:
 try:
     LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install cadrumo[anthropic]":
+    if exc.suggestion != "pip install aeat-cli[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {exc.suggestion!r}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
@@ -374,7 +374,7 @@ os.environ.update(env)
 Path(env["AEAT_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
 Path(env["PLAYWRIGHT_BROWSERS_PATH"]).mkdir(parents=True, exist_ok=True)
 
-target = f"cadrumo[browser] @ {wheel.as_uri()}"
+target = f"aeat-cli[browser] @ {wheel.as_uri()}"
 run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", target], env=env)
 run([sys.executable, "-m", "pip", "check"], env=env)
 run([sys.executable, "-c", "import playwright.async_api, playwright_stealth"], env=env)
@@ -465,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--browser",
         action="store_true",
-        help="Install cadrumo[browser], provision Chromium with system deps, and run browser health.",
+        help="Install aeat-cli[browser], provision Chromium with system deps, and run browser health.",
     )
     parser.add_argument("--timeout", type=int, help="Docker probe timeout in seconds.")
     args = parser.parse_args(argv)

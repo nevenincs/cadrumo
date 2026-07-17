@@ -125,7 +125,7 @@ projected box carries its formula and legal references in the JSON output,
 the same grounding as a real calculation.
 
 For when the year-end filing actually happens, see
-[Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
+[Filing periods](filing-periods.md).
 
 ## Trace a value to its legal basis
 
@@ -138,8 +138,7 @@ review stage:
 - Verification findings name the legal references behind each rule — see
   [Verify a filing](verification-reports.md).
 - `aeat app review queue --explain` — pending findings with their legal
-  references. See
-  [the review queue](classify-transactions.md#see-everything-that-still-needs-a-decision).
+  references. See [Work through the review queue](review-queue.md).
 
 ## Next steps
 

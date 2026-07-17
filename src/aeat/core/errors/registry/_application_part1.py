@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_CORPUS_SEARCH_DEPENDENCY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_corpus_search_dependency",
-            default_suggestion='pip install "cadrumo[search]"',
+            default_suggestion='pip install "aeat-cli[search]"',
             retryable=False,
             runbook_id=None,
         ),

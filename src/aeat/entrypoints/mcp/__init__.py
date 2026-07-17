@@ -6,7 +6,7 @@ annotations from the Layer 0 capability manifest (``aeat app contract``). The
 human-in-the-loop confirmation tiers and the faithfulness check live here too.
 
 The protocol runtime (the MCP SDK) is an optional dependency gated behind the
-``cadrumo[agent]`` extra and imported lazily by :func:`main`; the tool-building,
+``aeat-cli[agent]`` extra and imported lazily by :func:`main`; the tool-building,
 annotation, HITL, faithfulness, and dispatch logic in this package is
 SDK-independent and fully unit-tested. A bare-core invocation of the ``aeat-mcp``
 console script refuses with the install hint rather than crashing - the same
@@ -67,7 +67,7 @@ __all__ = [
 def main() -> None:
     """Console-script entry point for the ``aeat-mcp`` server.
 
-    Lazily imports the MCP SDK runtime. If the ``cadrumo[agent]`` extra is not
+    Lazily imports the MCP SDK runtime. If the ``aeat-cli[agent]`` extra is not
     installed, it refuses with the install hint and a non-zero exit rather than
     raising a raw ``ModuleNotFoundError``.
     """

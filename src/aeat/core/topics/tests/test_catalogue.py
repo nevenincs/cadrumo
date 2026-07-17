@@ -15,7 +15,7 @@ See Also:
         Registry citation projection service that consumes topic records for
         operator-facing reports.
     Governing vault records
-        ``2026-05-08-cadrumo-gap-closure-plan`` introduced the conceptual topic
+        ``2026-05-08-aeat-cli-gap-closure-plan`` introduced the conceptual topic
         catalogue, while ``2026-05-13-cli-workflow-redesign-epic-plan`` moved
         topic exposure under registry-owned citation services.
 """
@@ -33,6 +33,7 @@ from .. import Topic, TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+assert __package__ is not None
 topics_module = sys.modules[__package__.removesuffix(".tests")]
 
 _EXPECTED_TOPICS = frozenset(

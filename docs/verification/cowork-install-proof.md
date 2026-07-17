@@ -28,7 +28,7 @@ official support material asserting cloud execution for Cowork connectors
 
 - The publish blocker was removed for local delivery by pointing the
   installed plugin's `.mcp.json` at the locally built slim wheel
-  (`uvx --from "cadrumo[agent] @ file:///…/aeat-0.1.0-py3-none-any.whl"
+  (`uvx --from "aeat-cli[agent] @ file:///…/aeat-0.1.0-py3-none-any.whl"
   aeat-mcp` — the same command shape the published flow uses; the PyPI form
   returns after the first publish).
 - A live headless session of the Desktop app's OWN embedded runtime

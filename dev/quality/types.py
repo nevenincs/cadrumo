@@ -68,7 +68,7 @@ _IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = (
         "ty",
         "unresolved-import",
         "model2vec",
-        "model2vec is the optional cadrumo[search] extra, absent from the type-check env; "
+        "model2vec is the optional aeat-cli[search] extra, absent from the type-check env; "
         "no types-model2vec distribution exists.",
     ),
     _ExternalGap(
@@ -76,7 +76,7 @@ _IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = (
         "pyright",
         "reportMissingImports",
         "model2vec",
-        "model2vec is the optional cadrumo[search] extra, not installed in the type-check env.",
+        "model2vec is the optional aeat-cli[search] extra, not installed in the type-check env.",
     ),
     _ExternalGap(
         "adapters/outbound/google/tests/_drive_media_server.py",

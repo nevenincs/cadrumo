@@ -130,9 +130,9 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("cadrumo-*.whl"))
+    wheels = sorted(out_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
-        raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
+        raise AssertionError(f"expected exactly one aeat_cli-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     return wheels[0]
 
 
@@ -143,14 +143,14 @@ def test_data_root_exists_in_worktree() -> None:
 
 
 def test_wheel_filename_matches_distribution(built_wheel: Path) -> None:
-    """The built wheel follows the expected ``cadrumo-<version>-py3-none-any.whl`` shape.
+    """The built wheel follows the expected ``aeat_cli-<version>-py3-none-any.whl`` shape.
 
-    The PyPI distribution is ``cadrumo`` (the import package stays ``aeat``), so
+    The PyPI distribution is ``aeat-cli`` (the import package stays ``aeat``), so
     the wheel filename normalises the distribution name to ``aeat_cli`` — matching
-    the ``cadrumo-*.whl`` glob the ``built_wheel`` fixture already uses.
+    the ``aeat_cli-*.whl`` glob the ``built_wheel`` fixture already uses.
     """
 
-    assert re.match(r"^cadrumo-[0-9.]+(\.[a-z0-9]+)?-py3-none-any\.whl$", built_wheel.name), (
+    assert re.match(r"^aeat_cli-[0-9.]+(\.[a-z0-9]+)?-py3-none-any\.whl$", built_wheel.name), (
         f"unexpected wheel filename: {built_wheel.name}"
     )
 
@@ -170,7 +170,7 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     """The Renta ``source.pdf`` corpus binaries are absent from the slim wheel.
 
     They are corpus source binaries under ``corpus/manuals`` and ship in the
-    ``cadrumo-data-manuals`` companion, not this wheel; asserting their absence pins
+    ``aeat-data-manuals`` companion, not this wheel; asserting their absence pins
     the wheel-split boundary at exactly the highest-value binaries the prior
     contract force-shipped.
     """
@@ -185,7 +185,7 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     leaked = sorted(renta_pdfs & names)
     assert not leaked, (
         f"the slim wheel still ships Renta corpus source PDFs the wheel-split excludes: {leaked!r}; "
-        "they belong in the cadrumo-data-manuals companion distribution"
+        "they belong in the aeat-data-manuals companion distribution"
     )
 
 

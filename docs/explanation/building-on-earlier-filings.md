@@ -1,10 +1,6 @@
 # How filings build on earlier ones
 
-This page covers the connections between filings: why a yearly summary needs
-the quarters that came before it, how the tool carries figures forward from
-your earlier filings, and - just as important - what it leaves for you to
-check. It is for anyone preparing a form that depends on earlier periods or
-on the whole year.
+Some forms can't be filled from a single period's records alone. A yearly summary needs the quarters that came before it. An income-tax return needs the instalments you paid through the year. This page explains why that happens, how the tool carries figures forward from your earlier filings, and - just as important - what it leaves for you to check. It's for anyone preparing a form that depends on earlier periods or on the whole year.
 
 If you want how a single period's figures are built from your records, see [How your records become tax figures](from-records-to-figures.md). This page is about the connections *between* filings.
 
@@ -37,7 +33,7 @@ That running record needs a true starting point. The first time you use the tool
 
 People make mistakes with an opening balance, so there's a correction path. You can fix a wrong opening balance after the fact. One guard protects you: the tool refuses to change the basis of a period you've already completed and marked as filed. Rewriting a figure that a filed return already relied on would quietly change that return after the fact, so the correction is refused and names the filing that's in the way. If you hit that, the figure is locked because a filing already used it - which is exactly when you'd want it locked.
 
-To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). The whole cycle - seeding the opening balance, a credit quarter, the carry, and the annual summary - is demonstrated live in [The IVA year](../tutorials/iva-lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
+To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). For the yearly IVA summary that draws on these periods, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
 
 ## The annual income-tax return pulls the year together
 

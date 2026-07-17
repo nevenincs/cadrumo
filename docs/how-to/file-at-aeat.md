@@ -1,8 +1,7 @@
 # Upload your exported modelo at the AEAT portal
 
-This page covers the handoff from a verified draft to a real filing at AEAT,
-as an ordered checklist: export the file, upload it yourself at the portal,
-save the justificante, and record the filing locally. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
+This guide walks you through the handoff from a verified draft to a real filing
+at AEAT, as an ordered checklist. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
 AEAT. You upload the exported file at the AEAT portal yourself, signed with
 your own credentials. The `work file` command at the end records a local marker
 only; it does not and cannot file on your behalf.
@@ -65,10 +64,7 @@ The exported `.boe` file is a fixed-width text file in the official BOE
 export runs entirely on your machine and never contacts AEAT.
 
 The command prints the written file's path, its size in bytes, and its SHA-256
-checksum. Record the checksum - it is a fingerprint of the file's exact
-contents (change a single digit and the code changes completely), so if a
-question ever comes up about which version you filed, re-derive the checksum
-from the file on disk and compare: matching codes mean it is the same file.
+checksum. Record the checksum - it identifies exactly which file you uploaded.
 
 ## Step 3: upload the file at the AEAT portal yourself
 
@@ -131,9 +127,9 @@ mismatches, see [reconcile a filing](reconcile.md).
 
 With AEAT authentication configured, skip the manual download and let the
 tool fetch the receipt itself: `aeat app modelo reconcile pull` pulls the
-justificante from AEAT, stores it as encrypted evidence in your profile, and
-reconciles in one step — see
-[Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).
+justificante from AEAT and reconciles in one step, and
+[Pull and keep your filing receipts](justificante-receipts.md) stores it as
+encrypted evidence in your profile.
 
 ## If something goes wrong at the portal
 

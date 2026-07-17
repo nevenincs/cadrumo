@@ -1,10 +1,10 @@
 """Hatchling build hook: force-include the ``manuals`` corpus source binaries.
 
-The ``cadrumo-data-manuals`` companion ships exactly the corpus source binaries
+The ``aeat-data-manuals`` companion ships exactly the corpus source binaries
 under ``_data/corpus/manuals`` — the AEAT/BOE práctico manuals (``*.pdf``) — read
 from the ONE source tree at ``src/aeat/_data/corpus`` and mapped to the mirrored
 ``aeat_data/_data/corpus`` layout the runtime corpus-locator seam resolves. It is
-one of two disjoint sub-cap companions (the other, ``cadrumo-data-official``, ships
+one of two disjoint sub-cap companions (the other, ``aeat-data-official``, ships
 ``corpus/aeat_official`` and ``corpus/normatives``); together they cover every
 corpus source binary the slim ``aeat`` wheel excludes, each staying under PyPI's
 100 MB per-file cap so no size grant is needed.
@@ -51,7 +51,7 @@ _CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx"})
 _TARGET_PREFIX = "aeat_data/_data/corpus"
 
 # The corpus top-level subtrees this companion owns. The sibling
-# ``cadrumo-data-official`` owns ``aeat_official`` and ``normatives``; the two sets
+# ``aeat-data-official`` owns ``aeat_official`` and ``normatives``; the two sets
 # are disjoint and their union is every corpus subtree carrying source binaries.
 _OWNED_SUBDIRS = frozenset({"manuals"})
 
@@ -76,7 +76,7 @@ def _corpus_root(hook_root: Path) -> Path | None:
 class CustomBuildHook(BuildHookInterface):
     """Force-include this companion's corpus source binaries under the mirrored tree."""
 
-    PLUGIN_NAME = "cadrumo-data-manuals-corpus"
+    PLUGIN_NAME = "aeat-data-manuals-corpus"
 
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:
         """Inject the owned corpus source binaries into the build's force-include map."""

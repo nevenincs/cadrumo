@@ -1,17 +1,8 @@
 # Review calculations with Google Sheets
 
-This page covers the spreadsheet review of a modelo calculation: exporting it
-to Google Sheets, checking how each total is reached with live formulas, and
-pulling your reviewed edits back so the tool records them against your
-filing. This workflow is for reviewing calculated values after your profile
-and transactions are ready. It is not a bank statement import or bulk edit
-tool.
-
-Google Sheets is the review surface. The tool can also produce an offline
-`.xlsx` file, but that file is a fixed record of the calculation and its
-supporting evidence - a copy you can keep - not an editable review tool: it
-does not recompute, and there is no way to edit it and feed changes back.
-Use Google Sheets when you want to review and adjust.
+Use this guide when you want to review a modelo calculation in a Google Sheets
+spreadsheet. This workflow is for reviewing calculated values after your profile
+and transactions are ready. It is not a bank statement import or bulk edit tool.
 
 ## Before you start
 

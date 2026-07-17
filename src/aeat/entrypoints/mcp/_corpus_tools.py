@@ -12,7 +12,7 @@ functions over typed models: :func:`corpus_search_payload_from_response` and
 :func:`render_corpus_search_text` carry no protocol detail and are unit-tested
 directly, while :func:`build_corpus_search_tool` lazily adapts onto the MCP
 SDK's ``Tool`` type so the module still imports (and the server refuses
-gracefully) when the ``cadrumo[agent]`` extra is absent. The retrieval itself is
+gracefully) when the ``aeat-cli[agent]`` extra is absent. The retrieval itself is
 owned by the application service (:func:`~application.corpus_search.search_corpus`),
 consumed through the package facade per ``service-imports-via-top-level-reexports``.
 """
@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...application.corpus_search import RetrievalMode, RetrievalResponse, search_corpus
 
 if TYPE_CHECKING:
-    # Typing-only: the MCP SDK is an optional runtime dependency (``cadrumo[agent]``);
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``);
     # the real import stays deferred to inside the function body below.
     from mcp.types import Tool
 
@@ -166,7 +166,7 @@ def build_corpus_search_tool() -> Tool:
     """Build the SDK ``Tool`` for the grounding search tool.
 
     Lazily imports the SDK types so the module imports without the
-    ``cadrumo[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``: it
+    ``aeat-cli[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``: it
     reads the bundled corpus and never mutates state.
 
     Returns:

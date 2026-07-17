@@ -371,11 +371,3 @@ cache/
 # Runtime markers & nested provider locks (machine-local, never team-shared)
 .qdrant-initialized
 .agents/mcp_config.json.lock
-
-# React/Vite frontend build artefacts
-/frontend/node_modules/
-/frontend/dist/
-/frontend/build/
-/frontend/output/
-/frontend/*.tsbuildinfo
-/.playwright-cli/

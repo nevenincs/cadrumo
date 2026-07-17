@@ -7,7 +7,7 @@ that bind the regime itself, plus the cross-version fixture-coverage harness.
 - **Version-milestone tripwire.** While ``COMPATIBILITY_REGIME`` is
   ``PRE_RELEASE`` the package version must stay below ``1.0.0``. This catches
   a 1.0 cut made without consciously flipping the regime — the safety net the
-  ADR keeps behind the primary constant-owned decision.
+  policy keeps behind the primary constant-owned decision.
 - **One-way coherence.** ``RELEASED_FORMAT_FLOORS`` is populated if and only
   if the regime is ``RELEASED``. The frozen floors and the regime constant
   can never drift apart.
@@ -21,8 +21,7 @@ assertion below is either the live pre-release truth or vacuously green.
 Reads only the public ``aeat.core`` compatibility-lifecycle policy — never a
 tier's private floor/version constants, which stay intra-package.
 
-Governing vault record
-    ``2026-07-09-compatibility-lifecycle-adr``.
+The compatibility-lifecycle policy governs this gate.
 """
 
 from __future__ import annotations
@@ -45,7 +44,7 @@ from ..core import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DISTRIBUTION_NAME: Final[str] = "cadrumo"
+_DISTRIBUTION_NAME: Final[str] = "aeat-cli"
 
 #: The persisted-format tiers a released floor key may name: the secure-object
 #: substrate, the portable profile bundle, and the sealed archive. The

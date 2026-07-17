@@ -2,18 +2,18 @@
 
 The split ships the runtime as a slim ``aeat`` wheel with the corpus source
 binaries excluded, plus TWO sub-cap companion distributions carrying exactly
-those binaries between them: ``cadrumo-data-manuals`` (``corpus/manuals``) and
-``cadrumo-data-official`` (``corpus/aeat_official`` + ``corpus/normatives``). Both
+those binaries between them: ``aeat-data-manuals`` (``corpus/manuals``) and
+``aeat-data-official`` (``corpus/aeat_official`` + ``corpus/normatives``). Both
 contribute subtrees to the SAME ``aeat_data`` implicit namespace package, so the
 corpus seam resolves a binary from either portion. This lane proves both halves
 of the contract in a fresh stdlib venv:
 
 - **Core alone (advisory path):** the registry authority loads and validates
   non-fatally while emitting the loud :class:`CorpusCompanionAdvisory` naming
-  the missing set and the ``cadrumo[corpus-sources]`` install hint, and the
+  the missing set and the ``aeat-cli[corpus-sources]`` install hint, and the
   companion-guarded ``aeat app registry verify`` verb refuses instructively.
 - **With both companions (byte-identical path):** the same venv, after
-  installing the two ``cadrumo-data-*`` wheels, resolves the binaries through the
+  installing the two ``aeat-data-*`` wheels, resolves the binaries through the
   corpus seam over the joined namespace, the advisory disappears, and full
   byte-exact source verification runs clean — behaviour identical to a full
   checkout.
@@ -54,7 +54,7 @@ advisories = [w for w in caught if issubclass(w.category, CorpusCompanionAdvisor
 if not advisories:
     raise SystemExit("expected the loud CorpusCompanionAdvisory in a companion-less split install")
 message = str(advisories[0].message)
-if "cadrumo[corpus-sources]" not in message:
+if "aeat-cli[corpus-sources]" not in message:
     raise SystemExit(f"advisory does not name the install hint: {message!r}")
 print("split-advisory-ok")
 """
@@ -99,7 +99,7 @@ def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
-    wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
+    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[w.name for w in wheels]!r}")
     with zipfile.ZipFile(wheels[0]) as bundle:
@@ -115,8 +115,8 @@ def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
 
 # The two corpus companions and the wheel glob each emits, in install order.
 _DATA_COMPANIONS = (
-    ("aeat_data_manuals", "cadrumo_data_manuals-*.whl"),
-    ("aeat_data_official", "cadrumo_data_official-*.whl"),
+    ("aeat_data_manuals", "aeat_data_manuals-*.whl"),
+    ("aeat_data_official", "aeat_data_official-*.whl"),
 )
 
 # PyPI's default per-file size cap, in the decimal-MB convention the publish and
@@ -125,7 +125,7 @@ _PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 
 
 def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
-    """Build both ``cadrumo-data-*`` companion wheels from their in-repo projects.
+    """Build both ``aeat-data-*`` companion wheels from their in-repo projects.
 
     Each companion wheel is asserted sub-cap here too: a companion that crossed
     PyPI's 100 MB per-file limit would defeat the entire reason for the split.
@@ -192,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     print("extracting pristine HEAD tree for owner-clean wheel builds", flush=True)
     build_root = _head_extract(repo_root, work_dir)
 
-    print("building slim cadrumo wheel and both cadrumo-data-* companion wheels", flush=True)
+    print("building slim aeat wheel and both aeat-data-* companion wheels", flush=True)
     wheel = _build_slim_wheel(build_root, work_dir, uv)
     data_wheels = _build_data_wheels(build_root, work_dir, uv)
 
@@ -204,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     _run([str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE], cwd=work_dir)
     _assert_registry_verify_refuses(work_dir, venv_path)
 
-    print("installing BOTH cadrumo-data-* companions into the same venv", flush=True)
+    print("installing BOTH aeat-data-* companions into the same venv", flush=True)
     for data_wheel in data_wheels:
         _install_target_with_pip(work_dir, str(data_wheel.resolve()), venv_path)
 
@@ -224,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
         checks=(
             "pristine HEAD extract",
             "slim wheel build sheds every corpus binary",
-            "both cadrumo-data-* companion wheels build sub-cap (< 100 MB each)",
+            "both aeat-data-* companion wheels build sub-cap (< 100 MB each)",
             "stdlib venv creation",
             "slim-wheel-only pip install",
             "companion-less registry load emits the loud advisory",

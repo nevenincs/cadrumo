@@ -49,8 +49,7 @@ _LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 # ── Project metadata ────────────────────────────────────────────────────────
 project = str(_PYPROJECT["name"])
 author = ", ".join(author["name"] for author in _PYPROJECT.get("authors", []))
-# Human-facing footer credit; the packaging author handle stays in pyproject.
-copyright = "2026, the cadrumo authors"
+copyright = f"2026, {author}"
 release = str(_PYPROJECT["version"])
 version = release
 
@@ -250,16 +249,9 @@ if os.environ.get("AEAT_DOCS_OFFLINE"):
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "Cadrumo Documentation — Local Tax Engine"
-html_short_title = "Cadrumo Docs"
+html_title = "aeat-cli - local Spanish tax-file automation"
+html_short_title = "aeat-cli"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
-sitemap_url_scheme = "{link}"
-html_meta = {
-    "description": (
-        "Local tax engine with CLI, MCP, rules, skills, and scoped agents. "
-        "Deterministic calculations. LLM-assisted operation. No filing."
-    ),
-}
 html_favicon = "_static/aeat-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
@@ -426,12 +418,13 @@ html_context = {
         },
     ],
     "aeat_footer_note": (
-        "Cadrumo is an independent local tax engine that does not file declarations or represent a public authority."
+        "aeat is pre-alpha, local-first software. It is not tax advice, is not affiliated with AEAT, "
+        "and never replaces official AEAT tools or professional review."
     ),
 }
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
-ogp_site_name = "Cadrumo Documentation"
+ogp_site_name = "aeat documentation"
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"

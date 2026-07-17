@@ -166,7 +166,7 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
         raise OutboundStorageNetworkError(
             "googleapiclient is not importable",
             context={"dependency": "google-api-python-client"},
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
             translated_message="adapters.outbound.storage.google_drive.errors.googleapiclient_import_failed",
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
@@ -900,7 +900,7 @@ def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRI
         raise OutboundStorageNetworkError(
             "googleapiclient.http is not importable",
             context={"dependency": "google-api-python-client"},
-            suggestion="pip install cadrumo[google]",
+            suggestion="pip install aeat-cli[google]",
             translated_message="adapters.outbound.storage.google_drive.errors.googleapiclient_import_failed",
         ) from exc
     return MediaIoBaseUpload(io.BytesIO(payload), mimetype=_BINARY_MIME_TYPE, resumable=False)

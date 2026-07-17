@@ -1,4 +1,4 @@
-"""Developer release-readiness gates for `cadrumo` (RC soak, audit-state, rollback).
+"""Developer release-readiness gates for `aeat-cli` (RC soak, audit-state, rollback).
 
 See Also:
     :mod:`~dev.release.readiness`

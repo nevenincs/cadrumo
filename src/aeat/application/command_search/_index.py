@@ -9,7 +9,7 @@ cooperating parts, the same shape the corpus grounding search uses (ADR
   above curated OUTCOME ALIASES above the human DESCRIPTION above the per-verb
   HELP, so a homonym token in a low-value column no longer outranks the correct
   command whose key carries it (the ``import`` mis-rank the review found);
-* a model2vec semantic side (behind the capability-gated ``cadrumo[search]``
+* a model2vec semantic side (behind the capability-gated ``aeat-cli[search]``
   extra, reused through the ``corpus_search`` public facade) that embeds the
   command docs and the query into one vector space and cosine-ranks them, so a
   concept query reaches the right verb across a Spanish/English or
@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 import sqlite3
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -105,24 +105,28 @@ class CommandHit(BaseModel):
     score: float
 
 
-def _spanish_stemmer() -> object | None:
+class _SpanishStemmer(Protocol):
+    """Minimal runtime contract supplied by the optional snowball package."""
+
+    def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - external package API spelling
+
+
+def _spanish_stemmer() -> _SpanishStemmer | None:
     try:
         import snowballstemmer
     except ModuleNotFoundError:
         return None
-    return snowballstemmer.stemmer("spanish")
+    # CAST-RATIONALE-SNOWBALL-STEMMER: optional dependency exposes the protocol at runtime without stubs.
+    return cast(_SpanishStemmer, snowballstemmer.stemmer("spanish"))
 
 
-def _stem_terms(stemmer: object | None, terms: Sequence[str]) -> list[str]:
+def _stem_terms(stemmer: _SpanishStemmer | None, terms: Sequence[str]) -> list[str]:
     if stemmer is None or not terms:
         return list(terms)
-    # TYPE-IGNORE-RATIONALE-STEMMER: the snowball stemmer is a duck-typed optional
-    # dependency (typed `object | None`); `stemWords` resolves at runtime on the
-    # concrete stemmer and cannot be statically attributed on `object`.
-    return list(stemmer.stemWords(list(terms)))  # type: ignore[attr-defined]
+    return stemmer.stemWords(list(terms))
 
 
-def _column_text(stemmer: object | None, raw: str) -> str:
+def _column_text(stemmer: _SpanishStemmer | None, raw: str) -> str:
     """Store a tier as raw plus stemmed text so one column matches both forms.
 
     Keeps the raw (diacritics-folded by the tokenizer) text alongside its

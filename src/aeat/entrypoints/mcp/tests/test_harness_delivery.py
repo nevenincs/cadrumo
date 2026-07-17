@@ -6,7 +6,7 @@ rules and the active persona verbatim (decision record R4's tools-only floor), a
 personas, resolves each to its verbatim ``text/markdown`` document, and refuses
 an unknown URI cleanly. The SDK-independent surface is asserted directly; the
 server wiring and capability negotiation are asserted through the real built
-``Server``. When the ``cadrumo[agent]`` extra is absent, the SDK-dependent build
+``Server``. When the ``aeat-cli[agent]`` extra is absent, the SDK-dependent build
 is asserted to fail at the optional-dependency boundary instead - the same
 graceful-degradation contract ``test_sdk_adaptation`` follows, never a skip.
 """
@@ -245,7 +245,7 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
     anyio.run(_drive)
 
 
-# --- whoami identity tool (ADR I1) --------------------------------------------
+# --- whoami identity tool -----------------------------------------------------
 
 
 def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:

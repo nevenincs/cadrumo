@@ -70,8 +70,7 @@ be calculated:
   before calculating. Censo facts can affect profile readiness and local
   classifications.
 - [Plan your filing calendar](filing-calendar.md) and confirm the period token
-  with [Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
-  Standard non-exempt
+  with [Understand filing periods](filing-periods.md). Standard non-exempt
   profiles use quarterly periods such as `1T`; monthly IVA-liquidation profiles
   such as REDEME or large-company taxpayers use monthly periods such as `01`.
 - [Import or add your transactions](import-bank-statements.md), then

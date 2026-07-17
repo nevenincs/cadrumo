@@ -1,12 +1,12 @@
 {
   "manifest_version": "0.2",
-  "name": "cadrumo",
-  "display_name": "Cadrumo tax assistant console",
-  "version": "0.2.0",
-  "description": "Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool surface: grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided workflows, and gated execution that never files to AEAT.",
-  "long_description": "The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client. It carries the operator rules, the taxpayer-situation skills, and guided-workflow prompts; a read-only corpus and terminology search for legal grounding; and a human-in-the-loop confirmation gate on every state-changing verb. Live submission to AEAT is permanently impossible — no such tool exists; the taxpayer files outside the app. All financial data stays on-host in encrypted storage; only the conversation and the figures the assistant sees reach the LLM client's provider.",
+  "name": "aeat",
+  "display_name": "AEAT tax assistant console",
+  "version": "0.1.0",
+  "description": "Operate the aeat Spanish-tax CLI as an MCP tool surface: grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided workflows, and gated execution that never files to AEAT.",
+  "long_description": "The aeat console exposes a deterministic Spanish-tax CLI to any MCP client. It carries the operator rules, the taxpayer-situation skills, and guided-workflow prompts; a read-only corpus and terminology search for legal grounding; and a human-in-the-loop confirmation gate on every state-changing verb. Live submission to AEAT is permanently impossible — no such tool exists; the taxpayer files outside the app. All financial data stays on-host in encrypted storage; only the conversation and the figures the assistant sees reach the LLM client's provider.",
   "author": {
-    "name": "Cadrumo project (neve.md)"
+    "name": "AEAT tax assistant project"
   },
   "server": {
     "type": "binary",

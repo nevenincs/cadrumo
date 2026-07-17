@@ -94,64 +94,6 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
     assert html_root.is_dir()
 
 
-def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
-    """The deployment override can serialize sitemap generation safely."""
-    from dev.docs.build import docs_build_jobs
-
-    assert docs_build_jobs({}) == "auto"
-    assert docs_build_jobs({"AEAT_DOCS_JOBS": "1"}) == "1"
-    with pytest.raises(SystemExit, match="positive integer"):
-        docs_build_jobs({"AEAT_DOCS_JOBS": "0"})
-
-
-def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
-    """Local docs keep records; deployment may index rendered pages alone."""
-    from dev.docs.build import pagefind_index_mode
-
-    assert pagefind_index_mode({}) == "full"
-    assert pagefind_index_mode({"AEAT_DOCS_PAGEFIND_MODE": "full"}) == "full"
-    assert pagefind_index_mode({"AEAT_DOCS_PAGEFIND_MODE": "pages"}) == "pages"
-
-
-def test_pagefind_index_mode_rejects_unknown_values() -> None:
-    """The deployment cannot silently select an unsupported search contract."""
-    from dev.docs.build import pagefind_index_mode
-
-    with pytest.raises(SystemExit, match="AEAT_DOCS_PAGEFIND_MODE"):
-        pagefind_index_mode({"AEAT_DOCS_PAGEFIND_MODE": "records-only"})
-
-
-def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> None:
-    """The deployed sitemap uses canonical URLs and omits generated surfaces."""
-    from defusedxml import ElementTree
-
-    from dev.docs.build import write_deployment_sitemap
-
-    for relative in (
-        "index.html",
-        "guide/index.html",
-        "guide/start.html",
-        "cli/index.html",
-        "api/client.html",
-        "_modules/aeat/client.html",
-        "search.html",
-    ):
-        page = tmp_path / relative
-        page.parent.mkdir(parents=True, exist_ok=True)
-        page.write_text("<html></html>", encoding="utf-8")
-
-    write_deployment_sitemap(tmp_path, "https://cadrumo.neve.md/docs")
-
-    sitemap = ElementTree.parse(tmp_path / "sitemap.xml")
-    locations = [(element.text or "") for element in sitemap.iter() if element.tag.endswith("loc")]
-    assert locations == [
-        "https://cadrumo.neve.md/docs/",
-        "https://cadrumo.neve.md/docs/cli/",
-        "https://cadrumo.neve.md/docs/guide/",
-        "https://cadrumo.neve.md/docs/guide/start.html",
-    ]
-
-
 @pytest.mark.parametrize(
     "changed_path",
     [

@@ -1,20 +1,16 @@
 [project]
-name = "cadrumo"
+name = "aeat-cli"
 version = "0.2.0"
-description = "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT."
+description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
-# Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
-# (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
-# license-file globs (license-posture ADR).
-license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
 ]
-keywords = ["cadrumo", "aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
+keywords = ["aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.13",
@@ -39,6 +35,10 @@ dependencies = [
   "cryptography>=47.0.0,<48",
   # XML parsing.
   "defusedxml>=0.7.1,<1",
+  # In-process Excel-formula evaluator reserved for the schema-to-sheet
+  # parity oracle. The production registry formula runtime does not import
+  # this package directly; the workbook parity gate owns the dependency.
+  "formulas>=1.2.0,<2",
   # HTTP client
   "httpx>=0.28.1,<1",
   # OS-keychain abstraction for the master-key provider (Windows
@@ -46,6 +46,9 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
+  # Financial ingest. ofxtools is the maintained, strict OFX-spec parser
+  # (ships py.typed) that replaces the prior unmaintained OFX library.
+  "ofxtools>=1.1,<2",
   "openpyxl>=3.1.5,<4",
   # PDF parsing for justificantes.
   "pdfplumber>=0.11.9,<1",
@@ -88,15 +91,15 @@ dependencies = [
 
 [project.scripts]
 aeat = "aeat.entrypoints.cli:main"
-# Operator MCP server (the `cadrumo[agent]` capability). Refuses with an install
+# Operator MCP server (the `aeat-cli[agent]` capability). Refuses with an install
 # hint when the agent extra is absent, so a bare-core install carries the script
 # without the runtime.
 aeat-mcp = "aeat.entrypoints.mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/nevenincs/cadrumo"
-Issues = "https://github.com/nevenincs/cadrumo/issues"
-Repository = "https://github.com/nevenincs/cadrumo"
+Homepage = "https://github.com/nevenincs/aeat"
+Issues = "https://github.com/nevenincs/aeat/issues"
+Repository = "https://github.com/nevenincs/aeat"
 
 [project.optional-dependencies]
 workbook-windows = [
@@ -129,14 +132,6 @@ browser = [
 # subprocess CLI providers, which need no Python SDK).
 anthropic = [
   "anthropic>=0.74.1,<1",
-]
-# OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
-# parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
-# keeps the CORE dependency closure free of strong copyleft (license-posture
-# ADR). Lazily imported behind `require_optional_extra(OFX_EXTRA)`; an OFX
-# source without the extra refuses with the `pip install cadrumo[ofx]` hint.
-ofx = [
-  "ofxtools>=1.1,<2",
 ]
 # Operator agent-harness runtime. The harness operating layer (rules, personas,
 # skills) ships as reviewed product data in the CORE wheel under
@@ -171,8 +166,8 @@ search = [
 ]
 # Corpus source binaries (official AEAT PDF/XLS/XLSX) as TWO sub-cap companion
 # distributions, each exact-version-locked to this package. The binaries split
-# along the corpus directory seam — `cadrumo-data-manuals` ships `corpus/manuals`,
-# `cadrumo-data-official` ships `corpus/aeat_official` + `corpus/normatives` — so
+# along the corpus directory seam — `aeat-data-manuals` ships `corpus/manuals`,
+# `aeat-data-official` ships `corpus/aeat_official` + `corpus/normatives` — so
 # each wheel stays under PyPI's 100 MB per-file cap and no size grant is needed;
 # together they cover every corpus source binary. The slim core wheel excludes
 # these binaries (the wheel excludes below); without BOTH companions the
@@ -181,20 +176,19 @@ search = [
 # source verification is byte-identical to a full checkout. Reviewed data ships
 # as an artifact — never fetched at install or run time (product-packaging ADR).
 corpus-sources = [
-  "cadrumo-data-manuals==0.2.0",
-  "cadrumo-data-official==0.2.0",
+  "aeat-data-manuals==0.1.1",
+  "aeat-data-official==0.1.1",
 ]
 # Convenience aggregate: every optional integration at once. `corpus-sources`
 # is deliberately excluded until the two data companions are published on PyPI
 # (both are sub-cap and need no size grant; see RELEASING.md) — including it now
-# would make `cadrumo[all]` unresolvable.
+# would make `aeat-cli[all]` unresolvable.
 all = [
-  "cadrumo[google]",
-  "cadrumo[browser]",
-  "cadrumo[anthropic]",
-  "cadrumo[ofx]",
-  "cadrumo[agent]",
-  "cadrumo[search]",
+  "aeat-cli[google]",
+  "aeat-cli[browser]",
+  "aeat-cli[anthropic]",
+  "aeat-cli[agent]",
+  "aeat-cli[search]",
 ]
 
 [build-system]
@@ -216,8 +210,8 @@ exclude = [
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `aeat app registry` verification verbs at runtime.
-  # They ship in the two `cadrumo-data-manuals` / `cadrumo-data-official` companion
-  # distributions (installed together via the `cadrumo[corpus-sources]` extra)
+  # They ship in the two `aeat-data-manuals` / `aeat-data-official` companion
+  # distributions (installed together via the `aeat-cli[corpus-sources]` extra)
   # under a mirrored `aeat_data/_data/corpus` tree; the corpus locator resolves
   # either root. Every derived surface the
   # grounding search and legal gates read at runtime — extracted text
@@ -259,10 +253,10 @@ torch = [
 ]
 # The two data companions are not yet on PyPI, so the dev resolver builds each
 # from its in-repo project. uv sources never reach the published wheel metadata:
-# an installed `cadrumo[corpus-sources]` still resolves the bare
-# `cadrumo-data-manuals==0.1.0` / `cadrumo-data-official==0.1.0` pins from the index.
-cadrumo-data-manuals = { path = "packaging/aeat_data_manuals" }
-cadrumo-data-official = { path = "packaging/aeat_data_official" }
+# an installed `aeat-cli[corpus-sources]` still resolves the bare
+# `aeat-data-manuals==0.1.0` / `aeat-data-official==0.1.0` pins from the index.
+aeat-data-manuals = { path = "packaging/aeat_data_manuals" }
+aeat-data-official = { path = "packaging/aeat_data_official" }
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -290,7 +284,6 @@ dev = [
   "playwright>=1.58.0",
   "playwright-stealth>=2.0.3,<3",
   "anthropic>=0.74.1,<1",
-  "ofxtools>=1.1,<2",
   "prek>=0.2.0",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
@@ -613,7 +606,7 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "dev/docs/tests/test_docs_build.py" = ["S603"]
-# The cadrumo-data distribution gate builds the two companion wheels with the
+# The aeat-data distribution gate builds the two companion wheels with the
 # trusted `uv` build driver and enumerates corpus binaries via `git ls-files`
 # (partial paths resolved from PATH by design), mirroring the src/aeat
 # wheel-build gates.
@@ -926,7 +919,8 @@ ignore_decorators = [
 
 # ── Deptry (unused / transitive dependency lint) ─────────────────────────────
 # Suppress the false positives surfaced by deptry's default heuristics.
-# `rich` is the direct version pin for
+# `formulas` is owned by the workbook parity oracle even though production
+# imports do not reference it directly yet. `rich` is the direct version pin for
 # Typer's console rendering. `pydantic_core` is re-exported by pydantic
 # (legitimate transitive use), and `click` ships under typer (typer's CLI
 # surface is built on click). The remaining diagnostics flag genuine drift and
@@ -935,12 +929,12 @@ ignore_decorators = [
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-# `cadrumo`: the `all` convenience extra self-references the capability extras
-# (`cadrumo[google]` etc.); deptry reads the self-reference as an unused dependency.
-# `cadrumo-data-manuals` / `cadrumo-data-official`: two data-only companion
+# `aeat-cli`: the `all` convenience extra self-references the capability extras
+# (`aeat-cli[google]` etc.); deptry reads the self-reference as an unused dependency.
+# `aeat-data-manuals` / `aeat-data-official`: two data-only companion
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `aeat_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-DEP002 = ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "python-dotenv", "rich", "tzdata"]
+DEP002 = ["aeat-cli", "aeat-data-manuals", "aeat-data-official", "formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]

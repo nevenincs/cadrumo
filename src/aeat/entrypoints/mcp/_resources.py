@@ -14,14 +14,14 @@ Like ``_tools`` / ``_meta_tools`` / ``_prompts``, this module is SDK-independent
 pure functions over typed models: ``_server`` adapts :class:`HarnessResourceRef`
 to the SDK ``Resource``, :class:`HarnessResourceTemplate` to ``ResourceTemplate``,
 and :class:`HarnessResourceContent` to the read result, so this module imports
-with or without the ``cadrumo[agent]`` extra and is unit-tested directly.
+with or without the ``aeat-cli[agent]`` extra and is unit-tested directly.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from enum import StrEnum
-from importlib.resources.abc import Traversable
+from importlib.resources.abc import Traversable  # nosem
 
 from pydantic import BaseModel, ConfigDict, Field
 

@@ -12,7 +12,7 @@ same :data:`OPTIONAL_EXTRAS` registry through
 :func:`application.provisioning.probe_optional_extra`. :func:`require_optional_extra`
 is the seam every feature boundary calls before its lazy import so a missing
 extra becomes one instructive :class:`MissingOptionalExtraError` naming
-``pip install cadrumo[<extra>]`` instead of a raw deep-stack
+``pip install aeat-cli[<extra>]`` instead of a raw deep-stack
 ``ModuleNotFoundError``.
 
 These records describe package availability only. They do not decide whether an
@@ -33,7 +33,6 @@ __all__ = [
     "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
     "GOOGLE_EXTRA",
-    "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
     "MissingOptionalExtraError",
     "OptionalExtra",
@@ -64,7 +63,7 @@ class OptionalExtra(BaseModel):
         This is a dependency remediation hint, not a runtime provisioning command
         such as ``playwright install chromium``.
         """
-        return f"pip install cadrumo[{self.extra}]"
+        return f"pip install aeat-cli[{self.extra}]"
 
 
 # The capability-mapped optional extras declared in
@@ -73,11 +72,8 @@ class OptionalExtra(BaseModel):
 GOOGLE_EXTRA = OptionalExtra(extra="google", import_name="googleapiclient", feature="Google Drive / Sheets export")
 BROWSER_EXTRA = OptionalExtra(extra="browser", import_name="playwright", feature="live AEAT browser automation")
 ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feature="the Anthropic-API LLM provider")
-# ``ofxtools`` is GPL-3.0-only; gating it behind an extra keeps the CORE
-# dependency closure free of strong copyleft (license-posture ADR).
-OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
 
-OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA)
+OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA)
 
 
 class MissingOptionalExtraError(CoreError, ImportError):
@@ -92,7 +88,7 @@ class MissingOptionalExtraError(CoreError, ImportError):
 
     Attributes:
         extra: Optional-extra registry record that failed the spec-only probe.
-        install_hint: Exact ``pip install cadrumo[<extra>]`` remediation command.
+        install_hint: Exact ``pip install aeat-cli[<extra>]`` remediation command.
     """
 
     def __init__(self, extra: OptionalExtra) -> None:

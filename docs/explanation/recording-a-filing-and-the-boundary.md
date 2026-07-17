@@ -1,10 +1,6 @@
 # Recording a filing, and why the tool never files for you
 
-This page covers the last stretch of the journey: the line between the work
-you do on your own computer and the real Agencia Estatal de Administración
-Tributaria (AEAT, the Spanish tax agency). The short answer is that you file
-it yourself, and the tool keeps a careful record around that act. This page
-is about why the boundary sits where it does.
+This page explains the last stretch of the journey: the line between the work you do on your own computer and the real Agencia Estatal de Administración Tributaria (AEAT, the Spanish tax agency). It is for everyday autónomos who have built a modelo, checked it, and now want to know how filing actually happens. The short answer is that you file it yourself, and the tool keeps a careful record around that act. This page is about why the boundary sits where it does.
 
 ## The boundary is permanent
 
@@ -40,13 +36,13 @@ For the steps, see [Reconcile a filed modelo against its justificante](../how-to
 
 ## What this comparison can and can't tell you
 
-The comparison confirms that your local record matches the receipt's header
-fields - the modelo, the filing year, the period, and your tax ID - and
-names any field that disagrees. It does not compare individual box values,
-and it is not a live re-check of your maths against the agency: none of
-these steps re-derives your tax; they confirm what was filed and keep proof
-of it. The precise scope and the mismatch-handling steps are in
-[Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
+State this plainly, because it's easy to expect more than the tool delivers.
+
+The comparison confirms that your local record matches the receipt's header fields - the modelo, the filing year, the period, and your tax ID. If your record and the receipt agree, it tells you so. If they disagree, it names the fields that don't match. It does not compare the individual box values; it checks that the receipt is for the same return.
+
+It is **not** a live re-check of your maths against the agency. The tool does not ask AEAT to recompute your return and compare answers. It compares your record against a receipt you already hold, at the level of the header fields that identify the return.
+
+The tool can also save read-only copies of the agency's own record as evidence - keeping a copy of what AEAT holds, so you have it on file. That too is comparison and record-keeping, not a fresh calculation. None of these steps re-derives your tax; they confirm what was filed and keep proof of it.
 
 ## Where this sits in the journey
 

@@ -20,12 +20,6 @@ Each OFX transaction is projected into a
 ``TRNAMT`` value determines
 :class:`~domain.transactions.TransactionDirection` and the stored raw
 transaction keeps the absolute magnitude plus OFX-native raw fields.
-
-``ofxtools`` is GPL-3.0-only and therefore capability-gated behind the
-``ofx`` optional extra (license-posture ADR): the import is lazy, guarded by
-:func:`~core.require_optional_extra`, so a bare-core install keeps the rest
-of the ledger import surface and refuses OFX sources with the
-``pip install cadrumo[ofx]`` hint.
 """
 
 from __future__ import annotations
@@ -36,7 +30,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol, override, runtime_checkable
 
-from .....core import OFX_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra
+from ofxtools.Parser import OFXTree
+
 from .....core.decimal import coerce_decimal
 from .....core.logging import get_logger
 from .....domain.transactions import SourceFormat
@@ -54,22 +49,6 @@ from ._base import (
 
 _logger = get_logger(__name__)
 _INPUT_OFX_SOURCE_LABEL = "<input-ofx>"
-
-
-def _looks_like_ofx(path: Path) -> bool:
-    """Return whether ``path`` plausibly is an OFX/QFX document, without ``ofxtools``.
-
-    A cheap suffix + header sniff (the same markers the detection registry
-    uses) so the missing-extra refusal fires only for sources the operator
-    actually meant as OFX, while non-OFX probe candidates degrade to a miss.
-    """
-    if path.suffix.lower() in {".ofx", ".qfx"}:
-        return True
-    try:
-        head = path.read_bytes()[:256].upper()
-    except OSError:
-        return False
-    return b"OFXHEADER" in head or b"<OFX>" in head or b"<BANKTRANLIST>" in head
 
 
 class _OfxAccountLike(Protocol):
@@ -122,28 +101,9 @@ class OfxProvider(FinancialProvider):
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that the OFX file can be parsed and carries at least one transaction.
 
-        Without the ``ofx`` optional extra installed this degrades along the
-        detection contract: a source that does not look like OFX is reported
-        as a plain probe miss (so ``--provider auto`` detection of other
-        formats keeps working), while a source that clearly IS OFX raises the
-        instructive :class:`~core.MissingOptionalExtraError` naming the
-        ``pip install cadrumo[ofx]`` remediation — never a silent
-        "no provider matched".
-
         Returns:
             A :class:`ProviderValidation` with the validation outcome.
-
-        Raises:
-            MissingOptionalExtraError: If the source looks like an OFX/QFX
-                document but the ``ofx`` extra is not installed.
         """
-        if not optional_extra_available(OFX_EXTRA):
-            if _looks_like_ofx(path):
-                raise MissingOptionalExtraError(OFX_EXTRA)
-            return ProviderValidation(
-                is_valid=False,
-                warnings=(f"OFX provider unavailable: {OFX_EXTRA.install_hint}",),
-            )
         try:
             statements = self._load_statements(path)
         except InvalidFinancialSourceError as exc:
@@ -223,14 +183,7 @@ class OfxProvider(FinancialProvider):
                 )
 
     def _load_statements(self, path: Path) -> tuple[_OfxStatementLike, ...]:
-        """Parse and spec-validate every statement block exposed by an OFX file.
-
-        Raises:
-            MissingOptionalExtraError: If the ``ofx`` extra is not installed.
-        """
-        require_optional_extra(OFX_EXTRA)
-        from ofxtools.Parser import OFXTree
-
+        """Parse and spec-validate every statement block exposed by an OFX file."""
         tree = OFXTree()
         try:
             with path.open("rb") as handle:

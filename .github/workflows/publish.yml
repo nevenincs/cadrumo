@@ -6,13 +6,13 @@
 # There is NO automatic trigger — no tag push, no schedule — a human presses
 # the button, matching the LOCAL-ONLY HUMAN-GATED release discipline's intent.
 #
-# `cadrumo` publishes WHEEL-ONLY: the sdist packs the full source tree including
+# `aeat` publishes WHEEL-ONLY: the sdist packs the full source tree including
 # the corpus source binaries (~180 MB, over PyPI's 100 MB default cap). The
 # guards below refuse a fat artifact outright, so dispatching from a branch
 # without the wheel-split build config fails loudly instead of uploading.
 #
-# The corpus source binaries ship in TWO sub-cap companions — `cadrumo-data-manuals`
-# and `cadrumo-data-official` — each built from its own in-repo project and each
+# The corpus source binaries ship in TWO sub-cap companions — `aeat-data-manuals`
+# and `aeat-data-official` — each built from its own in-repo project and each
 # under the 100 MB cap, so no PyPI size grant is required.
 name: publish
 
@@ -23,10 +23,10 @@ on:
         description: "Distribution to publish"
         type: choice
         options:
-          - cadrumo
-          - cadrumo-data-manuals
-          - cadrumo-data-official
-        default: cadrumo
+          - aeat
+          - aeat-data-manuals
+          - aeat-data-official
+        default: aeat
 
 permissions:
   contents: read
@@ -43,16 +43,16 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - name: Build cadrumo (wheel only)
-        if: ${{ inputs.distribution == 'cadrumo' }}
+      - name: Build aeat (wheel only)
+        if: ${{ inputs.distribution == 'aeat' }}
         run: uv build --wheel --out-dir dist
 
-      - name: Build cadrumo-data-manuals companion
-        if: ${{ inputs.distribution == 'cadrumo-data-manuals' }}
+      - name: Build aeat-data-manuals companion
+        if: ${{ inputs.distribution == 'aeat-data-manuals' }}
         run: uv build --wheel --project packaging/aeat_data_manuals --out-dir dist
 
-      - name: Build cadrumo-data-official companion
-        if: ${{ inputs.distribution == 'cadrumo-data-official' }}
+      - name: Build aeat-data-official companion
+        if: ${{ inputs.distribution == 'aeat-data-official' }}
         run: uv build --wheel --project packaging/aeat_data_official --out-dir dist
 
       - name: Guard the artifact (size cap, slim-wheel split)
@@ -66,20 +66,20 @@ jobs:
           wheel = wheels[0]
           size_mb = wheel.stat().st_size / 1e6
           print(f"{wheel.name}: {size_mb:.1f} MB")
-          # Every artifact must clear PyPI's 100 MB per-file cap now: the slim cadrumo
+          # Every artifact must clear PyPI's 100 MB per-file cap now: the slim aeat
           # wheel AND both sub-cap corpus companions. There is no size grant on
           # the critical path — a fat artifact means the wheel-split build config
-          # is missing (cadrumo) or the corpus seam partition needs rebalancing
+          # is missing (aeat) or the corpus seam partition needs rebalancing
           # (a companion).
           if size_mb > 100:
               sys.exit(f"{wheel.name} exceeds the 100 MB PyPI cap ({size_mb:.1f} MB) - was this dispatched "
                        "from a branch without the wheel-split build config, or has a companion grown over cap?")
-          if wheel.name.startswith("cadrumo-"):
+          if wheel.name.startswith("aeat_cli-"):
               leaked = [n for n in zipfile.ZipFile(wheel).namelist()
                         if n.startswith("aeat/_data/corpus/")
                         and n.lower().endswith((".pdf", ".xls", ".xlsx"))]
               if leaked:
-                  sys.exit(f"slim cadrumo wheel leaked {len(leaked)} corpus source binaries")
+                  sys.exit(f"slim aeat wheel leaked {len(leaked)} corpus source binaries")
           EOF
 
       - name: Publish to PyPI (Trusted Publishing)

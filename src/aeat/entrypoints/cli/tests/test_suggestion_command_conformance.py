@@ -5,7 +5,7 @@ error-registry ``default_suggestion`` fields, the curated operator help
 documents, ``next_action`` builder strings, the runtime write-policy, and the
 four locale catalogues all cite ``aeat app ...`` / ``aeat config ...``
 invocations that an operator is told to run next. The pull/--file standard
-rule (``cadrumo-pull-and-file-standard``) records that NONE of these strings
+rule (``aeat-cli-pull-and-file-standard``) records that NONE of these strings
 were covered by a conformance gate: ``test_documented_command_conformance``
 scans only the how-to docs, and ``test_json_schema_conformance`` only the
 envelope ``command=`` identifiers, so "a verb rename MUST be swept by hand"

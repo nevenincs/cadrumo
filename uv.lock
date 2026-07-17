@@ -26,6 +26,256 @@ wheels = [
 ]
 
 [[package]]
+name = "aeat-cli"
+version = "0.2.0"
+source = { editable = "." }
+dependencies = [
+    { name = "argon2-cffi" },
+    { name = "beautifulsoup4" },
+    { name = "cryptography" },
+    { name = "defusedxml" },
+    { name = "formulas" },
+    { name = "httpx" },
+    { name = "keyring" },
+    { name = "ofxtools" },
+    { name = "openpyxl" },
+    { name = "pdfplumber" },
+    { name = "pikepdf" },
+    { name = "prompt-toolkit" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pypdfium2" },
+    { name = "python-dotenv" },
+    { name = "python-i18n" },
+    { name = "pyyaml" },
+    { name = "questionary" },
+    { name = "rich" },
+    { name = "rtoml" },
+    { name = "sqlalchemy" },
+    { name = "typer" },
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+    { name = "xlrd" },
+]
+
+[package.optional-dependencies]
+agent = [
+    { name = "anyio" },
+    { name = "mcp" },
+]
+all = [
+    { name = "anthropic" },
+    { name = "anyio" },
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "google-auth-oauthlib" },
+    { name = "mcp" },
+    { name = "model2vec" },
+    { name = "numpy" },
+    { name = "playwright" },
+    { name = "playwright-stealth" },
+    { name = "snowballstemmer" },
+]
+anthropic = [
+    { name = "anthropic" },
+]
+browser = [
+    { name = "playwright" },
+    { name = "playwright-stealth" },
+]
+corpus-sources = [
+    { name = "aeat-data-manuals" },
+    { name = "aeat-data-official" },
+]
+google = [
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "google-auth-oauthlib" },
+]
+search = [
+    { name = "model2vec" },
+    { name = "numpy" },
+    { name = "snowballstemmer" },
+]
+workbook-windows = [
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "anthropic" },
+    { name = "complexipy" },
+    { name = "deptry" },
+    { name = "doc8" },
+    { name = "furo" },
+    { name = "google-api-python-client" },
+    { name = "google-api-python-client-stubs" },
+    { name = "google-auth" },
+    { name = "google-auth-oauthlib" },
+    { name = "import-linter" },
+    { name = "interrogate" },
+    { name = "myst-parser" },
+    { name = "pagefind", extra = ["extended"] },
+    { name = "playwright" },
+    { name = "playwright-stealth" },
+    { name = "prek" },
+    { name = "psutil" },
+    { name = "pydoclint" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-httpx" },
+    { name = "pytest-playwright" },
+    { name = "pytest-rerunfailures" },
+    { name = "pytest-xdist" },
+    { name = "radon" },
+    { name = "reportlab" },
+    { name = "ruff" },
+    { name = "sphinx" },
+    { name = "sphinx-autobuild" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-design" },
+    { name = "sphinx-hoverxref" },
+    { name = "sphinx-markdown-builder" },
+    { name = "sphinx-notfound-page" },
+    { name = "sphinx-sitemap" },
+    { name = "sphinxcontrib-mermaid" },
+    { name = "sphinxext-opengraph" },
+    { name = "syrupy" },
+    { name = "time-machine" },
+    { name = "torch", version = "2.12.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+    { name = "torch", version = "2.12.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "ty" },
+    { name = "types-defusedxml" },
+    { name = "types-openpyxl" },
+    { name = "types-pywin32" },
+    { name = "types-pyyaml" },
+    { name = "types-reportlab" },
+    { name = "types-xlrd" },
+    { name = "vaultspec-core" },
+    { name = "vaultspec-rag", extra = ["mcp"] },
+    { name = "vulture" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aeat-cli", extras = ["agent"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["anthropic"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["browser"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["google"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["search"], marker = "extra == 'all'" },
+    { name = "aeat-data-manuals", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_manuals" },
+    { name = "aeat-data-official", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_official" },
+    { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.74.1,<1" },
+    { name = "anyio", marker = "extra == 'agent'", specifier = ">=4.5,<5" },
+    { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
+    { name = "beautifulsoup4", specifier = ">=4.12,<5" },
+    { name = "cryptography", specifier = ">=47.0.0,<48" },
+    { name = "defusedxml", specifier = ">=0.7.1,<1" },
+    { name = "formulas", specifier = ">=1.2.0,<2" },
+    { name = "google-api-python-client", marker = "extra == 'google'", specifier = ">=2.195.0,<3" },
+    { name = "google-auth", marker = "extra == 'google'", specifier = ">=2.50.0,<3" },
+    { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = ">=1.3.1,<2" },
+    { name = "httpx", specifier = ">=0.28.1,<1" },
+    { name = "keyring", specifier = ">=25.6.0,<26" },
+    { name = "mcp", marker = "extra == 'agent'", specifier = ">=1.12,<2" },
+    { name = "model2vec", marker = "extra == 'search'", specifier = ">=0.8,<1" },
+    { name = "numpy", marker = "extra == 'search'", specifier = ">=1.26,<3" },
+    { name = "ofxtools", specifier = ">=1.1,<2" },
+    { name = "openpyxl", specifier = ">=3.1.5,<4" },
+    { name = "pdfplumber", specifier = ">=0.11.9,<1" },
+    { name = "pikepdf", specifier = ">=10.0.0,<11" },
+    { name = "playwright", marker = "extra == 'browser'", specifier = ">=1.58.0,<2" },
+    { name = "playwright-stealth", marker = "extra == 'browser'", specifier = ">=2.0.3,<3" },
+    { name = "prompt-toolkit", specifier = ">=3.0,<4" },
+    { name = "pydantic", specifier = ">=2.12.5,<3" },
+    { name = "pydantic-settings", specifier = ">=2.9.1,<3" },
+    { name = "pypdfium2", specifier = ">=5.7.1,<6" },
+    { name = "python-dotenv", specifier = ">=1.2.2,<2" },
+    { name = "python-i18n", specifier = ">=0.3.9,<1" },
+    { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'workbook-windows'", specifier = ">=311" },
+    { name = "pyyaml", specifier = ">=6.0.3,<7" },
+    { name = "questionary", specifier = ">=2.1.1,<3" },
+    { name = "rich", specifier = ">=14.2.0,<16" },
+    { name = "rtoml", specifier = ">=0.13.0,<1" },
+    { name = "snowballstemmer", marker = "extra == 'search'", specifier = ">=2.2,<4" },
+    { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
+    { name = "typer", specifier = ">=0.20.0,<1" },
+    { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
+    { name = "xlrd", specifier = ">=2.0.1,<3" },
+]
+provides-extras = ["workbook-windows", "google", "browser", "anthropic", "agent", "search", "corpus-sources", "all"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "anthropic", specifier = ">=0.74.1,<1" },
+    { name = "complexipy", specifier = ">=3.3.0" },
+    { name = "deptry", specifier = ">=0.24" },
+    { name = "doc8", specifier = ">=1.1" },
+    { name = "furo", specifier = ">=2024.8" },
+    { name = "google-api-python-client", specifier = ">=2.195.0,<3" },
+    { name = "google-api-python-client-stubs", specifier = ">=1.36" },
+    { name = "google-auth", specifier = ">=2.50.0,<3" },
+    { name = "google-auth-oauthlib", specifier = ">=1.3.1,<2" },
+    { name = "import-linter", specifier = ">=2.0" },
+    { name = "interrogate", specifier = ">=1.7.0" },
+    { name = "myst-parser", specifier = ">=4.0" },
+    { name = "pagefind", extras = ["extended"], specifier = ">=1.5,<2" },
+    { name = "playwright", specifier = ">=1.58.0" },
+    { name = "playwright-stealth", specifier = ">=2.0.3,<3" },
+    { name = "prek", specifier = ">=0.2.0" },
+    { name = "psutil", specifier = ">=5.9" },
+    { name = "pydoclint", specifier = ">=0.6" },
+    { name = "pyright", specifier = ">=1.1.409" },
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "pytest-asyncio", specifier = ">=1.0.0" },
+    { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "pytest-httpx", specifier = ">=0.35.0" },
+    { name = "pytest-playwright", specifier = ">=0.6.0" },
+    { name = "pytest-rerunfailures", specifier = ">=15.0" },
+    { name = "pytest-xdist", specifier = ">=3.6.0" },
+    { name = "radon", specifier = ">=6.0.1" },
+    { name = "reportlab", specifier = ">=4.4.10" },
+    { name = "ruff", specifier = ">=0.15.12" },
+    { name = "sphinx", specifier = ">=8.1,<9" },
+    { name = "sphinx-autobuild", specifier = ">=2024.10" },
+    { name = "sphinx-autodoc-typehints", specifier = ">=2.5" },
+    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
+    { name = "sphinx-design", specifier = ">=0.6" },
+    { name = "sphinx-hoverxref", specifier = ">=1.4" },
+    { name = "sphinx-markdown-builder", specifier = ">=0.6" },
+    { name = "sphinx-notfound-page", specifier = ">=1.1" },
+    { name = "sphinx-sitemap", specifier = ">=2.6" },
+    { name = "sphinxcontrib-mermaid", specifier = ">=1.0" },
+    { name = "sphinxext-opengraph", specifier = ">=0.9" },
+    { name = "syrupy", specifier = ">=4.7.0" },
+    { name = "time-machine", specifier = ">=2.16.0" },
+    { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.4" },
+    { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cu130" },
+    { name = "ty", specifier = ">=0.0.1a1" },
+    { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
+    { name = "types-openpyxl", specifier = ">=3.1.5.20260408" },
+    { name = "types-pywin32", specifier = ">=311.0.0.20260508" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20260510" },
+    { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
+    { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
+    { name = "vaultspec-core", specifier = ">=0.1.25" },
+    { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.2.28" },
+    { name = "vulture", specifier = ">=2.16" },
+]
+
+[[package]]
+name = "aeat-data-manuals"
+version = "0.1.1"
+source = { directory = "packaging/aeat_data_manuals" }
+
+[[package]]
+name = "aeat-data-official"
+version = "0.1.1"
+source = { directory = "packaging/aeat_data_official" }
+
+[[package]]
 name = "alabaster"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -156,260 +406,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/43/65/318323f98dbee45d4
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/c6/92fcd42f1ba33e1184263f25bfabf3d27c383410470f169e4b8163bf9c17/beautifulsoup4-4.15.0-py3-none-any.whl", hash = "sha256:d6f88de62e1d4e38ecb1077eb9724cd0eff29d2a08ca16a401e9b9e93f117cf9", size = 109924, upload-time = "2026-06-07T16:44:21.566Z" },
 ]
-
-[[package]]
-name = "cadrumo"
-version = "0.2.0"
-source = { editable = "." }
-dependencies = [
-    { name = "argon2-cffi" },
-    { name = "beautifulsoup4" },
-    { name = "cryptography" },
-    { name = "defusedxml" },
-    { name = "httpx" },
-    { name = "keyring" },
-    { name = "openpyxl" },
-    { name = "pdfplumber" },
-    { name = "pikepdf" },
-    { name = "prompt-toolkit" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pypdfium2" },
-    { name = "python-dotenv" },
-    { name = "python-i18n" },
-    { name = "pyyaml" },
-    { name = "questionary" },
-    { name = "rich" },
-    { name = "rtoml" },
-    { name = "sqlalchemy" },
-    { name = "typer" },
-    { name = "tzdata", marker = "sys_platform == 'win32'" },
-    { name = "xlrd" },
-]
-
-[package.optional-dependencies]
-agent = [
-    { name = "anyio" },
-    { name = "mcp" },
-]
-all = [
-    { name = "anthropic" },
-    { name = "anyio" },
-    { name = "google-api-python-client" },
-    { name = "google-auth" },
-    { name = "google-auth-oauthlib" },
-    { name = "mcp" },
-    { name = "model2vec" },
-    { name = "numpy" },
-    { name = "ofxtools" },
-    { name = "playwright" },
-    { name = "playwright-stealth" },
-    { name = "snowballstemmer" },
-]
-anthropic = [
-    { name = "anthropic" },
-]
-browser = [
-    { name = "playwright" },
-    { name = "playwright-stealth" },
-]
-corpus-sources = [
-    { name = "cadrumo-data-manuals" },
-    { name = "cadrumo-data-official" },
-]
-google = [
-    { name = "google-api-python-client" },
-    { name = "google-auth" },
-    { name = "google-auth-oauthlib" },
-]
-ofx = [
-    { name = "ofxtools" },
-]
-search = [
-    { name = "model2vec" },
-    { name = "numpy" },
-    { name = "snowballstemmer" },
-]
-workbook-windows = [
-    { name = "pywin32", marker = "sys_platform == 'win32'" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "anthropic" },
-    { name = "complexipy" },
-    { name = "deptry" },
-    { name = "doc8" },
-    { name = "furo" },
-    { name = "google-api-python-client" },
-    { name = "google-api-python-client-stubs" },
-    { name = "google-auth" },
-    { name = "google-auth-oauthlib" },
-    { name = "import-linter" },
-    { name = "interrogate" },
-    { name = "myst-parser" },
-    { name = "ofxtools" },
-    { name = "pagefind", extra = ["extended"] },
-    { name = "playwright" },
-    { name = "playwright-stealth" },
-    { name = "prek" },
-    { name = "psutil" },
-    { name = "pydoclint" },
-    { name = "pyright" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-httpx" },
-    { name = "pytest-playwright" },
-    { name = "pytest-rerunfailures" },
-    { name = "pytest-xdist" },
-    { name = "radon" },
-    { name = "reportlab" },
-    { name = "ruff" },
-    { name = "sphinx" },
-    { name = "sphinx-autobuild" },
-    { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-design" },
-    { name = "sphinx-hoverxref" },
-    { name = "sphinx-markdown-builder" },
-    { name = "sphinx-notfound-page" },
-    { name = "sphinx-sitemap" },
-    { name = "sphinxcontrib-mermaid" },
-    { name = "sphinxext-opengraph" },
-    { name = "syrupy" },
-    { name = "time-machine" },
-    { name = "torch", version = "2.12.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
-    { name = "torch", version = "2.12.1+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
-    { name = "ty" },
-    { name = "types-defusedxml" },
-    { name = "types-openpyxl" },
-    { name = "types-pywin32" },
-    { name = "types-pyyaml" },
-    { name = "types-reportlab" },
-    { name = "types-xlrd" },
-    { name = "vaultspec-core" },
-    { name = "vaultspec-rag", extra = ["mcp"] },
-    { name = "vulture" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.74.1,<1" },
-    { name = "anyio", marker = "extra == 'agent'", specifier = ">=4.5,<5" },
-    { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
-    { name = "beautifulsoup4", specifier = ">=4.12,<5" },
-    { name = "cadrumo", extras = ["agent"], marker = "extra == 'all'" },
-    { name = "cadrumo", extras = ["anthropic"], marker = "extra == 'all'" },
-    { name = "cadrumo", extras = ["browser"], marker = "extra == 'all'" },
-    { name = "cadrumo", extras = ["google"], marker = "extra == 'all'" },
-    { name = "cadrumo", extras = ["ofx"], marker = "extra == 'all'" },
-    { name = "cadrumo", extras = ["search"], marker = "extra == 'all'" },
-    { name = "cadrumo-data-manuals", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_manuals" },
-    { name = "cadrumo-data-official", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_official" },
-    { name = "cryptography", specifier = ">=47.0.0,<48" },
-    { name = "defusedxml", specifier = ">=0.7.1,<1" },
-    { name = "google-api-python-client", marker = "extra == 'google'", specifier = ">=2.195.0,<3" },
-    { name = "google-auth", marker = "extra == 'google'", specifier = ">=2.50.0,<3" },
-    { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = ">=1.3.1,<2" },
-    { name = "httpx", specifier = ">=0.28.1,<1" },
-    { name = "keyring", specifier = ">=25.6.0,<26" },
-    { name = "mcp", marker = "extra == 'agent'", specifier = ">=1.12,<2" },
-    { name = "model2vec", marker = "extra == 'search'", specifier = ">=0.8,<1" },
-    { name = "numpy", marker = "extra == 'search'", specifier = ">=1.26,<3" },
-    { name = "ofxtools", marker = "extra == 'ofx'", specifier = ">=1.1,<2" },
-    { name = "openpyxl", specifier = ">=3.1.5,<4" },
-    { name = "pdfplumber", specifier = ">=0.11.9,<1" },
-    { name = "pikepdf", specifier = ">=10.0.0,<11" },
-    { name = "playwright", marker = "extra == 'browser'", specifier = ">=1.58.0,<2" },
-    { name = "playwright-stealth", marker = "extra == 'browser'", specifier = ">=2.0.3,<3" },
-    { name = "prompt-toolkit", specifier = ">=3.0,<4" },
-    { name = "pydantic", specifier = ">=2.12.5,<3" },
-    { name = "pydantic-settings", specifier = ">=2.9.1,<3" },
-    { name = "pypdfium2", specifier = ">=5.7.1,<6" },
-    { name = "python-dotenv", specifier = ">=1.2.2,<2" },
-    { name = "python-i18n", specifier = ">=0.3.9,<1" },
-    { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'workbook-windows'", specifier = ">=311" },
-    { name = "pyyaml", specifier = ">=6.0.3,<7" },
-    { name = "questionary", specifier = ">=2.1.1,<3" },
-    { name = "rich", specifier = ">=14.2.0,<16" },
-    { name = "rtoml", specifier = ">=0.13.0,<1" },
-    { name = "snowballstemmer", marker = "extra == 'search'", specifier = ">=2.2,<4" },
-    { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
-    { name = "typer", specifier = ">=0.20.0,<1" },
-    { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
-    { name = "xlrd", specifier = ">=2.0.1,<3" },
-]
-provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "agent", "search", "corpus-sources", "all"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "anthropic", specifier = ">=0.74.1,<1" },
-    { name = "complexipy", specifier = ">=3.3.0" },
-    { name = "deptry", specifier = ">=0.24" },
-    { name = "doc8", specifier = ">=1.1" },
-    { name = "furo", specifier = ">=2024.8" },
-    { name = "google-api-python-client", specifier = ">=2.195.0,<3" },
-    { name = "google-api-python-client-stubs", specifier = ">=1.36" },
-    { name = "google-auth", specifier = ">=2.50.0,<3" },
-    { name = "google-auth-oauthlib", specifier = ">=1.3.1,<2" },
-    { name = "import-linter", specifier = ">=2.0" },
-    { name = "interrogate", specifier = ">=1.7.0" },
-    { name = "myst-parser", specifier = ">=4.0" },
-    { name = "ofxtools", specifier = ">=1.1,<2" },
-    { name = "pagefind", extras = ["extended"], specifier = ">=1.5,<2" },
-    { name = "playwright", specifier = ">=1.58.0" },
-    { name = "playwright-stealth", specifier = ">=2.0.3,<3" },
-    { name = "prek", specifier = ">=0.2.0" },
-    { name = "psutil", specifier = ">=5.9" },
-    { name = "pydoclint", specifier = ">=0.6" },
-    { name = "pyright", specifier = ">=1.1.409" },
-    { name = "pytest", specifier = ">=9.0.3" },
-    { name = "pytest-asyncio", specifier = ">=1.0.0" },
-    { name = "pytest-cov", specifier = ">=6.0.0" },
-    { name = "pytest-httpx", specifier = ">=0.35.0" },
-    { name = "pytest-playwright", specifier = ">=0.6.0" },
-    { name = "pytest-rerunfailures", specifier = ">=15.0" },
-    { name = "pytest-xdist", specifier = ">=3.6.0" },
-    { name = "radon", specifier = ">=6.0.1" },
-    { name = "reportlab", specifier = ">=4.4.10" },
-    { name = "ruff", specifier = ">=0.15.12" },
-    { name = "sphinx", specifier = ">=8.1,<9" },
-    { name = "sphinx-autobuild", specifier = ">=2024.10" },
-    { name = "sphinx-autodoc-typehints", specifier = ">=2.5" },
-    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
-    { name = "sphinx-design", specifier = ">=0.6" },
-    { name = "sphinx-hoverxref", specifier = ">=1.4" },
-    { name = "sphinx-markdown-builder", specifier = ">=0.6" },
-    { name = "sphinx-notfound-page", specifier = ">=1.1" },
-    { name = "sphinx-sitemap", specifier = ">=2.6" },
-    { name = "sphinxcontrib-mermaid", specifier = ">=1.0" },
-    { name = "sphinxext-opengraph", specifier = ">=0.9" },
-    { name = "syrupy", specifier = ">=4.7.0" },
-    { name = "time-machine", specifier = ">=2.16.0" },
-    { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.4" },
-    { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cu130" },
-    { name = "ty", specifier = ">=0.0.1a1" },
-    { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
-    { name = "types-openpyxl", specifier = ">=3.1.5.20260408" },
-    { name = "types-pywin32", specifier = ">=311.0.0.20260508" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20260510" },
-    { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
-    { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
-    { name = "vaultspec-core", specifier = ">=0.1.25" },
-    { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.2.28" },
-    { name = "vulture", specifier = ">=2.16" },
-]
-
-[[package]]
-name = "cadrumo-data-manuals"
-version = "0.2.0"
-source = { directory = "packaging/aeat_data_manuals" }
-
-[[package]]
-name = "cadrumo-data-official"
-version = "0.2.0"
-source = { directory = "packaging/aeat_data_official" }
 
 [[package]]
 name = "certifi"
@@ -870,6 +866,25 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e6/dc/be6cbe99670cd6e4ad387123647cb08e0c32975e223f82551e914c5568a6/filelock-3.29.4.tar.gz", hash = "sha256:10cdb3656fc44541cdf30652a93fb10ec6b05325620eb316bd26893e4201538a", size = 63028, upload-time = "2026-06-13T16:12:00.744Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/37/a065dc3bd6e49423a6532c642ca7378d3f467b1ef44c2800c937af7f9739/filelock-3.29.4-py3-none-any.whl", hash = "sha256:dac1648087d5115554850d113e7dd8c83ab2d38e3435dde2d4f163847e57b767", size = 42757, upload-time = "2026-06-13T16:11:59.582Z" },
+]
+
+[[package]]
+name = "formulas"
+version = "1.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "numpy" },
+    { name = "numpy-financial" },
+    { name = "python-dateutil" },
+    { name = "regex" },
+    { name = "schedula" },
+    { name = "scipy" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a1/03/87e2931f7e134cfffb6c6199003ce1a59feeea5160abd774dfad1c19e1ef/formulas-1.3.4.tar.gz", hash = "sha256:018ee4c43056d2ea2497243e83bb61d92c0f1039ca8eb82a8f0e969562e3e8e9", size = 149229, upload-time = "2026-03-11T18:20:03.198Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/a0/4ddef4c1e4ccfa320f8780070fd6364b63a094b0ca6afd5d6fcf8c440669/formulas-1.3.4-py2.py3-none-any.whl", hash = "sha256:ee2c9795217885158d9ce8d68a78ea0fb0a96e0814d491aa83759ef96e5645a0", size = 126489, upload-time = "2026-03-11T18:20:01.464Z" },
 ]
 
 [[package]]
@@ -1802,6 +1817,18 @@ wheels = [
 ]
 
 [[package]]
+name = "numpy-financial"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/4e/6dff3733162d4a96140f0195f3b529c2d56f90d3245c8c1b506913d11f91/numpy-financial-1.0.0.tar.gz", hash = "sha256:f84341bc62b2485d5604a73d5fac7e91975b4b9cd5f4a5a9cf608902ea00cb40", size = 13185, upload-time = "2019-10-18T16:13:45.23Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6a/be/d07585e440d58835bad8f1c9ca7823b5252ffeda4c797e653a20215fca65/numpy_financial-1.0.0-py3-none-any.whl", hash = "sha256:bae534b357516f12258862d1f0181d911032d0467f215bfcd1c264b4da579047", size = 14025, upload-time = "2019-10-18T16:13:43.241Z" },
+]
+
+[[package]]
 name = "nvidia-cublas"
 version = "13.1.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2661,6 +2688,18 @@ wheels = [
 ]
 
 [[package]]
+name = "python-dateutil"
+version = "2.9.0.post0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
+]
+
+[[package]]
 name = "python-dotenv"
 version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3149,6 +3188,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/3f/73ccf82579412b4a71c4ca673f10b5f1f888d7cf5af7fe24f27d30307be4/safetensors-0.8.0-cp310-abi3-win32.whl", hash = "sha256:2ddf52eac562eda224f99acfa7889d02968c1fd59a5b011ae7d8137c37e9c02d", size = 342401, upload-time = "2026-06-09T07:52:28.895Z" },
     { url = "https://files.pythonhosted.org/packages/1b/6d/3fba214c1e5e0f69991677ec3bc17023f0421776975e1de0c682dca475e2/safetensors-0.8.0-cp310-abi3-win_amd64.whl", hash = "sha256:096ec1a98435df7beb08853bb5aa9081a84f23d0adc67ed1a0a10550f608373f", size = 355540, upload-time = "2026-06-09T07:52:27.832Z" },
     { url = "https://files.pythonhosted.org/packages/8d/fc/7eedc3510d97878876e32774eebbeb61c43f148a96e915c84229a3e967aa/safetensors-0.8.0-cp310-abi3-win_arm64.whl", hash = "sha256:f7838e5135a406ad3e02efdcb8cf2e5397d368b0154537c4fec682dbc544d452", size = 340500, upload-time = "2026-06-09T07:52:26.745Z" },
+]
+
+[[package]]
+name = "schedula"
+version = "1.6.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/16/25b477d86e12af6a40f17e648c5399c69408391e91835c2bee8e076f9b12/schedula-1.6.15.tar.gz", hash = "sha256:85654c82cb8e73fb5ca48952c317119157cd8da248c9d395bac90ffb9a01927c", size = 6210508, upload-time = "2026-03-04T22:16:16.459Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/96/b24b329a5a1aac05814ed9842fa37378434dab5b6ec602db8ecf939040f6/schedula-1.6.15-py2.py3-none-any.whl", hash = "sha256:69b7c84931d484406828d7568f3d7d86c4edea319e349a021a8b08db518b8c39", size = 6371149, upload-time = "2026-03-04T22:16:12.556Z" },
 ]
 
 [[package]]

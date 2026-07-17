@@ -1,34 +1,9 @@
 # Check AEAT notifications and live observations
 
-This page covers the live read-only AEAT surfaces: official notifications,
-declaration history, filed returns, NIF verification, the portal catalogue,
-the borrador, and your IVA compensation balance. All commands in this
-section download data and save it locally. None of them file anything or
-change your AEAT records.
-
-## How a live read works
-
-Every live read works the same way. It uses your configured authentication,
-reads from the AEAT sede read-only, and saves an encrypted local copy in
-your profile. It applies nothing automatically: a pull saves a local copy,
-and applying a downloaded fact updates only your local profile or records,
-and only after you review it. Nothing is ever sent back to AEAT — you remain
-the only one who files. To understand that boundary, see
-[Recording a filing and the boundary](../explanation/recording-a-filing-and-the-boundary.md).
-
-Two live surfaces have their own guides: censo facts are covered in
-[Link Modelo 036 census information](censo-update.md), and filing receipts
-(justificantes) in
-[Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).
-
-Before contacting AEAT, every live read runs an authentication preflight. If
-no provider is configured, the read refuses at that preflight; the refusal
-text mentions a Cl@ve identity check (`La identidad de Cl@ve Móvil no
-coincide...`), but the underlying cause is that authentication is not
-configured. Configure a provider first — see
-[Authenticate with AEAT](authenticate-with-aeat.md). `AEAT_LIVE_TESTS_ENABLED`
-is a developer setting that gates the project's own test suite; do not set
-it to use live reads.
+Use this guide to download and review read-only information from AEAT: official
+notifications, declaration history, filed returns, and your IVA compensation
+balance. All commands in this section download data and save it locally. None
+of them file anything or change your AEAT records.
 
 ## Before you start
 

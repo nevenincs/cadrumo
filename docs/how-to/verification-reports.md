@@ -1,26 +1,6 @@
 # Verify a draft filing and act on the findings
 
-This page covers the verification of a draft filing: running the check,
-reading the saved report, and acting on each kind of finding. Verification
-checks your saved calculation locally against the official form rules and
-saves a report of what it found. Nothing is sent to AEAT; everything happens
-on your computer. The order is always the same: calculate, then verify, then
-export or record the filing.
-
-The check asks three things: does every required box have a value; do the
-sums add up consistently, with no box contradicting another; and does
-anything block the form from being treated as complete. It also checks
-conditions outside the draft itself: that any earlier period this form
-builds on is filed and evidenced, that the running IVA balance carried
-between periods reconciles, and that every carried-forward figure still
-points at the revision it was filed under.
-
-A passed check is a local check — treat it as "my draft is complete and
-consistent", never as "I have filed" or "I am on time". Verifying is **not**
-the agency accepting your filing (the tool never contacts AEAT), **not** a
-guarantee the upload will succeed (submission happens separately, outside
-the tool), and **not** a deadline check (a draft can pass long after the
-deadline; see [the deadline section](#the-filing-deadline-has-passed)).
+Verification checks your saved calculation locally against the official form rules and saves a report of what it found. Nothing is sent to AEAT; everything happens on your computer. The order is always the same: calculate, then verify, then export or record the filing.
 
 ## Before you start
 

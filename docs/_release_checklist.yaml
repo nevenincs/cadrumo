@@ -1,4 +1,4 @@
-# Machine-validated release-readiness checklist for `cadrumo`.
+# Machine-validated release-readiness checklist for `aeat-cli`.
 #
 # Read and validated by `dev/release/readiness.py` (schema:
 # `ReleaseChecklist` in that module) before any release proceeds past the
@@ -11,12 +11,12 @@
 schema_version: 1
 
 # Non-hotfix releases soak on a pre-release channel before the human decides
-# to push + publish. There is no separate PyPI "beta" project yet (cadrumo
+# to push + publish. There is no separate PyPI "beta" project yet (aeat-cli
 # is pre-1.0 and has not shipped its first PyPI release) — the soak vehicle
 # today is a local, tagged pre-release build (`vX.Y.Z-rc.N`, built and smoke
 # tested via `just packaging-smoke*`, installed from the built wheel into a
 # scratch venv) reviewed over the soak window before the real tag lands.
-# Promote this to a real `cadrumo-beta` PyPI project once the first stable
+# Promote this to a real `aeat-cli-beta` PyPI project once the first stable
 # release has shipped and a channel is worth maintaining.
 soak:
   applies_to: "non-hotfix"

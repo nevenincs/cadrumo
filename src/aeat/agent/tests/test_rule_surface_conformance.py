@@ -3,7 +3,7 @@
 The operator operating rules name concrete CLI verbs and JSON-envelope fields.
 If a verb is renamed or an envelope field moves and the rule is not updated in the
 same change, the operator inherits a dead instruction - the exact failure mode the
-``cadrumo-pull-and-file-standard`` rule exists to prevent, here on the operator
+``aeat-cli-pull-and-file-standard`` rule exists to prevent, here on the operator
 side. This gate parses every shipped operator rule, extracts each ``aeat ...``
 command path and each named envelope-spine field, and asserts they all resolve
 against the live CLI surface and the real envelope models. A rule that cites a

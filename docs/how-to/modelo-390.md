@@ -37,8 +37,7 @@ Start with the local filing context:
 - Use [Plan your filing calendar](filing-calendar.md) to confirm the annual
   filing window.
 - Confirm the annual period token with
-  [Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
-  Modelo 390 uses `--period 0A`.
+  [Understand filing periods](filing-periods.md). Modelo 390 uses `--period 0A`.
 - [Import or add your transactions](import-bank-statements.md), then
   [classify them](classify-transactions.md). The annual ledger totals depend on
   the active profile's classified IVA rows.

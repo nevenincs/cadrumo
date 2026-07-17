@@ -1,8 +1,8 @@
 """Tests for the corpus-binary resolution seam over the aeat_data companion.
 
 The slim ``aeat`` runtime wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``;
-those binaries ship in TWO sub-cap companion distributions (``cadrumo-data-manuals``
-and ``cadrumo-data-official``) that both contribute subtrees to the SAME
+those binaries ship in TWO sub-cap companion distributions (``aeat-data-manuals``
+and ``aeat-data-official``) that both contribute subtrees to the SAME
 ``aeat_data`` PEP 420 implicit namespace package. :func:`resolve_corpus_binary`
 must resolve a corpus binary identically whether it lives under the ``aeat`` tree
 (full checkout) or under EITHER companion portion of the ``aeat_data`` namespace
@@ -129,7 +129,7 @@ def test_companion_resolution_is_byte_identical_to_a_tree_read(
 
 # Two distinct corpus-relative probes, each guaranteed absent from the real
 # ``aeat`` tree, one per companion portion. They mirror the split contract:
-# ``cadrumo-data-manuals`` owns ``corpus/manuals`` and ``cadrumo-data-official`` owns
+# ``aeat-data-manuals`` owns ``corpus/manuals`` and ``aeat-data-official`` owns
 # ``corpus/aeat_official``.
 _MANUALS_PORTION_PARTS = (
     "corpus",
