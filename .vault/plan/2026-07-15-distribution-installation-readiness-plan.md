@@ -104,7 +104,7 @@ translation. A failed check leaves its row open for a separate approved implemen
 - [x] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
 - [x] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
 - [x] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
-- [ ] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
+- [x] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
 - [ ] `W02.P06.S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple; `dev/packaging/verify_distribution_identity.py, src/cadrumo/_data/agent, src/cadrumo/agent, src/cadrumo/entrypoints/mcp`.
 - [ ] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
 
@@ -181,7 +181,7 @@ Run feature-scoped quality, architecture, documentation, and honest-close review
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
 - [ ] `W05.P12.S59` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
-- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; `leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
+- [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 
 ## Description
 

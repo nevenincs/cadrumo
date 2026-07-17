@@ -32,9 +32,9 @@ related:
   builds produced identical member digests, and the loaded cohort re-verified
   every artifact size and SHA-256 against its manifest without rebuilding.
 - The unit-scope gates passed 5/5 in the same session across
-  `dev/packaging/tests/test_python_cohort.py` and
-  `dev/packaging/tests/test_release_cohort.py` combined (the latter carries
-  the hermeticity, portable-path, and undeclared-file refusal gates, 3 tests).
+  `dev/packaging/tests/test_python_cohort.py` (2 tests) and
+  `dev/packaging/tests/test_release_cohort.py` (3 tests: hermeticity,
+  portable paths, undeclared-file refusal) combined.
 
 ## Notes
 
