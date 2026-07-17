@@ -151,7 +151,7 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.sandbox.use": CommandRiskDeclaration(),
     "config.profile.show": CommandRiskDeclaration(),
     "config.profile.status": CommandRiskDeclaration(),
-    "config.profile.subject_access_request": CommandRiskDeclaration(),
+    "config.profile.subject_access_request": CommandRiskDeclaration(handoff=True),
     "config.profile.validate": CommandRiskDeclaration(),
     "config.recover": CommandRiskDeclaration(destructive=True),
     "config.rekey": CommandRiskDeclaration(destructive=True),
