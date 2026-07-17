@@ -14,17 +14,18 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
+
 # `all-profile-reset` plan
 
 ### Phase `P01` - Deletion assessment and reset ownership
 
 Give bucket maintenance a target-scoped deletion assessment and an operation-owned deletion guarded by a fingerprint.
 
-- [ ] `P01.S01` - Add target deletion assessment and reset ownership fields to bucket-maintenance contracts; `src/cadrumo/application/bucket_maintenance/_contracts.py`.
-- [ ] `P01.S02` - Expose target-scoped deletion assessment and verify reset operation ownership and fingerprint during deletion; `src/cadrumo/application/bucket_maintenance/_service.py`.
-- [ ] `P01.S03` - Define the authoritative deletion-relevant bucket fingerprint for assessment and resume; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
-- [ ] `P01.S04` - Prove deletion assessment reports real retention blockers without mutating the bucket; `src/cadrumo/application/bucket_maintenance/tests/test_service_retention_floor.py`.
-- [ ] `P01.S05` - Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence; `src/cadrumo/application/bucket_maintenance/tests/test_service_delete.py`.
+- [x] `P01.S01` - Add target deletion assessment and reset ownership fields to bucket-maintenance contracts; `src/cadrumo/application/bucket_maintenance/_contracts.py`.
+- [x] `P01.S02` - Expose target-scoped deletion assessment and verify reset operation ownership and fingerprint during deletion; `src/cadrumo/application/bucket_maintenance/_service.py`.
+- [x] `P01.S03` - Define the authoritative deletion-relevant bucket fingerprint for assessment and resume; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
+- [x] `P01.S04` - Prove deletion assessment reports real retention blockers without mutating the bucket; `src/cadrumo/application/bucket_maintenance/tests/test_service_retention_floor.py`.
+- [x] `P01.S05` - Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence; `src/cadrumo/application/bucket_maintenance/tests/test_service_delete.py`.
 
 ### Phase `P02` - Reset journal and durable state
 
