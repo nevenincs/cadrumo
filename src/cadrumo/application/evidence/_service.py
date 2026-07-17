@@ -1,4 +1,4 @@
-"""Build, verify, export, and replay :class:`EvidenceBundle` manifests.
+"""Build, verify, and export :class:`EvidenceBundle` manifests.
 
 :class:`EvidenceBundleService` persists bundles through
 :class:`EvidenceBundleRepository` and reports integrity checks as an
@@ -70,7 +70,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
 
     See Also:
         :class:`EvidenceBundleService`
-            Service layer that builds, verifies, exports, and replays bundles.
+            Service layer that builds, verifies, and exports bundles.
         :class:`~adapters.persistence.storage.SecureBoundRepository`
             Generic encrypted-envelope repository base used by this store.
     """
@@ -113,7 +113,7 @@ class EvidenceBundleService:
     Each method maps to one of the verbs in ``aeat app modelo audit``:
     ``build`` is the constructor side of ``add``-equivalent (audit bundles
     are produced by the file/verify path, not the operator). ``show``,
-    ``check``, ``export``, ``replay`` are operator-facing.
+    ``check``, and ``export`` are operator-facing.
 
     Persisted manifests stay inside :class:`EvidenceBundleRepository`.
     Exported ZIP archives are separate caller-directed artifacts and are
@@ -376,25 +376,6 @@ class EvidenceBundleService:
                 archive.writestr(arcname, record_payloads[key])
             archive.writestr(_MANIFEST_FILENAME, manifest_payload)
         return output_path
-
-    def replay(
-        self,
-        *,
-        bucket_id: str,
-        bundle_id: str,
-        record_payloads: Mapping[tuple[str, str], bytes] | None = None,
-    ) -> EvidenceBundleVerificationReport:
-        """Evidence-case replay: re-verify the bundle against supplied payloads.
-
-        Replay never contacts AEAT and never performs live submission.
-        Behaviorally this is ``check`` with a different verb name and
-        intent: ``check`` is operator diagnostics, ``replay`` is the
-        forensic verb invoked when reproducing a historical filing for
-        audit handoff.
-
-        Returns an :class:`EvidenceBundleVerificationReport`.
-        """
-        return self.check(bucket_id=bucket_id, bundle_id=bundle_id, record_payloads=record_payloads)
 
 
 __all__ = [

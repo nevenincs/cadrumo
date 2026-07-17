@@ -16,7 +16,6 @@ from .. import (
     EvidenceBundleNotFoundError,
     EvidenceBundleService,
     EvidenceBundleVerificationError,
-    EvidenceBundleVerificationReport,
     VerificationCheck,
 )
 from .._models import derive_bundle_id
@@ -295,26 +294,6 @@ class TestExport:
         assert archive_path.exists()
         assert not archive_path.is_relative_to(runtime_profile.storage_root)
         assert _secure_object_fingerprint(runtime_profile) == before_export
-
-
-class TestReplay:
-    def test_replay_never_mutates_bundle_state(
-        self,
-        runtime_profile: TestRuntimeProfile,
-        payloads: dict[tuple[str, str], bytes],
-    ) -> None:
-        svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
-        report = svc.replay(
-            bucket_id=runtime_profile.bucket_id,
-            bundle_id=added.bundle_id,
-            record_payloads=payloads,
-        )
-        assert isinstance(report, EvidenceBundleVerificationReport)
-        assert report.verification_state is BundleVerificationState.VERIFIED
-        # replay must not have mutated the persisted bundle
-        reloaded = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id)
-        assert reloaded == added
 
 
 class TestBucketIsolation:

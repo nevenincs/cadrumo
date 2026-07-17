@@ -1895,10 +1895,8 @@ cli:
           utolsóként kerül bele).
         force_incomplete_help: Az exportálás engedélyezése akkor is, ha az ellenőrzés
           hiányosként jelöli a csomagot.
-        group_help: Bizonyítékcsomag-audit parancsok (show/check/export/replay).
+        group_help: Bizonyítékcsomag-audit parancsok (show/check/export).
         output_help: A csomag ZIP-archívumának kimeneti útvonala.
-        replay_help: A bizonyítékeset-ellenőrzés újrafuttatása törvényszéki audit-átadáshoz;
-          soha nem lép kapcsolatba az AEAT-tal és nem végez benyújtást.
         show_help: Bizonyítékcsomag manifesztjének és hivatkozott rekordjainak megjelenítése.
       bindings:
         app_help: Egy AEAT adónyomtatvány kötéseinek vizsgálata és előnézete.
