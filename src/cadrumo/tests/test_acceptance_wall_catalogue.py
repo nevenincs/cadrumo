@@ -54,6 +54,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -69,6 +70,24 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 # covers the summed real runtime of every wall's own CLI-driven test, not
 # just one node's worth of interpreter/collection overhead.
 _SUBPROCESS_TIMEOUT_SECONDS = 600
+# A ~30-node `pytest <id1> <id2> ... -m integration -n0` invocation is, on a
+# heavily contended shared worktree (many concurrent agent processes reading,
+# writing, and compiling the SAME repository tree -- observed at 250+ live
+# `python.exe` processes during triage), occasionally hit by a collection-time
+# race that makes pytest report every single requested node id as
+# `ERROR: not found: ... (no match in any of [<Module ...>])` and exit 4 with
+# zero collected items -- confirmed by re-running the identical command
+# against the identical node ids back-to-back and observing it flip between a
+# clean full collection and a total wipeout with no source change in between.
+# This is a distinct signature from a REAL regression: a real regression still
+# collects and reports the other 28 walls normally, with only the regressed
+# wall's testcase failing or erroring. A full wipeout (every catalogued node
+# id absent from the parsed junit report) is retried a bounded number of times,
+# with a short backoff to let contention clear, before being treated as a
+# genuine result -- so the gate stays sensitive to a real reopened wall while
+# shedding this proven environmental race.
+_BATCH_COLLECTION_RETRY_ATTEMPTS = 10
+_BATCH_COLLECTION_RETRY_BACKOFF_SECONDS = 3.0
 
 #: Per-testcase pass/fail result keyed by (junit classname, test function name).
 #: ``None`` means the testcase passed; a non-``None`` value is its failure/error message.
@@ -171,12 +190,30 @@ def _batched_wall_results() -> _JunitResults:
     reads its own wall's result from the same cached run -- each wall stays
     its own pytest test item (same per-wall attribution and reporting
     granularity as before), only the expensive subprocess boot is shared.
+
+    Retries a bounded number of times ONLY on a total collection wipeout (zero
+    of the requested node ids reported at all -- see
+    ``_BATCH_COLLECTION_RETRY_ATTEMPTS``), which is the proven shared-worktree
+    contention race, not a real regression. A run that collects and reports
+    even one catalogued wall is accepted immediately and never retried, so a
+    genuine reopened wall (which still collects the other 28 normally) is
+    caught on the first pass.
     """
     node_ids = tuple(entry.node_id for entry in ACCEPTANCE_WALL_CATALOGUE)
-    with tempfile.TemporaryDirectory(prefix="acceptance-wall-junit-") as tmp_dir:
-        junit_xml_path = Path(tmp_dir) / "acceptance_wall_junit.xml"
-        _run_pytest_subprocess(*node_ids, junit_xml_path=junit_xml_path)
-        return _parse_junit_results(junit_xml_path)
+    expected_keys = {
+        (_junit_classname_for_module(entry.test_module), entry.test_function) for entry in ACCEPTANCE_WALL_CATALOGUE
+    }
+    results: _JunitResults = {}
+    for attempt in range(1, _BATCH_COLLECTION_RETRY_ATTEMPTS + 1):
+        with tempfile.TemporaryDirectory(prefix="acceptance-wall-junit-") as tmp_dir:
+            junit_xml_path = Path(tmp_dir) / "acceptance_wall_junit.xml"
+            _run_pytest_subprocess(*node_ids, junit_xml_path=junit_xml_path)
+            results = _parse_junit_results(junit_xml_path)
+        if expected_keys & results.keys():
+            break
+        if attempt < _BATCH_COLLECTION_RETRY_ATTEMPTS:
+            time.sleep(_BATCH_COLLECTION_RETRY_BACKOFF_SECONDS)
+    return results
 
 
 def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
