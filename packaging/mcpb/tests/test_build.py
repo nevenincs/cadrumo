@@ -226,6 +226,17 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
     assert "UNSIGNED; assembly only; client installation unproved" in capsys.readouterr().out
 
 
+def test_unsigned_bundle_is_byte_reproducible(
+    tmp_path: Path,
+    real_cohort: Path,
+) -> None:
+    """Two assemblies of the exact real cohort produce identical MCPB bytes."""
+    first = BUILD.build(cohort_dir=real_cohort, dist_dir=tmp_path / "first")
+    second = BUILD.build(cohort_dir=real_cohort, dist_dir=tmp_path / "second")
+
+    assert first.read_bytes() == second.read_bytes()
+
+
 def test_missing_companion_is_rejected_by_the_canonical_validator(
     tmp_path: Path,
     real_cohort: Path,
