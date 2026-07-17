@@ -42,6 +42,7 @@ import sysconfig
 import time
 import uuid
 from dataclasses import dataclass
+from functools import partial
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
 from pathlib import Path
@@ -140,6 +141,8 @@ if TYPE_CHECKING:
     # annotations, `from __future__ import annotations`); they exist solely so
     # the standalone (non-nested) functions below can declare their true SDK
     # return/parameter types instead of the placeholder ``object``.
+    from collections.abc import Callable
+
     from mcp.server import Server
     from mcp.server.models import InitializationOptions
     from mcp.types import ContentBlock, Tool
@@ -792,18 +795,15 @@ def build_server(
 
     server: Server = Server(PRODUCT_IDENTITY.mcp_server)
 
-    async def _run_tool_with_progress(
-        descriptor: McpToolDescriptor,
-        arguments: dict[str, object],
-    ) -> SubprocessToolOutcome:
-        """Run the CLI subprocess off the event loop, heart-beating progress.
+    async def _run_offloop_with_progress[T](work: Callable[[], T]) -> T:
+        """Run blocking subprocess work off the event loop, heart-beating progress.
 
-        The supervised call blocks (Popen.communicate); running it in a worker
-        thread keeps the event loop responsive for the whole - possibly
-        minutes-long - live pull. When the client supplied a progress token, an
-        elapsed-seconds heartbeat is sent every few seconds until the call
-        completes, so a slow pull looks alive
-        rather than hung; a client that sent no token still gets the off-loop run.
+        The supervised call blocks (Popen.communicate); a worker thread keeps
+        pings, concurrent calls, and cancellation flowing on direct and ``execute``
+        path. When the client supplied a progress token, an elapsed-seconds
+        heartbeat is sent every few seconds until the call completes, so a slow
+        pull looks alive rather than hung; a client that sent no token still
+        gets the off-loop run.
         """
         import anyio
         from anyio.to_thread import run_sync
@@ -814,12 +814,12 @@ def build_server(
             progress_token = getattr(meta, "progressToken", None) if meta is not None else None
 
         if progress_token is None:
-            return await run_sync(_run_subprocess_tool, descriptor, arguments)
+            return await run_sync(work)
 
-        holder: dict[str, SubprocessToolOutcome] = {}
+        holder: dict[str, T] = {}
 
         async def _work() -> None:
-            holder["result"] = await run_sync(_run_subprocess_tool, descriptor, arguments)
+            holder["result"] = await run_sync(work)
             task_group.cancel_scope.cancel()
 
         async def _heartbeat() -> None:
@@ -838,6 +838,13 @@ def build_server(
             task_group.start_soon(_heartbeat)
             task_group.start_soon(_work)
         return holder["result"]
+
+    async def _run_tool_with_progress(
+        descriptor: McpToolDescriptor,
+        arguments: dict[str, object],
+    ) -> SubprocessToolOutcome:
+        """Run one direct per-verb CLI subprocess through the shared off-loop wrapper."""
+        return await _run_offloop_with_progress(partial(_run_subprocess_tool, descriptor, arguments))
 
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
@@ -953,11 +960,14 @@ def build_server(
                 isError=outcome.refused is not None,
             )
         if name == _META_EXECUTE_TOOL:
-            refusal, envelope, thinned_envelope, links, is_error = _meta_execute_call_outcome(
-                arguments,
-                descriptors=descriptors,
-                persona=persona,
-                run=_gated_subprocess_run,
+            refusal, envelope, thinned_envelope, links, is_error = await _run_offloop_with_progress(
+                partial(
+                    _meta_execute_call_outcome,
+                    arguments,
+                    descriptors=descriptors,
+                    persona=persona,
+                    run=_gated_subprocess_run,
+                )
             )
             if refusal is not None:
                 return CallToolResult(content=[TextContent(type="text", text=refusal)], isError=True)
