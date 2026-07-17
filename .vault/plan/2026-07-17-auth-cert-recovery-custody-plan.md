@@ -12,6 +12,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+  - '[[2026-07-17-auth-cert-recovery-custody-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -103,6 +104,12 @@ Remove the module-global test-double seam from the production secret-store facto
 - [x] `P07.S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers; `delete override_secret_store, the module-global _override_store, its if-override branch, and both blob_store and storage __init__ facade exports; migrate the four consuming tests to pass an EphemeralMasterKeyProvider-backed SecretStore explicitly, in one atomic relocation commit including apidocs scaffold; `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py`.
 - [x] `P07.S42` - Add an AST recurrence gate, patterned on test_wizard_prompter_singularity.py, that bans module-global _override_* factory state and public override_* setters in production, exempting only the sanctioned core.config.override_settings; `src/cadrumo/adapters/persistence/storage/blob_store/tests/test_materialisation.py`.
 - [x] `P07.S43` - Sweep the storage facade and generated API docs for the removed override_secret_store export and update the import-hygiene baseline after the seam removal; `src/cadrumo/adapters/persistence/storage/__init__.py`.
+
+### Phase `P08` - Certificate secret input hardening (deferred to P04 door)
+
+The cert-secret door safety review returned PASS with one Low hardening item: certificate secret set accepts the PKCS12 passphrase as an argv value, which lands the secret in the process table and shell history even though the hidden-prompt and stdin default is safe. This phase removes the argv affordance, deferred until the operator P04 passphrase door commits so it reuses that door bounded-stdin no-echo secret-input infrastructure rather than building a parallel authority.
+
+- [ ] `P08.S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
 
 ## Description
 
