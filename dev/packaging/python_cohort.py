@@ -249,6 +249,25 @@ def source_snapshot_drift(repo_root: Path) -> tuple[str, ...]:
     return tuple(line for line in completed.stdout.splitlines() if line.strip())
 
 
+def _stamp_bundled_verdict_into_build_tree(build_root: Path) -> None:
+    """Stamp the install-stable registry-validation verdict into the wheel tree.
+
+    Written before ``uv build`` so the cadrumo wheel ships
+    ``_data/registry/aeat-validation-verdict.json`` beside the registry tree; a
+    fingerprint-matched install then skips runtime registry validation on its
+    very first touch (ADR mcp-call-latency D1). Computed against the extracted
+    build tree, which is byte-identical to what the wheel packages, so the
+    install-stable (relative-path + size + version) key matches at runtime. The
+    verdict certifies only that the build validated this release's immutable
+    tree green; a fingerprint or version mismatch at runtime re-validates fully.
+    """
+    from cadrumo import __version__
+    from cadrumo.domain.calculations.registry import stamp_bundled_registry_verdict
+
+    registry_root = build_root / "src" / "cadrumo" / "_data" / "registry" / "aeat"
+    stamp_bundled_registry_verdict(registry_root, package_version=__version__)
+
+
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     """Build one clean-commit cohort and write its immutable digest manifest."""
     root = repo_root.resolve(strict=True)
@@ -278,6 +297,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         )
         with zipfile.ZipFile(archive) as bundle:
             bundle.extractall(build_root)  # noqa: S202 - archive is produced by local Git.
+        _stamp_bundled_verdict_into_build_tree(build_root)
         uv = shutil.which("uv")
         if uv is None:
             raise SystemExit("uv is required to build the Python cohort")

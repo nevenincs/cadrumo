@@ -90,7 +90,7 @@ def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
     with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
         written = certify_registry_validation(root, verdict_key=key, package_version="1.2.3")
         assert written.is_file()
-        assert registry_validation_is_certified(root, verdict_key=key) is True
+        assert registry_validation_is_certified(root, verdict_key=key, registry_fingerprints=()) is True
 
 
 def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path: Path) -> None:
@@ -98,7 +98,7 @@ def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path:
     with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
         written = certify_registry_validation(root, verdict_key="stored-key", package_version="1.2.3")
         assert written.is_file()
-        assert registry_validation_is_certified(root, verdict_key="different-key") is False
+        assert registry_validation_is_certified(root, verdict_key="different-key", registry_fingerprints=()) is False
         # Delete-not-migrate: the stale writable verdict is removed so the next
         # load re-validates rather than trusting a superseded fingerprint.
         assert not written.exists()
