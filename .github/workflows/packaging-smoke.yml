@@ -100,3 +100,128 @@ jobs:
             var/distribution-install-readiness/installed-cohorts/**/evidence.json
           if-no-files-found: warn
           retention-days: 14
+
+  # Windows leg: proves the python-windows-x86-64 distribution row on a native
+  # windows-latest (x86-64) runner. It runs the host-portable `packaging-smoke`
+  # aggregate (no Docker, no host package-manager lanes) so the cohort is built
+  # once and every portable lane consumes the same bytes. The Linux-only disk
+  # reclamation and the bash resource sampler are omitted; the justfile's
+  # `set windows-shell := pwsh` drives each recipe, and the smoke modules already
+  # branch on os.name for Scripts/.exe layouts.
+  cadrumo-packaging-smoke-windows:
+    name: Cadrumo / Windows / Python 3.13 / wheel artifacts
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Dependency surface preflight
+        run: uv run --no-sync python -m dev.packaging.dependency_surface
+
+      - name: Shipped data source preflight
+        run: uv run --no-sync python -m dev.packaging.source_preflight
+
+      - name: Cadrumo packaging preflight command tests
+        run: just packaging-smoke-preflight-tests
+
+      - name: Cadrumo host-portable packaging campaign
+        run: just packaging-smoke
+
+      - name: Checkpoint packaging evidence
+        if: always()
+        run: uv run --no-sync python -m dev.packaging.evidence
+
+      - name: Upload tested Cadrumo Python cohort
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-python-cohort-windows
+          path: var/packaging-smoke-cohort/python/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Cadrumo packaging smoke evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-packaging-smoke-evidence-windows
+          path: |
+            var/packaging-smoke-evidence/*.json
+            var/distribution-install-readiness/installed-cohorts/**/evidence.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  # macOS leg: proves the python-macos-arm64 distribution row on a native
+  # macos-latest runner (Apple silicon / arm64). Same host-portable
+  # `packaging-smoke` aggregate as the Windows leg; the Linux-only reclamation
+  # and sampler are omitted, and no host package-manager (Homebrew) lane runs.
+  cadrumo-packaging-smoke-macos:
+    name: Cadrumo / macOS / Python 3.13 / wheel artifacts
+    runs-on: macos-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Dependency surface preflight
+        run: uv run --no-sync python -m dev.packaging.dependency_surface
+
+      - name: Shipped data source preflight
+        run: uv run --no-sync python -m dev.packaging.source_preflight
+
+      - name: Cadrumo packaging preflight command tests
+        run: just packaging-smoke-preflight-tests
+
+      - name: Cadrumo host-portable packaging campaign
+        run: just packaging-smoke
+
+      - name: Checkpoint packaging evidence
+        if: always()
+        run: uv run --no-sync python -m dev.packaging.evidence
+
+      - name: Upload tested Cadrumo Python cohort
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-python-cohort-macos
+          path: var/packaging-smoke-cohort/python/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Cadrumo packaging smoke evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-packaging-smoke-evidence-macos
+          path: |
+            var/packaging-smoke-evidence/*.json
+            var/distribution-install-readiness/installed-cohorts/**/evidence.json
+          if-no-files-found: warn
+          retention-days: 14
