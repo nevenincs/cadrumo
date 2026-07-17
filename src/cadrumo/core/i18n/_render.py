@@ -353,7 +353,13 @@ def _recover_format_placeholder_roots(value: str) -> set[str]:
 def _locale_map(locale: str) -> dict[str, str]:
     resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
     with resource.open("r", encoding="utf-8") as handle:
-        loaded = yaml.safe_load(handle) or {}
+        # The C-accelerated SafeLoader parses the ~430 KB catalogue in tens of
+        # milliseconds where the pure-Python loader costs ~0.5 s on every
+        # process start; both apply identical safe-load semantics.
+        if hasattr(yaml, "CSafeLoader"):
+            loaded = yaml.load(handle, Loader=yaml.CSafeLoader) or {}
+        else:
+            loaded = yaml.safe_load(handle) or {}
     return _flatten_translations(loaded)
 
 

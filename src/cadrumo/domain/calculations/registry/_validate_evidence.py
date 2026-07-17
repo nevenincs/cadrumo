@@ -28,6 +28,7 @@ def _normalise_required_text(text: str) -> str:
 
 
 _DISK_CACHE: dict[str, str] | None = None
+_DISK_CACHE_DIRTY: bool = False
 
 
 def _corpus_text_cache_path() -> Path:
@@ -42,9 +43,26 @@ def _corpus_text_cache_path() -> Path:
 
 def reset_corpus_text_cache() -> None:
     """Drop the in-process corpus-text cache memos (test isolation only)."""
-    global _DISK_CACHE
+    global _DISK_CACHE, _DISK_CACHE_DIRTY
     _DISK_CACHE = None
+    _DISK_CACHE_DIRTY = False
     _NORMALISED_SOURCE_TEXT_CACHE.clear()
+
+
+def flush_corpus_text_cache() -> None:
+    """Persist accumulated corpus-text entries in one write.
+
+    Cache misses only mutate the in-process mapping and mark it dirty; the
+    validation entry points flush once when they finish. Writing per miss was
+    accidentally quadratic: every miss re-read and fully rewrote a JSON file
+    that grows to tens of megabytes, which alone cost ~13 seconds of the
+    first-touch registry validation on an end-user machine.
+    """
+    global _DISK_CACHE_DIRTY
+    if not _DISK_CACHE_DIRTY or _DISK_CACHE is None:
+        return
+    _write_disk_cache(_DISK_CACHE)
+    _DISK_CACHE_DIRTY = False
 
 
 def _load_disk_cache() -> dict[str, str]:
@@ -91,7 +109,9 @@ def _write_disk_cache(data: dict[str, str]) -> None:
                 _LOGGER.debug("Ignoring unreadable corpus text cache while merging at %s", cache_path, exc_info=True)
         merged.update(data)
         with tempfile.NamedTemporaryFile("w", dir=cache_path.parent, delete=False, encoding="utf-8") as tf:
-            json.dump(merged, tf, ensure_ascii=False, indent=2)
+            # Compact separators: this is a machine cache that reaches tens of
+            # megabytes; indentation only inflates every read and write.
+            json.dump(merged, tf, ensure_ascii=False, separators=(",", ":"))
             temp_name = tf.name
         os.replace(temp_name, cache_path)
     except Exception:
@@ -260,5 +280,6 @@ class EvidenceValidator:
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised
         disk_cache[cache_key_str] = normalised
-        _write_disk_cache(disk_cache)
+        global _DISK_CACHE_DIRTY
+        _DISK_CACHE_DIRTY = True
         return normalised
