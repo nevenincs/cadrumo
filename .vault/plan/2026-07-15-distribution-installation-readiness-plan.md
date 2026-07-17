@@ -13,6 +13,18 @@ related:
   - '[[2026-07-16-distribution-harness-identity-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
+<!-- RETIRED: P08, P10, S19, S20, S24, S29, S34, S35, S36, S37, S38, S39, S40, S41, S45, S46, S47, S48, S49, S50, S52, S53, S54, S55, S59, S69, S70 -->
+
 # `distribution-installation-readiness` plan
 
 ## Wave `W01` - Make the Python product complete
@@ -67,8 +79,6 @@ Create a versioned Scoop product artifact with both commands and exercise it in 
 
 - [x] `W02.P04.S17` - Generate a versioned Scoop manifest with immutable cohort URLs hashes persistence and both command shims; `packaging/scoop/generate.py`.
 - [x] `W02.P04.S18` - Prove Scoop generation matches the cohort and exposes both installed commands; `packaging/scoop/tests/test_generate.py`.
-- [ ] `W02.P04.S19` - Install from the intended bucket in Windows Sandbox and execute CLI MCP update and persistence behavior; `dev/packaging/smoke_scoop.ps1`.
-- [ ] `W02.P04.S20` - Run the clean Scoop acquisition gate on the declared Windows release row; `.github/workflows/packaging-scoop.yml`.
 
 ### Phase `W02.P05` - Generate and prove Homebrew
 
@@ -77,7 +87,6 @@ Create a pinned Python virtualenv formula and tap snapshot and exercise every pl
 - [x] `W02.P05.S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort; `packaging/homebrew/generate.py`.
 - [x] `W02.P05.S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort; `packaging/homebrew/tests/test_generate.py`.
 - [x] `W02.P05.S23` - Run audit source installation brew test CLI tax work and MCP tax work for one tap snapshot; `dev/packaging/smoke_homebrew.py`.
-- [ ] `W02.P05.S24` - Run the Homebrew acquisition gate on every claimed macOS and Linux row; `.github/workflows/packaging-homebrew.yml`.
 
 ### Phase `W02.P06` - Generate Claude artifacts and seal the cohort
 
@@ -89,7 +98,6 @@ translation. A failed check leaves its row open for a separate approved implemen
 - [x] `W02.P06.S25` - Generate plugin bootstrap configuration that resolves the complete cohort; `src/cadrumo/agent/_workspace.py`.
 - [x] `W02.P06.S26` - Byte-compare the complete generated marketplace plugin tree with its source authority; `src/cadrumo/agent/tests/test_marketplace_generation.py`.
 - [x] `W02.P06.S28` - Align MCPB platform and Python requirements with the command-bearing distribution; `packaging/mcpb/manifest.json`.
-- [ ] `W02.P06.S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort; `packaging/mcpb/build.py`.
 - [x] `W02.P06.S03` - Build wheel sdist companions plugin MCPB Scoop and Homebrew members once from a clean archive; `dev/packaging/release_cohort.py`.
 - [x] `W02.P06.S04` - Define and validate the immutable cohort identity and digest contract; `dev/packaging/cohort_manifest.py`.
 - [x] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
@@ -110,19 +118,6 @@ Replace fragmented lane manifests with a schema that binds source, hashes, envir
 - [x] `W03.P07.S32` - Require a complete same-cohort evidence set in release readiness; `dev/release/readiness.py`.
 - [x] `W03.P07.S33` - Reject stale skipped ambient mismatched and incomplete release evidence; `dev/release/tests/test_distribution_readiness.py`.
 
-### Phase `W03.P08` - Execute the support matrix
-
-Run clean platform and client rows against exact cohort hashes and reject absent, skipped, ambient, or mismatched execution evidence.
-
-- [ ] `W03.P08.S34` - Execute the complete cohort and installed tax oracle on the claimed Linux Python row; `.github/workflows/packaging-smoke.yml`.
-- [ ] `W03.P08.S35` - Execute the complete cohort and installed tax oracle on the claimed Windows Python row; `.github/workflows/packaging-smoke.yml`.
-- [ ] `W03.P08.S36` - Execute the complete cohort and installed tax oracle on the claimed macOS Python row; `.github/workflows/packaging-smoke.yml`.
-- [ ] `W03.P08.S37` - Execute Homebrew installation and both real-behavior oracles on the claimed Linux row; `.github/workflows/packaging-homebrew.yml`.
-- [ ] `W03.P08.S38` - Install the cohort plugin in Claude Code and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
-- [ ] `W03.P08.S39` - Install the cohort plugin or MCPB in Claude Desktop and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
-- [ ] `W03.P08.S40` - Install the supported artifact in Cowork and execute the real tax-work tool call; `.github/workflows/packaging-claude.yml`.
-- [ ] `W03.P08.S69` - Capture each real Claude client's harness identifier inventory, MCP server name, English MCP product description, and Spanish MCP product description and compare them with the exact cohort; `.github/workflows/packaging-claude.yml, var/distribution-install-readiness`.
-
 ## Wave `W04` - Promote and reacquire exact bytes
 
 Publish only the tested cohort through one authority, then reacquire from every advertised channel and repeat installed behavior before availability is claimed.
@@ -131,22 +126,9 @@ Publish only the tested cohort through one authority, then reacquire from every 
 
 Make the protected manual OIDC workflow consume stored tested artifacts and remove competing publication paths.
 
-- [ ] `W04.P09.S41` - Promote stored cohort bytes through protected manual OIDC publication without rebuilding; `.github/workflows/publish.yml`.
 - [x] `W04.P09.S42` - Verify cohort hashes evidence completeness and destination versions before any upload; `dev/release/promote_python_cohort.py`.
 - [x] `W04.P09.S43` - Remove local release upload authority while retaining diagnostic build recipes; `justfile`.
 - [ ] `W04.P09.S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts; `dev/release/tests/test_publish_workflow.py`.
-
-### Phase `W04.P10` - Reacquire public channels
-
-Install from the actual public endpoints and repeat both command and tax-work behavior before promotion is accepted.
-
-- [ ] `W04.P10.S45` - Acquire root and companion distributions from PyPI and repeat installed CLI and MCP tax work; `dev/packaging/acquire_pypi.py`.
-- [ ] `W04.P10.S46` - Acquire the exact GitHub release cohort and verify every retained digest; `dev/packaging/acquire_github_release.py`.
-- [ ] `W04.P10.S47` - Acquire Cadrumo through the public Scoop bucket and repeat installed behavior; `dev/packaging/acquire_scoop.ps1`.
-- [ ] `W04.P10.S48` - Acquire Cadrumo through the public Homebrew tap and repeat installed behavior; `dev/packaging/acquire_homebrew.py`.
-- [ ] `W04.P10.S49` - Acquire the public marketplace plugin through Claude and repeat the MCP tax-work call; `dev/packaging/acquire_claude_plugin.py`.
-- [ ] `W04.P10.S50` - Acquire the published MCPB through each claimed client and repeat the MCP tax-work call; `dev/packaging/acquire_mcpb.py`.
-- [ ] `W04.P10.S70` - Reacquire every public Claude artifact and verify its `cadrumo-` harness namespace and English and Spanish MCP product descriptions against the cohort manifest; `dev/packaging/acquire_claude_plugin.py, dev/packaging/acquire_mcpb.py`.
 
 ## Wave `W05` - Document measured reality and close
 
@@ -157,10 +139,6 @@ Publish acquisition guidance only for passing channels, formally review the impl
 Align README and user guides with the measured support matrix and prevent documentation from leading artifact availability.
 
 - [x] `W05.P11.S51` - Define the installation guide information architecture and evidence-backed claim boundaries; `.vault/reference/2026-07-15-distribution-installation-readiness-reference.md`.
-- [ ] `W05.P11.S52` - Publish only currently proven acquisition commands and support claims; `README.md`.
-- [ ] `W05.P11.S53` - Document clean installation verification update and removal for Python Scoop and Homebrew; `docs/workstation-setup.md`.
-- [ ] `W05.P11.S54` - Document Claude Code Desktop Cowork plugin and MCPB acquisition with real verification commands; `docs/how-to/connect-an-agent.md`.
-- [ ] `W05.P11.S55` - Publish the measured platform client and channel support matrix; `docs/updates.md`.
 - [x] `W05.P11.S56` - Fail documentation checks when an advertised channel lacks matching acquisition evidence; `dev/docs/tests/test_distribution_claims.py`.
 
 ### Phase `W05.P12` - Review and audit delivery
@@ -169,7 +147,6 @@ Run feature-scoped quality, architecture, documentation, and honest-close review
 
 - [ ] `W05.P12.S57` - Run the path-scoped formatting tests and vault checks for every touched implementation surface; `.vault/exec/2026-07-15-distribution-installation-readiness`.
 - [ ] `W05.P12.S58` - Perform a formal safety intent and quality review of the finished distribution implementation; `.vault/audit/2026-07-15-distribution-installation-readiness-code-review-audit.md`.
-- [ ] `W05.P12.S59` - Audit every generated artifact claim against retained installed behavior and public reacquisition evidence; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 - [ ] `W05.P12.S60` - Create step execution records rebuild the feature index and close only evidenced rows; `.vault/index/distribution-installation-readiness.index.md`.
 - [ ] `W05.P12.S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions; `leave noncompliant artifacts open; `.vault/audit/2026-07-15-distribution-installation-readiness-close-audit.md`.
 
@@ -187,6 +164,17 @@ useful prerequisites. None can close a command-bearing artifact Step without cle
 installation and successful tax work through that artifact's public interface. A data
 companion closes only when its integrity, exact-version participation, namespace
 contribution, and downstream cohort calculation are proved.
+
+The post-release tail of this campaign has been split into the post-release-distribution
+plan. Twenty-five steps that require operator publish approval (currently held) or real
+public-registry and multi-operating-system access - Windows Sandbox, multi-OS acquisition
+gates, real Claude-client installs, PyPI, GitHub, Scoop, Homebrew, marketplace, and MCPB
+reacquisition, and the availability documentation that depends on that evidence - were
+lifted into that plan verbatim, each row recording its originating step identifier. None
+was checked. The emptied support-matrix and public-reacquisition phases were removed. What
+remains here is the completable local scope: harness-identity verification, the publish
+workflow structural gate, and the closeout review and audit rows, which can be finished
+from this worktree. The close audit records the disposition of each deferred step.
 
 ## Steps
 
