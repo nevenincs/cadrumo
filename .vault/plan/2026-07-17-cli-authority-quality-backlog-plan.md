@@ -56,9 +56,9 @@ Make the namespace registry the sole metadata authority and prove each storage b
 
 Give filed observation persistence sole ownership of selection, ordering, and writes behind one typed finalizer.
 
-- [ ] `P04.S11` - Make filed observation persistence the sole owner of latest-record selection, deterministic history ordering, metadata enrollment, and calculation-observation writes and remove the duplicate selector and persistence loop from capture orchestration; `src/cadrumo/application/live/_filed_data_capture.py`.
-- [ ] `P04.S12` - Introduce one typed filed-capture finalizer and failure accumulator used by single, bulk, and source capture with explicit fail-fast single and source policy and best-effort bulk policy; `src/cadrumo/application/live/_filed_capture_finalizer.py`.
-- [ ] `P04.S13` - Prove identical latest selection and history ordering across all capture routes, their distinct failure policies, and preservation of the separate strict IVA compensation persistence path; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
+- [x] `P04.S11` - Make filed observation persistence the sole owner of latest-record selection, deterministic history ordering, metadata enrollment, and calculation-observation writes and remove the duplicate selector and persistence loop from capture orchestration; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [x] `P04.S12` - Introduce one typed filed-capture finalizer and failure accumulator used by single, bulk, and source capture with explicit fail-fast single and source policy and best-effort bulk policy; `src/cadrumo/application/live/_filed_capture_finalizer.py`.
+- [x] `P04.S13` - Prove identical latest selection and history ordering across all capture routes, their distinct failure policies, and preservation of the separate strict IVA compensation persistence path; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
 
 ### Phase `P05` - LLM review workflow typing
 
