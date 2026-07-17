@@ -12,6 +12,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+  - '[[2026-07-17-ledger-evidence-atomicity-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -50,6 +51,8 @@ Restrict ledger link to invoice-only linkage and remove the duplicate backend re
 - [x] `P03.S08` - Remove modelo audit replay and every call to the backend replay method while retaining only genuine evidence audit check; `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`.
 - [ ] `P03.S09` - Prove attach remains the sole evidence mutation, invoice link is atomic and invoice-only, and link rejects every removed evidence grammar; `src/cadrumo/entrypoints/cli/tests/test_ledger_link_check_verbs.py`.
 - [x] `P03.S10` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events; `src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
+- [ ] `P03.S16` - Move the one-evidence-writer guard from the wrapper to the transaction builder so the bulk-classify path cannot bypass the attach authority: the builder asserts the evidence set equals the current evidence unless the _evidence_authority marker is present, OR prove BULK_CLASSIFY_ALLOWED_COLUMNS never intersects the evidence fields, with a gate proving bulk-classify cannot mutate any evidence field outside attach; `src/cadrumo/application/ledger/_actions_manual.py, src/cadrumo/application/ledger/_actions_classification.py, src/cadrumo/application/ledger/_models.py`.
+- [ ] `P03.S17` - Add an explicit id-stability assertion to split_transaction_with_classified_children that raises when a classified replacement child transaction_id diverges from the bare child it derives from, so a divergence cannot silently misattribute evidence and provenance, gated on a test proving the split raises on a mismatched replacement transaction_id rather than proceeding; `src/cadrumo/application/ledger/_actions_split_merge.py`.
 
 ### Phase `P04` - Contract migration for the evidence family
 
