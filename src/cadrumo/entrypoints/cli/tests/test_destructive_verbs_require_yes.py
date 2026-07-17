@@ -146,3 +146,33 @@ def test_auth_logout_does_not_require_yes() -> None:
     result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
 
     assert result.exit_code == 0, result.output
+
+
+def test_auth_status_is_non_destructive_and_needs_no_yes() -> None:
+    """Anti-tautology: ``config auth status`` is a read verb needing no confirmation.
+
+    The ``--yes`` guard is scoped to destructive ``auth reset``; the recorded-state
+    report runs against an unconfigured profile and never demands confirmation.
+    """
+    result = invoke_cached_cli(["config", "auth", "status"])
+
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" not in combined and "confirm" not in combined.lower(), combined
+
+
+def test_auth_test_is_non_destructive_and_needs_no_yes() -> None:
+    """Anti-tautology: ``config auth test`` is a live probe needing no confirmation.
+
+    The probe may report an unavailable verdict, but it never mutates provider
+    state and never demands ``--yes``; only destructive ``auth reset`` is guarded.
+    """
+    from ....application.auth import configure_operator_auth
+
+    configure_operator_auth("certificate")
+    result = invoke_cached_cli(["config", "auth", "test"])
+
+    assert "Traceback" not in result.output, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" not in combined and "confirm" not in combined.lower(), combined
