@@ -52,9 +52,15 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W03-P08-S69]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S42]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
+  - '[[2026-07-15-distribution-installation-readiness-W04-P09-S44]]'
   - '[[2026-07-15-distribution-installation-readiness-W05-P11-S51]]'
   - '[[2026-07-15-distribution-installation-readiness-W05-P11-S56]]'
+  - '[[2026-07-15-distribution-installation-readiness-W05-P12-S57]]'
+  - '[[2026-07-15-distribution-installation-readiness-W05-P12-S60]]'
+  - '[[2026-07-15-distribution-installation-readiness-W05-P12-S71]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
+  - '[[2026-07-15-distribution-installation-readiness-audit]]'
+  - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'
   - '[[2026-07-15-distribution-installation-readiness-research]]'
@@ -75,6 +81,8 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 
 ### audit
 
+- `2026-07-15-distribution-installation-readiness-code-review-audit` - `distribution-installation-readiness` audit: `distribution installation readiness code review`
+- `2026-07-15-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `Distribution close: harness identity and publish guardrail disposition`
 - `2026-07-16-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `Packaging ADR reconciliation`
 - `2026-07-16-distribution-installation-readiness-p02-review-audit` - `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
 - `2026-07-17-distribution-installation-readiness-audit` - `distribution-installation-readiness` audit: `S67 distribution identity verifier code review`
@@ -127,8 +135,12 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
 - `2026-07-15-distribution-installation-readiness-W03-P08-S69` - Capture each real Claude client's harness identifier inventory, MCP server name, English MCP product description, and Spanish MCP product description and compare them with the exact cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S42` - Verify cohort hashes evidence completeness and destination versions before any upload
+- `2026-07-15-distribution-installation-readiness-W04-P09-S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts
 - `2026-07-15-distribution-installation-readiness-W05-P11-S51` - Define the installation guide information architecture and evidence-backed claim boundaries
 - `2026-07-15-distribution-installation-readiness-W05-P11-S56` - Fail documentation checks when an advertised channel lacks matching acquisition evidence
+- `2026-07-15-distribution-installation-readiness-W05-P12-S57` - Run the path-scoped formatting tests and vault checks for every touched implementation surface
+- `2026-07-15-distribution-installation-readiness-W05-P12-S60` - Create step execution records rebuild the feature index and close only evidenced rows
+- `2026-07-15-distribution-installation-readiness-W05-P12-S71` - Audit every deliverable for Cadrumo brand parity, canonical harness-prefix coverage, and parity between the English and Spanish MCP product descriptions
 
 ### plan
 
