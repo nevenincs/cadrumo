@@ -20,10 +20,11 @@ Once the amendment is filed, the wizard points the operator at the existing
 an export file itself, mirroring how ``work wizard`` hands off to
 ``work calculate`` rather than re-deriving casilla values.
 
-A real interactive terminal is required by default, reusing the exact
-console-support detection and dynamic-answer protocol
-:mod:`_modelo_work_wizard_cli` establishes for the calculation-draft wizard
-(``_QuestionaryTextPrompter`` and the ``_TextAnswerPrompter`` protocol).
+A real interactive terminal is required by default. Prompting runs through the
+application layer's canonical :class:`~application.wizard.QuestionaryPrompter`
+and the dynamic-prompt helper :func:`_modelo_work_wizard_cli._ask_wizard_text`,
+so this wizard, the calculation-draft wizard, and the profile setup wizard all
+share one console-support detection and one translated refusal.
 """
 
 from __future__ import annotations
@@ -50,6 +51,7 @@ from ...application.modelo import (
     get_filing_record,
     registry_casillas_for_registry_scope,
 )
+from ...application.wizard import QuestionaryPrompter
 from ...core import Period, permitted_amendment_kind_values
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import output_language, tr
@@ -57,10 +59,7 @@ from ...domain.calculations.registry import RegistrySnapshotError, validated_cas
 from ...domain.modelos import CalculationRevisionAmendmentKind
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_rendering import filing_record_lines
-from ._modelo_work_wizard_cli import (
-    _QuestionaryTextPrompter,
-    _TextAnswerPrompter,
-)
+from ._modelo_work_wizard_cli import _ask_wizard_text
 
 if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, ModeloRecord, WorkUnit
@@ -193,7 +192,7 @@ def run_modelo_work_amend_wizard(
             ),
         ) from None
 
-    active_prompter = _QuestionaryTextPrompter()
+    active_prompter = QuestionaryPrompter.from_ambient_app_session()
 
     try:
         casilla_rows = _baseline_casilla_rows(unit)
@@ -257,7 +256,7 @@ def _baseline_casilla_rows(unit: WorkUnit) -> tuple[Any, ...]:
 
 # KWARGS-ANY-RATIONALE-cli: casilla prompt rows carry a heterogeneous casilla-id element
 def _prompt_corrections(
-    prompter: _TextAnswerPrompter,
+    prompter: QuestionaryPrompter,
     *,
     unit: WorkUnit,
     baseline: ModeloRecord,
@@ -297,7 +296,7 @@ def _prompt_corrections(
             "Which casilla numbers changed? (comma/space separated, blank for none)"
         ),
     )
-    raw_selection = prompter.ask_text(selection_prompt, help_text=None).strip()
+    raw_selection = _ask_wizard_text(prompter, selection_prompt, help_text=None).strip()
     if not raw_selection:
         return ()
 
@@ -346,7 +345,7 @@ def _prompt_corrections(
             default="Corrected value for casilla {number} ({label}), currently {previous_value}",
         )
         help_text = row.localized_help.get(lang)
-        raw_value = prompter.ask_text(value_prompt, help_text=help_text).strip()
+        raw_value = _ask_wizard_text(prompter, value_prompt, help_text=help_text).strip()
         try:
             corrected_value = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
@@ -358,7 +357,7 @@ def _prompt_corrections(
 
 
 def _prompt_amendment_kind(
-    prompter: _TextAnswerPrompter,
+    prompter: QuestionaryPrompter,
     *,
     modelo: str,
     period: Period,
@@ -389,7 +388,7 @@ def _prompt_amendment_kind(
             "legally available for this filing's period are accepted."
         ),
     )
-    raw = prompter.ask_text(prompt, help_text=help_text).strip()
+    raw = _ask_wizard_text(prompter, prompt, help_text=help_text).strip()
     try:
         kind = CalculationRevisionAmendmentKind(raw)
     except ValueError as exc:
@@ -411,12 +410,12 @@ def _prompt_amendment_kind(
     return kind
 
 
-def _prompt_reason(prompter: _TextAnswerPrompter) -> str:
+def _prompt_reason(prompter: QuestionaryPrompter) -> str:
     prompt = tr(
         "cli.app.modelo.work.amend_wizard_reason_prompt",
         default="Reason for this amendment (kept in the audit trail)",
     )
-    raw = prompter.ask_text(prompt, help_text=None).strip()
+    raw = _ask_wizard_text(prompter, prompt, help_text=None).strip()
     if not raw:
         raise typer.BadParameter(tr("cli.app.modelo.work.amend_wizard_reason_required"))
     return raw

@@ -21,25 +21,28 @@ registry formula engine already populate them, exactly as a bare
 surface a bare calculate call would otherwise reject with a bindings-missing
 refusal.
 
-A real interactive terminal is required:
-:class:`_QuestionaryTextPrompter` reuses the exact non-TTY / Windows-no-console
-detection :class:`~application.wizard.QuestionaryPrompter` applies for
-the profile setup wizard, and raises the same translated
-:class:`~application.wizard.WizardUnsupportedConsoleError`.
-Prompt copy is dynamic
-(the casilla number and label come from the resolved registry snapshot, not a
-static translation-catalogue key), so this module does not reuse the wizard
-package's ``WizardQuestion`` model — that model's ``prompt`` field is a static
-``Translatable`` catalogue key with no interpolation support, the wrong shape
-for a runtime-discovered casilla label.
+A real interactive terminal is required: the prompting itself is the
+application layer's canonical :class:`~application.wizard.QuestionaryPrompter`,
+the same prompter the profile setup wizard drives, so the non-TTY /
+Windows-no-console detection and the translated
+:class:`~application.wizard.WizardUnsupportedConsoleError` are that one
+implementation rather than a re-derived copy of it.
+
+Only the prompt *copy* differs from the setup wizard: the casilla number and
+label come from the resolved registry snapshot, not a static
+translation-catalogue key, so this module does not build the wizard package's
+``WizardQuestion`` model — that model's ``prompt`` field is a static
+``Translatable`` key with no interpolation support, the wrong shape for a
+runtime-discovered casilla label. The rendered string goes to
+:meth:`~application.wizard.QuestionaryPrompter.ask_text` instead, which is the
+same plain-text primitive ``ask`` dispatches a ``TEXT`` widget onto.
 """
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
@@ -54,7 +57,7 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
 )
-from ...application.wizard import WizardUnsupportedConsoleError
+from ...application.wizard import QuestionaryPrompter
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice
@@ -69,58 +72,19 @@ if TYPE_CHECKING:
     from ...domain.modelos import WorkUnit
 
 
-@runtime_checkable
-class _TextAnswerPrompter(Protocol):
-    """Capability protocol for collecting one free-text answer to a dynamic prompt.
+def _ask_wizard_text(prompter: QuestionaryPrompter, prompt: str, *, help_text: str | None) -> str:
+    """Ask one dynamic free-text wizard question, printing ``help_text`` first.
 
-    Deliberately narrower than
-    :class:`~application.wizard.Prompter`: the wizard's questions are
-    always plain-text casilla/binding/relation values, and the prompt text
-    itself is built from a runtime-resolved registry label rather than a
-    static translation-catalogue key, so it takes an already-rendered
-    ``prompt`` string rather than a
-    :class:`~application.wizard._models.WizardQuestion`.
+    The console-support check runs before the help line so an unsupported host
+    refuses cleanly rather than printing guidance for a question it can never
+    ask. Help copy is emitted to stdout rather than through the prompter's
+    ``emit_progress`` logger hop because it is operator-facing guidance the
+    answer depends on, not progress telemetry.
     """
-
-    def ask_text(self, prompt: str, *, help_text: str | None) -> str: ...
-
-
-class _QuestionaryTextPrompter:
-    """Production prompter: renders ``prompt`` with ``questionary.text``.
-
-    Reuses the exact console-support detection
-    :class:`~application.wizard.QuestionaryPrompter` applies (non-TTY
-    stdin, Windows no-console-buffer) so a non-interactive host refuses with
-    the same translated
-    :class:`~application.wizard.WizardUnsupportedConsoleError`
-    the profile setup wizard raises, rather than hanging or crashing with a
-    raw ``questionary``/``prompt_toolkit`` traceback.
-    """
-
-    def _ensure_interactive_environment(self) -> None:
-        if not sys.stdin.isatty():
-            raise WizardUnsupportedConsoleError(translated_message="wizard.errors.unsupported_console")
-        try:
-            from prompt_toolkit.output.defaults import create_output
-
-            output = create_output(always_prefer_tty=True)
-            output.flush()
-        except OSError as exc:
-            raise WizardUnsupportedConsoleError(translated_message="wizard.errors.unsupported_console") from exc
-
-    def ask_text(self, prompt: str, *, help_text: str | None) -> str:
-        import questionary
-
-        self._ensure_interactive_environment()
-        if help_text:
-            print(help_text)  # noqa: T201 - operator-facing wizard help line, not a debug print
-        try:
-            result = questionary.text(prompt, default="").ask()
-        except OSError as exc:
-            raise WizardUnsupportedConsoleError(translated_message="wizard.errors.unsupported_console") from exc
-        if result is None:
-            return ""
-        return str(result)
+    prompter.ensure_interactive_environment()
+    if help_text:
+        print(help_text)  # noqa: T201 - operator-facing wizard help line, not a debug print
+    return prompter.ask_text(prompt)
 
 
 @dataclass(frozen=True, slots=True)
@@ -239,7 +203,7 @@ def run_modelo_work_wizard(
         bucket_id=bucket_id,
     )
 
-    active_prompter = _QuestionaryTextPrompter()
+    active_prompter = QuestionaryPrompter.from_ambient_app_session()
     try:
         steps = _outstanding_wizard_steps(unit)
     except RegistrySnapshotError as exc:
@@ -515,7 +479,7 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
 
 
 def _run_wizard_steps(
-    prompter: _TextAnswerPrompter,
+    prompter: QuestionaryPrompter,
     steps: tuple[_WizardStep, ...],
 ) -> tuple[tuple[_WizardStep, str], ...]:
     """Ask ``prompter`` one question per outstanding step, in order.
@@ -533,7 +497,7 @@ def _run_wizard_steps(
             label=step.label,
             default="Casilla {number} ({label})",
         )
-        raw = prompter.ask_text(prompt_text, help_text=step.help_text)
+        raw = _ask_wizard_text(prompter, prompt_text, help_text=step.help_text)
         answers.append((step, raw.strip()))
     return tuple(answers)
 
