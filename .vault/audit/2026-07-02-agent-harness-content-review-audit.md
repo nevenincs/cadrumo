@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#agent-harness-content-review'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-07-01-agent-harness-adr]]"
+  - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-07-01-agent-harness-research]]"
   - "[[2026-07-02-agent-harness-audit]]"
 ---
@@ -15,7 +15,7 @@ related:
 ## Scope
 
 A fresh-context honesty review of the DAE-80 agent-harness content rollout,
-required before the `2026-07-01-agent-harness-adr` restructure decisions
+required before the `2026-07-02-agent-harness-refoundation-adr` restructure decisions
 (D1-D7) can be declared structurally complete, per
 `aeat-campaign-close-honesty-review`. The review inherited the accepted
 parent ADR, the completion-roadmap research, and the git-safety incident
@@ -32,7 +32,7 @@ hand-off/deferral record, per the closure discipline.
 
 ### d1-dead-code-now-resolved | critical | the D1 persona-scoped tool boundary shipped as declared-but-unwired at ADR-close time; it is now wired at HEAD (uncommitted, verified green)
 
-D1 (`2026-07-01-agent-harness-adr`, decision D1) chose a runtime manifest
+D1 (`2026-07-02-agent-harness-refoundation-adr`, decision D1) chose a runtime manifest
 read filtered by the active persona, backed by a build-time-verified pinning
 test, over a second codegen'd allowlist artifact. Commit `198e6d6c7`
 (`feat(mcp): persona-scoped tool boundary (D1)`) landed the mechanism
@@ -52,7 +52,7 @@ change.
 
 ### d2-m100-breakage-handed-off | critical | the D2 LIVE_READ retirement's no-pathspec commit (84f84166f) permanently deleted a peer M100 anualidades derivation from history, leaving a live silent-under-declaration defect at committed HEAD
 
-D2 (`2026-07-01-agent-harness-adr`, decision D2) retired the dormant
+D2 (`2026-07-02-agent-harness-refoundation-adr`, decision D2) retired the dormant
 `LIVE_READ` `OperatorMutability` member as a "pure core-enum cleanup,
 proceeds now" surface-independent change. The one-line retirement itself is
 correct and landed in `84f84166f`. But the git-safety incident already
@@ -85,7 +85,7 @@ at HEAD and is explicitly NOT this campaign's item to close.
 
 ### no-retroactive-plan-artifact | high | the seven D1-D7 decisions landed across five commits plus two uncommitted wiring passes with no plan document ever authored, breaching plan-closure-requires-exec-records in spirit
 
-The `2026-07-01-agent-harness-adr` states in its Implementation section that
+The `2026-07-02-agent-harness-refoundation-adr` states in its Implementation section that
 "the above is the shape the subsequent implementation plan will structure
 into waves, phases, and steps" - but no `.vault/plan/2026-07-01-agent-harness-plan.md`
 (or equivalent) was ever scaffolded before execution began. Work proceeded

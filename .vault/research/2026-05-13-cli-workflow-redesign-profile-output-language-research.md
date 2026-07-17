@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
 ---
 

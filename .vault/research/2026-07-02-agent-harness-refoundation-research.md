@@ -3,13 +3,11 @@ tags:
   - '#research'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - '[[2026-06-30-agent-harness-adr]]'
-  - '[[2026-07-01-agent-harness-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-01-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-close-audit]]'
-  - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
 # `agent-harness-refoundation` research: `black-box tool universe, situation-keyed skills, and the MCP operating console`

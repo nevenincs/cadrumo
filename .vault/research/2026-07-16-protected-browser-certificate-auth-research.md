@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
-modified: '2026-07-16'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-17-aeat-access-gate-research]]"
+  - '[[2026-04-17-aeat-access-gate-adr]]'
 ---
 
 # `protected-browser-certificate-auth` research: `reconcile certificate proof with the real browser authority`
@@ -75,6 +75,17 @@ Other AEAT workflows show that `www<N>` hosts can change. Introducing fallback
 would make the proof ambiguous. The safe response to endpoint drift is a loud
 failure followed by new live evidence and a deliberate authority update.
 
+### Certificate identity must be bound to the loaded bytes
+
+Certificate loading reads, parses, and fingerprints one PKCS#12 byte sequence.
+Passing its source path to Playwright would create a second file read after
+validation: an operator or concurrent process could replace the file, causing
+Playwright to present a different certificate from the identity recorded in the
+session. The context provisioner must instead pass the retained private
+`LoadedCertificate` PKCS#12 bytes through Playwright's in-memory `pfx` field.
+That makes the parsed identity, recorded fingerprint, and browser-presented
+credential one immutable input and removes the path replacement race.
+
 ### Persisted handshake evidence adds no trust
 
 Persisted handshake fields record a historical result from the weaker proof
@@ -92,7 +103,8 @@ through a compatibility branch.
 The following parts remain sound and should survive:
 
 - one typed `ActiveCertificateCredentials` boundary;
-- PKCS#12 loading with `SecretStr` materialisation only at context construction;
+- PKCS#12 loading with `SecretStr` materialisation only at the two necessary
+  credential-use boundaries: PKCS#12 decode and Playwright context construction;
 - certificate health, expiry, thumbprint, subject, and subject-derived NIF/NIE;
 - the provider-agnostic `AuthProvider` abstraction;
 - encrypted browser storage state and integrity metadata;
@@ -105,9 +117,10 @@ handshake fields, and optional teardown are contradictory or dead.
 
 ## Recommendation
 
-Use one certificate implementation and one proof predicate. Bind the selected
-PKCS#12 credential to the exact `www6` origin when constructing the Playwright
-context, navigate to the exact protected resource, and accept fresh,
+Use one certificate implementation and one proof predicate. Pass the exact
+PKCS#12 bytes already loaded, parsed, and fingerprinted through Playwright's
+in-memory `pfx` field and bind them to the exact `www6` origin when constructing
+the context. Navigate to the exact protected resource, and accept fresh,
 resumed, or verified authentication only when the final URL and successful
 response still identify that resource.
 

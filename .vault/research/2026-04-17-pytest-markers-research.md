@@ -3,13 +3,11 @@ tags:
   - "#research"
   - "#pytest-markers"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-16-live-write-test-audit-research]]"
   - "[[2026-04-16-live-write-test-audit]]"
-  - "[[2026-04-12-submission-engine-adr]]"
   - "[[2026-04-13-filing-complementaria-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
 issue: "#163"
 charter: "#116"
 ---

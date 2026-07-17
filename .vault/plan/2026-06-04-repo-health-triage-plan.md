@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-07-04'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-06-04-repo-health-triage-research]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-04-repo-health-triage-adr]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-06-04-uv-venv-lock-workaround-audit]]'
-  - '[[2026-05-19-code-duplication-sweep-plan]]'
   - '[[2026-05-26-secure-storage-test-hygiene-audit]]'
 ---
 

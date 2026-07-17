@@ -5,12 +5,10 @@ tags:
   - "#research"
   - "#run-trace"
 date: 2026-04-14
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-workflow-engine-research]]"
   - "[[2026-04-12-workflow-engine-adr]]"
-  - "[[2026-04-12-submission-engine-adr]]"
-  - "[[2026-04-12-self-healing-sync-adr]]"
   - "[[2026-04-14-run-trace-adr]]"
 ---
 

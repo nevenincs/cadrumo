@@ -3,10 +3,10 @@ tags:
   - '#plan'
   - '#agent-harness'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L2
 related:
-  - '[[2026-07-01-agent-harness-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-01-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-content-review-audit]]'
 ---
@@ -72,7 +72,7 @@ Record the explicit deferral of the Tier-A persona-entry itinerary enumeration (
 
 ## Description
 
-Retroactive plan for `2026-07-01-agent-harness-adr`, authored after most of
+Retroactive plan for `2026-07-02-agent-harness-refoundation-adr`, authored after most of
 its seven implementation decisions (D1-D7) had already landed, per
 `plan-closure-requires-exec-records` and the HIGH finding in
 `2026-07-02-agent-harness-content-review-audit` (no plan artifact existed

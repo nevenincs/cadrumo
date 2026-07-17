@@ -3,13 +3,8 @@ tags:
   - '#audit'
   - '#google-oauth'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 related:
-  - "[[2026-05-13-google-oauth-plan]]"
-  - "[[2026-05-08-google-oauth-adr]]"
-  - "[[2026-05-12-google-oauth-adr]]"
-  - "[[2026-05-14-google-oauth-w01-p01-closeout-exec]]"
-  - "[[2026-05-14-google-oauth-w01-p02-closeout-exec]]"
 ---
 
 # `google-oauth` audit: `foundation phase reconciliation`

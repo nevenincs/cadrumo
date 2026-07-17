@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-perf-optimization'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-06-ledger-perf-optimization-adr]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#ledger-perf-optimization`.
 
 ### adr
 
-- `2026-07-06-ledger-perf-optimization-adr` - `ledger-perf-optimization` adr: `write-path serialization cost: dirty-set save vs serialization-carry cache` | (**status:** `proposed`)
+- `2026-07-06-ledger-perf-optimization-adr` - `ledger-perf-optimization` adr: `write-path serialization cost: dirty-set save vs serialization-carry cache` | (**status:** `accepted`)

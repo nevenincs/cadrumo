@@ -3,16 +3,14 @@ tags:
   - '#plan'
   - '#audits-resolution'
 date: '2026-05-13'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-13-eliminate-shims-audit]]"
   - "[[2026-05-13-schema-driven-wizard-ux-audit]]"
   - "[[2026-05-13-testing-framework-tautology-audit]]"
-  - "[[2026-05-10-eliminate-user-cli-shim-adr]]"
   - "[[2026-05-12-schema-driven-wizard-adr]]"
   - "[[2026-05-12-cli-design-research]]"
   - "[[2026-05-12-schema-driven-wizard-research]]"
-  - "[[2026-04-17-pytest-only-testing-research]]"
 ---
 
 # audits resolution plan

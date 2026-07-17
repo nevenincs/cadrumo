@@ -3,13 +3,12 @@ tags:
   - '#research'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
   - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
-  - '[[2026-07-01-agent-harness-adr]]'
 ---
 
 # `claude-ecosystem-packaging` research: `Claude ecosystem as the first packaged product destination`

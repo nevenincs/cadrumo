@@ -3,10 +3,8 @@ tags:
   - '#audit'
   - '#vat-rate-shadow-sweep'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - '[[2026-05-06-modelo-369-vat-centralization-audit]]'
-  - '[[2026-05-06-modelo-369-vat-centralization-research]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
 ---

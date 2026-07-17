@@ -3,10 +3,10 @@ tags:
   - '#plan'
   - '#aeat-user-docs-hardening'
 date: '2026-06-16'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L1
 related:
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-adr]]'
+  - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
 ---
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m184-socio-attribution-handoff'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-09-m184-socio-attribution-handoff-adr]]'
   - '[[2026-07-09-m184-socio-attribution-handoff-audit]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#m184-socio-attribution-hando
 
 ### adr
 
-- `2026-07-09-m184-socio-attribution-handoff-adr` - `m184-socio-attribution-handoff` adr: `M184 attributed-base handoff to socio M100 via typed profile facts` | (**status:** `proposed`)
+- `2026-07-09-m184-socio-attribution-handoff-adr` - `m184-socio-attribution-handoff` adr: `M184 attributed-base handoff to socio M100 via typed profile facts` | (**status:** `accepted`)
 
 ### audit
 

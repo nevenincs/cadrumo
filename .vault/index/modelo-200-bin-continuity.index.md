@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-200-bin-continuity'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-24-modelo-200-bin-continuity-adr]]'
   - '[[2026-07-10-modelo-200-bin-continuity-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#modelo-200-bin-continuity`.
 
 ### adr
 
-- `2026-06-24-modelo-200-bin-continuity-adr` - `modelo-200-bin-continuity` adr: `M200 BIN closing balance must be reconciled to the roll-forward by a no-silent continuity predicate` | (**status:** `proposed`)
+- `2026-06-24-modelo-200-bin-continuity-adr` - `modelo-200-bin-continuity` adr: `M200 BIN closing balance must be reconciled to the roll-forward by a no-silent continuity predicate` | (**status:** `accepted`)
 
 ### research
 

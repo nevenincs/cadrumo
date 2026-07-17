@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#redeme-company-refund'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-21-redeme-company-refund-adr]]'
   - '[[2026-06-21-redeme-company-refund-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#redeme-company-refund`.
 
 ### adr
 
-- `2026-06-21-redeme-company-refund-adr` - `redeme-company-refund` adr: `Modelo 303 refund (devolución) disposition: eligibility-gated election + refund-account axis` | (**status:** `proposed`)
+- `2026-06-21-redeme-company-refund-adr` - `redeme-company-refund` adr: `Modelo 303 refund (devolución) disposition: eligibility-gated election + refund-account axis` | (**status:** `superseded`)
 
 ### research
 

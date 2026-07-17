@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S01]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S02]]'
@@ -19,7 +19,6 @@ related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W02-P03-S09]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W02-P04-S12]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W07-P14-S48]]'
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-code-review-audit]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-reader-review-audit]]'
@@ -37,8 +36,6 @@ Auto-generated index of all documents tagged with `#aeat-cli-userdocs-hardening`
 ## Documents
 
 ### adr
-
-- `2026-06-04-aeat-cli-userdocs-hardening-adr` - `aeat-cli-userdocs-hardening` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### audit
 

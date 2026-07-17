@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#calc-sheets-parity'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-14-calc-sheets-translator-audit]]"
-  - "[[2026-05-14-google-oauth-adr]]"
 ---
 
 # `calc-sheets-parity` audit: engine and registry double-verification sweep

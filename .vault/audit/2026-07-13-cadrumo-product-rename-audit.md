@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-17'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
@@ -40,17 +40,22 @@ environment variables classified in the `W01.P01.S02` product-and-authority matr
 cross-period blocker; and the `aeat` command token wherever it appears inside an
 operator invocation (`aeat config ...`, `aeat app ...`, `aeat --help`). No action.
 
-### aeat-residue-class-b-crypto-labels | low | HKDF/AAD domain-separation labels `b"aeat.*.v1"` are intentional and owner-gated
+### aeat-residue-class-b-crypto-labels | low | Versioned cryptographic protocol domains remain byte-stable
 
-36 byte-literal domain-separation labels of the form `b"aeat.<purpose>.v1"` remain
-across the storage crypto surface (`blob_store`, `crypto`, envelope, dek-wrap,
-recovery, encrypted-columns, secret-store, bundle-encryption, rotation). Example
-sites: `src/cadrumo/adapters/persistence/storage/blob_store/_blob_store.py`
-(`b"aeat.blob.payload.v1"`, `b"aeat.blob.dek-wrap.v1"`) and the crypto tests
-(`b"aeat.context.v1"`, `b"aeat.envelope.v1"`, `b"aeat.lookup.v1"`). These labels are
-cryptographic domain-separation constants baked into derived keys and AAD; changing
-them re-keys existing encrypted data. Per the standing operator ruling they are left
-unchanged and are rekeyed only under explicit operator sign-off. Not a defect.
+The `aeat.*.v1`/`v2` HKDF contexts and AEAD associated-data values are
+cryptographic protocol constants, not executable aliases, compatibility
+branches, namespaces, or product-facing identifiers. Renaming one changes the
+derived key or authenticated bytes: the real DEK-wrap reference vector fails
+with `InvalidTag`, and already encrypted current-format data becomes
+undecryptable. They therefore remain byte-stable across blob storage, encrypted
+columns, envelopes, DEK wrapping, recovery, secret storage, profile bundles,
+rotation, and review-package recipient encryption. There is one current
+read/write path for each format and no fallback for a second label.
+
+The product-owned user-profile schema moved from
+`registry/aeat/user_profile` / `aeat.user_profile` to
+`registry/cadrumo/user_profile` / `cadrumo.user_profile`; the former registry
+path and identifier are not retained as aliases.
 
 ### aeat-residue-class-b-aeaterror | medium | `AeatError` base class (645 references) needs its own reconciliation, tracked as follow-up
 

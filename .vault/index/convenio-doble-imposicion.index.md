@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#convenio-doble-imposicion'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-30-convenio-doble-imposicion-adr]]'
   - '[[2026-06-30-convenio-doble-imposicion-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#convenio-doble-imposicion`.
 
 ### adr
 
-- `2026-06-30-convenio-doble-imposicion-adr` - `convenio-doble-imposicion` adr: `Convenio doble imposicion treaty-rate override framework` | (**status:** `proposed`)
+- `2026-06-30-convenio-doble-imposicion-adr` - `convenio-doble-imposicion` adr: `Convenio doble imposicion treaty-rate override framework` | (**status:** `accepted`)
 
 ### research
 

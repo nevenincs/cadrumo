@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#product-packaging'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-06-28-product-packaging-reference]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#product-packaging`.
 
 ### adr
 
-- `2026-06-28-product-packaging-adr` - `product-packaging` adr: `Self-contained wheel and clean-environment provisioning gate` | (**status:** `proposed`)
+- `2026-06-28-product-packaging-adr` - `product-packaging` adr: `Exact-version Cadrumo wheel cohort and clean-install proof` | (**status:** `accepted`)
 
 ### reference
 

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-06-30-agent-harness-adr]]"
+  - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
   - "[[2026-06-19-m202-first-period-attestation-adr]]"
 ---
@@ -14,7 +14,7 @@ related:
 
 ## Problem Statement
 
-The `aeat` CLI `prepare → calculate → verify` workflow is the surface an autonomous LLM tax-advisor agent drives (`2026-06-30-agent-harness-adr`). The verify gate's Layer-2 structural-invariant check — `VerificationPredicateDefinition.verification_predicates` declared per revision, evaluated by `_evaluate_predicate_expression` in `src/aeat/application/modelo/_verification_actions.py:306` — currently exists for only 6 of the ~12 calc-grade modelos that have a manual or partially-manual base chain: M100, M130, M131, M200, M210, M303. Confirmed by a global sweep `rg -l "verification_predicates" src/aeat/_data/registry/aeat/modelos --type toml`, which returns exactly 11 files across those 6 modelos and no others. M202, M123, M151, and M714 ship zero `verification_predicates` entries at HEAD. A `verification_expectations` block exists for M202 (all three revisions) but is the workbook-parity schema (`computed_casilla_ids` / `tolerance` / `discrepancy_causes`), a structurally distinct TOML key from `verification_predicates` (confirmed in `_schema.py:1046-1160`: both are separate `ModeloRevision` fields). For these modelos a positive economic input (resultado contable, base imponible, rendimientos, valuation) can resolve to a zero downstream base/cuota and the verify gate grants `verified_complete` with `finding_count = 0` — the exact defect class `no-silent-under-declaration` closes for M200 and M131.
+The `aeat` CLI `prepare → calculate → verify` workflow is the surface an autonomous LLM tax-advisor agent drives (`2026-07-02-agent-harness-refoundation-adr`). The verify gate's Layer-2 structural-invariant check — `VerificationPredicateDefinition.verification_predicates` declared per revision, evaluated by `_evaluate_predicate_expression` in `src/aeat/application/modelo/_verification_actions.py:306` — currently exists for only 6 of the ~12 calc-grade modelos that have a manual or partially-manual base chain: M100, M130, M131, M200, M210, M303. Confirmed by a global sweep `rg -l "verification_predicates" src/aeat/_data/registry/aeat/modelos --type toml`, which returns exactly 11 files across those 6 modelos and no others. M202, M123, M151, and M714 ship zero `verification_predicates` entries at HEAD. A `verification_expectations` block exists for M202 (all three revisions) but is the workbook-parity schema (`computed_casilla_ids` / `tolerance` / `discrepancy_causes`), a structurally distinct TOML key from `verification_predicates` (confirmed in `_schema.py:1046-1160`: both are separate `ModeloRevision` fields). For these modelos a positive economic input (resultado contable, base imponible, rendimientos, valuation) can resolve to a zero downstream base/cuota and the verify gate grants `verified_complete` with `finding_count = 0` — the exact defect class `no-silent-under-declaration` closes for M200 and M131.
 
 ## Method
 

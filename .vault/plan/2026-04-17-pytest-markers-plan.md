@@ -3,14 +3,12 @@ tags:
   - "#plan"
   - "#pytest-markers"
 date: 2026-04-17
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-pytest-markers-adr]]"
   - "[[2026-04-17-pytest-markers-research]]"
   - "[[2026-04-16-live-write-test-audit-adr]]"
-  - "[[2026-04-12-submission-engine-adr]]"
   - "[[2026-04-13-filing-complementaria-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
 ---
 
 # `pytest-markers` `phase-1` plan

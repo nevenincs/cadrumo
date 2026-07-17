@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-cli-operator-surface-audit]]'
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
