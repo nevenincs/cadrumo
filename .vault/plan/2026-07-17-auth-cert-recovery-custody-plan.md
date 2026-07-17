@@ -14,6 +14,16 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `auth-cert-recovery-custody` plan
 
 ### Phase `P01` - Authentication custody backend
@@ -85,6 +95,14 @@ Move payload schemas, write-policy tokens, locales, MCP mirrors, help and risk m
 - [ ] `P06.S38` - Re-arm the MCP mirror for the accepted auth, certificate, and recovery verbs; `src/cadrumo/agent/`.
 - [ ] `P06.S39` - Regenerate the CLI reference and operator how-to pages for the auth, certificate, and recovery families from the frozen live surface; `docs/how-to/authenticate-with-aeat.md`.
 - [ ] `P06.S40` - Prove the removed auth, certificate, and recovery spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+
+### Phase `P07` - Secret-store DI seam removal
+
+Remove the module-global test-double seam from the production secret-store factory: thread constructor dependency-injection into the certificate-secret backend, certificate-sources check, and materialisation helpers, delete the override setter and its global, and add a recurrence gate so the seam cannot return.
+
+- [x] `P07.S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers; `delete override_secret_store, the module-global _override_store, its if-override branch, and both blob_store and storage __init__ facade exports; migrate the four consuming tests to pass an EphemeralMasterKeyProvider-backed SecretStore explicitly, in one atomic relocation commit including apidocs scaffold; `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py`.
+- [ ] `P07.S42` - Add an AST recurrence gate, patterned on test_wizard_prompter_singularity.py, that bans module-global _override_* factory state and public override_* setters in production, exempting only the sanctioned core.config.override_settings; `src/cadrumo/adapters/persistence/storage/blob_store/tests/test_materialisation.py`.
+- [ ] `P07.S43` - Sweep the storage facade and generated API docs for the removed override_secret_store export and update the import-hygiene baseline after the seam removal; `src/cadrumo/adapters/persistence/storage/__init__.py`.
 
 ## Description
 

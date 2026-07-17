@@ -14,6 +14,16 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `cli-authority-quality-backlog` plan
 
 ### Phase `P01` - Registry as-of honesty
@@ -57,6 +67,33 @@ Type the language-model review workflow with mandatory invocation origins after 
 - [ ] `P05.S15` - Implement one application review workflow for suggest, saturate, review, apply, reject, evidence no-split, and evidence split while composing existing canonical persistence primitives; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
 - [ ] `P05.S16` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults; `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`.
 - [ ] `P05.S17` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries; `src/cadrumo/application/ledger/tests/test_llm_reject.py`.
+
+### Phase `P06` - MCP gate-refusal composition and CLI-MCP parity
+
+Close two MCP-surface gaps. Both are GATED: do not start either step until the mcp-call-latency plan completes, because that plan restructures the MCP dispatch and refusal path these steps build on.
+
+- [ ] `P06.S18` - GATED (blocked until the mcp-call-latency plan completes): make the MCP server direct dispatch path call gate_refusal() once so a refused call is not composed twice into the envelope; `src/cadrumo/entrypoints/mcp/_server.py`.
+- [ ] `P06.S19` - GATED (blocked until the mcp-call-latency plan completes): add a per-verb CLI-versus-MCP schema-parity diff proving every operator verb exposes the same request and response schema across both surfaces; `src/cadrumo/entrypoints/mcp/tests/test_inprocess_envelope_parity.py`.
+
+### Phase `P07` - Profile-create question-count contract
+
+Pin the prompted-question inventory the profile-create wizard surfaces so a silent add or drop of a question is a loud test failure. Decide the contract first, then implement and assert the exact count.
+
+- [ ] `P07.S20` - Decide the profile-create prompted-question inventory contract: fix the exact set and count of questions the wizard surfaces on the payload and record the rationale as an ADR-lite decision note in the plan; `src/cadrumo/application/wizard/_catalogue.py`.
+- [ ] `P07.S21` - Implement and assert the exact profile-create question count against the decided inventory so an added or dropped question fails the test loudly; `src/cadrumo/entrypoints/cli/tests/test_profile_create_wizard.py`.
+
+### Phase `P08` - Acceptance-wall meta-test isolation
+
+Remove the shared-temp-dir race that flakes the acceptance-wall meta-test under concurrent pytest workers.
+
+- [ ] `P08.S22` - Give the acceptance-wall meta-test a per-worker unique temp root via tmp_path_factory so concurrent pytest workers no longer share a PID-keyed directory and race; `src/cadrumo/tests/test_acceptance_wall_catalogue.py`.
+
+### Phase `P09` - Coverage-gap enforcement passes
+
+Turn two honestly-flagged coverage gaps into non-vacuous gates: the law-determined revision-resolution enforcement across select_revision callers, and a binding validator-dispatch completeness assertion.
+
+- [ ] `P09.S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it; `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`.
+- [ ] `P09.S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated; `src/cadrumo/domain/calculations/registry/tests/test_binding_build_validation.py`.
 
 ## Description
 
