@@ -155,6 +155,7 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.validate": CommandRiskDeclaration(),
     "config.recover": CommandRiskDeclaration(destructive=True),
     "config.rekey": CommandRiskDeclaration(destructive=True),
+    "config.repair": CommandRiskDeclaration(),
     "config.repair.connectivity": CommandRiskDeclaration(),
     "config.repair.integrity.objects": CommandRiskDeclaration(),
     "config.repair.integrity.registry": CommandRiskDeclaration(),
@@ -162,7 +163,13 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.repair.profile": CommandRiskDeclaration(),
     "config.repair.quarantine": CommandRiskDeclaration(),
     "config.repair.reset_progress": CommandRiskDeclaration(),
-    "config.reset": CommandRiskDeclaration(destructive=True),
+    # The reset lifecycle inherits the pre-split ``config.reset`` destructive
+    # declaration: start and resume irreversibly wipe local state, so they must
+    # elicit human confirmation on the MCP surface, never auto-approve. ``status``
+    # is a read of the in-progress reset.
+    "config.reset.resume": CommandRiskDeclaration(destructive=True),
+    "config.reset.start": CommandRiskDeclaration(destructive=True),
+    "config.reset.status": CommandRiskDeclaration(),
     "config.show_recovery": CommandRiskDeclaration(),
     "config.switch": CommandRiskDeclaration(),
     "config.verify_recovery": CommandRiskDeclaration(),
