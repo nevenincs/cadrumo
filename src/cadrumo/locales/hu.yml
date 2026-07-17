@@ -2949,8 +2949,13 @@ cli:
         non_interactive_passphrase_required: Ez a parancs interaktív terminált igényel
           az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase
           és --confirm-new-passphrase kapcsolókkal.
+        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
+        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
+        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
+        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
       new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
+      secrets_stdin_help: cli.config.custody.secrets_stdin_help
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
@@ -3142,6 +3147,16 @@ cli:
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
+    passphrase:
+      change:
+        help: cli.config.passphrase.change.help
+      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
+      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+      errors:
+        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
+        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
+      help: cli.config.passphrase.help
+      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
@@ -4153,14 +4168,12 @@ cli:
           és itt nem kapcsolhatók össze. Kézzel linkelhető katalógusszámla létrehozásához
           futtassa a 'aeat app ledger invoice catalogue create' parancsot, majd adja
           át az invoice_id értéket a --invoice-id kapcsolónak. Vásárlásiszámla-bizonyíték
-          csatolásához futtassa a 'aeat app ledger link <tx> --evidence-id <id>' (vagy
-          'aeat app ledger attach') parancsot egy 'aeat app ledger evidence add' azonosítóval.
-        missing_target: 'Adjon meg legalább egyet: --invoice-id vagy --evidence-id.'
-      evidence_id_help: A 'aeat app ledger evidence add' által létrehozott vásárlásiszámla-bizonyíték
-        azonosítója, amely a tranzakcióhoz kapcsolódik.
-      help: Főkönyvi tranzakció összekapcsolása számlával és/vagy vásárlásiszámla-bizonyítékkal
-        egyetlen kanonikus hívásban. Keresztbucket-hivatkozásokat elutasít. Csak helyi;
-        soha nem lép kapcsolatba az AEAT-tal.
+          csatolásához futtassa a 'aeat app ledger attach' parancsot egy 'aeat app
+          ledger evidence add' azonosítóval.
+      help: Főkönyvi tranzakció összekapcsolása egy reconciliációs katalógusszámlával
+        egyetlen kanonikus hívásban. Vásárlásiszámla-bizonyíték csatolásához használja
+        a 'aeat app ledger attach' parancsot. Keresztbucket-hivatkozásokat elutasít.
+        Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
       id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
       invoice_id_help: A bővített számlakatalógus azonosítója egy importált vagy reconciliált
         számlából, vagy a 'aeat app ledger invoice catalogue create' paranccsal létrehozva,
