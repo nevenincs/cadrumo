@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore, override_secret_store
+from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -190,31 +190,12 @@ def test_secure_storage_backend_request_witness_is_stable_keyed_and_secret_free(
 
 # ---------------------------------------------------------------------------
 # Operator-verb integration tests: the CLI-facing service functions, wired
-# through a real workflow-state repository and an injected SecretStore.
+# through a real workflow-state repository and the active profile bucket's own
+# encrypted secret store (opened by the ``_isolated_backend`` autouse fixture).
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture
-def _isolated_secret_store(tmp_path: Path) -> Iterator[SecretStore]:
-    """Inject a deterministic :class:`SecretStore` for the operator-verb tests.
-
-    ``override_secret_store`` installs an explicit process-wide test store for
-    the duration of each test, keeping operator-verb secret writes isolated
-    from any other test in the same pytest process.
-    """
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "op-blobs", master_key_provider=provider)
-    store = SecretStore(store_dir=tmp_path / "op-secrets", blob_store=blob_store, master_key_provider=provider)
-    override_secret_store(store)
-    try:
-        yield store
-    finally:
-        override_secret_store(None)
-
-
-def test_set_operator_certificate_source_secret_requires_a_registered_source(
-    _isolated_secret_store: SecretStore,
-) -> None:
+def test_set_operator_certificate_source_secret_requires_a_registered_source() -> None:
     """Binding a secret to an unregistered source name is refused, not silently created."""
     workflow_state_repository().update(_register_operator_profile())
 
@@ -222,7 +203,7 @@ def test_set_operator_certificate_source_secret_requires_a_registered_source(
         set_operator_certificate_source_secret(name="ghost", secret=SecretStr("passphrase"))
 
 
-def test_set_then_resolve_roundtrips_the_secret(_isolated_secret_store: SecretStore, tmp_path: Path) -> None:
+def test_set_then_resolve_roundtrips_the_secret(tmp_path: Path) -> None:
     """A secret set via the operator verb is resolvable via the operator resolver."""
     workflow_state_repository().update(_register_operator_profile())
     cert_path = tmp_path / "personal.p12"
@@ -242,7 +223,6 @@ def test_set_then_resolve_roundtrips_the_secret(_isolated_secret_store: SecretSt
 
 
 def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """The mutation result never carries the secret value itself, only its presence."""
@@ -258,7 +238,6 @@ def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
 
 
 def test_set_operator_certificate_source_secret_twice_reports_rotated(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """A second ``set`` call on the same source reports ``rotated=True``."""
@@ -278,7 +257,6 @@ def test_set_operator_certificate_source_secret_twice_reports_rotated(
 
 
 def test_remove_operator_certificate_source_secret_is_idempotent(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """Removing a certificate source's secret twice is a no-op the second time."""
@@ -297,7 +275,6 @@ def test_remove_operator_certificate_source_secret_is_idempotent(
 
 
 def test_resolve_certificate_source_secret_is_none_when_never_set(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """A registered source with no bound secret resolves to ``None``."""
