@@ -14,13 +14,23 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `ledger-evidence-atomicity` plan
 
 ### Phase `P01` - Evidence write authority
 
 Make attach the sole evidence mutation authority and expose one atomic invoice-only linkage writer.
 
-- [ ] `P01.S01` - Make generic manual-field updates refuse all evidence fields, reserve evidence catalogue and provenance mutation for attach, and expose a single atomic invoice-only linkage writer; `src/cadrumo/application/ledger/_actions_manual.py`.
+- [x] `P01.S01` - Make generic manual-field updates refuse all evidence fields, reserve evidence catalogue and provenance mutation for attach, and expose a single atomic invoice-only linkage writer; `src/cadrumo/application/ledger/_actions_manual.py`.
 - [ ] `P01.S02` - Prove direct evidence patches fail, invoice linkage cannot mutate evidence, and failed attach or link leaves transaction, evidence catalogue, provenance, and event history unchanged; `src/cadrumo/application/ledger/tests/test_actions_update_evidence.py`.
 - [ ] `P01.S03` - Prove create-time and attach-time evidence validation enforce the same missing and cross-bucket policy; `src/cadrumo/application/ledger/tests/test_actions_create_evidence_validation.py`.
 
