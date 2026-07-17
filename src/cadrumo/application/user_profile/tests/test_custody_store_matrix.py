@@ -1061,7 +1061,7 @@ def test_every_carried_store_round_trips_through_recovery(
 
 
 # ---------------------------------------------------------------------------
-# S74/S78: recovery lifecycle custody matrix.
+# Recovery lifecycle custody matrix.
 #
 # The recovery and passphrase lifecycle operations rewrap the master key under
 # a file passphrase, which only the encrypted-file backend supports. This
