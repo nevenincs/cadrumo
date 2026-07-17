@@ -58,7 +58,7 @@ def test_unset_passphrase_refuses_noninteractive_prompt() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S79: passphrase change preserves encrypted data and fails closed on a
+# Passphrase change preserves encrypted data and fails closed on a
 # rejected candidate. A passphrase change is the file provider's
 # ``complete_recovery`` rewrap: the master key (hence every record encrypted
 # under it) is preserved, and an invalid candidate passphrase is refused before

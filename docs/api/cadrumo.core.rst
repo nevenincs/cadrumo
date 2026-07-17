@@ -43,6 +43,8 @@ Submodules
    cadrumo.core._casilla_id
    cadrumo.core._config_integration_fields
    cadrumo.core._config_live_tests
+   cadrumo.core._config_llm_fields
+   cadrumo.core._config_mcp_serving_fields
    cadrumo.core._config_runtime_fields
    cadrumo.core._config_state_root
    cadrumo.core._config_storage_route

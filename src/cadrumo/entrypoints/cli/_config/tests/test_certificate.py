@@ -22,11 +22,8 @@ from cryptography.x509.oid import NameOID
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.storage import (
-    EncryptedBlobStore,
-    SecretStore,
     activate_master_key_provider,
     get_master_key_provider,
-    override_secret_store,
     secure_object_repository_for_active_bucket,
 )
 from .....application.auth import resolve_certificate_source_secret
@@ -35,7 +32,6 @@ from .....application.workflow import workflow_state_repository
 from .....core import resolve_active_bucket_id
 from .....domain.buckets import BucketEvent, BucketEventType
 from .....tests.cli_runner import invoke_typer_app
-from .....tests.master_key import EphemeralMasterKeyProvider
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
 
@@ -405,25 +401,7 @@ def test_certificate_check_with_no_registered_sources_reports_none(tmp_path: Pat
 # ── certificate secret set/remove (per-source secret backend, #591 slice) ───
 
 
-@pytest.fixture
-def _isolated_secret_store(tmp_path: Path):
-    """Inject a deterministic :class:`SecretStore` for the secret-verb CLI tests.
-
-    ``override_secret_store`` installs an explicit process-wide test store for
-    the duration of each test, keeping CLI secret writes isolated from any
-    other test in the same pytest process.
-    """
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "cli-secret-blobs", master_key_provider=provider)
-    store = SecretStore(store_dir=tmp_path / "cli-secrets", blob_store=blob_store, master_key_provider=provider)
-    override_secret_store(store)
-    try:
-        yield store
-    finally:
-        override_secret_store(None)
-
-
-def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _isolated_secret_store) -> None:
+def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
 
@@ -439,7 +417,7 @@ def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _is
         assert "Refused" in result.output, result.output
 
 
-def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_secret_store) -> None:
+def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path) -> None:
     """Setting a secret, rotating it, then removing it never leaks the secret value in output."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
@@ -495,7 +473,6 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_
 
 def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
     tmp_path: Path,
-    _isolated_secret_store,
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _create_profile()
@@ -606,7 +583,6 @@ def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
 
 def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_once(
     tmp_path: Path,
-    _isolated_secret_store,
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _create_profile()
@@ -699,7 +675,6 @@ def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_o
 
 def test_certificate_secret_remove_cli_resumes_failed_event_commit_truthfully_once(
     tmp_path: Path,
-    _isolated_secret_store,
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _create_profile()
@@ -773,7 +748,6 @@ def test_certificate_secret_remove_cli_resumes_failed_event_commit_truthfully_on
 
 def test_certificate_secret_cli_exposes_no_backend_or_legacy_grammar(
     tmp_path: Path,
-    _isolated_secret_store,
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()

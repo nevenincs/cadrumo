@@ -204,23 +204,28 @@ def test_mcpb_launches_from_the_unpacked_extension_through_the_manifest_command(
     args = launch["args"]
 
     assert client_install_evidence["official_validator"] == f"@anthropic-ai/mcpb@{_MCPB_CLI_VERSION}"
+    # ``uv run --no-project`` runs the bootstrap with no per-session project
+    # resolution; the bootstrap provisions once and direct-execs thereafter.
     assert args[0] == "run"
-    assert args[1] == "--directory"
-    assert args[3] == "src/server.py"
+    assert args[1] == "--no-project"
+    assert args[2] == "--directory"
+    assert args[4] == "src/server.py"
 
     # The manifest's ``${__dirname}`` placeholder resolves to the unpacked
     # extension the client provisioned, never to the source checkout.
-    extension_dir = Path(args[2]).resolve()
+    extension_dir = Path(args[3]).resolve()
     assert extension_dir.is_dir()
     assert extension_dir != _REPO_ROOT
     assert _REPO_ROOT not in extension_dir.parents
     assert (extension_dir / "manifest.json").is_file()
     assert (extension_dir / "pyproject.toml").is_file()
     assert (extension_dir / "src" / "server.py").is_file()
+    assert (extension_dir / "src" / "_serve.py").is_file()
 
     proof = client_install_evidence["proof"]
     assert proof["archive_construction"] == "passed"
-    assert proof["client_style_provisioning"] == "passed into bundle .venv"
+    assert proof["first_launch_provisioning"] == "passed into bundle .venv"
+    assert proof["second_launch_direct_exec"] == "passed with no re-resolution"
     assert proof["concurrent_server_launches"] == "passed"
     assert proof["bundle_runtime_oracle"] == "passed outside a desktop client"
 

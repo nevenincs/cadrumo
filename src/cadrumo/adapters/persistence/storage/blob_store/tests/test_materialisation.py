@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -19,7 +18,6 @@ from .._materialisation import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
-    override_secret_store,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -37,22 +35,17 @@ _UNSAFE_TEMPFILE_AFFIX_CASES: tuple[tuple[str, str, str, str], ...] = (
 
 
 @pytest.fixture
-def secret_store(tmp_path: Path) -> Iterator[SecretStore]:
+def secret_store(tmp_path: Path) -> SecretStore:
     provider = EphemeralMasterKeyProvider()
     blob_store = EncryptedBlobStore(
         root_dir=tmp_path / "blobs",
         master_key_provider=provider,
     )
-    store = SecretStore(
+    return SecretStore(
         store_dir=tmp_path / "secrets",
         blob_store=blob_store,
         master_key_provider=provider,
     )
-    override_secret_store(store)
-    try:
-        yield store
-    finally:
-        override_secret_store(None)
 
 
 def _put_secret(store: SecretStore, key: str, value: bytes) -> None:
@@ -81,38 +74,17 @@ def test_secret_store_factory_caches_each_explicit_route_independently(tmp_path:
         cadrumo_secret_store_dir=settings_a.cadrumo_secret_store_dir,
         cadrumo_blob_store_dir=tmp_path / "root-c" / "blobs",
     )
-    override_secret_store(None)
-    try:
-        store_a = get_secret_store(settings=settings_a)
-        store_b = get_secret_store(settings=settings_b)
-        store_c = get_secret_store(settings=settings_c)
+    store_a = get_secret_store(settings=settings_a)
+    store_b = get_secret_store(settings=settings_b)
+    store_c = get_secret_store(settings=settings_c)
 
-        assert store_a is get_secret_store(settings=settings_a)
-        assert store_b is get_secret_store(settings=settings_b)
-        assert store_a is not store_b
-        assert store_a is not store_c
-        assert store_a.store_dir == settings_a.cadrumo_secret_store_dir
-        assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
-        assert store_c.store_dir == settings_c.cadrumo_secret_store_dir
-
-        provider = EphemeralMasterKeyProvider()
-        override = SecretStore(
-            store_dir=tmp_path / "override" / "secrets",
-            blob_store=EncryptedBlobStore(
-                root_dir=tmp_path / "override" / "blobs",
-                master_key_provider=provider,
-            ),
-            master_key_provider=provider,
-        )
-        override_secret_store(override)
-        assert get_secret_store(settings=settings_a) is override
-
-        override_secret_store(None)
-        recreated_a = get_secret_store(settings=settings_a)
-        assert recreated_a is not store_a
-        assert recreated_a.store_dir == settings_a.cadrumo_secret_store_dir
-    finally:
-        override_secret_store(None)
+    assert store_a is get_secret_store(settings=settings_a)
+    assert store_b is get_secret_store(settings=settings_b)
+    assert store_a is not store_b
+    assert store_a is not store_c
+    assert store_a.store_dir == settings_a.cadrumo_secret_store_dir
+    assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
+    assert store_c.store_dir == settings_c.cadrumo_secret_store_dir
 
 
 def test_rejects_path_bearing_tempfile_affixes(secret_store: SecretStore) -> None:
@@ -124,12 +96,12 @@ def test_rejects_path_bearing_tempfile_affixes(secret_store: SecretStore) -> Non
             if api_name == "context":
                 with (
                     pytest.raises(StorageValidationError) as excinfo,
-                    materialise_secret(secret_key, prefix=prefix, suffix=suffix),
+                    materialise_secret(secret_key, store=secret_store, prefix=prefix, suffix=suffix),
                 ):
                     raise AssertionError("materialisation should reject unsafe affix before yielding")
             else:
                 with pytest.raises(StorageValidationError) as excinfo:
-                    export_to_temp_path(secret_key, prefix=prefix, suffix=suffix)
+                    export_to_temp_path(secret_key, store=secret_store, prefix=prefix, suffix=suffix)
 
             assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation", case_id
             assert excinfo.value.context == {
@@ -139,11 +111,11 @@ def test_rejects_path_bearing_tempfile_affixes(secret_store: SecretStore) -> Non
 
 
 def test_missing_key_raises_for_materialisation_apis(secret_store: SecretStore) -> None:
-    with pytest.raises(SecretNotFoundError), materialise_secret("never-stored"):
+    with pytest.raises(SecretNotFoundError), materialise_secret("never-stored", store=secret_store):
         raise AssertionError("materialisation should fail before yielding")
 
     with pytest.raises(SecretNotFoundError):
-        export_to_temp_path("never-stored")
+        export_to_temp_path("never-stored", store=secret_store)
 
 
 def test_cleanup_missing_path_is_logged_at_debug_for_materialisation_apis(
@@ -151,13 +123,13 @@ def test_cleanup_missing_path_is_logged_at_debug_for_materialisation_apis(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     _put_secret(secret_store, "aeat:test:context-cleanup", b"payload")
-    with caplog.at_level("DEBUG"), materialise_secret("aeat:test:context-cleanup") as path:
+    with caplog.at_level("DEBUG"), materialise_secret("aeat:test:context-cleanup", store=secret_store) as path:
         path.unlink()
     assert "secret materialisation cleanup skipped missing temp path" in caplog.text
 
     caplog.clear()
     _put_secret(secret_store, "aeat:test:cleanup-log", b"payload")
-    path, cleanup = export_to_temp_path("aeat:test:cleanup-log")
+    path, cleanup = export_to_temp_path("aeat:test:cleanup-log", store=secret_store)
     path.unlink()
     with caplog.at_level("DEBUG"):
         cleanup()
@@ -169,13 +141,13 @@ class TestMaterialiseSecret:
 
     def test_yields_path_with_plaintext(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:m1", b"google-service-account-bytes")
-        with materialise_secret("aeat:test:m1") as path:
+        with materialise_secret("aeat:test:m1", store=secret_store) as path:
             assert path.exists()
             assert path.read_bytes() == b"google-service-account-bytes"
 
     def test_unlinks_on_exit(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:m2", b"x")
-        with materialise_secret("aeat:test:m2") as path:
+        with materialise_secret("aeat:test:m2", store=secret_store) as path:
             captured = path
         assert not captured.exists()
 
@@ -186,7 +158,7 @@ class TestMaterialiseSecret:
         class _BoomError(Exception):
             pass
 
-        with pytest.raises(_BoomError), materialise_secret("aeat:test:m3") as path:
+        with pytest.raises(_BoomError), materialise_secret("aeat:test:m3", store=secret_store) as path:
             captured = path
             raise _BoomError
         assert captured is not None
@@ -210,7 +182,7 @@ class TestMaterialiseSecret:
 
     def test_tempfile_is_mode_0o600(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:perm", b"mode-check")
-        with materialise_secret("aeat:test:perm") as path:
+        with materialise_secret("aeat:test:perm", store=secret_store) as path:
             assert path.read_bytes() == b"mode-check"
             if os.name != "posix":
                 assert path.exists()
@@ -220,14 +192,14 @@ class TestMaterialiseSecret:
 
     def test_suffix_passes_through(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:json", b'{"k":"v"}')
-        with materialise_secret("aeat:test:json", suffix=".json") as path:
+        with materialise_secret("aeat:test:json", store=secret_store, suffix=".json") as path:
             assert path.suffix == ".json"
 
     def test_large_secret_payload_is_fully_written(self, secret_store: SecretStore) -> None:
         payload = (b"large-secret-materialisation" * 8192) + b"tail"
         _put_secret(secret_store, "aeat:test:large", payload)
 
-        with materialise_secret("aeat:test:large") as path:
+        with materialise_secret("aeat:test:large", store=secret_store) as path:
             assert path.read_bytes() == payload
 
 
@@ -236,7 +208,7 @@ class TestExportToTempPath:
 
     def test_returns_path_and_cleanup(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:e1", b"explicit-cleanup")
-        path, cleanup = export_to_temp_path("aeat:test:e1")
+        path, cleanup = export_to_temp_path("aeat:test:e1", store=secret_store)
         try:
             assert path.exists()
             assert path.read_bytes() == b"explicit-cleanup"
@@ -246,14 +218,14 @@ class TestExportToTempPath:
 
     def test_cleanup_is_idempotent(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:e2", b"x")
-        path, cleanup = export_to_temp_path("aeat:test:e2")
+        path, cleanup = export_to_temp_path("aeat:test:e2", store=secret_store)
         cleanup()
         cleanup()  # second call must not raise
         assert not path.exists()
 
     def test_cleanup_retries_after_unlink_failure(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:cleanup-retry", b"payload")
-        path, cleanup = export_to_temp_path("aeat:test:cleanup-retry")
+        path, cleanup = export_to_temp_path("aeat:test:cleanup-retry", store=secret_store)
         path.unlink()
         path.mkdir()
 

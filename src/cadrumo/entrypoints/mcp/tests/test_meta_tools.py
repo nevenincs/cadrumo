@@ -28,12 +28,12 @@ from .._meta_tools import (
 )
 from .._persona_scope import AgentPersona
 from .._server import (
-    _run_subprocess_tool,
     build_meta_sdk_tools,
     build_server,
     persona_scope_refusal,
 )
 from .._tools import McpToolDescriptor, build_tool_descriptors
+from .._transport import _run_subprocess_tool
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

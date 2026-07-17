@@ -8,7 +8,6 @@ file or a set of append fragments merged in deterministic order.
 
 from __future__ import annotations
 
-import logging
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -20,14 +19,13 @@ from pydantic import BaseModel, ValidationError
 
 from ....core import freeze_toml, read_toml
 from . import _loader_locales
+from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
     is_bundled_registry_root,
-    registry_disk_cache_dir,
     registry_disk_cache_enabled,
-    registry_disk_cache_max_entries,
 )
 from ._schema import (
     LegalParameter,
@@ -102,126 +100,6 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 )
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
-_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
-
-
-_EMBEDDED_SCHEMA_CORE_MODULES = (
-    # Cross-package core modules whose TYPES are EMBEDDED in the pickled compiled
-    # (modelos, catalogues) objects. The registry-package hash below covers the
-    # schema MODELS and the compiler/resolvers, but the compiled objects also
-    # embed core primitives defined OUTSIDE the registry package -- a change to
-    # one of these (a new BindingSourceKind member, a BindingAggregation field,
-    # a SensitivityClass value, a Period/TaxDomain shape) alters the pickled
-    # object semantics without touching any registry module, so it must be in
-    # the key too. Extend this tuple when a new core type becomes embedded in
-    # the compiled objects; `test_embedded_schema_core_modules_all_resolve`
-    # guards it against drift to a non-existent module.
-    "cadrumo.core.aggregation",  # BindingSourceKind / BindingAggregation / BindingTypedEnumKind
-    "cadrumo.core.classification",  # SensitivityClass
-    "cadrumo.core._period",  # Period
-    "cadrumo.core._tax_domain",  # TaxDomain
-)
-
-
-def _compute_loader_code_fingerprint() -> str:
-    """Return a content hash of the loader/compiler/schema source.
-
-    The registry disk cache stores COMPILED ``(modelos, catalogues)`` objects.
-    The tree fingerprint keys only the TOML inputs, so a change to the
-    compilation logic (or to a core type embedded in the compiled objects) that
-    produces DIFFERENT compiled objects from IDENTICAL TOML is invisible to the
-    cache key -- a stale pickle from a prior session (the shared OS temp dir
-    persists across sessions and code changes) would be served for the current
-    loader. The hand-maintained :data:`_REGISTRY_TREE_CACHE_SCHEMA_VERSION` only
-    guards against this when a developer remembers to bump it. Folding a content
-    hash of the source into the cache key closes the gap automatically:
-
-    * every registry-package module (excluding its tests) -- the schema models,
-      the compiler, and the resolvers; and
-    * the cross-package core modules whose types are embedded in the compiled
-      objects (:data:`_EMBEDDED_SCHEMA_CORE_MODULES`).
-
-    Any change to either surface yields a new key, so pre-change pickles can
-    never be served. Best-effort per surface: an unreadable registry tree (e.g.
-    a zip-imported install) falls back to the interpreter version + bytecode
-    cache tag; an unresolvable core module folds in a stable marker so the key
-    stays deterministic and distinct rather than crashing.
-    """
-    import hashlib
-    import importlib
-    import sys
-
-    hasher = hashlib.sha256()
-    try:
-        package_dir = Path(__file__).resolve().parent
-        source_files = sorted(
-            path for path in package_dir.rglob("*.py") if "tests" not in path.relative_to(package_dir).parts
-        )
-        for path in source_files:
-            hasher.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
-            hasher.update(path.read_bytes())
-    except OSError:
-        hasher.update(sys.version.encode("utf-8"))
-        hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))
-
-    for module_name in _EMBEDDED_SCHEMA_CORE_MODULES:
-        try:
-            module = importlib.import_module(module_name)
-            module_file = getattr(module, "__file__", None)
-            if module_file is None:
-                hasher.update(f"unresolved:{module_name}".encode())
-                continue
-            hasher.update(module_name.encode("utf-8"))
-            hasher.update(Path(module_file).read_bytes())
-        except (OSError, ImportError):
-            hasher.update(f"unresolved:{module_name}".encode())
-    return hasher.hexdigest()
-
-
-_LOADER_CODE_FINGERPRINT = _compute_loader_code_fingerprint()
-
-
-def _registry_disk_cache_key(
-    root: str,
-    fingerprints: tuple[tuple[str, int, int], ...],
-    *,
-    loader_code_fingerprint: str = _LOADER_CODE_FINGERPRINT,
-) -> str:
-    """Compute the registry disk-cache pickle key.
-
-    The key binds the compiled snapshot to (1) the schema-version marker, (2) a
-    content hash of the loader/compiler/schema source (so a code change that
-    alters compiled semantics invalidates the pickle even without a manual
-    version bump), (3) the registry root path, and (4) the per-TOML tree
-    fingerprints (path, size, mtime_ns). ``loader_code_fingerprint`` is injected
-    for test isolation; production always uses :data:`_LOADER_CODE_FINGERPRINT`.
-    """
-    import hashlib
-
-    hasher = hashlib.sha256()
-    hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
-    hasher.update(loader_code_fingerprint.encode("utf-8"))
-    hasher.update(root.encode("utf-8"))
-    for item in fingerprints:
-        hasher.update(item[0].encode("utf-8"))
-        hasher.update(str(item[1]).encode("utf-8"))
-        hasher.update(str(item[2]).encode("utf-8"))
-    return hasher.hexdigest()
-
-
-_DISK_CACHE_READ_ATTEMPTS = 3
-"""Total read attempts against the shared disk-cache pickle before falling back.
-
-Closes a narrow, real Windows race: ``os.replace`` is atomic at the
-filesystem level (sub-millisecond), but a reader's ``open(..., "rb")`` can
-transiently observe a sharing-violation ``OSError`` while a concurrent
-writer's replace is in flight -- an xdist worker racing a sibling worker (or
-an earlier invocation) that is mid-write to the SAME bundled-root pickle.
-2 retries with a short backoff comfortably outlasts an atomic replace; the
-broad ``except`` after the final attempt still falls through to a safe
-recompute for a genuinely corrupt or foreign file, unchanged from before.
-"""
-_DISK_CACHE_READ_RETRY_BASE_DELAY_SECONDS = 0.01
 type _RegistryPathFingerprint = tuple[str, int, int]
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 
@@ -1213,124 +1091,29 @@ def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
     return tuple(fingerprints)
 
 
-def _read_registry_disk_cache_pickle(
-    cache_path: Path,
-    *,
-    logger: logging.Logger,
-) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues] | None:
-    """Read the shared registry disk-cache pickle, retrying past a transient replace race.
-
-    Returns the unpickled payload, or ``None`` if every attempt failed (the
-    caller falls through to a safe recompute). See
-    :data:`_DISK_CACHE_READ_ATTEMPTS` for why the retry exists: a concurrent
-    writer's ``os.replace`` is atomic but can transiently make ``open()``
-    raise on some platforms while the replace is in flight.
-    """
-    import pickle
-    import time
-
-    for attempt in range(_DISK_CACHE_READ_ATTEMPTS):
-        try:
-            with open(cache_path, "rb") as f:
-                # Internal same-user performance cache of first-party registry data only.
-                # The payload is produced exclusively by the dump in the caller and keyed
-                # by a sha256 of the registry tree fingerprints; no untrusted input is ever
-                # deserialized here. A corrupt/foreign file is swallowed and recomputed.
-                return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
-        except Exception:
-            final_attempt = attempt == _DISK_CACHE_READ_ATTEMPTS - 1
-            logger.debug(
-                "Registry disk-cache read attempt %d/%d failed at %s%s",
-                attempt + 1,
-                _DISK_CACHE_READ_ATTEMPTS,
-                cache_path,
-                " -- giving up, will recompute" if final_attempt else " -- retrying",
-                exc_info=True,
-            )
-            if not final_attempt:
-                time.sleep(_DISK_CACHE_READ_RETRY_BASE_DELAY_SECONDS * (2**attempt))
-    return None
-
-
-def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) -> None:
-    """Keep only the newest ``registry_disk_cache_max_entries`` pickles, prune the rest.
-
-    One pickle accumulates per registry-tree fingerprint, so a long-lived cache
-    directory (an editable checkout re-compiling after successive registry
-    edits, or a shared bundled-root temp directory) would otherwise grow without
-    bound. Called after a successful write; entirely best-effort -- a prune
-    failure (a permission error, a concurrent writer's unlink, a file that
-    vanished mid-scan) is logged and swallowed. Eviction must never crash a
-    registry load; the worst case is a few extra stale pickles on disk.
-    """
-    keep = registry_disk_cache_max_entries()
-    try:
-        entries: list[tuple[int, Path]] = []
-        for pickle_path in cache_dir.glob("cadrumo_registry_*.pkl"):
-            try:
-                entries.append((pickle_path.stat().st_mtime_ns, pickle_path))
-            except OSError:
-                continue
-    except OSError:
-        logger.debug("Could not enumerate registry disk-cache pickles in %s", cache_dir, exc_info=True)
-        return
-    entries.sort(reverse=True)
-    for _mtime_ns, stale in entries[keep:]:
-        try:
-            stale.unlink()
-        except OSError:
-            logger.debug("Could not evict stale registry disk-cache pickle %s", stale, exc_info=True)
-
-
 @lru_cache(maxsize=32)
 def _load_registry_tree_cached(
     root: str,
     fingerprints: tuple[tuple[str, int, int], ...],
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    import logging
-    import os
-    import pickle
-    import tempfile
-
-    logger = logging.getLogger(__name__)
     resolved = Path(root)
-    cache_path: Path | None = None
-    if registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved)):
-        key_hash = _registry_disk_cache_key(root, fingerprints)
-
-        cache_path = registry_disk_cache_dir() / f"cadrumo_registry_{key_hash}.pkl"
-        if cache_path.is_file():
-            cached = _read_registry_disk_cache_pickle(cache_path, logger=logger)
-            if cached is not None:
-                return cached
+    use_disk_cache = registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved))
+    if use_disk_cache:
+        # ADR mcp-call-latency D3: a strict-validated compiled cache lets a warm
+        # process skip the TOML parse. It is a shortcut to the same compiled
+        # authority, never a second one: the loader here is the sole compile
+        # path, and the cache read integrity-checks and structurally validates
+        # the payload, deleting and recompiling on any mismatch.
+        cached = load_compiled_registry_cache(resolved, fingerprints)
+        if cached is not None:
+            return cached
 
     catalogues = _load_shared_catalogue_files(resolved / "legal")
     modelos = _load_all_modelo_definitions(resolved / "modelos")
     result = (modelos, catalogues)
 
-    if cache_path is not None:
-        temp_name = None
-        try:
-            # The production cache dir (<storage-root>/cache/registry) may not
-            # exist yet on a cold first run; the pytest/host-shared temp dir
-            # always does. Create it best-effort so the sibling write below has
-            # a parent; any failure falls through to the recompute-and-skip
-            # branch rather than crashing the load.
-            cache_path.parent.mkdir(parents=True, exist_ok=True)
-            with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
-                # Serialises first-party registry objects to the same-user temp cache read
-                # back above; the data never crosses a trust boundary. See the load note.
-                pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)  # nosemgrep
-                temp_name = tf.name
-            os.replace(temp_name, cache_path)
-            _evict_stale_registry_pickles(cache_path.parent, logger=logger)
-        except Exception:
-            logger.debug("Could not write registry disk cache at %s", cache_path, exc_info=True)
-            if temp_name is not None:
-                try:
-                    os.unlink(temp_name)
-                except Exception:
-                    logger.debug("Could not remove temporary registry disk cache file %s", temp_name, exc_info=True)
+    if use_disk_cache:
+        store_compiled_registry_cache(resolved, fingerprints, result)
     return result
 
 

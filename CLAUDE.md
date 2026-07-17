@@ -15,6 +15,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-locales-cli.md
 @.claude/rules/aeat-pytest-background-capture.md
 @.claude/rules/aeat-quality-gates.md
+@.claude/rules/aeat-rag-discovery-mandatory.md
 @.claude/rules/aeat-registry-authority-flow.md
 @.claude/rules/aeat-roundtrip-discipline.md
 @.claude/rules/aeat-safety-legal-gates.md

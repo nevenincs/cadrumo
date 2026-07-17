@@ -26,7 +26,6 @@ from dev.audit.report import (
     DimensionReport,
     HealthReport,
     Status,
-    _reduce_jscpd_output,
     audit_complexity,
     audit_duplication,
     audit_layering,
@@ -112,50 +111,13 @@ def test_to_json_round_trips_every_dimension_field() -> None:
     ]
 
 
-# ---------------------------------------------------------------------------
-# jscpd console-output reduction (real captured output shapes, no mocks)
-# ---------------------------------------------------------------------------
-
-
-def test_reduce_jscpd_output_parses_clone_count_and_percentage() -> None:
-    """A realistic jscpd console summary yields the clone count and duplicated %."""
-    raw = (
-        "Clone found (python):\n"
-        " - src/cadrumo/a.py [10:1 - 20:1]\n"
-        " - src/cadrumo/b.py [30:1 - 40:1]\n"
-        "\n"
-        "Found 3 clones.\n"
-        "\n"
-        "┌──────────┬─────────────┬──────────────────┐\n"
-        "│ Format   │ Total lines │ Duplicated lines │\n"
-        "├──────────┼─────────────┼──────────────────┤\n"
-        "│ python   │ 50000       │ 240 (0.48%)      │\n"
-        "└──────────┴─────────────┴──────────────────┘\n"
-    )
-
-    total, pct = _reduce_jscpd_output(raw)
-
-    assert total == 3
-    assert pct == "0.48"
-
-
-def test_reduce_jscpd_output_reports_zero_clones_on_clean_run() -> None:
-    """A clean jscpd run (no 'Found N clones' line) reduces to zero total."""
-    raw = "No duplicates found across the analyzed files.\n"
-
-    total, pct = _reduce_jscpd_output(raw)
-
-    assert total == 0
-    assert pct == ""
-
-
-def test_reduce_jscpd_output_strips_ansi_escapes_before_parsing() -> None:
-    """ANSI colour codes around the clone-found line must not break the regex."""
-    raw = "\x1b[36mFound 5 clones.\x1b[0m\n"
-
-    total, _pct = _reduce_jscpd_output(raw)
-
-    assert total == 5
+# jscpd invocation, parsing, and availability classification are owned by
+# ``dev.audit.duplication`` and covered by ``dev/audit/tests/test_duplication.py``
+# against the real subprocess. The reduction tests that lived here were deleted
+# with the second jscpd parser they exercised: one of them asserted that output
+# carrying no summary at all reduces to "zero clones", which is precisely the
+# false-green this report shipped for months. This module now tests only what it
+# owns -- the composition and the severity model.
 
 
 # ---------------------------------------------------------------------------
@@ -224,16 +186,21 @@ def test_audit_layering_returns_a_valid_dimension_report() -> None:
         assert result.details
 
 
-def test_audit_duplication_returns_a_valid_dimension_report() -> None:
-    """The duplication dimension shells out to jscpd and classifies it.
+def test_audit_duplication_reports_the_live_trees_real_duplication_state() -> None:
+    """The duplication dimension classifies the live tree honestly.
 
-    Never RED by design (jscpd reports advisory debt, never a hard break);
-    AMBER on any clone cluster or tool-unavailability, GREEN on zero clones.
+    Never RED by design (clone count is advisory debt, never a hard break). The
+    earlier form of this test asserted only ``status in {AMBER, GREEN}``, which
+    holds no matter what the dimension says -- it passed happily while the
+    dimension reported GREEN "no clones found" on a tree carrying 65 real
+    clones. The live tree does carry clones, so AMBER with a measured count is
+    the only honest verdict here; GREEN would mean the runner scanned nothing.
     """
     result = audit_duplication(PROJECT_ROOT)
 
     assert result.name == "duplication"
-    assert result.status in {Status.AMBER, Status.GREEN}
+    assert result.status is Status.AMBER
+    assert "clone cluster(s)" in result.headline
 
 
 def test_build_report_composes_all_four_dimensions_in_order() -> None:

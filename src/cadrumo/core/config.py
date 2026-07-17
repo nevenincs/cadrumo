@@ -32,8 +32,8 @@ from . import _config_live_tests as _live_test_config
 from ._auth_provider import AuthProviderKind as _AuthProviderKind
 from ._config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
-    CadrumoIntegrationSettings,
 )
+from ._config_mcp_serving_fields import CadrumoMcpServingSettings
 from ._config_state_root import (
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     PRODUCT_DATABASE_FILENAME,
@@ -46,7 +46,7 @@ from ._config_support import (
     AEAT_CERTIFICATE_PROTECTED_PATH,  # noqa: F401 - public certificate route authority
     AEAT_CERTIFICATE_PROTECTED_URL,  # noqa: F401 - public certificate route authority
     JustificanteParserBackendSetting,
-    LLMProviderSetting,
+    LLMProviderSetting,  # noqa: F401 - public re-export from cadrumo.core.config
     SecretStoreBackend,
     StorageRouteClassification,
     StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
@@ -114,6 +114,7 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_status_cache_dir": "cache/status-cache",
     "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
+    "cadrumo_validation_verdict_cache_dir": "cache/registry-verdict",
     # Durable generated outputs.
     "cadrumo_storage_backup_dir": "backups",
     "cadrumo_submissions_dir": "submissions",
@@ -167,7 +168,7 @@ class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
             self.env_vars = original_env_vars
 
 
-class Settings(CadrumoIntegrationSettings):
+class Settings(CadrumoMcpServingSettings):
     """Application settings populated from environment variables and ``.env``.
 
     Field names map directly to env var names (uppercased). For example,
@@ -527,6 +528,14 @@ class Settings(CadrumoIntegrationSettings):
             "(normalised text keyed by content fingerprint)"
         ),
     )
+    cadrumo_validation_verdict_cache_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "cache" / "registry-verdict",
+        description=(
+            "Directory for the persistent registry-validation verdict cache "
+            "(a fingerprint-keyed proof that validate_registry ran green, so a "
+            "matching immutable tree skips runtime re-validation)"
+        ),
+    )
 
     # ── Browser Automation ──────────────────────────────────────────────────
     cadrumo_browser_channel: str = Field(
@@ -758,78 +767,6 @@ class Settings(CadrumoIntegrationSettings):
             "the URL-encoded target path. The default template is "
             "sourced from the external constants registry."
         ),
-    )
-
-    # ── LLM ─────────────────────────────────────────────────────────────────
-    cadrumo_llm_provider: LLMProviderSetting = Field(
-        default=LLMProviderSetting.ANTHROPIC,
-        description="Default LLM provider name",
-    )
-    cadrumo_llm_model: str = Field(
-        default="claude-sonnet-4-6",
-        description="Default LLM model identifier",
-    )
-    cadrumo_llm_anthropic_api_key: SecretStr | None = Field(
-        default=None,
-        description="Anthropic API key (env only, never logged)",
-    )
-    cadrumo_llm_openai_api_key: SecretStr | None = Field(
-        default=None,
-        description="OpenAI API key (optional)",
-    )
-    cadrumo_llm_gemini_api_key: SecretStr | None = Field(
-        default=None,
-        description="Google Gemini API key (optional)",
-    )
-    cadrumo_llm_cache_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "llm-cache",
-        description="Directory for on-disk LLM cache entries",
-    )
-    cadrumo_llm_usage_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "llm-usage",
-        description="Directory for append-only LLM usage JSONL logs",
-    )
-    cadrumo_llm_run_telemetry_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "llm-run-telemetry",
-        description="Directory for append-only local LLM run-timing telemetry logs",
-    )
-    cadrumo_llm_run_telemetry_retention_days: int = Field(
-        default=30,
-        ge=1,
-        description="Retention window in days for local LLM run-telemetry records; older records are pruned",
-    )
-    cadrumo_llm_run_telemetry_max_records: int = Field(
-        default=5000,
-        ge=1,
-        description="Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned",
-    )
-    cadrumo_llm_cache_retention_days: int = Field(
-        default=30,
-        ge=1,
-        description="Retention window in days for on-disk LLM response-cache entries; older entries are pruned",
-    )
-    cadrumo_llm_cache_max_records: int = Field(
-        default=5000,
-        ge=1,
-        description="Maximum number of LLM response-cache entries retained; oldest excess entries are pruned",
-    )
-    cadrumo_llm_usage_retention_days: int = Field(
-        default=30,
-        ge=1,
-        description="Retention window in days for LLM usage records; older records are pruned",
-    )
-    cadrumo_llm_usage_max_records: int = Field(
-        default=5000,
-        ge=1,
-        description="Maximum number of LLM usage records retained; oldest excess records are pruned",
-    )
-    cadrumo_llm_default_timeout_s: int = Field(
-        default=60,
-        description="Default timeout for LLM provider calls in seconds",
-    )
-    cadrumo_llm_max_retries: int = Field(
-        default=3,
-        description="Maximum retry attempts for retryable LLM failures",
     )
 
     # ── Evidence reading: cloud-upload consent posture ──────────────────────
@@ -1253,6 +1190,7 @@ class Settings(CadrumoIntegrationSettings):
         "aeat_normatives_root",
         "cadrumo_iva_catalogue_root",
         "cadrumo_corpus_text_cache_dir",
+        "cadrumo_validation_verdict_cache_dir",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",

@@ -19,7 +19,8 @@ a ``(path, cleanup)`` tuple; the caller is responsible for invoking
 
 Both helpers consult the active :class:`SecretStore` via
 :func:`get_secret_store`, a route-aware lazy factory keyed by the resolved
-secret-store and blob-store roots from :class:`Settings`.
+secret-store and blob-store roots from :class:`Settings`, or accept an
+explicit ``store`` argument to bypass that factory entirely.
 """
 
 from __future__ import annotations
@@ -42,7 +43,6 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 _factory_lock = Lock()
-_override_store: SecretStore | None = None
 _stores_by_route: dict[tuple[str, str], SecretStore] = {}
 _DEFAULT_TEMPFILE_PREFIX = "cadrumo-secret"
 _EMPTY_SUFFIX = ""
@@ -56,8 +56,11 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
 
     Stores are cached by normalized secret-store and blob-store roots, so an
     explicit Settings route never inherits the first store constructed by an
-    unrelated profile root. Tests may call :func:`override_secret_store` to
-    install one explicit process-wide implementation.
+    unrelated profile root. Callers needing an isolated store inject it
+    directly at the consuming boundary (the ``store=`` parameter on
+    :func:`materialise_secret` / :func:`export_to_temp_path`, or the
+    ``store=`` / ``settings=`` parameters on the secret-store consumers)
+    rather than through a process-wide override.
 
     Args:
         settings: Optional pre-built settings instance. When ``None``,
@@ -66,10 +69,7 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
     Returns:
         The cached :class:`SecretStore` for the resolved route.
     """
-    global _override_store
     with _factory_lock:
-        if _override_store is not None:
-            return _override_store
         from .....core.config import load_settings
 
         resolved = settings if settings is not None else load_settings()
@@ -91,20 +91,6 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
         )
         _stores_by_route[route] = store
         return store
-
-
-def override_secret_store(store: SecretStore | None) -> None:
-    """Test helper: install (or clear) a process-wide secret-store override.
-
-    Args:
-        store: The :class:`SecretStore` to install. ``None`` clears
-            the override and reverts to the standard
-            :func:`get_secret_store` resolution.
-    """
-    global _override_store
-    with _factory_lock:
-        _override_store = store
-        _stores_by_route.clear()
 
 
 def _write_bytes_secure_fd(fd: int, payload: bytes) -> None:
@@ -280,5 +266,4 @@ __all__ = [
     "export_to_temp_path",
     "get_secret_store",
     "materialise_secret",
-    "override_secret_store",
 ]

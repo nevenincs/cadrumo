@@ -391,8 +391,10 @@ audit-dead-code:
     @uv run --no-sync vulture --config pyproject.toml src/cadrumo dev/vulture_whitelist.py
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
+# The runner owns the jscpd invocation AND its parsing, so this recipe and the
+# health report's duplication dimension cannot drift apart or disagree.
 audit-duplication:
-    @npx --yes jscpd@4.2.0 src/cadrumo --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python -m dev.audit.duplication
+    @uv run --no-sync python -m dev.audit.duplication
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:

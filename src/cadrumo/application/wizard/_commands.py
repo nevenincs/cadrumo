@@ -17,9 +17,12 @@ Flag derivation per question kind:
 * ``CHECKBOX`` → repeated ``--<question-id>`` option that accumulates
   a ``list[str]``.
 
-The closure accepts a ``Prompter`` injection through the keyword-only
-``_prompter`` parameter (not exposed as a Typer option) so tests can
-drive the flow without questionary interaction.
+An interactive walk prompts through
+:meth:`~cadrumo.application.wizard.QuestionaryPrompter.from_ambient_app_session`,
+so the prompts render against whatever IO the ambient ``prompt_toolkit``
+app session declares. Outside such a session — every production ``aeat``
+invocation — that session declares no IO, so the prompter binds to
+process stdio and applies the full non-TTY / no-console refusal.
 """
 
 from __future__ import annotations
@@ -52,7 +55,6 @@ from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._prompter import (
     CanonicalAnswerPrompter,
-    Prompter,
     QuestionaryPrompter,
     WizardEditUnsupportedConsoleError,
     WizardUnsupportedConsoleError,
@@ -801,7 +803,6 @@ def _run_full_flow(
     flow: WizardFlow,
     canonical: dict[str, str],
     *,
-    _prompter: Prompter | None,
     quiet: bool,
     accept_defaults: bool,
     profile_name: str,
@@ -861,7 +862,7 @@ def _run_full_flow(
             force_visible=explicit_question_ids,
         )
     else:
-        active = _prompter if _prompter is not None else QuestionaryPrompter()
+        active = QuestionaryPrompter.from_ambient_app_session()
         try:
             answers = run_flow(flow, active, defaults=canonical)
         except WizardUnsupportedConsoleError as exc:
@@ -1083,7 +1084,6 @@ def _run_wizard_persistence_path(
     canonical: dict[str, str],
     explicit_flags: dict[str, str],
     *,
-    _prompter: Prompter | None,
     quiet: bool,
     accept_defaults: bool,
     profile_name: str,
@@ -1097,7 +1097,6 @@ def _run_wizard_persistence_path(
     return _run_full_flow(
         flow,
         canonical,
-        _prompter=_prompter,
         quiet=quiet,
         accept_defaults=accept_defaults,
         profile_name=profile_name,
@@ -1232,7 +1231,6 @@ def _execute_wizard_command(
     flow: WizardFlow,
     mode: WizardPersistMode,
     *,
-    _prompter: Prompter | None,
     kwargs: dict[str, object],
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
@@ -1251,7 +1249,6 @@ def _execute_wizard_command(
             mode,
             canonical,
             explicit_flags,
-            _prompter=_prompter,
             quiet=quiet,
             accept_defaults=accept_defaults,
             profile_name=profile_name,
@@ -1277,8 +1274,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
 
     The returned closure carries one parameter per question in the
     flow (typed and annotated for Typer to derive a CLI flag) plus the
-    three mode flags. Tests can pass a custom prompter through the
-    keyword-only ``_prompter`` slot (not surfaced as a Typer option).
+    three mode flags.
 
     ``mode`` binds the closure to a single wizard verb. ``"create"``
     refuses a name that already has a manifest; ``"edit"`` refuses a
@@ -1290,7 +1286,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     mode_params = _mode_parameters(flow)
     parameters = (*mode_params, *question_params)
 
-    def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
+    def _command(**kwargs: object) -> None:
         import contextlib
 
         from ...core.errors import CadrumoError
@@ -1307,7 +1303,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
             try:
-                _execute_wizard_command(flow, mode, _prompter=_prompter, kwargs=kwargs)
+                _execute_wizard_command(flow, mode, kwargs=kwargs)
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack

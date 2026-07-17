@@ -8,7 +8,6 @@ catalogue path.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Protocol
 
 import typer
 
@@ -19,11 +18,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import BusinessClassification, is_classified
 from ._common import _bad, _emit_envelope
-
-
-class _TransactionRepo(Protocol):
-    @property
-    def bucket_id(self) -> str: ...
+from ._ledger_support import _TransactionRepo
 
 
 def ledger_classify_bulk_csv(

@@ -4895,6 +4895,11 @@ errors:
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
+    error_cadrumo_async_resource_cleanup: Asynchronous resource cleanup failed; retry
+      cleanup before continuing.
+    error_cadrumo_core: An internal application error occurred.
+    error_cadrumo_core_not_found: The requested resource or record was not found.
+    error_cadrumo_observability: An error occurred in the application telemetry.
     error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
       state while building the export plan.
     error_calc_sheets_parity: The parity harness scenario references casilla ids that
@@ -5097,10 +5102,6 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
-    error_cadrumo_core: 'An internal application error occurred.'
-    error_cadrumo_core_not_found: 'The requested resource or record was not found.'
-    error_cadrumo_observability: 'An error occurred in the application telemetry.'
-    error_cadrumo_async_resource_cleanup: 'Asynchronous resource cleanup failed; retry cleanup before continuing.'
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -5239,6 +5240,7 @@ errors:
   integrity:
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
+    integrity_cadrumo_core_validation: An internal data-integrity check failed.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_filing_amendment_validation: The amendment violates a legal or structural
       invariant.
@@ -5318,7 +5320,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_cadrumo_core_validation: 'An internal data-integrity check failed.'
   internal:
     internal_active_profile_pointer_transaction: 'Internal error: active-profile pointer
       transaction ownership is invalid.'
@@ -5337,14 +5338,14 @@ errors:
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
     internal_profile_registration: 'Internal error: profile could not be registered.'
-    internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
-      was registered a second time with different objects.'
-    internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
-      has not been registered at application startup.'
     internal_wizard_answer_queue_overflow: 'Internal error: the wizard closed with
       unconsumed canonical answers.'
     internal_wizard_answer_queue_underflow: 'Internal error: the wizard asked for
       more canonical answers than the non-interactive invocation supplied.'
+    internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
+      was registered a second time with different objects.'
+    internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
+      has not been registered at application startup.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
       signal.'
     internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
@@ -5788,6 +5789,9 @@ mcp:
   call:
     timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was
       cancelled. Retry, or run the equivalent aeat command directly in a terminal.'
+    timeout_may_complete: '''{command}'' exceeded its time limit; the operation may
+      still be completing in the background. Re-run it with the same idempotency key
+      to check - the idempotency guard makes the retry safe and never double-writes.'
   elicitation:
     confirm:
       consequence_handoff: This produces the filing-grade artefact the taxpayer will
@@ -5829,6 +5833,10 @@ mcp:
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
       it. Hand the verified work unit to the verifier session to produce the export
       or record marker.'
+  serving:
+    warm_degraded: '''{command}'' was served through the subprocess transport because
+      the warm in-process runtime was {reason}; the result is identical, only slower.
+      Warm serving resumes once the slow call clears.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

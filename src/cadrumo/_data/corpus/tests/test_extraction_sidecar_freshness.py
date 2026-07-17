@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from pathlib import Path
 
@@ -19,6 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
+_MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
+_CORPUS_TEXT_SUFFIX = ".corpus_text.json"
 _PART_SUFFIX = re.compile(r"\.part-\d+$")
 
 
@@ -99,3 +102,58 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
 
     assert sidecars, "no committed extraction sidecars found under src/cadrumo/_data/corpus"
     assert not failures, f"{len(failures)} stale or malformed extraction sidecars: {failures[:20]!r}"
+
+
+def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None:
+    """Every committed manual-PDF corpus text sidecar matches its source PDF bytes.
+
+    Ensures that dev/packaging/extract_manual_corpus_text.py was re-run after
+    any corpus PDF changed, so the shipped sidecars are always in sync with
+    the source PDFs that _validate_evidence._read_manual_pdf_sidecar reads.
+    """
+    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
+    failures: list[str] = []
+
+    for sidecar_path in sidecars:
+        rel_sidecar = sidecar_path.relative_to(_REPO_ROOT).as_posix()
+        try:
+            data: dict[str, object] = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            failures.append(f"{rel_sidecar}: cannot parse JSON: {exc}")
+            continue
+
+        corpus_path = data.get("corpus_path")
+        stored_sha256 = data.get("source_sha256")
+        normalised_text = data.get("normalised_text")
+        schema_version = data.get("schema_version")
+
+        if not isinstance(corpus_path, str) or not corpus_path.startswith("corpus/"):
+            failures.append(f"{rel_sidecar}: missing or malformed corpus_path: {corpus_path!r}")
+            continue
+        if not isinstance(stored_sha256, str) or len(stored_sha256) != 64:
+            failures.append(f"{rel_sidecar}: missing or malformed source_sha256")
+            continue
+        if not isinstance(normalised_text, str):
+            failures.append(f"{rel_sidecar}: missing normalised_text field")
+            continue
+        if schema_version != 1:
+            failures.append(f"{rel_sidecar}: unexpected schema_version {schema_version!r}")
+            continue
+
+        # Derive the expected source PDF path from corpus_path.
+        relative = corpus_path[len("corpus/") :]
+        source_path = _CORPUS_ROOT / Path(relative)
+        if not source_path.is_file():
+            failures.append(f"{rel_sidecar}: source PDF missing: {corpus_path}")
+            continue
+
+        actual_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        if actual_sha256 != stored_sha256:
+            failures.append(
+                f"{rel_sidecar}: sha256 mismatch for {corpus_path} "
+                f"(stored {stored_sha256[:8]}…, actual {actual_sha256[:8]}…) — "
+                "run: uv run --no-sync python -m dev.packaging.extract_manual_corpus_text"
+            )
+
+    assert sidecars, f"no manual corpus text sidecars found under {_MANUAL_CORPUS_TEXT_ROOT}"
+    assert not failures, f"{len(failures)} stale or malformed manual PDF sidecars:\n" + "\n".join(failures[:20])

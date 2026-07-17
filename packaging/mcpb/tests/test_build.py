@@ -10,8 +10,10 @@ import subprocess
 import sys
 import tomllib
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
+from typing import cast
 
 import pytest
 from dev.packaging.python_cohort import load_python_cohort
@@ -135,6 +137,47 @@ def _rewrite_digest(cohort_dir: Path, label: str) -> None:
     )
 
 
+def _load_bootstrap_namespace(bundle: Path) -> dict[str, object]:
+    """Exec the staged bootstrap source with an injected ``__file__``.
+
+    The bootstrap computes its bundle root from ``__file__``; injecting a path
+    under ``bundle/src`` lets its pure provisioning-state logic be exercised
+    without running ``uv`` or ``os.execv``. ``__name__`` is set to a non-main
+    value so the module-level ``main()`` guard does not fire.
+    """
+    namespace: dict[str, object] = {
+        "__file__": str(bundle / "src" / "server.py"),
+        "__name__": "cadrumo_mcpb_bootstrap_under_test",
+    }
+    exec(compile(BUILD._BOOTSTRAP_SOURCE, "server.py", "exec"), namespace)  # noqa: S102 - bundle-owned source under test
+    return namespace
+
+
+def test_bootstrap_provisioning_state_is_keyed_on_the_cohort_marker(tmp_path: Path) -> None:
+    """The bootstrap re-provisions only until the cohort marker matches the digest."""
+    bundle = tmp_path / "extension"
+    (bundle / "src").mkdir(parents=True)
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("CADRUMO_MCP_COHORT_SHA256", '{"cadrumo": "abc"}')
+        namespace = _load_bootstrap_namespace(bundle)
+        venv_python = cast("Callable[[], Path]", namespace["_venv_python"])()
+        is_provisioned = cast("Callable[[Path], bool]", namespace["_is_provisioned"])
+        # No venv interpreter yet: not provisioned, so the first launch provisions.
+        assert is_provisioned(venv_python) is False
+        venv_python.parent.mkdir(parents=True)
+        venv_python.write_text("", encoding="utf-8")
+        marker = cast("Path", namespace["_MARKER"])
+        # Interpreter present but marker absent: still not provisioned.
+        assert is_provisioned(venv_python) is False
+        # Marker matching the cohort digest: provisioned, so a later launch
+        # direct-execs and skips resolution.
+        marker.write_text('{"cadrumo": "abc"}', encoding="utf-8")
+        assert is_provisioned(venv_python) is True
+        # A cohort-digest change (a version upgrade) invalidates the marker.
+        patch.setenv("CADRUMO_MCP_COHORT_SHA256", '{"cadrumo": "def"}')
+        assert is_provisioned(venv_python) is False
+
+
 def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
     """Unexecuted client/platform rows are not advertised as compatibility."""
     manifest = BUILD.load_manifest()
@@ -144,7 +187,7 @@ def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
     assert server["entry_point"] == "src/server.py"
     assert server["mcp_config"] == {
         "command": "uv",
-        "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+        "args": ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"],
         "env": {
             "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
             "CADRUMO_MCP_PERSONA": "${user_config.persona}",
@@ -202,12 +245,14 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
             f"artifacts/{cohort.official_wheel.name}",
             "manifest.json",
             "pyproject.toml",
+            "src/_serve.py",
             "src/server.py",
         ]
         for filename, wheel in expected_wheels.items():
             assert archive.read(f"artifacts/{filename}") == wheel.read_bytes()
         manifest = json.loads(archive.read("manifest.json"))
-        launcher = archive.read("src/server.py").decode()
+        bootstrap = archive.read("src/server.py").decode()
+        launcher = archive.read("src/_serve.py").decode()
     expected_sha256 = {
         name: cohort.sha256[name]
         for name in (
@@ -221,8 +266,16 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
     assert env["CADRUMO_MCP_REQUIRED_VERSION"] == cohort.version
     assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == "${user_config.storage_root}"
     assert "UV_PROJECT_ENVIRONMENT" not in env
+    # The digest-pinned cohort verification lives in the real server entry, run
+    # by the provisioned interpreter.
     assert "distribution(name)" in launcher
     assert 'read_text("direct_url.json")' in launcher
+    # The bootstrap provisions the bundle-local venv once and direct-execs it
+    # thereafter, so no session after the first re-resolves the project.
+    assert "os.execv" in bootstrap
+    assert "_serve.py" in bootstrap
+    assert '"sync"' in bootstrap
+    assert "distribution(name)" not in bootstrap
     assert "UNSIGNED; assembly only; client installation unproved" in capsys.readouterr().out
 
 

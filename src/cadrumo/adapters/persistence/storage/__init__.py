@@ -188,7 +188,6 @@ from .blob_store import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
-    override_secret_store,
 )
 from .bucket import RecoveryVerificationError
 from .crypto import (
@@ -532,7 +531,6 @@ __all__ = [
     "materialise_secret",
     "mint_recovery_envelope",
     "open_session_from_recovery",
-    "override_secret_store",
     "redact",
     "redact_for_log",
     "redact_structured",

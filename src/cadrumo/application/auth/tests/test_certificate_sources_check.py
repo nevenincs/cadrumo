@@ -19,11 +19,10 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import _session_store
-from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore, get_secret_store, override_secret_store
+from ....adapters.persistence.storage import SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....core import AuthProviderKind, BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
-from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
@@ -257,21 +256,15 @@ def test_check_with_no_registered_sources_is_empty_and_has_no_warnings() -> None
 
 
 @pytest.fixture
-def _isolated_secret_store(tmp_path: Path) -> Iterator[SecretStore]:
-    """Inject a deterministic :class:`SecretStore` for the per-source secret tests.
+def _isolated_secret_store() -> SecretStore:
+    """Return the route-canonical :class:`SecretStore` for the per-source secret tests.
 
-    ``override_secret_store`` installs an explicit process-wide test store so
-    certificate-secret writes/reads (set, resolve, check, status, test) stay
-    isolated and consistent within the test.
+    The settings route and the active bucket session's master key are
+    already isolated per test by the ``_isolated_backend`` autouse
+    fixture, so the route-canonical store from :func:`get_secret_store`
+    is already test-isolated without a process-wide override.
     """
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "sec-blobs", master_key_provider=provider)
-    store = SecretStore(store_dir=tmp_path / "sec-secrets", blob_store=blob_store, master_key_provider=provider)
-    override_secret_store(store)
-    try:
-        yield store
-    finally:
-        override_secret_store(None)
+    return get_secret_store()
 
 
 def _register_select_with_secret(tmp_path: Path) -> Path:
@@ -637,73 +630,69 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
     tmp_path: Path,
 ) -> None:
     """Initializing root A first cannot redirect root B certificate secrets into A."""
-    override_secret_store(None)
-    try:
-        root_a_fixture = tmp_path / "route-a"
-        with (
-            isolated_profile_storage_root(tmp_path=root_a_fixture),
-            profile_create_storage_span(_BUCKET_ID),
-        ):
-            workflow_state_repository().update(_register_operator_profile())
-            now = datetime.now(UTC)
-            cert_a = _build_pkcs12(
-                tmp_path,
-                not_valid_before=now - timedelta(days=1),
-                not_valid_after=now + timedelta(days=200),
-                name="route-a",
-                subject_cn="route-a",
-            )
-            register_operator_certificate_source(name="selected", certificate_path=cert_a)
-            set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+    root_a_fixture = tmp_path / "route-a"
+    with (
+        isolated_profile_storage_root(tmp_path=root_a_fixture),
+        profile_create_storage_span(_BUCKET_ID),
+    ):
+        workflow_state_repository().update(_register_operator_profile())
+        now = datetime.now(UTC)
+        cert_a = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=200),
+            name="route-a",
+            subject_cn="route-a",
+        )
+        register_operator_certificate_source(name="selected", certificate_path=cert_a)
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+        select_operator_certificate_source(name="selected")
+        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
+        settings_a = load_settings()
+        store_a = get_secret_store(settings=settings_a)
+
+    root_b_fixture = tmp_path / "route-b"
+    with (
+        isolated_profile_storage_root(tmp_path=root_b_fixture),
+        profile_create_storage_span(_BUCKET_B),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_BUCKET_B,
+                display_name="gestor-route-b",
+            ),
+        )
+        cert_b = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=200),
+            name="route-b",
+            subject_cn="route-b",
+            password=_SECRET_B,
+        )
+        register_operator_certificate_source(name="selected", certificate_path=cert_b)
+        with override_settings(cadrumo_blob_store_dir=tmp_path / "route-b-explicit-blobs") as settings_b:
+            set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
             select_operator_certificate_source(name="selected")
-            configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
-            settings_a = load_settings()
-            store_a = get_secret_store(settings=settings_a)
+            configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
+            store_b = get_secret_store(settings=settings_b)
+            credentials_b = resolve_active_certificate_credentials(settings=settings_b)
+            provider_b = select_provider(
+                AuthProviderKind.CERTIFICATE,
+                settings=settings_b,
+            ).describe()
+            operator_test_b = run_operator_auth_test(settings=settings_b)
 
-        root_b_fixture = tmp_path / "route-b"
-        with (
-            isolated_profile_storage_root(tmp_path=root_b_fixture),
-            profile_create_storage_span(_BUCKET_B),
-        ):
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(
-                    state,
-                    profile_id=_BUCKET_B,
-                    display_name="gestor-route-b",
-                ),
-            )
-            cert_b = _build_pkcs12(
-                tmp_path,
-                not_valid_before=now - timedelta(days=1),
-                not_valid_after=now + timedelta(days=200),
-                name="route-b",
-                subject_cn="route-b",
-                password=_SECRET_B,
-            )
-            register_operator_certificate_source(name="selected", certificate_path=cert_b)
-            with override_settings(cadrumo_blob_store_dir=tmp_path / "route-b-explicit-blobs") as settings_b:
-                set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
-                select_operator_certificate_source(name="selected")
-                configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
-                store_b = get_secret_store(settings=settings_b)
-                credentials_b = resolve_active_certificate_credentials(settings=settings_b)
-                provider_b = select_provider(
-                    AuthProviderKind.CERTIFICATE,
-                    settings=settings_b,
-                ).describe()
-                operator_test_b = run_operator_auth_test(settings=settings_b)
-
-        assert store_a is not store_b
-        assert store_a.store_dir == settings_a.cadrumo_secret_store_dir
-        assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
-        assert credentials_b.certificate_path == cert_b
-        assert credentials_b.password is not None
-        assert credentials_b.password.get_secret_value() == _SECRET_B
-        assert provider_b.available is True
-        assert operator_test_b.certificate_path == str(cert_b)
-        assert operator_test_b.probe_result == ProviderProbeResult.OK
-    finally:
-        override_secret_store(None)
+    assert store_a is not store_b
+    assert store_a.store_dir == settings_a.cadrumo_secret_store_dir
+    assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
+    assert credentials_b.certificate_path == cert_b
+    assert credentials_b.password is not None
+    assert credentials_b.password.get_secret_value() == _SECRET_B
+    assert provider_b.available is True
+    assert operator_test_b.certificate_path == str(cert_b)
+    assert operator_test_b.probe_result == ProviderProbeResult.OK
 
 
 def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_session(
@@ -711,79 +700,75 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
     tmp_path: Path,
 ) -> None:
     """A matching UUID cannot reuse key material from a different storage root."""
-    override_secret_store(None)
-    try:
-        now = datetime.now(UTC)
-        root_b_fixture = tmp_path / "same-id-route-b"
-        with (
-            isolated_profile_storage_root(tmp_path=root_b_fixture),
-            override_settings(cadrumo_blob_store_dir=tmp_path / "same-id-route-b-blobs"),
-            profile_create_storage_span(_BUCKET_ID),
-        ):
-            workflow_state_repository().update(_register_operator_profile())
-            cert_b = _build_pkcs12(
-                tmp_path,
-                not_valid_before=now - timedelta(days=1),
-                not_valid_after=now + timedelta(days=200),
-                name="same-id-route-b",
-                subject_cn="same-id-route-b",
-                password=_SECRET_B,
-            )
-            register_operator_certificate_source(name="selected", certificate_path=cert_b)
-            set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
-            select_operator_certificate_source(name="selected")
-            configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
-            settings_b = load_settings()
+    now = datetime.now(UTC)
+    root_b_fixture = tmp_path / "same-id-route-b"
+    with (
+        isolated_profile_storage_root(tmp_path=root_b_fixture),
+        override_settings(cadrumo_blob_store_dir=tmp_path / "same-id-route-b-blobs"),
+        profile_create_storage_span(_BUCKET_ID),
+    ):
+        workflow_state_repository().update(_register_operator_profile())
+        cert_b = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=200),
+            name="same-id-route-b",
+            subject_cn="same-id-route-b",
+            password=_SECRET_B,
+        )
+        register_operator_certificate_source(name="selected", certificate_path=cert_b)
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+        select_operator_certificate_source(name="selected")
+        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
+        settings_b = load_settings()
 
-        root_a_fixture = tmp_path / "same-id-route-a"
-        with (
-            isolated_profile_storage_root(tmp_path=root_a_fixture),
-            override_settings(cadrumo_blob_store_dir=tmp_path / "same-id-route-a-blobs"),
-            profile_create_storage_span(_BUCKET_ID),
-        ):
-            workflow_state_repository().update(_register_operator_profile())
-            cert_a = _build_pkcs12(
-                tmp_path,
-                not_valid_before=now - timedelta(days=1),
-                not_valid_after=now + timedelta(days=200),
-                name="same-id-route-a",
-                subject_cn="same-id-route-a",
-            )
-            register_operator_certificate_source(name="selected", certificate_path=cert_a)
-            set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
-            select_operator_certificate_source(name="selected")
-            configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
-            configure_operator_auth(AuthProviderKind.CLAVE_MOVIL.value)
+    root_a_fixture = tmp_path / "same-id-route-a"
+    with (
+        isolated_profile_storage_root(tmp_path=root_a_fixture),
+        override_settings(cadrumo_blob_store_dir=tmp_path / "same-id-route-a-blobs"),
+        profile_create_storage_span(_BUCKET_ID),
+    ):
+        workflow_state_repository().update(_register_operator_profile())
+        cert_a = _build_pkcs12(
+            tmp_path,
+            not_valid_before=now - timedelta(days=1),
+            not_valid_after=now + timedelta(days=200),
+            name="same-id-route-a",
+            subject_cn="same-id-route-a",
+        )
+        register_operator_certificate_source(name="selected", certificate_path=cert_a)
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+        select_operator_certificate_source(name="selected")
+        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
+        configure_operator_auth(AuthProviderKind.CLAVE_MOVIL.value)
 
-            ambient_before = current_active_bucket_session()
-            assert ambient_before is not None
-            assert ambient_before.bucket_id == _BUCKET_ID
+        ambient_before = current_active_bucket_session()
+        assert ambient_before is not None
+        assert ambient_before.bucket_id == _BUCKET_ID
 
-            credentials_b = resolve_active_certificate_credentials(settings=settings_b)
-            provider_b = select_provider(
-                AuthProviderKind.CERTIFICATE,
-                settings=settings_b,
-            ).describe()
-            check_b = check_operator_certificate_sources(settings=settings_b)
-            operator_test_b = run_operator_auth_test(settings=settings_b)
-            preflight_b = build_live_auth_preflight_report(settings=settings_b)
+        credentials_b = resolve_active_certificate_credentials(settings=settings_b)
+        provider_b = select_provider(
+            AuthProviderKind.CERTIFICATE,
+            settings=settings_b,
+        ).describe()
+        check_b = check_operator_certificate_sources(settings=settings_b)
+        operator_test_b = run_operator_auth_test(settings=settings_b)
+        preflight_b = build_live_auth_preflight_report(settings=settings_b)
 
-            ambient_after = current_active_bucket_session()
-            assert credentials_b.certificate_path == cert_b
-            assert credentials_b.password is not None
-            assert credentials_b.password.get_secret_value() == _SECRET_B
-            assert provider_b.available is True
-            assert len(check_b.entries) == 1
-            assert check_b.entries[0].certificate_path == str(cert_b)
-            assert check_b.entries[0].result == ProviderProbeResult.OK
-            assert operator_test_b.certificate_path == str(cert_b)
-            assert operator_test_b.probe_result == ProviderProbeResult.OK
-            assert preflight_b.provider == AuthProviderKind.CERTIFICATE.value
-            assert preflight_b.certificate_path_configured is True
-            assert preflight_b.certificate_file_present is True
-            assert ambient_after is ambient_before
-    finally:
-        override_secret_store(None)
+        ambient_after = current_active_bucket_session()
+        assert credentials_b.certificate_path == cert_b
+        assert credentials_b.password is not None
+        assert credentials_b.password.get_secret_value() == _SECRET_B
+        assert provider_b.available is True
+        assert len(check_b.entries) == 1
+        assert check_b.entries[0].certificate_path == str(cert_b)
+        assert check_b.entries[0].result == ProviderProbeResult.OK
+        assert operator_test_b.certificate_path == str(cert_b)
+        assert operator_test_b.probe_result == ProviderProbeResult.OK
+        assert preflight_b.provider == AuthProviderKind.CERTIFICATE.value
+        assert preflight_b.certificate_path_configured is True
+        assert preflight_b.certificate_file_present is True
+        assert ambient_after is ambient_before
 
 
 def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket_secret(

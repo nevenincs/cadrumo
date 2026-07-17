@@ -13,19 +13,21 @@ a different loader-code state can never be served.
 
 from __future__ import annotations
 
-import pickle
 from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var
-from .._loader import (
+from .._compiled_cache import (
     _EMBEDDED_SCHEMA_CORE_MODULES,
     _LOADER_CODE_FINGERPRINT,
+    _encode_frame,
+    _registry_disk_cache_key,
+)
+from .._loader import (
     _collect_registry_tree_fingerprints,
     _load_registry_tree_cached,
-    _registry_disk_cache_key,
     clear_fingerprint_cache,
     load_registry_tree,
 )
@@ -135,13 +137,13 @@ def test_stale_loader_pickle_is_not_served_while_current_key_pickle_is(tmp_path:
         current_path = isolated_cache_dir / f"cadrumo_registry_{current_key}.pkl"
         assert current_path.is_file(), "the real compile must have written the current-key pickle"
 
-        # CONTROL: poison the CURRENT-key pickle. A matching-key pickle IS read,
-        # so the empty-modelos poison is served -- proving the cache is live and
-        # the regression assertion below is meaningful.
-        current_path.write_bytes(pickle.dumps(((), catalogues)))
+        # CONTROL: poison the CURRENT-key cache with a well-framed, digest-valid
+        # empty-modelos payload. A matching-key cache IS read, so the poison is
+        # served -- proving the cache is live and the regression below meaningful.
+        current_path.write_bytes(_encode_frame(((), catalogues)))
         _load_registry_tree_cached.cache_clear()
         served_modelos, _served_catalogues = load_registry_tree(resolved)
-        assert served_modelos == (), "control: a current-key poison pickle must be served (the disk cache is live)"
+        assert served_modelos == (), "control: a current-key poison cache must be served (the disk cache is live)"
 
         # REGRESSION: move the poison to a key computed with a DIFFERENT loader
         # fingerprint (a pre-change loader state). The current load must ignore it
@@ -154,7 +156,7 @@ def test_stale_loader_pickle_is_not_served_while_current_key_pickle_is(tmp_path:
         )
         assert stale_key != current_key
         stale_path = isolated_cache_dir / f"cadrumo_registry_{stale_key}.pkl"
-        stale_path.write_bytes(pickle.dumps(((), catalogues)))
+        stale_path.write_bytes(_encode_frame(((), catalogues)))
 
         _load_registry_tree_cached.cache_clear()
         real_modelos, _real_catalogues = load_registry_tree(resolved)

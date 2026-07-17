@@ -6,8 +6,9 @@ refuses with the install hint and a non-zero exit instead of raising a raw
 ``ModuleNotFoundError`` - the same graceful-degradation contract the Google,
 browser, and Anthropic integrations follow. The tool list, annotations, and the
 forbidden-live-write block are sourced from the SDK-independent core in this
-package; ``call_tool`` runs the deterministic CLI in a subprocess and returns its
-JSON envelope as structured content. Alongside the per-verb tools the server
+package; ``call_tool`` runs the deterministic CLI - warm in-process for local
+verbs, a supervised subprocess for the AEAT-sede family (``_run_tool``) - and
+returns its JSON envelope as structured content. Alongside the per-verb tools the server
 advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floor
 tool (the universal operating-layer channel), and serves the operating
 layer through real ``resources`` handlers - the concrete ``cadrumo://`` skill / rule
@@ -38,19 +39,15 @@ import contextlib
 import json
 import os
 import sys
-import sysconfig
 import time
 import uuid
-from dataclasses import dataclass
 from functools import partial
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import PRODUCT_IDENTITY
-from ...core.external_constants import UTF_8_ENCODING
-from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
+from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
@@ -90,7 +87,6 @@ from ._identity_gate import (
     identity_elicitation_echo,
     identity_gate_refusal,
 )
-from ._input_schema import cli_argv_for
 from ._meta_tools import (
     ToolRunner,
     ToolRunOutcome,
@@ -133,6 +129,11 @@ from ._terminology_tools import (
 )
 from ._tools import McpToolDescriptor, build_tool_descriptors
 from ._toolsets import Toolset, command_keys_for_toolsets
+from ._transport import (
+    SubprocessToolOutcome,
+    _run_subprocess_tool,
+    _run_tool,
+)
 
 if TYPE_CHECKING:
     # Typing-only: the MCP SDK is an optional runtime dependency (``cadrumo[agent]``),
@@ -311,127 +312,6 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
             ),
         )
     return tools
-
-
-def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
-    """Build the localized timed-out refusal envelope for a hung CLI call."""
-    from ...core.i18n import tr
-
-    message = tr(
-        "mcp.call.timeout",
-        command=command_key,
-        tier=tier.value,
-        seconds=int(timeout_s),
-        default=(
-            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled. "
-            "Retry, or run the equivalent Cadrumo command directly in a terminal for a long operation."
-        ),
-    )
-    return {"status": "error", "refusal": message, "timed_out": True}
-
-
-def _installed_cli_executable() -> str:
-    """Resolve the sibling CLI installed in the server's Python environment.
-
-    The MCP server and CLI are console scripts from one distribution cohort.
-    Resolving the interpreter's scripts directory preserves that relationship
-    even when ``PATH`` is empty, points at another environment, or contains a
-    checkout shim. Missing installation state fails closed instead of falling
-    back to an unrelated executable.
-    """
-    scripts_dir = Path(sysconfig.get_path("scripts")).resolve()
-    executable_name = PRODUCT_IDENTITY.cli_executable
-    if sys.platform == "win32":
-        executable_name = f"{executable_name}.exe"
-    executable = (scripts_dir / executable_name).resolve()
-    if not executable.is_file():
-        message = f"Installed Cadrumo CLI executable is missing from the MCP server environment: {executable}"
-        raise FileNotFoundError(message)
-    return str(executable)
-
-
-def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
-    """Build a structured refusal for an incomplete MCP installation."""
-    return {
-        "status": "error",
-        "refusal": str(error),
-        "installation_incomplete": True,
-    }
-
-
-@dataclass(frozen=True)
-class SubprocessToolOutcome(ToolRunOutcome):
-    """One supervised CLI dispatch and the executable actually passed to it."""
-
-    envelope: dict[str, object]
-    is_error: bool
-    executable: str
-
-
-def _run_subprocess_tool(
-    descriptor: McpToolDescriptor,
-    arguments: dict[str, object],
-) -> SubprocessToolOutcome:
-    """Run one tool's CLI command and retain the executable observed by the runtime.
-
-    The argv is reconstructed from the descriptor's per-verb input schema and the
-    named ``arguments`` the client supplied - positional arguments in CLI order,
-    then options - so the retired ``{args: [string]}`` bag has no path back in.
-
-    The call runs through :func:`~entrypoints.mcp._call_runtime.run_supervised`
-    with a per-tier wall-clock ceiling derived from the command's annotations:
-    a hung call is terminated together with
-    its whole process tree (a live pull spawns a browser child) and returns an
-    instructive, localized timed-out refusal rather than hanging the MCP call.
-
-    ``stdin`` is isolated to ``DEVNULL`` inside the runtime. Over the stdio
-    transport the server's own stdin IS the MCP client pipe; without this
-    isolation the spawned CLI child inherits that pipe and any read from it
-    blocks forever. Output is decoded as UTF-8 explicitly (the CLI always emits
-    UTF-8; the platform default is cp1252 on Windows, which would mojibake every
-    accented character for the LLM client), with ``errors="replace"`` matching the
-    CLI's own emit-side fallback.
-    """
-    tier = tier_for(
-        read_only=descriptor.annotations.read_only_hint,
-        open_world=descriptor.annotations.open_world_hint,
-    )
-    timeout_s = timeout_seconds(tier)
-    try:
-        executable = _installed_cli_executable()
-        argv = [executable, *cli_argv_for(descriptor.verb_schema, arguments)]
-        result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
-    except OSError as error:
-        return SubprocessToolOutcome(
-            envelope=_cli_resolution_refusal_envelope(error),
-            is_error=True,
-            executable="",
-        )
-    if result.timed_out:
-        return SubprocessToolOutcome(
-            envelope=_timeout_refusal_envelope(
-                command_key=descriptor.command_key,
-                tier=tier,
-                timeout_s=timeout_s,
-            ),
-            is_error=True,
-            executable=result.executable,
-        )
-    raw = result.stdout.strip() or result.stderr.strip()
-    try:
-        envelope = json.loads(raw)
-    except json.JSONDecodeError:
-        return SubprocessToolOutcome(
-            envelope={"status": "error", "raw": raw},
-            is_error=True,
-            executable=result.executable,
-        )
-    is_error = envelope.get("status") == "error" or result.returncode != 0
-    return SubprocessToolOutcome(
-        envelope=envelope,
-        is_error=is_error,
-        executable=result.executable,
-    )
 
 
 def build_meta_sdk_tools() -> list[Tool]:
@@ -642,18 +522,19 @@ async def _run_offloop_with_progress[T](
     import anyio
     from anyio.to_thread import run_sync
 
+    limiter = serving_capacity_limiter()
     progress_token = None
     with contextlib.suppress(LookupError, AttributeError):
         meta = server.request_context.meta
         progress_token = getattr(meta, "progressToken", None) if meta is not None else None
 
     if progress_token is None:
-        return await run_sync(work)
+        return await run_sync(work, limiter=limiter)
 
     holder: dict[str, T] = {}
 
     async def _work() -> None:
-        holder["result"] = await run_sync(work)
+        holder["result"] = await run_sync(work, limiter=limiter)
         task_group.cancel_scope.cancel()
 
     async def _heartbeat() -> None:
@@ -796,7 +677,9 @@ def build_server(
         ``client_supports_elicitation=False``: handoff-tier CONFIRM refuses
         (fail-closed), non-handoff CONFIRM proceeds under the client's
         annotation-driven confirmation. Faithfulness and telemetry match the
-        direct path.
+        direct path. The dispatch transport - warm in-process for local verbs,
+        supervised subprocess for the AEAT-sede family - is chosen by
+        :func:`_run_tool`, so meta-execute and the direct path share it.
         """
         key = descriptor.command_key
         identity_refusal = identity_gate_refusal(key, state=identity_state)
@@ -823,7 +706,7 @@ def build_server(
             )
             return _refused_tool_outcome(advisory_line(faith))
         started = time.monotonic()
-        outcome = _run_subprocess_tool(descriptor, arguments)
+        outcome = _run_tool(descriptor, arguments)
         envelope = outcome.envelope
         is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
@@ -847,10 +730,15 @@ def build_server(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
     ) -> SubprocessToolOutcome:
-        """Run one direct per-verb CLI subprocess through the shared off-loop wrapper."""
+        """Run one direct per-verb call through the shared off-loop wrapper.
+
+        The transport (warm in-process for local verbs, supervised subprocess for
+        the AEAT-sede family) is chosen by :func:`_run_tool`; either way the
+        blocking work runs off the event loop so the session keeps serving.
+        """
         return await _run_offloop_with_progress(
             server,
-            partial(_run_subprocess_tool, descriptor, arguments),
+            partial(_run_tool, descriptor, arguments),
         )
 
     @server.list_tools()
@@ -1177,7 +1065,7 @@ def build_server(
         resolver_args: dict[str, object] = {}
         if resolution.id_arg is not None:
             resolver_args[resolution.id_arg] = identity
-        outcome = await run_sync(_run_subprocess_tool, descriptor, resolver_args)
+        outcome = await run_sync(_run_subprocess_tool, descriptor, resolver_args, limiter=serving_capacity_limiter())
         envelope = outcome.envelope
         is_error = outcome.is_error
         result = envelope.get("result")

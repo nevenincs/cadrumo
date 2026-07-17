@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .._loader import _evict_stale_registry_pickles
+from .._compiled_cache import _evict_stale_registry_pickles
 from .._loader_cache import registry_disk_cache_max_entries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

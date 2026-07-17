@@ -168,7 +168,10 @@ def _create_profile_with_certificate_session(bucket_id: str) -> None:
 
 def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_path: Path) -> None:
     """A provider-scoped logout in bucket A leaves bucket B's session storage byte-identical."""
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, override_settings(cadrumo_active_profile=None):
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        override_settings(cadrumo_active_profile=None),
+    ):
         _create_profile_with_certificate_session(_PROFILE_A)
         _create_profile_with_certificate_session(_PROFILE_B)
         unrelated_before = _hash_bucket_tree(storage_root, _PROFILE_B)
@@ -190,7 +193,10 @@ def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_pat
 
 def test_all_provider_reset_leaves_unrelated_bucket_session_bytes_identical(tmp_path: Path) -> None:
     """An all-provider reset in bucket A leaves bucket B's session storage byte-identical."""
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root, override_settings(cadrumo_active_profile=None):
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        override_settings(cadrumo_active_profile=None),
+    ):
         _create_profile_with_certificate_session(_PROFILE_A)
         _create_profile_with_certificate_session(_PROFILE_B)
         unrelated_before = _hash_bucket_tree(storage_root, _PROFILE_B)

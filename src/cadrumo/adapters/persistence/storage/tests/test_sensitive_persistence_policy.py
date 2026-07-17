@@ -97,10 +97,15 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "registry corpus PDF-text cache; writes public AEAT manual text only, no user data",
     (
-        "src/cadrumo/domain/calculations/registry/_loader.py",
-        "_load_registry_tree_cached",
+        "src/cadrumo/domain/calculations/registry/_compiled_cache.py",
+        "store_compiled_registry_cache",
         "tempfile.NamedTemporaryFile",
-    ): "registry-tree compile cache; writes first-party registry definitions only, no user data",
+    ): "compiled-registry payload cache; writes the framed first-party compiled registry set only, no user data",
+    (
+        "src/cadrumo/domain/calculations/registry/_validate_verdict.py",
+        "write_verdict",
+        "tempfile.NamedTemporaryFile",
+    ): "registry validation-verdict cache; writes the non-secret compiled-registry validation verdict (JSON), no user data",
     (
         "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
         "_write_bytes_secure_fd",
@@ -231,16 +236,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_converted_binary_xls_path",
         "cached_path.write_bytes",
     ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
-    (
-        "src/cadrumo/entrypoints/cli/_config/_profile_bundle.py",
-        "config_profile_export",
-        "out.write_text",
-    ): "explicit operator-directed profile export to a caller-chosen path",
-    (
-        "src/cadrumo/entrypoints/cli/_config/_profile_bundle.py",
-        "config_profile_subject_access_request",
-        "out.write_text",
-    ): "explicit operator-directed GDPR right-of-access export to a caller-chosen path",
     (
         "src/cadrumo/application/ledger/_actions_export.py",
         "export_ledger_transactions",

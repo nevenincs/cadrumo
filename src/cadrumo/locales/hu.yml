@@ -5178,6 +5178,11 @@ errors:
       el lett utasítva.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
       100 tervezet-sémával sem.
+    error_cadrumo_async_resource_cleanup: Az aszinkron erőforrás-tisztítás meghiúsult;
+      a folytatás előtt próbálja meg újra a tisztítást.
+    error_cadrumo_core: Belső alkalmazáshiba történt.
+    error_cadrumo_core_not_found: A kért erőforrás vagy rekord nem található.
+    error_cadrumo_observability: Hiba történt az alkalmazás telemetriájában.
     error_calc_sheets_engine: A táblázatexportáló motor feloldhatatlan állapotba került
       az exportálási terv elkészítésekor.
     error_calc_sheets_parity: A paritás-tesztelési forgatókönyv olyan casilla.id értékekre
@@ -5372,10 +5377,6 @@ errors:
       évhez és időszakhoz.
     modelo_work_selector: A modelo munkavalaszto hibazott.
     modelo_work_selector_unit_not_found: A kiválasztott modelo munkaegység nem található.
-    error_cadrumo_core: 'Belső alkalmazáshiba történt.'
-    error_cadrumo_core_not_found: 'A kért erőforrás vagy rekord nem található.'
-    error_cadrumo_observability: 'Hiba történt az alkalmazás telemetriájában.'
-    error_cadrumo_async_resource_cleanup: 'Az aszinkron erőforrás-tisztítás meghiúsult; a folytatás előtt próbálja meg újra a tisztítást.'
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -5518,6 +5519,7 @@ errors:
   integrity:
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsa a
       kiválasztott profilt a folytatás előtt.
+    integrity_cadrumo_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van
       konfigurálva.
     integrity_filing_amendment_validation: A módosítás sérti a jogi vagy strukturális
@@ -5598,7 +5600,6 @@ errors:
       vagy a számítási motor sérült lehet.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
-    integrity_cadrumo_core_validation: 'Belső adatintegritás-ellenőrzés meghiúsult.'
   internal:
     internal_active_profile_pointer_transaction: 'Belső hiba: az aktívprofil-mutató
       tranzakciójának tulajdonjoga érvénytelen.'
@@ -5616,12 +5617,12 @@ errors:
     internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
     internal_profile_project_answers_not_registered: errors.internal.internal_profile_project_answers_not_registered
     internal_profile_registration: errors.internal.internal_profile_registration
-    internal_wizard_catalogue_already_registered: errors.internal.internal_wizard_catalogue_already_registered
-    internal_wizard_catalogue_not_registered: errors.internal.internal_wizard_catalogue_not_registered
     internal_wizard_answer_queue_overflow: 'Belső hiba: a varázsló fel nem használt
       kanonikus válaszokkal zárult.'
     internal_wizard_answer_queue_underflow: 'Belső hiba: a varázsló több kanonikus
       választ kért, mint amennyit a nem interaktív futtatás megadott.'
+    internal_wizard_catalogue_already_registered: errors.internal.internal_wizard_catalogue_already_registered
+    internal_wizard_catalogue_not_registered: errors.internal.internal_wizard_catalogue_not_registered
     internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási
       jelet adott ki.'
     internal_workflow_unhandled: 'Belső hiba: egy munkafolyamat-szakasz kezeletlen
@@ -6070,6 +6071,10 @@ mcp:
   call:
     timeout: A(z) '{command}' tullepte a(z) {tier} szint idokorlatjat ({seconds}s),
       es megszakadt. Probald ujra, vagy futtasd a megfelelo aeat parancsot a terminalban.
+    timeout_may_complete: A(z) '{command}' túllépte az időkorlátját; előfordulhat,
+      hogy a művelet még a háttérben fejeződik be. Futtasd újra ugyanazzal az idempotenciakulccsal
+      az ellenőrzéshez – az idempotenciavédelem biztonságossá teszi az újrapróbálkozást,
+      és soha nem ír kétszer.
   elicitation:
     confirm:
       consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet
@@ -6114,6 +6119,10 @@ mcp:
       amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
       tiltott. Add át az ellenőrzött munkaegységet a verifier munkamenetnek az export
       vagy a nyilvántartási jelölő elkészítéséhez.
+  serving:
+    warm_degraded: A(z) '{command}' az alfolyamat-transzporton keresztul lett kiszolgalva,
+      mert a meleg futtatokornyezet {reason} volt; az eredmeny azonos, csak lassabb.
+      A meleg kiszolgalas folytatodik, amint a lassu hivas befejezodik.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.

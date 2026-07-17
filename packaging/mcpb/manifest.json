@@ -14,7 +14,7 @@
     "entry_point": "src/server.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+      "args": ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"],
       "env": {
         "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
         "CADRUMO_MCP_PERSONA": "${user_config.persona}",
