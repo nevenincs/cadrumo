@@ -185,6 +185,36 @@ already fingerprint-keyed; crash/restart supervision becomes part of the MCP
 surface. Effort M/L. Without R6 the subprocess floor keeps reads at
 ~1.2–1.5 s; with it every read and simple write fits the sub-second bar.
 
+### Option R7 — parallelism (operator-raised; mitigation, not remedy)
+
+Raised by the operator: would multithreading the calculation help? Assessed
+per layer against the measured decomposition; the short verdict is that every
+cost parallelism could halve, an architectural option above deletes outright,
+so its durable place is inside R3's build step — not on the serving path.
+
+- Calculation engine (~1.5 s warm): pure-Python `Decimal` evaluation over the
+  formula dependency graph — CPU-bound under the GIL, so threads are a no-op;
+  process pools would pay Windows spawn plus model pickling for a stage that
+  is not the bottleneck, and parallel evaluation of a law-determined
+  dependency order adds determinism risk for marginal gain. Not recommended.
+- Warm `validate_registry` (3.7 s): also GIL-bound pure Python; and R1 makes
+  the path skipped entirely — parallelising it optimises code that should
+  not run. Not recommended.
+- Fingerprint stat walk: measured on the factory box (16,276 files, warm FS) —
+  threaded `os.stat` is SLOWER than serial (0.51–0.55 s at 4/8/16 threads vs
+  0.40 s serial; per-call cost too small to amortise thread handoff). The
+  real win is algorithmic, not concurrent: a single `os.scandir` walk does
+  the same collection in 0.08 s vs ~0.8 s for the current `rglob` +
+  per-`Path` double-stat. Recommended as a serial micro-fix (fits R5).
+- PDF corpus extraction (18.2 s over 11 PDFs): the one genuinely
+  parallelisable stage — but `pdfium` is not thread-safe, so it is a
+  multiprocessing pool, ~18 s → ~4–5 s on this host's cores. This is the
+  ~5 s-scale saving the operator intuited. It only matters where extraction
+  actually runs: after R3 that is the package-build step, where the pool is
+  worthwhile (cheap CI/release builds), and never the end-user machine.
+- Cold-FS TOML load (5.4–8.8 s): I/O-bound, threads would help somewhat, but
+  R5 removes the parse wholesale; not worth the complexity as a stopgap.
+
 ## Constraints
 
 - Registry cache invalidation MUST key on the complete tree fingerprint
