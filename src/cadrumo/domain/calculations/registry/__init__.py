@@ -95,7 +95,7 @@ from ._applicability import (
     modelo_202_modality_from_inputs,
     taxpayer_model_is_declared,
 )
-from ._authority import ValidatedRegistryAuthority, bundled_authority
+from ._authority import ValidatedRegistryAuthority, bundled_authority, stamp_bundled_registry_verdict
 from ._bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
@@ -865,6 +865,7 @@ __all__ = [
     "select_revision",
     "selector_as_dict",
     "selector_model_for_source",
+    "stamp_bundled_registry_verdict",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
     "undeclared_casilla_ids",

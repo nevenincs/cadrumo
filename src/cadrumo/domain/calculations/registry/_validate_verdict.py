@@ -1,25 +1,19 @@
 """Persistent registry-validation verdict cache.
 
-A green :meth:`RegistryValidator.validate_registry` run persists a small
-verdict record keyed by the complete registry fingerprint tuples the loader
-already computes (registry tree plus convenio, and the source-evidence set),
-the package version, and the outcome. On a later load a fingerprint match lets
-:class:`ValidatedRegistryAuthority` construct with validation marked done and
-skip the multi-second re-validation of an immutable bundled registry. This is
-the ADR ``mcp-call-latency`` D1 inversion: the build and continuous integration
-are the validation gate; the runtime asserts fingerprint identity only.
+A green ``validate_registry`` run persists a verdict keyed by the registry
+fingerprint tuples, the package version, and the outcome. On a later load a
+match lets :class:`ValidatedRegistryAuthority` construct with validation marked
+done and skip the multi-second re-validation of an immutable bundled registry
+(ADR ``mcp-call-latency`` D1: build and continuous integration are the gate;
+the runtime asserts fingerprint identity only).
 
-Two verdict homes back the same key:
-
-- a writable per-storage-root file under the settings-derived cache directory,
-  covering mutable development trees; and
-- a read-only file the release build stamps beside the bundled registry tree,
-  so the very first touch on an end-user machine skips runtime validation.
-
-Every verdict is derived and rebuildable per ``no-legacy-compatibility``: a key
-mismatch, or an unreadable/foreign record, deletes the writable verdict and
-forces a full re-validation. No migration, no version bridge, no read-tolerance
-of an old shape.
+Two homes back the verdict: a writable per-storage-root file (mutable trees,
+keyed on the full ``(path, size, mtime)`` tuples) and a read-only file the
+release build stamps beside the bundled tree (keyed on the install-stable
+``(relative-path, size)`` plus version, since mtime does not survive
+packaging). Every verdict is derived and rebuildable per
+``no-legacy-compatibility``: a key mismatch or a foreign record deletes the
+writable verdict and re-validates in full -- no migration.
 """
 
 from __future__ import annotations
@@ -41,7 +35,6 @@ FingerprintTuples = tuple[tuple[str, int, int], ...]
 """``(path, size, mtime_ns)`` fingerprint tuples, as the loader collects them."""
 
 VERDICT_OUTCOME_GREEN = "green"
-"""The only persisted outcome: a failed validation raises and stores nothing."""
 
 _VERDICT_FILENAME_PREFIX = "cadrumo_validation_verdict_"
 _BUNDLED_VERDICT_FILENAME = "aeat-validation-verdict.json"
@@ -53,10 +46,9 @@ _LOGGER = logging.getLogger(__name__)
 class ValidationVerdict(BaseModel):
     """A persisted proof that a registry tree validated green.
 
-    ``verdict_key`` folds the complete fingerprint tuples and the package
-    version into one hash (see :func:`compute_verdict_key`); the runtime skips
-    validation only when a stored green verdict's key equals the freshly
-    recomputed key.
+    ``verdict_key`` folds the fingerprint tuples and the package version into
+    one hash; the runtime skips validation only when a stored green verdict's
+    key equals the freshly recomputed key.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -74,11 +66,10 @@ def compute_verdict_key(
 ) -> str:
     """Hash the complete fingerprint tuples plus the package version into one key.
 
-    The two fingerprint groups are the exact tuples the authority already
-    passes as its :func:`functools.lru_cache` key, so correctness reduces to
-    fingerprint identity per the registry authority-flow rule. A group label is
-    mixed in so a tuple moving between the registry and source-evidence groups
-    cannot collide.
+    The two groups are the exact tuples the authority passes as its
+    ``lru_cache`` key, so correctness reduces to fingerprint identity per the
+    registry authority-flow rule. A group label is mixed in so a tuple moving
+    between groups cannot collide.
 
     Returns:
         The hex SHA-256 digest binding the fingerprints to ``package_version``.
@@ -94,16 +85,81 @@ def compute_verdict_key(
     return hasher.hexdigest()
 
 
+def compute_bundled_verdict_key(
+    *,
+    registry_fingerprints: FingerprintTuples,
+    registry_root: Path,
+    package_version: str = __version__,
+) -> str:
+    """Compute the install-stable key for the release-stamped bundled verdict.
+
+    The per-storage-root key (:func:`compute_verdict_key`) folds absolute paths
+    and ``mtime_ns``, which do NOT survive packaging: the cohort builds the
+    wheel from a ``git archive`` extraction and installation rewrites mtimes and
+    directory sizes. This key drops the mtime component and the directory
+    entries (both packaging-unstable) and keys on the release version plus the
+    sorted ``(relative-path, size)`` of every registry FILE -- stable from the
+    build machine to every install because the bundled tree is byte-identical
+    per release. Per the ADR, install byte integrity is owned by the
+    package-manager digest chain; any file-set or size change re-validates.
+
+    Returns:
+        The hex SHA-256 digest over the version, relative paths, and sizes.
+    """
+    resolved_root = registry_root.resolve()
+    entries: list[tuple[str, int]] = []
+    for path, size, _mtime_ns in registry_fingerprints:
+        candidate = Path(path)
+        if not candidate.is_file():
+            continue
+        try:
+            relative = candidate.resolve().relative_to(resolved_root).as_posix()
+        except ValueError:
+            relative = candidate.name
+        entries.append((relative, size))
+    hasher = hashlib.sha256()
+    hasher.update(b"bundled-registry")
+    hasher.update(package_version.encode("utf-8"))
+    for relative, size in sorted(entries):
+        hasher.update(relative.encode("utf-8"))
+        hasher.update(str(size).encode("utf-8"))
+    return hasher.hexdigest()
+
+
+def stamp_bundled_verdict(
+    *,
+    registry_fingerprints: FingerprintTuples,
+    registry_root: Path,
+    output_path: Path,
+    package_version: str = __version__,
+) -> ValidationVerdict:
+    """Write the install-stable bundled-tree verdict at ``output_path``.
+
+    Called by the release build against the tree it is packaging so the first
+    end-user touch of this release skips validation. The caller supplies the
+    fingerprints so this module adds no loader import edge.
+
+    Returns:
+        The written :class:`ValidationVerdict`.
+    """
+    key = compute_bundled_verdict_key(
+        registry_fingerprints=registry_fingerprints,
+        registry_root=registry_root,
+        package_version=package_version,
+    )
+    verdict = ValidationVerdict(verdict_key=key, package_version=package_version, outcome=VERDICT_OUTCOME_GREEN)
+    write_verdict(output_path, verdict)
+    return verdict
+
+
 def verdict_cache_path(root: Path) -> Path:
     """Return the writable per-storage-root verdict file for ``root``.
 
     Derived from :attr:`~core.config.Settings.cadrumo_validation_verdict_cache_dir`
-    (``<storage-root>/cache/registry-verdict`` by default), never a shared OS
-    temp directory that two host users could collide in. The filename embeds a
-    hash of the resolved root path so distinct registry roots (the bundled tree
-    and a development authoring tree) never share one file; a fingerprint change
-    on a given root reuses the same filename, so the mismatch branch deletes and
-    rewrites in place.
+    (``<storage-root>/cache/registry-verdict``), never a shared OS temp dir. The
+    filename embeds a hash of the resolved root path so distinct registry roots
+    never share a file, while a fingerprint change on one root reuses the same
+    filename so the mismatch branch deletes and rewrites in place.
 
     Returns:
         The verdict file location for ``root`` under the settings cache dir.
@@ -112,29 +168,38 @@ def verdict_cache_path(root: Path) -> Path:
     return load_settings().cadrumo_validation_verdict_cache_dir / f"{_VERDICT_FILENAME_PREFIX}{digest}.json"
 
 
+def shipped_verdict_location(registry_root: Path) -> Path:
+    """Return the shipped-verdict file location for ``registry_root``.
+
+    A sibling of the registry root, never inside it, so its own presence is not
+    walked by the fingerprint it certifies. Shared by the release build (which
+    stamps here) and the runtime read, so the two never disagree.
+
+    Returns:
+        The ``aeat-validation-verdict.json`` path beside ``registry_root``.
+    """
+    return registry_root.parent / _BUNDLED_VERDICT_FILENAME
+
+
 def bundled_verdict_path(root: Path) -> Path | None:
     """Return the read-only shipped verdict location for the bundled tree.
 
-    The release build stamps the bundled-tree verdict here so the first
-    end-user touch skips runtime validation; returns ``None`` for any mutable
-    authoring tree, which relies on the per-storage-root verdict instead. The
-    file is a sibling of the registry root, never inside it, so its own presence
-    is not walked by the registry-tree fingerprint it certifies.
+    Returns ``None`` for any mutable authoring tree, which relies on the
+    per-storage-root verdict instead.
 
     Returns:
         The shipped verdict path when ``root`` is the bundled tree, else ``None``.
     """
     if not is_bundled_registry_root(root):
         return None
-    return root.parent / _BUNDLED_VERDICT_FILENAME
+    return shipped_verdict_location(root)
 
 
 def read_verdict(path: Path) -> ValidationVerdict | None:
     """Read and strict-parse a verdict, or ``None`` if absent/unreadable/foreign.
 
     Returns:
-        The parsed :class:`ValidationVerdict`, or ``None`` on any read or
-        validation failure (the caller then recomputes deterministically).
+        The parsed :class:`ValidationVerdict`, or ``None`` on any read failure.
     """
     if not path.is_file():
         return None
@@ -172,16 +237,25 @@ def delete_verdict(path: Path) -> None:
         _LOGGER.debug("Could not delete validation verdict at %s", path, exc_info=True)
 
 
-def registry_validation_is_certified(root: Path, *, verdict_key: str) -> bool:
-    """Whether a persisted green verdict certifies ``verdict_key`` for ``root``.
+def registry_validation_is_certified(
+    root: Path,
+    *,
+    verdict_key: str,
+    registry_fingerprints: FingerprintTuples,
+    package_version: str = __version__,
+) -> bool:
+    """Whether a persisted green verdict certifies this tree for ``root``.
 
-    Checks the writable per-storage-root verdict first, deleting it on any
-    mismatch so the next load recomputes; then the read-only shipped bundled
-    verdict. A hit lets the authority construct with validation marked done and
-    skip ``validate_registry`` entirely, including on ``modelo list``.
+    Checks the writable per-storage-root verdict first (matched on the full
+    ``verdict_key``), deleting it on any mismatch; then, only when a shipped
+    bundled verdict is present, matches it on the install-stable
+    :func:`compute_bundled_verdict_key`. That key is computed lazily -- only on
+    the first-touch path where a shipped verdict exists and the writable verdict
+    has not hit -- so its file-stat pass never runs on a warm load or a dev tree
+    with no shipped verdict. A hit skips ``validate_registry`` entirely.
 
     Returns:
-        ``True`` when a stored green verdict's key equals ``verdict_key``.
+        ``True`` when a stored green verdict certifies the current tree.
     """
     writable = verdict_cache_path(root)
     verdict = read_verdict(writable)
@@ -193,8 +267,14 @@ def registry_validation_is_certified(root: Path, *, verdict_key: str) -> bool:
     shipped = bundled_verdict_path(root)
     if shipped is not None:
         shipped_verdict = read_verdict(shipped)
-        if shipped_verdict is not None and _verdict_matches(shipped_verdict, verdict_key):
-            return True
+        if shipped_verdict is not None:
+            bundled_key = compute_bundled_verdict_key(
+                registry_fingerprints=registry_fingerprints,
+                registry_root=root,
+                package_version=package_version,
+            )
+            if _verdict_matches(shipped_verdict, bundled_key):
+                return True
     return False
 
 
@@ -204,11 +284,7 @@ def certify_registry_validation(
     verdict_key: str,
     package_version: str = __version__,
 ) -> Path:
-    """Persist a fresh green verdict for ``root`` after a green validation.
-
-    Returns:
-        The writable verdict path the fresh record was written to.
-    """
+    """Persist a fresh green verdict for ``root``, returning the path written."""
     path = verdict_cache_path(root)
     write_verdict(
         path,

@@ -13,6 +13,7 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
+from .... import __version__
 from ....core.access_gate import (
     AuthorizationManifest,
     ModeloAuthorization,
@@ -32,6 +33,8 @@ from ._validate_verdict import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,
+    shipped_verdict_location,
+    stamp_bundled_verdict,
 )
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
@@ -298,9 +301,39 @@ def _load_authority(
         registry_fingerprints=_registry_fingerprint,
         source_evidence_fingerprints=_source_evidence_fingerprint,
     )
-    if registry_validation_is_certified(root, verdict_key=verdict_key):
+    if registry_validation_is_certified(
+        root,
+        verdict_key=verdict_key,
+        registry_fingerprints=_registry_fingerprint,
+    ):
         authority._mark_registry_validated()
     else:
         authority.validate_registry()
         certify_registry_validation(root, verdict_key=verdict_key)
     return authority
+
+
+def stamp_bundled_registry_verdict(registry_root: Path, *, package_version: str = __version__) -> Path:
+    """Stamp the install-stable bundled-tree verdict beside ``registry_root``.
+
+    The release build calls this against the registry tree it is packaging so
+    the first end-user touch of an install of this release skips runtime
+    validation. It collects the same registry-tree and convenio fingerprints
+    the authority keys on, computes the install-stable bundled key, and writes
+    the shipped verdict to the sibling location the runtime reads. The verdict
+    certifies only that the build validated this release's immutable tree green;
+    a fingerprint or version mismatch at runtime re-validates in full.
+
+    Returns:
+        The path the shipped verdict was written to.
+    """
+    resolved = registry_root.expanduser().resolve()
+    fingerprints = _collect_registry_tree_fingerprints(resolved) + collect_convenio_fingerprints(resolved)
+    output_path = shipped_verdict_location(resolved)
+    stamp_bundled_verdict(
+        registry_fingerprints=fingerprints,
+        registry_root=resolved,
+        output_path=output_path,
+        package_version=package_version,
+    )
+    return output_path
