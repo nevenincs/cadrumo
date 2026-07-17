@@ -61,3 +61,5 @@ The warm runtime honours idle-lock custody by construction - it holds no decrypt
 ## Notes
 
 The custody choice is to NOT hold keys warm: research shows crypto is not a bottleneck (Argon2id ~25 ms), so re-deriving per call is cheap and strictly safer than a long-lived held key. This is a stronger guarantee than the idle-lock rule requires. The idle-lock relock plus clean-crash-restart regression - which provisions a real encrypted bucket and asserts no session survives an in-process call - lands in S17 per the plan's division.
+
+Review remediation (MEDIUM-2 + lazy-import): the `close_active_bucket_session` relock import hoisted from the worker `finally` to module level (lazy-import gate). The warm-path soft-timeout refusal now carries an idempotent-retry Notice - the abandoned worker MAY still complete, so the operator is told to re-run with the same idempotency key, which the single-subject idempotency guard makes safe (a match is a no-op, never a double-write). No thread-killing, per the ruling.

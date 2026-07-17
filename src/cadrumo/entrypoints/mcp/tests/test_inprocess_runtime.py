@@ -38,7 +38,8 @@ def test_run_cli_in_process_emits_the_read_only_contract_envelope() -> None:
     # ``app contract`` is a read-only verb that needs no active profile, so it
     # exercises the whole in-process pipeline - root callback, verb body, and the
     # shared envelope emitter - without touching encrypted bucket state.
-    run = run_cli_in_process(["--format", "json", "app", "contract"])
+    run = run_cli_in_process(["--format", "json", "app", "contract"], acquire_timeout_s=30.0)
+    assert run is not None
     assert run.returncode == 0
     envelope, is_error = parse_cli_envelope(run)
     assert is_error is False
@@ -51,7 +52,8 @@ def test_run_cli_in_process_emits_the_read_only_contract_envelope() -> None:
 
 def test_dispatch_verb_in_process_reconstructs_the_argv_from_the_schema() -> None:
     descriptor = next(candidate for candidate in build_tool_descriptors() if candidate.command_key == "contract")
-    run = dispatch_verb_in_process(descriptor.verb_schema, {})
+    run = dispatch_verb_in_process(descriptor.verb_schema, {}, acquire_timeout_s=30.0)
+    assert run is not None
     envelope, is_error = parse_cli_envelope(run)
     assert is_error is False
     assert envelope["command"] == "contract"

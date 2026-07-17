@@ -31,6 +31,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.config import load_settings
+
 if TYPE_CHECKING:
     from anyio import CapacityLimiter
 
@@ -57,8 +59,6 @@ def serving_capacity_limiter() -> CapacityLimiter:
     global _SERVING_LIMITER
     if _SERVING_LIMITER is None:
         from anyio import CapacityLimiter
-
-        from ...core.config import load_settings
 
         _SERVING_LIMITER = CapacityLimiter(load_settings().cadrumo_mcp_serving_concurrency)
     return _SERVING_LIMITER

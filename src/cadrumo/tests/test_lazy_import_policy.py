@@ -661,6 +661,12 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._bundle", "domain.modelos"),
             ImportEdge("application.user_profile._bundle", "domain.transactions"),
             ImportEdge("application.user_profile._bundle", "domain.user_profile"),
+            ImportEdge("application.user_profile._bundle_export", "application.user_profile._bundle"),
+            ImportEdge("application.user_profile._bundle_export", "application.user_profile._bundle_encryption"),
+            ImportEdge("application.user_profile._bundle_export", "application.user_profile._orchestration"),
+            ImportEdge("application.user_profile._bundle_export", "application.workflow"),
+            ImportEdge("application.user_profile._bundle_export", "core"),
+            ImportEdge("application.user_profile._bundle_export", "domain.buckets"),
             ImportEdge("application.user_profile._capabilities", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._capabilities", "application.workflow"),
             ImportEdge("application.user_profile._censo_sync", "adapters.outbound.aeat.sede"),
@@ -684,6 +690,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._language_resolver", "application.workflow"),
             ImportEdge("application.user_profile._language_resolver", "core"),
             ImportEdge("application.user_profile._language_resolver", "core.config"),
+            ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.errors"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.master_key"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.sql.engine"),
@@ -730,6 +737,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.workflow._resume", "application.modelo"),
             ImportEdge("entrypoints.mcp", "entrypoints.mcp._server"),
             ImportEdge("entrypoints.mcp._faithfulness", "core.i18n"),
+            ImportEdge("entrypoints.mcp._inprocess", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._input_schema", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._persona_scope", "core.i18n"),
             ImportEdge("entrypoints.mcp._resources", "application.corpus_search"),
@@ -759,7 +767,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 520,  # +3 censo vivienda-ratio profile deferrals (was 517: +14 readiness relation-prefill)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 528,  # +8 mcp warm-serving + user_profile bundle-export/orchestration deferrals (was 520)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -769,7 +777,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 464  # test-only ephemeral-provider module and its four edges retired.
+_ALLOWLIST_EDGE_CEILING: int = 472  # +8 mcp warm-serving + user_profile bundle-export/orchestration deferrals (was 464).
 
 
 def _cadrumo_relative(dotted: str) -> str:

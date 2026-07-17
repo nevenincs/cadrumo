@@ -36,6 +36,7 @@ import contextlib
 import io
 import json
 import threading
+import time
 from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
@@ -57,6 +58,28 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 # loop and any subprocess-transport calls proceed; only the in-process
 # stream-capture window is mutually exclusive.
 _CAPTURE_LOCK = threading.Lock()
+
+# The monotonic time the CURRENT capture holder acquired the lock (``None`` when
+# free), plus its own guard. It makes a slow or hung in-process verb observable:
+# :func:`warm_capture_holder_age` lets the server bound the blast radius of a
+# wedged worker (which still holds the capture) by degrading later calls to the
+# supervised subprocess transport rather than queuing behind the wedge forever.
+_HOLDER_SINCE: float | None = None
+_STATE_LOCK = threading.Lock()
+
+
+def warm_capture_holder_age() -> float | None:
+    """Return how long the current in-process call has held the capture, or ``None``.
+
+    ``None`` means the capture is free. A value at or beyond the wedge threshold is
+    the server's signal that the warm transport is wedged (a worker running past
+    its ceiling still holds the capture), so subsequent calls should degrade to the
+    supervised subprocess transport until it clears.
+    """
+    with _STATE_LOCK:
+        held = _HOLDER_SINCE
+    return None if held is None else time.monotonic() - held
+
 
 # Tiers that CANNOT run in-process. The AEAT-sede / open-world family runs a
 # Playwright portal pull that spawns a browser child; only the supervised
@@ -106,7 +129,7 @@ def _exit_code(code: object) -> int:
     return 1
 
 
-def run_cli_in_process(argv_tail: Sequence[str]) -> CompletedCliRun:
+def run_cli_in_process(argv_tail: Sequence[str], *, acquire_timeout_s: float) -> CompletedCliRun | None:
     """Run the real ``aeat`` Typer app in-process, capturing its output streams.
 
     ``argv_tail`` is the argv the subprocess transport would pass after the
@@ -121,9 +144,22 @@ def run_cli_in_process(argv_tail: Sequence[str]) -> CompletedCliRun:
     so no CLI output reaches the MCP JSON-RPC pipe and concurrent calls cannot
     interleave their redirects.
 
+    The capture lock is acquired with a wall-clock bound: a call NEVER queues
+    behind a slow or hung in-process verb forever. When the lock cannot be
+    acquired within ``acquire_timeout_s`` this returns ``None``, the signal for the
+    caller to degrade to the supervised subprocess transport (the parity oracle
+    guarantees an identical envelope, so the fallback is behaviour-invisible except
+    latency).
+
     Returns:
-        The :class:`CompletedCliRun` carrying the captured streams and code.
+        The :class:`CompletedCliRun`, or ``None`` when the capture could not be
+        acquired within the bound.
     """
+    global _HOLDER_SINCE
+    if not _CAPTURE_LOCK.acquire(timeout=acquire_timeout_s):
+        return None
+    with _STATE_LOCK:
+        _HOLDER_SINCE = time.monotonic()
     from typer.main import get_command
 
     from ..cli import app
@@ -132,27 +168,38 @@ def run_cli_in_process(argv_tail: Sequence[str]) -> CompletedCliRun:
     out = io.StringIO()
     err = io.StringIO()
     returncode = 0
-    with _CAPTURE_LOCK, contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-        try:
-            command.main(
-                args=list(argv_tail),
-                prog_name=PRODUCT_IDENTITY.cli_executable,
-                standalone_mode=True,
-            )
-        except SystemExit as exit_request:
-            returncode = _exit_code(exit_request.code)
+    try:
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            try:
+                command.main(
+                    args=list(argv_tail),
+                    prog_name=PRODUCT_IDENTITY.cli_executable,
+                    standalone_mode=True,
+                )
+            except SystemExit as exit_request:
+                returncode = _exit_code(exit_request.code)
+    finally:
+        with _STATE_LOCK:
+            _HOLDER_SINCE = None
+        _CAPTURE_LOCK.release()
     return CompletedCliRun(stdout=out.getvalue(), stderr=err.getvalue(), returncode=returncode)
 
 
-def dispatch_verb_in_process(schema: VerbInputSchema, arguments: dict[str, object]) -> CompletedCliRun:
+def dispatch_verb_in_process(
+    schema: VerbInputSchema,
+    arguments: dict[str, object],
+    *,
+    acquire_timeout_s: float,
+) -> CompletedCliRun | None:
     """Build a verb's argv from its schema and run it through the warm runtime.
 
     The argv is reconstructed from the per-verb input schema and the named
     ``arguments`` through the same
     :func:`~entrypoints.mcp._input_schema.cli_argv_for` the subprocess transport
-    uses, so both transports dispatch the identical command line.
+    uses, so both transports dispatch the identical command line. Returns ``None``
+    when the capture could not be acquired within ``acquire_timeout_s``.
     """
-    return run_cli_in_process(cli_argv_for(schema, arguments))
+    return run_cli_in_process(cli_argv_for(schema, arguments), acquire_timeout_s=acquire_timeout_s)
 
 
 def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:

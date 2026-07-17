@@ -61,3 +61,5 @@ Concurrent off-loop dispatch is bounded. A real-behavior test fires three times 
 ## Notes
 
 The cap is the outer bound shared by both transports; the warm in-process path additionally serialises on its stdout capture lock, so in-process calls run effectively one at a time regardless of the cap, while up to `cap` supervised subprocesses may run concurrently. Default 4 suits the single-operator desktop client and is raisable for a multi-client host.
+
+Review remediation (MEDIUM-1): the single-file capture serialisation is now backed by a bounded wait plus wedge detection, so a slow or hung in-process call no longer blocks the transport indefinitely - it degrades warm-eligible calls to the subprocess transport with a warning Notice until the capture frees. Two new settings govern it: `cadrumo_mcp_warm_capture_wait_seconds` (the bounded acquire) and `cadrumo_mcp_wedge_threshold_seconds` (the wedge declaration). The S13 `serving_capacity_limiter` also hoisted its `core.config` import to module level as part of the lazy-import gate remediation.
