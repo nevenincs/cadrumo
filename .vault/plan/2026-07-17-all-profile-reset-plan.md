@@ -39,12 +39,12 @@ Persist non-secret reset operation state atomically outside target directories s
 
 Replace scoped reset with start, status, and resume composing the established profile, retention, auth, certificate, and pointer authorities.
 
-- [ ] `P03.S09` - Replace scoped reset with start, status, and resume over all live, tombstoned, and dangling-pointer targets; `src/cadrumo/application/config_reset.py`.
-- [ ] `P03.S10` - Acquire target locks in sorted UUID order and persist every retention decision before mutation; `src/cadrumo/application/config_reset.py`.
-- [ ] `P03.S11` - Invoke target-scoped auth reset and delete canonical secure-storage certificate secrets before each target deletion without certificate keyring reconciliation or migration; `src/cadrumo/application/config_reset.py`.
-- [ ] `P03.S12` - Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority; `src/cadrumo/application/config_reset.py`.
-- [ ] `P03.S13` - Persist deleting ownership before deletion and completion after each irreversible transition; `src/cadrumo/application/config_reset.py`.
-- [ ] `P03.S14` - Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status; `src/cadrumo/application/config_reset.py`.
+- [x] `P03.S09` - Replace scoped reset with start, status, and resume over all live, tombstoned, and dangling-pointer targets; `src/cadrumo/application/config_reset.py`.
+- [x] `P03.S10` - Acquire target locks in sorted UUID order and persist every retention decision before mutation; `src/cadrumo/application/config_reset.py`.
+- [x] `P03.S11` - Invoke target-scoped auth reset and delete canonical secure-storage certificate secrets before each target deletion without certificate keyring reconciliation or migration; `src/cadrumo/application/config_reset.py`.
+- [x] `P03.S12` - Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority; `src/cadrumo/application/config_reset.py`.
+- [x] `P03.S13` - Persist deleting ownership before deletion and completion after each irreversible transition; `src/cadrumo/application/config_reset.py`.
+- [x] `P03.S14` - Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status; `src/cadrumo/application/config_reset.py`.
 - [x] `P03.S15` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults; `src/cadrumo/application/tests/test_config_reset.py`.
 - [x] `P03.S16` - Prove every reset phase boundary resumes honestly in a fresh child process; `src/cadrumo/application/tests/test_config_reset_recovery.py`.
 - [x] `P03.S17` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes; `src/cadrumo/application/tests/test_config_reset_concurrency.py`.
