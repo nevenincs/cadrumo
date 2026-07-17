@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.verify_distribution_identity import verify_distribution_identity
+from dev.packaging.verify_distribution_identity import (
+    _labeled_product_description,
+    _product_description_observation,
+    verify_distribution_identity,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -139,8 +143,17 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         "human_confirmation",
         "never_files_live",
     ]
+    assert descriptions["approved_pair_count"] == 0
+    assert descriptions["product_review_required"] is True
     assert descriptions["model_facing_descriptions"] == {
+        "compliant": True,
+        "count": 1625,
+        "expected_sha256": "5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0",
+        "language_labels_absent": True,
         "localization_target": False,
+        "nonempty": True,
+        "sha256": "5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0",
+        "surface_counts": {"argument": 1240, "prompt": 35, "resource": 54, "tool": 296},
         "surfaces": [
             "MCP argument descriptions",
             "MCP prompt descriptions",
@@ -162,26 +175,58 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
     assert all(row["english_text"] == "" for row in observations)
     assert all(row["spanish_text"] == "" for row in observations)
     assert all(row["unlabeled_text"] == row["value"] for row in observations)
+    assert all(row["translation_approved"] is False for row in observations)
     assert all(row["compliant"] is False for row in observations)
     assert all(
         [claim["name"] for claim in row["claims"]] == descriptions["required_claims"]
         and all(claim["parity"] is False for claim in row["claims"])
         for row in observations
     )
-    assert [
-        {claim["name"] for claim in row["claims"] if claim["english"]}
-        for row in observations
-    ] == [
+    assert [{claim["name"] for claim in row["claims"] if claim["english"]} for row in observations] == [
         {"capability", "safety", "never_files_live"},
         {"capability"},
         {"capability", "safety", "never_files_live"},
         {"capability", "safety", "never_files_live"},
         set(descriptions["required_claims"]),
     ]
-    assert all(
-        all(claim["spanish"] is False for claim in row["claims"])
-        for row in observations
+    assert all(all(claim["spanish"] is False for claim in row["claims"]) for row in observations)
+
+
+def test_supported_english_and_spanish_language_labels_are_parsed() -> None:
+    """Both English-language and natural localized section labels are accepted."""
+    english, spanish, english_label, spanish_label = _labeled_product_description(
+        "Inglés: Approved English copy.\nEspañol: Texto español aprobado."
     )
+
+    assert english == "Approved English copy."
+    assert spanish == "Texto español aprobado."
+    assert english_label is True
+    assert spanish_label is True
+
+
+def test_unapproved_semantic_contradiction_cannot_pass_keyword_claim_checks() -> None:
+    """Product review, not matched vocabulary, is the authority for translation parity."""
+    observation = _product_description_observation(
+        surface="mcpb_client_display",
+        location="review-probe",
+        field="long_description",
+        value=(
+            "English: Cadrumo is not a Spanish tax MCP assistant. There is no gated execution or "
+            "read-only safety. It is false that only figures reach the provider. Financial data "
+            "does not use on-host encrypted storage. There is no human confirmation. It is false "
+            "that Cadrumo never files.\n"
+            "Español: Cadrumo no es un asistente fiscal MCP. No existe ejecución controlada ni solo "
+            "lectura. Es falso que solo las cifras llegan al proveedor. Los datos financieros no "
+            "usan almacenamiento cifrado local. No existe confirmación humana. Es falso que nunca "
+            "presenta."
+        ),
+    )
+
+    assert observation.english_label is True
+    assert observation.spanish_label is True
+    assert observation.translation_approved is False
+    assert observation.compliant is False
+    assert all(claim.parity is False for claim in observation.claims)
 
 
 def test_cli_returns_nonzero_and_emits_the_real_failure_report() -> None:

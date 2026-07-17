@@ -10,6 +10,7 @@ without renaming, translating, or mutating any shipped byte.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -64,8 +65,19 @@ _MODEL_FACING_DESCRIPTION_SURFACES: Final[tuple[str, ...]] = (
     "MCP resource descriptions",
     "MCP tool descriptions",
 )
+_ENGLISH_LANGUAGE_LABELS: Final[frozenset[str]] = frozenset({"en", "english", "ingles", "inglés"})
+_SPANISH_LANGUAGE_LABELS: Final[frozenset[str]] = frozenset({"es", "espanol", "español", "spanish"})
 _LANGUAGE_LABEL_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"(?im)^[ \t]*(?:\*\*)?(?P<label>English|EN|Spanish|ES)(?:\*\*)?[ \t]*:[ \t]*",
+    r"(?im)^[ \t]*(?:\*\*)?"
+    r"(?P<label>English|EN|Ingl[eé]s|Spanish|ES|Espa[nñ]ol)"
+    r"(?:\*\*)?[ \t]*:[ \t]*",
+)
+# Translation wording is not approved by the verification-only ADR. A later,
+# separately authorised migration must add the product-reviewed exact pair for
+# each client-display field; keyword similarity alone can never approve copy.
+_APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {}
+_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
+    "5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0"
 )
 _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]] = {
     "capability": {
@@ -107,12 +119,8 @@ _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]
         ),
     },
     "human_confirmation": {
-        "english": (
-            re.compile(r"\b(?:human-in-the-loop|human confirmation|confirmation gate)\b", re.I),
-        ),
-        "spanish": (
-            re.compile(r"\b(?:confirmaci[oó]n humana|intervenci[oó]n humana|una persona confirma)\b", re.I),
-        ),
+        "english": (re.compile(r"\b(?:human-in-the-loop|human confirmation|confirmation gate)\b", re.I),),
+        "spanish": (re.compile(r"\b(?:confirmaci[oó]n humana|intervenci[oó]n humana|una persona confirma)\b", re.I),),
     },
     "never_files_live": {
         "english": (
@@ -133,15 +141,20 @@ from pathlib import Path
 import cadrumo
 
 from cadrumo.entrypoints.mcp._dispatch import tool_name_for_command
-from cadrumo.entrypoints.mcp._corpus_tools import CORPUS_SEARCH_TOOL
-from cadrumo.entrypoints.mcp._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
+from cadrumo.entrypoints.mcp._corpus_tools import CORPUS_SEARCH_TOOL, build_corpus_search_tool
+from cadrumo.entrypoints.mcp._harness_tools import (
+    HARNESS_LOAD_TOOL,
+    WHOAMI_TOOL,
+    build_harness_floor_tool,
+    build_whoami_tool,
+)
 from cadrumo.entrypoints.mcp._prompts import ORIENTATION_PROMPT_NAME, build_prompt_catalogue, prompt_document
 from cadrumo.entrypoints.mcp._resources import (
     list_harness_resource_templates,
     list_harness_resources,
 )
-from cadrumo.entrypoints.mcp._server import build_meta_sdk_tools, build_server
-from cadrumo.entrypoints.mcp._terminology_tools import TERMINOLOGY_SEARCH_TOOL
+from cadrumo.entrypoints.mcp._server import build_meta_sdk_tools, build_sdk_tools, build_server
+from cadrumo.entrypoints.mcp._terminology_tools import TERMINOLOGY_SEARCH_TOOL, build_terminology_search_tool
 from cadrumo.entrypoints.mcp._tools import build_tool_descriptors
 
 prompts = []
@@ -160,6 +173,14 @@ templates = [
     for row in list_harness_resource_templates()
 ]
 descriptors = build_tool_descriptors()
+sdk_tools = [
+    *build_sdk_tools(descriptors),
+    *build_meta_sdk_tools(),
+    build_harness_floor_tool(),
+    build_whoami_tool(),
+    build_corpus_search_tool(),
+    build_terminology_search_tool(),
+]
 server_tools = sorted({
     *(row.name for row in descriptors),
     *(row.name for row in build_meta_sdk_tools()),
@@ -168,6 +189,48 @@ server_tools = sorted({
     CORPUS_SEARCH_TOOL,
     TERMINOLOGY_SEARCH_TOOL,
 })
+model_facing_descriptions = []
+for tool in sdk_tools:
+    model_facing_descriptions.append({
+        "surface": "tool",
+        "identifier": tool.name,
+        "description": tool.description,
+    })
+    pending = [("inputSchema", tool.inputSchema)]
+    while pending:
+        path, node = pending.pop()
+        if isinstance(node, dict):
+            description = node.get("description")
+            if isinstance(description, str):
+                model_facing_descriptions.append({
+                    "surface": "argument",
+                    "identifier": f"{tool.name}:{path}",
+                    "description": description,
+                })
+            pending.extend((f"{path}.{key}", value) for key, value in node.items())
+        elif isinstance(node, list):
+            pending.extend((f"{path}[{index}]", value) for index, value in enumerate(node))
+for prompt in build_prompt_catalogue():
+    model_facing_descriptions.append({
+        "surface": "prompt",
+        "identifier": prompt.name,
+        "description": prompt.description,
+    })
+    model_facing_descriptions.extend({
+        "surface": "argument",
+        "identifier": f"prompt:{prompt.name}:{argument.name}",
+        "description": argument.description,
+    } for argument in prompt.arguments)
+model_facing_descriptions.extend({
+    "surface": "resource",
+    "identifier": row.uri,
+    "description": row.description,
+} for row in list_harness_resources())
+model_facing_descriptions.extend({
+    "surface": "resource",
+    "identifier": row.uri_template,
+    "description": row.description,
+} for row in list_harness_resource_templates())
 print(json.dumps({
     "package_file": str(Path(cadrumo.__file__).resolve()),
     "mcp_server": build_server(descriptors).name,
@@ -177,6 +240,10 @@ print(json.dumps({
     "prompts": prompts,
     "resources": resources,
     "templates": templates,
+    "model_facing_descriptions": sorted(
+        model_facing_descriptions,
+        key=lambda row: (row["surface"], row["identifier"], row["description"]),
+    ),
 }, sort_keys=True))
 """
 
@@ -244,7 +311,23 @@ class ProductDescriptionObservation:
     english_text: str
     spanish_text: str
     unlabeled_text: str
+    translation_approved: bool
     claims: tuple[ProductDescriptionClaimCheck, ...]
+    compliant: bool
+
+
+@dataclass(frozen=True)
+class ModelFacingDescriptionCheck:
+    """Exact observation of the preserved English-only operational copy contract."""
+
+    localization_target: bool
+    surfaces: tuple[str, ...]
+    count: int
+    surface_counts: dict[str, int]
+    sha256: str
+    expected_sha256: str
+    nonempty: bool
+    language_labels_absent: bool
     compliant: bool
 
 
@@ -257,6 +340,7 @@ class DistributionIdentityReport:
     inventory_parity_checks: tuple[InventoryParityCheck, ...]
     product_identity_checks: tuple[ProductIdentityCheck, ...]
     product_description_observations: tuple[ProductDescriptionObservation, ...]
+    model_facing_description_check: ModelFacingDescriptionCheck
 
     @property
     def ok(self) -> bool:
@@ -266,6 +350,7 @@ class DistributionIdentityReport:
             and all(row.compliant for row in self.inventory_parity_checks)
             and all(row.compliant for row in self.product_identity_checks)
             and all(row.compliant for row in self.product_description_observations)
+            and self.model_facing_description_check.compliant
         )
 
     def to_document(self) -> dict[str, object]:
@@ -299,9 +384,11 @@ class DistributionIdentityReport:
                 "ok": all(row.compliant for row in self.product_description_observations),
                 "required_languages": ["English", "Spanish"],
                 "required_claims": list(_REQUIRED_PRODUCT_DESCRIPTION_CLAIMS),
+                "approved_pair_count": sum(len(pairs) for pairs in _APPROVED_PRODUCT_DESCRIPTION_PAIRS.values()),
+                "product_review_required": not bool(_APPROVED_PRODUCT_DESCRIPTION_PAIRS),
                 "model_facing_descriptions": {
-                    "localization_target": False,
-                    "surfaces": list(_MODEL_FACING_DESCRIPTION_SURFACES),
+                    **asdict(self.model_facing_description_check),
+                    "surfaces": list(self.model_facing_description_check.surfaces),
                 },
                 "observations": [asdict(row) for row in self.product_description_observations],
             },
@@ -1014,7 +1101,12 @@ def _labeled_product_description(value: str) -> tuple[str, str, bool, bool]:
     sections: dict[str, list[str]] = {"english": [], "spanish": []}
     for index, match in enumerate(matches):
         label = match.group("label").casefold()
-        language = "english" if label in {"english", "en"} else "spanish"
+        if label in _ENGLISH_LANGUAGE_LABELS:
+            language = "english"
+        elif label in _SPANISH_LANGUAGE_LABELS:
+            language = "spanish"
+        else:  # pragma: no cover - the closed regular expression prevents this.
+            raise ValueError(f"unsupported language label: {match.group('label')}")
         end = matches[index + 1].start() if index + 1 < len(matches) else len(value)
         sections[language].append(value[match.end() : end].strip())
     english_label = len(sections["english"]) == 1
@@ -1035,6 +1127,10 @@ def _product_description_observation(
     english, spanish, english_label, spanish_label = _labeled_product_description(text)
     unlabeled = text if _LANGUAGE_LABEL_PATTERN.search(text) is None else ""
     english_claim_text = english or unlabeled
+    translation_approved = (english, spanish) in _APPROVED_PRODUCT_DESCRIPTION_PAIRS.get(
+        (surface, field),
+        frozenset(),
+    )
     claim_rows: list[ProductDescriptionClaimCheck] = []
     for name, patterns in _PRODUCT_CLAIM_PATTERNS.items():
         english_claim = all(pattern.search(english_claim_text) is not None for pattern in patterns["english"])
@@ -1044,7 +1140,7 @@ def _product_description_observation(
                 name=name,
                 english=english_claim,
                 spanish=spanish_claim,
-                parity=english_claim and spanish_claim,
+                parity=english_claim and spanish_claim and translation_approved,
             ),
         )
     claims = tuple(claim_rows)
@@ -1058,12 +1154,14 @@ def _product_description_observation(
         english_text=english,
         spanish_text=spanish,
         unlabeled_text=unlabeled,
+        translation_approved=translation_approved,
         claims=claims,
         compliant=(
             english_label
             and spanish_label
             and bool(english)
             and bool(spanish)
+            and translation_approved
             and all(claim.parity for claim in claims)
         ),
     )
@@ -1127,6 +1225,56 @@ def _product_description_observations(
     )
 
 
+def _model_facing_description_check(
+    mcp_projection: dict[str, object],
+) -> ModelFacingDescriptionCheck:
+    """Verify the real operational description inventory against its frozen contract."""
+    raw_rows = mcp_projection.get("model_facing_descriptions")
+    if not isinstance(raw_rows, list) or not raw_rows:
+        raise ValueError("MCP projection did not return model-facing descriptions")
+    rows: list[dict[str, str]] = []
+    for row in raw_rows:
+        if (
+            not isinstance(row, dict)
+            or not isinstance(row.get("surface"), str)
+            or not isinstance(row.get("identifier"), str)
+            or not isinstance(row.get("description"), str)
+        ):
+            raise ValueError(f"invalid model-facing description projection: {row!r}")
+        rows.append(
+            {
+                "surface": row["surface"],
+                "identifier": row["identifier"],
+                "description": row["description"],
+            },
+        )
+    canonical = json.dumps(
+        rows,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode(_UTF_8)
+    digest = hashlib.sha256(canonical).hexdigest()
+    surfaces = ("argument", "prompt", "resource", "tool")
+    surface_counts = {surface: sum(row["surface"] == surface for row in rows) for surface in surfaces}
+    nonempty = all(row["identifier"].strip() and row["description"].strip() for row in rows)
+    language_labels_absent = all(_LANGUAGE_LABEL_PATTERN.search(row["description"]) is None for row in rows)
+    complete = all(surface_counts[surface] > 0 for surface in surfaces)
+    return ModelFacingDescriptionCheck(
+        localization_target=False,
+        surfaces=_MODEL_FACING_DESCRIPTION_SURFACES,
+        count=len(rows),
+        surface_counts=surface_counts,
+        sha256=digest,
+        expected_sha256=_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256,
+        nonempty=nonempty,
+        language_labels_absent=language_labels_absent,
+        compliant=(
+            complete and nonempty and language_labels_absent and digest == _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256
+        ),
+    )
+
+
 def verify_distribution_identity(repo_root: Path | None = None) -> DistributionIdentityReport:
     """Inventory and verify the current distribution identity without mutation."""
     root = (repo_root or Path(__file__).resolve().parents[2]).resolve(strict=True)
@@ -1153,12 +1301,14 @@ def verify_distribution_identity(repo_root: Path | None = None) -> DistributionI
         parity = _inventory_parity_checks(tuple(namespace))
         product = _product_identity_checks(root, plugin, marketplace, mcp_projection)
         descriptions = _product_description_observations(root, plugin, marketplace)
+        model_facing = _model_facing_description_check(mcp_projection)
     return DistributionIdentityReport(
         required_harness_prefix=_REQUIRED_HARNESS_PREFIX,
         namespace_observations=tuple(namespace),
         inventory_parity_checks=parity,
         product_identity_checks=product,
         product_description_observations=descriptions,
+        model_facing_description_check=model_facing,
     )
 
 
