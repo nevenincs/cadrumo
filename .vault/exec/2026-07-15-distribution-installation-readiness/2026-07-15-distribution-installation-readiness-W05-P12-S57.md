@@ -9,9 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-
-
-
 # Run the path-scoped formatting tests and vault checks for every touched implementation surface
 
 ## Scope

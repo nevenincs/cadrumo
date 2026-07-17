@@ -9,9 +9,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
 ---
 
-
-
-
 # Prove the publish workflow cannot build regenerate or accept unrelated artifacts
 
 ## Scope

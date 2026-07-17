@@ -9,8 +9,6 @@ related:
   - "[[2026-07-16-distribution-harness-identity-adr]]"
 ---
 
-
-
 # `distribution-installation-readiness` audit: `Distribution close: harness identity and publish guardrail disposition`
 
 ## Scope
