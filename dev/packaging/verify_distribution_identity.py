@@ -77,7 +77,7 @@ _LANGUAGE_LABEL_PATTERN: Final[re.Pattern[str]] = re.compile(
 # each client-display field; keyword similarity alone can never approve copy.
 _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {}
 _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
-    "5eaa233019daecfffc215ec482fa36dfdc4763a03b412c00f615cfd45496d9a0"
+    "2f58dacf1f917749e9510e7e5b706752992bd0eb997f0453fab82edda8391d6b"
 )
 _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]] = {
     "capability": {

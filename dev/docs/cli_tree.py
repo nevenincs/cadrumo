@@ -354,7 +354,7 @@ def build_cli_tree_in_subprocess() -> CliTree:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing AeatError contract.
+        # diagnostics; not on the operator-facing CadrumoError contract.
         raise RuntimeError(f"cli-tree projection subprocess failed (exit {result.returncode}):\n{result.stderr}")
     return CliTree.model_validate_json(result.stdout)
 

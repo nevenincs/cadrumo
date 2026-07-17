@@ -61,6 +61,10 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.entrypoints.schema_surface import (
+    GROUP_CALLBACK_SCHEMA_KEYS,
+    SCHEMA_KEY_BY_CLI_PATH,
+)
 
 if TYPE_CHECKING:
     import click
@@ -79,9 +83,7 @@ _FALLBACK_MARKER: str = "not available in the current configuration"
 #: than a leaf command.  These are excluded from the per-command reference
 #: pages (they are group landing surfaces, not operator-invokable leaves) but
 #: are listed on the output-schema registry page (``schemas.rst``).
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
-    {"root.status", "root.app", "ledger.participation", "contract", "agent", "quickfile"}
-)
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = GROUP_CALLBACK_SCHEMA_KEYS
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
 #: in :mod:`cadrumo.entrypoints.cli.test_json_schema_conformance`.
@@ -89,9 +91,6 @@ _APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset(
     {"diagnostics", "ledger", "modelo", "overview", "registry", "review"}
 )
 _APP_NAMESPACE_PASSTHROUGH: frozenset[str] = frozenset({"live"})
-_PATH_KEY_OVERRIDES: dict[str, str] = {
-    "config.profile.history": "config.bucket.history",
-}
 
 #: Deterministic wrap width for a captured group ``--help`` block, pinned via
 #: ``max_content_width`` (see :func:`_captured_help_text`) so the rendered
@@ -247,7 +246,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
         paths = ", ".join(degraded)
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing AeatError contract.
+        # diagnostics; not on the operator-facing CadrumoError contract.
         raise RuntimeError(
             f"Import-failure fallback detected in CLI subtree(s): {paths}. "
             "Ensure all optional dependencies are installed before generating the reference.",
@@ -282,7 +281,7 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
         elif head in _APP_NAMESPACE_PASSTHROUGH:
             pass  # keep ``app.`` prefix
     normalised = ".".join(tokens)
-    return _PATH_KEY_OVERRIDES.get(normalised, normalised)
+    return SCHEMA_KEY_BY_CLI_PATH.get(normalised, normalised)
 
 
 # ---------------------------------------------------------------------------
@@ -1166,7 +1165,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing AeatError contract.
+        # diagnostics; not on the operator-facing CadrumoError contract.
         raise RuntimeError(f"CLI reference generation subprocess failed (exit {result.returncode}):\n{result.stderr}")
 
     # Read back what the subprocess wrote. Recursive (`rglob`, not `glob`)
@@ -1227,7 +1226,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing AeatError contract.
+        # diagnostics; not on the operator-facing CadrumoError contract.
         raise RuntimeError(f"CLI leaf-path collection subprocess failed (exit {result.returncode}):\n{result.stderr}")
     return [line for line in result.stdout.splitlines() if line.strip()]
 

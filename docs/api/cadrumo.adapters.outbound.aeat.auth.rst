@@ -25,7 +25,6 @@ Submodules
    cadrumo.adapters.outbound.aeat.auth._clave_permanente_metadata
    cadrumo.adapters.outbound.aeat.auth._clave_permanente_support
    cadrumo.adapters.outbound.aeat.auth._errors
-   cadrumo.adapters.outbound.aeat.auth._fixtures
    cadrumo.adapters.outbound.aeat.auth._providers
    cadrumo.adapters.outbound.aeat.auth._session_store
    cadrumo.adapters.outbound.aeat.auth.certificate

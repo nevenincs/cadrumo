@@ -26,6 +26,7 @@ from dev.packaging.cohort_manifest import (
 _MANIFEST_NAME: Final[str] = "packaging-smoke-manifest.json"
 _EVIDENCE_SCHEMA: Final[Literal["cadrumo.distribution-evidence.v1"]] = "cadrumo.distribution-evidence.v1"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
+_UTF_8: Final[str] = "utf-8"
 
 
 class EvidenceStatus(StrEnum):
@@ -236,7 +237,7 @@ def _canonical_json(document: Mapping[str, object]) -> bytes:
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
-    ).encode("utf-8")
+    ).encode(_UTF_8)
 
 
 def evidence_identifier(evidence: EvidenceIdentityPayload) -> str:
@@ -310,7 +311,7 @@ def write_distribution_evidence(directory: Path, evidence: DistributionEvidence)
     if destination.exists():
         raise FileExistsError(f"distribution evidence already exists: {destination}")
     temporary = destination.with_suffix(".json.tmp")
-    temporary.write_text(evidence.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    temporary.write_text(evidence.model_dump_json(indent=2) + "\n", encoding=_UTF_8)
     temporary.replace(destination)
     return destination
 
@@ -322,7 +323,7 @@ def load_distribution_evidence(
 ) -> DistributionEvidence:
     """Load evidence and optionally prove it names the exact retained cohort."""
     evidence_path = path.resolve(strict=True)
-    evidence = DistributionEvidence.model_validate_json(evidence_path.read_text(encoding="utf-8"))
+    evidence = DistributionEvidence.model_validate_json(evidence_path.read_text(encoding=_UTF_8))
     if cohort_directory is not None:
         expected = bind_cohort(load_release_cohort(cohort_directory))
         if evidence.cohort != expected:

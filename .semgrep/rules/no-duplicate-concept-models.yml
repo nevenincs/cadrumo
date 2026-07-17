@@ -11,11 +11,13 @@ rules:
       - python
     paths:
       include:
-        - "/src/aeat/"
+        - "src/cadrumo/**"
       exclude:
-        - "/src/aeat/**/test_*.py"
-        - "/src/aeat/**/_test_*.py"
-        - "/src/aeat/tests/**/*.py"
+        - "src/cadrumo/**/tests/**"
+        - "src/cadrumo/**/test_*.py"
+        - "src/cadrumo/**/_test_*.py"
+        - "src/cadrumo/domain/contribuyente/_ccaa.py"
+        - "src/cadrumo/application/filing/runtime.py"
     pattern-either:
       - patterns:
           - pattern: |
@@ -30,18 +32,12 @@ rules:
                   ...
       - patterns:
           - pattern: |
-              class CasillaSchema(...):
+              class CasillaSchema(BaseModel):
                   ...
-          - pattern-not-inside: |
-              # canonical-owner-allowed
-              ...
       - patterns:
           - pattern: |
-              class RegistryCasillaSchema(...):
+              class RegistryCasillaSchema(BaseModel):
                   ...
-          - pattern-not-inside: |
-              # canonical-owner-allowed
-              ...
       - patterns:
           - pattern: |
               class VerificationFinding(...):

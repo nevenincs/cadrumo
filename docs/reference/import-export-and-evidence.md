@@ -175,19 +175,14 @@ A genuinely complete audit handoff would normally combine:
 That combination supports both halves of the audit question: “Was this actually
 filed?” and “What facts, rules, and calculations produced it?”
 
-The current audit evidence bundle implementation does not yet carry the richer audit
-inventory described by the accepted architecture. Assemble and verify the
-missing parts separately until that inventory and its payload loading are
-available through the operator workflow.
+The audit evidence bundle does not currently include every item listed above.
+Assemble and verify the missing items separately; a bundle is complete only
+when every referenced supporting record and payload is present.
 
 ## Important limitations
 
-The recent campaign was a reconciliation and adjudication exercise, not a
-hidden broad implementation. It examined 38 candidate Modelo and revision
-windows and authorized zero new implementations. The missing cases lacked a
-sufficient mandate, authoritative layouts, or real evidence.
-
-Consequently:
+Support is limited to Modelo and revision combinations backed by registered,
+authoritative layouts and real evidence. Consequently:
 
 - Import and export support must not be described as universal across all
   Modelos and periods.

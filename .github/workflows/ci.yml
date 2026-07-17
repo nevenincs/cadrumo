@@ -68,6 +68,9 @@ jobs:
           just check-style
           just check-relative-imports
 
+      - name: Import architecture
+        run: just check-imports
+
       - name: Typecheck
         run: just check-types
 

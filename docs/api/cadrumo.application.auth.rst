@@ -30,3 +30,4 @@ Submodules
    cadrumo.application.auth._operator_scope
    cadrumo.application.auth._protocols
    cadrumo.application.auth._sessions
+   cadrumo.application.auth._workflow_repository

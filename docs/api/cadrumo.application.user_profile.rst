@@ -34,5 +34,4 @@ Submodules
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
    cadrumo.application.user_profile._repository
-   cadrumo.application.user_profile._testing
    cadrumo.application.user_profile._validation

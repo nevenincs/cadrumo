@@ -224,10 +224,8 @@ exclude = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/cadrumo"]
 # Test modules and fixtures serve no installed consumer: the suites run from
-# the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load
-# (the one production-space reference, `envelope/_repository_test_suite.py`,
-# imports the harness function-locally and is exercised only by excluded test
-# modules). This payload is shed from the distribution to bound its size.
+# the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load.
+# This payload is shed from the distribution to bound its size.
 exclude = [
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
@@ -318,12 +316,8 @@ dev = [
   "pytest-asyncio>=1.0.0",
   # Coverage measurement + fail-under gate for unit tests.
   "pytest-cov>=6.0.0",
-  # httpx wire-shape assertions for unit tests; banned in live files.
-  "pytest-httpx>=0.35.0",
   # Live browser harness.
   "pytest-playwright>=0.6.0",
-  # Per-test retries for genuinely flaky live endpoints; live only, opt-in per test.
-  "pytest-rerunfailures>=15.0",
   # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
   # pytest-xdist's `-n auto` calls psutil.cpu_count; pin so `uv sync` restores
@@ -336,10 +330,6 @@ dev = [
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
   "ruff>=0.15.12",
-  # Snapshot diffing for registry behaviour.
-  "syrupy>=4.7.0",
-  # Wall-clock control for deadline/expedientes tests; banned in live files.
-  "time-machine>=2.16.0",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/cadrumo/. vaultspec-rag
   # carries the [mcp] extra here (demoted from the base dependency set): it is
@@ -751,7 +741,7 @@ convention = "google"
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
 "unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See src/cadrumo/tests/README.md."
-"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See src/cadrumo/tests/README.md."
+"unittest.mock".msg = "Mocks are banned. Exercise real objects and explicit production seams. See src/cadrumo/tests/README.md."
 "mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See src/cadrumo/tests/README.md."
 
 # The relative-imports mandate is enforced by the custom
@@ -814,7 +804,7 @@ python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
 asyncio_mode = "strict"
 markers = [
-  "unit: deterministic tests with no external I/O",
+  "unit: deterministic offline tests scoped to one owner; owned local processes are allowed, external networks and services are not",
   "integration: deterministic in-process tests that cross architectural layers",
   "aeat_live: opt-in tests that read from a real external service; see src/cadrumo/tests/README.md",
   "hex_domain: exercises domain.* business model and computation",
@@ -971,6 +961,9 @@ ignore_decorators = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-DEP002 = ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "formulas", "python-dotenv", "rich", "tzdata"]
+# `model2vec`: the optional search loader imports this module deliberately
+# through `importlib` so a bare-core installation retains lexical-only search;
+# deptry cannot observe that capability-gated dynamic import.
+DEP002 = ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "formulas", "model2vec", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]

@@ -27,7 +27,7 @@ from .python_cohort import assert_installed_cohort, load_python_cohort
 _UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
-    "registry/aeat/user_profile/schema.toml",
+    "registry/cadrumo/user_profile/schema.toml",
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
 _TRACKED_DATA_ROOTS = (
