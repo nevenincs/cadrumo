@@ -29,6 +29,7 @@ Submodules
    cadrumo.domain.calculations.registry._censo_modelos
    cadrumo.domain.calculations.registry._checker_oracle_flow
    cadrumo.domain.calculations.registry._citation_blocklist
+   cadrumo.domain.calculations.registry._compiled_cache
    cadrumo.domain.calculations.registry._constructs
    cadrumo.domain.calculations.registry._convenio
    cadrumo.domain.calculations.registry._corpus_catalogue
@@ -126,6 +127,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_semantic_roles
    cadrumo.domain.calculations.registry._validate_source_casilla_ids
    cadrumo.domain.calculations.registry._validate_surfaces
+   cadrumo.domain.calculations.registry._validate_verdict
    cadrumo.domain.calculations.registry._validate_verification_predicates
    cadrumo.domain.calculations.registry._withholding_bindings
    cadrumo.domain.calculations.registry._workbook_parity

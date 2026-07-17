@@ -23,6 +23,7 @@ Submodules
    cadrumo.entrypoints.mcp._harness_tools
    cadrumo.entrypoints.mcp._hitl
    cadrumo.entrypoints.mcp._identity_gate
+   cadrumo.entrypoints.mcp._inprocess
    cadrumo.entrypoints.mcp._input_schema
    cadrumo.entrypoints.mcp._meta_tools
    cadrumo.entrypoints.mcp._persona_scope
