@@ -12,7 +12,9 @@ otherwise land silently.
 
 from __future__ import annotations
 
+import ast
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -135,3 +137,79 @@ def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:
     assert err.modelo_id == "100"
     # Sorted tuple of every matching revision id, read from the typed field.
     assert err.candidate_ids == ("2025", "2025-twin")
+
+
+_CADRUMO_ROOT = Path(__file__).resolve().parents[4]
+
+#: Production modules sanctioned to pass ``revision_id`` INTO ``select_revision``.
+#: Both do so as a narrowing assertion alongside the law-determined
+#: ``filing_year``/``period`` axes, never as the sole selector: ``_snapshot`` is
+#: the resolver internal that funnels every snapshot, and ``_work_addressing``
+#: is the creation-time assertion path that accepts an explicit ``--revision``
+#: only when it equals the law-determined pick (per the
+#: revision-resolution-is-law-determined discipline).
+_SANCTIONED_REVISION_ID_SITES = frozenset(
+    {
+        "domain/calculations/registry/_snapshot.py",
+        "application/modelo/_work_addressing.py",
+    },
+)
+
+
+def _production_select_revision_calls() -> list[tuple[str, int, frozenset[str]]]:
+    """AST-collect every production ``select_revision(...)`` call site.
+
+    Returns ``(repo-relative posix path, line number, keyword-name set)`` for
+    each call outside the test tree. ``filing_year`` and ``period`` are
+    keyword-only parameters of ``select_revision``, so their presence in the
+    keyword-name set is a faithful proxy for "the law-determined axes drove
+    this selection".
+    """
+    calls: list[tuple[str, int, frozenset[str]]] = []
+    for path in _CADRUMO_ROOT.rglob("*.py"):
+        if "tests" in path.parts or path.name == "conftest.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else None
+            if name != "select_revision":
+                continue
+            keywords = frozenset(kw.arg for kw in node.keywords if kw.arg is not None)
+            calls.append((path.relative_to(_CADRUMO_ROOT).as_posix(), node.lineno, keywords))
+    return calls
+
+
+def test_every_production_select_revision_call_is_law_determined() -> None:
+    """No production ``select_revision`` call selects by an injected revision id.
+
+    ``select_revision`` funnels every snapshot resolution (see the module
+    docstring). This AST audit proves that every production call drives the
+    selection from the law-determined ``(filing_year, period)`` axes and that a
+    stored/explicit ``revision_id`` is only ever passed as a NARROWING assertion
+    alongside those axes, and only at the two sanctioned sites. A new call that
+    omits the law-determined axes (a revision_id-only injection) or that feeds a
+    ``revision_id`` into resolution from an unreviewed site fails here — the
+    exact defect class the revision-resolution-is-law-determined rule bars.
+    """
+    calls = _production_select_revision_calls()
+    assert calls, (
+        "AST audit found no production select_revision call sites; the gate would "
+        "be vacuous — confirm the resolver name or path traversal did not drift"
+    )
+
+    under_specified = [(rel, line, sorted(kw)) for rel, line, kw in calls if not {"filing_year", "period"} <= kw]
+    assert not under_specified, (
+        "select_revision call(s) omit the law-determined filing_year/period axes, so "
+        f"selection is not period-driven (an injection risk): {under_specified}"
+    )
+
+    revision_id_sites = {rel for rel, _line, kw in calls if "revision_id" in kw}
+    unsanctioned = revision_id_sites - _SANCTIONED_REVISION_ID_SITES
+    assert not unsanctioned, (
+        "new production site(s) pass revision_id into select_revision resolution; prove they "
+        "only assert-equal against the law-determined pick (never inject) and, if so, enroll "
+        f"them in _SANCTIONED_REVISION_ID_SITES: {sorted(unsanctioned)}"
+    )
