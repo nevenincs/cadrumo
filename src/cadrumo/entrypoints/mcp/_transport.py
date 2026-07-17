@@ -25,6 +25,7 @@ from ...adapters.persistence.storage import close_active_bucket_session
 from ...core import PRODUCT_IDENTITY
 from ...core.config import load_settings
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._inprocess import (
@@ -51,8 +52,6 @@ _WEDGE_FALLBACK_MARKER = "<subprocess-wedge-fallback>"
 
 def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
     """Build the localized timed-out refusal envelope for a hung CLI call."""
-    from ...core.i18n import tr
-
     message = tr(
         "mcp.call.timeout",
         command=command_key,
@@ -173,8 +172,6 @@ def _inprocess_timeout_notice(*, command_key: str) -> Notice:
     single-subject idempotency guard makes that retry safe (a match returns the
     existing record as a no-op; it never double-writes).
     """
-    from ...core.i18n import tr
-
     message = tr(
         "mcp.call.timeout.may_complete",
         command=command_key,
@@ -203,8 +200,6 @@ def _warm_degradation_notice(*, command_key: str, wedged: bool) -> Notice:
     warning Notice names the wedge/contention so telemetry and the operator see the
     degradation.
     """
-    from ...core.i18n import tr
-
     reason = "wedged" if wedged else "busy"
     message = tr(
         "mcp.serving.warm_degraded",
