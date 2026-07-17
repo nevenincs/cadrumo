@@ -19,7 +19,10 @@ from ....domain.transactions import (
 from .. import (
     LLMProvider,
     LLMSplitApplyResult,
+    ManualLedgerTransactionPatch,
+    SplitChildCommand,
     apply_evidence_split,
+    split_transaction_with_classified_children,
     suggest_evidence_split,
 )
 from ._llm_evidence_split_support import (
@@ -228,3 +231,44 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     # Only the parent row exists: no split children were persisted.
     assert tuple(catalogue.transactions) == (tx_id,)
     assert events.load().events == events_before
+
+
+def test_split_child_classification_that_changes_raw_id_is_refused(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    # A per-child classification patch that alters a raw movement field (here the
+    # amount) would re-address the child under a new content-addressed id while
+    # its siblings, lineage, and the result still name the stale id. The atomic
+    # writer must refuse before persisting anything.
+    repository, events, _objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    children = (
+        SplitChildCommand(amount=Decimal("72.60"), description="child a"),
+        SplitChildCommand(amount=Decimal("48.40"), description="child b"),
+    )
+    classifications = (
+        ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS),
+        ManualLedgerTransactionPatch(
+            business_classification=BusinessClassification.BUSINESS,
+            amount=Decimal("40.00"),
+        ),
+    )
+
+    with pytest.raises(TransactionValidationError, match="transaction id"):
+        split_transaction_with_classified_children(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            children=children,
+            child_classifications=classifications,
+            classified_by="llm:test-model",
+            actor="operator",
+            transaction_repository=repository,
+            bucket_event_repository=events,
+            occurred_at=_NOW,
+        )
+
+    catalogue = repository.load()
+    parent = catalogue.get(tx_id)
+    assert parent is not None
+    assert parent.lifecycle_state is TransactionLifecycleState.ACTIVE
+    assert tuple(catalogue.transactions) == (tx_id,)
