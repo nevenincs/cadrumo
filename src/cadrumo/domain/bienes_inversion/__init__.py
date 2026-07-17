@@ -49,7 +49,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core.errors import AeatError as _AeatError
+from ...core.errors import CadrumoError as _CadrumoError
 from ...core.external_constants import (
     IVA_BIEN_INVERSION_INMUEBLE_DIVISOR as _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
 )
@@ -68,7 +68,7 @@ from ...core.external_constants import (
 from ...core.money import round_to_cents as _quantize
 
 
-class BienInversionRecordError(_AeatError):
+class BienInversionRecordError(_CadrumoError):
     """Raised when a bien-de-inversión register record is structurally invalid."""
 
 

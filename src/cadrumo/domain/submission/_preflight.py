@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ._errors import SubmissionPreflightError
@@ -169,7 +169,7 @@ class Preflight:
 
         try:
             description = self.auth_provider.describe()
-        except AeatError as exc:
+        except CadrumoError as exc:
             _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
             raise SubmissionPreflightError(
                 "auth provider failed to describe itself",

@@ -6,10 +6,10 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class UserProfileError(AeatError):
+class UserProfileError(CadrumoError):
     """Base error for every :mod:`domain.user_profile` failure mode."""
 
 

@@ -229,25 +229,18 @@ def test_every_catalogued_wall_test_is_collectible_and_passes(
     )
 
 
-def test_a_regressed_wall_assertion_is_caught_by_the_gate() -> None:
+def test_a_regressed_wall_assertion_is_caught_by_the_gate(tmp_path: Path) -> None:
     """Anti-tautology proof: deliberately regressing a wall makes the gate fail.
 
-    Materialises a sibling copy of the ``ledger-exclude`` wall's real test
-    module (issue ``#224``) in its OWN real ``tests/`` directory -- preserving
-    the package-relative imports the module uses -- with its core assertion
-    flipped from ``"excluded"`` to a wrong value. Runs that mutated copy
-    through the same real pytest-subprocess mechanism the gate uses and
-    asserts the run FAILS with the expected assertion diagnostic. This proves
-    the gate mechanism can actually detect a reopened wall, rather than
-    passing regardless of the wall's real state.
+    Materialises a temporary copy of the ``ledger-exclude`` wall's real test
+    module (issue ``#224``), converts its package-relative imports to their
+    equivalent canonical absolute imports, and flips its core assertion from
+    ``"excluded"`` to a wrong value. Running that mutated copy through the same
+    real pytest subprocess must fail with the expected assertion diagnostic.
 
-    The temporary module is written into and removed from the real
-    ``entrypoints/cli/tests/`` directory (never into an unrelated package
-    location) so pytest's ``prepend`` import mode resolves its relative
-    imports exactly as it does for the real file. The filename carries this
-    process's pid so two concurrent runs of this test (this is a shared,
-    multi-agent worktree) never collide on the same path, and cleanup runs in
-    a ``try``/``finally`` so a failed assertion still removes the fixture.
+    The module lives under pytest's isolated ``tmp_path`` rather than the source
+    tree. Repository-wide scanners running on other xdist workers therefore
+    cannot observe a transient mutation-proof file.
     """
     guarded_entry = next(entry for entry in ACCEPTANCE_WALL_CATALOGUE if entry.issue == 224)
     original_module = _REPO_ROOT / guarded_entry.test_module
@@ -260,26 +253,22 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate() -> None:
         "assertion line this anti-tautology proof mutates; update the mutation target"
     )
     mutated_source = original_source.replace(target_assertion, regressed_assertion, 1)
+    mutated_source = mutated_source.replace("from ....", "from cadrumo.")
     assert mutated_source != original_source
 
     mutated_module_name = f"test_acceptance_wall_regression_proof_ledger_exclude_mutated_{os.getpid()}.py"
-    mutated_module_path = original_module.parent / mutated_module_name
-    assert not mutated_module_path.exists(), "stale mutated-proof fixture left behind by a prior run"
+    mutated_module_path = tmp_path / mutated_module_name
+    mutated_module_path.write_text(mutated_source, encoding="utf-8")
+    mutated_node_id = f"{mutated_module_path.as_posix()}::{guarded_entry.test_function}"
 
-    try:
-        mutated_module_path.write_text(mutated_source, encoding="utf-8")
-        mutated_node_id = f"{mutated_module_path.relative_to(_REPO_ROOT).as_posix()}::{guarded_entry.test_function}"
+    completed = _run_pytest_subprocess(mutated_node_id)
 
-        completed = _run_pytest_subprocess(mutated_node_id)
-
-        assert completed.returncode != 0, (
-            "the mutated (deliberately regressed) wall test PASSED -- the gate "
-            "mechanism cannot detect a real regression:\n"
-            f"  stdout: {completed.stdout}\n"
-            f"  stderr: {completed.stderr}"
-        )
-        assert "not-actually-excluded" in completed.stdout or "AssertionError" in completed.stdout, (
-            f"the mutated wall test failed, but not on the expected assertion:\n{completed.stdout}"
-        )
-    finally:
-        mutated_module_path.unlink(missing_ok=True)
+    assert completed.returncode != 0, (
+        "the mutated (deliberately regressed) wall test PASSED -- the gate "
+        "mechanism cannot detect a real regression:\n"
+        f"  stdout: {completed.stdout}\n"
+        f"  stderr: {completed.stderr}"
+    )
+    assert "not-actually-excluded" in completed.stdout or "AssertionError" in completed.stdout, (
+        f"the mutated wall test failed, but not on the expected assertion:\n{completed.stdout}"
+    )

@@ -16,11 +16,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Self
 
-from ....core.errors import AeatError, CoreValidationError
+from ....core.errors import CadrumoError, CoreValidationError
 from ._ids import BindingId, CasillaId, RelationId
 
 
-class RegistryError(AeatError, ValueError):
+class RegistryError(CadrumoError, ValueError):
     """Base error for registry loading, resolution, and validation."""
 
 

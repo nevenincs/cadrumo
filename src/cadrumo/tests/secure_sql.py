@@ -15,8 +15,15 @@ from sqlalchemy import text as sa_text
 
 from ..adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
-    EphemeralMasterKeyProvider,
+    Base,
+    MasterKeyMaterialMissingError,
+    SecretAlreadyExistsError,
+    SecureObjectRepository,
+    StorageRuntime,
     create_engine_from_settings,
+    dispose_engine,
+    inspect_storage_runtime,
+    secure_object_repository_for_active_bucket,
 )
 from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
@@ -32,13 +39,9 @@ from ..adapters.persistence.storage.master_key import (
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )
-from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
-from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..adapters.persistence.storage.sql import Base
-from ..adapters.persistence.storage.sql.engine import dispose_engine
-from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
 from ..domain.user_profile import UserProfileStatus
+from .master_key import EphemeralMasterKeyProvider
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
@@ -69,8 +72,6 @@ def _provision_bucket_dek_v1_session(
     consistency is what lets the wrapped DEK unwrap under the
     provider-resolved KEK rather than a divergent raw test key.
     """
-    from ..adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
-
     paths = provision_bucket_directory(storage_root, bucket_id)
     provider = get_master_key_provider()
     try:

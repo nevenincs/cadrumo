@@ -99,7 +99,8 @@ def test_attribution_entity_socios_base_assigned_is_explicit_money_amount(
 
     assert field.type is ProfileFieldType.MONEY
     assert field.required is True
-    assert "must not fabricate" in field.description
+    assert "Debe consignarse expresamente" in field.description
+    assert "no se deduce únicamente del porcentaje de participación" in field.description
     expected_refs = {"ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"}
     assert set(field.legal_refs) == expected_refs
     assert expected_refs <= legal_ids

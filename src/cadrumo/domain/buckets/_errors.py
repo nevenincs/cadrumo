@@ -7,10 +7,10 @@ cover operator-facing bucket browse, export, import, rename, and delete flows.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class BucketsError(AeatError):
+class BucketsError(CadrumoError):
     """Base error for the bucket-event-history domain."""
 
 

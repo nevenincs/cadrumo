@@ -76,16 +76,18 @@ execution marker or exactly one accepted `hex_*` marker.
 
 ## Live Read Opt-In
 
-`aeat_live` tests are skipped unless `CADRUMO_LIVE_TESTS_ENABLED=1` is set
-in the environment. The canonical env var name is
+`aeat_live` tests are excluded from the default test selection. When selected
+explicitly, each live test fails at the shared prerequisite gate unless
+`CADRUMO_LIVE_TESTS_ENABLED=1` is configured. The canonical setting name is
 `CADRUMO_LIVE_TESTS_ENABLED`.
 
 The opt-in is enforced at two layers:
 
 1. `pyproject.toml` sets `addopts = "... -m 'unit' ..."` so plain local
    test runs select only unit tests.
-2. `src/cadrumo/tests/conftest.py` adds a skip marker to collected
-   `aeat_live` items when the env var is not truthy.
+2. `src/cadrumo/tests/live_gate.py` fails explicitly selected `aeat_live`
+   tests when the required opt-in is absent; it never converts them into
+   skipped tests.
 
 Google Workspace live tests additionally require
 `AEAT_LIVE_TESTS_GOOGLE=1` and project-owned fixtures provisioned via
@@ -106,21 +108,18 @@ time for these banned test-control libraries:
 - `vcr`, `vcrpy`
 - `freezegun`, `time_machine`
 
-Live tests must observe real external state. Snapshot/record libraries
-and clock-control libraries belong only in deterministic offline tests.
+Live tests must observe real external state. Snapshot/record, interception,
+retry, and clock-control libraries are not part of the accepted test-control
+surface.
 
 ## Plugin Roster
 
 | plugin | scope | role | pitfalls |
 | --- | --- | --- | --- |
 | `pytest-asyncio` | unit + integration + live | async test collection (`asyncio_mode = "strict"`) | plain `async def` tests need an explicit async marker |
-| `pytest-playwright` | live only | browser fixtures (`page`, `browser`, `context`) | needs `playwright install` for browser binaries |
-| `pytest-httpx` | offline only | httpx wire-shape assertions | banned in `aeat_live` files |
-| `pytest-rerunfailures` | live only, opt-in per-test | retry intermittently unstable external endpoints | never apply globally |
-| `syrupy` | offline + live | snapshot diffing for large structured output | never update snapshots in CI |
+| `pytest-playwright` | live fixtures only | browser fixtures (`page`, `browser`, `context`); deterministic adapter-unit tests may launch the production Playwright session against local `data:` pages without these fixtures | needs `playwright install` for browser binaries |
 | `pytest-xdist` | offline only | parallel deterministic suite | not safe for live tests |
 | `pytest-cov` | unit only | coverage measurement and fail-under | live tests are excluded from the coverage lane |
-| `time-machine` | offline only | deterministic wall-clock control | banned in `aeat_live` files |
 
 ## Coverage Gate
 
@@ -156,8 +155,8 @@ Checklist:
    deterministic cross-layer tests, and `aeat_live` only for read-only
    external-service tests.
 5. Never import `unittest`, `unittest.mock`, or `mock`.
-6. In `aeat_live` files, also avoid the extended banned set
-   (`pytest_httpx`, `time_machine`, `vcr`, and related libraries).
+6. Do not use HTTP interception, snapshot/record, retry, or clock-control
+   libraries as substitutes for real behaviour.
 7. Run the relevant focused pytest lane before closing a change.
 
 ## Cross-References

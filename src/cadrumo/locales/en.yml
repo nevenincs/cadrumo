@@ -34,8 +34,6 @@ adapters:
           active authenticated session.
         capture_requires_certificate: capture_storage_state() requires an active certificate-backed
           session with protected-resource metadata.
-        closing: The authenticator is closing; no new verify_login operations are
-          allowed.
         metadata_parse_failed: Persisted metadata did not produce a parsed model.
         no_active_context: No active browser context; call authenticate() first.
         no_context_capture_storage: No active browser context; cannot capture storage
@@ -58,8 +56,6 @@ adapters:
           parsed.
         no_persisted_session: No persisted Cl@ve Movil session found; run `aeat config
           auth status` first.
-        page_missing_click: Playwright page does not expose click(); cannot drive
-          Cl@ve Movil entry.
         session_expired: Cl@ve Movil session has passed its idle deadline.
         storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
           data may be corrupt.
@@ -4892,9 +4888,6 @@ errors:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
       operation.
-    error_aeat_core: An internal application error occurred.
-    error_aeat_core_not_found: The requested resource or record was not found.
-    error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
@@ -5104,6 +5097,10 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
+    error_cadrumo_core: 'An internal application error occurred.'
+    error_cadrumo_core_not_found: 'The requested resource or record was not found.'
+    error_cadrumo_observability: 'An error occurred in the application telemetry.'
+    error_cadrumo_async_resource_cleanup: 'Asynchronous resource cleanup failed; retry cleanup before continuing.'
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -5242,11 +5239,9 @@ errors:
   integrity:
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
-    integrity_aeat_core_validation: An internal data-integrity check failed.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_filing_amendment_validation: The amendment violates a legal or structural
       invariant.
-    integrity_filing_fixture: The filing fixture data is not valid.
     integrity_filing_validation: Filing validation surfaced a blocking finding.
     integrity_financial_attachments_attachment_validation: The attachment failed validation.
       Check the file and attach it again.
@@ -5323,6 +5318,7 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_cadrumo_core_validation: 'An internal data-integrity check failed.'
   internal:
     internal_active_profile_pointer_transaction: 'Internal error: active-profile pointer
       transaction ownership is invalid.'
@@ -5345,10 +5341,10 @@ errors:
       was registered a second time with different objects.'
     internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
       has not been registered at application startup.'
-    internal_wizard_script_overflow: 'Internal error: the wizard closed with unconsumed
-      scripted answers.'
-    internal_wizard_script_underflow: 'Internal error: the wizard asked for more answers
-      than it had scripted.'
+    internal_wizard_answer_queue_overflow: 'Internal error: the wizard closed with
+      unconsumed canonical answers.'
+    internal_wizard_answer_queue_underflow: 'Internal error: the wizard asked for
+      more canonical answers than the non-interactive invocation supplied.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
       signal.'
     internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
@@ -5707,13 +5703,11 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
-      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
-        an upgrader from version {missing_from_version} toward {expected} is missing.'
-      schema_upgrader_already_registered: A schema upgrader is already registered
-        for namespace {namespace} from version {from_version}.
       schema_version_from_future: Stored schema version {schema_version} for namespace
         {namespace} is newer than this application supports (up to {expected}); it
         cannot be read.
+      schema_version_unsupported: Stored schema version {schema_version} for namespace
+        {namespace} is unsupported; this application requires version {expected}.
       unknown_classification: Secure-object namespace %{namespace} contains unknown
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime

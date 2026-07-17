@@ -33,10 +33,8 @@ adapters:
           de sesion valida.
         capture_requires_active_session: capture_storage_state() requiere la sesión
           autenticada actualmente activa.
-        capture_requires_certificate: capture_storage_state() requiere una sesión activa
-          con certificado y metadatos del recurso protegido.
-        closing: El autenticador está cerrando; no se permiten nuevas operaciones
-          verify_login.
+        capture_requires_certificate: capture_storage_state() requiere una sesión
+          activa con certificado y metadatos del recurso protegido.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
         no_active_context: No hay contexto de navegador activo; llame a authenticate()
           primero.
@@ -61,8 +59,6 @@ adapters:
           pueden analizarse.
         no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
           config auth status` primero.
-        page_missing_click: La pagina de Playwright no expone click(); no se puede
-          operar la entrada de Cl@ve Movil.
         session_expired: La sesion de Cl@ve Movil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
           Movil no coincide; los datos de sesion pueden estar corruptos.
@@ -4519,8 +4515,7 @@ cli:
         section_review_and_registry: Revision y registro
       config:
         auth_configure: Configurar el proveedor de autenticacion con la AEAT.
-        auth_logout: Cerrar las sesiones locales de autenticación y conservar la configuración
-          del proveedor.
+        auth_logout: Cerrar sesiones locales y conservar la configuración del proveedor.
         auth_providers: Listar los proveedores de autenticacion disponibles.
         auth_reset: Retirar la configuración local de autenticación y las credenciales
           guardadas.
@@ -5269,9 +5264,6 @@ errors:
       de envío.
     error_access_gate_submission_preflight: La comprobación previa del control de
       acceso rechazó una operación de escritura.
-    error_aeat_core: Se produjo un error interno en la aplicación.
-    error_aeat_core_not_found: No se encontró el recurso o registro solicitado.
-    error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
@@ -5281,6 +5273,11 @@ errors:
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
       de borrador de Modelo 100 conocido.
+    error_cadrumo_async_resource_cleanup: Falló la limpieza asíncrona de recursos;
+      vuelva a intentar la limpieza antes de continuar.
+    error_cadrumo_core: Se produjo un error interno en la aplicación.
+    error_cadrumo_core_not_found: No se encontró el recurso o registro solicitado.
+    error_cadrumo_observability: Se produjo un error en la telemetría de la aplicación.
     error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
       un estado irresoluble al generar el plan de exportación.
     error_calc_sheets_parity: El escenario del arnés de paridad hace referencia a
@@ -5653,13 +5650,12 @@ errors:
   integrity:
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
-    integrity_aeat_core_validation: Una comprobación interna de integridad de datos
+    integrity_cadrumo_core_validation: Una comprobación interna de integridad de datos
       no se superó.
     integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
       mal configurado.
     integrity_filing_amendment_validation: La declaración complementaria infringe
       una invariante legal o de estructura.
-    integrity_filing_fixture: Los datos de prueba de la declaración no son válidos.
     integrity_filing_validation: La validación de la declaración detectó un problema
       que impide continuar.
     integrity_financial_attachments_attachment_validation: El justificante adjunto
@@ -5765,10 +5761,10 @@ errors:
       asistente ya esta registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catalogo del asistente
       no esta registrado.'
-    internal_wizard_script_overflow: 'Error interno: el asistente se cerró con respuestas
-      guionizadas sin consumir.'
-    internal_wizard_script_underflow: 'Error interno: el asistente solicitó más respuestas
-      de las que tenía guionizadas.'
+    internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
+      respuestas canónicas sin consumir.'
+    internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó más
+      respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
     internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
@@ -6155,14 +6151,12 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
-      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
-        espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
-        hacia {expected}.'
-      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
-        para el espacio de nombres {namespace} desde la versión {from_version}.
       schema_version_from_future: La versión de esquema almacenada {schema_version}
         del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
         (hasta {expected}); no se puede leer.
+      schema_version_unsupported: La versión de esquema almacenada {schema_version}
+        del espacio de nombres {namespace} no es compatible; esta aplicación requiere
+        la versión {expected}.
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado

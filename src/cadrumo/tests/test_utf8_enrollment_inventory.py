@@ -85,7 +85,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "adapters/persistence/storage/attachment.py",
         "adapters/persistence/storage/crypto/_encrypted_columns.py",
         "adapters/persistence/storage/envelope/_envelope.py",
-        "adapters/persistence/storage/envelope/_repository_test_suite.py",
+        "adapters/persistence/storage/envelope/tests/_repository_contract_support.py",
         "adapters/persistence/storage/envelope/_secure_repository.py",
         "adapters/persistence/storage/master_key/test_no_classvar_state.py",
         "adapters/persistence/storage/sql/secure_objects.py",

@@ -162,7 +162,14 @@ def test_objective_estimation_modulos_profile_facts_are_stable_annual_inputs(
     epigraph = schema.field("irpf.objective_estimation_modulos_iae_epigraph")
     assert epigraph.type.value == "string"
     assert epigraph.model_selectors == ("irpf.objective_estimation_modulos_iae_epigraph",)
-    assert "coefficient tables remain in the modelo registry" in epigraph.description
+
+    expected_modulos_paths = {
+        "irpf.objective_estimation_modulos_iae_epigraph",
+        *(f"irpf.objective_estimation_modulos_module_{slot}_units" for slot in range(1, 8)),
+    }
+    assert {path for path in schema.field_paths if path.startswith("irpf.objective_estimation_modulos_")} == (
+        expected_modulos_paths
+    )
 
     expected_refs = {"ley-35-2006:art-31", "orden-hac-1425-2025:art-4"}
     assert set(epigraph.legal_refs) == expected_refs

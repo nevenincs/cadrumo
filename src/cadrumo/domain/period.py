@@ -30,10 +30,10 @@ from datetime import date
 
 from ..core import Period
 from ..core import PeriodError as CorePeriodError
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 
 
-class PeriodError(AeatError):
+class PeriodError(CadrumoError):
     """Base class for errors raised by this registry-token helper module."""
 
 

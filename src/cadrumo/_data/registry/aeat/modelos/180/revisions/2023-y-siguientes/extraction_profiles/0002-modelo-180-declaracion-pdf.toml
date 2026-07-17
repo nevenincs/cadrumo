@@ -1,7 +1,7 @@
 # M180 declaracion_pdf extraction profile.
 #
 # Label patterns grounded against the AEAT-published printed-form template:
-#   src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_180/files/
+#   src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/
 #     02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf
 #   Page 1, REGISTRO DE TIPO 1 (REGISTRO DE DECLARANTE) printed layout.
 #
@@ -18,7 +18,7 @@
 #
 # These are the resumen-declarante summary totals on the M180 printed declaration.
 # Synthetic round-trip fixture:
-#   src/aeat/tests/fixtures/justificantes/180/2024-0A.pdf
+#   src/cadrumo/tests/fixtures/justificantes/180/2024-0A.pdf
 
 [[revisions.2023-y-siguientes.extraction_profiles]]
 id = "modelo-180-declaracion-pdf"

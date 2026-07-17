@@ -289,7 +289,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.persistence.profile.usage_ratios", "adapters.persistence.storage.errors"),
             ImportEdge("adapters.persistence.profile.usage_ratios", "adapters.persistence.storage.runtime_repository"),
             ImportEdge("adapters.persistence.storage.blob_store._materialisation", "core.config"),
-            ImportEdge("adapters.persistence.storage.envelope._repository_test_suite", "tests.secure_sql"),
             ImportEdge(
                 "adapters.persistence.storage.master_key._bucket_session", "adapters.persistence.storage.sql.engine"
             ),
@@ -325,18 +324,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge(
                 "adapters.persistence.storage.master_key._master_key_bucket_dek",
                 "adapters.persistence.storage.master_key._dek_wrap",
-            ),
-            ImportEdge(
-                "adapters.persistence.storage.master_key._master_key_ephemeral",
-                "adapters.persistence.storage.master_key._active_session",
-            ),
-            ImportEdge(
-                "adapters.persistence.storage.master_key._master_key_ephemeral",
-                "adapters.persistence.storage.master_key._bucket_session",
-            ),
-            ImportEdge(
-                "adapters.persistence.storage.master_key._master_key_ephemeral",
-                "adapters.persistence.storage.master_key._errors",
             ),
             ImportEdge("adapters.persistence.storage.master_key._master_key_io", "core.config"),
             ImportEdge("adapters.persistence.storage.master_key._master_key_tax_id", "core.identity"),
@@ -782,7 +769,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 468  # retired certificate backend modules removed four deferral edges.
+_ALLOWLIST_EDGE_CEILING: int = 464  # test-only ephemeral-provider module and its four edges retired.
 
 
 def _cadrumo_relative(dotted: str) -> str:

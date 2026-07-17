@@ -5,7 +5,7 @@
 #   Row 16: "2. Ejercicio y período. Periodo"
 # Fetched 2026-05-27 from:
 #   https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR369e21.xlsx
-# Saved at: src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+# Saved at: src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/
 #   Descripcion_PresentacionFichero369_v1.pdf
 #
 # Source 2 — AEAT online manual "Presentación régimen de la Unión", section 2:
@@ -15,12 +15,12 @@
 # Fetched 2026-05-27 from:
 #   https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/
 #     manuales-ayuda-presentacion/modelo-369/presentacion-regimen-union/2-ejercicio-periodo.html
-# Saved at: src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+# Saved at: src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/
 #   2-ejercicio-periodo.html
 #
 # The label patterns match the AEAT-published section/field names "Ejercicio" and
 # "Periodo" as they appear in both the DR field descriptions and the online manual
-# section heading. The synthetic fixture (src/aeat/tests/fixtures/justificantes/
+# section heading. The synthetic fixture (src/cadrumo/tests/fixtures/justificantes/
 # 369/2024-1T.pdf) reproduces these labels so the named_label parser can capture
 # the trailing value token on each line.
 [[revisions."esquema-union".extraction_profiles]]

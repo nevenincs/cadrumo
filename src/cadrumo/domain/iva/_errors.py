@@ -2,7 +2,7 @@
 
 Every failure mode raised by the IVA substrate inherits from
 :class:`IvaError`, which in turn inherits from
-:class:`cadrumo.core.errors.AeatError`. Downstream callers catch the base class
+:class:`cadrumo.core.errors.CadrumoError`. Downstream callers catch the base class
 when they want to treat the substrate as an opaque unit, or the specific
 subclass when they need to distinguish missing-rate from missing-category or
 corpus load failures.
@@ -10,10 +10,10 @@ corpus load failures.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class IvaError(AeatError):
+class IvaError(CadrumoError):
     """Base error for every :mod:`cadrumo.domain.iva` failure mode."""
 
 
