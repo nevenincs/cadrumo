@@ -82,6 +82,9 @@ class ProfileBundleExportTarget(BaseModel):
 
     destination: Path
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-COMPUTED-FIELD:
+    # pydantic v2 computed_field stacked over property trips the checker's
+    # prop-decorator rule; the runtime is the sanctioned pydantic idiom.
     @computed_field  # type: ignore[prop-decorator]
     @property
     def identity(self) -> str:

@@ -223,7 +223,7 @@ def test_encrypted_transport_decrypts_to_the_canonical_cleartext_bundle(tmp_path
 
 
 def test_event_failure_keeps_target_published_and_reconcile_emits_pending_event(tmp_path: Path) -> None:
-    # Contract (S11): a durably-published bundle is NEVER un-published. If the
+    # Contract: a durably-published bundle is NEVER un-published. If the
     # completion event write fails after a successful atomic replace, the target
     # stays published, the operation journal stays COMPLETED, and a later
     # reconcile emits the still-owed PROFILE_EXPORTED event exactly once. This

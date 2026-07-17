@@ -23,7 +23,6 @@ The sealed recovery archive is a separate surface and is not folded in here.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import secrets
 from dataclasses import dataclass
@@ -32,7 +31,10 @@ from typing import TYPE_CHECKING
 
 from ...core import fsync_parent_dir
 from ...core.atomic_write import atomic_write_hardened_bytes
+from ...core.hashing import sha256_hex
 from ...core.locks import exclusive_file_lock
+from ...core.locks_errors import LockAcquisitionError
+from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
 from ._bundle_export_contracts import (
@@ -134,7 +136,7 @@ def prepare_profile_export(
             target_identity=target.identity,
             destination=str(request.destination),
             staged_path=str(staged_path),
-            content_sha256=hashlib.sha256(payload_bytes).hexdigest(),
+            content_sha256=sha256_hex(payload_bytes),
             purpose=request.purpose,
             transport=request.transport,
             bundle_schema_version=bundle.bundle_schema_version,
@@ -236,8 +238,6 @@ def reconcile_prepared_exports(
       staged temp is removed and its journal cleared, and no event is emitted for
       an artifact that was never durably published.
     """
-    from ...core.locks_errors import LockAcquisitionError
-
     repository = journal or ProfileBundleExportJournalRepository()
     reconciled: list[ProfileBundleExportOperation] = []
     for operation in repository.list():
@@ -296,7 +296,7 @@ def _destination_matches_digest(destination: Path, content_sha256: str) -> bool:
     if not destination.is_file():
         return False
     try:
-        return hashlib.sha256(destination.read_bytes()).hexdigest() == content_sha256
+        return sha256_hex(destination.read_bytes()) == content_sha256
     except OSError:
         return False
 
@@ -404,8 +404,6 @@ def _safe_delete_journal(repository: ProfileBundleExportJournalRepository, opera
     try:
         repository.delete(operation_id)
     except OSError:
-        from ...core.logging import get_logger
-
         get_logger(__name__).debug("profile export journal cleanup failed", exc_info=True)
 
 
