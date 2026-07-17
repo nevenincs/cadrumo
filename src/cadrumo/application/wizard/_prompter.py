@@ -229,14 +229,41 @@ class QuestionaryPrompter:
         )
 
     def emit_progress(self, text: str) -> None:
-        """Emit a progress line (section header or question prefix).
+        """Render a progress line (section header or question prefix) for the operator.
 
-        Called by the runtime between question prompts so operators see
-        their position in the flow. Routes through the structured logger
-        so the message is handled by the configured logging pipeline and
-        any registered secret-scrubbing filters.
+        Called by the runtime between question prompts so operators see their
+        position in the flow, which means the line has to reach the same eyes the
+        prompts do. It is therefore written to :meth:`output_device` — the very
+        device every ``questionary`` primitive in :meth:`ask` renders on — and
+        never to ``print``/stdout: operator prose interleaved with the
+        ``--format json`` envelope leaves that envelope unparseable for a machine
+        caller. This is the same reasoning that keeps the modelo wizard's help
+        copy riding on the prompt string instead of a bare ``print``.
+
+        The structured log record is kept as a secondary, machine-facing trace
+        (it carries the configured logging pipeline's secret-scrubbing filters);
+        the console handler defaults to ``WARNING``, so it is not what the
+        operator reads.
         """
         _log.info("wizard.progress text=%r", text)
+        output = self.output_device()
+        output.write(f"{text}\n")
+        output.flush()
+
+    def output_device(self) -> Output:
+        """Return the ``prompt_toolkit`` device this prompter's prompts render on.
+
+        An injected ``output`` (see :meth:`from_ambient_app_session`) is that
+        device by declaration. Otherwise the device is the ambient app session's
+        own output, which is exactly what ``questionary`` resolves an
+        ``output=None`` prompt against — so progress and prompts cannot land on
+        different surfaces.
+        """
+        if self._output is not None:
+            return self._output
+        from prompt_toolkit.application.current import get_app_session
+
+        return get_app_session().output
 
     def ensure_interactive_environment(self) -> None:
         """Fail before progress when this process cannot host an interactive prompt.
