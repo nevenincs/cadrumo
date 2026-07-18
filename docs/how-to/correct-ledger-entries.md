@@ -29,6 +29,7 @@ The `view` command reports the id, amount, direction, description, and lifecycle
 - If you want to keep a transaction in history but out of everyday lists, [archive it](#archive-a-transaction).
 - If you stashed or archived a transaction by mistake, [restore it to active](#restore-a-stashed-or-archived-transaction).
 
+(update-fields-on-a-transaction)=
 ## Update fields on a transaction
 
 Change one or more fields directly. The sequence records a chair at the wrong price, corrects the amount and description, and confirms the correction:
@@ -43,6 +44,7 @@ An update gives the transaction a new ID - the update output prints it. You don'
 
 Update works on active transactions only. Archived and stashed transactions refuse it, as does a split parent - the active parts of a split can be updated normally.
 
+(remove-a-transaction)=
 ## Remove a transaction
 
 Remove deletes a transaction from your active records. Preview it first with `--dry-run`, then remove it for real. The removed id no longer resolves, which is how the sequence confirms the deletion:
@@ -53,6 +55,7 @@ Remove deletes a transaction from your active records. Preview it first with `--
 
 A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row.
 
+(split-one-transaction-into-parts)=
 ## Split one transaction into parts
 
 When one payment covers two different things - for example, a card payment that mixes business and personal items - split it into parts. Amounts and descriptions pair up one per part: the first amount goes with the first description, and so on:
@@ -63,6 +66,7 @@ When one payment covers two different things - for example, a card payment that 
 
 The original transaction becomes the split parent, and the parts carry the balance from then on. The split output prints one `child_transactions` row per part, each with a short `display_id` and a full `full_id`. Copy those ids - the merge command needs them to undo the split.
 
+(merge-split-parts-back)=
 ## Merge split parts back
 
 To undo a split, merge the parts back together using the child ids the split printed. Name every sibling part - the command refuses a partial merge. The sequence splits a payment, then merges the parts into one fresh transaction:
@@ -73,6 +77,7 @@ To undo a split, merge the parts back together using the child ids the split pri
 
 The parts and the original parent move to history, and the merge creates a fresh transaction in their place. If you no longer have the split output, the parts are active rows: run `aeat app ledger list` and read their ids from the listing.
 
+(stash-a-transaction-you-are-unsure-about)=
 ## Stash a transaction you are unsure about
 
 Stash sets a transaction aside for later. A stashed transaction is kept out of ordinary work. The sequence stashes a row and confirms its new lifecycle state:
@@ -83,6 +88,7 @@ Stash sets a transaction aside for later. A stashed transaction is kept out of o
 
 Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active. The `stash` command prints the transaction's fields but not its new lifecycle state, so `view` is how you confirm the change took effect.
 
+(archive-a-transaction)=
 ## Archive a transaction
 
 Archive keeps a transaction in history but out of ordinary work - it's the right choice for duplicates you want to keep a deliberate trace of. The sequence archives a duplicate row and confirms the state change:
@@ -93,6 +99,7 @@ Archive keeps a transaction in history but out of ordinary work - it's the right
 
 Like stash, the command prints the transaction's fields but not its new lifecycle state, so `view` confirms the row now reads `ARCHIVED`.
 
+(restore-a-stashed-or-archived-transaction)=
 ## Restore a stashed or archived transaction
 
 If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals. The sequence stashes a row and then restores it:

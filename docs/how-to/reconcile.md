@@ -30,6 +30,7 @@ To create a profile, see [Set up your taxpayer profile](profile-setup.md). For
 the filing workflow, see the [quickstart](quickstart.md). Every command on
 this page needs your master-key passphrase; the tool prompts for it.
 
+(pull-and-store-the-justificante)=
 ## Pull and store the justificante
 
 Keep the receipt with your records: it is the official evidence behind every

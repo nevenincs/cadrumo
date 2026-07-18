@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0000\n"
+"Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -22,6 +21,8 @@ msgstr ""
 #: ../../how-to/irpf-lifecycle.md:1
 msgid "The income-tax year: four instalments and the annual Renta"
 msgstr ""
+"L'any de l'impost sobre la renda: quatre pagaments fraccionats i la Renda"
+" anual"
 
 #: ../../how-to/irpf-lifecycle.md:3
 msgid ""
@@ -32,6 +33,12 @@ msgid ""
 "and exported every IRPF filing the year asks of a self-employed "
 "consultant."
 msgstr ""
+"Aquesta pàgina tracta un any complet d'IRPF per a un contribuent "
+"d'exemple: quatre pagaments fraccionats trimestrals del Model 130, "
+"cadascun construït sobre els anteriors, que es tanquen amb la declaració "
+"anual de la Renda del Model 100 que recull tot l'any. Comenceu des d'un "
+"magatzem buit; al final heu preparat i exportat cada presentació d'IRPF "
+"que l'any demana a una consultora autònoma."
 
 #: ../../how-to/irpf-lifecycle.md:9
 msgid ""
@@ -40,6 +47,10 @@ msgid ""
 "Tributaria (AEAT). At each filing you upload the exported file yourself "
 "through the AEAT portal."
 msgstr ""
+"Cadrumo (l'ordre `aeat`) prepara fitxers locals per als formularis "
+"tributaris espanyols. No els envia a l'Agencia Estatal de Administración "
+"Tributaria (AEAT). A cada presentació pugeu el fitxer exportat vós mateix"
+" mitjançant el portal de l'AEAT."
 
 #: ../../how-to/irpf-lifecycle.md:14
 msgid ""
@@ -50,6 +61,12 @@ msgid ""
 "lifecycle.md) - the two run-throughs describe the same business from two "
 "tax angles."
 msgstr ""
+"Coneixeu la persona que segueix aquest recorregut: l'Ana García López, "
+"una consultora (*consultoría*) que va iniciar la seva activitat l'1 de "
+"gener de 2026, factura els seus clients amb un 21 per cent d'IVA i compra"
+" material d'oficina a mesura que avança. La mateixa persona i el mateix "
+"ledger continuen a [L'any de l'IVA](iva-lifecycle.md): els dos "
+"recorreguts descriuen el mateix negoci des de dos angles fiscals."
 
 #: ../../how-to/irpf-lifecycle.md:21
 msgid ""
@@ -57,10 +74,13 @@ msgid ""
 " explanations in English and quotes real Spanish output where it shows "
 "one."
 msgstr ""
+"La CLI imprimeix l'ajuda, les etiquetes i els missatges en castellà. "
+"Aquesta pàgina manté les explicacions en català i cita la sortida real en"
+" castellà quan en mostra alguna."
 
 #: ../../how-to/irpf-lifecycle.md:24
 msgid "Prerequisites"
-msgstr ""
+msgstr "Requisits previs"
 
 #: ../../how-to/irpf-lifecycle.md:26
 msgid ""
@@ -68,10 +88,14 @@ msgid ""
 "setup.md)) and a master-key passphrase. `aeat` encrypts your data with a "
 "passphrase and prompts for it the first time each command runs."
 msgstr ""
+"Necessiteu una ordre `aeat` que funcioni (vegeu [Instal·leu Cadrumo"
+"](../workstation-setup.md)) i una contrasenya de clau mestra. `aeat` "
+"xifra les vostres dades amb una contrasenya i us la demana el primer cop "
+"que s'executa cada ordre."
 
 #: ../../how-to/irpf-lifecycle.md:31
 msgid "Stage 1: set up the taxpayer"
-msgstr ""
+msgstr "Etapa 1: configureu el contribuent"
 
 #: ../../how-to/irpf-lifecycle.md:33
 msgid ""
@@ -79,6 +103,10 @@ msgid ""
 "profile](profile-setup.md) walks through. The documentation sandbox "
 "provisions its own profile, so this create is shown as a display frame:"
 msgstr ""
+"Creeu el perfil amb `aeat config profile`, tal com explica [Configureu el"
+" vostre perfil de contribuent](profile-setup.md). L'entorn de proves de "
+"la documentació proveeix el seu propi perfil, de manera que aquest create"
+" es mostra com a marc de visualització:"
 
 #: ../../how-to/irpf-lifecycle.md:40
 msgid ""
@@ -88,10 +116,16 @@ msgid ""
 "first period. The sample `--tax-id` has the shape of a Spanish citizen's "
 "NIF; use your own NIF, CIF, DNI, or NIE for a real profile."
 msgstr ""
+"El `--name` i els `--surnames` són obligatoris: el pas d'exportació es "
+"nega sense un nom d'operador. L'`--activity-start-date` marca quan va "
+"començar l'activitat, de manera que `aeat` no cerca cap presentació "
+"anterior al vostre primer període. El `--tax-id` d'exemple té la forma "
+"del NIF d'un ciutadà espanyol; utilitzeu el vostre propi NIF, CIF, DNI o "
+"NIE per a un perfil real."
 
 #: ../../how-to/irpf-lifecycle.md:46
 msgid "Confirm what the year will ask of Ana:"
-msgstr ""
+msgstr "Confirmeu què demanarà l'any a l'Ana:"
 
 #: ../../how-to/irpf-lifecycle.md:52
 msgid ""
@@ -99,10 +133,14 @@ msgid ""
 "January) and the annual Renta window the following spring. `explain` "
 "shows why Modelo 130 applies: an activity under estimación directa."
 msgstr ""
+"El calendari llista les quatre finestres del Model 130 (abril, juliol, "
+"octubre, gener) i la finestra de la Renda anual la primavera següent. "
+"`explain` mostra per què s'aplica el Model 130: una activitat en "
+"estimación directa."
 
 #: ../../how-to/irpf-lifecycle.md:56
 msgid "Stage 2: the first quarter"
-msgstr ""
+msgstr "Etapa 2: el primer trimestre"
 
 #: ../../how-to/irpf-lifecycle.md:58
 msgid ""
@@ -112,6 +150,11 @@ msgid ""
 "categories`). The two `ledger add` commands appear as the collapsed setup"
 " of the sequence below."
 msgstr ""
+"Registreu l'activitat del primer trimestre: una venda, una despesa. "
+"L'`--amount` és el total brut (base imposable més IVA), i una fila de "
+"despesa necessita un `--category-id` (llisteu els ids vàlids amb `aeat "
+"app ledger categories`). Les dues ordres `ledger add` apareixen com la "
+"configuració plegada de la seqüència següent."
 
 #: ../../how-to/irpf-lifecycle.md:63
 msgid ""
@@ -123,18 +166,31 @@ msgid ""
 "close the quarter are shown after the verified result (they run against "
 "your own evidenced, filed history, not the sandbox):"
 msgstr ""
+"Creeu i calculeu el primer pagament fraccionat. El Model 130 és "
+"acumulatiu, i un primer període real no té historial, de manera que els "
+"tres trasllats del període anterior es passen com a zeros: aquest és "
+"l'únic trimestre on ho feu. La seqüència següent registra les dues files "
+"del trimestre, crea i calcula l'esborrany i el verifica; les ordres "
+"d'exportació, presentació i reconciliació que tanquen el trimestre es "
+"mostren després del resultat verificat (s'executen contra el vostre propi"
+" historial presentat i amb evidència, no l'entorn de proves):"
 
 #: ../../how-to/irpf-lifecycle.md:75
 msgid ""
 "The key figures show the year so far: 1000 earned, 500 spent, and an "
 "instalment of 20 percent on the net:"
 msgstr ""
+"Les xifres clau mostren l'any fins ara: 1000 guanyats, 500 gastats i un "
+"pagament fraccionat del 20 per cent sobre el net:"
 
 #: ../../how-to/irpf-lifecycle.md:84
 msgid ""
 "(The final result is 0.00 here because the minoración for low net income "
 "absorbs the whole instalment - casilla 13 in the output shows it.)"
 msgstr ""
+"(El resultat final és 0.00 aquí perquè la minoración per rendiment net "
+"baix absorbeix tot el pagament fraccionat: la casella 13 de la sortida ho"
+" mostra.)"
 
 #: ../../how-to/irpf-lifecycle.md:87
 msgid ""
@@ -144,6 +200,11 @@ msgid ""
 " checksum - note the checksum; it identifies exactly which file you "
 "upload."
 msgstr ""
+"La verificació informa `completeness_status complete` i "
+"`granted_verificado_completo true` (la seqüència anterior ho comprova). "
+"L'exportació escriu el fitxer fichero-BOE i n'imprimeix el camí, la mida "
+"i la suma de verificació SHA-256: anoteu la suma de verificació; "
+"identifica exactament quin fitxer pugeu."
 
 #: ../../how-to/irpf-lifecycle.md:92
 msgid ""
@@ -157,10 +218,20 @@ msgid ""
 "commands (export, file, reconcile pull) are shown after the verified "
 "result in the sequence above."
 msgstr ""
+"Pugeu el fitxer al portal de l'AEAT (la llista de comprovació és [Pugeu "
+"el vostre model exportat al portal de l'AEAT](file-at-aeat.md)) i, tot "
+"seguit, registreu la presentació localment amb `aeat app modelo work "
+"file` mentre la finestra de presentació estigui oberta. `work file` només"
+" desa un marcador local: no envia res. El marcador és el que permet que "
+"els trasllats del trimestre següent es resolguin a partir d'aquest. "
+"Finalment, descarregueu el justificante amb `aeat app modelo reconcile "
+"pull` perquè el rebut oficial quedi registrat. Les tres ordres (export, "
+"file, reconcile pull) es mostren després del resultat verificat a la "
+"seqüència anterior."
 
 #: ../../how-to/irpf-lifecycle.md:101
 msgid "Stage 3: the second and third quarters"
-msgstr ""
+msgstr "Etapa 3: el segon i el tercer trimestre"
 
 #: ../../how-to/irpf-lifecycle.md:103
 msgid ""
@@ -173,28 +244,45 @@ msgid ""
 "the frozen documentation sandbox can reproduce, so the chain is shown as "
 "display frames:"
 msgstr ""
+"L'any continua; registreu l'activitat de cada trimestre a mesura que "
+"passa. Per al segon trimestre, suposem que l'Ana factura dues vegades i "
+"compra una vegada. Ara el comportament acumulatiu es manifesta: "
+"l'esborrany del segon trimestre es calcula SENSE zeros `--binding`, "
+"resolent els trasllats a partir del primer trimestre presentat. Tot el "
+"segon trimestre s'executa contra el registre del primer trimestre de "
+"l'Ana, presentat i amb evidència, i dins de la finestra de presentació de"
+" juliol, cap dels quals l'entorn de proves congelat de la documentació "
+"pot reproduir, de manera que la cadena es mostra com a marcs de "
+"visualització:"
 
 #: ../../how-to/irpf-lifecycle.md:114
 msgid "Read the revision and compare it with the first quarter's:"
-msgstr ""
+msgstr "Llegiu la revisió i compareu-la amb la del primer trimestre:"
 
 #: ../../how-to/irpf-lifecycle.md:116
 msgid ""
 "Casilla `01` (ingresos) now covers January through June - the ledger "
 "window for `2T` is the year to date, not the quarter alone."
 msgstr ""
+"La casella `01` (ingresos) ara cobreix de gener a juny: la finestra del "
+"ledger per a `2T` és l'any fins a la data, no només el trimestre."
 
 #: ../../how-to/irpf-lifecycle.md:118
 msgid ""
 "Casilla `05` (pagos fraccionados anteriores) carries the instalment you "
 "paid in the first quarter, read from your own filed record."
 msgstr ""
+"La casella `05` (pagos fraccionados anteriores) porta el pagament "
+"fraccionat que vau ingressar el primer trimestre, llegit del vostre propi"
+" registre presentat."
 
 #: ../../how-to/irpf-lifecycle.md:120
 msgid ""
 "If an earlier quarter had ended negative, casilla `15` would offset it "
 "here."
 msgstr ""
+"Si un trimestre anterior hagués acabat en negatiu, la casella `15` el "
+"compensaria aquí."
 
 #: ../../how-to/irpf-lifecycle.md:123
 msgid ""
@@ -203,16 +291,24 @@ msgid ""
 "and file and reconcile it. The tool never invents the missing quarter; a "
 "visible blank beats a guessed zero."
 msgstr ""
+"Si el càlcul es bloqueja en canvi amb una troballa entre períodes, el "
+"primer trimestre no està presentat ni consta amb evidència al vostre "
+"registre: torneu a l'etapa 2 i presenteu-lo i reconcilieu-lo. L'eina mai "
+"no inventa el trimestre que falta; un buit visible és millor que un zero "
+"endevinat."
 
 #: ../../how-to/irpf-lifecycle.md:128
 msgid ""
 "The third quarter is the same chain one period later, with `3T` in place "
 "of `2T` throughout. Every quarter after the first is this one rhythm."
 msgstr ""
+"El tercer trimestre és la mateixa cadena un període més tard, amb `3T` en"
+" lloc de `2T` a tot arreu. Cada trimestre després del primer és aquest "
+"mateix ritme."
 
 #: ../../how-to/irpf-lifecycle.md:131
 msgid "Stage 4: the fourth quarter closes the instalment year"
-msgstr ""
+msgstr "Etapa 4: el quart trimestre tanca l'any de pagaments fraccionats"
 
 #: ../../how-to/irpf-lifecycle.md:133
 msgid ""
@@ -221,14 +317,19 @@ msgid ""
 "Ana has four instalments on record; together they are the payments on "
 "account the annual declaration will set against her full-year income."
 msgstr ""
+"Executeu la mateixa cadena per a `4T` el gener de l'any següent, sent la "
+"finestra de presentació del quart trimestre de l'1 al 30 de gener. Un cop"
+" presentat, l'Ana té quatre pagaments fraccionats registrats; junts són "
+"els pagaments a compte que la declaració anual descomptarà de la seva "
+"renda de tot l'any."
 
 #: ../../how-to/irpf-lifecycle.md:138
 msgid "Check the year's IRPF position at any point:"
-msgstr ""
+msgstr "Comproveu la posició d'IRPF de l'any en qualsevol moment:"
 
 #: ../../how-to/irpf-lifecycle.md:144
 msgid "Stage 5: the annual Renta declaration"
-msgstr ""
+msgstr "Etapa 5: la declaració anual de la Renda"
 
 #: ../../how-to/irpf-lifecycle.md:146
 msgid ""
@@ -236,12 +337,17 @@ msgid ""
 "annual, so the period token is `0A`, and the filing year is the income "
 "year - the 2026 declaration is prepared and filed in 2027."
 msgstr ""
+"La primavera següent, el Model 100 anual recull l'any. És anual, de "
+"manera que el token de període és `0A`, i l'any de presentació és l'any "
+"de la renda: la declaració del 2026 es prepara i es presenta el 2027."
 
 #: ../../how-to/irpf-lifecycle.md:150
 msgid ""
 "Before creating it, confirm the year's records are clean. The ledger "
 "preflight for the annual period runs locally:"
 msgstr ""
+"Abans de crear-la, confirmeu que els registres de l'any estan nets. El "
+"preflight del ledger per al període anual s'executa localment:"
 
 #: ../../how-to/irpf-lifecycle.md:157
 msgid ""
@@ -256,6 +362,19 @@ msgid ""
 "earlier Renta. Employment or capital income the ledger cannot know about "
 "is supplied as manual casillas, found with `bindings list --missing`:"
 msgstr ""
+"La resta de la cadena anual resol els quatre pagaments fraccionats "
+"presentats i la revisió del registre del Model 100 del 2026, que es "
+"publica per a la campanya de presentació del 2027 després que aquesta "
+"documentació es compili, de manera que aquestes ordres es mostren com a "
+"marcs de visualització. `dependencies` llista cada presentació que la "
+"declaració incorpora, els quatre pagaments fraccionats del Model 130 "
+"entre elles, i si la seva evidència està satisfeta. La declaració "
+"s'acobla a partir de quatre menes de font: les dades del perfil de l'Ana,"
+" el ledger classificat de l'any, els quatre pagaments fraccionats "
+"presentats (incorporats com a pagaments a compte) i qualsevol trasllat "
+"d'una Renda anterior. Els rendiments del treball o del capital que el "
+"ledger no pot conèixer es proporcionen com a caselles manuals, que es "
+"troben amb `bindings list --missing`:"
 
 #: ../../how-to/irpf-lifecycle.md:171
 msgid ""
@@ -263,10 +382,13 @@ msgid ""
 "article of law, is the subject of [Deep dive: how the Renta declaration "
 "is assembled](../explanation/how-renta-is-assembled.md)."
 msgstr ""
+"Com arriba cada valor, i com traçar qualsevol xifra fins a la seva regla "
+"i el seu article de llei, és el tema de [Anàlisi a fons: com s'acobla la "
+"declaració de la Renda](../explanation/how-renta-is-assembled.md)."
 
 #: ../../how-to/irpf-lifecycle.md:175
 msgid "What you completed"
-msgstr ""
+msgstr "Què heu completat"
 
 #: ../../how-to/irpf-lifecycle.md:177
 msgid ""
@@ -276,34 +398,46 @@ msgid ""
 "into one settlement. Every figure stayed traceable to the ledger rows and"
 " the rules that produced it."
 msgstr ""
+"Heu portat un contribuent a través de tot un any d'IRPF: un primer "
+"trimestre amb trasllats zero explícits, tres trimestres els trasllats "
+"dels quals es van resoldre a partir dels vostres propis registres "
+"presentats, i una declaració anual que va incorporar els pagaments "
+"fraccionats en una sola liquidació. Cada xifra es va mantenir traçable "
+"fins a les files del ledger i les regles que la van produir."
 
 #: ../../how-to/irpf-lifecycle.md:183
 msgid "Next steps"
-msgstr ""
+msgstr "Passos següents"
 
 #: ../../how-to/irpf-lifecycle.md:185
 msgid ""
 "[The IVA year](iva-lifecycle.md) - the same persona and ledger, through "
 "the IVA cycle."
 msgstr ""
+"[L'any de l'IVA](iva-lifecycle.md): la mateixa persona i ledger, a través"
+" del cicle de l'IVA."
 
 #: ../../how-to/irpf-lifecycle.md:187
 msgid ""
 "[Prepare a Modelo 130 IRPF instalment](modelo-130.md) - the standalone "
 "per-quarter recipe."
 msgstr ""
+"[Prepareu un pagament fraccionat del Model 130 d'IRPF](modelo-130.md): la"
+" recepta autònoma per trimestre."
 
 #: ../../how-to/irpf-lifecycle.md:189
 msgid "[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)"
-msgstr ""
+msgstr "[Prepareu la declaració anual de la Renda del Model 100](modelo-100.md)"
 
 #: ../../how-to/irpf-lifecycle.md:190
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
 msgstr ""
+"[Anàlisi a fons: com s'acobla la declaració de la Renda](../explanation"
+"/how-renta-is-assembled.md)"
 
 #: ../../how-to/irpf-lifecycle.md:191
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
-msgstr ""
+msgstr "[Diagnostiqueu i repareu la configuració local](troubleshooting.md)"
 

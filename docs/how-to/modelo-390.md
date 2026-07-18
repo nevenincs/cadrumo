@@ -95,6 +95,7 @@ The implemented 390 registry bindings include 303 quarter sums for annual
 devengada, deducible, and regimen-general result reconciliation. They also
 include compensation values copied or summed from the same year's 303 periods.
 
+(what-each-modelo-303-quarter-needs-before-you-verify)=
 ## What each Modelo 303 quarter needs before you verify
 
 Modelo 390 verification depends on the four quarterly Modelo 303 returns.

@@ -102,6 +102,7 @@ modelo casillas 130` (the inspect sequence above shows this), and see
 [Review and supply calculation inputs](review-calculation-values.md) for the
 full input workflow.
 
+(each-quarter-is-cumulative)=
 ## Each quarter is cumulative
 
 Modelo 130 is a year-to-date form, not a quarter-slice form. The second

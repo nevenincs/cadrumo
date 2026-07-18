@@ -50,6 +50,7 @@ were resolved, how many required casillas are missing, and the findings that
 block verification. Missing required casillas are values you must resolve before
 export.
 
+(supply-manual-casilla-values)=
 ## Supply manual casilla values
 
 Use `--casilla` only for a box whose input kind is `manual`. Use the box number
@@ -75,6 +76,7 @@ cuenta, a manual box) and seeds the three first-period bindings:
 Do not enter a box value without checking the list first. Read the label so
 you know which field you are filling.
 
+(supply-a-missing-field-value)=
 ## Supply a missing field value
 
 When Cadrumo cannot fill a field automatically, the missing field appears in the
@@ -227,6 +229,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
   amounts, with references to the applicable law. This applies only to maritime
   workers. Most filers can skip this section.
 
+(correct-an-already-filed-local-record)=
 ## Correct an already filed local record
 
 If a filing was already uploaded and later needs correction, use the amendment

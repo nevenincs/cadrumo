@@ -111,6 +111,7 @@ registered profile instead of only the
 Suppressed entries include obligations that do not apply given your profile
 facts, or that are incomplete. Each entry shows why it was suppressed.
 
+(period-tokens-and-dates)=
 ## Period tokens and dates
 
 Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as shown

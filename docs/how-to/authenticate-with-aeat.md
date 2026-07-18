@@ -75,6 +75,7 @@ Check what is configured:
 If you want to inspect a specific provider, use `--provider` with either
 command.
 
+(renew-your-certificate-before-it-expires)=
 ## Renew your certificate before it expires
 
 A digital certificate has an expiry date. The tool reads that date from the

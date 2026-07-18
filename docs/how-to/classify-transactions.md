@@ -83,6 +83,7 @@ for special cases: reduced rate (food, books), exempt supplies, purchases from
 EU suppliers, or recargo de equivalencia. Run
 `aeat app ledger classify --help` to see the accepted values.
 
+(classify-mixed-use-transactions)=
 ## Classify mixed-use transactions
 
 A mixed-use transaction is one you use partly for business and partly
@@ -184,6 +185,7 @@ fill in tax amounts such as taxable base, IVA rate, or IRPF category.
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full
 provider, preview, apply, and override flow.
 
+(see-everything-that-still-needs-a-decision)=
 ## See everything that still needs a decision
 
 The review queue is one profile-wide list of everything that still wants your

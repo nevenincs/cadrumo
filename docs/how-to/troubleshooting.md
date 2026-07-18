@@ -202,6 +202,7 @@ When nothing else recovers the problem, and only then, clear the saved progress 
 
 It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.
 
+(prepare-a-privacy-safe-support-request)=
 ## Prepare a privacy-safe support request
 
 When the steps on this page don't resolve the problem, gather this before asking for help:
