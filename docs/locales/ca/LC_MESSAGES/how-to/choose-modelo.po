@@ -371,9 +371,9 @@ msgstr ""
 "La descripció mostra el nom oficial del formulari (en castellà), el "
 "domini, la cadència, l'ID de la revisió activa, la llista completa d'IDs "
 "de revisió, els tokens de període vàlids i tres recomptes d'estructura "
-"—casillas (caselles), vinculaciones (vinculacions de dades) i fórmulas "
-"(fórmules)— que descriuen com és de complex el formulari. Conserva totes "
-"dues ordres com a ajudes de consulta. L'aplicabilitat sempre prové "
+"que descriuen com és de complex el formulari: casillas (caselles), "
+"vinculaciones (vinculacions de dades) i fórmulas (fórmules). Conserva "
+"totes dues ordres com a ajudes de consulta. L'aplicabilitat sempre prové "
 "d'`overview explain`."
 
 #: ../../how-to/choose-modelo.md:72
