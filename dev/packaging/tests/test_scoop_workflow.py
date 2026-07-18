@@ -16,24 +16,19 @@ def _workflow() -> dict[str, object]:
     return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
 
 
-def test_scoop_workflow_declares_the_sandbox_release_row() -> None:
-    """The acquisition job can run only on the labelled Windows Sandbox host."""
+def test_scoop_workflow_declares_the_container_release_row() -> None:
+    """The acquisition job runs on a GitHub-hosted Windows-container host."""
     document = _workflow()
     assert document["name"] == "Cadrumo Scoop Acquisition"
     assert set(document["jobs"]) == {"cadrumo-scoop-acquisition"}
 
     job = document["jobs"]["cadrumo-scoop-acquisition"]
-    assert job["name"] == "Cadrumo / Windows / x64 / Scoop Sandbox"
-    assert job["runs-on"] == [
-        "self-hosted",
-        "Windows",
-        "X64",
-        "cadrumo-windows-sandbox",
-    ]
-    preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows Sandbox release row")
-    assert "Containers-DisposableClientVM" in preflight["run"]
-    assert "WindowsSandbox.exe" in preflight["run"]
+    assert job["name"] == "Cadrumo / Windows / x64 / Scoop Container"
+    assert job["runs-on"] == "windows-2022"
+    preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows container release row")
     assert 'PROCESSOR_ARCHITECTURE -ne "AMD64"' in preflight["run"]
+    assert "docker version --format" in preflight["run"]
+    assert '$serverOs -ne "windows"' in preflight["run"]
 
 
 def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
@@ -65,14 +60,14 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert document["permissions"] == {"actions": "read", "contents": "read"}
 
 
-def test_scoop_workflow_runs_the_real_sandbox_lifecycle_without_rebuilding() -> None:
-    """The row generates only channel metadata and executes the real Sandbox harness."""
+def test_scoop_workflow_runs_the_real_container_lifecycle_without_rebuilding() -> None:
+    """The row generates only channel metadata and executes the real container harness."""
     document = _workflow()
     steps = document["jobs"]["cadrumo-scoop-acquisition"]["steps"]
     generate = next(step for step in steps if step["name"] == "Generate cohort-bound Scoop source manifest")
     initialize = next(step for step in steps if step["name"] == "Initialize current-run evidence root")
-    stage = next(step for step in steps if step["name"] == "Stage token-free Sandbox harness")
-    smoke = next(step for step in steps if step["name"] == "Install and exercise Cadrumo inside Windows Sandbox")
+    stage = next(step for step in steps if step["name"] == "Stage token-free container harness")
+    smoke = next(step for step in steps if step["name"] == "Install and exercise Cadrumo inside a Windows container")
     upload = next(step for step in steps if step["name"] == "Upload Cadrumo Scoop acquisition evidence")
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
@@ -86,7 +81,8 @@ def test_scoop_workflow_runs_the_real_sandbox_lifecycle_without_rebuilding() -> 
     assert "installed_tax_oracle.py" in stage["run"]
     assert "installed_mcp_oracle.py" in stage["run"]
     assert "$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1" in smoke["run"]
-    assert "-Mode Sandbox" in smoke["run"]
+    assert "-Mode Container" in smoke["run"]
+    assert "mcr.microsoft.com/windows/servercore:ltsc2022" in smoke["run"]
     assert "-TimeoutMinutes 60" in smoke["run"]
     assert upload["if"] == "always() && steps.initialize.outputs.ready == 'true'"
     assert upload["with"]["if-no-files-found"] == "error"

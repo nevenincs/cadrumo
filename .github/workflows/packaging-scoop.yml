@@ -1,6 +1,7 @@
 # Clean Scoop acquisition gate for the immutable Cadrumo Python cohort.
-# This workflow requires a Windows x64 self-hosted runner with Windows Sandbox
-# enabled; GitHub-hosted Windows runners do not satisfy that isolation contract.
+# The clean acquisition runs inside a disposable Windows container (Windows
+# containers ship on GitHub-hosted windows-2022 with the daemon in
+# Windows-container mode by default), so no self-hosted runner is required.
 
 name: Cadrumo Scoop Acquisition
 
@@ -26,8 +27,8 @@ permissions:
 
 jobs:
   cadrumo-scoop-acquisition:
-    name: Cadrumo / Windows / x64 / Scoop Sandbox
-    runs-on: [self-hosted, Windows, X64, cadrumo-windows-sandbox]
+    name: Cadrumo / Windows / x64 / Scoop Container
+    runs-on: windows-2022
     timeout-minutes: 90
 
     steps:
@@ -47,7 +48,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $root | Out-Null
           "CADRUMO_S20_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
           [ordered]@{
-            schema = "cadrumo.packaging.scoop-workflow.v1"
+            schema = "cadrumo.packaging.scoop-workflow.v2"
             status = "initialized"
             github_run_id = $env:GITHUB_RUN_ID
             github_run_attempt = $env:GITHUB_RUN_ATTEMPT
@@ -59,20 +60,18 @@ jobs:
             Set-Content -LiteralPath (Join-Path $root "run-context.json") -Encoding UTF8
           "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
-      - name: Verify declared Windows Sandbox release row
+      - name: Verify declared Windows container release row
         shell: powershell
         run: |
           if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
             throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
           }
-          $feature = Get-WindowsOptionalFeature `
-            -Online `
-            -FeatureName Containers-DisposableClientVM
-          if ($feature.State -ne "Enabled") {
-            throw "Containers-DisposableClientVM must be enabled"
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+            throw "docker is unavailable"
           }
-          if (-not (Get-Command WindowsSandbox.exe -ErrorAction SilentlyContinue)) {
-            throw "WindowsSandbox.exe is unavailable"
+          $serverOs = (docker version --format "{{.Server.Os}}").Trim()
+          if ($serverOs -ne "windows") {
+            throw "Docker must run Windows containers; got '$serverOs'"
           }
 
       - name: Verify source workflow identity
@@ -155,7 +154,7 @@ jobs:
             throw "Scoop source manifest generation failed"
           }
 
-      - name: Stage token-free Sandbox harness
+      - name: Stage token-free container harness
         shell: powershell
         run: |
           $harness = Join-Path $env:CADRUMO_S20_ROOT "harness"
@@ -175,11 +174,12 @@ jobs:
               -Destination (Join-Path $packaging $file)
           }
 
-      - name: Install and exercise Cadrumo inside Windows Sandbox
+      - name: Install and exercise Cadrumo inside a Windows container
         shell: powershell
         run: |
           & "$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1" `
-            -Mode Sandbox `
+            -Mode Container `
+            -ContainerImage mcr.microsoft.com/windows/servercore:ltsc2022 `
             -CohortDir "$env:CADRUMO_S20_ROOT/cohort" `
             -ManifestPath "$env:CADRUMO_S20_ROOT/source-manifest.json" `
             -EvidenceDir "$env:CADRUMO_S20_ROOT/evidence" `
