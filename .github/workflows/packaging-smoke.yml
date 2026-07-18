@@ -11,9 +11,15 @@ on:
   pull_request:
     branches: [main]
 
+# PR iterations cancel their own stale runs, but a push to main must never
+# cancel the running matrix: the release gates consume a COMPLETED successful
+# push-to-main run, and the shared-worktree campaigns push to main more often
+# than the ~35-minute matrix takes, so cancel-on-push livelocks the gate
+# forever. With queueing, the running matrix completes and the newest push
+# waits as the single pending run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
