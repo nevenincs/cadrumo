@@ -99,7 +99,17 @@ function Install-ScoopIfRequested {
     }
 
     if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        # The container child already launches with -ExecutionPolicy Bypass, so
+        # only widen at Process scope; a CurrentUser/machine scope write is
+        # rejected by the Windows container's more-specific pinned policy and
+        # terminates under ErrorActionPreference Stop ("Security error.").
+        try {
+            Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+        }
+        catch {
+            # The effective policy is already Bypass from the launch flag; a
+            # policy-override refusal here is non-fatal, so continue bootstrap.
+        }
         [Net.ServicePointManager]::SecurityProtocol = (
             [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
         )
