@@ -391,6 +391,96 @@ body[data-theme="dark"] .cadrumo-header-mark {
   display: none;
 }
 
+/* Language switcher: native details/summary dropdown. Closed state is a
+   fixed-footprint button (current language code only) so the header never
+   overflows; the open panel overlays content above the mobile drawers. */
+.cadrumo-header-lang {
+  position: relative;
+}
+
+.cadrumo-header-lang-summary {
+  align-items: center;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  gap: 0.25rem;
+  height: 2.1rem;
+  list-style: none;
+  padding: 0 0.5rem;
+  user-select: none;
+}
+
+.cadrumo-header-lang-summary::-webkit-details-marker {
+  display: none;
+}
+
+.cadrumo-header-lang-summary:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-lang-code {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.cadrumo-header-lang-caret {
+  flex: none;
+  height: 0.7rem;
+  transition: transform 0.15s ease;
+  width: 0.7rem;
+}
+
+.cadrumo-header-lang[open] .cadrumo-header-lang-caret {
+  transform: rotate(180deg);
+}
+
+.cadrumo-header-lang-menu {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  list-style: none;
+  margin: 0;
+  min-width: 8.5rem;
+  padding: 0.25rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 95;
+}
+
+.cadrumo-header-lang-menu li {
+  display: block;
+  margin: 0;
+}
+
+.cadrumo-header-lang-item,
+.cadrumo-header-lang-item:any-link {
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  display: block;
+  font-size: 0.84rem;
+  padding: 0.4rem 0.7rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cadrumo-header-lang-item:any-link:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-lang-item.is-current {
+  color: var(--color-brand-content);
+  font-weight: 500;
+}
+
 /* ── 5. Broadcast strip ───────────────────────────────────────────────── */
 
 .cadrumo-broadcast {

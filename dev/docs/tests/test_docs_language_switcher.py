@@ -1,11 +1,13 @@
 """Language-switcher rendering and configuration contracts.
 
 The header language switcher (``docs/_templates/cadrumo-language-switcher.html``)
-links every page to its counterpart under each per-language deploy root. These
-gates prove, with a real Furo build (no mocks), that the switcher computes the
-correct relative hrefs from both a localized subdir build and the default English
-root build, and that ``docs/conf.py`` populates the switcher context from the
-single ``OutputLanguage`` authority.
+is a native ``<details>/<summary>`` dropdown linking every page to its
+counterpart under each per-language deploy root. These gates prove, with a real
+Furo build (no mocks), that the switcher computes the correct relative hrefs
+from both a localized subdir build and the default English root build, that the
+closed state keeps a fixed footprint (current language code only, so the header
+cannot overflow on narrow viewports), and that ``docs/conf.py`` populates the
+switcher context from the single ``OutputLanguage`` authority.
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ def _switcher_context(language: str) -> dict[str, object]:
         "cadrumo_docs_default_language": "en",
         "cadrumo_docs_language_is_default": language == "en",
         "cadrumo_docs_languages": [{"code": code, "label": _LANGUAGE_LABELS[code]} for code in order],
+        "cadrumo_docs_language_label": _LANGUAGE_LABELS[language],
     }
 
 
@@ -73,14 +76,42 @@ def _build_switcher_site(tmp_path: Path, language: str) -> str:
     return (out / "how-to" / "quickstart.html").read_text(encoding="utf-8")
 
 
+def _switcher_block(html: str) -> str:
+    """Return the switcher's ``<details>`` dropdown block from the rendered header."""
+    match = re.search(r'<details class="cadrumo-header-lang"[^>]*>.*?</details>', html, re.DOTALL)
+    assert match is not None, "language switcher <details> dropdown is absent from the rendered header"
+    return match.group(0)
+
+
+def _switcher_summary(html: str) -> str:
+    """Return the switcher's ``<summary>`` (the closed-state trigger)."""
+    match = re.search(r"<summary.*?</summary>", _switcher_block(html), re.DOTALL)
+    assert match is not None, "language switcher <summary> is absent"
+    return match.group(0)
+
+
 def _switcher_hrefs(html: str) -> dict[str, str]:
-    """Extract the switcher's per-language hrefs keyed by BCP-47 code from the nav block."""
-    nav = re.search(r'<nav class="cadrumo-header-lang".*?</nav>', html, re.DOTALL)
-    assert nav is not None, "language switcher nav is absent from the rendered header"
+    """Extract the dropdown menu's per-language option hrefs keyed by BCP-47 code."""
     hrefs: dict[str, str] = {}
-    for match in re.finditer(r'<a class="cadrumo-header-nav-link" href="([^"]+)"[^>]*lang="([a-z]+)"', nav.group(0)):
+    for match in re.finditer(
+        r'<a class="cadrumo-header-lang-item" href="([^"]+)"[^>]*lang="([a-z]+)"', _switcher_block(html)
+    ):
         hrefs[match.group(2)] = match.group(1)
     return hrefs
+
+
+def _assert_dropdown_shape(html: str, language: str) -> None:
+    """Closed state shows only the current language code; the open menu lists every language."""
+    summary = _switcher_summary(html)
+    # Fixed-footprint trigger: the current code, no anchors, no other language.
+    assert f'lang="{language}">{language.upper()}</span>' in summary
+    assert "<a" not in summary
+    assert all(f'lang="{other}"' not in summary for other in _LANGUAGE_LABELS if other != language)
+    # Open panel: every language present, the current one a non-link current marker.
+    block = _switcher_block(html)
+    menu_langs = set(re.findall(r'class="cadrumo-header-lang-item[^"]*"[^>]*\blang="([a-z]+)"', block))
+    assert menu_langs == set(_LANGUAGE_LABELS)
+    assert f'aria-current="true" lang="{language}"' in block
 
 
 def test_localized_build_links_up_to_sibling_language_roots(tmp_path: Path) -> None:
@@ -97,8 +128,7 @@ def test_localized_build_links_up_to_sibling_language_roots(tmp_path: Path) -> N
         "ca": "../../ca/how-to/quickstart.html",
         "hu": "../../hu/how-to/quickstart.html",
     }
-    # The current language renders as a non-link current marker, not an anchor.
-    assert 'aria-current="true" lang="es"' in html
+    _assert_dropdown_shape(html, "es")
 
 
 def test_default_build_links_down_into_language_roots(tmp_path: Path) -> None:
@@ -114,7 +144,7 @@ def test_default_build_links_down_into_language_roots(tmp_path: Path) -> None:
         "ca": "../ca/how-to/quickstart.html",
         "hu": "../hu/how-to/quickstart.html",
     }
-    assert 'aria-current="true" lang="en"' in html
+    _assert_dropdown_shape(html, "en")
 
 
 def _conf_switcher_context(language: str) -> dict[str, object]:
