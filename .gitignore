@@ -84,6 +84,11 @@ docs/_static/cli-tree.json
 # build like docs/_build). The canonical output lives under docs/_build/html/
 # pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.
 pagefind/
+# Gettext POT message templates for docs localization (`just docs-gettext`),
+# extracted fresh from the user-scope pages on every run. The per-language .po
+# catalogues under docs/locales/<lang>/ ARE committed; only these templates are
+# a regenerated build product.
+docs/locales/pot/
 
 # PyBuilder
 .pybuilder/

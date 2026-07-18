@@ -23,6 +23,7 @@ from sphinx.deprecation import RemovedInSphinx90Warning
 _PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
+from cadrumo.core.external_constants import OutputLanguage  # noqa: E402
 from cadrumo.core.product_identity import PRODUCT_IDENTITY  # noqa: E402
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
@@ -113,11 +114,24 @@ source_suffix = {
 }
 
 master_doc = os.environ.get("CADRUMO_DOCS_MASTER_DOC", "index")
-# English is the only documentation language. Additional languages attach
-# here - set `language`, add `locale_dirs` and `gettext_compact`, and a
-# gettext / sphinx-intl build matrix. Documentation translation must not
-# reuse the runtime CLI translation catalogues.
-language = "en"
+# The build language is read from CADRUMO_DOCS_LANGUAGE and validated against the
+# OutputLanguage closed set (es/en/ca/hu) - the single language authority shared
+# with the runtime CLI catalogues, never a second hand-listed set. English is the
+# msgid source (the default) and carries no catalogue; es/ca/hu substitute
+# translated paragraphs from docs/locales/<lang>/LC_MESSAGES. The CLI OUTPUT
+# language stays pinned to English at the top of this module (executed sequences
+# render live CLI output as evidence, not translatable prose). gettext_compact is
+# disabled so each source page owns one catalogue, which the all-languages
+# completeness gate reads per page. Documentation translation must not reuse the
+# runtime CLI translation catalogues.
+_VALID_DOCS_LANGUAGES = {member.value for member in OutputLanguage}
+language = os.environ.get("CADRUMO_DOCS_LANGUAGE", "en")
+if language not in _VALID_DOCS_LANGUAGES:
+    raise ValueError(
+        f"CADRUMO_DOCS_LANGUAGE must be one of {sorted(_VALID_DOCS_LANGUAGES)}; got {language!r}",
+    )
+locale_dirs = ["locales"]
+gettext_compact = False
 
 exclude_patterns = [
     "_build",
