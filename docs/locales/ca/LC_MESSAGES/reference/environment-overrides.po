@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../reference/environment-overrides.md:5
 msgid "Environment overrides"
-msgstr ""
+msgstr "Substitucions d'entorn"
 
 #: ../../reference/environment-overrides.md:7
 msgid ""
@@ -32,6 +31,13 @@ msgid ""
 "commands. Set an override only when you administer a deployment and know "
 "why the default does not fit."
 msgstr ""
+"Aquesta pàgina tracta cada variable d'entorn que llegeix l'aplicació, "
+"generada a partir del model de configuració en directe. Les substitucions"
+" d'entorn són configuració avançada de desplegament i de desenvolupament:"
+" cada flux de treball d'usuari funciona sense elles a través "
+"d'indicadors, opcions d'ordre i ordres `aeat config`. Estableix una "
+"substitució només quan administris un desplegament i sàpigues per què el "
+"valor per defecte no encaixa."
 
 #: ../../reference/environment-overrides.md:13
 msgid ""
@@ -39,56 +45,62 @@ msgid ""
 " in the repository; the runtime also reads them from `env/.env`. A value "
 "set in the process environment wins over the `.env` file."
 msgstr ""
+"Una plantilla anotada amb les mateixes variables es troba a "
+"`env/.env.example` al repositori; el temps d'execució també les llegeix "
+"des de `env/.env`. Un valor definit a l'entorn del procés preval sobre el"
+" fitxer `.env`."
 
 #: ../../reference/environment-overrides.md
 msgid "Variable"
-msgstr ""
+msgstr "Variable"
 
 #: ../../reference/environment-overrides.md
 msgid "Type"
-msgstr ""
+msgstr "Tipus"
 
 #: ../../reference/environment-overrides.md
 msgid "Default"
-msgstr ""
+msgstr "Per defecte"
 
 #: ../../reference/environment-overrides.md
 msgid "What it controls"
-msgstr ""
+msgstr "Què controla"
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS`"
-msgstr ""
+msgstr "`AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS`"
 
 #: ../../reference/environment-overrides.md
 msgid "str"
-msgstr ""
+msgstr "str"
 
 #: ../../reference/environment-overrides.md
 msgid "`es`"
-msgstr ""
+msgstr "`es`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Authoritative language for domain terminology (modelos, registry "
 "definitions, references)."
 msgstr ""
+"Llengua autoritzada per a la terminologia de domini (models, definicions "
+"del registre, referències)."
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_BASE_URL`"
-msgstr ""
+msgstr "`AEAT_BASE_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid "(derived)"
-msgstr ""
+msgstr "(derived)"
 
 #: ../../reference/environment-overrides.md
 msgid "AEAT sede electrónica base URL"
-msgstr ""
+msgstr "URL base de la seu electrònica de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE`"
-msgstr ""
+msgstr "`AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE`"
 
 #: ../../reference/environment-overrides.md
 #, python-brace-format
@@ -98,10 +110,14 @@ msgid ""
 " path. The default template is sourced from the external constants "
 "registry."
 msgstr ""
+"Plantilla d'URL de la pàgina de selecció de mètode d'autenticació de "
+"l'AEAT que utilitza el flux d'inici de sessió de Cl@ve Permanente. "
+"`{target}` se substitueix per la ruta de destinació codificada per a URL."
+" La plantilla per defecte prové del registre de constants externes."
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE`"
-msgstr ""
+msgstr "`AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE`"
 
 #: ../../reference/environment-overrides.md
 #, python-brace-format
@@ -110,40 +126,47 @@ msgid ""
 " with the URL-encoded target path. The default template is sourced from "
 "the external constants registry."
 msgstr ""
+"Plantilla d'URL de la pàgina de selecció de mètode d'autenticació de "
+"l'AEAT. `{target}` se substitueix per la ruta de destinació codificada "
+"per a URL. La plantilla per defecte prové del registre de constants "
+"externes."
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_MANUALS_ROOT`"
-msgstr ""
+msgstr "`AEAT_MANUALS_ROOT`"
 
 #: ../../reference/environment-overrides.md
 msgid "Path"
-msgstr ""
+msgstr "Path"
 
 #: ../../reference/environment-overrides.md
 msgid "Root directory for the structured AEAT Manual práctico corpus"
-msgstr ""
+msgstr "Directori arrel del corpus estructurat del Manual práctico de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_NORMATIVES_ROOT`"
-msgstr ""
+msgstr "`AEAT_NORMATIVES_ROOT`"
 
 #: ../../reference/environment-overrides.md
 msgid "Root directory for the bundled legal normatives corpus"
-msgstr ""
+msgstr "Directori arrel del corpus de normatives legals inclòs"
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_SEDE_EXPEDIENTES_PATH`"
-msgstr ""
+msgstr "`AEAT_SEDE_EXPEDIENTES_PATH`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "AEAT Sede path for 'Mis expedientes' — the default post-auth target used "
 "by Cl@ve Móvil login and the expedientes reader."
 msgstr ""
+"Ruta de la Seu de l'AEAT per a «Mis expedientes»: la destinació posterior"
+" a l'autenticació per defecte que utilitzen l'inici de sessió de Cl@ve "
+"Móvil i el lector d'expedients."
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_STATUS_DETAIL_URL_TEMPLATE`"
-msgstr ""
+msgstr "`AEAT_STATUS_DETAIL_URL_TEMPLATE`"
 
 #: ../../reference/environment-overrides.md
 #, python-brace-format
@@ -152,24 +175,30 @@ msgid ""
 "'{expediente_id}'. Override only when AEAT changes the corresponding "
 "route."
 msgstr ""
+"Plantilla de ruta d'URL d'una pàgina de detall d'expedient. Ha de "
+"contenir «{expediente_id}». Substitueix-la només quan l'AEAT canviï la "
+"ruta corresponent."
 
 #: ../../reference/environment-overrides.md
 msgid "`AEAT_STATUS_NOTIFICACIONES_PATH`"
-msgstr ""
+msgstr "`AEAT_STATUS_NOTIFICACIONES_PATH`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "URL path for the 'Mis notificaciones' listing page. Joined against "
 "aeat_base_url. Override only when AEAT changes the corresponding route."
 msgstr ""
+"Ruta d'URL de la pàgina de llistat «Mis notificaciones». S'uneix a "
+"aeat_base_url. Substitueix-la només quan l'AEAT canviï la ruta "
+"corresponent."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_ACTIVE_PROFILE`"
-msgstr ""
+msgstr "`CADRUMO_ACTIVE_PROFILE`"
 
 #: ../../reference/environment-overrides.md
 msgid "unset"
-msgstr ""
+msgstr "sense definir"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -178,14 +207,19 @@ msgid ""
 "precedence chain. Leave unset for normal installs; the pointer file is "
 "the canonical default."
 msgstr ""
+"Substitució per shell del perfil d'operador actiu. Quan es defineix, "
+"preval sobre el fitxer de punter <cadrumo-root>/active-profile a la "
+"cadena de precedència del perfil actiu. Deixa-la sense definir per a "
+"instal·lacions normals; el fitxer de punter és el valor per defecte "
+"canònic."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_ALLOW_UNENCRYPTED`"
-msgstr ""
+msgstr "`CADRUMO_ALLOW_UNENCRYPTED`"
 
 #: ../../reference/environment-overrides.md
 msgid "empty"
-msgstr ""
+msgstr "buit"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -196,60 +230,73 @@ msgid ""
 "confidentiality. The substrate refuses to load an operator profile that "
 "carries a real NIF/NIE/CIF while running in unsecured mode."
 msgstr ""
+"Barrera d'exclusió amb nom hostil per al backend no segur. S'ha "
+"d'establir al literal «1» (variable d'entorn: "
+"CADRUMO_ALLOW_UNENCRYPTED=1) per utilitzar "
+"cadrumo_secret_store_backend=unsecured. El backend no segur està pensat "
+"només per a escenaris de prova, educatius o d'un sol ús i ofereix ZERO "
+"confidencialitat. El substrat es nega a carregar un perfil d'operador que"
+" porti un NIF/NIE/CIF real mentre s'executa en mode no segur."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_ATTACHMENTS_DIR`"
-msgstr ""
+msgstr "`CADRUMO_ATTACHMENTS_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Root directory for the attachment byte and manifest store"
-msgstr ""
+msgstr "Directori arrel del magatzem de bytes d'adjunts i de manifests"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_AUDIT_DIR`"
-msgstr ""
+msgstr "`CADRUMO_AUDIT_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory for the governed audit sink (redacted, classification-aware)"
 msgstr ""
+"Directori del canal d'auditoria governat (redactat, conscient de la "
+"classificació)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S`"
-msgstr ""
+msgstr "`CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "int"
-msgstr ""
+msgstr "int"
 
 #: ../../reference/environment-overrides.md
 msgid "`180`"
-msgstr ""
+msgstr "`180`"
 
 #: ../../reference/environment-overrides.md
 msgid "Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows"
 msgstr ""
+"TTL (segons) del bloqueig d'adquisició per als fluxos d'autenticació de "
+"l'AEAT basats en certificat"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S`"
-msgstr ""
+msgstr "`CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`90`"
-msgstr ""
+msgstr "`90`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the "
 "acquisition lock TTL"
 msgstr ""
+"Marge (segons) afegit a ``cadrumo_clave_movil_timeout_ms`` per al TTL del"
+" bloqueig d'adquisició"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_AUTH_PROVIDER`"
-msgstr ""
+msgstr "`CADRUMO_AUTH_PROVIDER`"
 
 #: ../../reference/environment-overrides.md
 msgid "AuthProviderKind"
-msgstr ""
+msgstr "AuthProviderKind"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -257,76 +304,88 @@ msgid ""
 "--provider is omitted. When None, the CLI auto-selects the first "
 "configured provider from the canonical registry order."
 msgstr ""
+"Proveïdor d'autenticació per defecte per a `aeat config auth status` / "
+"`test` quan s'omet --provider. Quan és None, la CLI selecciona "
+"automàticament el primer proveïdor configurat segons l'ordre canònic del "
+"registre."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_AUTH_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_AUTH_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`30000`"
-msgstr ""
+msgstr "`30000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Playwright navigation timeout for protected AEAT authentication in "
 "milliseconds"
 msgstr ""
+"Temps màxim de navegació de Playwright per a l'autenticació protegida de "
+"l'AEAT, en mil·lisegons"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS`"
-msgstr ""
+msgstr "`CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`en`"
-msgstr ""
+msgstr "`en`"
 
 #: ../../reference/environment-overrides.md
 msgid "Authoritative language for internal code and documentation"
-msgstr ""
+msgstr "Llengua autoritzada per al codi i la documentació interns"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BLOB_STORE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_BLOB_STORE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Directory containing the encrypted blob store (content-addressed, "
 "classification-aware)"
 msgstr ""
+"Directori que conté el magatzem de blobs xifrats (adreçat per contingut, "
+"conscient de la classificació)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_BUSCAR_SETTLE_MS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_BUSCAR_SETTLE_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`3000`"
-msgstr ""
+msgstr "`3000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Settle delay (ms) after the AEAT 'Buscar' button before reading the "
 "results table"
 msgstr ""
+"Retard d'estabilització (ms) després del botó «Buscar» de l'AEAT abans de"
+" llegir la taula de resultats"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_CHANNEL`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_CHANNEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`chrome`"
-msgstr ""
+msgstr "`chrome`"
 
 #: ../../reference/environment-overrides.md
 msgid "Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')"
 msgstr ""
+"Canal de navegador de Playwright que s'ha d'utilitzar (p. ex., «chrome», "
+"«chromium», «msedge»)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`5000`"
-msgstr ""
+msgstr "`5000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -334,164 +393,188 @@ msgid ""
 "during AEAT live auth and read flows. Cleanup must not leave a command "
 "hanging after the primary operation has already failed or timed out."
 msgstr ""
+"Temps màxim de millor esforç (ms) per a la neteja del context/sessió del "
+"navegador de Playwright durant els fluxos d'autenticació i lectura en "
+"directe de l'AEAT. La neteja no ha de deixar una ordre penjada després "
+"que l'operació principal ja hagi fallat o hagi esgotat el temps."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`10000`"
-msgstr ""
+msgstr "`10000`"
 
 #: ../../reference/environment-overrides.md
 msgid "Timeout for individual form interactions (fill/click/wait) in milliseconds"
 msgstr ""
+"Temps màxim per a les interaccions individuals amb formularis "
+"(omplir/clic/espera), en mil·lisegons"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_HEADLESS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_HEADLESS`"
 
 #: ../../reference/environment-overrides.md
 msgid "bool"
-msgstr ""
+msgstr "bool"
 
 #: ../../reference/environment-overrides.md
 msgid "`true`"
-msgstr ""
+msgstr "`true`"
 
 #: ../../reference/environment-overrides.md
 msgid "Run browser in headless mode"
-msgstr ""
+msgstr "Executa el navegador en mode sense capçalera"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_LOCALE`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_LOCALE`"
 
 #: ../../reference/environment-overrides.md
 msgid "`es-ES`"
-msgstr ""
+msgstr "`es-ES`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default browser locale passed to Playwright context (BCP-47 tag)"
 msgstr ""
+"Configuració regional del navegador per defecte passada al context de "
+"Playwright (etiqueta BCP-47)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default Playwright navigation timeout (milliseconds) for AEAT sede pages"
 msgstr ""
+"Temps màxim de navegació de Playwright per defecte (mil·lisegons) per a "
+"les pàgines de la seu de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`2500`"
-msgstr ""
+msgstr "`2500`"
 
 #: ../../reference/environment-overrides.md
 msgid "Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages"
 msgstr ""
+"Temps màxim de la prova de visibilitat de selectors (ms) que utilitzen "
+"les etapes de comprovació GROI/NIF-IVA"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_TIMEZONE`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_TIMEZONE`"
 
 #: ../../reference/environment-overrides.md
 msgid "`Europe/Madrid`"
-msgstr ""
+msgstr "`Europe/Madrid`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default IANA timezone string passed to Playwright context"
-msgstr ""
+msgstr "Cadena de zona horària IANA per defecte passada al context de Playwright"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`15000`"
-msgstr ""
+msgstr "`15000`"
 
 #: ../../reference/environment-overrides.md
 msgid "Timeout (ms) for the AEAT declarations 'Ver' button click and navigation"
 msgstr ""
+"Temps màxim (ms) per al clic del botó «Ver» de les declaracions de l'AEAT"
+" i la navegació"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_VIEWPORT_HEIGHT`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_VIEWPORT_HEIGHT`"
 
 #: ../../reference/environment-overrides.md
 msgid "`900`"
-msgstr ""
+msgstr "`900`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default Playwright viewport height (px) for AEAT sede sessions"
 msgstr ""
+"Alçada de la finestra gràfica de Playwright per defecte (px) per a les "
+"sessions de la seu de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BROWSER_VIEWPORT_WIDTH`"
-msgstr ""
+msgstr "`CADRUMO_BROWSER_VIEWPORT_WIDTH`"
 
 #: ../../reference/environment-overrides.md
 msgid "`1366`"
-msgstr ""
+msgstr "`1366`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default Playwright viewport width (px) for AEAT sede sessions"
 msgstr ""
+"Amplada de la finestra gràfica de Playwright per defecte (px) per a les "
+"sessions de la seu de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES`"
-msgstr ""
+msgstr "`CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES`"
 
 #: ../../reference/environment-overrides.md
 msgid "`15`"
-msgstr ""
+msgstr "`15`"
 
 #: ../../reference/environment-overrides.md
 msgid "Fallback idle-lock window (minutes) when a bucket manifest omits the value"
 msgstr ""
+"Finestra de bloqueig per inactivitat de reserva (minuts) quan un manifest"
+" de bucket omet el valor"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S`"
-msgstr ""
+msgstr "`CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "float"
-msgstr ""
+msgstr "float"
 
 #: ../../reference/environment-overrides.md
 msgid "`0.1`"
-msgstr ""
+msgstr "`0.1`"
 
 #: ../../reference/environment-overrides.md
 msgid "Polling interval (seconds) for bucket lockfile acquisition retries"
 msgstr ""
+"Interval de sondeig (segons) per als reintents d'adquisició del fitxer de"
+" bloqueig del bucket"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CALC_SHEETS_RECALC_DELAY_S`"
-msgstr ""
+msgstr "`CADRUMO_CALC_SHEETS_RECALC_DELAY_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`2.0`"
-msgstr ""
+msgstr "`2.0`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Delay (seconds) waiting for Google Sheets server-side recalculation "
 "between parity polls"
 msgstr ""
+"Retard (segons) esperant el recàlcul del costat del servidor de Google "
+"Sheets entre sondejos de paritat"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CERT_CRITICAL_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_CERT_CRITICAL_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`14`"
-msgstr ""
+msgstr "`14`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -499,66 +582,75 @@ msgid ""
 "certificates with <= this many days remaining are CRITICAL and must be "
 "renewed before authenticated AEAT work continues"
 msgstr ""
+"Llindar crític (dies) per a la barrera de precaducitat del certificat: "
+"els certificats amb <= aquests dies restants són CRÍTICS i s'han de "
+"renovar abans de continuar el treball autenticat amb l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CERT_WARN_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_CERT_WARN_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`60`"
-msgstr ""
+msgstr "`60`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Warning threshold (days) for the certificate pre-expiry gate: "
 "certificates with <= this many days remaining are surfaced as WARN"
 msgstr ""
+"Llindar d'advertència (dies) per a la barrera de precaducitat del "
+"certificat: els certificats amb <= aquests dies restants es mostren com a"
+" WARN"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CERTIFICATE_FRIENDLY_NAME`"
-msgstr ""
+msgstr "`CADRUMO_CERTIFICATE_FRIENDLY_NAME`"
 
 #: ../../reference/environment-overrides.md
 msgid "Optional human-readable label for the certificate"
-msgstr ""
+msgstr "Etiqueta opcional llegible per humans per al certificat"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CERTIFICATE_PASSWORD_SECRET`"
-msgstr ""
+msgstr "`CADRUMO_CERTIFICATE_PASSWORD_SECRET`"
 
 #: ../../reference/environment-overrides.md
 msgid "SecretStr"
-msgstr ""
+msgstr "SecretStr"
 
 #: ../../reference/environment-overrides.md
 msgid "(secret)"
-msgstr ""
+msgstr "(secret)"
 
 #: ../../reference/environment-overrides.md
 msgid "PKCS#12 passphrase (env only, never logged or persisted)"
-msgstr ""
+msgstr "Contrasenya PKCS#12 (només d'entorn, mai registrada ni persistida)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CERTIFICATE_PATH`"
-msgstr ""
+msgstr "`CADRUMO_CERTIFICATE_PATH`"
 
 #: ../../reference/environment-overrides.md
 msgid "Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle"
-msgstr ""
+msgstr "Ruta del sistema de fitxers al paquet PKCS#12 (.p12/.pfx) de l'operador"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_MOVIL_DNI_FECHA`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_MOVIL_DNI_FECHA`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "DNI validity / expiry date (YYYY-MM-DD) used by the non-QR Cl@ve Móvil "
 "fallback form. Applies when the configured identity is a DNI."
 msgstr ""
+"Data de validesa / caducitat del DNI (YYYY-MM-DD) que utilitza el "
+"formulari de reserva sense QR de Cl@ve Móvil. S'aplica quan la identitat "
+"configurada és un DNI."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_MOVIL_DNI_NIE`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_MOVIL_DNI_NIE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -568,10 +660,16 @@ msgid ""
 "under Spanish tax law; typed as SecretStr to prevent leakage through repr"
 " / model_dump / ValidationError."
 msgstr ""
+"DNI/NIE del contribuent per a `aeat config auth configure --provider "
+"clave_movil`. S'utilitza per segellar la sessió persistida amb la "
+"identitat de l'operador i per preomplir el formulari de reserva sense QR."
+" Identificador personal regulat per l'AEAT segons la llei tributària "
+"espanyola; tipat com a SecretStr per evitar-ne la filtració a través de "
+"repr / model_dump / ValidationError."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_MOVIL_NIE_SOPORTE`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_MOVIL_NIE_SOPORTE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -579,14 +677,18 @@ msgid ""
 "fallback form. Applies when the configured identity is a NIE. AEAT-"
 "regulated personal identifier; typed as SecretStr to prevent leakage."
 msgstr ""
+"Número de suport del NIE (número de soporte) que utilitza el formulari de"
+" reserva sense QR de Cl@ve Móvil. S'aplica quan la identitat configurada "
+"és un NIE. Identificador personal regulat per l'AEAT; tipat com a "
+"SecretStr per evitar-ne la filtració."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`120000`"
-msgstr ""
+msgstr "`120000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -595,10 +697,15 @@ msgid ""
 "must fail fast enough for an operator to retry deliberately rather than "
 "leaving a pending request dangling."
 msgstr ""
+"Temps màxim (mil·lisegons) que el proveïdor de Cl@ve Móvil espera que es "
+"completi l'autenticació del costat del navegador de l'AEAT abans "
+"d'avortar. Les execucions de producció han de fallar prou de pressa "
+"perquè un operador pugui reintentar deliberadament en comptes de deixar "
+"una sol·licitud pendent penjada."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_PERMANENTE_DNI_NIE`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_PERMANENTE_DNI_NIE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -608,10 +715,16 @@ msgid ""
 "identifier under Spanish tax law; typed as SecretStr to prevent leakage "
 "through repr / model_dump / ValidationError."
 msgstr ""
+"DNI/NIE del contribuent per a `aeat config auth configure --provider "
+"clave_permanente`. S'utilitza com a nom d'usuari d'inici de sessió a "
+"l'IdP de Cl@ve i per segellar la sessió persistida amb la identitat de "
+"l'operador. Identificador personal regulat per l'AEAT segons la llei "
+"tributària espanyola; tipat com a SecretStr per evitar-ne la filtració a "
+"través de repr / model_dump / ValidationError."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_PERMANENTE_PASSWORD`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_PERMANENTE_PASSWORD`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -619,14 +732,18 @@ msgid ""
 "treatment as the certificate passphrase: env var only, never stored in a "
 "committed env file, never logged."
 msgstr ""
+"Contrasenya de Cl@ve Permanente per al formulari d'inici de sessió "
+"DNI/NIE + contrasenya. Mateix tractament que la contrasenya del "
+"certificat: només variable d'entorn, mai emmagatzemada en un fitxer "
+"d'entorn comès, mai registrada."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`60000`"
-msgstr ""
+msgstr "`60000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -636,14 +753,20 @@ msgid ""
 "SMS), so this window is shorter than the human-in-the-loop Cl@ve Móvil "
 "timeout."
 msgstr ""
+"Temps màxim (mil·lisegons) que el proveïdor de Cl@ve Permanente espera "
+"que es completi l'anada i tornada del formulari d'inici de sessió de "
+"l'IdP de l'AEAT/Cl@ve abans d'avortar. L'inici de sessió rutinari de "
+"Cl@ve Permanente es pot automatitzar sense capçalera (DNI/NIE + "
+"contrasenya, sense SMS), de manera que aquesta finestra és més curta que "
+"el temps màxim de Cl@ve Móvil amb intervenció humana."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLAVE_PREFER_NON_QR`"
-msgstr ""
+msgstr "`CADRUMO_CLAVE_PREFER_NON_QR`"
 
 #: ../../reference/environment-overrides.md
 msgid "`false`"
-msgstr ""
+msgstr "`false`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -651,10 +774,13 @@ msgid ""
 "contraste) rather than the QR code. This still requires operator-mediated"
 " completion in Cl@ve."
 msgstr ""
+"Quan és cert, el proveïdor de Cl@ve Móvil utilitza la reserva sense QR "
+"(DNI/NIE + contraste) en comptes del codi QR. Això encara requereix que "
+"l'operador completi el procés a Cl@ve."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CLI_REVEAL_IDENTIFIERS`"
-msgstr ""
+msgstr "`CADRUMO_CLI_REVEAL_IDENTIFIERS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -668,20 +794,33 @@ msgid ""
 "bearer tokens, URLs, and secure-object keys stay redacted "
 "unconditionally."
 msgstr ""
+"Mostra els identificadors de perfil i de bucket en brut a la sortida "
+"d'èxit de la CLI en comptes dels marcadors segurs per enganxar "
+"``<profile-id>`` / ``<bucket-id>``. Desactivat per defecte, manté la "
+"política de redacció centralitzada de la sortida (els UUID de "
+"perfil/bucket es redacten perquè els diagnòstics es puguin enganxar amb "
+"seguretat en notes compartides). Un gestor amb múltiples clients que hagi"
+" de desambiguar a quin bucket es va adreçar una ordre estableix "
+"``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` per excloure-se'n. Això només "
+"desredacta els UUID opacs de perfil/bucket; les identitats fiscals "
+"NIF/NIE/CIF, els testimonis de portador, les URL i les claus d'objectes "
+"segurs es mantenen redactades incondicionalment."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_CORPUS_TEXT_CACHE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_CORPUS_TEXT_CACHE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Directory for the registry corpus source-text validation cache "
 "(normalised text keyed by content fingerprint)"
 msgstr ""
+"Directori de la memòria cau de validació del text d'origen del corpus del"
+" registre (text normalitzat indexat per empremta de contingut)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_DATABASE_URL`"
-msgstr ""
+msgstr "`CADRUMO_DATABASE_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -694,46 +833,62 @@ msgid ""
 "deterministic location supply this field explicitly; production reads the"
 " computed value."
 msgstr ""
+"URL de SQLAlchemy per al backend de persistència principal. Quan és "
+"buida, el validador del model resol la URL a través de la cadena de "
+"precedència del perfil actiu cap a "
+"``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-"
+"id>/db/cadrumo.db``; sense cap perfil actiu, en deriva una de reserva a "
+"nivell d'arrel a ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` de"
+" manera que la URL mai no és buida quan l'arrel d'emmagatzematge està "
+"definida. Les proves que necessiten una ubicació determinista "
+"proporcionen aquest camp explícitament; la producció llegeix el valor "
+"calculat."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_DEADLINE_DUE_SOON_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_DEADLINE_DUE_SOON_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Days before an obligation's closes_on date that flag "
 "ObligationStatus.DUE_SOON in the deadline engine"
 msgstr ""
+"Dies abans de la data closes_on d'una obligació que marquen "
+"ObligationStatus.DUE_SOON al motor de terminis"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_DEV_TEST_DATABASE_PASSWORD`"
-msgstr ""
+msgstr "`CADRUMO_DEV_TEST_DATABASE_PASSWORD`"
 
 #: ../../reference/environment-overrides.md
 msgid "Development/test-only password used by secure-storage subprocess tests."
 msgstr ""
+"Contrasenya només per a desenvolupament/proves que utilitzen les proves "
+"de subprocés d'emmagatzematge segur."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_DRAFT_FAIL_ON_WARNING`"
-msgstr ""
+msgstr "`CADRUMO_DRAFT_FAIL_ON_WARNING`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "If true, build_draft raises FilingValidationError when any WARNING- or "
 "ERROR-severity finding is produced"
 msgstr ""
+"Si és cert, build_draft llança FilingValidationError quan es produeix "
+"qualsevol troballa de gravetat WARNING o ERROR"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_DRAFTS_DIR`"
-msgstr ""
+msgstr "`CADRUMO_DRAFTS_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where filing drafts are written as JSON files"
-msgstr ""
+msgstr "Directori on els esborranys de presentació s'escriuen com a fitxers JSON"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED`"
-msgstr ""
+msgstr "`CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -742,10 +897,14 @@ msgid ""
 "invocation operator consent acknowledgement is still required for each "
 "cloud read."
 msgstr ""
+"Si aquest desplegament permet transmetre evidència a un model al núvol o "
+"no. Desactivat per defecte: la lectura d'evidència només es fa a "
+"l'amfitrió. Quan és True, encara cal un reconeixement de consentiment de "
+"l'operador per invocació per a cada lectura al núvol."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_EVIDENCE_GESTOR_MODE`"
-msgstr ""
+msgstr "`CADRUMO_EVIDENCE_GESTOR_MODE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -753,84 +912,97 @@ msgid ""
 "categorically refused regardless of "
 "cadrumo_evidence_cloud_upload_permitted or per-invocation consent."
 msgstr ""
+"Indicador de desplegament per a gestor/professional. Quan és True, la "
+"pujada d'evidència al núvol es refusa categòricament independentment de "
+"cadrumo_evidence_cloud_upload_permitted o del consentiment per invocació."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FALLBACK_LANGUAGES`"
-msgstr ""
+msgstr "`CADRUMO_FALLBACK_LANGUAGES`"
 
 #: ../../reference/environment-overrides.md
 msgid "`es,en`"
-msgstr ""
+msgstr "`es,en`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Comma-separated fallback chain consulted when the target language is "
 "missing."
 msgstr ""
+"Cadena de reserva separada per comes que es consulta quan falta la "
+"llengua de destinació."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FILE_LOCK_RETRY_BACKOFF_S`"
-msgstr ""
+msgstr "`CADRUMO_FILE_LOCK_RETRY_BACKOFF_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`0.05`"
-msgstr ""
+msgstr "`0.05`"
 
 #: ../../reference/environment-overrides.md
 msgid "Sleep interval (seconds) between non-blocking file-lock acquire attempts"
 msgstr ""
+"Interval d'espera (segons) entre intents no bloquejants d'adquisició del "
+"bloqueig de fitxer"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FILE_LOCK_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_FILE_LOCK_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`30.0`"
-msgstr ""
+msgstr "`30.0`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default exclusive file-lock acquisition timeout (seconds)"
 msgstr ""
+"Temps màxim per defecte d'adquisició del bloqueig exclusiu de fitxer "
+"(segons)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FILING_HISTORY_ARCHIVE_HTML`"
-msgstr ""
+msgstr "`CADRUMO_FILING_HISTORY_ARCHIVE_HTML`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "If true, archive fetched detail-page HTML under "
 "<cadrumo_filing_history_dir>/pages/"
 msgstr ""
+"Si és cert, arxiva l'HTML de les pàgines de detall obtingudes sota "
+"<cadrumo_filing_history_dir>/pages/"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FILING_HISTORY_CACHE_TTL_S`"
-msgstr ""
+msgstr "`CADRUMO_FILING_HISTORY_CACHE_TTL_S`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "TTL in seconds for per-expediente filing-history cache entries (default "
 "15 min)"
 msgstr ""
+"TTL en segons per a les entrades de la memòria cau de l'historial de "
+"presentacions per expedient (per defecte 15 min)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FILING_HISTORY_DIR`"
-msgstr ""
+msgstr "`CADRUMO_FILING_HISTORY_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where the persisted ModeloHistory JSON file lives"
-msgstr ""
+msgstr "Directori on es troba el fitxer JSON persistit de ModeloHistory"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FINANCIAL_TXS_DIR`"
-msgstr ""
+msgstr "`CADRUMO_FINANCIAL_TXS_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where the transaction catalogue JSON file is stored"
-msgstr ""
+msgstr "Directori on es desa el fitxer JSON del catàleg de transaccions"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_FORCE_COLOR`"
-msgstr ""
+msgstr "`CADRUMO_FORCE_COLOR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -840,10 +1012,16 @@ msgid ""
 " this and the standard NO_COLOR convention through Settings rather than "
 "reading os.environ directly."
 msgstr ""
+"Força la sortida de color ANSI fins i tot quan stdout no és un TTY. Els "
+"operadors ho estableixen quan canalitzen la sortida de Cadrumo a través "
+"d'un renderitzador de terminal (less -R, gh actions, etc.). Per defecte "
+"és False; l'ajudant should_use_color() consulta aquest valor i la "
+"convenció estàndard NO_COLOR a través de Settings en comptes de llegir "
+"os.environ directament."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
-msgstr ""
+msgstr "`CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -852,40 +1030,49 @@ msgid ""
 "obtains this from the Cloud Console / Drive web UI; the app creates "
 "`cadrumo-vault/` lazily on first probe."
 msgstr ""
+"ID de la carpeta de Drive sota la qual es crea i s'utilitza `cadrumo-"
+"vault/`. Necessari quan cadrumo_storage_provider_kind=google_drive. "
+"L'operador l'obté de la Cloud Console / la interfície web de Drive; "
+"l'aplicació crea `cadrumo-vault/` de manera diferida en el primer "
+"sondeig."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME`"
-msgstr ""
+msgstr "`CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME`"
 
 #: ../../reference/environment-overrides.md
 msgid "`cadrumo-vault`"
-msgstr ""
+msgstr "`cadrumo-vault`"
 
 #: ../../reference/environment-overrides.md
 msgid "Folder name created under the Google Drive root for the Cadrumo vault"
 msgstr ""
+"Nom de carpeta creada sota l'arrel de Google Drive per a la caixa forta "
+"de Cadrumo"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
-msgstr ""
+msgstr "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`300`"
-msgstr ""
+msgstr "`300`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Clock-skew buffer (seconds) before nominal expiry when refreshing Google "
 "access tokens"
 msgstr ""
+"Marge de desviació del rellotge (segons) abans de la caducitat nominal en"
+" refrescar els testimonis d'accés de Google"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_INBOX_ALERT_LEAD_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_INBOX_ALERT_LEAD_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`7`"
-msgstr ""
+msgstr "`7`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -893,76 +1080,84 @@ msgid ""
 "CRITICAL/HIGH notifications whose appeal_deadline falls within the next N"
 " days"
 msgstr ""
+"Finestra d'antelació (dies) per a l'informe de terminis de notificacions:"
+" mostra les notificacions CRITICAL/HIGH la appeal_deadline de les quals "
+"cau dins dels pròxims N dies"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_INBOX_DIR`"
-msgstr ""
+msgstr "`CADRUMO_INBOX_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where the persisted Inbox JSON file lives"
-msgstr ""
+msgstr "Directori on es troba el fitxer JSON persistit de la Bústia"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_INBOX_PDF_DIR`"
-msgstr ""
+msgstr "`CADRUMO_INBOX_PDF_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where downloaded notification PDFs are stored"
-msgstr ""
+msgstr "Directori on es desen els PDF de notificacions baixats"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_INVOICES_DIR`"
-msgstr ""
+msgstr "`CADRUMO_INVOICES_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where the invoice catalogue JSON file is stored"
-msgstr ""
+msgstr "Directori on es desa el fitxer JSON del catàleg de factures"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_IVA_CATALOGUE_ROOT`"
-msgstr ""
+msgstr "`CADRUMO_IVA_CATALOGUE_ROOT`"
 
 #: ../../reference/environment-overrides.md
 msgid "Root directory for the hand-reviewed IVA taxonomy catalogue"
-msgstr ""
+msgstr "Directori arrel del catàleg de taxonomia d'IVA revisat a mà"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_JUSTIFICANTE_PARSER_BACKEND`"
-msgstr ""
+msgstr "`CADRUMO_JUSTIFICANTE_PARSER_BACKEND`"
 
 #: ../../reference/environment-overrides.md
 msgid "JustificanteParserBackendSetting"
-msgstr ""
+msgstr "JustificanteParserBackendSetting"
 
 #: ../../reference/environment-overrides.md
 msgid "`pdfplumber`"
-msgstr ""
+msgstr "`pdfplumber`"
 
 #: ../../reference/environment-overrides.md
 msgid "Parser backend for `cadrumo.adapters.inbound.justificante`"
-msgstr ""
+msgstr "Backend d'anàlisi per a `cadrumo.adapters.inbound.justificante`"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_JUSTIFICANTES_DIR`"
-msgstr ""
+msgstr "`CADRUMO_JUSTIFICANTES_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where parsed justificante PDFs and metadata are stored"
 msgstr ""
+"Directori on es desen els PDF de justificants analitzats i les seves "
+"metadades"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIBREOFFICE_EXECUTABLE`"
-msgstr ""
+msgstr "`CADRUMO_LIBREOFFICE_EXECUTABLE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Optional explicit path to the soffice / libreoffice binary used by the "
 "workbook-parity scanner. When None the scanner resolves it from PATH."
 msgstr ""
+"Ruta explícita opcional al binari soffice / libreoffice que utilitza "
+"l'escàner de paritat de llibres de treball. Quan és None, l'escàner la "
+"resol des de PATH."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -970,14 +1165,19 @@ msgid ""
 "modelo/year. Bulk filed-history reads use this per-query budget so one "
 "slow modelo cannot block all later modelos from returning typed failures."
 msgstr ""
+"Temps màxim (ms) per a una consulta al registre de declaracions "
+"presentades de l'AEAT per a un sol model/any. Les lectures massives de "
+"l'historial de presentacions utilitzen aquest pressupost per consulta de "
+"manera que un model lent no pugui impedir que tots els models posteriors "
+"retornin fallades tipades."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`250`"
-msgstr ""
+msgstr "`250`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -985,14 +1185,18 @@ msgid ""
 "giving Playwright browser tasks time to report cancellation-only errors "
 "before the loop handler is restored."
 msgstr ""
+"Retard de drenatge (ms) després que es cancel·li una superfície de "
+"lectura en directe d'IVA acotada, donant a les tasques del navegador de "
+"Playwright temps per informar d'errors de només cancel·lació abans de "
+"restaurar el gestor del bucle."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`240000`"
-msgstr ""
+msgstr "`240000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1001,10 +1205,15 @@ msgid ""
 "budgets but remain below operator shell/tool timeouts so the CLI can "
 "cancel and clean up inside its own process."
 msgstr ""
+"Temps màxim del vigilant de la CLI de nivell superior (ms) per a l'ordre "
+"combinada d'estat remot d'IVA de només lectura. Ha de superar els "
+"pressupostos normals d'autenticació i de superfície però mantenir-se per "
+"sota dels temps màxims del shell/eina de l'operador de manera que la CLI "
+"pugui cancel·lar i netejar dins del seu propi procés."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1013,14 +1222,20 @@ msgid ""
 "IVA surface timeout so partial filed-history failures can return a "
 "structured report before the whole surface is cancelled."
 msgstr ""
+"Temps màxim (ms) per a una observació de declaració presentada del Model "
+"303 dins d'una lectura combinada en directe de l'historial de "
+"presentacions d'IVA. Ha de ser inferior al temps màxim de la superfície "
+"en directe d'IVA exterior de manera que les fallades parcials de "
+"l'historial de presentacions puguin retornar un informe estructurat abans"
+" que es cancel·li tota la superfície."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`180000`"
-msgstr ""
+msgstr "`180000`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1029,115 +1244,133 @@ msgid ""
 "shorter timeouts; this bounds the whole filed-history or wallet/cartera "
 "surface."
 msgstr ""
+"Temps màxim exterior (ms) per a cada superfície de lectura en directe "
+"d'IVA dins d'una adquisició combinada d'estat remot. Les etapes "
+"individuals del navegador tenen els seus propis temps màxims més curts; "
+"aquest acota tota la superfície d'historial de presentacions o de "
+"moneder/cartera."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_TESTS_ENABLED`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_TESTS_ENABLED`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real"
 " external services"
 msgstr ""
+"Indicador d'inclusió (establert a «1») per executar les proves "
+"@pytest.mark.aeat_live contra serveis externs reals"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_TESTS_GOOGLE`"
-msgstr ""
+msgstr "`CADRUMO_LIVE_TESTS_GOOGLE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Opt-in flag (set to '1') to run @pytest.mark.aeat_live Google (OAuth / "
 "Drive) tests against real Google services"
 msgstr ""
+"Indicador d'inclusió (establert a «1») per executar les proves "
+"@pytest.mark.aeat_live de Google (OAuth / Drive) contra serveis reals de "
+"Google"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_ANTHROPIC_API_KEY`"
-msgstr ""
+msgstr "`CADRUMO_LLM_ANTHROPIC_API_KEY`"
 
 #: ../../reference/environment-overrides.md
 msgid "Anthropic API key (env only, never logged)"
-msgstr ""
+msgstr "Clau d'API d'Anthropic (només d'entorn, mai registrada)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_CACHE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_LLM_CACHE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory for on-disk LLM cache entries"
-msgstr ""
+msgstr "Directori per a les entrades de memòria cau d'LLM al disc"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_CACHE_MAX_RECORDS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_CACHE_MAX_RECORDS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Maximum number of LLM response-cache entries retained; oldest excess "
 "entries are pruned"
 msgstr ""
+"Nombre màxim d'entrades de memòria cau de respostes d'LLM que es "
+"conserven; les entrades sobrants més antigues s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_CACHE_RETENTION_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_CACHE_RETENTION_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`30`"
-msgstr ""
+msgstr "`30`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Retention window in days for on-disk LLM response-cache entries; older "
 "entries are pruned"
 msgstr ""
+"Finestra de retenció en dies per a les entrades de memòria cau de "
+"respostes d'LLM al disc; les entrades més antigues s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_DEFAULT_MAX_TOKENS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_DEFAULT_MAX_TOKENS`"
 
 #: ../../reference/environment-overrides.md
 msgid "`1024`"
-msgstr ""
+msgstr "`1024`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default maximum output tokens when an LLM request omits ``max_tokens``"
 msgstr ""
+"Nombre màxim de testimonis de sortida per defecte quan una sol·licitud "
+"d'LLM omet ``max_tokens``"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_DEFAULT_TEMPERATURE`"
-msgstr ""
+msgstr "`CADRUMO_LLM_DEFAULT_TEMPERATURE`"
 
 #: ../../reference/environment-overrides.md
 msgid "`0.0`"
-msgstr ""
+msgstr "`0.0`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default sampling temperature when an LLM request omits ``temperature``"
 msgstr ""
+"Temperatura de mostreig per defecte quan una sol·licitud d'LLM omet "
+"``temperature``"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_DEFAULT_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_LLM_DEFAULT_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default timeout for LLM provider calls in seconds"
-msgstr ""
+msgstr "Temps màxim per defecte per a les crides al proveïdor d'LLM, en segons"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_GEMINI_API_KEY`"
-msgstr ""
+msgstr "`CADRUMO_LLM_GEMINI_API_KEY`"
 
 #: ../../reference/environment-overrides.md
 msgid "Google Gemini API key (optional)"
-msgstr ""
+msgstr "Clau d'API de Google Gemini (opcional)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_GEMINI_GENERATE_CONTENT_TEMPLATE`"
-msgstr ""
+msgstr "`CADRUMO_LLM_GEMINI_GENERATE_CONTENT_TEMPLATE`"
 
 #: ../../reference/environment-overrides.md
 #, python-brace-format
 msgid "`https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`"
-msgstr ""
+msgstr "`https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`"
 
 #: ../../reference/environment-overrides.md
 #, python-brace-format
@@ -1145,52 +1378,56 @@ msgid ""
 "Google Gemini generateContent endpoint template (``{model}`` is "
 "substituted)"
 msgstr ""
+"Plantilla del punt final generateContent de Google Gemini (``{model}`` se"
+" substitueix)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_MAX_RETRIES`"
-msgstr ""
+msgstr "`CADRUMO_LLM_MAX_RETRIES`"
 
 #: ../../reference/environment-overrides.md
 msgid "`3`"
-msgstr ""
+msgstr "`3`"
 
 #: ../../reference/environment-overrides.md
 msgid "Maximum retry attempts for retryable LLM failures"
-msgstr ""
+msgstr "Nombre màxim d'intents de reintent per a les fallades d'LLM reintentables"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_MODEL`"
-msgstr ""
+msgstr "`CADRUMO_LLM_MODEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`claude-sonnet-4-6`"
-msgstr ""
+msgstr "`claude-sonnet-4-6`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default LLM model identifier"
-msgstr ""
+msgstr "Identificador del model d'LLM per defecte"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_OLLAMA_CHAT_URL`"
-msgstr ""
+msgstr "`CADRUMO_LLM_OLLAMA_CHAT_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`http://127.0.0.1:11434/api/chat`"
-msgstr ""
+msgstr "`http://127.0.0.1:11434/api/chat`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Local Ollama /api/chat endpoint; override for non-localhost Ollama "
 "deployments"
 msgstr ""
+"Punt final /api/chat d'Ollama local; substitueix-lo per a desplegaments "
+"d'Ollama que no siguin localhost"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_OLLAMA_NUM_CTX`"
-msgstr ""
+msgstr "`CADRUMO_LLM_OLLAMA_NUM_CTX`"
 
 #: ../../reference/environment-overrides.md
 msgid "`8192`"
-msgstr ""
+msgstr "`8192`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1199,14 +1436,19 @@ msgid ""
 "which exceeds Ollama's 4096 default; 8192 fits the prompt + image + "
 "output with headroom and still runs on consumer hardware"
 msgstr ""
+"Finestra de context d'Ollama (num_ctx) per a les sol·licituds locals. La "
+"lectura de visió envia la instrucció completa de la llista d'admesos del "
+"registre més la imatge codificada de la factura, cosa que supera el valor"
+" per defecte de 4096 d'Ollama; 8192 encabeix la instrucció + la imatge + "
+"la sortida amb marge i encara s'executa en maquinari de consum"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_OLLAMA_VISION_MODEL`"
-msgstr ""
+msgstr "`CADRUMO_LLM_OLLAMA_VISION_MODEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`qwen2.5vl:3b`"
-msgstr ""
+msgstr "`qwen2.5vl:3b`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1217,100 +1459,119 @@ msgid ""
 "override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for CPU-only/low-"
 "memory hardware"
 msgstr ""
+"Model de visió d'Ollama local que s'utilitza per llegir evidència "
+"escanejada/en imatge a l'amfitrió (la postura per defecte, permesa per a "
+"gestors); ha de ser un model multimodal descarregat al temps d'execució "
+"local d'Ollama. El valor per defecte qwen2.5vl:3b (~3 GB) és de nivell "
+"document/OCR i s'executa en maquinari de consum normal (GPU modesta o "
+"CPU); substitueix-lo per qwen2.5vl:7b per a una GPU de 8 GB o més, o per "
+"moondream per a maquinari només de CPU / poca memòria"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_OPENAI_API_KEY`"
-msgstr ""
+msgstr "`CADRUMO_LLM_OPENAI_API_KEY`"
 
 #: ../../reference/environment-overrides.md
 msgid "OpenAI API key (optional)"
-msgstr ""
+msgstr "Clau d'API d'OpenAI (opcional)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL`"
-msgstr ""
+msgstr "`CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`https://api.openai.com/v1/chat/completions`"
-msgstr ""
+msgstr "`https://api.openai.com/v1/chat/completions`"
 
 #: ../../reference/environment-overrides.md
 msgid "OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies"
 msgstr ""
+"Punt final Chat Completions d'OpenAI; substitueix-lo per a proxies "
+"compatibles amb OpenAI"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_PROVIDER`"
-msgstr ""
+msgstr "`CADRUMO_LLM_PROVIDER`"
 
 #: ../../reference/environment-overrides.md
 msgid "LLMProviderSetting"
-msgstr ""
+msgstr "LLMProviderSetting"
 
 #: ../../reference/environment-overrides.md
 msgid "`ANTHROPIC`"
-msgstr ""
+msgstr "`ANTHROPIC`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default LLM provider name"
-msgstr ""
+msgstr "Nom del proveïdor d'LLM per defecte"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_RUN_TELEMETRY_DIR`"
-msgstr ""
+msgstr "`CADRUMO_LLM_RUN_TELEMETRY_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory for append-only local LLM run-timing telemetry logs"
 msgstr ""
+"Directori per als registres de telemetria de temps d'execució d'LLM "
+"local, només d'addició"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Maximum number of local LLM run-telemetry records retained; oldest excess"
 " records are pruned"
 msgstr ""
+"Nombre màxim de registres de telemetria d'execució d'LLM local que es "
+"conserven; els registres sobrants més antics s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Retention window in days for local LLM run-telemetry records; older "
 "records are pruned"
 msgstr ""
+"Finestra de retenció en dies per als registres de telemetria d'execució "
+"d'LLM local; els registres més antics s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_USAGE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_LLM_USAGE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory for append-only LLM usage JSONL logs"
-msgstr ""
+msgstr "Directori per als registres JSONL d'ús d'LLM, només d'addició"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_USAGE_MAX_RECORDS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_USAGE_MAX_RECORDS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Maximum number of LLM usage records retained; oldest excess records are "
 "pruned"
 msgstr ""
+"Nombre màxim de registres d'ús d'LLM que es conserven; els registres "
+"sobrants més antics s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_USAGE_RETENTION_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_LLM_USAGE_RETENTION_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid "Retention window in days for LLM usage records; older records are pruned"
 msgstr ""
+"Finestra de retenció en dies per als registres d'ús d'LLM; els registres "
+"més antics s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LLM_VISION_READ_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_LLM_VISION_READ_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1318,10 +1579,14 @@ msgid ""
 "general LLM timeout because a local vision model on consumer hardware "
 "(CPU or a modest GPU) can take one to several minutes to read an invoice"
 msgstr ""
+"Temps màxim per sol·licitud per a la lectura de visió local a l'amfitrió;"
+" més gran que el temps màxim general d'LLM perquè un model de visió local"
+" en maquinari de consum (CPU o una GPU modesta) pot trigar d'un a "
+"diversos minuts a llegir una factura"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOCAL_STORAGE_ROOT`"
-msgstr ""
+msgstr "`CADRUMO_LOCAL_STORAGE_ROOT`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1335,10 +1600,22 @@ msgid ""
 "never lands inside a virtualenv or uv cache. An explicit "
 "`CADRUMO_LOCAL_STORAGE_ROOT` override wins over the derived default."
 msgstr ""
+"Directori arrel del backend LocalFileSystemProvider. Cada espai de noms "
+"esdevé un subdirectori; cada objecte és un fitxer "
+"`<hmac_prefix_8>--<label>.bin` aparellat amb un fitxer lateral "
+"`.meta.json`. El valor per defecte és conscient de l'execució "
+"instal·lada: una còpia del codi font es resol a "
+"`PROJECT_ROOT/var/storage`, mentre que una distribució instal·lada "
+"s'arrela al directori de dades d'usuari de la plataforma "
+"(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` o "
+"`~/Library/Application Support/cadrumo/storage`) de manera que el "
+"magatzem xifrat mai no acabi dins d'un virtualenv o d'una memòria cau "
+"d'uv. Una substitució explícita `CADRUMO_LOCAL_STORAGE_ROOT` preval sobre"
+" el valor per defecte derivat."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_DIR`"
-msgstr ""
+msgstr "`CADRUMO_LOG_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1349,78 +1626,96 @@ msgid ""
 "scopes, isolating each workspace's log. An explicit ``CADRUMO_LOG_DIR`` "
 "override wins over the derived default."
 msgstr ""
+"Directori arrel del registre de diagnòstic. El valor per defecte ``None``"
+" d'aquí és un marcador de posició: quan el camp no s'estableix "
+"explícitament, el validador del model l'arrela a "
+"``<cadrumo_local_storage_root>/logs`` de manera que el registre de "
+"diagnòstic visqui sota l'única arrel d'estat que "
+"``CADRUMO_LOCAL_STORAGE_ROOT`` acota, aïllant el registre de cada espai "
+"de treball. Una substitució explícita ``CADRUMO_LOG_DIR`` preval sobre el"
+" valor per defecte derivat."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_FILE_BACKUP_COUNT`"
-msgstr ""
+msgstr "`CADRUMO_LOG_FILE_BACKUP_COUNT`"
 
 #: ../../reference/environment-overrides.md
 msgid "`5`"
-msgstr ""
+msgstr "`5`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Number of rotated cadrumo.log backups retained by the rotating file "
 "handler"
 msgstr ""
+"Nombre de còpies de seguretat rotades de cadrumo.log que conserva el "
+"gestor de fitxers rotatiu"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_FILE_LEVEL`"
-msgstr ""
+msgstr "`CADRUMO_LOG_FILE_LEVEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`DEBUG`"
-msgstr ""
+msgstr "`DEBUG`"
 
 #: ../../reference/environment-overrides.md
 msgid "Log level for the file handler installed by ``cadrumo.core.logging``"
 msgstr ""
+"Nivell de registre per al gestor de fitxers instal·lat per "
+"``cadrumo.core.logging``"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_FILE_MAX_BYTES`"
-msgstr ""
+msgstr "`CADRUMO_LOG_FILE_MAX_BYTES`"
 
 #: ../../reference/environment-overrides.md
 msgid "`10485760`"
-msgstr ""
+msgstr "`10485760`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Size cap (bytes) for cadrumo.log before the rotating file handler rolls "
 "over; default 10 MiB"
 msgstr ""
+"Límit de mida (bytes) de cadrumo.log abans que el gestor de fitxers "
+"rotatiu faci la rotació; per defecte 10 MiB"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_LEVEL`"
-msgstr ""
+msgstr "`CADRUMO_LOG_LEVEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "Optional default CLI log level override: quiet, default, verbose, or debug"
 msgstr ""
+"Substitució opcional del nivell de registre per defecte de la CLI: quiet,"
+" default, verbose o debug"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_ROOT_LEVEL`"
-msgstr ""
+msgstr "`CADRUMO_LOG_ROOT_LEVEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "Root logger level installed by ``cadrumo.core.logging``"
-msgstr ""
+msgstr "Nivell del registrador arrel instal·lat per ``cadrumo.core.logging``"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LOG_STDERR_LEVEL`"
-msgstr ""
+msgstr "`CADRUMO_LOG_STDERR_LEVEL`"
 
 #: ../../reference/environment-overrides.md
 msgid "`ERROR`"
-msgstr ""
+msgstr "`ERROR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Log level for the stderr handler installed by ``cadrumo.core.logging``"
 msgstr ""
+"Nivell de registre per al gestor de stderr instal·lat per "
+"``cadrumo.core.logging``"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_M210_ENGINE_LIVE`"
-msgstr ""
+msgstr "`CADRUMO_M210_ENGINE_LIVE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1430,22 +1725,28 @@ msgid ""
 "skipped and the engine path runs (irnr_resolve_tipo_gravamen dispatch + "
 "representante-fiscal predicate + cuota composition)."
 msgstr ""
+"Habilita el motor d'IRNR del M210, que actualment només cobreix les "
+"lletres a, b i f de l'art. 25 del TRLIRNR. Quan és False (per defecte), "
+"`aeat app modelo work create --modelo 210` emet l'stub de refús del camí "
+"B. Quan és True, la salvaguarda de l'stub s'omet i s'executa el camí del "
+"motor (dispatch d'irnr_resolve_tipo_gravamen + predicat de representante-"
+"fiscal + composició de la cuota)."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_MANUALS_HTTP_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_MANUALS_HTTP_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`60.0`"
-msgstr ""
+msgstr "`60.0`"
 
 #: ../../reference/environment-overrides.md
 msgid "HTTP timeout (seconds) for AEAT manual PDF downloads"
-msgstr ""
+msgstr "Temps màxim d'HTTP (segons) per a les baixades de PDF de manuals de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_MANUALS_REVIEW_REQUIRED`"
-msgstr ""
+msgstr "`CADRUMO_MANUALS_REVIEW_REQUIRED`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1453,64 +1754,70 @@ msgid ""
 "record missing definition-review metadata; when False the rejection is "
 "downgraded to a warning"
 msgstr ""
+"Quan és True, la verificació del corpus de manuals rebutja qualsevol "
+"registre de Manual/Secció/Regla al qual falten metadades de revisió de "
+"definició; quan és False, el rebuig es rebaixa a una advertència"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_OUTPUT_LANGUAGE`"
-msgstr ""
+msgstr "`CADRUMO_OUTPUT_LANGUAGE`"
 
 #: ../../reference/environment-overrides.md
 msgid "OutputLanguage"
-msgstr ""
+msgstr "OutputLanguage"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Target ISO 639-1 language code for user-facing content. Invalid values "
 "coerce to None and fall back to the default."
 msgstr ""
+"Codi de llengua ISO 639-1 de destinació per al contingut de cara a "
+"l'usuari. Els valors no vàlids es converteixen a None i recorren al valor"
+" per defecte."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_PROXY_BYPASS`"
-msgstr ""
+msgstr "`CADRUMO_PROXY_BYPASS`"
 
 #: ../../reference/environment-overrides.md
 msgid "Comma-separated list of domains to bypass the proxy"
-msgstr ""
+msgstr "Llista separada per comes de dominis que han d'ometre el proxy"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_PROXY_PASSWORD_SECRET`"
-msgstr ""
+msgstr "`CADRUMO_PROXY_PASSWORD_SECRET`"
 
 #: ../../reference/environment-overrides.md
 msgid "Password for proxy authentication"
-msgstr ""
+msgstr "Contrasenya per a l'autenticació del proxy"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_PROXY_URL`"
-msgstr ""
+msgstr "`CADRUMO_PROXY_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid "Proxy URL (e.g., 'http://proxy.example.com:8080')"
-msgstr ""
+msgstr "URL del proxy (p. ex., «http://proxy.example.com:8080»)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_PROXY_USERNAME`"
-msgstr ""
+msgstr "`CADRUMO_PROXY_USERNAME`"
 
 #: ../../reference/environment-overrides.md
 msgid "Username for proxy authentication"
-msgstr ""
+msgstr "Nom d'usuari per a l'autenticació del proxy"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_RATE_LIMIT_DELAY_SECONDS`"
-msgstr ""
+msgstr "`CADRUMO_RATE_LIMIT_DELAY_SECONDS`"
 
 #: ../../reference/environment-overrides.md
 msgid "Minimum delay between AEAT requests in seconds"
-msgstr ""
+msgstr "Retard mínim entre sol·licituds a l'AEAT, en segons"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_REGISTRY_DISK_CACHE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_REGISTRY_DISK_CACHE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1521,14 +1828,22 @@ msgid ""
 "owned directory, so a test asserting exclusive pickle state never races "
 "sibling pytest-xdist workers."
 msgstr ""
+"Substitució del directori de pickle a disc del registre entre processos. "
+"Quan no es defineix, la producció deriva "
+"<cadrumo_local_storage_root>/cache/registry i les execucions de pytest "
+"comparteixen el directori temporal de l'amfitrió per al pickle immutable "
+"d'arrel inclosa. L'estableix només l'aïllament de proves per redirigir la"
+" memòria cau cap a un directori propietat de la prova, de manera que una "
+"prova que afirma un estat de pickle exclusiu mai no competeixi amb els "
+"treballadors germans de pytest-xdist."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES`"
-msgstr ""
+msgstr "`CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES`"
 
 #: ../../reference/environment-overrides.md
 msgid "`8`"
-msgstr ""
+msgstr "`8`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1536,42 +1851,53 @@ msgid ""
 "directory; after each write the oldest excess pickles are pruned (best-"
 "effort) so accumulated per-fingerprint pickles cannot grow without bound."
 msgstr ""
+"Nombre màxim de pickles de memòria cau a disc del registre que es "
+"conserven per directori de memòria cau; després de cada escriptura, els "
+"pickles sobrants més antics s'eliminen (amb el millor esforç) de manera "
+"que els pickles acumulats per empremta no puguin créixer sense límit."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_REGISTRY_PARITY_STORE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_REGISTRY_PARITY_STORE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where registry parity tape artifacts are archived by default"
 msgstr ""
+"Directori on s'arxiven per defecte els artefactes de cinta de paritat del"
+" registre"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_REPLAY_ACTIVE`"
-msgstr ""
+msgstr "`CADRUMO_REPLAY_ACTIVE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Subprocess-IPC marker carrying the original run_id when a CLI invocation "
 "is a replay re-entry"
 msgstr ""
+"Marcador d'IPC de subprocés que porta el run_id original quan una "
+"invocació de la CLI és una reentrada de reproducció"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_RUNS_DIR`"
-msgstr ""
+msgstr "`CADRUMO_RUNS_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Directory where run traces and JSONL event logs are persisted (one "
 "subdirectory per run_id, containing trace.json + events.jsonl)"
 msgstr ""
+"Directori on es persisteixen els rastres d'execució i els registres "
+"d'esdeveniments JSONL (un subdirectori per run_id, que conté trace.json +"
+" events.jsonl)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_RUNS_MAX_TOTAL_BYTES`"
-msgstr ""
+msgstr "`CADRUMO_RUNS_MAX_TOTAL_BYTES`"
 
 #: ../../reference/environment-overrides.md
 msgid "`268435456`"
-msgstr ""
+msgstr "`268435456`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1579,20 +1905,26 @@ msgid ""
 "age-based prune, oldest run directories are removed until the store fits "
 "under this ceiling (the newest run directory is always kept)"
 msgstr ""
+"Límit total de mida al disc (bytes) del magatzem de rastres per execució;"
+" després de l'eliminació basada en l'antiguitat, els directoris "
+"d'execució més antics s'eliminen fins que el magatzem cap sota aquest "
+"sostre (el directori d'execució més nou sempre es conserva)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_RUNS_RETENTION_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_RUNS_RETENTION_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Retention window in days for per-run trace directories; older run "
 "directories are pruned"
 msgstr ""
+"Finestra de retenció en dies per als directoris de rastres per execució; "
+"els directoris d'execució més antics s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_SECRET_PASSPHRASE`"
-msgstr ""
+msgstr "`CADRUMO_SECRET_PASSPHRASE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1601,18 +1933,22 @@ msgid ""
 "preserve fail-closed behaviour. Operator-facing env var is "
 "CADRUMO_SECRET_PASSPHRASE."
 msgstr ""
+"Contrasenya que deriva la clau mestra del magatzem de secrets xifrat. Per"
+" defecte None: el carregador de la clau mestra refusa operar amb un valor"
+" None o buit per preservar el comportament fail-closed. La variable "
+"d'entorn de cara a l'operador és CADRUMO_SECRET_PASSPHRASE."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_SECRET_STORE_BACKEND`"
-msgstr ""
+msgstr "`CADRUMO_SECRET_STORE_BACKEND`"
 
 #: ../../reference/environment-overrides.md
 msgid "SecretStoreBackend"
-msgstr ""
+msgstr "SecretStoreBackend"
 
 #: ../../reference/environment-overrides.md
 msgid "`auto`"
-msgstr ""
+msgstr "`auto`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1622,48 +1958,62 @@ msgid ""
 "headless). unsecured = testing-only mode with a published deterministic "
 "key; requires cadrumo_allow_unencrypted=true and refuses real NIFs."
 msgstr ""
+"Backend de la clau mestra per al magatzem de secrets. auto = clauer del "
+"SO quan està disponible, amb reserva a fitxer xifrat altrament. keyring ="
+" només clauer del SO (es nega a recórrer a la reserva). file = només "
+"fitxer xifrat (necessari per a CI / sense capçalera). unsecured = mode "
+"només de prova amb una clau determinista publicada; requereix "
+"cadrumo_allow_unencrypted=true i refusa NIF reals."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_SECRET_STORE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_SECRET_STORE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Directory for the encrypted secret-store master-key file and ciphertext "
 "records"
 msgstr ""
+"Directori per al fitxer de la clau mestra del magatzem de secrets xifrat "
+"i els registres de text xifrat"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_STATUS_CACHE_DIR`"
-msgstr ""
+msgstr "`CADRUMO_STATUS_CACHE_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory for the short-lived AEAT status-page cache"
 msgstr ""
+"Directori per a la memòria cau de curta durada de la pàgina d'estat de "
+"l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_STATUS_CACHE_TTL_S`"
-msgstr ""
+msgstr "`CADRUMO_STATUS_CACHE_TTL_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "TTL in seconds for status cache entries (default 15 min)"
 msgstr ""
+"TTL en segons per a les entrades de la memòria cau d'estat (per defecte "
+"15 min)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_STORAGE_BACKUP_DIR`"
-msgstr ""
+msgstr "`CADRUMO_STORAGE_BACKUP_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where the storage layer writes database backups"
 msgstr ""
+"Directori on la capa d'emmagatzematge escriu les còpies de seguretat de "
+"la base de dades"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_STORAGE_PROVIDER_KIND`"
-msgstr ""
+msgstr "`CADRUMO_STORAGE_PROVIDER_KIND`"
 
 #: ../../reference/environment-overrides.md
 msgid "`local_filesystem`"
-msgstr ""
+msgstr "`local_filesystem`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1672,38 +2022,49 @@ msgid ""
 "additionally requires cadrumo_google_drive_root_folder_id and a per-"
 "profile registered OAuth client + token via `aeat config google`."
 msgstr ""
+"Backend per a `cadrumo.adapters.outbound.storage`. Valors acceptats: "
+"local_filesystem (per defecte), google_drive, in_memory. google_drive "
+"requereix a més cadrumo_google_drive_root_folder_id i un client OAuth + "
+"testimoni registrat per perfil mitjançant `aeat config google`."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_STRICT_SECURITY`"
-msgstr ""
+msgstr "`CADRUMO_STRICT_SECURITY`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Raise instead of warn when AEAT credential artifact permission hardening "
 "fails"
 msgstr ""
+"Llança un error en comptes d'advertir quan falla l'enduriment de permisos"
+" de l'artefacte de credencials de l'AEAT"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_SUBMISSIONS_DIR`"
-msgstr ""
+msgstr "`CADRUMO_SUBMISSIONS_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where ModeloPresentado JSON audit records are persisted"
 msgstr ""
+"Directori on es persisteixen els registres d'auditoria JSON de "
+"ModeloPresentado"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_TELEMETRY_ENDPOINT`"
-msgstr ""
+msgstr "`CADRUMO_TELEMETRY_ENDPOINT`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Remote telemetry collector URL, consumed by HttpTelemetrySink when a call"
 " site opts into real transmission. Unset means no dial target."
 msgstr ""
+"URL del recol·lector de telemetria remota, que consumeix "
+"HttpTelemetrySink quan un lloc de crida opta per la transmissió real. "
+"Sense definir vol dir que no hi ha cap destinació de marcatge."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_TELEMETRY_GESTOR_MODE`"
-msgstr ""
+msgstr "`CADRUMO_TELEMETRY_GESTOR_MODE`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1711,10 +2072,14 @@ msgid ""
 " is categorically refused regardless of cadrumo_telemetry_opt_in, "
 "cadrumo_telemetry_tier, or per-invocation consent."
 msgstr ""
+"Indicador de desplegament per a gestor/professional. Quan és True, "
+"l'emissió de telemetria remota es refusa categòricament independentment "
+"de cadrumo_telemetry_opt_in, cadrumo_telemetry_tier o del consentiment "
+"per invocació."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_TELEMETRY_OPT_IN`"
-msgstr ""
+msgstr "`CADRUMO_TELEMETRY_OPT_IN`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1723,18 +2088,22 @@ msgid ""
 "operator consent acknowledgement is still required for each emit, and "
 "cadrumo_telemetry_tier must not be 'off'."
 msgstr ""
+"Si aquest desplegament permet transmetre telemetria remota o no. "
+"Desactivat per defecte: tota la telemetria es queda local. Quan és True, "
+"encara cal un reconeixement de consentiment de l'operador per invocació "
+"per a cada emissió, i cadrumo_telemetry_tier no ha de ser «off»."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_TELEMETRY_TIER`"
-msgstr ""
+msgstr "`CADRUMO_TELEMETRY_TIER`"
 
 #: ../../reference/environment-overrides.md
 msgid "TelemetryTier"
-msgstr ""
+msgstr "TelemetryTier"
 
 #: ../../reference/environment-overrides.md
 msgid "`off`"
-msgstr ""
+msgstr "`off`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1743,10 +2112,15 @@ msgid ""
 "timing percentiles). Only remote_allowed=True metric keys are ever "
 "eligible for transmission at any tier."
 msgstr ""
+"Nivell de telemetria remota: «off» (cap emissió remota independentment de"
+" la inclusió), «crash_only» (només comptadors d'error/resultat) o «full» "
+"(comptadors més percentils de temps). Només les claus de mètrica amb "
+"remote_allowed=True són mai elegibles per a la transmissió en qualsevol "
+"nivell."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_TOKEN_DIR`"
-msgstr ""
+msgstr "`CADRUMO_TOKEN_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1757,18 +2131,25 @@ msgid ""
 " lock files included, lives under one state root. An explicit "
 "``CADRUMO_TOKEN_DIR`` override wins over the derived default."
 msgstr ""
+"Directori per als fitxers de testimoni d'autenticació i de bloqueig en "
+"memòria cau. El valor per defecte ``PROJECT_ROOT`` d'aquí és un marcador "
+"de posició: quan el camp no s'estableix explícitament, el validador del "
+"model l'arrela a ``<cadrumo_local_storage_root>/tokens`` de manera que "
+"cada magatzem de perfil, inclosos els fitxers de testimoni i de bloqueig,"
+" visqui sota una sola arrel d'estat. Una substitució explícita "
+"``CADRUMO_TOKEN_DIR`` preval sobre el valor per defecte derivat."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_USAGE_RATIOS_PATH`"
-msgstr ""
+msgstr "`CADRUMO_USAGE_RATIOS_PATH`"
 
 #: ../../reference/environment-overrides.md
 msgid "User-configured per-category usage ratio overrides"
-msgstr ""
+msgstr "Substitucions de la proporció d'ús per categoria configurades per l'usuari"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`"
-msgstr ""
+msgstr "`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1783,88 +2164,115 @@ msgid ""
 "only to this operator-chosen directory and must never be committed or "
 "reused as a fixture without sanitisation."
 msgstr ""
+"Directori de captura de diagnòstic d'inclusió per a la lectura del "
+"moneder de compensació d'IVA (cartera). El valor per defecte ``None`` "
+"desactiva la captura i és l'única postura de producció: amb ell sense "
+"definir, el camí de lectura del moneder és idèntic byte a byte. Quan "
+"s'estableix mitjançant ``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR``, la lectura"
+" bolca l'arbre complet de pàgines capturades —el document principal, cada"
+" pàgina emergent, cada marc fill i captures de pantalla per pàgina— a "
+"aquest directori de manera que la desviació del DOM de l'AEAT a la "
+"superfície de la cartera es pugui diagnosticar fora de línia contra "
+"evidència real. La captura pot contenir imports reals del contribuent; "
+"només s'escriu en aquest directori triat per l'operador i mai no s'ha de "
+"cometre ni reutilitzar com a fixture sense sanejament."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WALLET_DIAGNOSTIC_RETENTION_DAYS`"
-msgstr ""
+msgstr "`CADRUMO_WALLET_DIAGNOSTIC_RETENTION_DAYS`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Retention window in days for wallet diagnostic dump files; when the opt-"
 "in dump directory is configured, dump files older than this are pruned"
 msgstr ""
+"Finestra de retenció en dies per als fitxers de bolcat de diagnòstic del "
+"moneder; quan el directori de bolcat d'inclusió està configurat, els "
+"fitxers de bolcat més antics que això s'eliminen"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WORKBOOK_PARITY_LIBREOFFICE_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_WORKBOOK_PARITY_LIBREOFFICE_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`120`"
-msgstr ""
+msgstr "`120`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Subprocess timeout (seconds) for the LibreOffice binary XLS conversion "
 "fall-back"
 msgstr ""
+"Temps màxim de subprocés (segons) per a la reserva de conversió d'XLS del"
+" binari de LibreOffice"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WORKBOOK_PARITY_PER_FILE_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_WORKBOOK_PARITY_PER_FILE_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "`15.0`"
-msgstr ""
+msgstr "`15.0`"
 
 #: ../../reference/environment-overrides.md
 msgid "Default per-file timeout (seconds) for workbook-parity scans"
 msgstr ""
+"Temps màxim per fitxer per defecte (segons) per als escanejos de paritat "
+"de llibres de treball"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WORKBOOK_PARITY_RECALC_TIMEOUT_S`"
-msgstr ""
+msgstr "`CADRUMO_WORKBOOK_PARITY_RECALC_TIMEOUT_S`"
 
 #: ../../reference/environment-overrides.md
 msgid "Subprocess timeout (seconds) when forcing workbook recalculation"
 msgstr ""
+"Temps màxim de subprocés (segons) en forçar el recàlcul del llibre de "
+"treball"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WORKFLOW_RUNS_DIR`"
-msgstr ""
+msgstr "`CADRUMO_WORKFLOW_RUNS_DIR`"
 
 #: ../../reference/environment-overrides.md
 msgid "Directory where WorkflowResult JSON audit records are persisted"
 msgstr ""
+"Directori on es persisteixen els registres d'auditoria JSON de "
+"WorkflowResult"
 
 #: ../../reference/environment-overrides.md
 msgid "`FINANCIAL_BASE_CURRENCY`"
-msgstr ""
+msgstr "`FINANCIAL_BASE_CURRENCY`"
 
 #: ../../reference/environment-overrides.md
 msgid "`EUR`"
-msgstr ""
+msgstr "`EUR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
 "Fallback ISO 4217 currency used when a financial source omits a per-row "
 "currency"
 msgstr ""
+"Moneda ISO 4217 de reserva que s'utilitza quan una font financera omet "
+"una moneda per fila"
 
 #: ../../reference/environment-overrides.md
 msgid "`FINANCIAL_DEFAULT_CSV_ENCODING`"
-msgstr ""
+msgstr "`FINANCIAL_DEFAULT_CSV_ENCODING`"
 
 #: ../../reference/environment-overrides.md
 msgid "`utf-8`"
-msgstr ""
+msgstr "`utf-8`"
 
 #: ../../reference/environment-overrides.md
 msgid "Preferred encoding attempted first when decoding financial CSV sources"
 msgstr ""
+"Codificació preferida que s'intenta primer en descodificar fonts CSV "
+"financeres"
 
 #: ../../reference/environment-overrides.md
 msgid "`NO_COLOR`"
-msgstr ""
+msgstr "`NO_COLOR`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
@@ -1874,22 +2282,28 @@ msgid ""
 "os.environ on Settings() instantiation, so the no-color convention is "
 "honoured without per-call-site os.environ reads."
 msgstr ""
+"Desactiva la sortida de color ANSI independentment de l'estat del TTY. "
+"Reflecteix la convenció àmpliament adoptada de no-color.org a través de "
+"la variable d'entorn NO_COLOR; pydantic-settings llegeix NO_COLOR (nom "
+"del camp en majúscules) d'os.environ en la instanciació de Settings(), de"
+" manera que la convenció no-color es respecta sense lectures d'os.environ"
+" a cada lloc de crida."
 
 #: ../../reference/environment-overrides.md
 msgid "`SITE_HEALTH_PROBE_URL`"
-msgstr ""
+msgstr "`SITE_HEALTH_PROBE_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid "AEAT Sede URL the site-health probe navigates to"
-msgstr ""
+msgstr "URL de la Seu de l'AEAT a què navega la prova de salut del lloc"
 
 #: ../../reference/environment-overrides.md
 msgid "`SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`"
-msgstr ""
+msgstr "`SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`"
 
 #: ../../reference/environment-overrides.md
 msgid "Fallback Retry-After seconds when a 429/503 omits the header"
-msgstr ""
+msgstr "Segons de Retry-After de reserva quan un 429/503 omet la capçalera"
 
 #: ../../reference/environment-overrides.md:176
 msgid ""
@@ -1897,4 +2311,8 @@ msgid ""
 "above. Defaults marked `(derived)` are computed from the storage root or "
 "project location at runtime."
 msgstr ""
+"L'aplicació mai no imprimeix els secrets i es marquen com a `(secret)` "
+"més amunt. Els valors per defecte marcats com a `(derived)` es calculen a"
+" partir de l'arrel d'emmagatzematge o de la ubicació del projecte en "
+"temps d'execució."
 
