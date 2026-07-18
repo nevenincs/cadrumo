@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
+from dev.docs.i18n import TARGET_LANGUAGES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -422,6 +423,60 @@ def test_user_scope_build_is_nitpicky_clean_and_excludes_api(tmp_path: Path) -> 
     # suppression to reach the warning stream.
     assert "how-to/quickstart" in combined
     assert "api/cadrumo" not in combined
+
+
+@pytest.mark.parametrize("language", TARGET_LANGUAGES)
+def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: str) -> None:
+    """A per-language user-scope ``-n -W`` build succeeds for every translation target.
+
+    The localized documentation matrix that the docs CI grows: each Spanish,
+    Catalan, and Hungarian target builds the operator surface under nitpicky
+    warnings-as-errors with ``CADRUMO_DOCS_LANGUAGE`` set, reading the committed
+    ``docs/locales/<lang>`` catalogues. An untranslated or fuzzy segment falls
+    back to English at render time - that fallback is refused by the separate
+    completeness gate, not here - so the structural build must be as clean in
+    every language as it is in English (:func:`test_user_scope_build_is_nitpicky_clean_and_excludes_api`
+    covers the English source). The full autodoc build stays English-only.
+
+    Args:
+        tmp_path: Pytest-provided isolated output directory.
+        language: The BCP-47 translation target to build.
+    """
+    docs_source = tmp_path / "docs-source"
+    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_SCOPE": "user",
+        "CADRUMO_DOCS_LANGUAGE": language,
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "dummy",
+            "-n",
+            "-W",
+            "-j",
+            "auto",
+            str(docs_source),
+            str(tmp_path / "out"),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, (
+        f"nitpicky {language} user-scope build reported warnings or errors:\n"
+        + (result.stdout or "")[-6000:]
+        + (result.stderr or "")[-6000:]
+    )
 
 
 def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
