@@ -413,8 +413,8 @@ msgid ""
 "enter the value directly."
 msgstr ""
 "**No se pudo derivar un valor.** La herramienta necesitaba calcular una "
-"casilla pero tus datos no aportaron suficiente entrada. Aporta la entrada"
-" que falta o introduzca el valor directamente."
+"casilla pero tus datos no aportaron suficiente entrada. Aporta la entrada "
+"que falta o introduce el valor directamente."
 
 #: ../../how-to/verification-reports.md:157
 msgid ""
@@ -549,10 +549,10 @@ msgid ""
 "your NIF, CIF, DNI, NIE, or NII."
 msgstr ""
 "Si un informe o un mensaje de error no coincide con lo que describe esta "
-"guía, consulte [Diagnostica y repara](troubleshooting.md). Los términos "
+"guía, consulta [Diagnostica y repara](troubleshooting.md). Los términos "
 "desconocidos se definen en el {doc}`glosario </_generated/glossary>`. "
 "Antes de compartir la salida de un comando para pedir ayuda, elimina los "
-"identificadores fiscales personales como su NIF, CIF, DNI, NIE o NII."
+"identificadores fiscales personales como tu NIF, CIF, DNI, NIE o NII."
 
 #: ../../how-to/verification-reports.md:222
 msgid "Next steps"
