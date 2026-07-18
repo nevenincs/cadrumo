@@ -81,6 +81,7 @@ def _run_pytest_subprocess(
     junit_xml_path: Path | None = None,
     keyword_expression: str | None = None,
     storage_root: Path | None = None,
+    rootdir: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run the catalogued wall test(s) in a real, fresh ``pytest`` subprocess.
 
@@ -117,6 +118,25 @@ def _run_pytest_subprocess(
     there trips ``FormerProductStateError`` at collection, so the run dies
     before the wall's own assertion is ever reached. In-tree callers pass
     ``None`` and let the conftest chain establish the root as usual.
+
+    ``rootdir``, when supplied, pins pytest's ``--rootdir`` at that directory
+    and clears the inherited ``testpaths`` (``--override-ini testpaths=``).
+    A caller running an OUT-OF-TREE module (one written under the OS temp tree,
+    not under the repository) MUST supply it, set to the module's own
+    directory, and run the subprocess with that same directory as its ``cwd``.
+    Otherwise pytest infers a rootdir spanning the ``cwd`` (the Y:-drive repo)
+    and the temp-drive node, and the inherited ``testpaths = ["src/cadrumo"]``
+    then drives a broad collection walk that ``lstat()``s sibling entries in
+    the shared OS temp directory. In the multi-agent worktree a concurrent
+    agent deleting its own transient temp directory (e.g. a ``cli-sequence-*``
+    scratch dir) mid-walk surfaces here as a spurious collection
+    ``FileNotFoundError`` that interrupts the whole session before the wall's
+    own assertion is reached -- the residual ``-n auto`` flake of issue
+    ``#66``/``#24``. Pinning the rootdir to the module's own directory and
+    clearing ``testpaths`` confines collection to the explicit node, so no
+    shared-temp walk happens. (Mirrors the identical guard in
+    ``registry/tests/test_loader_cache_isolation.py``.) In-tree callers pass
+    ``None`` and keep the repository rootdir.
     """
     argv = [
         sys.executable,
@@ -130,6 +150,8 @@ def _run_pytest_subprocess(
         "-m",
         "integration",
     ]
+    if rootdir is not None:
+        argv.extend(["--rootdir", str(rootdir), "--override-ini", "testpaths="])
     if junit_xml_path is not None:
         argv.append(f"--junitxml={junit_xml_path}")
     if keyword_expression is not None:
@@ -140,7 +162,7 @@ def _run_pytest_subprocess(
         env = {**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)}
     return subprocess.run(
         argv,
-        cwd=_REPO_ROOT,
+        cwd=rootdir if rootdir is not None else _REPO_ROOT,
         env=env,
         capture_output=True,
         text=True,
@@ -323,6 +345,13 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate(tmp_path: Path) -> Non
     run its conftest chain, so the subprocess is handed an explicit
     ``storage_root`` -- see :func:`_run_pytest_subprocess` for why omitting it
     kills the run at collection, long before the mutated assertion is reached.
+    It is likewise handed an explicit ``rootdir`` pinned to ``tmp_path`` (and
+    runs with that directory as its ``cwd``): without it, the cross-drive
+    rootdir inference between the repo ``cwd`` and this temp-tree node drives an
+    inherited-``testpaths`` collection walk over the shared OS temp directory,
+    which flakes with a spurious ``FileNotFoundError`` when a concurrent agent
+    deletes its own transient temp dir mid-walk (issue ``#66``) -- again see
+    :func:`_run_pytest_subprocess`.
     """
     guarded_entry = next(entry for entry in ACCEPTANCE_WALL_CATALOGUE if entry.issue == 224)
     original_module = _REPO_ROOT / guarded_entry.test_module
@@ -347,7 +376,7 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate(tmp_path: Path) -> Non
 
     storage_root = tmp_path / "cadrumo-storage-root"
     storage_root.mkdir()
-    completed = _run_pytest_subprocess(mutated_node_id, storage_root=storage_root)
+    completed = _run_pytest_subprocess(mutated_node_id, storage_root=storage_root, rootdir=tmp_path)
 
     assert completed.returncode != 0, (
         "the mutated (deliberately regressed) wall test PASSED -- the gate "
