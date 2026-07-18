@@ -20,89 +20,48 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_real_authored_and_generated_harness_inventory_reports_current_prefix_failure() -> None:
-    """The verifier must report today's real generic namespace, not pretend compliance."""
+def test_real_authored_and_generated_harness_inventory_is_fully_cadrumo_prefixed() -> None:
+    """Every authored and generated harness identifier now carries the ``cadrumo-`` prefix.
+
+    Post-migration compliance gate (was the inverted pre-migration failure probe).
+    Every authored persona, rule, and skill and every generated workspace / plugin /
+    marketplace projection, MCP prompt, embedded prompt-resource, and MCP resource is
+    prefix-compliant with an empty failure list, so this test now fails loudly on any
+    FUTURE unprefixed regression. It asserts only the namespace / inventory surface;
+    overall ``report.ok`` stays gated by the client-display bilingual claim-parity of
+    the short product descriptions, which is proven separately by
+    ``test_real_client_display_descriptions_report_missing_bilingual_claim_parity`` and
+    ``test_cli_returns_nonzero_and_emits_the_real_failure_report``.
+    """
     report = verify_distribution_identity(_REPO_ROOT)
     document = report.to_document()
 
-    assert report.ok is False
     assert document["required_harness_prefix"] == "cadrumo-"
     authored = document["authored_inventory"]
-    assert authored["persona"] == {
-        "count": 7,
-        "compliant": 0,
-        "failures": [
-            "classifier",
-            "coordinator",
-            "ledger-groomer",
-            "modelo-preparer",
-            "onboarding",
-            "reconciler",
-            "verifier",
-        ],
-    }
-    assert authored["rule"] == {
-        "count": 7,
-        "compliant": 0,
-        "failures": [
-            "operator-envelope-reading",
-            "operator-grounding",
-            "operator-honest-declaration",
-            "operator-lifecycle-ordering",
-            "operator-operating-rules",
-            "operator-orientation-routing",
-            "operator-safety-handoff",
-        ],
-    }
-    assert authored["skill"]["count"] == 34
-    assert authored["skill"]["compliant"] == 0
-    assert len(authored["skill"]["failures"]) == 34
-    assert authored["skill"]["failures"][0] == "alta-contribuyente"
-    assert authored["skill"]["failures"][-1] == "retenedor-empleador"
-    assert "preparar-modelo-200" in authored["skill"]["failures"]
-    assert "regularizar-atrasos" in authored["skill"]["failures"]
+    assert authored["persona"] == {"count": 7, "compliant": 7, "failures": []}
+    assert authored["rule"] == {"count": 7, "compliant": 7, "failures": []}
+    assert authored["skill"] == {"count": 34, "compliant": 34, "failures": []}
 
     surfaces = document["surface_inventory"]
+    for surface in ("workspace", "plugin", "marketplace"):
+        for kind, group in surfaces[surface].items():
+            assert group["compliant"] == group["count"], (surface, kind, group)
+            assert group["failures"] == [], (surface, kind, group)
     assert surfaces["workspace"]["generated_agent"]["count"] == 7
-    assert surfaces["workspace"]["generated_agent"]["compliant"] == 0
     assert surfaces["workspace"]["rule"]["count"] == 7
-    assert surfaces["workspace"]["rule"]["compliant"] == 0
     assert surfaces["workspace"]["skill"]["count"] == 34
-    assert surfaces["workspace"]["skill"]["compliant"] == 0
     assert surfaces["plugin"]["generated_agent"]["count"] == 7
-    assert surfaces["plugin"]["generated_agent"]["compliant"] == 0
     assert surfaces["plugin"]["skill"]["count"] == 34
-    assert surfaces["plugin"]["skill"]["compliant"] == 0
     assert surfaces["marketplace"]["generated_agent"]["count"] == 7
-    assert surfaces["marketplace"]["generated_agent"]["compliant"] == 0
     assert surfaces["marketplace"]["skill"]["count"] == 34
-    assert surfaces["marketplace"]["skill"]["compliant"] == 0
-    assert surfaces["mcp_prompts"]["prompt"] == {
-        "count": 35,
-        "compliant": 1,
-        "failures": surfaces["authored"]["skill"]["failures"],
-    }
-    assert surfaces["mcp_prompt_resources"]["embedded_rule"] == {
-        "count": 1,
-        "compliant": 0,
-        "failures": ["operating-rules"],
-    }
-    assert surfaces["mcp_prompt_resources"]["embedded_skill"] == {
-        "count": 34,
-        "compliant": 0,
-        "failures": surfaces["authored"]["skill"]["failures"],
-    }
-    assert surfaces["mcp_resources"]["resource_persona"]["count"] == 7
-    assert surfaces["mcp_resources"]["resource_persona"]["compliant"] == 0
-    assert surfaces["mcp_resources"]["resource_rule"]["count"] == 7
-    assert surfaces["mcp_resources"]["resource_rule"]["compliant"] == 0
-    assert surfaces["mcp_resources"]["resource_skill"]["count"] == 34
-    assert surfaces["mcp_resources"]["resource_skill"]["compliant"] == 0
+    assert surfaces["mcp_prompts"]["prompt"] == {"count": 35, "compliant": 35, "failures": []}
+    assert surfaces["mcp_prompt_resources"]["embedded_rule"] == {"count": 1, "compliant": 1, "failures": []}
+    assert surfaces["mcp_prompt_resources"]["embedded_skill"] == {"count": 34, "compliant": 34, "failures": []}
+    assert surfaces["mcp_resources"]["resource_persona"] == {"count": 7, "compliant": 7, "failures": []}
+    assert surfaces["mcp_resources"]["resource_rule"] == {"count": 7, "compliant": 7, "failures": []}
+    assert surfaces["mcp_resources"]["resource_skill"] == {"count": 34, "compliant": 34, "failures": []}
     templates = surfaces["mcp_resource_templates"]
     assert len(templates) == 6
-    assert templates["template_persona"] == {"count": 1, "compliant": 1, "failures": []}
-    assert templates["template_rule"] == {"count": 1, "compliant": 1, "failures": []}
-    assert templates["template_skill"] == {"count": 1, "compliant": 1, "failures": []}
     assert all(template == {"count": 1, "compliant": 1, "failures": []} for template in templates.values())
     assert document["inventory_parity"]["ok"] is True
     assert all(check["compliant"] is True for check in document["inventory_parity"]["checks"])
@@ -181,7 +140,9 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
     # Row 4 (mcpb long_description) is the only compliant row: all six claims pass.
     # The four short fields lack the full claim set so they remain compliant=False.
     assert observations[4]["compliant"] is True
-    assert all(row["compliant"] is False for row in (observations[0], observations[1], observations[2], observations[3]))
+    assert all(
+        row["compliant"] is False for row in (observations[0], observations[1], observations[2], observations[3])
+    )
 
     # --- Rows 0 and 2 (plugin + marketplace-plugin): approved bilingual pair wired ---
     for row in (observations[0], observations[2]):
