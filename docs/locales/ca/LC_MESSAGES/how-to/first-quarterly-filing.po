@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:1
 msgid "Prepare your first quarterly IRPF filing"
-msgstr "Prepareu la vostra primera presentació trimestral de l'IRPF"
+msgstr "Prepara la teva primera presentació trimestral de l'IRPF"
 
 #: ../../how-to/first-quarterly-filing.md:3
 msgid ""
@@ -31,13 +31,12 @@ msgid ""
 "self-employed taxpayer with a NIF, CIF, NIE, or other filing identity who"
 " is running Cadrumo for the first time."
 msgstr ""
-"Aquesta pàgina tracta la vostra primera presentació del Model 130 "
-"trimestral, de cap a cap: incorporeu un trimestre de moviments al ledger,"
-" classifiqueu-los com a ingressos de negoci i despeses deduïbles, "
-"prepareu l'esborrany i comproveu que ha passat la verificació abans d"
-"'exportar-lo. Està escrita per a un contribuent autònom amb un NIF, CIF, "
-"NIE o una altra identitat de presentació que executa Cadrumo per primera "
-"vegada."
+"Aquesta pàgina tracta la teva primera presentació del Model 130 "
+"trimestral, de cap a cap: incorpora un trimestre de moviments al ledger, "
+"classifica'ls com a ingressos de negoci i despeses deduïbles, prepara "
+"l'esborrany i comprova que ha passat la verificació abans d'exportar-lo. "
+"Està escrita per a un contribuent autònom amb un NIF, CIF, NIE o una "
+"altra identitat de presentació que executa Cadrumo per primera vegada."
 
 #: ../../how-to/first-quarterly-filing.md:9
 msgid ""
@@ -47,8 +46,8 @@ msgid ""
 msgstr ""
 "Cadrumo mai no presenta cap declaració a l'Agencia Estatal de "
 "Administración Tributaria (AEAT). Cada ordre següent construeix i "
-"comprova un fitxer local. Pugeu el fitxer exportat vós mateix mitjançant "
-"el canal oficial de l'AEAT."
+"comprova un fitxer local. Puja el fitxer exportat tu mateix mitjançant el"
+" canal oficial de l'AEAT."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -58,8 +57,8 @@ msgid ""
 msgstr ""
 "Les ordres d'aquesta pàgina s'executen en directe en el moment de la "
 "compilació en un entorn de proves nou i sintètic. Els moviments, els "
-"imports i el contribuent són inventats. Executeu les mateixes ordres "
-"sobre el vostre propi perfil per veure les vostres pròpies xifres."
+"imports i el contribuent són inventats. Executa les mateixes ordres sobre"
+" el teu propi perfil per veure les teves pròpies xifres."
 
 #: ../../how-to/first-quarterly-filing.md:17
 msgid ""
@@ -67,13 +66,13 @@ msgid ""
 "profile create <name>` before you start. [Set up your profile](profile-"
 "setup.md) walks through it step by step."
 msgstr ""
-"**Requisit:** un perfil de contribuent vàlid. Creeu-ne un amb `aeat "
-"config profile create <name>` abans de començar. [Configureu el vostre "
-"perfil](profile-setup.md) us hi guia pas a pas."
+"**Requisit:** un perfil de contribuent vàlid. Crea'n un amb `aeat config "
+"profile create <name>` abans de començar. [Configura el teu perfil"
+"](profile-setup.md) te hi guia pas a pas."
 
 #: ../../how-to/first-quarterly-filing.md:21
 msgid "Bring your quarter's transactions in"
-msgstr "Incorporeu els moviments del vostre trimestre"
+msgstr "Incorpora els moviments del teu trimestre"
 
 #: ../../how-to/first-quarterly-filing.md:23
 msgid ""
@@ -81,9 +80,9 @@ msgid ""
 "comma-separated statement with two movements: one payment collected from "
 "a client, and one office-supplies purchase."
 msgstr ""
-"Importeu l'extracte bancari del trimestre. Aquest exemple llegeix un "
-"petit extracte separat per comes amb dos moviments: un cobrament rebut "
-"d'un client i una compra de material d'oficina."
+"Importa l'extracte bancari del trimestre. Aquest exemple llegeix un petit"
+" extracte separat per comes amb dos moviments: un cobrament rebut d'un "
+"client i una compra de material d'oficina."
 
 #: ../../how-to/first-quarterly-filing.md:31
 msgid ""
@@ -94,12 +93,12 @@ msgid ""
 msgstr ""
 "La importació llegeix l'extracte i emmagatzema cada moviment com una fila"
 " del ledger. El llistat confirma que les dues files han aterrat al primer"
-" trimestre del 2026. Apunteu `--provider` al format que exporta el vostre"
-" banc; llisteu els proveïdors admesos amb:"
+" trimestre del 2026. Apunta `--provider` al format que exporta el teu "
+"banc; llista els proveïdors admesos amb:"
 
 #: ../../how-to/first-quarterly-filing.md:39
 msgid "Classify each transaction"
-msgstr "Classifiqueu cada moviment"
+msgstr "Classifica cada moviment"
 
 #: ../../how-to/first-quarterly-filing.md:41
 msgid ""
@@ -108,8 +107,7 @@ msgid ""
 "calculate."
 msgstr ""
 "Una fila importada porta una data i un import, però encara no diu com "
-"l'ha de tractar el càlcul fiscal. Classifiqueu cada fila abans de "
-"calcular."
+"l'ha de tractar el càlcul fiscal. Classifica cada fila abans de calcular."
 
 #: ../../how-to/first-quarterly-filing.md:44
 msgid ""
@@ -118,18 +116,18 @@ msgid ""
 "from the listing above. The income classification takes only the business"
 " decision:"
 msgstr ""
-"Marqueu el cobrament rebut com a ingrés de negoci i la compra com a "
-"despesa de negoci deduïble amb una categoria. Preneu cada id de moviment "
-"del llistat anterior. La classificació d'ingressos pren només la decisió "
-"de negoci:"
+"Marca el cobrament rebut com a ingrés de negoci i la compra com a despesa"
+" de negoci deduïble amb una categoria. Pren cada id de moviment del "
+"llistat anterior. La classificació d'ingressos pren només la decisió de "
+"negoci:"
 
 #: ../../how-to/first-quarterly-filing.md:52
 msgid ""
 "For an expense, add `--category-id <category-id>` plus the taxable base "
 "and IVA fields. List the accepted categories any time:"
 msgstr ""
-"Per a una despesa, afegiu `--category-id <category-id>` més els camps de "
-"base imposable i IVA. Llisteu les categories admeses en qualsevol moment:"
+"Per a una despesa, afegeix `--category-id <category-id>` més els camps de"
+" base imposable i IVA. Llista les categories admeses en qualsevol moment:"
 
 #: ../../how-to/first-quarterly-filing.md:59
 msgid ""
@@ -138,12 +136,12 @@ msgid ""
 "transactions.md)."
 msgstr ""
 "Per al flux de classificació complet (classificació en massa, proporcions"
-" d'ús mixt i la cua de revisió), llegiu [Classifiqueu els moviments"
+" d'ús mixt i la cua de revisió), llegeix [Classifica els moviments"
 "](classify-transactions.md)."
 
 #: ../../how-to/first-quarterly-filing.md:62
 msgid "Prepare the Modelo 130 draft"
-msgstr "Prepareu l'esborrany del Model 130"
+msgstr "Prepara l'esborrany del Model 130"
 
 #: ../../how-to/first-quarterly-filing.md:64
 msgid ""
@@ -153,7 +151,7 @@ msgid ""
 "130 is the IRPF payment on account for self-employed activity under "
 "estimación directa."
 msgstr ""
-"Un cop classificades les files del trimestre, prepareu el pagament "
+"Un cop classificades les files del trimestre, prepara el pagament "
 "fraccionat. La preparació següent configura un perfil d'autònom i un "
 "ledger classificat, i després crea l'esborrany, el calcula i el verifica."
 " El Model 130 és el pagament a compte de l'IRPF per a l'activitat "
@@ -161,14 +159,14 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:73
 msgid "Read the frames in order:"
-msgstr "Llegiu els marcs en ordre:"
+msgstr "Llegeix els marcs en ordre:"
 
 #: ../../how-to/first-quarterly-filing.md:75
 msgid ""
 "Create the draft for Modelo 130, first quarter 2026. The command reports "
 "a `work_unit_id` that addresses the draft."
 msgstr ""
-"Creeu l'esborrany per al Model 130, primer trimestre del 2026. L'ordre "
+"Crea l'esborrany per al Model 130, primer trimestre del 2026. L'ordre "
 "reporta un `work_unit_id` que adreça l'esborrany."
 
 #: ../../how-to/first-quarterly-filing.md:77
@@ -182,27 +180,27 @@ msgid ""
 "percent of the net. The three `--binding ...=0` values are the prior-"
 "period carries a true first quarter does not have."
 msgstr ""
-"Calculeu-lo. Cadrumo llegeix el ledger classificat i emplena les "
-"caselles: la casella `01` és l'ingrés del trimestre, la casella `02` les "
-"despeses deduïbles, la casella `03` el rendiment net i la casella `04` el"
-" pagament fraccionat. La casella 01 mostra 1000.00, no els 1210.00 que "
-"heu cobrat: l'IVA no forma part mai dels vostres ingressos, de manera que"
-" els 210.00 d'IVA es deixen fora. Amb el ledger d'exemple, el rendiment "
-"net és `500.00` i el pagament fraccionat és `100.00`, el vint per cent "
-"del net. Els tres valors `--binding ...=0` són els trasllats del període "
-"anterior que un primer trimestre real no té."
+"Calcula'l. Cadrumo llegeix el ledger classificat i emplena les caselles: "
+"la casella `01` és l'ingrés del trimestre, la casella `02` les despeses "
+"deduïbles, la casella `03` el rendiment net i la casella `04` el pagament"
+" fraccionat. La casella 01 mostra 1000.00, no els 1210.00 que has cobrat:"
+" l'IVA no forma part mai dels teus ingressos, de manera que els 210.00 "
+"d'IVA es deixen fora. Amb el ledger d'exemple, el rendiment net és "
+"`500.00` i el pagament fraccionat és `100.00`, el vint per cent del net. "
+"Els tres valors `--binding ...=0` són els trasllats del període anterior "
+"que un primer trimestre real no té."
 
 #: ../../how-to/first-quarterly-filing.md:85
 msgid ""
 "Verify the draft. The result reads `granted_verificado_completo` true, so"
 " the draft is complete and ready to export."
 msgstr ""
-"Verifiqueu l'esborrany. El resultat diu `granted_verificado_completo` "
-"cert, de manera que l'esborrany està complet i a punt per exportar."
+"Verifica l'esborrany. El resultat diu `granted_verificado_completo` cert,"
+" de manera que l'esborrany està complet i a punt per exportar."
 
 #: ../../how-to/first-quarterly-filing.md:88
 msgid "Check the figures and export"
-msgstr "Comproveu les xifres i exporteu"
+msgstr "Comprova les xifres i exporta"
 
 #: ../../how-to/first-quarterly-filing.md:90
 msgid ""
@@ -215,13 +213,13 @@ msgid ""
 "303 IVA filing](modelo-303.md):"
 msgstr ""
 "El resultat de la verificació és el senyal que l'esborrany està a punt. "
-"Quan `granted_verificado_completo` diu cert, exporteu el fitxer. "
+"Quan `granted_verificado_completo` diu cert, exporta el fitxer. "
 "L'exportació es nega fins que cada fila de despesa deduïble porti "
 "evidència de factura de compra enllaçada; aquest exemple de primera "
 "presentació omet aquesta evidència, de manera que l'exportació i el "
 "marcador de presentació posterior al portal es mostren com a marcs de "
 "visualització. La cadena completa d'evidència a exportació s'executa de "
-"cap a cap, executada, a [Prepareu una presentació del Model 303 "
+"cap a cap, executada, a [Prepara una presentació del Model 303 "
 "d'IVA](modelo-303.md):"
 
 #: ../../how-to/first-quarterly-filing.md:100
@@ -231,9 +229,9 @@ msgid ""
 " IRPF instalment](modelo-130.md) for the cumulative year-to-date "
 "behaviour."
 msgstr ""
-"Un trimestre posterior es construeix sobre aquest: deixeu les tres "
+"Un trimestre posterior es construeix sobre aquest: deixa les tres "
 "vinculacions del període anterior sense establir perquè es resolguin a "
-"partir del vostre historial presentat. Vegeu [Prepareu un pagament "
+"partir del teu historial presentat. Consulta [Prepara un pagament "
 "fraccionat del Model 130 d'IRPF](modelo-130.md) per al comportament "
 "acumulatiu de l'any fins a la data."
 
@@ -243,11 +241,11 @@ msgstr "Passos següents"
 
 #: ../../how-to/first-quarterly-filing.md:107
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
-msgstr "[Prepareu un pagament fraccionat del Model 130 d'IRPF](modelo-130.md)"
+msgstr "[Prepara un pagament fraccionat del Model 130 d'IRPF](modelo-130.md)"
 
 #: ../../how-to/first-quarterly-filing.md:108
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr "[Classifiqueu els moviments](classify-transactions.md)"
+msgstr "[Classifica els moviments](classify-transactions.md)"
 
 #: ../../how-to/first-quarterly-filing.md:109
 msgid "[The filing workflow](filing-spine.md)"
@@ -255,5 +253,5 @@ msgstr "[El flux de treball de presentació](filing-spine.md)"
 
 #: ../../how-to/first-quarterly-filing.md:110
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
-msgstr "[Pugeu el vostre model exportat al portal de l'AEAT](file-at-aeat.md)"
+msgstr "[Puja el teu model exportat al portal de l'AEAT](file-at-aeat.md)"
 
