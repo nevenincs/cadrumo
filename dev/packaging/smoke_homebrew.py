@@ -24,6 +24,18 @@ _RELEASE_ARTIFACT = re.compile(
     r'/(?P<filename>[^/"]+\.tar\.gz)"(?P<separator>\r?\n)'
     r'(?P<sha_prefix>\s+sha256 ")(?P<sha256>[0-9a-f]{64})"',
 )
+_TAP_NAME = re.compile(r"[a-z0-9][a-z0-9_-]*/[a-z0-9][a-z0-9_-]*")
+
+
+def _require_valid_tap_name(tap_name: str) -> None:
+    """Accept one lowercase ``user/repository`` tap pair as Homebrew itself does.
+
+    A Homebrew tap name maps to a ``homebrew-<repository>`` GitHub repository, so
+    the repository segment may carry underscores (the ``x86_64`` architecture id)
+    as well as hyphens; the matrix passes ``cadrumo-smoke/linux-x86_64``.
+    """
+    if not _TAP_NAME.fullmatch(tap_name):
+        raise SystemExit(f"tap name must be one lowercase user/repository pair: {tap_name!r}")
 
 
 @dataclass(frozen=True)
@@ -221,8 +233,7 @@ def run_homebrew_smoke(
     if not brew.is_file():
         raise SystemExit(f"Homebrew executable is not a file: {brew}")
     repo = repo_root.resolve(strict=True)
-    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*", tap_name):
-        raise SystemExit(f"tap name must be one lowercase user/repository pair: {tap_name!r}")
+    _require_valid_tap_name(tap_name)
     if platform.system() not in {"Darwin", "Linux"}:
         raise SystemExit(f"Homebrew smoke requires macOS or Linux; got {platform.system()}")
     if platform.machine().casefold() not in {"x86_64", "amd64", "arm64", "aarch64"}:
@@ -551,7 +562,7 @@ def run_homebrew_smoke(
         )
         for formula in sorted(remaining_new, reverse=True):
             completed = subprocess.run(  # noqa: S603
-                [str(brew), "uninstall", "--force", formula],
+                [str(brew), "uninstall", "--force", "--ignore-dependencies", formula],
                 cwd=run_root,
                 check=False,
                 capture_output=True,

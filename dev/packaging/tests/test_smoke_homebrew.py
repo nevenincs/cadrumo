@@ -7,9 +7,35 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.smoke_homebrew import _assert_oracle_evidence, localize_formula
+from dev.packaging.smoke_homebrew import (
+    _assert_oracle_evidence,
+    _require_valid_tap_name,
+    localize_formula,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_tap_name_accepts_the_underscored_architecture_matrix_id() -> None:
+    """The linux-x86_64 matrix tap must pass, matching Homebrew's own tap grammar."""
+    _require_valid_tap_name("cadrumo-smoke/linux-x86_64")
+    _require_valid_tap_name("cadrumo-smoke/macos-intel")
+
+
+@pytest.mark.parametrize(
+    "tap_name",
+    [
+        "Cadrumo-Smoke/linux",
+        "cadrumo-smoke",
+        "cadrumo smoke/linux",
+        "/linux-x86_64",
+        "cadrumo-smoke/",
+    ],
+)
+def test_tap_name_rejects_a_malformed_pair(tap_name: str) -> None:
+    """A non-lowercase or non-``user/repository`` tap name is still refused."""
+    with pytest.raises(SystemExit, match="one lowercase user/repository pair"):
+        _require_valid_tap_name(tap_name)
 
 
 def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: Path) -> None:
