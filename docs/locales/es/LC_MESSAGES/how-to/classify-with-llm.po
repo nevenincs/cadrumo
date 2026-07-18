@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/classify-with-llm.md:1
 msgid "Classify transactions with an LLM"
-msgstr ""
+msgstr "Clasificar transacciones con un LLM"
 
 #: ../../how-to/classify-with-llm.md:3
 msgid ""
@@ -32,6 +31,13 @@ msgid ""
 "consent, through a cloud provider. The suggestion is always a starting "
 "point: you confirm or correct it, and the model never sets a euro amount."
 msgstr ""
+"Esta página cubre el flujo de clasificación asistida por LLM: configurar un "
+"proveedor, obtener una vista previa de una sugerencia para una transacción, "
+"el bucle de revisión (aplicar, rechazar o anular), saturar los campos "
+"fiscales de IVA y leer una factura adjunta con un modelo, en tu propia "
+"máquina o, con consentimiento explícito, a través de un proveedor en la "
+"nube. La sugerencia es siempre un punto de partida: tú la confirmas o la "
+"corriges, y el modelo nunca fija un importe en euros."
 
 #: ../../how-to/classify-with-llm.md:10
 msgid ""
@@ -40,6 +46,10 @@ msgid ""
 "provider setup; see [the privacy boundary](#privacy-boundary) before "
 "using real taxpayer data."
 msgstr ""
+"La clasificación no contacta con la AEAT ni presenta nada. La CLI del "
+"proveedor puede contactar con su propio servicio externo según cómo hayas "
+"configurado el proveedor; consulta [el límite de privacidad](#privacy-"
+"boundary) antes de usar datos reales de un contribuyente."
 
 #: ../../how-to/classify-with-llm.md:15
 msgid ""
@@ -48,14 +58,18 @@ msgid ""
 "shown as display-only frames. The local commands around them run live at "
 "build time."
 msgstr ""
+"Las órdenes de LLM y de visión de esta página necesitan una CLI de proveedor "
+"o un modelo de visión local que el entorno de pruebas de la documentación no "
+"ejecuta, así que se muestran como paneles solo ilustrativos. Las órdenes "
+"locales que las rodean se ejecutan en directo al construir la documentación."
 
 #: ../../how-to/classify-with-llm.md:19
 msgid "Before you start"
-msgstr ""
+msgstr "Antes de empezar"
 
 #: ../../how-to/classify-with-llm.md:21
 msgid "You need:"
-msgstr ""
+msgstr "Necesitas:"
 
 #: ../../how-to/classify-with-llm.md:23
 msgid ""
@@ -63,24 +77,29 @@ msgid ""
 "and at least one transaction in its ledger to classify. See [Import and "
 "manage transactions](import-bank-statements.md)."
 msgstr ""
+"Un perfil activo, consulta [configurar tu perfil de contribuyente](profile-"
+"setup.md), y al menos una transacción en su ledger para clasificar. Consulta "
+"[Importar y gestionar transacciones](import-bank-statements.md)."
 
 #: ../../how-to/classify-with-llm.md:26
 msgid ""
 "Your master-key passphrase. The command opens the encrypted ledger, so it"
 " prompts for the passphrase."
 msgstr ""
+"La frase de contraseña de tu clave maestra. La orden abre el ledger cifrado, "
+"así que te pide la frase de contraseña."
 
 #: ../../how-to/classify-with-llm.md:28
 msgid "A provider CLI installed, on `PATH`, and logged in."
-msgstr ""
+msgstr "Una CLI de proveedor instalada, en el `PATH` y con la sesión iniciada."
 
 #: ../../how-to/classify-with-llm.md:30
 msgid "The runtime emits help, prompts, and messages in Spanish."
-msgstr ""
+msgstr "El entorno de ejecución emite la ayuda, las peticiones y los mensajes en español."
 
 #: ../../how-to/classify-with-llm.md:32
 msgid "Set up a provider"
-msgstr ""
+msgstr "Configura un proveedor"
 
 #: ../../how-to/classify-with-llm.md:34
 msgid ""
@@ -91,6 +110,12 @@ msgid ""
 "Google's `agy` CLI, the supported successor to the retired standalone "
 "`gemini` CLI."
 msgstr ""
+"`aeat` no almacena credenciales de LLM y no tiene una configuración de "
+"cuenta de LLM aparte. Ejecuta una CLI de proveedor que ya esté instalada y "
+"autenticada en tu sistema. La orden de clasificación acepta nombres de "
+"proveedor como `claude`, `antigravity` y `codex`; `antigravity` usa la CLI "
+"`agy` de Google, el sucesor con soporte de la retirada CLI independiente "
+"`gemini`."
 
 #: ../../how-to/classify-with-llm.md:41
 msgid ""
@@ -98,6 +123,9 @@ msgid ""
 "its status (`available` or `unavailable`), and a fix when something is "
 "missing:"
 msgstr ""
+"Enumera las CLI de proveedor visibles en el `PATH`. Cada fila informa de un "
+"proveedor, su estado (`available` o `unavailable`) y una solución cuando "
+"falta algo:"
 
 #: ../../how-to/classify-with-llm.md:47
 msgid ""
@@ -107,6 +135,12 @@ msgid ""
 "service capabilities, run `aeat config check`; it lists each LLM provider"
 " as `disponible` or `ausente` with the fix for each problem."
 msgstr ""
+"Esto solo comprueba la detectabilidad, no el inicio de sesión de la cuenta. "
+"El lector de visión local también aparece aquí: `ollama-vision` muestra "
+"`unavailable` con una solución hasta que Ollama esté en marcha. Para una "
+"comprobación más amplia que también informe de las capacidades de servicio "
+"del perfil, ejecuta `aeat config check`; enumera cada proveedor de LLM como "
+"`disponible` o `ausente` con la solución para cada problema."
 
 #: ../../how-to/classify-with-llm.md:53
 msgid ""
@@ -114,6 +148,10 @@ msgid ""
 "The login command and data-retention settings belong to the provider, not"
 " to `aeat`. Then smoke-test with a preview, which saves nothing:"
 msgstr ""
+"Instala y autentica el proveedor con su propia CLI o su flujo de cuenta. La "
+"orden de inicio de sesión y los ajustes de retención de datos pertenecen al "
+"proveedor, no a `aeat`. Después haz una prueba rápida con una vista previa, "
+"que no guarda nada:"
 
 #: ../../how-to/classify-with-llm.md:60
 msgid ""
@@ -121,16 +159,22 @@ msgid ""
 "own error (for example `La clasificacion por LLM fallo: claude CLI exited"
 " with 1: 'Not logged in ...'`). Complete that provider's login and retry."
 msgstr ""
+"Un proveedor con la sesión cerrada hace que la orden se niegue y transmita "
+"el propio error del proveedor (por ejemplo `La clasificacion por LLM fallo: "
+"claude CLI exited with 1: 'Not logged in ...'`). Completa el inicio de "
+"sesión de ese proveedor y vuelve a intentarlo."
 
 #: ../../how-to/classify-with-llm.md:64
 msgid "Ask for a suggestion"
-msgstr ""
+msgstr "Pide una sugerencia"
 
 #: ../../how-to/classify-with-llm.md:66
 msgid ""
 "Find a row that still needs classification and inspect it. Then send that"
 " one row to the provider for a preview:"
 msgstr ""
+"Localiza una fila que aún necesite clasificación y examínala. Después envía "
+"esa única fila al proveedor para una vista previa:"
 
 #: ../../how-to/classify-with-llm.md:73
 msgid ""
@@ -141,6 +185,12 @@ msgid ""
 "record, including the `provenance` (`llm:<provider>`) and `persisted` "
 "fields, put the global JSON flag before the subcommand:"
 msgstr ""
+"`aeat` envía esa única fila a la CLI del proveedor seleccionado, que sugiere "
+"una clasificación (`BUSINESS`, `PERSONAL` o `MIXED`), una categoría de gasto "
+"cuando puede elegir una de la lista permitida, una confianza y un motivo "
+"breve. En modo de vista previa no se guarda nada. Para el registro completo "
+"legible por máquina, incluidos los campos `provenance` (`llm:<provider>`) y "
+"`persisted`, pon la opción global de JSON antes del subcomando:"
 
 #: ../../how-to/classify-with-llm.md:83
 msgid ""
@@ -149,20 +199,26 @@ msgid ""
 "underlying manual concepts, see [Classify transactions](classify-"
 "transactions.md)."
 msgstr ""
+"Usa la descripción, el importe, la dirección, la contraparte y los "
+"documentos de origen de la fila para decidir si la sugerencia tiene sentido. "
+"Para los conceptos manuales subyacentes, consulta [Clasificar transacciones"
+"](classify-transactions.md)."
 
 #: ../../how-to/classify-with-llm.md:87
 msgid "Review, apply, reject, or override"
-msgstr ""
+msgstr "Revisar, aplicar, rechazar o anular"
 
 #: ../../how-to/classify-with-llm.md:89
 msgid "The review loop has four terminals:"
-msgstr ""
+msgstr "El bucle de revisión tiene cuatro finales:"
 
 #: ../../how-to/classify-with-llm.md:91
 msgid ""
 "**Review.** Preview without `--apply`. Nothing is saved; walking away "
 "leaves the row unchanged."
 msgstr ""
+"**Revisar.** Vista previa sin `--apply`. No se guarda nada; si te vas, la "
+"fila queda sin cambios."
 
 #: ../../how-to/classify-with-llm.md:93
 msgid ""
@@ -171,6 +227,10 @@ msgid ""
 "status; provenance, confidence, and reason are recorded with the "
 "classification event."
 msgstr ""
+"**Aplicar.** Persiste la sugerencia tras revisarla. La salida de aplicar "
+"muestra el id de la transacción, `clasificado-por llm:<provider>` y el nuevo "
+"estado de revisión; la procedencia, la confianza y el motivo se registran "
+"junto con el evento de clasificación."
 
 #: ../../how-to/classify-with-llm.md:96
 msgid ""
@@ -179,6 +239,11 @@ msgid ""
 "`--reject` cannot be combined with `--apply`. Previewing and walking away"
 " also changes nothing, but `--reject` is what writes the audit trail."
 msgstr ""
+"**Rechazar.** Deja constancia de que el modelo se equivocó, con tu motivo, "
+"como un evento de auditoría; la fila sigue sin clasificar y el registro "
+"permanece en el historial. `--reject` no se puede combinar con `--apply`. "
+"Hacer una vista previa e irte tampoco cambia nada, pero `--reject` es lo que "
+"escribe el rastro de auditoría."
 
 #: ../../how-to/classify-with-llm.md:100
 msgid ""
@@ -186,18 +251,25 @@ msgid ""
 "incomplete. Manual classification always wins and supersedes a derived or"
 " model-applied value."
 msgstr ""
+"**Anular.** Clasifica a mano siempre que la sugerencia sea incorrecta o "
+"incompleta. La clasificación manual siempre prevalece y sustituye a un valor "
+"derivado o aplicado por el modelo."
 
 #: ../../how-to/classify-with-llm.md:104
 msgid ""
 "Apply and reject both run the provider, so they are shown as display-only"
 " frames:"
 msgstr ""
+"Tanto aplicar como rechazar ejecutan el proveedor, así que se muestran como "
+"paneles solo ilustrativos:"
 
 #: ../../how-to/classify-with-llm.md:110
 msgid ""
 "Override runs entirely on your machine. Classify the row by hand with the"
 " classification and category you choose:"
 msgstr ""
+"Anular se ejecuta por completo en tu máquina. Clasifica la fila a mano con "
+"la clasificación y la categoría que elijas:"
 
 #: ../../how-to/classify-with-llm.md:117
 msgid ""
@@ -206,10 +278,15 @@ msgid ""
 "transactions.md#classify-mixed-use-transactions). After important "
 "corrections, re-run preflight for the period:"
 msgstr ""
+"Si la fila es de uso mixto, la sugerencia del LLM por sí sola no basta; "
+"aporta el porcentaje de la actividad a través del [flujo de uso mixto"
+"](classify-transactions.md#classify-mixed-use-transactions) habitual. "
+"Después de correcciones importantes, vuelve a ejecutar la comprobación "
+"previa del periodo:"
 
 #: ../../how-to/classify-with-llm.md:126
 msgid "Fill in the tax fields automatically"
-msgstr ""
+msgstr "Rellena los campos fiscales automáticamente"
 
 #: ../../how-to/classify-with-llm.md:128
 msgid ""
@@ -220,6 +297,12 @@ msgid ""
 "category; the rate comes from the registry, and the base and IVA amount "
 "are computed from the transaction total:"
 msgstr ""
+"Una sugerencia aplicada sin más guarda la clasificación y la categoría de "
+"gasto; no rellena los campos fiscales regulados. Añade `--saturate` para "
+"seleccionar además una categoría de IVA y derivar la base imponible, el tipo "
+"de IVA y la cuota de IVA. El modelo nunca inventa un número: solo selecciona "
+"la categoría de IVA; el tipo procede del registro, y la base y la cuota de "
+"IVA se calculan a partir del total de la transacción:"
 
 #: ../../how-to/classify-with-llm.md:138
 msgid ""
@@ -231,6 +314,13 @@ msgid ""
 "return `unknown` rather than guess; re-run, or pick the category "
 "yourself."
 msgstr ""
+"La vista previa añade la categoría de IVA seleccionada y, cuando la "
+"categoría tiene un tipo español, las cifras derivadas; la base y el IVA "
+"siempre suman el total de la transacción. Una categoría sin un tipo español "
+"simple (una entrega intracomunitaria, una compra con inversión del sujeto "
+"pasivo) muestra una nota en lugar de números, y esos los completas a mano. "
+"El modelo también puede declinar y devolver `unknown` en vez de adivinar; "
+"vuelve a ejecutar, o elige tú mismo la categoría."
 
 #: ../../how-to/classify-with-llm.md:145
 msgid ""
@@ -241,6 +331,12 @@ msgid ""
 "It only touches the IVA fields, and the row must already be classified "
 "business or mixed:"
 msgstr ""
+"Cuando ya conozcas la categoría de IVA, o el modelo haya devuelto "
+"`unknown`, clasifica primero la fila como de la actividad y luego deja que "
+"el sistema derive los números sin ningún `--llm`. Esto deriva las cifras del "
+"tipo oficial exactamente igual que la vía del modelo y las registra como "
+"derivadas por el sistema. Solo toca los campos de IVA, y la fila ya debe "
+"estar clasificada como de la actividad o mixta:"
 
 #: ../../how-to/classify-with-llm.md:155
 msgid ""
@@ -248,6 +344,9 @@ msgid ""
 "yourself. The taxable base plus IVA must equal the transaction total to "
 "the cent:"
 msgstr ""
+"Para anular a mano cualquier campo, clasifica manualmente con las cifras tú "
+"mismo. La base imponible más el IVA debe ser igual al total de la "
+"transacción hasta el céntimo:"
 
 #: ../../how-to/classify-with-llm.md:162
 msgid ""
@@ -256,10 +355,14 @@ msgid ""
 "](review-calculation-values.md) when a modelo later reports missing "
 "values."
 msgstr ""
+"La categoría de IRPF sigue introduciéndose a mano en [Clasificar "
+"transacciones](classify-transactions.md). Usa [Revisar y aportar los datos "
+"de cálculo](review-calculation-values.md) cuando más adelante un modelo "
+"informe de valores que faltan."
 
 #: ../../how-to/classify-with-llm.md:167
 msgid "Read the attached invoice"
-msgstr ""
+msgstr "Lee la factura adjunta"
 
 #: ../../how-to/classify-with-llm.md:169
 msgid ""
@@ -270,6 +373,12 @@ msgid ""
 "euro amount from the registry. How the document is read depends on the "
 "file:"
 msgstr ""
+"Adjunta una factura de compra o un recibo a una transacción (consulta "
+"[Adjuntar facturas y recibos](ledger-evidence.md)) y luego deja que el "
+"modelo la lea mientras clasificas con `--read-evidence`. El modelo elige la "
+"categoría de gasto y la situación de IVA a partir de lo que lee; `aeat` "
+"deriva cada importe en euros del registro. Cómo se lee el documento depende "
+"del archivo:"
 
 #: ../../how-to/classify-with-llm.md:175
 msgid ""
@@ -278,6 +387,10 @@ msgid ""
 "no `--llm` provider is needed, and it works in gestor and professional "
 "deployments."
 msgstr ""
+"**Un PDF escaneado o una imagen** los lee en tu propia máquina un modelo de "
+"visión local. Nada sale de la máquina, no hace falta ninguna confirmación, "
+"no hace falta ningún proveedor `--llm` y funciona en despliegues de gestor y "
+"profesionales."
 
 #: ../../how-to/classify-with-llm.md:179
 msgid ""
@@ -286,12 +399,20 @@ msgid ""
 " is off by default, barred for gestor deployments, and gated behind an "
 "explicit per-run acknowledgement."
 msgstr ""
+"**Un PDF con capa de texto** tiene su texto extraído y enviado a un "
+"proveedor en la nube (los mismos proveedores `--llm`). Esto envía el texto "
+"fuera de tu máquina, así que está desactivado de forma predeterminada, "
+"prohibido para despliegues de gestor y sujeto a una confirmación explícita "
+"por cada ejecución."
 
 #: ../../how-to/classify-with-llm.md:184
 msgid ""
 "Prefer the on-host path. Install Ollama and pull the default vision model"
 " first (this is an Ollama command, not an `aeat` command):"
 msgstr ""
+"Prefiere la vía en el propio equipo. Instala Ollama y descarga primero el "
+"modelo de visión predeterminado (esta es una orden de Ollama, no una orden "
+"de `aeat`):"
 
 #: ../../how-to/classify-with-llm.md:191
 msgid ""
@@ -301,12 +422,20 @@ msgid ""
 "classify from the attached image, previewing first. Override the vision "
 "model for one run with `--vision-model qwen2.5vl:7b`:"
 msgstr ""
+"`qwen2.5vl:3b` ocupa unos 3 GB y funciona en una GPU de consumo o en CPU. En "
+"una GPU de 8 GB o más, descarga `qwen2.5vl:7b` para una lectura más potente "
+"de escaneos densos; para una máquina con poca memoria o solo CPU, descarga "
+"`moondream`. Luego clasifica a partir de la imagen adjunta, con una vista "
+"previa primero. Anula el modelo de visión para una ejecución con `--vision-"
+"model qwen2.5vl:7b`:"
 
 #: ../../how-to/classify-with-llm.md:200
 msgid ""
 "Reading a text-layer PDF through a cloud provider requires all of the "
 "following, or the command refuses and explains why:"
 msgstr ""
+"Leer un PDF con capa de texto a través de un proveedor en la nube requiere "
+"todo lo siguiente, o la orden se niega y explica por qué:"
 
 #: ../../how-to/classify-with-llm.md:203
 msgid ""
@@ -314,12 +443,18 @@ msgid ""
 "stay off in gestor installations; whoever administers the installation "
 "decides this deployment setting."
 msgstr ""
+"La instalación lo permite. Las lecturas de evidencia en la nube están "
+"desactivadas de forma predeterminada y siguen desactivadas en las "
+"instalaciones de gestor; quien administra la instalación decide este ajuste "
+"de despliegue."
 
 #: ../../how-to/classify-with-llm.md:206
 msgid ""
 "You acknowledge it on this run with `--evidence-acknowledged`. The "
 "acknowledgement is never remembered; pass it every time."
 msgstr ""
+"Lo confirmas en esta ejecución con `--evidence-acknowledged`. La "
+"confirmación nunca se recuerda; pásala cada vez."
 
 #: ../../how-to/classify-with-llm.md:212
 msgid ""
@@ -328,10 +463,14 @@ msgid ""
 "receives only the transaction row, exactly as in the plain suggestion "
 "flow."
 msgstr ""
+"La confirmación solo controla la subida del texto de la factura. Una "
+"transacción sin evidencia adjunta no envía nada adicional: el proveedor "
+"recibe solo la fila de la transacción, exactamente igual que en el flujo de "
+"sugerencia simple."
 
 #: ../../how-to/classify-with-llm.md:216
 msgid "Split a multi-line invoice automatically"
-msgstr ""
+msgstr "Divide automáticamente una factura de varias líneas"
 
 #: ../../how-to/classify-with-llm.md:218
 msgid ""
@@ -342,6 +481,13 @@ msgid ""
 "one step, add `--auto-split`. `--auto-split` requires `--read-evidence` "
 "and cannot combine with the manual override flags:"
 msgstr ""
+"Cuando el modelo lee una factura con varias líneas a distintos tipos o "
+"categorías, la vista previa añade una nota `split recommended` con la orden "
+"exacta para separarlas. Cada línea debe convertirse en su propia entrada "
+"para que su IVA deducible y su gasto al tipo base se declaren de forma "
+"independiente. Para actuar en un solo paso, añade `--auto-split`. `--auto-"
+"split` requiere `--read-evidence` y no se puede combinar con las opciones de "
+"anulación manual:"
 
 #: ../../how-to/classify-with-llm.md:228
 msgid ""
@@ -350,10 +496,14 @@ msgid ""
 "children sum exactly to the original amount. A single-line invoice is "
 "classified in place with no split."
 msgstr ""
+"Una factura de varias líneas muestra en la vista previa una transacción "
+"hija por línea, cada una con su propia categoría, categoría de IVA y base e "
+"IVA derivados del registro; las hijas suman exactamente el importe original. "
+"Una factura de una sola línea se clasifica en el sitio sin división."
 
 #: ../../how-to/classify-with-llm.md:233
 msgid "How `aeat` protects the documents it reads"
-msgstr ""
+msgstr "Cómo protege `aeat` los documentos que lee"
 
 #: ../../how-to/classify-with-llm.md:235
 msgid ""
@@ -361,12 +511,18 @@ msgid ""
 "them into memory for the one call and never writes them to a temp file, a"
 " log, or a cache."
 msgstr ""
+"Los bytes de las facturas residen únicamente en el almacenamiento seguro "
+"cifrado. La lectura los descifra en memoria para esa única llamada y nunca "
+"los escribe en un archivo temporal, un registro o una caché."
 
 #: ../../how-to/classify-with-llm.md:238
 msgid ""
 "A scanned or image read sends the image only to the local model over a "
 "loopback connection on your machine. Nothing leaves the machine."
 msgstr ""
+"Una lectura de escaneo o imagen envía la imagen solo al modelo local a "
+"través de una conexión de bucle invertido en tu máquina. Nada sale de la "
+"máquina."
 
 #: ../../how-to/classify-with-llm.md:240
 msgid ""
@@ -374,6 +530,9 @@ msgid ""
 "provider you explicitly permitted and acknowledged. It never sends the "
 "PDF bytes."
 msgstr ""
+"Una lectura de capa de texto envía solo el texto extraído, y solo a un "
+"proveedor en la nube que hayas permitido y confirmado explícitamente. Nunca "
+"envía los bytes del PDF."
 
 #: ../../how-to/classify-with-llm.md:243
 msgid ""
@@ -383,10 +542,15 @@ msgid ""
 " do not add up. When the printed IVA does not match the computed IVA, the"
 " review shows an advisory so you can check before filing."
 msgstr ""
+"El modelo selecciona únicamente la clasificación, la categoría, la categoría "
+"de IVA y una proporción de división. `aeat` deriva cada tipo, base y cuota "
+"de IVA del registro, y se niega a persistir un resultado cuyas partes no "
+"cuadren. Cuando el IVA impreso no coincide con el IVA calculado, la revisión "
+"muestra un aviso para que puedas comprobarlo antes de presentar."
 
 #: ../../how-to/classify-with-llm.md:249
 msgid "Evidence deployment settings"
-msgstr ""
+msgstr "Ajustes de despliegue de la evidencia"
 
 #: ../../how-to/classify-with-llm.md:251
 msgid ""
@@ -394,42 +558,52 @@ msgid ""
 "and administered outside this workflow. The full list lives in the "
 "[environment overrides reference](../reference/environment-overrides.md)."
 msgstr ""
+"Los ajustes de consentimiento y de modelo son configuración de despliegue, "
+"desactivados de forma predeterminada y administrados fuera de este flujo. La "
+"lista completa está en la [referencia de anulaciones de entorno](../"
+"reference/environment-overrides.md)."
 
 #: ../../how-to/classify-with-llm.md:255
 msgid "See how each suggestion was produced"
-msgstr ""
+msgstr "Ver cómo se produjo cada sugerencia"
 
 #: ../../how-to/classify-with-llm.md:257
 msgid ""
 "Every applied result records how it was produced, so a later review shows"
 " the source:"
 msgstr ""
+"Cada resultado aplicado registra cómo se produjo, así que una revisión "
+"posterior muestra la fuente:"
 
 #: ../../how-to/classify-with-llm.md:260
 msgid "`llm:local-vision:<model>`: read on-host by the local vision model."
 msgstr ""
+"`llm:local-vision:<model>`: leído en el propio equipo por el modelo de "
+"visión local."
 
 #: ../../how-to/classify-with-llm.md:261
 msgid "`llm:<provider>:<model>`: classified by a cloud provider."
-msgstr ""
+msgstr "`llm:<provider>:<model>`: clasificado por un proveedor en la nube."
 
 #: ../../how-to/classify-with-llm.md:262
 msgid ""
 "`derived:iva-category`: you chose the IVA category and `aeat` derived the"
 " rest."
 msgstr ""
+"`derived:iva-category`: elegiste la categoría de IVA y `aeat` derivó el "
+"resto."
 
 #: ../../how-to/classify-with-llm.md:264
 msgid "`manual`: you set the classification by hand."
-msgstr ""
+msgstr "`manual`: estableciste la clasificación a mano."
 
 #: ../../how-to/classify-with-llm.md:266
 msgid "Inspect a transaction and its history at any time:"
-msgstr ""
+msgstr "Examina una transacción y su historial en cualquier momento:"
 
 #: ../../how-to/classify-with-llm.md:272
 msgid "Limits and batch alternatives"
-msgstr ""
+msgstr "Límites y alternativas en bloque"
 
 #: ../../how-to/classify-with-llm.md:274
 msgid ""
@@ -440,10 +614,17 @@ msgid ""
 "rule add` then `rule apply --dry-run` then `rule apply`); both are "
 "covered in [Classify transactions](classify-transactions.md)."
 msgstr ""
+"La vía del LLM es solo de una transacción; no se puede combinar con "
+"`--from-csv` ni con las opciones manuales `--classification`. Para el "
+"trabajo en bloque usa la vía manual basada en CSV (`aeat app ledger classify "
+"--from-csv ./classifications.csv`) o las reglas guardadas deterministas "
+"(`aeat app ledger rule add`, luego `rule apply --dry-run` y luego `rule "
+"apply`); ambas se tratan en [Clasificar transacciones](classify-"
+"transactions.md)."
 
 #: ../../how-to/classify-with-llm.md:281
 msgid "Privacy boundary"
-msgstr ""
+msgstr "Límite de privacidad"
 
 #: ../../how-to/classify-with-llm.md:283
 msgid ""
@@ -455,28 +636,35 @@ msgid ""
 "data with an LLM provider unless your provider setup and privacy policy "
 "permit it."
 msgstr ""
+"La clasificación por LLM llama a la CLI del proveedor seleccionado en tu "
+"máquina. Esa CLI puede enviar los datos del prompt al servicio en la nube "
+"del proveedor, según cómo funcione ese proveedor y cómo esté configurada tu "
+"cuenta. Trata las descripciones de las transacciones, las contrapartes, los "
+"importes, las categorías y cualquier contexto de perfil incluido en el "
+"prompt como datos de un contribuyente. No uses datos de producción con un "
+"proveedor de LLM a menos que la configuración de tu proveedor y su política "
+"de privacidad lo permitan."
 
 #: ../../how-to/classify-with-llm.md:290
 msgid "Next steps"
-msgstr ""
+msgstr "Próximos pasos"
 
 #: ../../how-to/classify-with-llm.md:292
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr ""
+msgstr "[Clasificar transacciones](classify-transactions.md)"
 
 #: ../../how-to/classify-with-llm.md:293
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
-msgstr ""
+msgstr "[Adjuntar facturas y recibos](ledger-evidence.md)"
 
 #: ../../how-to/classify-with-llm.md:294
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr ""
+msgstr "[Importar y gestionar transacciones](import-bank-statements.md)"
 
 #: ../../how-to/classify-with-llm.md:295
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Revisar y aportar los datos de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/classify-with-llm.md:296
 msgid "[CLI reference](../cli/index.rst)"
-msgstr ""
-
+msgstr "[Referencia de la CLI](../cli/index.rst)"
