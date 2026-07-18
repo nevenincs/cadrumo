@@ -78,7 +78,7 @@ def _verb(command_key: str, *, is_error: bool = False) -> LiveToolCallRecord:
 def _trajectory(*calls: LiveToolCallRecord, session_id: str) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="identidad-perfil-switch-reconfirm",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         tool_calls=calls,
     )

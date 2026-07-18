@@ -72,7 +72,7 @@ def _target_tool_name() -> str:
 def _core_trajectory(tool_calls: tuple[LiveToolCallRecord, ...], *, session_id: str) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="descubrimiento-verbo-long-tail",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         tool_calls=tool_calls,
     )

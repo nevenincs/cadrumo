@@ -29,7 +29,7 @@ _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
 def _trajectory(session_id: str, *, command_keys: tuple[str, ...]) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="cierre-trimestre",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         tool_calls=tuple(LiveToolCallRecord(tool_name=key or "search", command_key=key) for key in command_keys),
     )
@@ -38,7 +38,7 @@ def _trajectory(session_id: str, *, command_keys: tuple[str, ...]) -> LiveTrajec
 def _passing_score(session_id: str) -> LiveScenarioScore:
     return LiveScenarioScore(
         scenario="cierre-trimestre",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         keys_resolve=True,
         lifecycle_ordered=True,
@@ -52,7 +52,7 @@ def _failing_score(session_id: str) -> LiveScenarioScore:
     # human-readable failure reason. ``passed`` is derived and must be False.
     return LiveScenarioScore(
         scenario="cierre-trimestre",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         keys_resolve=True,
         lifecycle_ordered=False,

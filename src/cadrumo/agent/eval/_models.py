@@ -585,7 +585,7 @@ class LiveTrajectory(BaseModel):
         scenario: The golden scenario name this session ran, empty for a free
             exploration session.
         persona: The harness persona the driver played (e.g.
-            ``"modelo-preparer"``).
+            ``"cadrumo-modelo-preparer"``).
         session_id: Caller-supplied stable identifier for the session (clock-free
             identity per the project's determinism discipline; the caller decides
             the scheme).
