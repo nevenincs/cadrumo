@@ -119,6 +119,7 @@ proof, and audit packages.
 :hidden:
 
 Getting started <how-to/index>
+Get Cadrumo <download>
 Install Cadrumo <workstation-setup>
 Quickstart <how-to/quickstart>
 Connect an agent (MCP) <how-to/connect-an-agent>
